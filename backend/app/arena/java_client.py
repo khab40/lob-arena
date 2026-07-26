@@ -3,7 +3,7 @@ import json
 from urllib import error, parse, request
 
 from app.metrics import PrometheusTextRegistry, Timer
-from app.schemas.arena import ArenaState, AttackTrackerState, ExchangeEventReplay, Incident
+from app.schemas.arena import ArenaMetricsSnapshot, ArenaState, AttackTrackerState, ExchangeEventReplay, Incident
 
 
 class JavaArenaClient:
@@ -25,6 +25,10 @@ class JavaArenaClient:
 
     async def get_state(self) -> ArenaState:
         return await asyncio.to_thread(lambda: self.state)
+
+    async def get_metrics_snapshot(self) -> ArenaMetricsSnapshot:
+        payload = await asyncio.to_thread(self._request, "GET", "/api/arena/metrics-state")
+        return ArenaMetricsSnapshot.model_validate(payload)
 
     async def start(self) -> ArenaState:
         return await self._arena_state("/api/simulation/start")

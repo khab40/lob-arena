@@ -239,6 +239,12 @@ class ExchangeEventReplay(BaseModel):
     has_more: bool
 
 
+class ArenaMetricsSnapshot(BaseModel):
+    tick: int = Field(ge=0)
+    running: bool
+    incidents_count: int = Field(ge=0)
+
+
 class ArenaState(BaseModel):
     tick: int
     running: bool

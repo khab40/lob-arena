@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.HttpStatus;
@@ -35,6 +38,8 @@ class ArenaControllerTest {
         assertThat(controller.incident(incidentId).path("scenario_family").textValue())
                 .isEqualTo("spoofing_like_wall");
         assertThat(controller.exchangeEvents(0, 10).path("events")).isNotEmpty();
+        assertThat(controller.metricsState().path("tick").longValue()).isEqualTo(3);
+        assertThat(controller.metricsState().path("incidents_count").longValue()).isEqualTo(1);
         assertThat(controller.pause().path("running").booleanValue()).isFalse();
         assertThat(controller.reset().path("tick").longValue()).isZero();
     }
@@ -49,6 +54,32 @@ class ArenaControllerTest {
         assertThatThrownBy(() -> controller.exchangeEvents(-1, 0))
                 .isInstanceOfSatisfying(ResponseStatusException.class,
                         exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
+    }
+
+    @Test
+    void readsMetricsStateWithoutWaitingForTheArenaMonitor(@TempDir Path output) throws Exception {
+        LiveArenaService arena = arena(output);
+        CountDownLatch monitorHeld = new CountDownLatch(1);
+        CountDownLatch releaseMonitor = new CountDownLatch(1);
+        Thread holder = Thread.ofPlatform().start(() -> {
+            synchronized (arena) {
+                monitorHeld.countDown();
+                try {
+                    releaseMonitor.await();
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        });
+        try {
+            assertThat(monitorHeld.await(1, TimeUnit.SECONDS)).isTrue();
+            org.junit.jupiter.api.Assertions.assertTimeoutPreemptively(
+                    Duration.ofSeconds(1), arena::metricsState);
+        } finally {
+            releaseMonitor.countDown();
+            holder.join(1_000);
+        }
+        assertThat(holder.isAlive()).isFalse();
     }
 
     private LiveArenaService arena(Path output) {

@@ -62,6 +62,20 @@ def test_java_arena_client_controls_and_reads_state(monkeypatch) -> None:
     ]
 
 
+def test_java_arena_client_reads_lightweight_metrics_snapshot(monkeypatch) -> None:
+    def urlopen(req, timeout: float):
+        assert req.full_url == "http://java:8080/api/arena/metrics-state"
+        return Response(b'{"tick":7,"running":false,"incidents_count":3}')
+
+    monkeypatch.setattr("app.arena.java_client.request.urlopen", urlopen)
+
+    snapshot = asyncio.run(JavaArenaClient("http://java:8080").get_metrics_snapshot())
+
+    assert snapshot.tick == 7
+    assert snapshot.running is False
+    assert snapshot.incidents_count == 3
+
+
 def test_java_arena_client_maps_scenario_slug(monkeypatch) -> None:
     scenario = {
         "scenario_id": "SCN-000001",

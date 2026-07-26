@@ -4,7 +4,6 @@ import json
 import sys
 from io import BytesIO
 from pathlib import Path
-from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
@@ -15,6 +14,7 @@ from app.nebius.detector_tournament import (
     DetectorTournamentMetrics,
     DetectorTournamentResponse,
 )
+from app.schemas.arena import ArenaMetricsSnapshot
 
 
 class Response(BytesIO):
@@ -187,28 +187,65 @@ def test_agent_runner_metrics_endpoint_and_decide_contract(monkeypatch) -> None:
     assert 'agent_runner_decide_duration_seconds_count{runner_id="remote",outcome="completed"} 1' in metrics_after
 
 
-def test_backend_metrics_uses_single_state_request_for_incident_count(monkeypatch) -> None:
+def test_backend_metrics_uses_lightweight_java_snapshot(monkeypatch) -> None:
     class Simulation:
         def __init__(self) -> None:
-            self.state_calls = 0
-            self.incident_calls = 0
+            self.metrics_snapshot_calls = 0
 
-        async def get_state(self) -> SimpleNamespace:
-            self.state_calls += 1
-            return SimpleNamespace(tick=9, running=True, incidents=[object(), object()])
-
-        async def list_incidents(self) -> list[object]:
-            self.incident_calls += 1
-            raise AssertionError("backend /metrics should use incidents from ArenaState")
+        async def get_metrics_snapshot(self) -> ArenaMetricsSnapshot:
+            self.metrics_snapshot_calls += 1
+            return ArenaMetricsSnapshot(tick=9, running=True, incidents_count=2)
 
     simulation = Simulation()
     monkeypatch.setattr(backend_app.state, "simulation", simulation)
+    monkeypatch.setattr(backend_app.state, "arena_metrics_snapshot", None)
+    monkeypatch.setattr(backend_app.state, "arena_metrics_snapshot_at", None)
 
     response = TestClient(backend_app).get("/metrics")
 
     assert response.status_code == 200
     assert "arena_tick 9" in response.text
     assert "arena_incidents_total 2" in response.text
+    assert "arena_metrics_snapshot_up 1" in response.text
     assert 'detector_tournament_in_flight{execution_mode="local"} 0' in response.text
-    assert simulation.state_calls == 1
-    assert simulation.incident_calls == 0
+    assert simulation.metrics_snapshot_calls == 1
+
+
+def test_backend_metrics_uses_cached_snapshot_when_java_is_unavailable(monkeypatch) -> None:
+    class Simulation:
+        async def get_metrics_snapshot(self) -> ArenaMetricsSnapshot:
+            raise RuntimeError("Java arena is unavailable")
+
+    monkeypatch.setattr(backend_app.state, "simulation", Simulation())
+    monkeypatch.setattr(
+        backend_app.state,
+        "arena_metrics_snapshot",
+        ArenaMetricsSnapshot(tick=12, running=False, incidents_count=4),
+    )
+    monkeypatch.setattr(backend_app.state, "arena_metrics_snapshot_at", 0.0)
+
+    response = TestClient(backend_app).get("/metrics")
+
+    assert response.status_code == 200
+    assert "arena_tick 12" in response.text
+    assert "arena_incidents_total 4" in response.text
+    assert "arena_metrics_snapshot_up 0" in response.text
+
+
+def test_backend_metrics_reports_unknown_age_before_first_success(monkeypatch) -> None:
+    class Simulation:
+        async def get_metrics_snapshot(self) -> ArenaMetricsSnapshot:
+            raise RuntimeError("Java arena is unavailable")
+
+    monkeypatch.setattr(backend_app.state, "simulation", Simulation())
+    monkeypatch.setattr(backend_app.state, "arena_metrics_snapshot", None)
+    monkeypatch.setattr(backend_app.state, "arena_metrics_snapshot_at", None)
+
+    response = TestClient(backend_app).get("/metrics")
+
+    assert response.status_code == 200
+    assert "arena_metrics_snapshot_up 0" in response.text
+    assert "arena_metrics_snapshot_age_seconds NaN" in response.text
+    assert "arena_tick" not in response.text
+    assert "arena_running" not in response.text
+    assert "arena_incidents_total" not in response.text

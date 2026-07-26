@@ -280,8 +280,11 @@ class LiveArenaServiceTest {
         arena.loadDataSource("hybrid", "lobster-spy-fixture", 7);
         arena.launchScenario("spoofing_like_wall");
         JsonNode live = arena.stepForTest();
+        JsonNode liveReplay = arena.exchangeEvents(0, 10);
         assertThat(live.path("detectors").toString())
                 .doesNotContain("scenario", "attack_seed", "SYN:");
+        assertThat(liveReplay.path("events")).isNotEmpty();
+        assertThat(liveReplay.path("latest_sequence").longValue()).isPositive();
         int lastHistorical = -1;
         int firstSynthetic = -1;
         for (int index = 0; index < live.path("exchange_events").size(); index++) {

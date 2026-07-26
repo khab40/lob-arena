@@ -37,16 +37,16 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
     private JsonNode manifest;
     private ArrayNode asks;
     private ArrayNode bids;
-    private String datasetId;
+    private volatile String datasetId;
     private long sourceSequence;
     private long replayPosition;
     private long timestampNs;
-    private long tick;
+    private volatile long tick;
     private long totalRows;
     private long pairedRows;
     private String eventsParquetSha256;
     private String booksParquetSha256;
-    private boolean running;
+    private volatile boolean running;
     private boolean eof;
     private boolean kernelCursorStarted;
 
@@ -125,7 +125,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         }
     }
 
-    public synchronized boolean loaded() {
+    public boolean loaded() {
         return datasetId != null;
     }
 
@@ -334,6 +334,13 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         context.put("progress", totalRows == 0 ? 0 : Math.min(1.0, (double) replayPosition / totalRows));
         context.put("eof", eof);
         return result;
+    }
+
+    JsonNode metricsState() {
+        return mapper.createObjectNode()
+                .put("tick", tick)
+                .put("running", running)
+                .put("incidents_count", 0);
     }
 
     private boolean readNext() {

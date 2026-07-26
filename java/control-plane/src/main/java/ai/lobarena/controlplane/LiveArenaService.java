@@ -56,8 +56,9 @@ final class LiveArenaService {
     private final long defaultMasterSeed;
 
     private IntegerMatchingEngine matching;
-    private long tick;
-    private boolean running;
+    private volatile long tick;
+    private volatile boolean running;
+    private volatile int metricsIncidentCount;
     private int scenarioCounter;
     private int incidentCounter;
     private List<String> activeAgentIds = List.of();
@@ -65,7 +66,7 @@ final class LiveArenaService {
     private double previousDepth;
     private String replaySourceType;
     private long replayMasterSeed;
-    private boolean lobsterKernelReplay;
+    private volatile boolean lobsterKernelReplay;
     private final Set<Long> lobsterBidPrices = new HashSet<>();
     private final Set<Long> lobsterAskPrices = new HashSet<>();
 
@@ -140,6 +141,16 @@ final class LiveArenaService {
         return buildState();
     }
 
+    JsonNode metricsState() {
+        if (historical.loaded() && !lobsterKernelReplay) {
+            return historical.metricsState();
+        }
+        return mapper.createObjectNode()
+                .put("tick", tick)
+                .put("running", running)
+                .put("incidents_count", metricsIncidentCount);
+    }
+
     synchronized JsonNode start() {
         if (historical.loaded() && !lobsterKernelReplay) {
             return historical.start();
@@ -182,6 +193,7 @@ final class LiveArenaService {
         scenario = null;
         agentEvents.clear();
         incidents.clear();
+        metricsIncidentCount = 0;
         incidentKeys.clear();
         detectorAlertTicks.clear();
         activeAgentIds = List.of();
@@ -239,7 +251,7 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode exchangeEvents(long afterSequence, int limit) {
-        if (historical.loaded()) {
+        if (historical.loaded() && !lobsterKernelReplay) {
             ObjectNode replay = mapper.createObjectNode();
             replay.putArray("events");
             return replay.put("after_sequence", afterSequence)
@@ -247,14 +259,12 @@ final class LiveArenaService {
                     .put("latest_sequence", 0)
                     .put("has_more", false);
         }
-        List<ExchangeEvent> all = matching.events();
+        List<ExchangeEvent> page = matching.eventsAfterSequence(afterSequence, limit);
         ArrayNode events = mapper.createArrayNode();
-        all.stream()
-                .filter(event -> event.getMetadata().getSequence() > afterSequence)
-                .limit(limit)
+        page.stream()
                 .map(this::exchangeEventJson)
                 .forEach(events::add);
-        long latest = all.isEmpty() ? 0 : all.getLast().getMetadata().getSequence();
+        long latest = matching.latestEventSequence();
         long next = events.isEmpty() ? afterSequence : events.get(events.size() - 1).path("sequence").longValue();
         return mapper.createObjectNode()
                 .set("events", events)
@@ -825,22 +835,12 @@ final class LiveArenaService {
         ArrayNode events = result.putArray("events");
         agentEvents.forEach(events::add);
         ArrayNode exchangeEvents = result.putArray("exchange_events");
-        matching.events().stream()
-                .skip(Math.max(0, matching.events().size() - EVENT_WINDOW))
+        matching.tailEvents(EVENT_WINDOW).stream()
                 .map(this::exchangeEventJson)
                 .forEach(exchangeEvents::add);
         if (kernelHistoricalLoaded()) {
             ArrayNode historicalEvents = result.putArray("historical_events");
-            matching.events().stream()
-                    .filter(event -> event.getMetadata().getSource()
-                            == EventSource.EVENT_SOURCE_HISTORICAL)
-                    .skip(Math.max(
-                            0,
-                            matching.events().stream()
-                                            .filter(event -> event.getMetadata().getSource()
-                                                    == EventSource.EVENT_SOURCE_HISTORICAL)
-                                            .count()
-                                    - EVENT_WINDOW))
+            matching.tailEventsBySource(EventSource.EVENT_SOURCE_HISTORICAL, EVENT_WINDOW).stream()
                     .map(this::exchangeEventJson)
                     .forEach(historicalEvents::add);
             result.set("market_data", replayContext());
@@ -883,8 +883,7 @@ final class LiveArenaService {
                         .limit(5)
                         .filter(level -> quantity(level.getQuantityLots()) >= average * 1.5)
                         .count();
-        List<ExchangeEvent> currentEvents = matching.events().stream()
-                .filter(event -> event.getMetadata().getTick() == tick)
+        List<ExchangeEvent> currentEvents = matching.eventsAtTick(tick).stream()
                 .filter(event -> event.getPayloadCase() != ExchangeEvent.PayloadCase.SNAPSHOT)
                 .toList();
         long cancels = currentEvents.stream()
@@ -983,6 +982,7 @@ final class LiveArenaService {
                 .put("scenario_id", scenario.id())
                 .put("scenario_family", scenario.family());
         incidents.add(incident);
+        metricsIncidentCount = incidents.size();
         journal.append("incidents/incidents.jsonl", incident);
     }
 

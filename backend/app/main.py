@@ -1,3 +1,5 @@
+import time
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
@@ -51,6 +53,8 @@ app.state.simulation = JavaArenaClient(
     timeout_seconds=settings.java_arena_timeout_seconds,
     metrics=metrics_registry,
 )
+app.state.arena_metrics_snapshot = None
+app.state.arena_metrics_snapshot_at = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,20 +86,44 @@ def api_status() -> dict[str, object]:
 
 @app.get("/metrics", include_in_schema=False)
 async def metrics(request: Request) -> PlainTextResponse:
-    state = await request.app.state.simulation.get_state()
-    incidents = state.incidents or []
-    lines = [
-        "# HELP arena_tick Current simulation tick.",
-        "# TYPE arena_tick gauge",
-        f"arena_tick {state.tick}",
-        "# HELP arena_running Whether the simulation loop is running.",
-        "# TYPE arena_running gauge",
-        f"arena_running {1 if state.running else 0}",
-        "# HELP arena_incidents_total Number of in-memory incidents.",
-        "# TYPE arena_incidents_total gauge",
-        f"arena_incidents_total {len(incidents)}",
-        metrics_registry.render(),
-    ]
+    snapshot_up = 1
+    try:
+        snapshot = await request.app.state.simulation.get_metrics_snapshot()
+    except (LookupError, RuntimeError, ValueError):
+        snapshot_up = 0
+        snapshot = request.app.state.arena_metrics_snapshot
+    else:
+        request.app.state.arena_metrics_snapshot = snapshot
+        request.app.state.arena_metrics_snapshot_at = time.monotonic()
+
+    observed_at = request.app.state.arena_metrics_snapshot_at
+    snapshot_age = "NaN" if observed_at is None else f"{max(0.0, time.monotonic() - observed_at):.6g}"
+    lines: list[str] = []
+    if snapshot is not None:
+        lines.extend(
+            [
+                "# HELP arena_tick Current simulation tick.",
+                "# TYPE arena_tick gauge",
+                f"arena_tick {snapshot.tick}",
+                "# HELP arena_running Whether the simulation loop is running.",
+                "# TYPE arena_running gauge",
+                f"arena_running {1 if snapshot.running else 0}",
+                "# HELP arena_incidents_total Number of in-memory incidents.",
+                "# TYPE arena_incidents_total gauge",
+                f"arena_incidents_total {snapshot.incidents_count}",
+            ]
+        )
+    lines.extend(
+        [
+            "# HELP arena_metrics_snapshot_up Whether the Java metrics snapshot refreshed successfully.",
+            "# TYPE arena_metrics_snapshot_up gauge",
+            f"arena_metrics_snapshot_up {snapshot_up}",
+            "# HELP arena_metrics_snapshot_age_seconds Age of the last successful Java metrics snapshot.",
+            "# TYPE arena_metrics_snapshot_age_seconds gauge",
+            f"arena_metrics_snapshot_age_seconds {snapshot_age}",
+            metrics_registry.render(),
+        ]
+    )
     return PlainTextResponse(
         "\n".join(lines) + "\n",
         media_type="text/plain; version=0.0.4",

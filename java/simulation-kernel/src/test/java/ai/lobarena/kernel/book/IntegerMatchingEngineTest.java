@@ -130,6 +130,43 @@ final class IntegerMatchingEngineTest {
     }
 
     @Test
+    void boundedEventViewsPreserveOrderWithoutCopyingTheFullHistory() {
+        IntegerMatchingEngine engine = engine();
+        engine.submit(KernelOrder.limit("bid-1", "maker", Side.SIDE_BUY, 1, 97, 1));
+        engine.submit(KernelOrder.limit("bid-2", "maker", Side.SIDE_BUY, 1, 98, 2));
+        engine.submit(KernelOrder.limit("bid-3", "maker", Side.SIDE_BUY, 1, 99, 3));
+        engine.submit(
+                KernelOrder.limit("ask-historical", "historical", Side.SIDE_SELL, 1, 101, 4),
+                new MutationContext(
+                        4L,
+                        null,
+                        null,
+                        null,
+                        EventSource.EVENT_SOURCE_HISTORICAL,
+                        10L,
+                        4L,
+                        4L));
+
+        assertEquals(
+                List.of(3L, 4L),
+                engine.tailEvents(2).stream().map(event -> event.getMetadata().getSequence()).toList());
+        assertEquals(
+                List.of(4L),
+                engine.tailEventsBySource(EventSource.EVENT_SOURCE_HISTORICAL, 5).stream()
+                        .map(event -> event.getMetadata().getSequence())
+                        .toList());
+        assertEquals(
+                List.of(3L),
+                engine.eventsAtTick(3).stream().map(event -> event.getMetadata().getSequence()).toList());
+        assertEquals(
+                List.of(3L),
+                engine.eventsAfterSequence(2, 1).stream()
+                        .map(event -> event.getMetadata().getSequence())
+                        .toList());
+        assertEquals(4, engine.latestEventSequence());
+    }
+
+    @Test
     void recordsImmutableSourceSnapshotWithoutReplacingLiveBook() {
         IntegerMatchingEngine engine = engine();
         engine.submit(KernelOrder.limit("synthetic-bid", "agent", Side.SIDE_BUY, 5, 99, 1));

@@ -25,6 +25,11 @@ final class ArenaController {
         return arena.state();
     }
 
+    @GetMapping("/api/arena/metrics-state")
+    JsonNode metricsState() {
+        return arena.metricsState();
+    }
+
     @GetMapping("/api/arena/exchange-events")
     JsonNode exchangeEvents(
             @RequestParam(defaultValue = "0") long afterSequence,

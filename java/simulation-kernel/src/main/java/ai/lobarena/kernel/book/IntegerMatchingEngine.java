@@ -11,7 +11,9 @@ import ai.lobarena.exchange.v1.LobSnapshot;
 import ai.lobarena.exchange.v1.ModifyOrder;
 import ai.lobarena.kernel.determinism.DeterministicValues;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 public final class IntegerMatchingEngine {
     private final IntegerOrderBook book;
@@ -19,6 +21,7 @@ public final class IntegerMatchingEngine {
     private final String venue;
     private final EventSource source;
     private final List<ExchangeEvent> events = new ArrayList<>();
+    private final Map<EventSource, List<ExchangeEvent>> eventsBySource = new EnumMap<>(EventSource.class);
     private MutationContext mutationContext = MutationContext.EMPTY;
 
     public IntegerMatchingEngine(
@@ -109,7 +112,7 @@ public final class IntegerMatchingEngine {
                             mutationContext.scenarioFamily()))
                     .setSnapshot(LobSnapshot.newBuilder().setDepth(depth).setBook(snapshot))
                     .build();
-            events.add(event);
+            appendEvent(event);
             return event;
         } finally {
             mutationContext = previous;
@@ -118,6 +121,60 @@ public final class IntegerMatchingEngine {
 
     public List<ExchangeEvent> events() {
         return List.copyOf(events);
+    }
+
+    public long latestEventSequence() {
+        return events.isEmpty() ? 0 : events.getLast().getMetadata().getSequence();
+    }
+
+    public List<ExchangeEvent> tailEvents(int limit) {
+        if (limit <= 0 || events.isEmpty()) {
+            return List.of();
+        }
+        int start = Math.max(0, events.size() - limit);
+        return List.copyOf(events.subList(start, events.size()));
+    }
+
+    public List<ExchangeEvent> tailEventsBySource(EventSource source, int limit) {
+        List<ExchangeEvent> sourceEvents = eventsBySource.getOrDefault(source, List.of());
+        if (limit <= 0 || sourceEvents.isEmpty()) {
+            return List.of();
+        }
+        int start = Math.max(0, sourceEvents.size() - limit);
+        return List.copyOf(sourceEvents.subList(start, sourceEvents.size()));
+    }
+
+    public List<ExchangeEvent> eventsAtTick(long tick) {
+        List<ExchangeEvent> result = new ArrayList<>();
+        for (int index = events.size() - 1; index >= 0; index--) {
+            ExchangeEvent event = events.get(index);
+            long eventTick = event.getMetadata().getTick();
+            if (eventTick < tick) {
+                break;
+            }
+            if (eventTick == tick) {
+                result.add(event);
+            }
+        }
+        return List.copyOf(result.reversed());
+    }
+
+    public List<ExchangeEvent> eventsAfterSequence(long afterSequence, int limit) {
+        if (limit <= 0 || events.isEmpty()) {
+            return List.of();
+        }
+        int low = 0;
+        int high = events.size();
+        while (low < high) {
+            int middle = (low + high) >>> 1;
+            if (events.get(middle).getMetadata().getSequence() <= afterSequence) {
+                low = middle + 1;
+            } else {
+                high = middle;
+            }
+        }
+        int end = Math.min(events.size(), low + limit);
+        return List.copyOf(events.subList(low, end));
     }
 
     public IntegerOrderBook book() {
@@ -157,7 +214,7 @@ public final class IntegerMatchingEngine {
                             .setAggressorRemainingQuantityLots(execution.aggressorRemainingQuantityLots())
                             .setRestingRemainingQuantityLots(execution.restingRemainingQuantityLots()))
                     .build();
-            events.add(event);
+            appendEvent(event);
         }
     }
 
@@ -197,7 +254,12 @@ public final class IntegerMatchingEngine {
                     .setPriorityPreserved(mutation.priorityPreserved())
                     .setOwner(mutation.after().owner()));
         }
-        events.add(event.build());
+        appendEvent(event.build());
+    }
+
+    private void appendEvent(ExchangeEvent event) {
+        events.add(event);
+        eventsBySource.computeIfAbsent(event.getMetadata().getSource(), ignored -> new ArrayList<>()).add(event);
     }
 
     private EventMetadata.Builder metadata(
