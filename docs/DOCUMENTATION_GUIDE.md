@@ -66,6 +66,7 @@ graph TD
 - **[hybrid-dataset-validation.md](hybrid-dataset-validation.md)** — LOBSTER invariants, causal-neighbourhood equivalence, signed validation reports, and verification
 - **[client-historical-dataset-validation-runbook.md](client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
 - **[feature-engineering-lightgbm.md](feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and future trainer rules
+- **[governed-corpus-benchmark-protocol.md](governed-corpus-benchmark-protocol.md)** — Pre-training corpus governance, independent negative labels, frozen split policy, statistical metrics, and release gates
 - **[determinism-contract-v1.md](determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
 - **[canonical-hashing-v1.md](canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
 - **[benchmark-methodology.md](benchmark-methodology.md)** — Evaluating detector performance

@@ -8,6 +8,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 SourceType = Literal["lobster", "synthetic", "hybrid"]
+LABEL_SCHEMA_VERSION = "feature_labels_v2"
 
 
 class FeaturePipelineConfig(BaseModel):
@@ -59,12 +60,15 @@ class FeatureRunMetadata(BaseModel):
 
 
 class LabelWindow(BaseModel):
-    attack_family: str = Field(min_length=1)
+    label: Literal[0, 1] = 1
+    attack_family: str | None = None
     label_source: str = Field(default="synthetic_scenario", min_length=1)
+    provenance_id: str | None = Field(default=None, min_length=1)
     start_tick: int | None = Field(default=None, ge=0)
     end_tick: int | None = Field(default=None, ge=0)
     start_timestamp_ns: int | None = Field(default=None, ge=0)
     end_timestamp_ns: int | None = Field(default=None, ge=0)
+    end_inclusive: bool = True
     phases: dict[str, tuple[int, int]] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -81,6 +85,17 @@ class LabelWindow(BaseModel):
             raise ValueError("label tick start must not exceed end")
         if time_pair and self.start_timestamp_ns > self.end_timestamp_ns:
             raise ValueError("label timestamp start must not exceed end")
+        if not self.end_inclusive and (
+            (tick_pair and self.start_tick == self.end_tick)
+            or (time_pair and self.start_timestamp_ns == self.end_timestamp_ns)
+        ):
+            raise ValueError("half-open label windows must have positive width")
+        if self.label == 1 and not self.attack_family:
+            raise ValueError("positive label windows require an attack family")
+        if self.label == 0 and self.attack_family is not None:
+            raise ValueError("negative label windows cannot have an attack family")
+        if self.label == 0 and self.phases:
+            raise ValueError("negative label windows cannot have attack phases")
         if self.phases and not tick_pair:
             raise ValueError("label phases require tick bounds")
         ordered_phases: list[tuple[int, int, str]] = []
@@ -100,7 +115,7 @@ class LabelWindow(BaseModel):
 class LabelSpec(BaseModel):
     """Separate ground truth; default_label is never inferred from market data."""
 
-    schema_version: Literal["feature_labels_v1"] = "feature_labels_v1"
+    schema_version: Literal["feature_labels_v1", "feature_labels_v2"] = LABEL_SCHEMA_VERSION
     labels: list[LabelWindow] = Field(default_factory=list)
     default_label: Literal[0, 1] | None = None
     default_attack_family: str | None = None
@@ -112,23 +127,33 @@ class LabelSpec(BaseModel):
             raise ValueError("an explicit default label requires default_label_source")
         if self.default_label == 1 and not self.default_attack_family:
             raise ValueError("a positive default label requires default_attack_family")
-        coordinate_systems = {"tick" if window.start_tick is not None else "timestamp" for window in self.labels}
-        if len(coordinate_systems) > 1:
-            raise ValueError("all label windows must use the same coordinate system")
-        ordered = sorted(
-            (
+        if self.default_label == 0 and self.default_attack_family is not None:
+            raise ValueError("a negative default label cannot have an attack family")
+        for coordinate_system in ("tick", "timestamp"):
+            ordered = sorted(
                 (
-                    window.start_tick if window.start_tick is not None else window.start_timestamp_ns,
-                    window.end_tick if window.end_tick is not None else window.end_timestamp_ns,
-                    window.attack_family,
+                    (
+                        window.start_tick if coordinate_system == "tick" else window.start_timestamp_ns,
+                        window.end_tick if coordinate_system == "tick" else window.end_timestamp_ns,
+                        window.end_inclusive,
+                        window.provenance_id or "",
+                    )
+                    for window in self.labels
+                    if (window.start_tick is not None) == (coordinate_system == "tick")
                 )
-                for window in self.labels
-            ),
-        )
-        for previous, current in zip(ordered, ordered[1:], strict=False):
-            if current[0] <= previous[1]:
-                raise ValueError("label windows must not overlap")
+            )
+            for previous, current in zip(ordered, ordered[1:], strict=False):
+                if current[0] < previous[1] or (
+                    current[0] == previous[1] and previous[2]
+                ):
+                    raise ValueError("label windows must not overlap")
         return self
+
+    def canonical_json(self) -> str:
+        return json.dumps(self.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
+
+    def spec_hash(self) -> str:
+        return hashlib.sha256(self.canonical_json().encode("utf-8")).hexdigest()
 
 
 class AssignedLabel(BaseModel):
@@ -144,26 +169,40 @@ def assign_label(
     tick: int,
     prediction_timestamp_ns: int,
 ) -> AssignedLabel:
+    matches: list[LabelWindow] = []
     for window in spec.labels:
         tick_match = (
             window.start_tick is not None
             and window.end_tick is not None
-            and window.start_tick <= tick <= window.end_tick
+            and window.start_tick <= tick
+            and (tick <= window.end_tick if window.end_inclusive else tick < window.end_tick)
         )
         time_match = (
             window.start_timestamp_ns is not None
             and window.end_timestamp_ns is not None
-            and window.start_timestamp_ns <= prediction_timestamp_ns <= window.end_timestamp_ns
+            and window.start_timestamp_ns <= prediction_timestamp_ns
+            and (
+                prediction_timestamp_ns <= window.end_timestamp_ns
+                if window.end_inclusive
+                else prediction_timestamp_ns < window.end_timestamp_ns
+            )
         )
-        if not tick_match and not time_match:
-            continue
+        if tick_match or time_match:
+            matches.append(window)
+    if len(matches) > 1:
+        provenance = sorted(window.provenance_id or "<unidentified>" for window in matches)
+        raise ValueError(
+            f"feature row matches multiple ground-truth windows: {', '.join(provenance)}"
+        )
+    if matches:
+        window = matches[0]
         phase = next(
             (name for name, bounds in sorted(window.phases.items()) if bounds[0] <= tick <= bounds[1]),
-            "attack",
+            "attack" if window.label == 1 else "none",
         )
         return AssignedLabel(
-            label=1,
-            attack_family=window.attack_family,
+            label=window.label,
+            attack_family=window.attack_family if window.label == 1 else None,
             attack_phase=phase,
             label_source=window.label_source,
         )

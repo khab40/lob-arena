@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lob-arena.local/contracts/governed-clean-window-equivalence-v1.schema.json",
+  "title": "LOB Arena Governed Clean Window Equivalence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "verdict",
+    "base_session_id",
+    "dataset_id",
+    "campaign_id",
+    "source_control_window_id",
+    "transferred_window_id",
+    "window_start_timestamp_ns",
+    "window_end_timestamp_ns",
+    "causal_start_timestamp_ns",
+    "causal_end_timestamp_ns",
+    "control_events_sha256",
+    "hybrid_events_sha256",
+    "outside_causal_neighbourhood_equivalent",
+    "exact_book_match_rate"
+  ],
+  "properties": {
+    "schema_version": {"const": "governed_clean_window_equivalence_v1"},
+    "verdict": {"const": "pass"},
+    "base_session_id": {"type": "string", "minLength": 1},
+    "dataset_id": {"type": "string", "minLength": 1},
+    "campaign_id": {"type": "string", "minLength": 1},
+    "source_control_window_id": {"type": "string", "minLength": 1},
+    "transferred_window_id": {"type": "string", "minLength": 1},
+    "window_start_timestamp_ns": {"type": "integer", "minimum": 0},
+    "window_end_timestamp_ns": {"type": "integer", "exclusiveMinimum": 0},
+    "causal_start_timestamp_ns": {"type": "integer", "minimum": 0},
+    "causal_end_timestamp_ns": {"type": "integer", "minimum": 0},
+    "control_events_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "hybrid_events_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "outside_causal_neighbourhood_equivalent": {"const": true},
+    "exact_book_match_rate": {"const": 1.0}
+  }
+}

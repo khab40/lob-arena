@@ -1,0 +1,396 @@
+{
+  "$defs": {
+    "BootstrapPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence_level": {
+          "default": 0.95,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Confidence Level",
+          "type": "number"
+        },
+        "method": {
+          "const": "session_cluster_percentile"
+        },
+        "paired_comparisons": {
+          "const": true
+        },
+        "resamples": {
+          "default": 2000,
+          "minimum": 100,
+          "title": "Resamples",
+          "type": "integer"
+        },
+        "seed": {
+          "default": 20260726,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "method",
+        "resamples",
+        "confidence_level",
+        "seed",
+        "paired_comparisons"
+      ],
+      "title": "BootstrapPolicy",
+      "type": "object"
+    },
+    "CleanLabelPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "blind_to_model_outputs": {
+          "const": true
+        },
+        "conflicts_require_adjudicator": {
+          "const": true
+        },
+        "historical_default_label": {
+          "default": null,
+          "title": "Historical Default Label",
+          "type": "null"
+        },
+        "independent_reviewers": {
+          "default": 2,
+          "minimum": 2,
+          "title": "Independent Reviewers",
+          "type": "integer"
+        },
+        "statuses": {
+          "default": [
+            "unreviewed",
+            "candidate_clean",
+            "verified_clean",
+            "ambiguous",
+            "excluded",
+            "synthetic_attack"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Statuses",
+          "type": "array"
+        },
+        "transferable_to_hybrid_only_after_exact_equivalence": {
+          "const": true
+        }
+      },
+      "required": [
+        "independent_reviewers",
+        "blind_to_model_outputs",
+        "conflicts_require_adjudicator",
+        "historical_default_label",
+        "transferable_to_hybrid_only_after_exact_equivalence",
+        "statuses"
+      ],
+      "title": "CleanLabelPolicy",
+      "type": "object"
+    },
+    "CorpusMinimums": {
+      "additionalProperties": false,
+      "properties": {
+        "complete_sessions": {
+          "default": 30,
+          "minimum": 1,
+          "title": "Complete Sessions",
+          "type": "integer"
+        },
+        "distinct_dates": {
+          "default": 10,
+          "minimum": 1,
+          "title": "Distinct Dates",
+          "type": "integer"
+        },
+        "instruments": {
+          "default": 3,
+          "minimum": 1,
+          "title": "Instruments",
+          "type": "integer"
+        },
+        "require_all_attack_families": {
+          "default": true,
+          "title": "Require All Attack Families",
+          "type": "boolean"
+        },
+        "required_attack_families": {
+          "default": [
+            "spoofing_like_wall",
+            "layering_like",
+            "quote_stuffing"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Attack Families",
+          "type": "array"
+        },
+        "seeds_per_attack_family": {
+          "default": 3,
+          "minimum": 1,
+          "title": "Seeds Per Attack Family",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "complete_sessions",
+        "instruments",
+        "distinct_dates",
+        "seeds_per_attack_family",
+        "require_all_attack_families",
+        "required_attack_families"
+      ],
+      "title": "CorpusMinimums",
+      "type": "object"
+    },
+    "MetricPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "alert_deduplication_window_ns": {
+          "default": 1000000000,
+          "minimum": 0,
+          "title": "Alert Deduplication Window Ns",
+          "type": "integer"
+        },
+        "attack_recall_unit": {
+          "const": "campaign"
+        },
+        "false_alert_denominator": {
+          "const": "evaluable_canonical_events"
+        },
+        "minimum_regime_cell_count": {
+          "default": 10,
+          "minimum": 1,
+          "title": "Minimum Regime Cell Count",
+          "type": "integer"
+        },
+        "report_raw_and_deduplicated_alerts": {
+          "const": true
+        },
+        "require_realized_benefit_event": {
+          "const": true
+        },
+        "worst_decile_fraction": {
+          "default": 0.1,
+          "exclusiveMinimum": 0,
+          "maximum": 0.5,
+          "title": "Worst Decile Fraction",
+          "type": "number"
+        }
+      },
+      "required": [
+        "alert_deduplication_window_ns",
+        "minimum_regime_cell_count",
+        "false_alert_denominator",
+        "attack_recall_unit",
+        "require_realized_benefit_event",
+        "report_raw_and_deduplicated_alerts",
+        "worst_decile_fraction"
+      ],
+      "title": "MetricPolicy",
+      "type": "object"
+    },
+    "SplitPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "embargo_sessions": {
+          "default": 1,
+          "minimum": 0,
+          "title": "Embargo Sessions",
+          "type": "integer"
+        },
+        "group_fields": {
+          "default": [
+            "venue",
+            "instrument",
+            "session_date",
+            "session_id"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "title": "Group Fields",
+          "type": "array"
+        },
+        "keep_all_session_campaigns_together": {
+          "const": true
+        },
+        "purge_alert_horizon_ns": {
+          "default": 5000000000,
+          "minimum": 0,
+          "title": "Purge Alert Horizon Ns",
+          "type": "integer"
+        },
+        "purge_causal_tail_ns": {
+          "default": 10000000000,
+          "minimum": 0,
+          "title": "Purge Causal Tail Ns",
+          "type": "integer"
+        },
+        "purge_feature_window_ns": {
+          "default": 10000000000,
+          "minimum": 0,
+          "title": "Purge Feature Window Ns",
+          "type": "integer"
+        },
+        "purge_label_uncertainty_ns": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Purge Label Uncertainty Ns",
+          "type": "integer"
+        },
+        "strategy": {
+          "const": "chronological_session_grouped_purged"
+        },
+        "test_fraction": {
+          "default": 0.2,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Test Fraction",
+          "type": "number"
+        },
+        "train_fraction": {
+          "default": 0.6,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Train Fraction",
+          "type": "number"
+        },
+        "validation_fraction": {
+          "default": 0.2,
+          "exclusiveMaximum": 1,
+          "exclusiveMinimum": 0,
+          "title": "Validation Fraction",
+          "type": "number"
+        }
+      },
+      "required": [
+        "strategy",
+        "group_fields",
+        "keep_all_session_campaigns_together",
+        "purge_feature_window_ns",
+        "purge_alert_horizon_ns",
+        "purge_causal_tail_ns",
+        "purge_label_uncertainty_ns",
+        "embargo_sessions",
+        "train_fraction",
+        "validation_fraction",
+        "test_fraction"
+      ],
+      "title": "SplitPolicy",
+      "type": "object"
+    },
+    "StreamingPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "event_chunk_size": {
+          "default": 50000,
+          "minimum": 1,
+          "title": "Event Chunk Size",
+          "type": "integer"
+        },
+        "max_memory_growth_fraction": {
+          "default": 0.2,
+          "minimum": 0,
+          "title": "Max Memory Growth Fraction",
+          "type": "number"
+        },
+        "parquet_row_group_size": {
+          "default": 25000,
+          "minimum": 1,
+          "title": "Parquet Row Group Size",
+          "type": "integer"
+        },
+        "quantile_sample_size": {
+          "default": 2048,
+          "minimum": 128,
+          "title": "Quantile Sample Size",
+          "type": "integer"
+        },
+        "quantile_sketch": {
+          "const": "deterministic_priority_sample_v1"
+        },
+        "require_chunk_size_equivalence": {
+          "const": true
+        }
+      },
+      "required": [
+        "event_chunk_size",
+        "parquet_row_group_size",
+        "quantile_sketch",
+        "quantile_sample_size",
+        "max_memory_growth_fraction",
+        "require_chunk_size_equivalence"
+      ],
+      "title": "StreamingPolicy",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/governed-benchmark-protocol-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bootstrap": {
+      "$ref": "#/$defs/BootstrapPolicy"
+    },
+    "canonical_event_schema_version": {
+      "default": 1,
+      "minimum": 1,
+      "title": "Canonical Event Schema Version",
+      "type": "integer"
+    },
+    "clean_labels": {
+      "$ref": "#/$defs/CleanLabelPolicy"
+    },
+    "corpus": {
+      "$ref": "#/$defs/CorpusMinimums"
+    },
+    "feature_schema_version": {
+      "default": "lob_features_v1",
+      "minLength": 1,
+      "title": "Feature Schema Version",
+      "type": "string"
+    },
+    "freeze_test_before_training": {
+      "const": true
+    },
+    "metrics": {
+      "$ref": "#/$defs/MetricPolicy"
+    },
+    "protocol_id": {
+      "minLength": 1,
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "require_signed_release_manifest": {
+      "const": true
+    },
+    "schema_version": {
+      "const": "governed_benchmark_protocol_v1"
+    },
+    "splits": {
+      "$ref": "#/$defs/SplitPolicy"
+    },
+    "streaming": {
+      "$ref": "#/$defs/StreamingPolicy"
+    }
+  },
+  "required": [
+    "schema_version",
+    "protocol_id",
+    "corpus",
+    "clean_labels",
+    "splits",
+    "bootstrap",
+    "metrics",
+    "streaming",
+    "canonical_event_schema_version",
+    "feature_schema_version",
+    "freeze_test_before_training",
+    "require_signed_release_manifest"
+  ],
+  "title": "LOB Arena Governed Benchmark Protocol v1",
+  "type": "object"
+}

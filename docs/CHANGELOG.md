@@ -59,6 +59,37 @@ Update this file with each significant commit before pushing.
 
 ## Unreleased
 
+### Current - feat: add governed corpus and benchmark protocol
+
+- Added versioned corpus, independent clean-window adjudication, canonical Java
+  replay, frozen split, benchmark result, and signed release contracts.
+- Added coverage gates across complete sessions, instruments, dates, attack
+  families, and seeds; historical data stays unlabeled unless two independent
+  blinded reviews or adjudication establish a clean window.
+- Added chronological base-session grouping, boundary embargo, purge metadata,
+  duplicate-source leakage rejection, and a frozen assignment hash.
+- Added one-pass bounded-memory feature output, deterministic quality samples,
+  Parquet row groups, logical row hashes, and throughput/RSS benchmarking.
+- Added false alerts per million events, attack-level recall,
+  detection-before-benefit, duplicate-alert load, session-cluster confidence
+  intervals, paired comparisons, train-fitted regime matrices, worst-decile
+  results, and a fully signed Ed25519 benchmark release.
+- Added focused and end-to-end tests proving canonical artifact binding,
+  tamper rejection, scientific split/label gates, and signed release
+  verification. No learned model was added.
+- Added the versioned explicit negative-label contract and governed feature
+  export path. Independently verified clean windows now become bounded label
+  zero rows only after local corpus/evidence verification; unreviewed history
+  remains null, hybrid transfer requires equivalence evidence, and each run
+  records label/adjudication provenance hashes.
+- Hardened the governed release after review: corpus coverage and chronological
+  splits are recomputed, canonical Java stream hashes are independently
+  derived, replay/campaign inventories fail on omissions or duplicates,
+  ground-truth records must parse into exactly one registered attack, clean
+  transfers require exact causal-neighbourhood equivalence, event-ID checks use
+  disk-backed bounded state, and streaming evidence is bound to the exact
+  historical-control replay and reproduced across two row-group sizes.
+
 ### Current - feat: add versioned causal market-abuse features
 
 - Added one source-agnostic `lob_features_v1` rolling pipeline over Java

@@ -18,6 +18,7 @@ from app.exchange.schemas import (
     OrderBookSnapshot,
     PriceLevel,
 )
+from app.exchange.stream_validation import DiskBackedUniqueIds
 from app.features.models import (
     FeaturePipelineConfig,
     FeatureRunMetadata,
@@ -156,10 +157,14 @@ class FeaturePipeline:
         config: FeaturePipelineConfig,
         metadata: FeatureRunMetadata,
         labels: LabelSpec | None = None,
+        expected_event_count: int | None = None,
     ) -> None:
         self.config = config
         self.metadata = metadata
         self.labels = labels or LabelSpec()
+        if expected_event_count is not None and expected_event_count < 1:
+            raise ValueError("expected event count must be positive")
+        self.expected_event_count = expected_event_count
         self._reset_state()
 
     def _reset_state(self) -> None:
@@ -170,80 +175,160 @@ class FeaturePipeline:
         self._last_cancel_ns: dict[tuple[str, int], int] = {}
         self._last_message_ns: int | None = None
         self._previous_mid: float | None = None
+        self._input_digest = hashlib.sha256()
+        self._source_counts: Counter[str] = Counter()
+        self._event_type_counts: Counter[str] = Counter()
+        self._event_count = 0
+        self._feature_checkpoint_count = 0
+        self._historical_snapshot_count = 0
+        self._first_sequence: int | None = None
+        self._last_sequence: int | None = None
+        self._first_timestamp_ns: int | None = None
+        self._last_timestamp_ns: int | None = None
+        self._previous_sequence: int | None = None
+        self._previous_validation_time = -1
+        self._previous_validation_tick = -1
+        self._stream_complete = False
+        self._first_half_state_peak = 0
+        self._second_half_state_peak = 0
 
-    def generate(self, events: Sequence[CanonicalExchangeEvent]) -> FeatureRunResult:
+    def generate(self, events: Iterable[CanonicalExchangeEvent]) -> FeatureRunResult:
+        rows = list(self.iter_rows(events))
+        return self.finish(rows)
+
+    def iter_rows(
+        self,
+        events: Iterable[CanonicalExchangeEvent],
+    ) -> Iterable[dict[str, Any]]:
+        """Yield causal feature rows while retaining only rolling exchange state."""
         self._reset_state()
-        self._validate_event_order(events)
-        rows: list[dict[str, Any]] = []
-        input_digest = hashlib.sha256()
-        for event in events:
-            canonical_line = json.dumps(
-                event.to_dict(),
-                sort_keys=True,
-                separators=(",", ":"),
-            ).encode("utf-8")
-            input_digest.update(canonical_line + b"\n")
-            timestamp_ns = self._event_timestamp_ns(event)
-            if isinstance(event, LobSnapshotEvent):
-                if event.source == "historical":
-                    self._observe_historical_snapshot(event, timestamp_ns)
+        with DiskBackedUniqueIds() as unique_ids:
+            for event in events:
+                self._validate_next_event(event, unique_ids=unique_ids)
+                canonical_line = json.dumps(
+                    event.to_dict(),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode("utf-8")
+                self._input_digest.update(canonical_line + b"\n")
+                timestamp_ns = self._event_timestamp_ns(event)
+                self._event_count += 1
+                self._source_counts[event.source] += 1
+                self._event_type_counts[event.event_type] += 1
+                if self._first_sequence is None:
+                    self._first_sequence = event.sequence
+                    self._first_timestamp_ns = timestamp_ns
+                self._last_sequence = event.sequence
+                self._last_timestamp_ns = timestamp_ns
+                if isinstance(event, LobSnapshotEvent):
+                    if event.source == "historical":
+                        self._historical_snapshot_count += 1
+                        self._observe_historical_snapshot(event, timestamp_ns)
+                    else:
+                        row = self._snapshot_row(event, timestamp_ns)
+                        self._feature_checkpoint_count += 1
+                        yield row
                 else:
-                    row = self._snapshot_row(event, timestamp_ns)
-                    rows.append(row)
-            else:
-                self._observe_event(event, timestamp_ns)
+                    self._observe_event(event, timestamp_ns)
+                self._observe_bounded_state()
+        if self._event_count == 0:
+            raise ValueError("feature input requires at least one canonical event")
+        if (
+            self.expected_event_count is not None
+            and self._event_count != self.expected_event_count
+        ):
+            raise ValueError("feature input event count does not match expected full stream")
+        self._stream_complete = True
+
+    def finish(self, rows: list[dict[str, Any]]) -> FeatureRunResult:
+        """Finalize a fully consumed feature stream using collected output rows."""
+        if not self._stream_complete:
+            raise ValueError("feature stream must be consumed completely before finalization")
         quality = feature_quality_report(rows, FEATURE_COLUMNS)
-        source_counts = Counter(event.source for event in events)
-        event_type_counts = Counter(event.event_type for event in events)
         return FeatureRunResult(
             rows=rows,
             quality_report=quality,
-            input_sha256=input_digest.hexdigest(),
-            input_provenance={
-                "canonical_event_count": len(events),
-                "source_event_counts": dict(sorted(source_counts.items())),
-                "event_type_counts": dict(sorted(event_type_counts.items())),
-                "feature_checkpoint_count": len(rows),
-                "historical_source_snapshot_count": sum(
-                    isinstance(event, LobSnapshotEvent) and event.source == "historical" for event in events
-                ),
-                "first_sequence": events[0].sequence,
-                "last_sequence": events[-1].sequence,
-                "first_timestamp_ns": self._event_timestamp_ns(events[0]),
-                "last_timestamp_ns": self._event_timestamp_ns(events[-1]),
-            },
+            input_sha256=self._input_digest.hexdigest(),
+            input_provenance=self.stream_provenance(),
         )
 
-    def _validate_event_order(self, events: Sequence[CanonicalExchangeEvent]) -> None:
-        if not events:
-            raise ValueError("feature input requires at least one canonical event")
-        previous_sequence: int | None = None
-        previous_time = -1
-        previous_tick = -1
-        event_ids: set[str] = set()
-        for event in events:
-            if event.event_id in event_ids:
-                raise ValueError("canonical event IDs must be unique")
-            event_ids.add(event.event_id)
-            if event.sequence is None:
-                raise ValueError("feature input requires assigned canonical sequences")
-            if previous_sequence is None and event.sequence != 1:
-                raise ValueError("canonical feature input must start at sequence 1")
-            if previous_sequence is not None and event.sequence != previous_sequence + 1:
-                raise ValueError("canonical event sequences must be contiguous and strictly increasing")
-            timestamp_ns = self._event_timestamp_ns(event)
-            if timestamp_ns < previous_time:
-                raise ValueError("canonical event timestamps must not regress")
-            if event.tick is not None:
-                if event.tick < previous_tick:
-                    raise ValueError("canonical event ticks must not regress")
-                previous_tick = event.tick
-            if isinstance(event, LobSnapshotEvent) and event.tick is None:
-                raise ValueError("snapshot events require a tick for typed feature output")
-            if event.symbol != self.metadata.instrument or event.venue != self.metadata.venue:
-                raise ValueError("event instrument/venue does not match run metadata")
-            previous_sequence = event.sequence
-            previous_time = timestamp_ns
+    def stream_provenance(self) -> dict[str, Any]:
+        if not self._stream_complete:
+            raise ValueError("feature stream must be consumed completely before reading provenance")
+        return {
+            "canonical_event_count": self._event_count,
+            "source_event_counts": dict(sorted(self._source_counts.items())),
+            "event_type_counts": dict(sorted(self._event_type_counts.items())),
+            "feature_label_schema_version": self.labels.schema_version,
+            "feature_label_spec_sha256": self.labels.spec_hash(),
+            "feature_label_window_count": len(self.labels.labels),
+            "feature_checkpoint_count": self._feature_checkpoint_count,
+            "historical_source_snapshot_count": self._historical_snapshot_count,
+            "first_sequence": self._first_sequence,
+            "last_sequence": self._last_sequence,
+            "first_timestamp_ns": self._first_timestamp_ns,
+            "last_timestamp_ns": self._last_timestamp_ns,
+            "bounded_state_first_half_peak": self._first_half_state_peak,
+            "bounded_state_second_half_peak": self._second_half_state_peak,
+            "bounded_state_growth_fraction": self._bounded_state_growth_fraction(),
+        }
+
+    @property
+    def input_sha256(self) -> str:
+        if not self._stream_complete:
+            raise ValueError("feature stream must be consumed completely before reading its digest")
+        return self._input_digest.hexdigest()
+
+    def _validate_next_event(
+        self,
+        event: CanonicalExchangeEvent,
+        *,
+        unique_ids: DiskBackedUniqueIds,
+    ) -> None:
+        unique_ids.add(event.event_id)
+        if event.sequence is None:
+            raise ValueError("feature input requires assigned canonical sequences")
+        if self._previous_sequence is None and event.sequence != 1:
+            raise ValueError("canonical feature input must start at sequence 1")
+        if self._previous_sequence is not None and event.sequence != self._previous_sequence + 1:
+            raise ValueError("canonical event sequences must be contiguous and strictly increasing")
+        timestamp_ns = self._event_timestamp_ns(event)
+        if timestamp_ns < self._previous_validation_time:
+            raise ValueError("canonical event timestamps must not regress")
+        if event.tick is not None:
+            if event.tick < self._previous_validation_tick:
+                raise ValueError("canonical event ticks must not regress")
+            self._previous_validation_tick = event.tick
+        if isinstance(event, LobSnapshotEvent) and event.tick is None:
+            raise ValueError("snapshot events require a tick for typed feature output")
+        if event.symbol != self.metadata.instrument or event.venue != self.metadata.venue:
+            raise ValueError("event instrument/venue does not match run metadata")
+        self._previous_sequence = event.sequence
+        self._previous_validation_time = timestamp_ns
+
+    def _observe_bounded_state(self) -> None:
+        state_size = (
+            len(self._event_facts)
+            + len(self._snapshot_facts)
+            + len(self._semantic_errors)
+            + len(self._order_birth_ns)
+            + len(self._last_cancel_ns)
+        )
+        midpoint = (
+            self.expected_event_count // 2
+            if self.expected_event_count is not None
+            else None
+        )
+        if midpoint is None or self._event_count <= midpoint:
+            self._first_half_state_peak = max(self._first_half_state_peak, state_size)
+        else:
+            self._second_half_state_peak = max(self._second_half_state_peak, state_size)
+
+    def _bounded_state_growth_fraction(self) -> float | None:
+        if self.expected_event_count is None or self._second_half_state_peak == 0:
+            return None
+        baseline = max(self._first_half_state_peak, 1)
+        return max(0.0, (self._second_half_state_peak - baseline) / baseline)
 
     def _event_timestamp_ns(self, event: CanonicalExchangeEvent) -> int:
         if event.exchange_timestamp_ns is not None:

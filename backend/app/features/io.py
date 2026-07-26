@@ -8,6 +8,7 @@ import urllib.request
 import uuid
 from datetime import date, datetime, timezone
 from pathlib import Path
+from collections.abc import Iterator
 from typing import Any
 
 import pyarrow as pa
@@ -31,7 +32,11 @@ from app.features.pipeline import (
 
 
 def load_events_jsonl(path: Path) -> list[CanonicalExchangeEvent]:
-    events: list[CanonicalExchangeEvent] = []
+    return list(iter_events_jsonl(path))
+
+
+def iter_events_jsonl(path: Path) -> Iterator[CanonicalExchangeEvent]:
+    event_count = 0
     with path.open(encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, 1):
             if not line.strip():
@@ -40,15 +45,24 @@ def load_events_jsonl(path: Path) -> list[CanonicalExchangeEvent]:
                 payload = json.loads(line)
                 if not isinstance(payload, dict):
                     raise ValueError("event must be a JSON object")
-                events.append(exchange_event_from_dict(payload))
+                yield exchange_event_from_dict(payload)
+                event_count += 1
             except (json.JSONDecodeError, ValueError, TypeError) as exception:
                 raise ValueError(f"{path}: invalid canonical event at line {line_number}: {exception}") from exception
-    if not events:
+    if event_count == 0:
         raise ValueError(f"{path}: canonical event stream is empty")
-    return events
 
 
 def fetch_events(url: str, *, page_size: int = 1000, timeout: float = 30.0) -> list[CanonicalExchangeEvent]:
+    return list(iter_fetch_events(url, page_size=page_size, timeout=timeout))
+
+
+def iter_fetch_events(
+    url: str,
+    *,
+    page_size: int = 1000,
+    timeout: float = 30.0,
+) -> Iterator[CanonicalExchangeEvent]:
     parsed_url = urllib.parse.urlsplit(url)
     if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
         raise ValueError("canonical event endpoint must be an absolute HTTP(S) URL")
@@ -56,7 +70,7 @@ def fetch_events(url: str, *, page_size: int = 1000, timeout: float = 30.0) -> l
         raise ValueError("canonical event endpoint page_size must be between 1 and 10000")
     if timeout <= 0:
         raise ValueError("canonical event endpoint timeout must be positive")
-    events: list[CanonicalExchangeEvent] = []
+    event_count = 0
     after_sequence = 0
     while True:
         separator = "&" if "?" in url else "?"
@@ -84,15 +98,15 @@ def fetch_events(url: str, *, page_size: int = 1000, timeout: float = 30.0) -> l
             raise ValueError("canonical event endpoint cursor does not match its last event")
         if has_more and not page_events:
             raise ValueError("canonical event endpoint returned an empty non-terminal page")
-        events.extend(page_events)
+        yield from page_events
+        event_count += len(page_events)
         if not has_more:
             break
         if next_sequence == after_sequence:
             raise ValueError("canonical event endpoint did not advance its cursor")
         after_sequence = next_sequence
-    if not events:
+    if event_count == 0:
         raise ValueError("canonical event endpoint returned an empty stream")
-    return events
 
 
 def load_config(path: Path) -> FeaturePipelineConfig:
@@ -125,7 +139,7 @@ def load_labels(path: Path | None) -> LabelSpec:
         raise ValueError(f"{path}: label input is empty")
     if len(payloads) == 1 and isinstance(payloads[0], dict):
         payload = payloads[0]
-        if payload.get("schema_version") == "feature_labels_v1":
+        if payload.get("schema_version") in {"feature_labels_v1", "feature_labels_v2"}:
             return LabelSpec.model_validate(payload)
     windows: list[LabelWindow] = []
     for payload in payloads:

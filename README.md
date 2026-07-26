@@ -248,6 +248,13 @@ Generate the checked-in reproducible fixture:
 make generate-features FEATURE_OVERWRITE=1
 ```
 
+For governed historical or hybrid runs, `generate_features.py` can merge
+locally verified clean-window adjudications into the replay labels. Only
+explicit reviewed windows become label zero; every other historical row stays
+unlabeled. See the
+[governed corpus protocol](docs/governed-corpus-benchmark-protocol.md#commands)
+for the complete command and required artifact bindings.
+
 The formulas, configuration, label boundary, prefix-invariance guarantee, and
 session-grouped training rules are documented in
 [Causal Feature Engineering for a Future LightGBM Detector](docs/feature-engineering-lightgbm.md)
@@ -470,6 +477,7 @@ make secrets-check
 | Prometheus and Grafana observability | [docs/kernel-observability.md](docs/kernel-observability.md) |
 | Benchmark methodology | [docs/benchmark-methodology.md](docs/benchmark-methodology.md) |
 | Causal LightGBM feature engineering | [docs/feature-engineering-lightgbm.md](docs/feature-engineering-lightgbm.md) |
+| Governed corpus and ML benchmark protocol | [docs/governed-corpus-benchmark-protocol.md](docs/governed-corpus-benchmark-protocol.md) |
 | Nebius deployment | [docs/nebius-deployment.md](docs/nebius-deployment.md) |
 | L40S migration | [docs/l40s-migration.md](docs/l40s-migration.md) |
 | Prompting layer | [docs/surveillance-prompting.md](docs/surveillance-prompting.md) |

@@ -1,0 +1,95 @@
+{
+  "$id": "https://lob-arena.local/contracts/feature-streaming-validation-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "base_session_id": {
+      "minLength": 1,
+      "title": "Base Session Id",
+      "type": "string"
+    },
+    "benchmark": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Benchmark"
+    },
+    "canonical_event_count": {
+      "minimum": 1,
+      "title": "Canonical Event Count",
+      "type": "integer"
+    },
+    "canonical_event_stream_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Canonical Event Stream Hash",
+      "type": "string"
+    },
+    "control_replay_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Control Replay Manifest Sha256",
+      "type": "string"
+    },
+    "corpus_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Corpus Hash",
+      "type": "string"
+    },
+    "events_per_second": {
+      "exclusiveMinimum": 0,
+      "title": "Events Per Second",
+      "type": "number"
+    },
+    "full_session": {
+      "const": true
+    },
+    "logical_hashes_by_chunk_size": {
+      "additionalProperties": {
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "minProperties": 2,
+      "title": "Logical Hashes By Chunk Size",
+      "type": "object"
+    },
+    "memory_growth_fraction": {
+      "minimum": 0,
+      "title": "Memory Growth Fraction",
+      "type": "number"
+    },
+    "protocol_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Protocol Hash",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "feature_streaming_validation_v1"
+    },
+    "verdict": {
+      "const": "pass"
+    }
+  },
+  "required": [
+    "schema_version",
+    "verdict",
+    "protocol_hash",
+    "corpus_hash",
+    "base_session_id",
+    "control_replay_manifest_sha256",
+    "canonical_event_stream_hash",
+    "full_session",
+    "canonical_event_count",
+    "memory_growth_fraction",
+    "events_per_second",
+    "logical_hashes_by_chunk_size",
+    "benchmark"
+  ],
+  "title": "LOB Arena Feature Streaming Validation v1",
+  "type": "object"
+}

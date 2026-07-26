@@ -1,0 +1,251 @@
+{
+  "$defs": {
+    "AdjudicatorDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "adjudicator_id": {
+          "minLength": 1,
+          "title": "Adjudicator Id",
+          "type": "string"
+        },
+        "decided_at": {
+          "format": "date-time",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "clean",
+            "not_clean",
+            "ambiguous"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "rationale": {
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        }
+      },
+      "required": [
+        "adjudicator_id",
+        "decision",
+        "decided_at",
+        "rationale"
+      ],
+      "title": "AdjudicatorDecision",
+      "type": "object"
+    },
+    "ArtifactReference": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "minLength": 1,
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactReference",
+      "type": "object"
+    },
+    "ReviewDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "enum": [
+            "clean",
+            "not_clean",
+            "ambiguous"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/ArtifactReference"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        },
+        "method": {
+          "minLength": 1,
+          "title": "Method",
+          "type": "string"
+        },
+        "model_outputs_hidden": {
+          "const": true
+        },
+        "reviewed_at": {
+          "format": "date-time",
+          "title": "Reviewed At",
+          "type": "string"
+        },
+        "reviewer_id": {
+          "minLength": 1,
+          "title": "Reviewer Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reviewer_id",
+        "decision",
+        "reviewed_at",
+        "method",
+        "model_outputs_hidden",
+        "evidence"
+      ],
+      "title": "ReviewDecision",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/clean-window-adjudication-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "adjudicator_decision": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AdjudicatorDecision"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "base_session_id": {
+      "minLength": 1,
+      "title": "Base Session Id",
+      "type": "string"
+    },
+    "end_timestamp_ns": {
+      "exclusiveMinimum": 0,
+      "title": "End Timestamp Ns",
+      "type": "integer"
+    },
+    "exact_equivalence_validation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ArtifactReference"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "exclusion_reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Exclusion Reason"
+    },
+    "label_source": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Label Source"
+    },
+    "reviewer_decisions": {
+      "items": {
+        "$ref": "#/$defs/ReviewDecision"
+      },
+      "title": "Reviewer Decisions",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "clean_window_adjudication_v1"
+    },
+    "start_timestamp_ns": {
+      "minimum": 0,
+      "title": "Start Timestamp Ns",
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "unreviewed",
+        "candidate_clean",
+        "verified_clean",
+        "ambiguous",
+        "excluded",
+        "synthetic_attack"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "transferred_from_control_window_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Transferred From Control Window Id"
+    },
+    "window_id": {
+      "minLength": 1,
+      "title": "Window Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "window_id",
+    "base_session_id",
+    "start_timestamp_ns",
+    "end_timestamp_ns",
+    "status",
+    "reviewer_decisions",
+    "adjudicator_decision",
+    "exclusion_reason",
+    "label_source",
+    "transferred_from_control_window_id",
+    "exact_equivalence_validation"
+  ],
+  "title": "LOB Arena Clean Window Adjudication v1",
+  "type": "object"
+}

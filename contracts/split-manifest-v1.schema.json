@@ -1,0 +1,276 @@
+{
+  "$defs": {
+    "EmbargoGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "base_session_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Base Session Ids",
+          "type": "array"
+        },
+        "between": {
+          "enum": [
+            "train_validation",
+            "validation_test"
+          ],
+          "title": "Between",
+          "type": "string"
+        },
+        "session_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Session Dates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "between",
+        "session_dates",
+        "base_session_ids"
+      ],
+      "title": "EmbargoGroup",
+      "type": "object"
+    },
+    "FoldSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "base_session_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Base Session Ids",
+          "type": "array"
+        },
+        "campaign_count": {
+          "minimum": 0,
+          "title": "Campaign Count",
+          "type": "integer"
+        },
+        "first_date": {
+          "format": "date",
+          "title": "First Date",
+          "type": "string"
+        },
+        "fold": {
+          "enum": [
+            "train",
+            "validation",
+            "test"
+          ],
+          "title": "Fold",
+          "type": "string"
+        },
+        "instruments": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Instruments",
+          "type": "array"
+        },
+        "last_date": {
+          "format": "date",
+          "title": "Last Date",
+          "type": "string"
+        },
+        "session_count": {
+          "minimum": 1,
+          "title": "Session Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "fold",
+        "first_date",
+        "last_date",
+        "session_count",
+        "campaign_count",
+        "instruments",
+        "base_session_ids"
+      ],
+      "title": "FoldSummary",
+      "type": "object"
+    },
+    "SessionSplitAssignment": {
+      "additionalProperties": false,
+      "properties": {
+        "base_session_id": {
+          "minLength": 1,
+          "title": "Base Session Id",
+          "type": "string"
+        },
+        "campaign_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Campaign Ids",
+          "type": "array"
+        },
+        "fold": {
+          "enum": [
+            "train",
+            "validation",
+            "test"
+          ],
+          "title": "Fold",
+          "type": "string"
+        },
+        "instrument": {
+          "minLength": 1,
+          "title": "Instrument",
+          "type": "string"
+        },
+        "session_date": {
+          "format": "date",
+          "title": "Session Date",
+          "type": "string"
+        },
+        "source_session_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Session Hash",
+          "type": "string"
+        },
+        "split_group": {
+          "minLength": 1,
+          "title": "Split Group",
+          "type": "string"
+        },
+        "venue": {
+          "minLength": 1,
+          "title": "Venue",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base_session_id",
+        "split_group",
+        "source_session_hash",
+        "fold",
+        "session_date",
+        "instrument",
+        "venue",
+        "campaign_ids"
+      ],
+      "title": "SessionSplitAssignment",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/split-manifest-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assignment_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Assignment Hash",
+      "type": "string"
+    },
+    "assignments": {
+      "items": {
+        "$ref": "#/$defs/SessionSplitAssignment"
+      },
+      "minItems": 3,
+      "title": "Assignments",
+      "type": "array"
+    },
+    "corpus_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Corpus Hash",
+      "type": "string"
+    },
+    "corpus_id": {
+      "minLength": 1,
+      "title": "Corpus Id",
+      "type": "string"
+    },
+    "embargo": {
+      "items": {
+        "$ref": "#/$defs/EmbargoGroup"
+      },
+      "title": "Embargo",
+      "type": "array"
+    },
+    "embargo_date_groups": {
+      "minimum": 0,
+      "title": "Embargo Date Groups",
+      "type": "integer"
+    },
+    "folds": {
+      "items": {
+        "$ref": "#/$defs/FoldSummary"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Folds",
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "protocol_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Protocol Hash",
+      "type": "string"
+    },
+    "protocol_id": {
+      "minLength": 1,
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "purge_ns": {
+      "minimum": 0,
+      "title": "Purge Ns",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "governed_split_manifest_v1"
+    },
+    "split_group_fields": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Split Group Fields",
+      "type": "array"
+    },
+    "split_id": {
+      "minLength": 1,
+      "title": "Split Id",
+      "type": "string"
+    },
+    "strategy": {
+      "const": "chronological_session_grouped_purged"
+    },
+    "test_frozen": {
+      "const": true
+    }
+  },
+  "required": [
+    "schema_version",
+    "split_id",
+    "corpus_id",
+    "corpus_hash",
+    "protocol_id",
+    "protocol_hash",
+    "generated_at",
+    "strategy",
+    "split_group_fields",
+    "purge_ns",
+    "embargo_date_groups",
+    "assignments",
+    "embargo",
+    "folds",
+    "test_frozen",
+    "assignment_hash"
+  ],
+  "title": "LOB Arena Governed Split Manifest v1",
+  "type": "object"
+}

@@ -1,0 +1,199 @@
+{
+  "$defs": {
+    "RegimeBoundary": {
+      "additionalProperties": false,
+      "properties": {
+        "lower": {
+          "title": "Lower",
+          "type": "number"
+        },
+        "upper": {
+          "title": "Upper",
+          "type": "number"
+        }
+      },
+      "required": [
+        "lower",
+        "upper"
+      ],
+      "title": "RegimeBoundary",
+      "type": "object"
+    },
+    "RegimeFitRow": {
+      "additionalProperties": false,
+      "properties": {
+        "base_session_id": {
+          "minLength": 1,
+          "title": "Base Session Id",
+          "type": "string"
+        },
+        "control_or_pre_attack": {
+          "const": true
+        },
+        "feature_config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Config Hash",
+          "type": "string"
+        },
+        "feature_schema_version": {
+          "minLength": 1,
+          "title": "Feature Schema Version",
+          "type": "string"
+        },
+        "liquidity_score": {
+          "title": "Liquidity Score",
+          "type": "number"
+        },
+        "message_rate_long": {
+          "minimum": 0,
+          "title": "Message Rate Long",
+          "type": "number"
+        },
+        "realized_volatility_long": {
+          "minimum": 0,
+          "title": "Realized Volatility Long",
+          "type": "number"
+        },
+        "split": {
+          "const": "train"
+        },
+        "spread_bps": {
+          "minimum": 0,
+          "title": "Spread Bps",
+          "type": "number"
+        }
+      },
+      "required": [
+        "base_session_id",
+        "split",
+        "control_or_pre_attack",
+        "feature_schema_version",
+        "feature_config_hash",
+        "liquidity_score",
+        "realized_volatility_long",
+        "spread_bps",
+        "message_rate_long"
+      ],
+      "title": "RegimeFitRow",
+      "type": "object"
+    },
+    "RegimeThresholdManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "boundaries": {
+          "additionalProperties": {
+            "$ref": "#/$defs/RegimeBoundary"
+          },
+          "title": "Boundaries",
+          "type": "object"
+        },
+        "feature_config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Config Hash",
+          "type": "string"
+        },
+        "feature_schema_version": {
+          "minLength": 1,
+          "title": "Feature Schema Version",
+          "type": "string"
+        },
+        "fit_input_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fit Input Hash",
+          "type": "string"
+        },
+        "fit_row_count": {
+          "minimum": 3,
+          "title": "Fit Row Count",
+          "type": "integer"
+        },
+        "fit_source": {
+          "const": "control_or_pre_attack"
+        },
+        "fit_split": {
+          "const": "train"
+        },
+        "schema_version": {
+          "const": "regime_thresholds_v1"
+        }
+      },
+      "required": [
+        "schema_version",
+        "feature_schema_version",
+        "feature_config_hash",
+        "fit_split",
+        "fit_source",
+        "fit_row_count",
+        "fit_input_hash",
+        "boundaries"
+      ],
+      "title": "RegimeThresholdManifest",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/governed-regime-evidence-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "assignment_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Assignment Hash",
+      "type": "string"
+    },
+    "corpus_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Corpus Hash",
+      "type": "string"
+    },
+    "fit_rows": {
+      "items": {
+        "$ref": "#/$defs/RegimeFitRow"
+      },
+      "minItems": 3,
+      "title": "Fit Rows",
+      "type": "array"
+    },
+    "fit_session_ids": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Fit Session Ids",
+      "type": "array"
+    },
+    "protocol_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Protocol Hash",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "governed_regime_evidence_v1"
+    },
+    "target_features": {
+      "additionalProperties": {
+        "additionalProperties": {
+          "type": "number"
+        },
+        "type": "object"
+      },
+      "minProperties": 1,
+      "title": "Target Features",
+      "type": "object"
+    },
+    "thresholds": {
+      "$ref": "#/$defs/RegimeThresholdManifest"
+    }
+  },
+  "required": [
+    "schema_version",
+    "protocol_hash",
+    "corpus_hash",
+    "assignment_hash",
+    "fit_session_ids",
+    "fit_rows",
+    "thresholds",
+    "target_features"
+  ],
+  "title": "LOB Arena Governed Regime Evidence v1",
+  "type": "object"
+}

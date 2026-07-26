@@ -33,6 +33,7 @@ from app.features.models import (
     FeatureRunMetadata,
     LabelSpec,
     LabelWindow,
+    assign_label,
 )
 from app.features.pipeline import (
     FEATURE_COLUMNS,
@@ -293,6 +294,60 @@ def test_labels_and_synthetic_metadata_never_enter_feature_calculation() -> None
     assert all(row["label"] is None for row in clean.rows)
     assert [row["label"] for row in labeled.rows if 5 <= row["tick"] <= 6] == [1, 1]
     assert not any(field in FEATURE_COLUMNS for field in ("scenario_id", "scenario_name", "scenario_family", "label"))
+
+
+def test_explicit_negative_windows_are_typed_bounded_and_do_not_change_features() -> None:
+    events = canonical_stream()
+    labels = LabelSpec(
+        labels=[
+            LabelWindow(
+                label=0,
+                attack_family=None,
+                label_source="independently_verified_clean",
+                provenance_id="clean-window-1",
+                start_timestamp_ns=BASE_TIMESTAMP_NS + 4_000_000_000,
+                end_timestamp_ns=BASE_TIMESTAMP_NS + 7_000_000_000,
+                end_inclusive=False,
+            )
+        ]
+    )
+
+    unlabeled = FeaturePipeline(config(), metadata()).generate(events)
+    governed = FeaturePipeline(config(), metadata(), labels).generate(events)
+
+    assert features_by_tick(unlabeled.rows) == features_by_tick(governed.rows)
+    assert [row["label"] for row in governed.rows if 4 <= row["tick"] < 7] == [0, 0, 0]
+    assert next(row for row in governed.rows if row["tick"] == 7)["label"] is None
+    assert all(
+        row["attack_family"] is None and row["attack_phase"] == "none"
+        for row in governed.rows
+        if row["label"] == 0
+    )
+    assert governed.input_provenance["feature_label_window_count"] == 1
+    assert governed.input_provenance["feature_label_spec_sha256"] == labels.spec_hash()
+
+
+def test_mixed_coordinate_ground_truth_fails_closed_when_windows_match_same_row() -> None:
+    labels = LabelSpec(
+        labels=[
+            LabelWindow(attack_family="layering", start_tick=5, end_tick=6),
+            LabelWindow(
+                label=0,
+                label_source="independently_verified_clean",
+                provenance_id="clean-overlap",
+                start_timestamp_ns=BASE_TIMESTAMP_NS + 5_000_000_000,
+                end_timestamp_ns=BASE_TIMESTAMP_NS + 7_000_000_000,
+                end_inclusive=False,
+            ),
+        ]
+    )
+
+    with pytest.raises(ValueError, match="multiple ground-truth windows"):
+        assign_label(
+            labels,
+            tick=5,
+            prediction_timestamp_ns=BASE_TIMESTAMP_NS + 5_000_000_000,
+        )
 
 
 def test_hybrid_changes_only_causal_windows_and_converges_to_control() -> None:

@@ -1,0 +1,77 @@
+{
+  "schema_version": "governed_benchmark_protocol_v1",
+  "protocol_id": "lob-arena-governed-benchmark-v1",
+  "corpus": {
+    "complete_sessions": 30,
+    "instruments": 3,
+    "distinct_dates": 10,
+    "seeds_per_attack_family": 3,
+    "require_all_attack_families": true,
+    "required_attack_families": [
+      "spoofing_like_wall",
+      "layering_like",
+      "quote_stuffing"
+    ]
+  },
+  "clean_labels": {
+    "independent_reviewers": 2,
+    "blind_to_model_outputs": true,
+    "conflicts_require_adjudicator": true,
+    "historical_default_label": null,
+    "transferable_to_hybrid_only_after_exact_equivalence": true,
+    "statuses": [
+      "unreviewed",
+      "candidate_clean",
+      "verified_clean",
+      "ambiguous",
+      "excluded",
+      "synthetic_attack"
+    ]
+  },
+  "splits": {
+    "strategy": "chronological_session_grouped_purged",
+    "group_fields": [
+      "venue",
+      "instrument",
+      "session_date",
+      "session_id"
+    ],
+    "keep_all_session_campaigns_together": true,
+    "purge_feature_window_ns": 10000000000,
+    "purge_alert_horizon_ns": 5000000000,
+    "purge_causal_tail_ns": 10000000000,
+    "purge_label_uncertainty_ns": 0,
+    "embargo_sessions": 1,
+    "train_fraction": 0.6,
+    "validation_fraction": 0.2,
+    "test_fraction": 0.2
+  },
+  "bootstrap": {
+    "method": "session_cluster_percentile",
+    "resamples": 2000,
+    "confidence_level": 0.95,
+    "seed": 20260726,
+    "paired_comparisons": true
+  },
+  "metrics": {
+    "alert_deduplication_window_ns": 1000000000,
+    "minimum_regime_cell_count": 10,
+    "false_alert_denominator": "evaluable_canonical_events",
+    "attack_recall_unit": "campaign",
+    "require_realized_benefit_event": true,
+    "report_raw_and_deduplicated_alerts": true,
+    "worst_decile_fraction": 0.1
+  },
+  "streaming": {
+    "event_chunk_size": 50000,
+    "parquet_row_group_size": 25000,
+    "quantile_sketch": "deterministic_priority_sample_v1",
+    "quantile_sample_size": 2048,
+    "max_memory_growth_fraction": 0.2,
+    "require_chunk_size_equivalence": true
+  },
+  "canonical_event_schema_version": 1,
+  "feature_schema_version": "lob_features_v1",
+  "freeze_test_before_training": true,
+  "require_signed_release_manifest": true
+}

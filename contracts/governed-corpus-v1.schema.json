@@ -1,0 +1,282 @@
+{
+  "$defs": {
+    "ArtifactReference": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "minLength": 1,
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactReference",
+      "type": "object"
+    },
+    "CampaignManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "attack_family": {
+          "minLength": 1,
+          "title": "Attack Family",
+          "type": "string"
+        },
+        "campaign_id": {
+          "minLength": 1,
+          "title": "Campaign Id",
+          "type": "string"
+        },
+        "canonical_events": {
+          "$ref": "#/$defs/ArtifactReference"
+        },
+        "derived_seed": {
+          "minimum": 0,
+          "title": "Derived Seed",
+          "type": "integer"
+        },
+        "ground_truth": {
+          "$ref": "#/$defs/ArtifactReference"
+        },
+        "injection_timestamp_ns": {
+          "minimum": 0,
+          "title": "Injection Timestamp Ns",
+          "type": "integer"
+        },
+        "master_seed": {
+          "minimum": 0,
+          "title": "Master Seed",
+          "type": "integer"
+        },
+        "validation": {
+          "$ref": "#/$defs/ArtifactReference"
+        }
+      },
+      "required": [
+        "campaign_id",
+        "attack_family",
+        "master_seed",
+        "derived_seed",
+        "injection_timestamp_ns",
+        "canonical_events",
+        "ground_truth",
+        "validation"
+      ],
+      "title": "CampaignManifest",
+      "type": "object"
+    },
+    "CorpusCoverage": {
+      "additionalProperties": false,
+      "properties": {
+        "attack_families": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Attack Families",
+          "type": "array"
+        },
+        "complete_sessions": {
+          "title": "Complete Sessions",
+          "type": "integer"
+        },
+        "distinct_dates": {
+          "items": {
+            "format": "date",
+            "type": "string"
+          },
+          "title": "Distinct Dates",
+          "type": "array"
+        },
+        "instruments": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Instruments",
+          "type": "array"
+        },
+        "seeds_by_attack_family": {
+          "additionalProperties": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "title": "Seeds By Attack Family",
+          "type": "object"
+        }
+      },
+      "required": [
+        "complete_sessions",
+        "instruments",
+        "distinct_dates",
+        "attack_families",
+        "seeds_by_attack_family"
+      ],
+      "title": "CorpusCoverage",
+      "type": "object"
+    },
+    "GovernedSession": {
+      "additionalProperties": false,
+      "properties": {
+        "base_session_id": {
+          "minLength": 1,
+          "title": "Base Session Id",
+          "type": "string"
+        },
+        "campaigns": {
+          "items": {
+            "$ref": "#/$defs/CampaignManifest"
+          },
+          "title": "Campaigns",
+          "type": "array"
+        },
+        "canonical_control_events": {
+          "$ref": "#/$defs/ArtifactReference"
+        },
+        "complete_session": {
+          "title": "Complete Session",
+          "type": "boolean"
+        },
+        "control_validation": {
+          "$ref": "#/$defs/ArtifactReference"
+        },
+        "dataset_id": {
+          "minLength": 1,
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "end_timestamp_ns": {
+          "exclusiveMinimum": 0,
+          "title": "End Timestamp Ns",
+          "type": "integer"
+        },
+        "instrument": {
+          "minLength": 1,
+          "title": "Instrument",
+          "type": "string"
+        },
+        "session_date": {
+          "format": "date",
+          "title": "Session Date",
+          "type": "string"
+        },
+        "session_id": {
+          "minLength": 1,
+          "title": "Session Id",
+          "type": "string"
+        },
+        "source_manifest": {
+          "$ref": "#/$defs/ArtifactReference"
+        },
+        "start_timestamp_ns": {
+          "minimum": 0,
+          "title": "Start Timestamp Ns",
+          "type": "integer"
+        },
+        "timezone": {
+          "minLength": 1,
+          "title": "Timezone",
+          "type": "string"
+        },
+        "venue": {
+          "minLength": 1,
+          "title": "Venue",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base_session_id",
+        "dataset_id",
+        "instrument",
+        "venue",
+        "session_id",
+        "session_date",
+        "timezone",
+        "start_timestamp_ns",
+        "end_timestamp_ns",
+        "complete_session",
+        "source_manifest",
+        "canonical_control_events",
+        "control_validation",
+        "campaigns"
+      ],
+      "title": "GovernedSession",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/governed-corpus-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "corpus_id": {
+      "minLength": 1,
+      "title": "Corpus Id",
+      "type": "string"
+    },
+    "coverage": {
+      "$ref": "#/$defs/CorpusCoverage"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "protocol_hash": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Protocol Hash",
+      "type": "string"
+    },
+    "protocol_id": {
+      "minLength": 1,
+      "title": "Protocol Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "governed_corpus_v1"
+    },
+    "sessions": {
+      "items": {
+        "$ref": "#/$defs/GovernedSession"
+      },
+      "minItems": 1,
+      "title": "Sessions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "corpus_id",
+    "protocol_id",
+    "protocol_hash",
+    "generated_at",
+    "sessions",
+    "coverage"
+  ],
+  "title": "LOB Arena Governed Corpus v1",
+  "type": "object"
+}

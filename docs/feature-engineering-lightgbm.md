@@ -146,11 +146,19 @@ fields are nullable `attack_family`, `attack_phase`, `label`, and
 `label_source`.
 
 No labels file means labels remain null. In particular, historical records are
-never automatically assigned label 0. A caller that has an independently
-verified benign corpus may explicitly supply a default label and label source.
-The adapter accepts `feature_labels_v1`, a replay summary containing
+never automatically assigned label 0. Governed negative labels use explicit,
+half-open `feature_labels_v2` windows with
+`label_source=independently_verified_clean`; session-wide default negatives are
+rejected by the governed adapter. Version 1 positive-label inputs remain
+readable for compatibility. The adapter accepts `feature_labels_v1` or
+`feature_labels_v2`, a replay summary containing
 `ground_truth`, or the native multi-line
 `outputs/labels/scenario_labels.jsonl` contract.
+
+Every run records the label-schema version, canonical label-specification hash,
+and window count independently of the canonical event hash. Label assignment
+is performed only after causal features are calculated, so labels and review
+metadata cannot enter feature formulas.
 
 ## Running
 
@@ -159,6 +167,25 @@ Generate the checked-in fixture:
 ```bash
 make generate-features FEATURE_OVERWRITE=1
 ```
+
+Generate with bounded-memory event iteration and Parquet row groups:
+
+```bash
+make generate-features-streaming FEATURE_OVERWRITE=1
+```
+
+Benchmark event throughput, feature-row throughput, peak Python allocation,
+process RSS, output size, and logical row determinism:
+
+```bash
+make benchmark-feature-streaming FEATURE_OVERWRITE=1
+```
+
+The streaming writer retains active-order/rolling-window state, one configured
+Parquet row group, exact online counts and moments, and a bounded deterministic
+priority sample for quality-report quantiles. `logical_feature_rows_sha256`
+must remain identical across row-group sizes even when physical Parquet bytes
+differ.
 
 Equivalent direct command:
 
@@ -171,6 +198,27 @@ backend/.venv/bin/python scripts/generate_features.py \
   --output outputs/features/sample \
   --overwrite
 ```
+
+Generate governed features whose reviewed clean windows become explicit
+negative rows:
+
+```bash
+backend/.venv/bin/python scripts/generate_features.py \
+  --replay-manifest /secure/corpus/session/replay-manifest.json \
+  --clean-adjudications /secure/corpus/adjudications.jsonl \
+  --corpus-manifest outputs/governed/client-corpus-v1/corpus-manifest.json \
+  --benchmark-protocol configs/benchmark/governed-benchmark-v1.json \
+  --artifact-root /secure/corpus/artifacts \
+  --output outputs/features/client-session
+```
+
+This path performs local SHA-256 verification of corpus artifacts and review
+evidence, binds the replay to its registered base session/campaign, and then
+exports only replay-appropriate negatives. Historical controls receive
+original verified-clean windows. Hybrid runs receive only windows explicitly
+transferred after exact-equivalence validation. Synthetic runs receive no
+historical negatives. All unreviewed, candidate, ambiguous, excluded, and
+out-of-window rows remain null.
 
 To consume the current Java replay directly:
 

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lob-arena.local/contracts/feature-labels-v2.schema.json",
+  "title": "LOB Arena Feature Labels v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "labels"],
+  "properties": {
+    "schema_version": {"const": "feature_labels_v2"},
+    "labels": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/labelWindow"}
+    },
+    "default_label": {"type": ["integer", "null"], "enum": [0, 1, null]},
+    "default_attack_family": {"type": ["string", "null"], "minLength": 1},
+    "default_label_source": {"type": ["string", "null"], "minLength": 1}
+  },
+  "$defs": {
+    "labelWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "label_source",
+        "end_inclusive",
+        "phases"
+      ],
+      "properties": {
+        "label": {"type": "integer", "enum": [0, 1]},
+        "attack_family": {"type": ["string", "null"], "minLength": 1},
+        "label_source": {"type": "string", "minLength": 1},
+        "provenance_id": {"type": ["string", "null"], "minLength": 1},
+        "start_tick": {"type": ["integer", "null"], "minimum": 0},
+        "end_tick": {"type": ["integer", "null"], "minimum": 0},
+        "start_timestamp_ns": {"type": ["integer", "null"], "minimum": 0},
+        "end_timestamp_ns": {"type": ["integer", "null"], "minimum": 0},
+        "end_inclusive": {"type": "boolean"},
+        "phases": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "prefixItems": [
+              {"type": "integer", "minimum": 0},
+              {"type": "integer", "minimum": 0}
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "required": ["start_tick", "end_tick"],
+          "properties": {
+            "start_timestamp_ns": {"type": "null"},
+            "end_timestamp_ns": {"type": "null"}
+          }
+        },
+        {
+          "required": ["start_timestamp_ns", "end_timestamp_ns"],
+          "properties": {
+            "start_tick": {"type": "null"},
+            "end_tick": {"type": "null"}
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {"properties": {"label": {"const": 0}}},
+          "then": {
+            "properties": {
+              "attack_family": {"type": "null"},
+              "phases": {"maxProperties": 0}
+            }
+          },
+          "else": {
+            "required": ["attack_family"],
+            "properties": {
+              "attack_family": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      ]
+    }
+  }
+}
