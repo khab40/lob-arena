@@ -1,0 +1,18 @@
+{
+  "schema_version": "feature_labels_v1",
+  "labels": [
+    {
+      "attack_family": "layering",
+      "label_source": "synthetic_scenario",
+      "start_tick": 2,
+      "end_tick": 3,
+      "phases": {
+        "placement": [2, 2],
+        "cancellation": [3, 3]
+      }
+    }
+  ],
+  "default_label": null,
+  "default_attack_family": null,
+  "default_label_source": null
+}

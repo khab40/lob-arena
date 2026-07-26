@@ -1,0 +1,13 @@
+{
+  "run_id": "feature-fixture-hybrid-v1",
+  "dataset_id": "public-generated-feature-fixture-v1",
+  "source_type": "hybrid",
+  "instrument": "SPY",
+  "venue": "LOBSTER",
+  "session_id": "SPY-2012-06-21-am",
+  "session_date": "2012-06-21",
+  "seed": 424242,
+  "price_tick_size": 0.01,
+  "quantity_lot_size": 1.0,
+  "tick_interval_ns": 1000000000
+}

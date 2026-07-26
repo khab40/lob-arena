@@ -234,6 +234,25 @@ ingestion/storage and
 [ARD-0023](docs/architecture/ARD-0023-hybrid-historical-replay.md) for hybrid
 ordering, provenance, seed derivation, label isolation, metrics, and artifacts.
 
+### Model-ready causal features
+
+The retained Python AI/ML layer can convert the Java canonical event stream
+from LOBSTER, synthetic, or hybrid runs into the same versioned causal feature
+schema for a future LightGBM detector. It writes typed Parquet, run metadata,
+and a feature-quality report; it does not train a model or treat unlabeled
+history as benign.
+
+Generate the checked-in reproducible fixture:
+
+```bash
+make generate-features FEATURE_OVERWRITE=1
+```
+
+The formulas, configuration, label boundary, prefix-invariance guarantee, and
+session-grouped training rules are documented in
+[Causal Feature Engineering for a Future LightGBM Detector](docs/feature-engineering-lightgbm.md)
+and [ARD-0024](docs/architecture/ARD-0024-versioned-causal-feature-engineering.md).
+
 Compose options can be combined:
 
 | Runtime | Command |
@@ -450,6 +469,7 @@ make secrets-check
 | Runtime model | [docs/runtime-model.md](docs/runtime-model.md) |
 | Prometheus and Grafana observability | [docs/kernel-observability.md](docs/kernel-observability.md) |
 | Benchmark methodology | [docs/benchmark-methodology.md](docs/benchmark-methodology.md) |
+| Causal LightGBM feature engineering | [docs/feature-engineering-lightgbm.md](docs/feature-engineering-lightgbm.md) |
 | Nebius deployment | [docs/nebius-deployment.md](docs/nebius-deployment.md) |
 | L40S migration | [docs/l40s-migration.md](docs/l40s-migration.md) |
 | Prompting layer | [docs/surveillance-prompting.md](docs/surveillance-prompting.md) |

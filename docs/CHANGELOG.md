@@ -59,6 +59,22 @@ Update this file with each significant commit before pushing.
 
 ## Unreleased
 
+### Current - feat: add versioned causal market-abuse features
+
+- Added one source-agnostic `lob_features_v1` rolling pipeline over Java
+  canonical events for LOBSTER, synthetic, and hybrid runs, with stable
+  float64 columns, explicit source/session metadata, external nullable labels,
+  configuration hashing, and tick/lot/book validation.
+- Added Zstandard Parquet, JSON run metadata, feature-quality reports, a
+  canonical JSONL/Java endpoint CLI, Make target, and a generated hybrid sample.
+- Added prefix-invariance, label-leakage, source-parity, order-lifecycle,
+  session-split, invalid-semantics, typed-artifact, and hybrid causal-convergence
+  tests plus ARD-0024 and trainer-consumption documentation.
+- Review hardening now uses only Java combined-book checkpoints as prediction
+  rows, groups duplicate imports of one session together, rejects gapped or
+  duplicate canonical streams and ambiguous labels, counts only terminal
+  lifetimes and large adds, and validates artifact/run/config consistency.
+
 ### Current - feat: add deterministic LOBSTER hybrid replay
 
 - Reused the authoritative Java integer exchange to replay normalized LOBSTER

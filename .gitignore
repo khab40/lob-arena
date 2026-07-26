@@ -52,6 +52,8 @@ outputs/*
 !/data/lobster/README.md
 !/data/lobster/fixture/
 !/data/lobster/fixture/**
+!/data/features/
+!/data/features/**
 
 aimada-latest.zip
 .coverage

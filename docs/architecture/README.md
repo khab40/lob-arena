@@ -6,7 +6,7 @@ ARDs capture architecture decisions, context, tradeoffs, implementation phases, 
 
 ## Implementation Summary
 
-Status as of 2026-07-24:
+Status as of 2026-07-25:
 
 | ARD | Implementation | Notes |
 |-----|----------------|-------|
@@ -31,6 +31,7 @@ Status as of 2026-07-24:
 | [ARD-0021](ARD-0021-local-observability-grafana.md) | `[done]` | Prometheus/Grafana observability includes bounded detector-tournament lifecycle telemetry and a provisioned operations dashboard |
 | [ARD-0022](ARD-0022-historical-market-data-ingestion.md) | `[done]` | FastAPI validates paired LOBSTER CSV files and atomically registers normalized Parquet datasets |
 | [ARD-0023](ARD-0023-hybrid-historical-replay.md) | `[done]` | Java deterministically merges immutable LOBSTER history with UI-launched synthetic attacks while isolating labels and provenance |
+| [ARD-0024](ARD-0024-versioned-causal-feature-engineering.md) | `[done]` | Source-agnostic causal snapshot features, typed Parquet, quality metadata, leakage checks, and session-grouped split contract |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -55,6 +56,7 @@ diagrams document the execution boundaries.
 - [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md) — Persisted data formats (JSON, Parquet, CSV, Markdown)
 - [ARD-0022: Historical Market Data Ingestion And Replay](ARD-0022-historical-market-data-ingestion.md) — Paired LOBSTER validation, normalized Parquet storage, and dataset registration
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md) — Historical/synthetic merge ordering, source immutability, ID/seed separation, labels, metrics, and evidence
+- [ARD-0024: Versioned Causal Market-Abuse Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md) — Stable feature names/types, rolling formulas, label isolation, split policy, Parquet, and quality artifacts
 
 ### Agent Execution
 

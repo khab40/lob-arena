@@ -1,0 +1,14 @@
+{
+  "schema_version": "lob_features_v1",
+  "short_window_ns": 2000000000,
+  "long_window_ns": 10000000000,
+  "depth_levels": 5,
+  "zscore_min_periods": 5,
+  "rapid_cancel_ns": 100000000,
+  "replenishment_ns": 500000000,
+  "burst_gap_ns": 10000000,
+  "large_order_quantity": 1000.0,
+  "wall_size_multiple": 3.0,
+  "layering_min_levels": 3,
+  "fail_on_invalid_rows": true
+}

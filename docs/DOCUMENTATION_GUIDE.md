@@ -62,8 +62,10 @@ graph TD
 - **[architecture/ARD-0020-java-arena-websocket-agent-orchestration.md](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md)** — Java live arena, WebSocket, agent orchestration, and retained Python boundary
 - **[architecture/ARD-0022-historical-market-data-ingestion.md](architecture/ARD-0022-historical-market-data-ingestion.md)** — LOBSTER discovery, validation, normalized storage, and dataset registration
 - **[architecture/ARD-0023-hybrid-historical-replay.md](architecture/ARD-0023-hybrid-historical-replay.md)** — Deterministic historical/synthetic merge, provenance, labels, metrics, and replay artifacts
+- **[architecture/ARD-0024-versioned-causal-feature-engineering.md](architecture/ARD-0024-versioned-causal-feature-engineering.md)** — Stable causal feature schema, leakage boundary, artifacts, and grouped splits
 - **[hybrid-dataset-validation.md](hybrid-dataset-validation.md)** — LOBSTER invariants, causal-neighbourhood equivalence, signed validation reports, and verification
 - **[client-historical-dataset-validation-runbook.md](client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
+- **[feature-engineering-lightgbm.md](feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and future trainer rules
 - **[determinism-contract-v1.md](determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
 - **[canonical-hashing-v1.md](canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
 - **[benchmark-methodology.md](benchmark-methodology.md)** — Evaluating detector performance

@@ -134,6 +134,33 @@ is recorded from the immutable historical payload, while attacks and detectors
 read the combined live book. Ground truth comes only from the launched synthetic
 scenario and is never part of detector input.
 
+### Offline Feature Engineering Path
+
+```mermaid
+graph LR
+    Canonical["Java canonical event stream"]
+    Feature["lob_features_v1 causal pipeline"]
+    Truth["Separate scenario ground truth"]
+    Parquet["Typed feature Parquet"]
+    Quality["Run + quality metadata"]
+    Trainer["Future LightGBM trainer"]
+
+    Canonical --> Feature
+    Truth -->|"joined after numeric calculation"| Feature
+    Feature --> Parquet
+    Feature --> Quality
+    Parquet --> Trainer
+```
+
+Python retains offline AI/ML feature engineering without becoming an exchange
+authority. One row is emitted at each simulation-source combined-book
+checkpoint from only the event prefix visible at that checkpoint. Immutable
+historical-source snapshots are validated but do not become prediction rows
+because they omit synthetic overlays. The same formulas apply to LOBSTER,
+synthetic, and hybrid origins. Labels remain separate, feature/config versions
+are hashed, and session-level split groups prohibit random separation of
+adjacent rolling windows.
+
 ### Detector Tournament Observability
 
 Detector tournaments participate in the observability plane through
@@ -273,6 +300,8 @@ Phase 4.5 adds a Managed Experiment manifest control plane before execution. The
 | `historical-replay/<run>/comparison.json` | Detector TP/FN/FP/TN, precision, recall, F1, alert timing, and final-book realism deltas. |
 | `historical-replay/<run>/validation-report.json` / `.sig` | Causal-neighbourhood equivalence, lifecycle, provenance, determinism, and detached Ed25519 attestation. |
 | `historical-replay/<run>/manifest.json` / `checksums.sha256` | Replay comparison inventory and full-bundle integrity checks. |
+| `features/<run>/features.parquet` | Stable typed causal feature rows for a future LightGBM detector. |
+| `features/<run>/run-metadata.json` / `feature-quality.json` | Feature/config/input hashes, source/session metadata, split policy, missing/distribution/class-balance summaries, and invalid rows. |
 | `experiments/<experiment_id>/experiment.json` | Phase 4.5 experiment manifest with requested scenarios, execution mode, status, artifact paths, optional smart-batch link, and metrics. |
 | `experiments/<experiment_id>/attacks.jsonl` | Deterministic attack plan rows with expected labels, detector family, timing, agent profile, and parameters for each planned run. |
 | `experiments/<experiment_id>/jobs.jsonl` | Experiment-scoped local and Nebius Job records, including queued, running, completed, failed, and explicitly unconfigured states. |
@@ -364,4 +393,6 @@ Detailed architecture decisions are recorded in [Architecture Records (ARDs)](ar
 - [ARD-0021: Local Observability With Prometheus And Grafana](architecture/ARD-0021-local-observability-grafana.md) — Optional local monitoring profile and bottleneck dashboards
 - [ARD-0022: Historical Market Data Ingestion And Replay](architecture/ARD-0022-historical-market-data-ingestion.md) — LOBSTER discovery, validation, Parquet normalization, and registry contract
 - [ARD-0023: Deterministic Hybrid Historical Replay](architecture/ARD-0023-hybrid-historical-replay.md) — Java historical/synthetic merge ordering, provenance, seed, labels, metrics, and artifacts
+- [ARD-0024: Versioned Causal Market-Abuse Feature Engineering](architecture/ARD-0024-versioned-causal-feature-engineering.md) — Source-agnostic causal features, typed artifacts, label isolation, and leakage-safe grouped splits
 - [Hybrid Dataset Validation](hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
+- [Causal Feature Engineering for a Future LightGBM Detector](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and trainer consumption contract

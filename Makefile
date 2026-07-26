@@ -1,7 +1,7 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
-	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
+	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
 
 grader-smoke:
 	./scripts/grader-smoke.sh
@@ -17,6 +17,15 @@ frontend-dev:
 
 java-control-plane:
 	./scripts/run-java-control-plane.sh --server.port=8081
+
+generate-features:
+	backend/.venv/bin/python scripts/generate_features.py \
+		--events "$${FEATURE_EVENTS:-data/features/fixture/events.jsonl}" \
+		--metadata "$${FEATURE_METADATA:-data/features/fixture/run-metadata.json}" \
+		--labels "$${FEATURE_LABELS:-data/features/fixture/labels.json}" \
+		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v1.json}" \
+		--output "$${FEATURE_OUTPUT:-outputs/features/sample}" \
+		$${FEATURE_OVERWRITE:+--overwrite}
 
 serverless-benchmark:
 	cd serverless/jobs && uv run python run_batch_benchmark.py --config job_config.example.yaml

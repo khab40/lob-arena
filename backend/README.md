@@ -116,6 +116,25 @@ for ingestion and
 [ARD-0023](../docs/architecture/ARD-0023-hybrid-historical-replay.md) for
 ordering, seed derivation, provenance, labels, and artifact guarantees.
 
+## Feature generation
+
+The offline feature pipeline consumes canonical Java exchange-event JSONL or
+the paginated Java `/api/arena/exchange-events` endpoint. It emits one causal
+row per combined-book checkpoint using the same `lob_features_v1` contract for
+LOBSTER, synthetic, and hybrid runs. Immutable historical-source snapshots are
+validated as provenance but are not prediction rows.
+
+From the repository root:
+
+```bash
+make generate-features FEATURE_OVERWRITE=1
+```
+
+Labels are a separate optional input and are joined only after numeric feature
+calculation. No labels input leaves rows unlabeled. See
+[Causal Feature Engineering for a Future LightGBM Detector](../docs/feature-engineering-lightgbm.md)
+for direct CLI examples, formulas, Parquet types, and leakage-safe split rules.
+
 Coverage:
 
 ```bash
