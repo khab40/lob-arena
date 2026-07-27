@@ -52,3 +52,26 @@ def get_dataset(dataset_id: str, request: Request) -> ImportedDataset:
     if dataset is None:
         raise HTTPException(status_code=404, detail="unknown dataset")
     return dataset
+
+
+@router.delete("/datasets/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_dataset(dataset_id: str, request: Request) -> None:
+    try:
+        arena_state = await request.app.state.simulation.get_state()
+    except (LookupError, RuntimeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="cannot safely delete a dataset while Arena state is unavailable",
+        ) from exc
+    loaded_dataset_id = (arena_state.market_data or {}).get("dataset_id")
+    if loaded_dataset_id == dataset_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="dataset is currently loaded by Arena; load another source before deleting it",
+        )
+    try:
+        request.app.state.data_ingestion.delete_dataset(dataset_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="unknown dataset") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc

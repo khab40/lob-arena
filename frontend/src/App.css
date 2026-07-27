@@ -4954,6 +4954,53 @@ kbd {
   overflow: hidden;
 }
 
+.heatmap-dialog-backdrop {
+  align-items: stretch;
+  background: var(--overlay-bg);
+  display: flex;
+  inset: 0;
+  padding: 18px;
+  position: fixed;
+  z-index: 100;
+}
+
+.liquidity-heatmap.expanded {
+  background: var(--panel-surface);
+  border: 1px solid rgba(var(--info-rgb), 0.45);
+  border-radius: 10px;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.72);
+  contain: layout paint;
+  height: 100%;
+  padding: 18px;
+  width: 100%;
+}
+
+.heatmap-placeholder {
+  visibility: hidden;
+}
+
+.heatmap-heading-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.heatmap-close-button,
+.heatmap-expand-button {
+  background: rgba(var(--info-rgb), 0.12);
+  border: 1px solid rgba(var(--info-rgb), 0.4);
+  border-radius: 5px;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 5px 9px;
+}
+
+.heatmap-close-button:focus-visible,
+.heatmap-expand-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .heatmap-canvas-wrap {
   min-height: 0;
   overflow: hidden;

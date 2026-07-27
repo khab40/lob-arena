@@ -1,23 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+  deleteImportedDataset,
   importLobsterCandidate,
   listImportedDatasets,
   listLobsterCandidates,
   type ImportedDataset,
   type LobsterCandidate
 } from "@/api/client";
-
-type ImportDuration = "1" | "5" | "full";
-type ImportWindowSelection = {
-  duration: ImportDuration;
-  startTime: string;
-};
+import {
+  defaultImportWindow,
+  formatTimeInput,
+  resolveImportWindow,
+  type ImportDuration,
+  type ImportWindowSelection
+} from "@/pages/importWindow";
 
 export function DataIngestionPage() {
   const [candidates, setCandidates] = useState<LobsterCandidate[]>([]);
   const [datasets, setDatasets] = useState<ImportedDataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [importWindows, setImportWindows] = useState<Record<string, ImportWindowSelection>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +80,22 @@ export function DataIngestionPage() {
         ...patch
       }
     }));
+  }
+
+  async function deleteDataset(dataset: ImportedDataset) {
+    if (!window.confirm(`Delete ${dataset.dataset_id}? This removes its imported Parquet files and manifest.`)) {
+      return;
+    }
+    setDeleting(dataset.dataset_id);
+    setError(null);
+    try {
+      await deleteImportedDataset(dataset.dataset_id);
+      await refresh();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Dataset deletion failed");
+    } finally {
+      setDeleting(null);
+    }
   }
 
   return (
@@ -155,9 +174,23 @@ export function DataIngestionPage() {
                           >
                             <option value="1">1 minute</option>
                             <option value="5">5 minutes</option>
+                            <option value="custom">Custom</option>
                             <option value="full">Full range</option>
                           </select>
                         </label>
+                        {selection.duration === "custom" ? (
+                          <label>
+                            <span>Minutes</span>
+                            <input
+                              aria-label={`Import duration in minutes for ${candidate.symbol}`}
+                              min="1"
+                              onChange={(event) => updateImportWindow(candidate, { customMinutes: event.target.value })}
+                              step="1"
+                              type="number"
+                              value={selection.customMinutes}
+                            />
+                          </label>
+                        ) : null}
                         <small className={selectedWindow.valid ? "" : "control-error"}>
                           {selectedWindow.valid ? selectedWindow.label : selectedWindow.error}
                         </small>
@@ -207,6 +240,14 @@ export function DataIngestionPage() {
                 <p>{dataset.trade_date} · {dataset.start_time}–{dataset.end_time}</p>
                 <p>{dataset.row_count.toLocaleString()} aligned events and snapshots</p>
                 <code>{dataset.dataset_id}</code>
+                <button
+                  className="danger-button"
+                  disabled={deleting !== null}
+                  onClick={() => void deleteDataset(dataset)}
+                  type="button"
+                >
+                  {deleting === dataset.dataset_id ? "Deleting…" : "Delete dataset"}
+                </button>
               </article>
             ))}
           </div>
@@ -214,67 +255,6 @@ export function DataIngestionPage() {
       </section>
     </section>
   );
-}
-
-function defaultImportWindow(candidate: LobsterCandidate): ImportWindowSelection {
-  return {
-    duration: "1",
-    startTime: formatTimeInput(candidate.start_time_ms)
-  };
-}
-
-function resolveImportWindow(
-  candidate: LobsterCandidate,
-  selection = defaultImportWindow(candidate)
-): {
-  error: string;
-  label: string;
-  request: { start_time_ms?: number; end_time_ms?: number };
-  valid: boolean;
-} {
-  if (selection.duration === "full") {
-    return {
-      error: "",
-      label: `${candidate.start_time}–${candidate.end_time}`,
-      request: {},
-      valid: true
-    };
-  }
-  const startTimeMs = parseTimeInput(selection.startTime);
-  const durationMs = Number(selection.duration) * 60_000;
-  const endTimeMs = startTimeMs + durationMs;
-  if (
-    !Number.isFinite(startTimeMs) ||
-    startTimeMs < candidate.start_time_ms ||
-    endTimeMs > candidate.end_time_ms
-  ) {
-    return {
-      error: "Window must fit inside the source range.",
-      label: "",
-      request: {},
-      valid: false
-    };
-  }
-  return {
-    error: "",
-    label: `${formatTimeInput(startTimeMs)}–${formatTimeInput(endTimeMs)}`,
-    request: { start_time_ms: startTimeMs, end_time_ms: endTimeMs },
-    valid: true
-  };
-}
-
-function parseTimeInput(value: string) {
-  const parts = value.split(":").map(Number);
-  if (parts.length < 2 || parts.some((part) => !Number.isFinite(part))) return Number.NaN;
-  const [hours, minutes, seconds = 0] = parts;
-  return ((hours * 60 + minutes) * 60 + seconds) * 1_000;
-}
-
-function formatTimeInput(value: number) {
-  const hours = Math.floor(value / 3_600_000);
-  const minutes = Math.floor((value % 3_600_000) / 60_000);
-  const seconds = Math.floor((value % 60_000) / 1_000);
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
 function formatBytes(value: number | null) {

@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from threading import Lock
 
@@ -39,6 +40,24 @@ class DataIngestionService:
 
     def dataset(self, dataset_id: str) -> ImportedDataset | None:
         return next((item for item in self.datasets() if item.dataset_id == dataset_id), None)
+
+    def delete_dataset(self, dataset_id: str) -> None:
+        with self._import_lock:
+            dataset = next(
+                (
+                    (manifest, path)
+                    for manifest, path in iter_manifests(self.processed_dir)
+                    if manifest.dataset_id == dataset_id
+                ),
+                None,
+            )
+            if dataset is None:
+                raise LookupError(dataset_id)
+            _, path = dataset
+            resolved = path.resolve()
+            if not resolved.is_relative_to(self.processed_dir) or resolved.parent != self.processed_dir:
+                raise ValueError("dataset path is outside the processed data directory")
+            shutil.rmtree(resolved)
 
     def import_candidate(
         self,
