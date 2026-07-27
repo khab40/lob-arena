@@ -225,6 +225,21 @@ def test_background_import_status_is_visible_and_failure_can_be_retried(tmp_path
     assert retried
 
 
+def test_imported_dataset_can_be_deleted(tmp_path: Path) -> None:
+    raw = Path(__file__).resolve().parents[2] / "data" / "lobster" / "fixture"
+    processed = tmp_path / "processed"
+    service = DataIngestionService(raw, processed)
+    candidate = service.candidates()[0]
+    manifest = service.import_candidate(candidate.candidate_id)
+
+    service.delete_dataset(manifest.dataset_id)
+
+    assert service.dataset(manifest.dataset_id) is None
+    assert not (processed / manifest.dataset_id).exists()
+    with pytest.raises(LookupError):
+        service.delete_dataset(manifest.dataset_id)
+
+
 def _write_rows(path: Path, rows: list[list[str]]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         csv.writer(handle).writerows(rows)

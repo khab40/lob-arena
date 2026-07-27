@@ -1,7 +1,11 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
 
 type ApiState = {
+  candidates?: Record<string, unknown>[];
+  datasets?: Record<string, unknown>[];
+  deletedDatasets?: string[];
   experiment?: ReturnType<typeof experimentFixture> | null;
+  importRequests?: Record<string, unknown>[];
   jobs?: Record<string, unknown>[];
   leaderboard?: Record<string, unknown>[];
   localRun?: (route: Route) => Promise<void>;
@@ -47,12 +51,16 @@ function jobFixture(overrides: Record<string, unknown> = {}) {
 }
 
 async function mockApi(page: Page, state: ApiState = {}) {
+  state.candidates ??= [];
+  state.datasets ??= [];
+  state.deletedDatasets ??= [];
+  state.importRequests ??= [];
   state.jobs ??= [];
   state.leaderboard ??= [];
   state.scenarioRequests ??= [];
   state.submitCalls ??= 0;
 
-  await page.route("http://localhost:8000/**", async (route) => {
+  await page.route(/^https?:\/\/[^/]+\/api\//, async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     const path = url.pathname;
@@ -62,6 +70,25 @@ async function mockApi(page: Page, state: ApiState = {}) {
       contentType: "application/json",
       status
     });
+
+    if (path === "/api/data-ingestion/lobster/candidates" && method === "GET") {
+      return json(state.candidates);
+    }
+    const candidateImport = path.match(/^\/api\/data-ingestion\/lobster\/candidates\/([^/]+)\/import$/);
+    if (candidateImport && method === "POST") {
+      state.importRequests?.push(request.postDataJSON() as Record<string, unknown>);
+      return json({ candidate_id: candidateImport[1], dataset_id: null, status: "importing" }, 202);
+    }
+    if (path === "/api/data-ingestion/datasets" && method === "GET") {
+      return json(state.datasets);
+    }
+    const datasetDelete = path.match(/^\/api\/data-ingestion\/datasets\/([^/]+)$/);
+    if (datasetDelete && method === "DELETE") {
+      const datasetId = decodeURIComponent(datasetDelete[1]);
+      state.deletedDatasets?.push(datasetId);
+      state.datasets = state.datasets?.filter((dataset) => dataset.dataset_id !== datasetId);
+      return route.fulfill({ status: 204 });
+    }
 
     if (path === "/api/nebius/status") {
       return json({
@@ -513,4 +540,80 @@ test("attack tracker and market timeline visualize attack events", async ({ page
   await expect(markers).toContainText("T0");
   await expect(page.getByRole("img", { name: "Mid price, spread bps, and imbalance timeline" })).toBeVisible();
   await expect(markers).toContainText("incident confirmed", { timeout: 7_000 });
+});
+
+test("liquidity heatmap dialog traps focus and restores it when closed", async ({ page }) => {
+  await mockApi(page);
+  await page.goto("/arena?demo=real");
+
+  const expand = page.getByRole("button", { name: "Expand liquidity heatmap" });
+  await expand.focus();
+  await expand.click();
+
+  const dialog = page.getByRole("dialog", { name: "Liquidity Heatmap" });
+  const close = dialog.getByRole("button", { name: "Close expanded liquidity heatmap" });
+  await expect(dialog).toBeVisible();
+  await expect(page.locator("#root")).toHaveAttribute("inert", "");
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("#root")).not.toHaveAttribute("inert", "");
+  await expect(expand).toBeFocused();
+});
+
+test("data ingestion accepts custom minutes and deletes a confirmed dataset", async ({ page }) => {
+  const state: ApiState = {
+    candidates: [{
+      candidate_id: "candidate-1",
+      dataset_id: null,
+      depth: 10,
+      end_time: "10:30:00.000",
+      end_time_ms: 37_800_000,
+      errors: [],
+      message_file: "message.csv",
+      message_file_size: 100,
+      orderbook_file: "orderbook.csv",
+      orderbook_file_size: 200,
+      start_time: "09:30:00.000",
+      start_time_ms: 34_200_000,
+      status: "ready",
+      symbol: "SPY",
+      trade_date: "2012-06-21"
+    }],
+    datasets: [{
+      dataset_id: "dataset-stale",
+      depth: 10,
+      end_time: "09:35:00.000",
+      end_time_ms: 34_500_000,
+      event_counts: {},
+      imported_at: "2026-07-27T13:00:00Z",
+      path: "/data/processed/lobster/dataset-stale",
+      row_count: 100,
+      source_type: "lobster",
+      start_time: "09:30:00.000",
+      start_time_ms: 34_200_000,
+      symbol: "SPY",
+      trade_date: "2012-06-21"
+    }]
+  };
+  await mockApi(page, state);
+  await page.goto("/data-ingestion");
+
+  await page.getByLabel("Import duration for SPY").selectOption("custom");
+  await page.getByLabel("Import duration in minutes for SPY").fill("17");
+  await expect(page.getByText("09:30:00–09:47:00")).toBeVisible();
+  await page.getByRole("button", { name: "Import window" }).click();
+  await expect.poll(() => state.importRequests?.length).toBe(1);
+  expect(state.importRequests?.[0]).toEqual({
+    end_time_ms: 35_220_000,
+    start_time_ms: 34_200_000
+  });
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Delete dataset" }).click();
+  await expect.poll(() => state.deletedDatasets).toEqual(["dataset-stale"]);
+  await expect(page.getByText("dataset-stale")).toBeHidden();
 });

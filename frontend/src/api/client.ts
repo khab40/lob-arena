@@ -94,6 +94,16 @@ export async function listImportedDatasets(): Promise<ImportedDataset[]> {
   return response.json();
 }
 
+export async function deleteImportedDataset(datasetId: string): Promise<void> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/data-ingestion/datasets/${encodeURIComponent(datasetId)}`,
+    { method: "DELETE" }
+  );
+  if (!response.ok) {
+    throw new Error(await apiErrorMessage(response, "Dataset deletion failed"));
+  }
+}
+
 export async function listHistoricalReplayDatasets(): Promise<HistoricalReplayDataset[]> {
   const response = await fetch(`${API_BASE_URL}/api/arena/historical-datasets`);
   if (!response.ok) {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { OrderBookSnapshot, PriceLevel } from "@/types/arena";
 import {
   bucketHeatmapPrice,
@@ -48,7 +49,11 @@ export function LiquidityHeatmap({
 }) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const expandButtonRef = useRef<HTMLButtonElement | null>(null);
+  const shouldRestoreFocusRef = useRef(false);
   const [canvasSize, setCanvasSize] = useState({ height: 320, width: 900 });
+  const [expanded, setExpanded] = useState(false);
   const [themeVersion, setThemeVersion] = useState(0);
   const recentSnapshots = useMemo(() => snapshots.slice(-maxFrames), [maxFrames, snapshots]);
   const priceBucket = useMemo(() => inferPriceBucket(recentSnapshots), [recentSnapshots]);
@@ -73,8 +78,58 @@ export function LiquidityHeatmap({
     });
     observer.observe(wrapper);
     return () => observer.disconnect();
-  }, []);
+  }, [expanded]);
 
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const appRoot = document.getElementById("root");
+    const previousBodyOverflow = document.body.style.overflow;
+    appRoot?.setAttribute("inert", "");
+    document.body.style.overflow = "hidden";
+    dialogRef.current?.querySelector<HTMLButtonElement>(".heatmap-close-button")?.focus();
+
+    const handleDialogKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        shouldRestoreFocusRef.current = true;
+        setExpanded(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const focusable = Array.from(
+        dialogRef.current?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        ) ?? []
+      );
+      if (!focusable.length) {
+        event.preventDefault();
+        dialogRef.current?.focus();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", handleDialogKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleDialogKeyDown);
+      appRoot?.removeAttribute("inert");
+      document.body.style.overflow = previousBodyOverflow;
+    };
+  }, [expanded]);
+
+  useEffect(() => {
+    if (!expanded && shouldRestoreFocusRef.current) {
+      shouldRestoreFocusRef.current = false;
+      expandButtonRef.current?.focus();
+    }
+  }, [expanded]);
 
   useEffect(() => {
     const observer = new MutationObserver(() => setThemeVersion((version) => version + 1));
@@ -102,11 +157,38 @@ export function LiquidityHeatmap({
     drawHeatmap(context, frames, visiblePrices, priceBucket, readHeatmapTheme());
   }, [canvasSize, frames, priceBucket, themeVersion, visiblePrices]);
 
-  return (
-    <section className="liquidity-heatmap">
+  function closeExpandedHeatmap() {
+    shouldRestoreFocusRef.current = true;
+    setExpanded(false);
+  }
+
+  const heatmapBody = (
+    <>
       <div className="section-heading-row">
-        <h2>Liquidity Heatmap</h2>
-        <span>{frames.length} frames</span>
+        <h2 id={expanded ? "expanded-heatmap-title" : undefined}>Liquidity Heatmap</h2>
+        <div className="heatmap-heading-actions">
+          <span>{frames.length} frames</span>
+          {expanded ? (
+            <button
+              aria-label="Close expanded liquidity heatmap"
+              className="heatmap-close-button"
+              onClick={closeExpandedHeatmap}
+              type="button"
+            >
+              Close
+            </button>
+          ) : (
+            <button
+              aria-label="Expand liquidity heatmap"
+              className="heatmap-expand-button"
+              onClick={() => setExpanded(true)}
+              ref={expandButtonRef}
+              type="button"
+            >
+              Expand
+            </button>
+          )}
+        </div>
       </div>
       <div className="heatmap-canvas-wrap" ref={wrapperRef}>
         <canvas
@@ -120,7 +202,37 @@ export function LiquidityHeatmap({
         <span><i className="legend-swatch high" /> bright = high liquidity</span>
         <span><i className="legend-swatch abuser" /> outline = suspect liquidity</span>
       </div>
-    </section>
+    </>
+  );
+
+  return (
+    <>
+      {expanded ? <div aria-hidden="true" className="liquidity-heatmap heatmap-placeholder" /> : (
+        <section
+          className="liquidity-heatmap"
+          onDoubleClick={() => setExpanded(true)}
+          title="Double-click to enlarge"
+        >
+          {heatmapBody}
+        </section>
+      )}
+      {expanded ? createPortal(
+        <div className="heatmap-dialog-backdrop">
+          <section
+            aria-labelledby="expanded-heatmap-title"
+            aria-modal="true"
+            className="liquidity-heatmap expanded"
+            onDoubleClick={closeExpandedHeatmap}
+            ref={dialogRef}
+            role="dialog"
+            tabIndex={-1}
+          >
+            {heatmapBody}
+          </section>
+        </div>,
+        document.body
+      ) : null}
+    </>
   );
 }
 
