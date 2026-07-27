@@ -3,6 +3,13 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Bounded the authoritative Java arena's canonical in-memory event history,
+  added stream-scoped segmented JSONL persistence with archive-backed cursor
+  replay and incremental deterministic summaries, closed embedded DuckDB
+  resources at EOF, paged aligned Parquet replay to bound JDBC native memory,
+  configured DuckDB memory/disk spill limits, and added explicit Java
+  heap/direct-memory and Compose container budgets.
+
 - Added LOBSTER message/book, lifecycle, visible-volume, session, crossed-book,
   normalized hash, and provenance validation; repeat-run determinism and
   before/during/after causal-neighbourhood equivalence; synthetic

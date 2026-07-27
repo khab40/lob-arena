@@ -69,6 +69,23 @@ def test_observability_profiles_support_prometheus_alone_or_grafana_stack() -> N
     assert "prometheus" in services["grafana"]["depends_on"]
 
 
+def test_java_kernel_has_explicit_heap_container_and_duckdb_budgets() -> None:
+    java = _compose()["services"]["java-kernel"]
+
+    assert java["mem_limit"] == "${JAVA_KERNEL_MEMORY_LIMIT:-4g}"
+    assert "-Xmx2g" in java["environment"]["JAVA_TOOL_OPTIONS"]
+    assert "-XX:MaxDirectMemorySize=256m" in java["environment"]["JAVA_TOOL_OPTIONS"]
+    assert java["environment"]["LOB_ARENA_EVENT_HISTORY_CAPACITY"] == (
+        "${LOB_ARENA_EVENT_HISTORY_CAPACITY:-50000}"
+    )
+    assert java["environment"]["LOB_ARENA_DUCKDB_MEMORY_LIMIT"] == (
+        "${LOB_ARENA_DUCKDB_MEMORY_LIMIT:-1GB}"
+    )
+    assert java["environment"]["LOB_ARENA_DUCKDB_MAX_TEMP_DIRECTORY_SIZE"] == (
+        "${LOB_ARENA_DUCKDB_MAX_TEMP_DIRECTORY_SIZE:-8GB}"
+    )
+
+
 def test_detector_tournament_dashboard_uses_bounded_prometheus_metrics() -> None:
     dashboard_path = (
         Path(__file__).resolve().parents[2]

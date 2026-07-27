@@ -152,10 +152,10 @@ Java independently verifies the actual `events.parquet` and
 `book_snapshots.parquet` files when replay begins. It rejects:
 
 - size or SHA-256 mismatches against the manifest;
-- incomplete or duplicate source sequences;
+- incomplete, duplicate, or physically out-of-order source sequences;
 - event/book row-count mismatches;
 - timestamp regressions or values outside the selected session; and
-- message/book rows that do not have the same sequence and timestamp.
+- message/book rows that are not positionally aligned on sequence and timestamp.
 
 This check is intentionally repeated at the replay trust boundary; a manifest
 alone is not accepted as proof.

@@ -198,6 +198,37 @@ final class IntegerMatchingEngineTest {
         assertEquals(17, event.getMetadata().getSourceSequence());
     }
 
+    @Test
+    void boundedHistoryEvictsWithoutReusingSequencesOrDroppingSinkEvents() {
+        List<ExchangeEvent> emitted = new java.util.ArrayList<>();
+        IntegerMatchingEngine engine = new IntegerMatchingEngine(
+                new IntegerOrderBook(1_000_000_000, 1_000_000),
+                "LOB",
+                "SIM",
+                EventSource.EVENT_SOURCE_SIMULATION,
+                2,
+                emitted::add);
+
+        engine.submit(KernelOrder.limit("bid-1", "maker", Side.SIDE_BUY, 1, 97, 1));
+        engine.submit(KernelOrder.limit("bid-2", "maker", Side.SIDE_BUY, 1, 98, 2));
+        engine.submit(KernelOrder.limit("bid-3", "maker", Side.SIDE_BUY, 1, 99, 3));
+        List<ExchangeEvent> fourth =
+                engine.submit(KernelOrder.limit("bid-4", "maker", Side.SIDE_BUY, 1, 100, 4));
+
+        assertEquals(List.of(3L, 4L), engine.events().stream()
+                .map(event -> event.getMetadata().getSequence())
+                .toList());
+        assertEquals(3, engine.firstRetainedSequence());
+        assertEquals(4, engine.latestEventSequence());
+        assertEquals(2, engine.retainedEventCount());
+        assertEquals(List.of(1L, 2L, 3L, 4L), emitted.stream()
+                .map(event -> event.getMetadata().getSequence())
+                .toList());
+        assertEquals(List.of(4L), fourth.stream()
+                .map(event -> event.getMetadata().getSequence())
+                .toList());
+    }
+
     private IntegerMatchingEngine engine() {
         return new IntegerMatchingEngine(
                 new IntegerOrderBook(1_000_000_000, 1_000_000),

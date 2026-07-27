@@ -76,8 +76,20 @@ class JavaArenaClient:
             return None
         return Incident.model_validate(payload)
 
-    async def replay_exchange_events(self, *, after_sequence: int = 0, limit: int = 100) -> ExchangeEventReplay:
-        query = parse.urlencode({"afterSequence": after_sequence, "limit": limit})
+    async def replay_exchange_events(
+        self,
+        *,
+        after_sequence: int = 0,
+        limit: int = 100,
+        stream_id: str | None = None,
+    ) -> ExchangeEventReplay:
+        parameters: dict[str, object] = {
+            "afterSequence": after_sequence,
+            "limit": limit,
+        }
+        if stream_id is not None:
+            parameters["streamId"] = stream_id
+        query = parse.urlencode(parameters)
         payload = await asyncio.to_thread(
             self._request,
             "GET",

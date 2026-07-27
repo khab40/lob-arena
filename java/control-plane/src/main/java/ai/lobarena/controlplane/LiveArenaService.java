@@ -13,11 +13,10 @@ import ai.lobarena.kernel.determinism.EventOrderKey;
 import ai.lobarena.kernel.determinism.EventPhase;
 import ai.lobarena.kernel.determinism.DeterministicValues;
 import ai.lobarena.kernel.hashing.CanonicalHashes;
+import jakarta.annotation.PreDestroy;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Path;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -43,12 +42,18 @@ final class LiveArenaService {
     private static final int SNAPSHOT_DEPTH = 12;
     private static final int EVENT_WINDOW = 100;
     private static final int AGENT_EVENT_WINDOW = 20;
+    private static final int DEFAULT_EVENT_HISTORY_CAPACITY = 50_000;
+    private static final int DEFAULT_ARCHIVE_SEGMENT_EVENTS = 25_000;
+    private static final long DEFAULT_ARCHIVE_MAX_STREAM_BYTES = 20L * 1024 * 1024 * 1024;
 
     private final ObjectMapper mapper;
     private final AgentOrchestrator orchestrator;
     private final ArenaJournal journal;
     private final HistoricalMarketDataSource historical;
     private final HistoricalCsvMarketDataSource historicalCsv;
+    private final int eventHistoryCapacity;
+    private final CanonicalEventArchive eventArchive;
+    private final DuckDbResourceLimits duckDbResourceLimits;
     private final Deque<ObjectNode> agentEvents = new ArrayDeque<>();
     private final List<ObjectNode> incidents = new ArrayList<>();
     private final Set<String> incidentKeys = new HashSet<>();
@@ -59,6 +64,9 @@ final class LiveArenaService {
     private volatile long tick;
     private volatile boolean running;
     private volatile int metricsIncidentCount;
+    private volatile int metricsRetainedEventCount;
+    private volatile long metricsLatestSequence;
+    private volatile long metricsArchiveBytes;
     private int scenarioCounter;
     private int incidentCounter;
     private List<String> activeAgentIds = List.of();
@@ -67,6 +75,9 @@ final class LiveArenaService {
     private String replaySourceType;
     private long replayMasterSeed;
     private volatile boolean lobsterKernelReplay;
+    private EventStreamSummary eventSummary;
+    private String streamId;
+    private volatile String streamError;
     private final Set<Long> lobsterBidPrices = new HashSet<>();
     private final Set<Long> lobsterAskPrices = new HashSet<>();
 
@@ -122,12 +133,71 @@ final class LiveArenaService {
             Path historicalCsvDataDir,
             int historicalRowsPerTick,
             long masterSeed) {
+        this(
+                mapper,
+                orchestrator,
+                journal,
+                historicalDataDir,
+                historicalCsvDataDir,
+                historicalRowsPerTick,
+                masterSeed,
+                DEFAULT_EVENT_HISTORY_CAPACITY,
+                DEFAULT_ARCHIVE_SEGMENT_EVENTS,
+                DEFAULT_ARCHIVE_MAX_STREAM_BYTES);
+    }
+
+    LiveArenaService(
+            ObjectMapper mapper,
+            AgentOrchestrator orchestrator,
+            ArenaJournal journal,
+            Path historicalDataDir,
+            Path historicalCsvDataDir,
+            int historicalRowsPerTick,
+            long masterSeed,
+            int eventHistoryCapacity,
+            int archiveSegmentEvents,
+            long archiveMaxStreamBytes) {
+        this(
+                mapper,
+                orchestrator,
+                journal,
+                historicalDataDir,
+                historicalCsvDataDir,
+                historicalRowsPerTick,
+                masterSeed,
+                eventHistoryCapacity,
+                archiveSegmentEvents,
+                archiveMaxStreamBytes,
+                DuckDbResourceLimits.defaults());
+    }
+
+    LiveArenaService(
+            ObjectMapper mapper,
+            AgentOrchestrator orchestrator,
+            ArenaJournal journal,
+            Path historicalDataDir,
+            Path historicalCsvDataDir,
+            int historicalRowsPerTick,
+            long masterSeed,
+            int eventHistoryCapacity,
+            int archiveSegmentEvents,
+            long archiveMaxStreamBytes,
+            DuckDbResourceLimits duckDbResourceLimits) {
         this.mapper = mapper;
         this.orchestrator = orchestrator;
         this.journal = journal;
-        this.historical = new HistoricalMarketDataSource(mapper, historicalDataDir, historicalRowsPerTick);
+        this.historical = new HistoricalMarketDataSource(
+                mapper, historicalDataDir, historicalRowsPerTick, duckDbResourceLimits);
+        this.duckDbResourceLimits = duckDbResourceLimits;
         this.historicalCsv =
                 new HistoricalCsvMarketDataSource(mapper, historicalCsvDataDir, historicalRowsPerTick);
+        this.eventHistoryCapacity = eventHistoryCapacity;
+        this.eventArchive = new CanonicalEventArchive(
+                journal.root(),
+                mapper,
+                archiveSegmentEvents,
+                archiveMaxStreamBytes,
+                this::exchangeEventJson);
         this.defaultMasterSeed = masterSeed;
         this.replayMasterSeed = masterSeed;
         this.matching = newMatchingEngine();
@@ -148,13 +218,18 @@ final class LiveArenaService {
         return mapper.createObjectNode()
                 .put("tick", tick)
                 .put("running", running)
-                .put("incidents_count", metricsIncidentCount);
+                .put("incidents_count", metricsIncidentCount)
+                .put("retained_event_count", metricsRetainedEventCount)
+                .put("latest_sequence", metricsLatestSequence)
+                .put("archive_bytes", metricsArchiveBytes)
+                .put("archive_pending_events", eventArchive.pendingCount());
     }
 
     synchronized JsonNode start() {
         if (historical.loaded() && !lobsterKernelReplay) {
             return historical.start();
         }
+        ensureReplayArchiveCapacity();
         running = true;
         return buildState();
     }
@@ -210,6 +285,7 @@ final class LiveArenaService {
         if (kernelHistoricalLoaded() && !"hybrid".equals(replaySourceType)) {
             throw new IllegalArgumentException("scenarios require the hybrid historical source");
         }
+        ensureReplayArchiveCapacity();
         String normalized = normalizeScenario(family);
         scenarioCounter++;
         String scenarioAgentId = kernelHistoricalLoaded() ? "SYN:ABUSER_01" : "ABUSER_01";
@@ -251,26 +327,39 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode exchangeEvents(long afterSequence, int limit) {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        return exchangeEvents(null, afterSequence, limit);
+    }
+
+    synchronized JsonNode exchangeEvents(String requestedStreamId, long afterSequence, int limit) {
+        if (requestedStreamId == null && historical.loaded() && !lobsterKernelReplay) {
             ObjectNode replay = mapper.createObjectNode();
             replay.putArray("events");
             return replay.put("after_sequence", afterSequence)
                     .put("next_after_sequence", afterSequence)
                     .put("latest_sequence", 0)
+                    .putNull("stream_id")
+                    .put("first_available_sequence", 0)
+                    .put("retained_from_sequence", 0)
                     .put("has_more", false);
         }
-        List<ExchangeEvent> page = matching.eventsAfterSequence(afterSequence, limit);
+        String selectedStreamId = requestedStreamId == null ? streamId : requestedStreamId;
         ArrayNode events = mapper.createArrayNode();
-        page.stream()
-                .map(this::exchangeEventJson)
-                .forEach(events::add);
-        long latest = matching.latestEventSequence();
+        eventArchive.readAfter(selectedStreamId, afterSequence, limit).forEach(events::add);
+        boolean currentStream = selectedStreamId.equals(streamId);
+        long latest = currentStream
+                ? matching.latestEventSequence()
+                : eventArchive.latestSequence(selectedStreamId);
         long next = events.isEmpty() ? afterSequence : events.get(events.size() - 1).path("sequence").longValue();
         return mapper.createObjectNode()
                 .set("events", events)
                 .put("after_sequence", afterSequence)
                 .put("next_after_sequence", next)
                 .put("latest_sequence", latest)
+                .put("stream_id", selectedStreamId)
+                .put("first_available_sequence", latest == 0 ? 0 : 1)
+                .put(
+                        "retained_from_sequence",
+                        currentStream ? matching.firstRetainedSequence() : latest + 1)
                 .put("has_more", next < latest);
     }
 
@@ -297,6 +386,18 @@ final class LiveArenaService {
 
     synchronized long defaultMasterSeed() {
         return defaultMasterSeed;
+    }
+
+    JsonNode runtimeLimits() {
+        return mapper.createObjectNode()
+                .put("event_history_capacity", eventHistoryCapacity)
+                .put("event_archive_max_stream_bytes", eventArchive.maxStreamBytes())
+                .put("duckdb_memory_limit", duckDbResourceLimits.memoryLimit())
+                .put("duckdb_threads", duckDbResourceLimits.threads())
+                .put("duckdb_temp_directory", duckDbResourceLimits.tempDirectory().toString())
+                .put(
+                        "duckdb_max_temp_directory_size",
+                        duckDbResourceLimits.maxTempDirectorySize());
     }
 
     synchronized JsonNode loadDataSource(String sourceType, String datasetId) {
@@ -471,6 +572,7 @@ final class LiveArenaService {
                 scenario == null ? null : scenario.id(),
                 scenario == null ? null : scenario.name(),
                 scenario == null ? null : scenario.family());
+        completeCanonicalTick();
         previousDepth = depthBefore;
         JsonNode state = buildState();
         journal.append("snapshots/ticks.jsonl", state);
@@ -507,6 +609,7 @@ final class LiveArenaService {
                 null,
                 null);
         matching.recordSnapshot(SNAPSHOT_DEPTH, snapshotContext);
+        completeCanonicalTick();
         previousDepth = depthBefore;
         if (historicalCsv.eof()) {
             running = false;
@@ -541,6 +644,7 @@ final class LiveArenaService {
                 new MutationContext(
                         tick, null, null, null, EventSource.EVENT_SOURCE_SIMULATION,
                         null, historical.currentTimestampNs(), historical.currentTimestampNs()));
+        completeCanonicalTick();
         previousDepth = depthBefore;
         if (historical.eof()) running = false;
         journal.append("snapshots/ticks.jsonl", buildState());
@@ -832,6 +936,16 @@ final class LiveArenaService {
         ObjectNode result = mapper.createObjectNode();
         result.put("tick", tick);
         result.put("running", running);
+        result.put("stream_id", streamId);
+        result.put("latest_sequence", matching.latestEventSequence());
+        result.put("retained_from_sequence", matching.firstRetainedSequence());
+        result.put("retained_event_count", matching.retainedEventCount());
+        result.put("archive_bytes", eventArchive.archiveBytes());
+        if (streamError == null) {
+            result.putNull("stream_error");
+        } else {
+            result.put("stream_error", streamError);
+        }
         ArrayNode events = result.putArray("events");
         agentEvents.forEach(events::add);
         ArrayNode exchangeEvents = result.putArray("exchange_events");
@@ -1078,31 +1192,31 @@ final class LiveArenaService {
                 .put("source_row_count", replayRowCount())
                 .put("source_rows_replayed", replayPosition())
                 .put("events_sha256", replayEventsSha256())
-                .put("canonical_event_count", matching.events().size())
-                .put("stream_hash", HexFormat.of().formatHex(CanonicalHashes.eventStreamHash(matching.events(), 1)))
+                .put("canonical_event_count", eventSummary.eventCount())
+                .put("stream_hash", eventSummary.streamHashHex())
                 .put("historical_event_hash", sourceEventHash(EventSource.EVENT_SOURCE_HISTORICAL))
                 .put("synthetic_event_hash", sourceEventHash(EventSource.EVENT_SOURCE_SIMULATION))
                 .put("historical_snapshot_stream_hash", historicalSnapshotStreamHash())
-                .put(
-                        "historical_source_sequences",
-                        matching.events().stream()
-                                .filter(event -> event.getMetadata().getSource()
-                                        == EventSource.EVENT_SOURCE_HISTORICAL)
-                                .filter(event -> event.getMetadata().hasSourceSequence())
-                                .map(event -> event.getMetadata().getSourceSequence())
-                                .distinct()
-                                .count());
+                .put("historical_source_sequences", eventSummary.historicalSourceSequences());
         summary.set("source_integrity", replaySourceIntegrity());
         ObjectNode counts = summary.putObject("event_counts");
         ObjectNode sourceCounts = counts.putObject("by_source");
         ObjectNode typeCounts = counts.putObject("by_type");
-        for (ExchangeEvent event : matching.events()) {
-            String source = event.getMetadata().getSource() == EventSource.EVENT_SOURCE_HISTORICAL
-                    ? "historical"
-                    : "simulation";
-            sourceCounts.put(source, sourceCounts.has(source) ? sourceCounts.path(source).longValue() + 1 : 1);
-            String type = event.getPayloadCase().name().toLowerCase();
-            typeCounts.put(type, typeCounts.has(type) ? typeCounts.path(type).longValue() + 1 : 1);
+        for (EventSource source : List.of(
+                EventSource.EVENT_SOURCE_HISTORICAL,
+                EventSource.EVENT_SOURCE_SIMULATION)) {
+            long count = eventSummary.sourceCount(source);
+            if (count > 0) {
+                sourceCounts.put(
+                        source == EventSource.EVENT_SOURCE_HISTORICAL ? "historical" : "simulation",
+                        count);
+            }
+        }
+        for (ExchangeEvent.PayloadCase type : ExchangeEvent.PayloadCase.values()) {
+            long count = eventSummary.typeCount(type);
+            if (count > 0) {
+                typeCounts.put(type.name().toLowerCase(), count);
+            }
         }
         ObjectNode alerts = summary.putObject("detector_alert_ticks");
         detectorAlertTicks.forEach((detector, ticks) -> {
@@ -1125,61 +1239,25 @@ final class LiveArenaService {
         realism.put("final_level_count", book.getBidsCount() + book.getAsksCount());
         summary.set("validation_trace", validationTrace());
         ArrayNode syntheticEvents = summary.putArray("synthetic_events");
-        matching.events().stream()
-                .filter(event -> event.getMetadata().getSource() == EventSource.EVENT_SOURCE_SIMULATION)
-                .filter(event -> event.getMetadata().hasScenarioId())
+        eventSummary.scenarioEvents().stream()
                 .map(this::exchangeEventJson)
                 .forEach(syntheticEvents::add);
         return summary;
     }
 
     private String historicalSnapshotStreamHash() {
-        MessageDigest digest = sha256Digest();
-        matching.events().stream()
-                .filter(event -> event.getMetadata().getSource() == EventSource.EVENT_SOURCE_HISTORICAL)
-                .filter(event -> event.getPayloadCase() == ExchangeEvent.PayloadCase.SNAPSHOT)
-                .forEach(event -> {
-                    var metadata = event.getMetadata();
-                    String identity = "%d|%d|".formatted(
-                            metadata.hasSourceSequence() ? metadata.getSourceSequence() : 0,
-                            metadata.hasExchangeTimestampNs() ? metadata.getExchangeTimestampNs() : 0);
-                    digest.update(identity.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
-                    digest.update(CanonicalHashes.bookHash(event.getSnapshot().getBook()));
-                });
-        return HexFormat.of().formatHex(digest.digest());
+        return eventSummary.historicalSnapshotHashHex();
     }
 
     private ArrayNode validationTrace() {
         ArrayNode trace = mapper.createArrayNode();
-        Map<Long, long[]> flowByTick = new LinkedHashMap<>();
-        for (ExchangeEvent event : matching.events()) {
-            if (event.getPayloadCase() == ExchangeEvent.PayloadCase.SNAPSHOT) {
-                continue;
-            }
-            long[] counts = flowByTick.computeIfAbsent(
-                    event.getMetadata().getTick(), ignored -> new long[4]);
-            counts[0]++;
-            switch (event.getPayloadCase()) {
-                case ADD -> counts[1]++;
-                case CANCEL -> counts[2]++;
-                case EXECUTE -> counts[3]++;
-                default -> {
-                    // Other canonical messages still contribute to message_count.
-                }
-            }
-        }
-        trace.add(validationObservation(
-                0, 0, BookSnapshot.getDefaultInstance(), flowByTick.getOrDefault(0L, new long[4])));
-        matching.events().stream()
-                .filter(event -> event.getMetadata().getSource() == EventSource.EVENT_SOURCE_SIMULATION)
-                .filter(event -> event.getPayloadCase() == ExchangeEvent.PayloadCase.SNAPSHOT)
-                .map(event -> validationObservation(
-                        event.getMetadata().getTick(),
-                        event.getMetadata().hasExchangeTimestampNs()
-                                ? event.getMetadata().getExchangeTimestampNs()
-                                : 0,
-                        event.getSnapshot().getBook(),
-                        flowByTick.getOrDefault(event.getMetadata().getTick(), new long[4])))
+        trace.add(validationObservation(0, 0, BookSnapshot.getDefaultInstance(), new long[4]));
+        eventSummary.validationPoints().stream()
+                .map(point -> validationObservation(
+                        point.tick(),
+                        point.exchangeTimestampNs(),
+                        point.book(),
+                        point.eventFlow()))
                 .forEach(trace::add);
         return trace;
     }
@@ -1210,58 +1288,11 @@ final class LiveArenaService {
     }
 
     private String sourceEventHash(EventSource source) {
-        MessageDigest digest = sha256Digest();
-        matching.events().stream()
-                .filter(event -> event.getMetadata().getSource() == source)
-                .map(CanonicalHashes::eventHash)
-                .forEach(digest::update);
-        return HexFormat.of().formatHex(digest.digest());
-    }
-
-    private static MessageDigest sha256Digest() {
-        try {
-            return MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 must be available", exception);
-        }
+        return eventSummary.sourceHashHex(source);
     }
 
     private double averageCancelledLifetimeMs(List<ExchangeEvent> currentEvents) {
-        Set<String> cancelledOrderIds = currentEvents.stream()
-                .filter(event -> event.getPayloadCase() == ExchangeEvent.PayloadCase.CANCEL)
-                .map(event -> event.getCancel().getOrderId())
-                .collect(java.util.stream.Collectors.toSet());
-        if (cancelledOrderIds.isEmpty()) {
-            return 0;
-        }
-        Map<String, ExchangeEvent> adds = new LinkedHashMap<>();
-        matching.events().stream()
-                .filter(event -> event.getPayloadCase() == ExchangeEvent.PayloadCase.ADD)
-                .filter(event -> cancelledOrderIds.contains(event.getAdd().getOrderId()))
-                .forEach(event -> adds.putIfAbsent(event.getAdd().getOrderId(), event));
-        double total = 0;
-        int count = 0;
-        for (ExchangeEvent cancel : currentEvents) {
-            if (cancel.getPayloadCase() != ExchangeEvent.PayloadCase.CANCEL) {
-                continue;
-            }
-            ExchangeEvent add = adds.get(cancel.getCancel().getOrderId());
-            if (add == null) {
-                continue;
-            }
-            long addTime = eventTimeNs(add);
-            long cancelTime = eventTimeNs(cancel);
-            total += Math.max(0, cancelTime - addTime) / 1_000_000.0;
-            count++;
-        }
-        return count == 0 ? 0 : total / count;
-    }
-
-    private static long eventTimeNs(ExchangeEvent event) {
-        if (event.getMetadata().hasExchangeTimestampNs()) {
-            return event.getMetadata().getExchangeTimestampNs();
-        }
-        return event.getMetadata().getTick() * 500_000_000L;
+        return eventSummary.averageCancellationLifetimeMs(currentEvents);
     }
 
     private long referencePriceTicks() {
@@ -1287,6 +1318,30 @@ final class LiveArenaService {
 
     private boolean kernelHistoricalLoaded() {
         return historicalCsv.loaded() || lobsterKernelReplay;
+    }
+
+    private void ensureReplayArchiveCapacity() {
+        if (!kernelHistoricalLoaded()) {
+            return;
+        }
+        int depth = Math.max(1, replayContext().path("depth").asInt(SNAPSHOT_DEPTH));
+        try {
+            long maximumEventsPerRow = Math.addExact(Math.multiplyExact(2L, depth), 2L);
+            long estimatedBytes = Math.multiplyExact(
+                    Math.multiplyExact(replayRowCount(), maximumEventsPerRow),
+                    384L);
+            if (estimatedBytes > eventArchive.maxStreamBytes()) {
+                throw new CanonicalEventArchive.ArchiveCapacityExceededException(
+                        "archive_capacity_insufficient: estimated replay archive "
+                                + estimatedBytes
+                                + " bytes exceeds configured stream quota "
+                                + eventArchive.maxStreamBytes()
+                                + " bytes");
+            }
+        } catch (ArithmeticException exception) {
+            throw new CanonicalEventArchive.ArchiveCapacityExceededException(
+                    "archive_capacity_insufficient: replay archive estimate overflowed");
+        }
     }
 
     private String replayDatasetId() {
@@ -1508,19 +1563,71 @@ final class LiveArenaService {
     }
 
     private IntegerMatchingEngine newMatchingEngine() {
+        beginEventStream();
         IntegerOrderBook book = new IntegerOrderBook(UNIT_NANOS, UNIT_NANOS);
         book.initialize(REFERENCE_PRICE_TICKS, BASELINE_LEVELS, LEVEL_SPACING_TICKS, BASE_QUANTITY_LOTS, "normal");
-        return new IntegerMatchingEngine(book, "BTCUSDT", "SIM", EventSource.EVENT_SOURCE_SIMULATION);
+        return new IntegerMatchingEngine(
+                book,
+                "BTCUSDT",
+                "SIM",
+                EventSource.EVENT_SOURCE_SIMULATION,
+                eventHistoryCapacity,
+                this::acceptCanonicalEvent);
     }
 
     private IntegerMatchingEngine newHistoricalMatchingEngine() {
+        beginEventStream();
         IntegerOrderBook book =
                 new IntegerOrderBook(replayPriceTickSizeNanos(), replayQuantityLotSizeNanos());
         return new IntegerMatchingEngine(
                 book,
                 replaySymbol(),
                 replayVenue(),
-                EventSource.EVENT_SOURCE_SIMULATION);
+                EventSource.EVENT_SOURCE_SIMULATION,
+                eventHistoryCapacity,
+                this::acceptCanonicalEvent);
+    }
+
+    private void beginEventStream() {
+        eventSummary = new EventStreamSummary();
+        streamId = eventArchive.beginStream();
+        streamError = null;
+        metricsRetainedEventCount = 0;
+        metricsLatestSequence = 0;
+        metricsArchiveBytes = 0;
+    }
+
+    private void acceptCanonicalEvent(ExchangeEvent event) {
+        eventSummary.accept(event);
+        eventArchive.append(event);
+    }
+
+    private void completeCanonicalTick() {
+        try {
+            eventArchive.flushCompletedTick();
+            if (eventArchive.latestPersistedSequence() != matching.latestEventSequence()) {
+                throw new IllegalStateException("canonical archive did not reach the completed tick sequence");
+            }
+            metricsRetainedEventCount = matching.retainedEventCount();
+            metricsLatestSequence = matching.latestEventSequence();
+            metricsArchiveBytes = eventArchive.archiveBytes();
+        } catch (RuntimeException exception) {
+            running = false;
+            streamError = exception.getMessage();
+            throw exception;
+        }
+    }
+
+    int retainedEventCountMetric() {
+        return metricsRetainedEventCount;
+    }
+
+    long latestSequenceMetric() {
+        return metricsLatestSequence;
+    }
+
+    long archiveBytesMetric() {
+        return metricsArchiveBytes;
     }
 
     private void addAgentEvent(ObjectNode event) {
@@ -1529,6 +1636,14 @@ final class LiveArenaService {
             agentEvents.removeLast();
         }
         journal.append("events/events.jsonl", event);
+    }
+
+    @PreDestroy
+    synchronized void close() {
+        running = false;
+        historical.close();
+        historicalCsv.clear();
+        eventArchive.close();
     }
 
     private ObjectNode event(String type, String agentId, String message) {

@@ -17,6 +17,10 @@ final class ArenaJournal {
         this.mapper = mapper;
     }
 
+    Path root() {
+        return root;
+    }
+
     synchronized void append(String relativePath, JsonNode value) {
         Path target = root.resolve(relativePath).normalize();
         if (!target.startsWith(root.normalize())) {

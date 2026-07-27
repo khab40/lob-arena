@@ -98,6 +98,36 @@ class LiveArenaServiceTest {
     }
 
     @Test
+    void exchangeReplayReadsEventsThatHaveRotatedOutOfMemory(@TempDir Path output) {
+        AgentRunnerClient client = (URI runner, JsonNode snapshot) -> CompletableFuture.completedFuture(
+                mapper.readTree("{\"agent_ids\":[],\"intents\":[]}"));
+        LiveArenaService arena = new LiveArenaService(
+                mapper,
+                new AgentOrchestrator(List.of(), client),
+                new ArenaJournal(output, mapper),
+                output.resolve("unused-parquet"),
+                output.resolve("unused-csv"),
+                250,
+                42,
+                2,
+                2,
+                1_000_000);
+        for (int index = 0; index < 4; index++) {
+            arena.stepForTest();
+        }
+
+        JsonNode state = arena.state();
+        JsonNode replay = arena.exchangeEvents(0, 4);
+
+        assertThat(state.path("retained_event_count").intValue()).isEqualTo(2);
+        assertThat(state.path("retained_from_sequence").longValue()).isEqualTo(3);
+        assertThat(replay.path("events"))
+                .extracting(event -> event.path("sequence").longValue())
+                .containsExactly(1L, 2L, 3L, 4L);
+        assertThat(replay.path("stream_id").textValue()).isEqualTo(state.path("stream_id").textValue());
+    }
+
+    @Test
     void historicalReplayPreservesLifecycleProvenanceAndHasNoGroundTruth(@TempDir Path output) {
         LiveArenaService arena = historicalArena(output, 4);
         JsonNode loaded = arena.loadDataSource("historical", "sample-btcusdt-0945");
@@ -118,6 +148,29 @@ class LiveArenaServiceTest {
                 .filteredOn(event -> event.hasNonNull("order_id"))
                 .allMatch(event -> event.path("order_id").textValue().startsWith("HIST:"));
         assertThat(state.path("detectors").toString()).doesNotContain("scenario");
+    }
+
+    @Test
+    void rejectsReplayBeforeRunningWhenTheArchiveQuotaIsInsufficient(@TempDir Path output) {
+        AgentRunnerClient client = (URI runner, JsonNode snapshot) -> CompletableFuture.completedFuture(
+                mapper.readTree("{\"agent_ids\":[],\"intents\":[]}"));
+        LiveArenaService arena = new LiveArenaService(
+                mapper,
+                new AgentOrchestrator(List.of(), client),
+                new ArenaJournal(output, mapper),
+                output.resolve("unused-parquet"),
+                HistoricalCsvMarketDataSourceTest.fixtureRoot(),
+                4,
+                42,
+                50,
+                25,
+                1);
+        arena.loadDataSource("historical", "sample-btcusdt-0945");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(arena::start)
+                .isInstanceOf(CanonicalEventArchive.ArchiveCapacityExceededException.class)
+                .hasMessageContaining("archive_capacity_insufficient");
+        assertThat(arena.state().path("running").booleanValue()).isFalse();
     }
 
     @Test

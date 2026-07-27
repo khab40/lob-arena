@@ -71,6 +71,13 @@ Arena state and each versioned `arena_state` WebSocket message include `exchange
 
 `GET /api/arena/exchange-events?after_sequence=N&limit=M` provides gap-free cursor replay. The response includes `next_after_sequence`, the stream's `latest_sequence`, and `has_more`; clients pass the returned cursor into the next request. Limits are constrained to 1–1000 events.
 
+The authoritative Java control plane retains at most
+`LOB_ARENA_EVENT_HISTORY_CAPACITY` canonical events in the JVM (50,000 by
+default). Older cursor pages are served from the segmented archive, so memory
+rotation does not create replay gaps. Responses also include `stream_id`,
+`first_available_sequence`, and `retained_from_sequence`. Supplying
+`streamId=<id>` reads a completed stream after a reset.
+
 ## Frontend Projection
 
 The frontend models the five event payloads as a discriminated `ExchangeEvent` union. Arena's secondary detection drawer includes an Exchange Tape showing the newest 18 events with canonical sequence, type, concise state change, venue, symbol, and simulation tick. Snapshot rows show depth and level counts rather than rendering their complete nested book.
@@ -89,8 +96,15 @@ ARD-0018 is complete without selecting a vendor CSV layout. When a historical da
 
 ## Durable Streams
 
-Each completed simulation tick appends every not-yet-persisted canonical event to `history/exchange_events.jsonl`. Snapshot events are also appended to `history/lob_snapshots.jsonl` for efficient checkpoint scans. Rows retain the canonical payload and add `run_id` plus `stream_id` archive metadata.
+Each completed Java arena tick appends every canonical event to
+`history/exchange-events/<stream_id>/segment-*.jsonl` before publishing the
+completed tick. Segment manifests retain sequence ranges and archive byte
+counts. Rows retain the canonical payload and add `stream_id` archive
+metadata.
 
-Canonical sequences are scoped to `stream_id`. Reset starts a new stream segment with sequence 1 while preserving prior append-only history. `PersistedExchangeEventSource` filters the archive by stream ID, validates the canonical schema and contiguous sequence, and exposes the standard cursor reader.
+Canonical sequences are scoped to `stream_id`. Reset starts a new stream with
+sequence 1 while preserving prior append-only history. The active-stream
+archive is bounded by `LOB_ARENA_EVENT_ARCHIVE_MAX_STREAM_BYTES`; a replay
+whose conservative estimate exceeds that quota is rejected before it starts.
 
 End-to-end coverage runs an eight-tick spoofing-like scenario and verifies all five event types, exact sequence continuity, one snapshot per tick, persisted/in-memory event equality, and equality between the final persisted checkpoint and live book.

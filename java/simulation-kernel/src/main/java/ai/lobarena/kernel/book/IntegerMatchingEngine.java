@@ -10,29 +10,49 @@ import ai.lobarena.exchange.v1.ExecuteOrder;
 import ai.lobarena.exchange.v1.LobSnapshot;
 import ai.lobarena.exchange.v1.ModifyOrder;
 import ai.lobarena.kernel.determinism.DeterministicValues;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Consumer;
 
 public final class IntegerMatchingEngine {
     private final IntegerOrderBook book;
     private final String symbol;
     private final String venue;
     private final EventSource source;
-    private final List<ExchangeEvent> events = new ArrayList<>();
-    private final Map<EventSource, List<ExchangeEvent>> eventsBySource = new EnumMap<>(EventSource.class);
+    private final int eventHistoryCapacity;
+    private final Consumer<ExchangeEvent> eventSink;
+    private final Deque<ExchangeEvent> events = new ArrayDeque<>();
     private MutationContext mutationContext = MutationContext.EMPTY;
+    private List<ExchangeEvent> submissionEvents;
+    private long latestEventSequence;
 
     public IntegerMatchingEngine(
             IntegerOrderBook book, String symbol, String venue, EventSource source) {
+        this(book, symbol, venue, source, Integer.MAX_VALUE, ignored -> {});
+    }
+
+    public IntegerMatchingEngine(
+            IntegerOrderBook book,
+            String symbol,
+            String venue,
+            EventSource source,
+            int eventHistoryCapacity,
+            Consumer<ExchangeEvent> eventSink) {
         this.book = book;
         this.symbol = requireText("symbol", symbol);
         this.venue = requireText("venue", venue);
         if (source != EventSource.EVENT_SOURCE_SIMULATION && source != EventSource.EVENT_SOURCE_HISTORICAL) {
             throw new IllegalArgumentException("source must be simulation or historical");
         }
+        if (eventHistoryCapacity <= 0) {
+            throw new IllegalArgumentException("eventHistoryCapacity must be positive");
+        }
         this.source = source;
+        this.eventHistoryCapacity = eventHistoryCapacity;
+        this.eventSink = eventSink == null ? ignored -> {} : eventSink;
         book.setMutationListener(this::recordMutation);
     }
 
@@ -41,7 +61,9 @@ public final class IntegerMatchingEngine {
     }
 
     public List<ExchangeEvent> submit(KernelOrder order, MutationContext context) {
-        int cursor = events.size();
+        List<ExchangeEvent> previousSubmissionEvents = submissionEvents;
+        List<ExchangeEvent> emitted = new ArrayList<>();
+        submissionEvents = emitted;
         MutationContext previous = mutationContext;
         mutationContext = mergeContext(order, context);
         try {
@@ -63,8 +85,9 @@ public final class IntegerMatchingEngine {
             }
         } finally {
             mutationContext = previous;
+            submissionEvents = previousSubmissionEvents;
         }
-        return List.copyOf(events.subList(cursor, events.size()));
+        return List.copyOf(emitted);
     }
 
     public ExchangeEvent recordSnapshot(
@@ -124,57 +147,70 @@ public final class IntegerMatchingEngine {
     }
 
     public long latestEventSequence() {
-        return events.isEmpty() ? 0 : events.getLast().getMetadata().getSequence();
+        return latestEventSequence;
+    }
+
+    public long firstRetainedSequence() {
+        return events.isEmpty() ? latestEventSequence + 1 : events.getFirst().getMetadata().getSequence();
+    }
+
+    public int retainedEventCount() {
+        return events.size();
     }
 
     public List<ExchangeEvent> tailEvents(int limit) {
         if (limit <= 0 || events.isEmpty()) {
             return List.of();
         }
-        int start = Math.max(0, events.size() - limit);
-        return List.copyOf(events.subList(start, events.size()));
+        int skip = Math.max(0, events.size() - limit);
+        return events.stream().skip(skip).toList();
     }
 
     public List<ExchangeEvent> tailEventsBySource(EventSource source, int limit) {
-        List<ExchangeEvent> sourceEvents = eventsBySource.getOrDefault(source, List.of());
-        if (limit <= 0 || sourceEvents.isEmpty()) {
+        if (limit <= 0 || events.isEmpty()) {
             return List.of();
         }
-        int start = Math.max(0, sourceEvents.size() - limit);
-        return List.copyOf(sourceEvents.subList(start, sourceEvents.size()));
+        Deque<ExchangeEvent> result = new ArrayDeque<>();
+        Iterator<ExchangeEvent> iterator = events.descendingIterator();
+        while (iterator.hasNext() && result.size() < limit) {
+            ExchangeEvent event = iterator.next();
+            if (event.getMetadata().getSource() == source) {
+                result.addFirst(event);
+            }
+        }
+        return List.copyOf(result);
     }
 
     public List<ExchangeEvent> eventsAtTick(long tick) {
-        List<ExchangeEvent> result = new ArrayList<>();
-        for (int index = events.size() - 1; index >= 0; index--) {
-            ExchangeEvent event = events.get(index);
+        Deque<ExchangeEvent> result = new ArrayDeque<>();
+        Iterator<ExchangeEvent> iterator = events.descendingIterator();
+        while (iterator.hasNext()) {
+            ExchangeEvent event = iterator.next();
             long eventTick = event.getMetadata().getTick();
             if (eventTick < tick) {
                 break;
             }
             if (eventTick == tick) {
-                result.add(event);
+                result.addFirst(event);
             }
         }
-        return List.copyOf(result.reversed());
+        return List.copyOf(result);
     }
 
     public List<ExchangeEvent> eventsAfterSequence(long afterSequence, int limit) {
         if (limit <= 0 || events.isEmpty()) {
             return List.of();
         }
-        int low = 0;
-        int high = events.size();
-        while (low < high) {
-            int middle = (low + high) >>> 1;
-            if (events.get(middle).getMetadata().getSequence() <= afterSequence) {
-                low = middle + 1;
-            } else {
-                high = middle;
+        List<ExchangeEvent> result = new ArrayList<>(Math.min(limit, events.size()));
+        for (ExchangeEvent event : events) {
+            if (event.getMetadata().getSequence() > afterSequence) {
+                result.add(event);
+                if (result.size() == limit) {
+                    break;
+                }
             }
         }
-        int end = Math.min(events.size(), low + limit);
-        return List.copyOf(events.subList(low, end));
+        return List.copyOf(result);
     }
 
     public IntegerOrderBook book() {
@@ -259,7 +295,14 @@ public final class IntegerMatchingEngine {
 
     private void appendEvent(ExchangeEvent event) {
         events.add(event);
-        eventsBySource.computeIfAbsent(event.getMetadata().getSource(), ignored -> new ArrayList<>()).add(event);
+        latestEventSequence = event.getMetadata().getSequence();
+        while (events.size() > eventHistoryCapacity) {
+            events.removeFirst();
+        }
+        if (submissionEvents != null) {
+            submissionEvents.add(event);
+        }
+        eventSink.accept(event);
     }
 
     private EventMetadata.Builder metadata(
@@ -326,7 +369,7 @@ public final class IntegerMatchingEngine {
     }
 
     private long nextSequence() {
-        return events.size() + 1L;
+        return latestEventSequence + 1L;
     }
 
     private String nextEventId(String eventType) {

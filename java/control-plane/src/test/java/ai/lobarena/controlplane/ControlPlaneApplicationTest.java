@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 
-@SpringBootTest
+@SpringBootTest(properties = "lob.arena.output-dir=build/test-output")
 final class ControlPlaneApplicationTest {
     @Autowired
     private ApplicationContext context;
@@ -27,6 +27,10 @@ final class ControlPlaneApplicationTest {
         assertThat(context.getBeansOfType(ai.lobarena.kernel.simulation.JavaSimulationKernel.class)).hasSize(1);
         assertThat(context.getBeansOfType(PrometheusMeterRegistry.class)).hasSize(1);
         assertThat(context.getBeansOfType(MicrometerKernelGrpcTelemetry.class)).hasSize(1);
+        assertThat(context.getBeansOfType(ArenaEventMetrics.class)).hasSize(1);
+        PrometheusMeterRegistry meters = context.getBean(PrometheusMeterRegistry.class);
+        assertThat(meters.find("lob.arena.events.retained").gauge()).isNotNull();
+        assertThat(meters.find("lob.arena.events.archive.bytes").gauge()).isNotNull();
         assertThat(context.getBeansOfType(ai.lobarena.grpc.JavaKernelGrpcServer.class)).isEmpty();
     }
 

@@ -30,19 +30,40 @@ final class ArenaController {
         return arena.metricsState();
     }
 
+    @GetMapping("/api/arena/runtime-limits")
+    JsonNode runtimeLimits() {
+        return arena.runtimeLimits();
+    }
+
     @GetMapping("/api/arena/exchange-events")
     JsonNode exchangeEvents(
             @RequestParam(defaultValue = "0") long afterSequence,
-            @RequestParam(defaultValue = "100") int limit) {
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String streamId) {
         if (afterSequence < 0 || limit < 1 || limit > 1000) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid replay cursor or limit");
         }
-        return arena.exchangeEvents(afterSequence, limit);
+        try {
+            return arena.exchangeEvents(streamId, afterSequence, limit);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(HttpStatus.GONE, exception.getMessage(), exception);
+        }
+    }
+
+    JsonNode exchangeEvents(long afterSequence, int limit) {
+        return exchangeEvents(afterSequence, limit, null);
     }
 
     @PostMapping("/api/simulation/start")
     JsonNode start() {
-        return arena.start();
+        try {
+            return arena.start();
+        } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
+        }
     }
 
     @PostMapping("/api/simulation/pause")
@@ -80,6 +101,9 @@ final class ArenaController {
                     String.valueOf(body.getOrDefault("scenario_family", "")),
                     integerValue(body.get("max_ticks"), 10_000),
                     longValue(body.get("master_seed"), arena.defaultMasterSeed()));
+        } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
@@ -95,6 +119,9 @@ final class ArenaController {
     JsonNode launchScenario(@PathVariable String scenario) {
         try {
             return arena.launchScenario(scenario);
+        } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
         }

@@ -236,6 +236,9 @@ class ExchangeEventReplay(BaseModel):
     after_sequence: int = Field(ge=0)
     next_after_sequence: int = Field(ge=0)
     latest_sequence: int = Field(ge=0)
+    stream_id: str | None = None
+    first_available_sequence: int | None = Field(default=None, ge=0)
+    retained_from_sequence: int | None = Field(default=None, ge=0)
     has_more: bool
 
 

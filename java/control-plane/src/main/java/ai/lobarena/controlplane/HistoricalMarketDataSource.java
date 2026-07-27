@@ -18,6 +18,8 @@ import java.util.Deque;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -25,15 +27,21 @@ import tools.jackson.databind.node.ObjectNode;
 
 /** Replays the vendor-neutral normalized historical Parquet contract. */
 final class HistoricalMarketDataSource implements ReplayMarketDataSource {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HistoricalMarketDataSource.class);
     private static final Pattern SAFE_DATASET_ID = Pattern.compile("[A-Za-z0-9._-]+");
     private static final int EVENT_WINDOW = 100;
+    private static final int DEFAULT_REPLAY_BATCH_ROWS = 4_096;
     private final ObjectMapper mapper;
     private final Path registryRoot;
     private final int rowsPerTick;
+    private final DuckDbResourceLimits resourceLimits;
+    private final int replayBatchRows;
     private final Deque<ObjectNode> eventTail = new ArrayDeque<>();
     private Connection connection;
     private PreparedStatement statement;
     private ResultSet rows;
+    private Path replayEventsPath;
+    private Path replayBooksPath;
     private JsonNode manifest;
     private ArrayNode asks;
     private ArrayNode bids;
@@ -51,9 +59,28 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
     private boolean kernelCursorStarted;
 
     HistoricalMarketDataSource(ObjectMapper mapper, Path registryRoot, int rowsPerTick) {
+        this(mapper, registryRoot, rowsPerTick, DuckDbResourceLimits.defaults());
+    }
+
+    HistoricalMarketDataSource(
+            ObjectMapper mapper,
+            Path registryRoot,
+            int rowsPerTick,
+            DuckDbResourceLimits resourceLimits) {
+        this(mapper, registryRoot, rowsPerTick, resourceLimits, DEFAULT_REPLAY_BATCH_ROWS);
+    }
+
+    HistoricalMarketDataSource(
+            ObjectMapper mapper,
+            Path registryRoot,
+            int rowsPerTick,
+            DuckDbResourceLimits resourceLimits,
+            int replayBatchRows) {
         this.mapper = mapper;
         this.registryRoot = registryRoot.toAbsolutePath().normalize();
         this.rowsPerTick = Math.max(1, rowsPerTick);
+        this.resourceLimits = resourceLimits;
+        this.replayBatchRows = Math.max(1, replayBatchRows);
     }
 
     public synchronized JsonNode load(String requestedDatasetId) {
@@ -91,21 +118,27 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
             eventsParquetSha256 = verifyOutputFile(eventsPath, "events.parquet");
             booksParquetSha256 = verifyOutputFile(booksPath, "book_snapshots.parquet");
             connection = DriverManager.getConnection("jdbc:duckdb:");
+            resourceLimits.apply(connection);
             validateNormalizedTables(eventsPath, booksPath);
+            replayEventsPath = eventsPath.toAbsolutePath().normalize();
+            replayBooksPath = booksPath.toAbsolutePath().normalize();
             statement = connection.prepareStatement("""
                     SELECT e.source_sequence, e.timestamp_ns_since_midnight, e.event_kind,
                            e.source_event_code, e.source_order_id, e.size, e.price_x10000,
                            e.direction, e.book_side, e.aggressor_side, e.halt_state,
                            to_json(b.asks) AS asks_json, to_json(b.bids) AS bids_json
-                    FROM read_parquet(?) e
-                    INNER JOIN read_parquet(?) b
-                      ON e.source_sequence = b.source_sequence
-                     AND e.timestamp_ns_since_midnight = b.timestamp_ns_since_midnight
-                    ORDER BY e.source_sequence
+                    FROM (
+                        SELECT * FROM read_parquet(?)
+                        WHERE source_sequence > ?
+                        LIMIT ?
+                    ) e
+                    POSITIONAL JOIN (
+                        SELECT * FROM read_parquet(?)
+                        WHERE source_sequence > ?
+                        LIMIT ?
+                    ) b
                     """);
-            statement.setString(1, eventsPath.toAbsolutePath().normalize().toString());
-            statement.setString(2, booksPath.toAbsolutePath().normalize().toString());
-            rows = statement.executeQuery();
+            openReplayBatch(Long.MIN_VALUE);
             tick = 0;
             replayPosition = 0;
             running = false;
@@ -117,9 +150,11 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
             }
             return state();
         } catch (IOException | SQLException exception) {
+            LOGGER.warn("Failed to load historical dataset {}", requestedDatasetId, exception);
             clearState();
             throw new IllegalArgumentException("failed to load historical dataset: " + exception.getMessage(), exception);
         } catch (RuntimeException exception) {
+            LOGGER.warn("Rejected historical dataset {}", requestedDatasetId, exception);
             clearState();
             throw exception;
         }
@@ -345,7 +380,17 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
 
     private boolean readNext() {
         try {
-            if (!rows.next()) return false;
+            if (!rows.next()) {
+                if (replayPosition >= totalRows) {
+                    finishEof();
+                    return false;
+                }
+                openReplayBatch(sourceSequence);
+                if (!rows.next()) {
+                    throw new IllegalStateException(
+                            "historical replay ended before the validated row count");
+                }
+            }
             sourceSequence = rows.getLong("source_sequence");
             replayPosition++;
             timestampNs = rows.getLong("timestamp_ns_since_midnight");
@@ -370,13 +415,26 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
             eventTail.addFirst(event);
             while (eventTail.size() > EVENT_WINDOW) eventTail.removeLast();
             if (replayPosition >= totalRows) {
-                eof = true;
-                running = false;
+                finishEof();
             }
             return true;
         } catch (SQLException exception) {
             throw new IllegalStateException("historical replay failed", exception);
         }
+    }
+
+    private void openReplayBatch(long afterSequence) throws SQLException {
+        if (rows != null) {
+            rows.close();
+            rows = null;
+        }
+        statement.setString(1, replayEventsPath.toString());
+        statement.setLong(2, afterSequence);
+        statement.setInt(3, replayBatchRows);
+        statement.setString(4, replayBooksPath.toString());
+        statement.setLong(5, afterSequence);
+        statement.setInt(6, replayBatchRows);
+        rows = statement.executeQuery();
     }
 
     private HistoricalSnapshotRecord currentRecord() {
@@ -484,93 +542,118 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         if (startNs < 0 || endNs <= startNs) {
             throw new IllegalArgumentException("historical manifest has invalid session boundaries");
         }
-        try (PreparedStatement validation = connection.prepareStatement("""
-                WITH event_rows AS (
-                    SELECT source_sequence,
-                           timestamp_ns_since_midnight,
-                           lag(timestamp_ns_since_midnight)
-                               OVER (ORDER BY source_sequence) AS prior_timestamp
-                    FROM read_parquet(?)
-                ),
-                book_rows AS (
-                    SELECT source_sequence,
-                           timestamp_ns_since_midnight,
-                           lag(timestamp_ns_since_midnight)
-                               OVER (ORDER BY source_sequence) AS prior_timestamp
-                    FROM read_parquet(?)
-                )
-                SELECT
-                    (SELECT count(*) FROM event_rows) AS event_count,
-                    (SELECT count(*) FROM book_rows) AS book_count,
-                    (SELECT count(DISTINCT source_sequence) FROM event_rows)
-                        AS distinct_event_sequences,
-                    (SELECT count(DISTINCT source_sequence) FROM book_rows)
-                        AS distinct_book_sequences,
-                    (SELECT count(*) FROM event_rows
-                     WHERE prior_timestamp > timestamp_ns_since_midnight)
-                        AS event_timestamp_regressions,
-                    (SELECT count(*) FROM book_rows
-                     WHERE prior_timestamp > timestamp_ns_since_midnight)
-                        AS book_timestamp_regressions,
-                    (SELECT count(*) FROM event_rows
-                     WHERE timestamp_ns_since_midnight < ?
-                        OR timestamp_ns_since_midnight >= ?)
-                        AS event_out_of_session,
-                    (SELECT count(*) FROM book_rows
-                     WHERE timestamp_ns_since_midnight < ?
-                        OR timestamp_ns_since_midnight >= ?)
-                        AS book_out_of_session,
-                    (SELECT count(*)
-                     FROM event_rows e
-                     FULL OUTER JOIN book_rows b
-                       ON e.source_sequence = b.source_sequence
-                      AND e.timestamp_ns_since_midnight = b.timestamp_ns_since_midnight
-                     WHERE e.source_sequence IS NULL OR b.source_sequence IS NULL)
-                        AS unpaired_rows
+        TableValidation events = validateTable(eventsPath, startNs, endNs);
+        TableValidation books = validateTable(booksPath, startNs, endNs);
+        if (events.rowCount() != totalRows || books.rowCount() != totalRows) {
+            throw new IllegalArgumentException(
+                    "historical Parquet row counts do not match the manifest");
+        }
+        if (events.distinctSequences() != totalRows || books.distinctSequences() != totalRows) {
+            throw new IllegalArgumentException(
+                    "historical source_sequence values must be unique");
+        }
+        if (events.sequenceRegressions() != 0 || books.sequenceRegressions() != 0) {
+            throw new IllegalArgumentException(
+                    "historical source_sequence values must be stored in ascending order");
+        }
+        if (events.timestampRegressions() != 0 || books.timestampRegressions() != 0) {
+            throw new IllegalArgumentException(
+                    "historical timestamps regress in source_sequence order");
+        }
+        if (events.outOfSession() != 0 || books.outOfSession() != 0) {
+            throw new IllegalArgumentException(
+                    "historical timestamps fall outside the manifest session");
+        }
+        long unpairedRows = countUnpairedRows(eventsPath, booksPath);
+        if (unpairedRows != 0) {
+            throw new IllegalArgumentException(
+                    "historical message and order-book rows are not synchronized");
+        }
+        pairedRows = events.rowCount();
+    }
+
+    private TableValidation validateTable(Path path, long startNs, long endNs) throws SQLException {
+        long rowCount;
+        long distinctSequences;
+        long outOfSession;
+        try (PreparedStatement basic = connection.prepareStatement("""
+                SELECT count(*) AS row_count,
+                       count(DISTINCT source_sequence) AS distinct_sequences,
+                       count(*) FILTER (
+                           WHERE timestamp_ns_since_midnight < ?
+                              OR timestamp_ns_since_midnight >= ?
+                       ) AS out_of_session
+                FROM read_parquet(?)
                 """)) {
-            validation.setString(1, eventsPath.toAbsolutePath().normalize().toString());
-            validation.setString(2, booksPath.toAbsolutePath().normalize().toString());
-            validation.setLong(3, startNs);
-            validation.setLong(4, endNs);
-            validation.setLong(5, startNs);
-            validation.setLong(6, endNs);
-            try (ResultSet result = validation.executeQuery()) {
+            basic.setLong(1, startNs);
+            basic.setLong(2, endNs);
+            basic.setString(3, path.toAbsolutePath().normalize().toString());
+            try (ResultSet result = basic.executeQuery()) {
                 if (!result.next()) {
                     throw new IllegalArgumentException("historical integrity query returned no result");
                 }
-                long eventCount = result.getLong("event_count");
-                long bookCount = result.getLong("book_count");
-                long distinctEvents = result.getLong("distinct_event_sequences");
-                long distinctBooks = result.getLong("distinct_book_sequences");
-                long eventRegressions = result.getLong("event_timestamp_regressions");
-                long bookRegressions = result.getLong("book_timestamp_regressions");
-                long eventOutOfSession = result.getLong("event_out_of_session");
-                long bookOutOfSession = result.getLong("book_out_of_session");
-                long unpairedRows = result.getLong("unpaired_rows");
-                if (eventCount != totalRows || bookCount != totalRows) {
-                    throw new IllegalArgumentException(
-                            "historical Parquet row counts do not match the manifest");
+                rowCount = result.getLong("row_count");
+                distinctSequences = result.getLong("distinct_sequences");
+                outOfSession = result.getLong("out_of_session");
+            }
+        }
+        long sequenceRegressions;
+        long timestampRegressions;
+        try (PreparedStatement ordering = connection.prepareStatement("""
+                SELECT count(*) FILTER (
+                           WHERE prior_sequence >= source_sequence
+                       ) AS sequence_regressions,
+                       count(*) FILTER (
+                           WHERE prior_timestamp > timestamp_ns_since_midnight
+                       ) AS timestamp_regressions
+                FROM (
+                    SELECT source_sequence,
+                           timestamp_ns_since_midnight,
+                           lag(source_sequence) OVER () AS prior_sequence,
+                           lag(timestamp_ns_since_midnight) OVER () AS prior_timestamp
+                    FROM read_parquet(?)
+                )
+                """)) {
+            ordering.setString(1, path.toAbsolutePath().normalize().toString());
+            try (ResultSet result = ordering.executeQuery()) {
+                if (!result.next()) {
+                    throw new IllegalArgumentException("historical ordering query returned no result");
                 }
-                if (distinctEvents != totalRows || distinctBooks != totalRows) {
-                    throw new IllegalArgumentException(
-                            "historical source_sequence values must be unique");
+                sequenceRegressions = result.getLong("sequence_regressions");
+                timestampRegressions = result.getLong("timestamp_regressions");
+            }
+        }
+        return new TableValidation(
+                rowCount, distinctSequences, sequenceRegressions, timestampRegressions, outOfSession);
+    }
+
+    private long countUnpairedRows(Path eventsPath, Path booksPath) throws SQLException {
+        try (PreparedStatement pairing = connection.prepareStatement("""
+                SELECT count(*) AS unpaired_rows
+                FROM read_parquet(?) e
+                POSITIONAL JOIN read_parquet(?) b
+                WHERE e.source_sequence IS NULL
+                   OR b.source_sequence IS NULL
+                   OR e.source_sequence != b.source_sequence
+                   OR e.timestamp_ns_since_midnight != b.timestamp_ns_since_midnight
+                """)) {
+            pairing.setString(1, eventsPath.toAbsolutePath().normalize().toString());
+            pairing.setString(2, booksPath.toAbsolutePath().normalize().toString());
+            try (ResultSet result = pairing.executeQuery()) {
+                if (!result.next()) {
+                    throw new IllegalArgumentException("historical pairing query returned no result");
                 }
-                if (eventRegressions != 0 || bookRegressions != 0) {
-                    throw new IllegalArgumentException(
-                            "historical timestamps regress in source_sequence order");
-                }
-                if (eventOutOfSession != 0 || bookOutOfSession != 0) {
-                    throw new IllegalArgumentException(
-                            "historical timestamps fall outside the manifest session");
-                }
-                if (unpairedRows != 0) {
-                    throw new IllegalArgumentException(
-                            "historical message and order-book rows are not synchronized");
-                }
-                pairedRows = eventCount;
+                return result.getLong("unpaired_rows");
             }
         }
     }
+
+    private record TableValidation(
+            long rowCount,
+            long distinctSequences,
+            long sequenceRegressions,
+            long timestampRegressions,
+            long outOfSession) {}
 
     private static String sha256(Path path) throws IOException {
         MessageDigest digest;
@@ -598,12 +681,36 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
     }
 
     private void closeResources() {
-        try { if (rows != null) rows.close(); } catch (SQLException ignored) {}
-        try { if (statement != null) statement.close(); } catch (SQLException ignored) {}
-        try { if (connection != null) connection.close(); } catch (SQLException ignored) {}
+        try {
+            if (rows != null) rows.close();
+        } catch (SQLException exception) {
+            LOGGER.warn("Failed to close DuckDB replay result set", exception);
+        }
+        try {
+            if (statement != null) statement.close();
+        } catch (SQLException exception) {
+            LOGGER.warn("Failed to close DuckDB replay statement", exception);
+        }
+        try {
+            if (connection != null) connection.close();
+        } catch (SQLException exception) {
+            LOGGER.warn("Failed to close DuckDB replay connection", exception);
+        }
         rows = null;
         statement = null;
         connection = null;
+        replayEventsPath = null;
+        replayBooksPath = null;
+    }
+
+    private void finishEof() {
+        eof = true;
+        running = false;
+        closeResources();
+    }
+
+    synchronized boolean resourcesOpen() {
+        return rows != null || statement != null || connection != null;
     }
 
     private void clearState() {

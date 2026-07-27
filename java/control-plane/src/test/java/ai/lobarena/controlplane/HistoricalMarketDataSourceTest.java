@@ -53,13 +53,15 @@ class HistoricalMarketDataSourceTest {
         }
         writeManifest(dataset, datasetId, events, books, 2);
 
-        HistoricalMarketDataSource source = new HistoricalMarketDataSource(mapper, root, 1);
+        HistoricalMarketDataSource source = new HistoricalMarketDataSource(
+                mapper, root, 1, DuckDbResourceLimits.defaults(), 1);
         JsonNode loaded = source.load(datasetId);
         assertThat(loaded.path("market_data").path("source_sequence").longValue()).isEqualTo(91);
         assertThat(loaded.path("market_data").path("replay_position").longValue()).isEqualTo(1);
         assertThat(loaded.path("market_data").path("progress").doubleValue()).isEqualTo(0.5);
         assertThat(loaded.path("book").path("best_bid").doubleValue()).isEqualTo(91.14);
         assertThat(loaded.path("historical_events").get(0).path("price_x10000").longValue()).isEqualTo(911400);
+        assertThat(source.resourcesOpen()).isTrue();
 
         source.start();
         source.advance();
@@ -70,11 +72,14 @@ class HistoricalMarketDataSourceTest {
         assertThat(advanced.path("market_data").path("eof").booleanValue()).isTrue();
         assertThat(advanced.path("running").booleanValue()).isFalse();
         assertThat(advanced.path("book").path("bids").get(0).path("quantity").longValue()).isEqualTo(75);
+        assertThat(source.resourcesOpen()).isFalse();
 
         JsonNode reset = source.reset();
         assertThat(reset.path("market_data").path("source_sequence").longValue()).isEqualTo(91);
         assertThat(reset.path("running").booleanValue()).isFalse();
+        assertThat(source.resourcesOpen()).isTrue();
         source.close();
+        assertThat(source.resourcesOpen()).isFalse();
 
         Files.write(events, new byte[] {0}, StandardOpenOption.APPEND);
         HistoricalMarketDataSource tampered = new HistoricalMarketDataSource(mapper, root, 1);
