@@ -35,10 +35,11 @@ export function AboutPage() {
   return (
     <section className="about-page">
       <div className="panel about-hero-panel">
-        <h2>Adversarial Synthetic Market Simulation for Surveillance Benchmarking</h2>
+        <h2>Governed Historical + Synthetic Order-Book Validation for Market Surveillance</h2>
         <p>
-          A multi-agent platform that generates realistic synthetic limit-order-book activity and benchmarks
-          market-surveillance systems against adaptive manipulation strategies.
+          A research and validation platform that replays licensed historical order-book data, injects
+          controlled synthetic attacks, and benchmarks surveillance detectors against reproducible ground
+          truth.
         </p>
       </div>
 
@@ -72,9 +73,9 @@ export function AboutPage() {
           <span className="about-section-label">Product Scope</span>
           <h3>What We Solve</h3>
           <p>
-            The project makes order-book anomaly detection understandable without using real trading data. It lets a
-            reviewer see the market move, launch synthetic patterns, inspect detector evidence, and compare detector
-            quality through repeatable batch runs.
+            The project makes order-book surveillance validation understandable across synthetic and locally
+            licensed historical data. It lets a reviewer see the market move, launch synthetic patterns, inspect
+            detector evidence, and compare detector quality through repeatable synthetic and hybrid batch runs.
           </p>
           <ul>
             <li>Live visual order book and market microstructure cockpit.</li>

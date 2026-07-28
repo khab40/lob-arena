@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
 import { AttackBuilder } from "@/components/AttackBuilder";
 import { AttackTracker } from "@/components/AttackTracker";
 import { AgentTimeline } from "@/components/AgentTimeline";

@@ -68,6 +68,13 @@ Update this file with each significant commit before pushing.
 
 ### Current - feat: add governed corpus and benchmark protocol
 
+- Fixed the post-MLflow CI regressions by aligning the frontend branding
+  contract with the historical/hybrid product positioning and recording the
+  exact Gitleaks fingerprint of a committed non-secret example placeholder.
+- Upgraded the locked frontend to React/React DOM 19.2.8, React Router 8.3.0
+  and PostCSS 8.5.23, migrated declarative router imports from the removed
+  `react-router-dom` compatibility package, and closed the associated
+  Dependabot advisories.
 - Added an opt-in, pinned shared MLflow 3.13 Docker deployment with PostgreSQL
   metadata, private MinIO artifacts, basic authentication, generated local
   secrets, health-gated startup, persistent volumes, and hardened containers.

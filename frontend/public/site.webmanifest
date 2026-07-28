@@ -1,7 +1,7 @@
 {
   "name": "LOB Arena",
   "short_name": "LOB Arena",
-  "description": "A multi-agent platform that generates realistic synthetic limit-order-book activity and benchmarks market-surveillance systems against adaptive manipulation strategies.",
+  "description": "A research and validation platform that replays licensed historical order-book data, injects controlled synthetic attacks, and benchmarks surveillance detectors against reproducible ground truth.",
   "icons": [
     {
       "src": "/lob-arena-icon.svg",

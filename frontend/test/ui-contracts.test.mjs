@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const productTagline = "Governed Historical + Synthetic Order-Book Validation for Market Surveillance";
+const productDescription =
+  "A research and validation platform that replays licensed historical order-book data, injects controlled synthetic attacks, and benchmarks surveillance detectors against reproducible ground truth.";
 
 function read(relativePath) {
   return readFileSync(resolve(root, relativePath), "utf8");
@@ -23,20 +26,30 @@ function escapeRegExp(value) {
 describe("LOB Arena branding contract", () => {
   const readme = read("../README.md");
   const app = read("src/App.tsx");
+  const about = read("src/pages/AboutPage.tsx");
+  const packageJson = read("package.json");
   const index = read("index.html");
   const manifest = read("public/site.webmanifest");
 
   it("keeps the project title, tagline, description, and repository URL aligned", () => {
     expectIncludes(readme, [
       "# LOB Arena",
-      "Adversarial Synthetic Market Simulation for Surveillance Benchmarking",
-      "A multi-agent platform that generates realistic synthetic limit-order-book activity and benchmarks market-surveillance systems against adaptive manipulation strategies.",
+      productTagline,
+      "A research and validation platform that replays licensed historical order-book",
+      "detectors against reproducible ground truth.",
       "github.com/khab40/lob-arena"
     ]);
     expectIncludes(app, ["<strong>LOB Arena</strong>"]);
-    expectIncludes(index, ["<title>LOB Arena</title>", 'name="description"']);
-    expectIncludes(manifest, ['"name": "LOB Arena"', '"short_name": "LOB Arena"']);
-    assert.doesNotMatch(`${readme}\n${app}\n${index}\n${manifest}`, /AI Market Abuse Detection Arena/);
+    expectIncludes(about, [
+      productTagline,
+      "A research and validation platform that replays licensed historical order-book data, injects",
+      "controlled synthetic attacks, and benchmarks surveillance detectors against reproducible ground",
+      "truth."
+    ]);
+    expectIncludes(packageJson, [productDescription]);
+    expectIncludes(index, ["<title>LOB Arena</title>", 'name="description"', productDescription]);
+    expectIncludes(manifest, ['"name": "LOB Arena"', '"short_name": "LOB Arena"', productDescription]);
+    assert.doesNotMatch(`${readme}\n${app}\n${about}\n${index}\n${manifest}`, /AI Market Abuse Detection Arena/);
   });
 
   it("presents the README in reviewer-first narrative order", () => {

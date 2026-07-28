@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { launchAttackExperiment, type AttackExperimentRequest } from "@/api/client";
 import { controlCenterIncidentPath, storeControlCenterIncident } from "@/controlCenterIncident";
 import type { ArenaScenarioType } from "@/hooks/useArenaSource";
