@@ -119,7 +119,8 @@
           "default": [
             "spoofing_like_wall",
             "layering_like",
-            "quote_stuffing"
+            "quote_stuffing",
+            "liquidity_evaporation"
           ],
           "items": {
             "type": "string"

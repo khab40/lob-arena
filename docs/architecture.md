@@ -161,6 +161,36 @@ synthetic, and hybrid origins. Labels remain separate, feature/config versions
 are hashed, and session-level split groups prohibit random separation of
 adjacent rolling windows.
 
+### Governed LightGBM Release Boundary
+
+```mermaid
+graph LR
+    Protocol["Protocol + corpus + frozen split"]
+    Features["lob_features_v1 artifacts"]
+    Training["Training-run manifest"]
+    Calibration["Validation-only calibration<br/>and operating points"]
+    Bundle["Checksummed model bundle"]
+    Predictions["Fold-bound prediction manifest"]
+
+    Protocol --> Training
+    Features --> Training
+    Training --> Calibration
+    Training --> Bundle
+    Calibration --> Bundle
+    Bundle --> Predictions
+```
+
+Phase 0 defines the fail-closed identity and artifact boundary before adding a
+LightGBM dependency. Every manifest binds the model and training-run IDs to the
+exact protocol, corpus, chronological assignment, feature schema, and feature
+configuration hashes. Calibration is validation-only, the test fold is
+explicitly inaccessible during fitting, and high-precision, balanced, and
+high-recall thresholds are frozen before prediction artifacts are accepted.
+The contracts are immutable and use typed finite parameters and metrics.
+Release verification resolves only safe relative paths and verifies every
+artifact's bytes, size, schema, SHA-256 value, canonical manifest binding, and
+checksum-inventory membership.
+
 ### Detector Tournament Observability
 
 Detector tournaments participate in the observability plane through
@@ -302,6 +332,7 @@ Phase 4.5 adds a Managed Experiment manifest control plane before execution. The
 | `historical-replay/<run>/manifest.json` / `checksums.sha256` | Replay comparison inventory and full-bundle integrity checks. |
 | `features/<run>/features.parquet` | Stable typed causal feature rows for a future LightGBM detector. |
 | `features/<run>/run-metadata.json` / `feature-quality.json` | Feature/config/input hashes, source/session metadata, split policy, missing/distribution/class-balance summaries, and invalid rows. |
+| LightGBM Phase 0 manifests | Strict training, calibration, model-bundle, and prediction contracts binding governed inputs, frozen operating points, checksums, and release identity. |
 | `experiments/<experiment_id>/experiment.json` | Phase 4.5 experiment manifest with requested scenarios, execution mode, status, artifact paths, optional smart-batch link, and metrics. |
 | `experiments/<experiment_id>/attacks.jsonl` | Deterministic attack plan rows with expected labels, detector family, timing, agent profile, and parameters for each planned run. |
 | `experiments/<experiment_id>/jobs.jsonl` | Experiment-scoped local and Nebius Job records, including queued, running, completed, failed, and explicitly unconfigured states. |
@@ -395,5 +426,6 @@ Detailed architecture decisions are recorded in [Architecture Records (ARDs)](ar
 - [ARD-0023: Deterministic Hybrid Historical Replay](architecture/ARD-0023-hybrid-historical-replay.md) — Java historical/synthetic merge ordering, provenance, seed, labels, metrics, and artifacts
 - [ARD-0024: Versioned Causal Market-Abuse Feature Engineering](architecture/ARD-0024-versioned-causal-feature-engineering.md) — Source-agnostic causal features, typed artifacts, label isolation, and leakage-safe grouped splits
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) — Independently verified negatives, frozen chronological splits, canonical Java evaluation, session confidence intervals, regime/worst-decile results, and signed releases
+- [ARD-0026: Governed LightGBM Release Boundary](architecture/ARD-0026-governed-lightgbm-release-boundary.md) — Phase 0 identity, provenance, validation-only calibration, frozen operating points, predictions, and checksummed model bundles
 - [Hybrid Dataset Validation](hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
 - [Causal Feature Engineering for a Future LightGBM Detector](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and trainer consumption contract

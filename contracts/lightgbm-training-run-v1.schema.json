@@ -1,0 +1,500 @@
+{
+  "$defs": {
+    "ArtifactDigest": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_name": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Logical Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_name",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactDigest",
+      "type": "object"
+    },
+    "ClassWeightEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "fit_fold": {
+          "const": "train"
+        },
+        "negative_count": {
+          "minimum": 1,
+          "title": "Negative Count",
+          "type": "integer"
+        },
+        "negative_weight": {
+          "exclusiveMinimum": 0,
+          "title": "Negative Weight",
+          "type": "number"
+        },
+        "positive_count": {
+          "minimum": 1,
+          "title": "Positive Count",
+          "type": "integer"
+        },
+        "positive_weight": {
+          "exclusiveMinimum": 0,
+          "title": "Positive Weight",
+          "type": "number"
+        },
+        "strategy": {
+          "const": "balanced_training_fold"
+        }
+      },
+      "required": [
+        "strategy",
+        "fit_fold",
+        "negative_count",
+        "positive_count",
+        "negative_weight",
+        "positive_weight"
+      ],
+      "title": "ClassWeightEvidence",
+      "type": "object"
+    },
+    "EarlyStoppingEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "best_iteration": {
+          "minimum": 1,
+          "title": "Best Iteration",
+          "type": "integer"
+        },
+        "best_score": {
+          "minimum": 0,
+          "title": "Best Score",
+          "type": "number"
+        },
+        "metric": {
+          "const": "binary_logloss"
+        },
+        "min_delta": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Min Delta",
+          "type": "number"
+        },
+        "selection_fold": {
+          "const": "validation"
+        },
+        "stopping_rounds": {
+          "minimum": 1,
+          "title": "Stopping Rounds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "selection_fold",
+        "metric",
+        "stopping_rounds",
+        "min_delta",
+        "best_iteration",
+        "best_score"
+      ],
+      "title": "EarlyStoppingEvidence",
+      "type": "object"
+    },
+    "FoldFeatureInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactDigest"
+        },
+        "fold": {
+          "enum": [
+            "train",
+            "validation",
+            "test"
+          ],
+          "title": "Fold",
+          "type": "string"
+        },
+        "fold_membership_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fold Membership Hash",
+          "type": "string"
+        },
+        "row_count": {
+          "minimum": 1,
+          "title": "Row Count",
+          "type": "integer"
+        },
+        "session_count": {
+          "minimum": 1,
+          "title": "Session Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "fold",
+        "artifact",
+        "fold_membership_hash",
+        "session_count",
+        "row_count"
+      ],
+      "title": "FoldFeatureInput",
+      "type": "object"
+    },
+    "GovernedModelBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "assignment_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Assignment Hash",
+          "type": "string"
+        },
+        "corpus_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Corpus Hash",
+          "type": "string"
+        },
+        "corpus_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Corpus Id",
+          "type": "string"
+        },
+        "feature_config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Config Hash",
+          "type": "string"
+        },
+        "feature_schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Feature Schema Version",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "protocol_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Protocol Id",
+          "type": "string"
+        },
+        "split_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Split Id",
+          "type": "string"
+        },
+        "training_run_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Training Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_id",
+        "training_run_id",
+        "protocol_id",
+        "protocol_hash",
+        "corpus_id",
+        "corpus_hash",
+        "split_id",
+        "assignment_hash",
+        "feature_schema_version",
+        "feature_config_hash"
+      ],
+      "title": "GovernedModelBinding",
+      "type": "object"
+    },
+    "LightGbmV1Hyperparameters": {
+      "additionalProperties": false,
+      "properties": {
+        "bagging_fraction": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Bagging Fraction",
+          "type": "number"
+        },
+        "bagging_freq": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Bagging Freq",
+          "type": "integer"
+        },
+        "boosting_type": {
+          "const": "gbdt"
+        },
+        "deterministic": {
+          "const": true
+        },
+        "feature_fraction": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Feature Fraction",
+          "type": "number"
+        },
+        "lambda_l1": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Lambda L1",
+          "type": "number"
+        },
+        "lambda_l2": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Lambda L2",
+          "type": "number"
+        },
+        "learning_rate": {
+          "default": 0.03,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Learning Rate",
+          "type": "number"
+        },
+        "max_depth": {
+          "default": -1,
+          "title": "Max Depth",
+          "type": "integer"
+        },
+        "metric": {
+          "const": "binary_logloss"
+        },
+        "min_data_in_leaf": {
+          "default": 20,
+          "minimum": 1,
+          "title": "Min Data In Leaf",
+          "type": "integer"
+        },
+        "num_boost_round": {
+          "default": 500,
+          "minimum": 1,
+          "title": "Num Boost Round",
+          "type": "integer"
+        },
+        "num_leaves": {
+          "default": 31,
+          "minimum": 2,
+          "title": "Num Leaves",
+          "type": "integer"
+        },
+        "num_threads": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Num Threads",
+          "type": "integer"
+        },
+        "objective": {
+          "const": "binary"
+        }
+      },
+      "required": [
+        "objective",
+        "metric",
+        "boosting_type",
+        "deterministic",
+        "num_boost_round",
+        "learning_rate",
+        "num_leaves",
+        "max_depth",
+        "min_data_in_leaf",
+        "feature_fraction",
+        "bagging_fraction",
+        "bagging_freq",
+        "lambda_l1",
+        "lambda_l2",
+        "num_threads"
+      ],
+      "title": "LightGbmV1Hyperparameters",
+      "type": "object"
+    },
+    "PreprocessingEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "fit_fold": {
+          "const": "train"
+        },
+        "mode": {
+          "enum": [
+            "none",
+            "training_fitted"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "transformer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactDigest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "mode",
+        "fit_fold",
+        "transformer"
+      ],
+      "title": "PreprocessingEvidence",
+      "type": "object"
+    },
+    "TrainingDataPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "base_session_weighting": {
+          "const": "normalize_within_class"
+        },
+        "class_weights_fit_on": {
+          "const": "training_fold_only"
+        },
+        "early_stopping_fold": {
+          "const": "validation"
+        },
+        "invalid_row_policy": {
+          "const": "reject"
+        },
+        "missing_value_policy": {
+          "const": "lightgbm_native"
+        },
+        "negative_label_source": {
+          "const": "independently_verified_clean"
+        },
+        "positive_label_source": {
+          "const": "synthetic_scenario"
+        },
+        "preprocessing_fit_on": {
+          "const": "training_fold_only"
+        },
+        "target": {
+          "const": "attack_active"
+        },
+        "test_fold_accessed": {
+          "const": false
+        },
+        "training_fold": {
+          "const": "train"
+        }
+      },
+      "required": [
+        "target",
+        "training_fold",
+        "early_stopping_fold",
+        "negative_label_source",
+        "positive_label_source",
+        "invalid_row_policy",
+        "missing_value_policy",
+        "class_weights_fit_on",
+        "preprocessing_fit_on",
+        "base_session_weighting",
+        "test_fold_accessed"
+      ],
+      "title": "TrainingDataPolicy",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/lightgbm-training-run-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "binding": {
+      "$ref": "#/$defs/GovernedModelBinding"
+    },
+    "class_weights": {
+      "$ref": "#/$defs/ClassWeightEvidence"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "data_policy": {
+      "$ref": "#/$defs/TrainingDataPolicy"
+    },
+    "early_stopping": {
+      "$ref": "#/$defs/EarlyStoppingEvidence"
+    },
+    "git_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Git Commit",
+      "type": "string"
+    },
+    "hyperparameters": {
+      "$ref": "#/$defs/LightGbmV1Hyperparameters"
+    },
+    "input_features": {
+      "items": {
+        "$ref": "#/$defs/FoldFeatureInput"
+      },
+      "minItems": 2,
+      "title": "Input Features",
+      "type": "array"
+    },
+    "ordered_feature_columns": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Ordered Feature Columns",
+      "type": "array"
+    },
+    "preprocessing": {
+      "$ref": "#/$defs/PreprocessingEvidence"
+    },
+    "schema_version": {
+      "const": "lightgbm_training_run_v1"
+    },
+    "training_seed": {
+      "minimum": 0,
+      "title": "Training Seed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema_version",
+    "binding",
+    "git_commit",
+    "created_at",
+    "training_seed",
+    "data_policy",
+    "ordered_feature_columns",
+    "input_features",
+    "hyperparameters",
+    "class_weights",
+    "preprocessing",
+    "early_stopping"
+  ],
+  "title": "LOB Arena LightGBM Training Run v1",
+  "type": "object"
+}

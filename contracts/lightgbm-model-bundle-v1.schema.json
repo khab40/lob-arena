@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "ArtifactDigest": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_name": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Logical Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_name",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactDigest",
+      "type": "object"
+    },
+    "GovernedModelBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "assignment_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Assignment Hash",
+          "type": "string"
+        },
+        "corpus_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Corpus Hash",
+          "type": "string"
+        },
+        "corpus_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Corpus Id",
+          "type": "string"
+        },
+        "feature_config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Config Hash",
+          "type": "string"
+        },
+        "feature_schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Feature Schema Version",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "protocol_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Protocol Id",
+          "type": "string"
+        },
+        "split_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Split Id",
+          "type": "string"
+        },
+        "training_run_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Training Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_id",
+        "training_run_id",
+        "protocol_id",
+        "protocol_hash",
+        "corpus_id",
+        "corpus_hash",
+        "split_id",
+        "assignment_hash",
+        "feature_schema_version",
+        "feature_config_hash"
+      ],
+      "title": "GovernedModelBinding",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/lightgbm-model-bundle-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "items": {
+        "$ref": "#/$defs/ArtifactDigest"
+      },
+      "minItems": 1,
+      "title": "Artifacts",
+      "type": "array"
+    },
+    "binding": {
+      "$ref": "#/$defs/GovernedModelBinding"
+    },
+    "calibration_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Calibration Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "model_format": {
+      "const": "lightgbm_text_v1"
+    },
+    "schema_version": {
+      "const": "lightgbm_model_bundle_v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "binding",
+    "calibration_id",
+    "created_at",
+    "model_format",
+    "artifacts"
+  ],
+  "title": "LOB Arena LightGBM Model Bundle v1",
+  "type": "object"
+}

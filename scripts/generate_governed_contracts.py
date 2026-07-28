@@ -18,6 +18,12 @@ from app.corpus.models import GovernedBenchmarkProtocol  # noqa: E402
 from app.corpus.splits import GovernedSplitManifest  # noqa: E402
 from app.evaluation.regimes import GovernedRegimeEvidence  # noqa: E402
 from app.features.streaming import StreamingValidationEvidence  # noqa: E402
+from app.ml.lightgbm.contracts import (  # noqa: E402
+    CalibrationManifest,
+    DetectorPredictionsManifest,
+    LightGbmTrainingRun,
+    ModelBundleManifest,
+)
 
 
 CONTRACTS: dict[str, tuple[Type[BaseModel], str]] = {
@@ -44,6 +50,22 @@ CONTRACTS: dict[str, tuple[Type[BaseModel], str]] = {
     "governed-regime-evidence-v1.schema.json": (
         GovernedRegimeEvidence,
         "LOB Arena Governed Regime Evidence v1",
+    ),
+    "lightgbm-training-run-v1.schema.json": (
+        LightGbmTrainingRun,
+        "LOB Arena LightGBM Training Run v1",
+    ),
+    "lightgbm-model-bundle-v1.schema.json": (
+        ModelBundleManifest,
+        "LOB Arena LightGBM Model Bundle v1",
+    ),
+    "model-calibration-v1.schema.json": (
+        CalibrationManifest,
+        "LOB Arena Model Calibration v1",
+    ),
+    "detector-predictions-v1.schema.json": (
+        DetectorPredictionsManifest,
+        "LOB Arena Detector Predictions v1",
     ),
 }
 

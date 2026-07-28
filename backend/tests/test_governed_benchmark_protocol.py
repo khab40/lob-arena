@@ -5,6 +5,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.corpus.models import GovernedBenchmarkProtocol, load_benchmark_protocol
+from app.scenarios.catalog import IMPLEMENTED_SCENARIO_TYPES
 from scripts.generate_governed_contracts import CONTRACTS, render_contract
 
 
@@ -22,6 +23,8 @@ def test_checked_in_governed_protocol_is_valid_and_stable() -> None:
     assert protocol.splits.keep_all_session_campaigns_together
     assert protocol.splits.purge_ns == 10_000_000_000
     assert protocol.freeze_test_before_training
+    assert tuple(protocol.corpus.required_attack_families) == IMPLEMENTED_SCENARIO_TYPES
+    assert "liquidity_evaporation" in protocol.corpus.required_attack_families
     assert len(protocol.protocol_hash()) == 64
     assert protocol.protocol_hash() == load_benchmark_protocol(PROTOCOL_PATH).protocol_hash()
 
@@ -63,6 +66,4 @@ def test_checked_in_contract_declares_fail_closed_protocol_controls() -> None:
 
 def test_generated_governed_contracts_match_strict_runtime_models() -> None:
     for filename, (model, title) in CONTRACTS.items():
-        assert (ROOT / "contracts" / filename).read_text(encoding="utf-8") == (
-            render_contract(filename, model, title)
-        )
+        assert (ROOT / "contracts" / filename).read_text(encoding="utf-8") == (render_contract(filename, model, title))

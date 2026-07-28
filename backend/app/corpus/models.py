@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.scenarios.catalog import IMPLEMENTED_SCENARIO_TYPES
+
 
 PROTOCOL_SCHEMA_VERSION = "governed_benchmark_protocol_v1"
 
@@ -21,11 +23,7 @@ class CorpusMinimums(_StrictModel):
     distinct_dates: int = Field(default=10, ge=1)
     seeds_per_attack_family: int = Field(default=3, ge=1)
     require_all_attack_families: bool = True
-    required_attack_families: tuple[str, ...] = (
-        "spoofing_like_wall",
-        "layering_like",
-        "quote_stuffing",
-    )
+    required_attack_families: tuple[str, ...] = IMPLEMENTED_SCENARIO_TYPES
 
     @model_validator(mode="after")
     def validate_attack_families(self) -> "CorpusMinimums":

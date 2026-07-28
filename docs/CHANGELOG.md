@@ -68,6 +68,21 @@ Update this file with each significant commit before pushing.
 
 ### Current - feat: add governed corpus and benchmark protocol
 
+- Added the LightGBM Phase 0 release boundary: strict training-run, calibration,
+  model-bundle, and prediction manifests bind stable model/run IDs to exact
+  protocol, corpus, chronological assignment, feature, Git, and artifact
+  hashes before any trainer is introduced.
+- Added fail-closed validation for training-only preprocessing/class weights,
+  validation-only early stopping/calibration/threshold selection, the three
+  frozen operating modes, checksummed release contents, and cross-manifest
+  compatibility.
+- Review hardening made every manifest and nested value immutable, replaced
+  untyped parameters and metrics with finite binary-LightGBM contracts, bound
+  train/validation/test inputs to their declared folds and feature schema,
+  verified balanced class weights, and added byte-level artifact, canonical
+  manifest, safe-path, and checksum-inventory verification.
+- Made required attack-family coverage derive from the implemented scenario
+  catalog and added liquidity evaporation to the governed production protocol.
 - Added versioned corpus, independent clean-window adjudication, canonical Java
   replay, frozen split, benchmark result, and signed release contracts.
 - Added coverage gates across complete sessions, instruments, dates, attack

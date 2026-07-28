@@ -10,7 +10,8 @@
     "required_attack_families": [
       "spoofing_like_wall",
       "layering_like",
-      "quote_stuffing"
+      "quote_stuffing",
+      "liquidity_evaporation"
     ]
   },
   "clean_labels": {

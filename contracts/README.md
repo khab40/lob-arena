@@ -39,12 +39,22 @@ The governed ML workflow adds fail-closed JSON contracts for:
 - `split-manifest-v1.schema.json`;
 - `canonical-java-replay-bundle-v1.schema.json`;
 - `feature-streaming-validation-v1.schema.json`;
-- `governed-regime-evidence-v1.schema.json`; and
-- `benchmark-results-v2.schema.json`.
+- `governed-regime-evidence-v1.schema.json`;
+- `benchmark-results-v2.schema.json`;
+- `lightgbm-training-run-v1.schema.json`;
+- `lightgbm-model-bundle-v1.schema.json`;
+- `model-calibration-v1.schema.json`; and
+- `detector-predictions-v1.schema.json`.
 
 These schemas bind corpus provenance, independent clean reviews, frozen
 session-level splits, canonical Java replay inputs, and signed benchmark
-results before any learned-model training.
+results before any learned-model training. The LightGBM Phase 0 schemas also
+bind stable model/training identities, feature and split hashes, validation-only
+calibration, frozen operating thresholds, prediction outputs, and the
+checksummed model artifact inventory before the trainer is implemented. Runtime
+verification additionally checks normalized artifact paths, exact bytes,
+sizes, SHA-256 values, canonical manifest contents, schema compatibility, and
+the complete checksum inventory.
 
 Run `make check-governed-contracts` to detect drift between generated JSON
 contracts and their fail-closed runtime models.

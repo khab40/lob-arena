@@ -1,0 +1,444 @@
+{
+  "$defs": {
+    "ArtifactDigest": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_name": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Logical Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_name",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactDigest",
+      "type": "object"
+    },
+    "CalibrationMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "brier_score": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Brier Score",
+          "type": "number"
+        },
+        "expected_calibration_error": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Expected Calibration Error",
+          "type": "number"
+        }
+      },
+      "required": [
+        "brier_score",
+        "expected_calibration_error"
+      ],
+      "title": "CalibrationMetrics",
+      "type": "object"
+    },
+    "CalibrationParameters": {
+      "additionalProperties": false,
+      "properties": {
+        "isotonic_x": {
+          "default": [],
+          "items": {
+            "type": "number"
+          },
+          "title": "Isotonic X",
+          "type": "array"
+        },
+        "isotonic_y": {
+          "default": [],
+          "items": {
+            "type": "number"
+          },
+          "title": "Isotonic Y",
+          "type": "array"
+        },
+        "method": {
+          "enum": [
+            "raw",
+            "platt",
+            "isotonic"
+          ],
+          "title": "Method",
+          "type": "string"
+        },
+        "platt_intercept": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Platt Intercept"
+        },
+        "platt_slope": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Platt Slope"
+        }
+      },
+      "required": [
+        "method",
+        "platt_slope",
+        "platt_intercept",
+        "isotonic_x",
+        "isotonic_y"
+      ],
+      "title": "CalibrationParameters",
+      "type": "object"
+    },
+    "GovernedModelBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "assignment_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Assignment Hash",
+          "type": "string"
+        },
+        "corpus_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Corpus Hash",
+          "type": "string"
+        },
+        "corpus_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Corpus Id",
+          "type": "string"
+        },
+        "feature_config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Config Hash",
+          "type": "string"
+        },
+        "feature_schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Feature Schema Version",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "protocol_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Protocol Id",
+          "type": "string"
+        },
+        "split_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Split Id",
+          "type": "string"
+        },
+        "training_run_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Training Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_id",
+        "training_run_id",
+        "protocol_id",
+        "protocol_hash",
+        "corpus_id",
+        "corpus_hash",
+        "split_id",
+        "assignment_hash",
+        "feature_schema_version",
+        "feature_config_hash"
+      ],
+      "title": "GovernedModelBinding",
+      "type": "object"
+    },
+    "OperatingPoint": {
+      "additionalProperties": false,
+      "properties": {
+        "metric_constraints": {
+          "$ref": "#/$defs/OperatingPointConstraints"
+        },
+        "mode": {
+          "enum": [
+            "high_precision",
+            "balanced",
+            "high_recall"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "selection_policy": {
+          "enum": [
+            "maximize_recall_at_precision_floor",
+            "maximize_f1",
+            "maximize_precision_at_recall_floor"
+          ],
+          "title": "Selection Policy",
+          "type": "string"
+        },
+        "threshold": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Threshold",
+          "type": "number"
+        },
+        "validation_metrics": {
+          "$ref": "#/$defs/OperatingPointMetrics"
+        }
+      },
+      "required": [
+        "mode",
+        "threshold",
+        "selection_policy",
+        "validation_metrics",
+        "metric_constraints"
+      ],
+      "title": "OperatingPoint",
+      "type": "object"
+    },
+    "OperatingPointConstraints": {
+      "additionalProperties": false,
+      "properties": {
+        "precision_floor": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Precision Floor"
+        },
+        "recall_floor": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recall Floor"
+        }
+      },
+      "required": [
+        "precision_floor",
+        "recall_floor"
+      ],
+      "title": "OperatingPointConstraints",
+      "type": "object"
+    },
+    "OperatingPointMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "attack_level_recall": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Attack Level Recall"
+        },
+        "detection_before_benefit_rate": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detection Before Benefit Rate"
+        },
+        "duplicate_alert_load": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duplicate Alert Load"
+        },
+        "f1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "F1",
+          "type": "number"
+        },
+        "false_alerts_per_million_events": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "False Alerts Per Million Events"
+        },
+        "precision": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "number"
+        },
+        "recall": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Recall",
+          "type": "number"
+        }
+      },
+      "required": [
+        "precision",
+        "recall",
+        "f1",
+        "attack_level_recall",
+        "detection_before_benefit_rate",
+        "false_alerts_per_million_events",
+        "duplicate_alert_load"
+      ],
+      "title": "OperatingPointMetrics",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/model-calibration-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "binding": {
+      "$ref": "#/$defs/GovernedModelBinding"
+    },
+    "calibrated_metrics": {
+      "$ref": "#/$defs/CalibrationMetrics"
+    },
+    "calibration_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Calibration Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "fit_fold": {
+      "const": "validation"
+    },
+    "input_predictions": {
+      "$ref": "#/$defs/ArtifactDigest"
+    },
+    "operating_points": {
+      "items": {
+        "$ref": "#/$defs/OperatingPoint"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "title": "Operating Points",
+      "type": "array"
+    },
+    "parameters": {
+      "$ref": "#/$defs/CalibrationParameters"
+    },
+    "raw_metrics": {
+      "$ref": "#/$defs/CalibrationMetrics"
+    },
+    "row_count": {
+      "minimum": 1,
+      "title": "Row Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "model_calibration_v1"
+    },
+    "session_count": {
+      "minimum": 1,
+      "title": "Session Count",
+      "type": "integer"
+    },
+    "test_fold_accessed": {
+      "const": false
+    }
+  },
+  "required": [
+    "schema_version",
+    "calibration_id",
+    "binding",
+    "created_at",
+    "fit_fold",
+    "test_fold_accessed",
+    "input_predictions",
+    "session_count",
+    "row_count",
+    "parameters",
+    "raw_metrics",
+    "calibrated_metrics",
+    "operating_points"
+  ],
+  "title": "LOB Arena Model Calibration v1",
+  "type": "object"
+}

@@ -1,0 +1,248 @@
+{
+  "$defs": {
+    "ArtifactDigest": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_name": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Logical Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_name",
+        "uri",
+        "sha256",
+        "size_bytes",
+        "schema_version"
+      ],
+      "title": "ArtifactDigest",
+      "type": "object"
+    },
+    "FoldFeatureInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/ArtifactDigest"
+        },
+        "fold": {
+          "enum": [
+            "train",
+            "validation",
+            "test"
+          ],
+          "title": "Fold",
+          "type": "string"
+        },
+        "fold_membership_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fold Membership Hash",
+          "type": "string"
+        },
+        "row_count": {
+          "minimum": 1,
+          "title": "Row Count",
+          "type": "integer"
+        },
+        "session_count": {
+          "minimum": 1,
+          "title": "Session Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "fold",
+        "artifact",
+        "fold_membership_hash",
+        "session_count",
+        "row_count"
+      ],
+      "title": "FoldFeatureInput",
+      "type": "object"
+    },
+    "GovernedModelBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "assignment_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Assignment Hash",
+          "type": "string"
+        },
+        "corpus_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Corpus Hash",
+          "type": "string"
+        },
+        "corpus_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Corpus Id",
+          "type": "string"
+        },
+        "feature_config_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Config Hash",
+          "type": "string"
+        },
+        "feature_schema_version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Feature Schema Version",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "protocol_hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Protocol Hash",
+          "type": "string"
+        },
+        "protocol_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Protocol Id",
+          "type": "string"
+        },
+        "split_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Split Id",
+          "type": "string"
+        },
+        "training_run_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Training Run Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "model_id",
+        "training_run_id",
+        "protocol_id",
+        "protocol_hash",
+        "corpus_id",
+        "corpus_hash",
+        "split_id",
+        "assignment_hash",
+        "feature_schema_version",
+        "feature_config_hash"
+      ],
+      "title": "GovernedModelBinding",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/detector-predictions-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "alert_count": {
+      "minimum": 0,
+      "title": "Alert Count",
+      "type": "integer"
+    },
+    "binding": {
+      "$ref": "#/$defs/GovernedModelBinding"
+    },
+    "calibration_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Calibration Id",
+      "type": "string"
+    },
+    "contains_calibrated_probabilities": {
+      "const": true
+    },
+    "contains_raw_probabilities": {
+      "const": true
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "fold": {
+      "enum": [
+        "train",
+        "validation",
+        "test"
+      ],
+      "title": "Fold",
+      "type": "string"
+    },
+    "input_features": {
+      "items": {
+        "$ref": "#/$defs/FoldFeatureInput"
+      },
+      "minItems": 1,
+      "title": "Input Features",
+      "type": "array"
+    },
+    "operating_mode": {
+      "enum": [
+        "high_precision",
+        "balanced",
+        "high_recall"
+      ],
+      "title": "Operating Mode",
+      "type": "string"
+    },
+    "prediction_run_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Prediction Run Id",
+      "type": "string"
+    },
+    "predictions": {
+      "$ref": "#/$defs/ArtifactDigest"
+    },
+    "row_count": {
+      "minimum": 1,
+      "title": "Row Count",
+      "type": "integer"
+    },
+    "schema_version": {
+      "const": "detector_predictions_v1"
+    },
+    "threshold": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Threshold",
+      "type": "number"
+    }
+  },
+  "required": [
+    "schema_version",
+    "prediction_run_id",
+    "binding",
+    "calibration_id",
+    "created_at",
+    "fold",
+    "operating_mode",
+    "threshold",
+    "input_features",
+    "predictions",
+    "row_count",
+    "alert_count",
+    "contains_raw_probabilities",
+    "contains_calibrated_probabilities"
+  ],
+  "title": "LOB Arena Detector Predictions v1",
+  "type": "object"
+}
