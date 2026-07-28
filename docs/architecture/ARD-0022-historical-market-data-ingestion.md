@@ -28,6 +28,33 @@ WebSocket authority.
 - Streaming ingestion, distributed import jobs, and timestamp-paced replay are
   outside this increment.
 
+## Current Data Flow
+
+```mermaid
+graph LR
+    Source["Licensed local LOBSTER pair"]
+    FastAPI["FastAPI validation"]
+    Dataset["Immutable Parquet + manifest"]
+    Java["Java replay adapter"]
+    Control["Historical control"]
+    Hybrid["Hybrid + synthetic overlay"]
+    Evidence["Validation / corpus artifacts"]
+    MLflow["MLflow corpus-release index"]
+
+    Source --> FastAPI
+    FastAPI --> Dataset
+    Dataset --> Java
+    Java --> Control
+    Java --> Hybrid
+    Control --> Evidence
+    Hybrid --> Evidence
+    Evidence -. "hashes + permitted reports only" .-> MLflow
+```
+
+Raw licensed records remain local by default. MLflow may receive source/release
+hashes and permitted derived reports after governance checks; it is not the
+historical dataset registry and does not replace the immutable local manifest.
+
 ## Storage Contract
 
 Each ready dataset contains:
@@ -63,10 +90,16 @@ contract:
   the sole live-book writer.
 - ARD-0023 defines merge ordering, ID separation, seed derivation, label
   isolation, detector input, and comparison artifacts.
+- ARD-0025 governs which validated sessions and independently reviewed windows
+  may enter a frozen corpus.
+- ARD-0027 indexes approved corpus-release metadata without accepting raw
+  LOBSTER records by default.
 
 ## Related Documentation
 
 - [ARD-0018: Canonical Exchange Event Stream](ARD-0018-canonical-exchange-event-stream.md)
 - [ARD-0023: Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
+- [ARD-0025: Governed Corpus and Benchmark](ARD-0025-governed-corpus-and-ml-benchmark.md)
+- [ARD-0027: Shared MLflow Tracking](ARD-0027-shared-mlflow-tracking.md)
 - [Public LOBSTER-compatible fixture](../../data/lobster/README.md)
 - [Historical and hybrid replay instructions](../../README.md#historical-and-hybrid-replay)

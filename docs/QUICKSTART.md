@@ -94,6 +94,23 @@ NEBIUS_CLI_CONFIG_DIR="$HOME/.nebius" \
 docker compose --profile grafana up --build
 ```
 
+### Optional Shared MLflow
+
+The MLflow profile is independent of the core arena and monitoring profiles:
+
+```bash
+make mlflow-bootstrap
+make mlflow-up
+make mlflow-verify
+```
+
+Open <http://127.0.0.1:5500> and use the administrator credential from the
+Git-ignored `deployments/mlflow/.env`. The verification creates the corpus,
+LightGBM-development, governed-evaluation, and binary registered-model
+namespaces and tests PostgreSQL plus S3-compatible artifact persistence.
+PostgreSQL and MinIO are not published to the host. See
+[Shared MLflow Tracking](mlflow-tracking-server.md).
+
 ## 4. Quick Test
 
 In the Arena UI, click **Start** to begin a live simulation. You should see:
@@ -171,7 +188,9 @@ python scripts/call_endpoint.py --base-url http://localhost:9000 --route orderbo
 ## Next Steps
 
 - **Understand the architecture**: Read [Architecture Overview](architecture.md)
+- **Review functional scope**: Read [Functional Overview](FUNCTIONAL_OVERVIEW.md)
 - **Learn the workflows**: Read [Use Cases](USE_CASES.md)
+- **Operate shared MLflow**: Read [Shared MLflow Tracking](mlflow-tracking-server.md)
 - **Deploy to Nebius**: Read [Nebius Deployment](nebius-deployment.md)
 - **Run benchmarks**: Read [Benchmark Methodology](benchmark-methodology.md)
 - **Inspect runtime health**: Read [Kernel Observability](kernel-observability.md)
@@ -194,10 +213,9 @@ If you see `cli_installed: false` in `/api/nebius/status`:
 
 ### Build Fails
 ```bash
-# Clean and rebuild
-docker compose down
-docker system prune -a
-docker compose up --build
+# Rebuild project services without deleting unrelated Docker data
+docker compose build --no-cache
+docker compose up
 ```
 
 ### WebSocket Connection Issues

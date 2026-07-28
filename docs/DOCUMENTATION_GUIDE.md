@@ -9,6 +9,7 @@ graph TD
     Docs["docs"]
     Quickstart["QUICKSTART.md - Get running in 5 minutes"]
     Architecture["architecture.md - System overview"]
+    Functional["FUNCTIONAL_OVERVIEW.md - Capabilities and acceptance"]
     ARDs["architecture - Architecture records"]
     UseCases["USE_CASES.md - Workflow diagrams"]
     Runtime["runtime-model.md - Simulation runtime"]
@@ -23,6 +24,7 @@ graph TD
 
     Docs --> Quickstart
     Docs --> Architecture
+    Docs --> Functional
     Docs --> ARDs
     Docs --> UseCases
     Docs --> Runtime
@@ -44,15 +46,17 @@ graph TD
 
 1. **For newcomers**: Start with [QUICKSTART.md](QUICKSTART.md)
 2. **For architecture understanding**: Start with [architecture.md](architecture.md)
-3. **For workflows**: Read [USE_CASES.md](USE_CASES.md)
-4. **For deployment**: Read [nebius-deployment.md](nebius-deployment.md)
+3. **For functional scope and status**: Read [FUNCTIONAL_OVERVIEW.md](FUNCTIONAL_OVERVIEW.md)
+4. **For workflows**: Read [USE_CASES.md](USE_CASES.md)
+5. **For deployment**: Read [mlflow-tracking-server.md](mlflow-tracking-server.md) and [nebius-deployment.md](nebius-deployment.md)
 
 ### Core References
 
 - **[README.md](../README.md)** — Master index and navigation guide
 - **[architecture.md](architecture.md)** — System design with component responsibilities and data flow
 - **[architecture/README.md](architecture/README.md)** — Index of all Architecture Records
-- **[USE_CASES.md](USE_CASES.md)** — Eight primary workflows with business value
+- **[FUNCTIONAL_OVERVIEW.md](FUNCTIONAL_OVERVIEW.md)** — Product actors, capability status, lifecycle, invariants, and Track A/Track B acceptance
+- **[USE_CASES.md](USE_CASES.md)** — Implemented and planned client/research workflows with business value
 
 ### Specialized Topics
 
@@ -67,6 +71,7 @@ graph TD
 - **[client-historical-dataset-validation-runbook.md](client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
 - **[feature-engineering-lightgbm.md](feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and future trainer rules
 - **[governed-corpus-benchmark-protocol.md](governed-corpus-benchmark-protocol.md)** — Pre-training corpus governance, independent negative labels, frozen split policy, statistical metrics, and release gates
+- **[mlflow-tracking-server.md](mlflow-tracking-server.md)** — Shared tracking topology, security, roadmap namespaces, operations, and governance boundary
 - **[determinism-contract-v1.md](determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
 - **[canonical-hashing-v1.md](canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
 - **[benchmark-methodology.md](benchmark-methodology.md)** — Evaluating detector performance
@@ -79,7 +84,8 @@ graph TD
 
 ### 1. Consistency & Linking
 
-- **All cross-references use markdown links** with relative paths
+- **Internal cross-references use relative markdown links**; external
+  references use HTTPS
 - **Links are tested** to ensure they work (broken links indicate stale docs)
 - **ARDs are linked** from [architecture.md](architecture.md) and [USE_CASES.md](USE_CASES.md)
 - **Use cases are mapped** to architecture components in [USE_CASES.md](USE_CASES.md)
@@ -92,7 +98,8 @@ graph TD
 
 ### 3. Mermaid Diagrams
 
-- **All Mermaid diagrams use conservative `graph TD` or `graph LR` syntax** for broad VS Code compatibility
+- **Mermaid diagrams use conservative `graph` or `flowchart` syntax** with
+  explicit `TD`/`LR` direction for broad GitHub and VS Code compatibility
 - **VS Code requires Mermaid preview support**: install the recommended `bierner.markdown-mermaid` extension if diagrams render as code blocks
 - **Diagrams are self-contained**: No external dependencies
 - **Diagrams include labels** for clarity
@@ -123,7 +130,8 @@ graph TD
 | API changes | [backend/README.md](../backend/README.md), [QUICKSTART.md](QUICKSTART.md), affected ARDs |
 | New ARD created | [architecture/README.md](architecture/README.md), [architecture.md](architecture.md), [USE_CASES.md](USE_CASES.md) |
 | UI shell or presentation behavior changes | [DESIGN-IDEAS.md](DESIGN-IDEAS.md), [architecture.md](architecture.md), [USE_CASES.md](USE_CASES.md), affected ARDs |
-| Deployment changes | [nebius-deployment.md](nebius-deployment.md), [QUICKSTART.md](QUICKSTART.md) |
+| Deployment changes | Relevant deployment guide, [QUICKSTART.md](QUICKSTART.md), [architecture.md](architecture.md), affected ARD |
+| Functional capability/status changes | [FUNCTIONAL_OVERVIEW.md](FUNCTIONAL_OVERVIEW.md), [USE_CASES.md](USE_CASES.md), [README.md](../README.md) |
 | Safety/legal implications | [safety-and-disclaimers.md](safety-and-disclaimers.md) |
 
 ### How to Update
@@ -146,7 +154,8 @@ graph TD
 
 Use this checklist when making documentation changes:
 
-- [ ] All markdown links are relative paths (no `file://`, no `http://`)
+- [ ] Internal links are relative, external links use HTTPS, and no link uses
+      `file://`
 - [ ] All links use proper markdown syntax: `[text](path#section)`
 - [ ] No backticks around file names or links
 - [ ] Mermaid diagrams render without errors (check in VS Code preview)

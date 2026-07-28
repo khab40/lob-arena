@@ -8,8 +8,9 @@ Implementation Status: `[done]`
 
 ## Context
 
-LOB Arena needs to evaluate its existing synthetic spoofing-like, layering-like,
-and quote-stuffing scenarios against genuine historical market conditions.
+LOB Arena needs to evaluate its existing spoofing-like, layering-like,
+quote-stuffing, and liquidity-evaporation scenarios against genuine historical
+market conditions.
 Building a second simulator would split exchange semantics, detector behavior,
 hashing, labels, metrics, and artifacts. Treating all historical records as
 benign ground truth would also make evaluation claims invalid.
@@ -54,6 +55,9 @@ graph LR
     Detector["Existing deterministic detectors"]
     Labels["Separate synthetic ground truth"]
     Metrics["Existing comparison metrics + artifacts"]
+    Corpus["Governed corpus candidate"]
+    Features["Causal feature rows"]
+    MLflow["Shared MLflow index"]
 
     Pair --> Ingest
     Ingest --> Dataset
@@ -64,6 +68,10 @@ graph LR
     Scenario --> Labels
     Detector --> Metrics
     Labels --> Metrics
+    Metrics --> Corpus
+    Corpus --> Features
+    Corpus -. "release hashes" .-> MLflow
+    Features -. "quality metadata" .-> MLflow
 ```
 
 ## Deterministic Ordering
@@ -151,6 +159,12 @@ The existing Python comparison CLI writes:
 - `signature.json`
 - `manifest.json`
 - `checksums.sha256`
+
+After validation, independently adjudicated clean windows and synthetic attack
+intervals may enter the ARD-0025 corpus workflow. ARD-0024 then calculates
+causal numeric features from combined-book checkpoints. MLflow records only
+governed release identities, metrics, and permitted artifacts; it does not
+derive labels or alter replay order.
 
 Artifacts contain source and canonical event counts, historical/synthetic
 hashes, detector alert ticks, TP, FN, FP, TN, precision, recall, F1, and basic
@@ -250,6 +264,9 @@ Tradeoffs:
 - [ARD-0018: Canonical Exchange Event Stream](ARD-0018-canonical-exchange-event-stream.md)
 - [ARD-0020: Java Arena WebSocket And Agent Orchestration](ARD-0020-java-arena-websocket-agent-orchestration.md)
 - [ARD-0022: Historical Market Data Ingestion And Replay](ARD-0022-historical-market-data-ingestion.md)
+- [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
+- [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
+- [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [Architecture Overview](../architecture.md)
 - [Use Cases](../USE_CASES.md)
 - [Historical replay README](../../README.md#historical-and-hybrid-replay)

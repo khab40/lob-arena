@@ -6,7 +6,7 @@ ARDs capture architecture decisions, context, tradeoffs, implementation phases, 
 
 ## Implementation Summary
 
-Status as of 2026-07-26:
+Status as of 2026-07-28:
 
 | ARD | Implementation | Notes |
 |-----|----------------|-------|
@@ -34,6 +34,7 @@ Status as of 2026-07-26:
 | [ARD-0024](ARD-0024-versioned-causal-feature-engineering.md) | `[done]` | Source-agnostic causal snapshot features, typed Parquet, quality metadata, leakage checks, and session-grouped split contract |
 | [ARD-0025](ARD-0025-governed-corpus-and-ml-benchmark.md) | `[done]` | Governed corpus/adjudication, frozen splits, Java-bound evaluation, streaming features, clustered statistics, regime/worst-decile analysis, and signed releases |
 | [ARD-0026](ARD-0026-governed-lightgbm-release-boundary.md) | `[phase-0 done]` | Stable LightGBM training/release identity, validation-only calibration, operating modes, predictions, and checksummed artifact contracts |
+| [ARD-0027](ARD-0027-shared-mlflow-tracking.md) | `[done]` | Authenticated shared MLflow tracking with PostgreSQL metadata, S3-compatible artifacts, and governed experiment/model namespaces |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -61,6 +62,7 @@ diagrams document the execution boundaries.
 - [ARD-0024: Versioned Causal Market-Abuse Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md) — Stable feature names/types, rolling formulas, label isolation, split policy, Parquet, and quality artifacts
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md) — Independent clean labels, chronological grouped splits, Java-bound evaluation, session bootstrap, operational metrics, and signed release gates
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md) — Phase 0 identity, provenance, calibration, operating-point, prediction, and checksummed bundle contracts
+- [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md) — Docker deployment, storage, authentication, roadmap namespaces, and governance boundary
 
 ### Agent Execution
 

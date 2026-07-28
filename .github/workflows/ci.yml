@@ -292,6 +292,9 @@ jobs:
           - name: java-kernel
             context: .
             file: java/Dockerfile
+          - name: mlflow
+            context: deployments/mlflow
+            file: deployments/mlflow/Dockerfile
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -317,6 +320,10 @@ jobs:
       - name: Smoke test Java runtime layout
         if: ${{ matrix.name == 'java-kernel' }}
         run: docker run --rm --entrypoint sh lob-arena-ci/java-kernel:${{ github.sha }} -c 'test "$(id -u)" -ne 0 && test -r /app/app.jar'
+
+      - name: Smoke test MLflow runtime dependencies
+        if: ${{ matrix.name == 'mlflow' }}
+        run: docker run --rm --entrypoint python lob-arena-ci/mlflow:${{ github.sha }} -c 'import boto3, mlflow, psycopg2; assert mlflow.__version__ == "3.13.0"'
 
   compose:
     name: Validate Compose configurations
@@ -351,6 +358,10 @@ jobs:
           test "$(docker compose --profile prometheus config --services | grep -E '^(prometheus|grafana)$' | paste -sd, -)" = "prometheus"
           test "$(docker compose --profile grafana config --services | grep -E '^(prometheus|grafana)$' | sort | paste -sd, -)" = "grafana,prometheus"
           test "$(docker compose --profile monitoring config --services | grep -E '^(prometheus|grafana)$' | sort | paste -sd, -)" = "grafana,prometheus"
+
+      - name: Validate MLflow profile
+        run: |
+          test "$(docker compose --profile mlflow config --services | grep '^mlflow' | sort | paste -sd, -)" = "mlflow,mlflow-minio,mlflow-minio-init,mlflow-postgres"
 
       - name: Verify local mode defaults to the serverless guard
         env:

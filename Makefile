@@ -1,7 +1,7 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
-	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
+	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
 
 grader-smoke:
 	./scripts/grader-smoke.sh
@@ -130,6 +130,31 @@ evaluate-governed-benchmark:
 
 verify-governed-release:
 	backend/.venv/bin/python scripts/verify_governed_release.py "$${GOVERNED_BENCHMARK_OUTPUT}"
+
+mlflow-bootstrap:
+	./scripts/bootstrap-mlflow-env.sh
+
+mlflow-up:
+	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
+	docker compose --env-file deployments/mlflow/.env --profile mlflow up -d --build --wait mlflow
+
+mlflow-status:
+	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
+	docker compose --env-file deployments/mlflow/.env --profile mlflow ps -a mlflow mlflow-postgres mlflow-minio mlflow-minio-init
+
+mlflow-logs:
+	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
+	docker compose --env-file deployments/mlflow/.env --profile mlflow logs --tail=200 mlflow mlflow-postgres mlflow-minio mlflow-minio-init
+
+mlflow-verify:
+	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
+	docker compose --env-file deployments/mlflow/.env --profile mlflow exec -T mlflow \
+		python /opt/lob-arena/mlflow/smoke_test.py
+
+mlflow-down:
+	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
+	docker compose --env-file deployments/mlflow/.env --profile mlflow stop mlflow mlflow-minio mlflow-postgres
+	docker compose --env-file deployments/mlflow/.env --profile mlflow rm -f mlflow mlflow-minio-init mlflow-minio mlflow-postgres
 
 serverless-benchmark:
 	cd serverless/jobs && uv run python run_batch_benchmark.py --config job_config.example.yaml

@@ -1,30 +1,38 @@
 # Use Cases
 
-LOB Arena is an educational synthetic market simulation for demonstrating order-book anomaly detection, red-team scenario injection, deterministic detector evaluation, and AI Investigator explanations.
+LOB Arena is a research and validation platform for historical order-book
+replay, controlled synthetic attack injection, governed detector evaluation,
+shared ML experiments, and AI-assisted investigation.
 
-This document describes business-style use cases. It does not describe real market surveillance, trading signals, or compliance decisioning.
+This document describes business-style use cases. Historical activity is never
+automatically classified as benign or abusive, and the platform does not
+provide trading signals or compliance decisions.
 
 **For architecture details**, see [High-Level Architecture](architecture.md) and [Architecture Records (ARDs)](architecture/README.md).
 
 ## What We Solve
 
-The project solves a demo and evaluation problem: how to make market
+The project solves a detector-validation problem: how to make market
 microstructure anomaly detection understandable, inspectable, and measurable
-without using real market data or claiming real surveillance capability.
+using either synthetic streams or locally licensed historical backgrounds
+without inventing labels for real activity.
 
 We provide:
 
 - a live visual arena where synthetic normal and abuse-like agents act in real time
+- validated, immutable LOBSTER ingestion and historical control replay
+- deterministic hybrid streams containing a separate namespaced attack overlay
 - deterministic detectors that convert order-book behavior into confidence scores and evidence
 - AI Investigator explanations that make detector evidence understandable to a reviewer
-- batch benchmarks that measure detector precision, recall, F1, and latency
-- synthetic labeled datasets for repeatable experiments
+- governed corpora, causal features, chronological splits, and signed benchmark releases
+- shared authenticated MLflow tracking for corpus, model-development, and governed-evaluation records
+- batch benchmarks that measure detector quality, latency, alert load, regimes, and uncertainty
 - local UI shell preferences for day/night/system display and compact navigation
 - safety framing that keeps the project educational and non-compliance-oriented
 
-The core business value is not "detect manipulation in production." The value is
-to demonstrate a complete engineering workflow for synthetic anomaly detection:
-simulate, inject scenarios, detect, explain, benchmark, and report.
+The core business value is detector testing and model-development evidence:
+register, validate, replay, inject, label, review, feature, train, compare,
+explain, and release.
 
 ## How We Use Nebius Serverless
 
@@ -67,36 +75,35 @@ Nebius Serverless Cloud - Managed Experiment jobs:
 - produce benchmark reports and metrics artifacts
 - keep long-running experiment work separate from live demo latency
 
-## Full System
+## Full Functional Lifecycle
 
 ```mermaid
-graph LR
-    Operator["Demo Operator"]
-    Reviewer["Technical Reviewer"]
-    Researcher["Research / Benchmark User"]
-    UI["React Visual Arena + Themed Shell"]
-    Backend["FastAPI Simulator Backend"]
-    Simulation["Synthetic Exchange + Agents"]
-    Detectors["Deterministic Detector Engine"]
-    NebiusEndpoint["Nebius AI / LLM Inference"]
-    NebiusJobs["Nebius Serverless Cloud - Managed Experiment Jobs"]
-    Artifacts["Reports, Metrics, Dataset Artifacts"]
+flowchart LR
+    Register["Register and validate<br/>historical session"]
+    Replay["Historical control replay"]
+    Inject["Hybrid replay +<br/>synthetic attack"]
+    Evidence["Signed comparison<br/>and locality evidence"]
+    Review["Blind clean-window<br/>review / adjudication"]
+    Freeze["Frozen corpus +<br/>chronological split"]
+    Features["Causal features"]
+    Train["LightGBM v1<br/>next delivery"]
+    Compare["Rules vs model<br/>governed evaluation"]
+    Track["MLflow experiments<br/>and approved artifacts"]
+    Client["Client coverage report<br/>and investigation"]
 
-    Operator -->|"choose theme and runtime"| UI
-    Operator -->|"start / pause / reset arena"| UI
-    Operator -->|"launch red-team scenario"| UI
-    Operator -->|"request AI explanation"| UI
-    UI -->|"WebSocket live arena + REST control-plane APIs"| Backend
-    Backend --> Simulation
-    Simulation --> Detectors
-    Detectors --> Backend
-    Backend -->|"incident evidence"| NebiusEndpoint
-    NebiusEndpoint -->|"explanation / scenario draft"| Backend
-    Researcher -->|"run benchmark / dataset job"| NebiusJobs
-    NebiusJobs --> Simulation
-    NebiusJobs --> Detectors
-    NebiusJobs --> Artifacts
-    Reviewer -->|"inspect architecture, reports, screenshots"| Artifacts
+    Register --> Replay
+    Register --> Inject
+    Replay --> Evidence
+    Inject --> Evidence
+    Evidence --> Review
+    Review --> Freeze
+    Freeze --> Features
+    Features --> Train
+    Train --> Compare
+    Compare --> Client
+    Freeze -. "release hash" .-> Track
+    Train -. "development run" .-> Track
+    Compare -. "metrics + manifest" .-> Track
 ```
 
 ## Use Case Summary
@@ -106,7 +113,11 @@ graph LR
 | Command Center Demo | Demo Operator | Run the Serverless E2E demo, inspect endpoint/job status, and show AI investigation plus detector tournament evidence. |
 | Live Arena Mode | Demo Operator | Show a changing synthetic order book with normal and red-team activity. |
 | Manual Scenario Launch | Demo Operator | Inject a bounded abuse-like pattern and observe visible market effects. |
+| Historical Session Registration | Data Steward / Research User | Validate a licensed LOBSTER pair and freeze immutable normalized provenance. |
 | Hybrid Historical Replay | Demo Operator / Research User | Replay a LOBSTER window as an unlabeled control, then inject the same predefined synthetic attack over that window for reproducible comparison. |
+| Governed Corpus Release | Data Steward / Independent Reviewers | Admit sessions and clean windows only after coverage, provenance, blind review, conflict resolution, and signed release gates pass. |
+| Shared MLflow Tracking | ML Engineer / Reviewer | Keep corpus, LightGBM-development, governed-evaluation, and approved model metadata in one authenticated tracking plane. |
+| Governed LightGBM v1 | ML Engineer / Model Validator | Train binary `attack_active`, freeze validation-selected operating modes, and compare against rules without test leakage. This is the next planned detector delivery. |
 | Incident Investigation | Demo Operator / Reviewer | Use AI Investigator to turn detector evidence into a clear explanation. |
 | Red-Team Scenario Generation | Demo Operator | Use Scenario Generator to create a launchable synthetic scenario configuration. |
 | Detector Tournament Benchmark | Research / Benchmark User | Use Managed Experiment jobs to compare detector precision, recall, F1, and latency. |
@@ -212,6 +223,45 @@ Nebius role:
 - Manually launched scenarios can be generated or narrated by Nebius AI.
 - Scenario labels become inputs for Managed Experiment benchmark runs.
 
+## Historical Session Registration
+
+Status: implemented for local/UI ingestion and manifest validation.
+
+Purpose: convert one licensed LOBSTER message/book pair into an immutable,
+locally governed replay dataset without uploading the raw source to MLflow.
+
+```mermaid
+graph LR
+    Steward["Data Steward"]
+    Pair["LOBSTER message + book CSV"]
+    Validate["Schema, synchronization,<br/>book and provenance validation"]
+    Normalize["Aligned Parquet"]
+    Manifest["Checksummed dataset manifest"]
+    Registry["Local dataset registry"]
+
+    Steward --> Pair
+    Pair --> Validate
+    Validate --> Normalize
+    Validate --> Manifest
+    Normalize --> Registry
+    Manifest --> Registry
+```
+
+Main flow:
+
+1. Select a complete session or bounded time window in Data Ingestion.
+2. Validate message/book alignment, price units, timestamps, lifecycle,
+   crossed-book state, visible volume, and source provenance.
+3. Write events, snapshots, and the manifest atomically.
+4. Register the dataset only after all hashes and row counts agree.
+5. Record only permitted manifest/release metadata in downstream tracking.
+
+Business value:
+
+- Creates a reproducible client-data onboarding boundary.
+- Prevents malformed or modified source material from entering Java replay.
+- Keeps licensed raw records local and out of experiment metadata by default.
+
 ## Hybrid Historical Replay
 
 Purpose: compare detector behavior on an immutable LOBSTER window with and
@@ -265,6 +315,110 @@ Nebius role:
 - No Nebius call is required for deterministic replay or detector scoring.
 - Persisted comparison evidence may later be summarized by AI Investigator,
   without moving labels or AI output into the detector decision path.
+
+## Governed Corpus Release
+
+Status: implemented as typed manifests, CLIs, validation gates, chronological
+splits, and signed releases. The multi-reviewer API/UI workflow remains the next
+Track B product delivery.
+
+Purpose: freeze a scientifically defensible corpus instead of treating all
+historical windows as clean negatives.
+
+```mermaid
+graph LR
+    Sessions["Validated complete sessions"]
+    Attacks["Hybrid attack campaigns"]
+    Proposals["Candidate clean windows"]
+    ReviewA["Blind reviewer A"]
+    ReviewB["Blind reviewer B"]
+    Resolve["Conflict adjudication"]
+    Coverage["30 sessions / 3 instruments /<br/>10 dates / families / seeds"]
+    Release["Signed corpus release"]
+
+    Sessions --> Proposals
+    Attacks --> Coverage
+    Proposals --> ReviewA
+    Proposals --> ReviewB
+    ReviewA --> Resolve
+    ReviewB --> Resolve
+    Resolve --> Coverage
+    Coverage --> Release
+```
+
+Acceptance boundary:
+
+- at least 30 complete sessions, three instruments, and ten dates;
+- every protocol-required attack family and at least three seeds per family;
+- two independent blinded decisions or explicit adjudication for every clean
+  window;
+- frozen session-grouped chronological assignments, boundary embargo, and
+  duplicate-source rejection; and
+- exact protocol, corpus, split, feature, signature, and checksum bindings.
+
+MLflow may index the frozen release hash and permitted reports only after these
+repository gates pass.
+
+## Shared MLflow Tracking
+
+Status: implemented and deployed through the opt-in `mlflow` Compose profile.
+
+Purpose: give Track A and Track B one authenticated experiment, artifact, and
+model-registry index without making MLflow the approval authority.
+
+```mermaid
+graph TD
+    Corpus["lob-arena/corpus-releases"]
+    Development["lob-arena/lightgbm-development"]
+    Evaluation["lob-arena/governed-evaluation"]
+    Model["lob-arena-lightgbm-attack-active"]
+    Server["Authenticated MLflow"]
+    Database["PostgreSQL metadata"]
+    Artifacts["S3-compatible artifacts"]
+    Contracts["Signed/checksummed<br/>repository contracts"]
+
+    Corpus --> Server
+    Development --> Server
+    Evaluation --> Server
+    Model --> Server
+    Server --> Database
+    Server --> Artifacts
+    Contracts -. "authorizes what may be logged/released" .-> Server
+```
+
+Main flow:
+
+1. A governed pipeline verifies compatible protocol, corpus, split, feature,
+   and release hashes locally.
+2. It logs parameters, metrics, manifests, and permitted artifacts to the
+   appropriate experiment.
+3. Development models remain in the development experiment.
+4. Final test results enter governed evaluation only after thresholds are
+   frozen.
+5. A registered model version or alias is created only after release
+   verification passes.
+
+## Governed LightGBM v1
+
+Status: planned next major detector feature; Phase 0 contracts, causal features,
+governed benchmark, and shared MLflow are implemented prerequisites.
+
+Purpose: deliver an interpretable binary `attack_active` challenger and compare
+it with deterministic rules on identical governed observations.
+
+Main flow:
+
+1. Load only schema/protocol/corpus/split-compatible feature artifacts.
+2. Fit preprocessing and class weights on the training fold only.
+3. Use validation for early stopping, probability calibration, and threshold
+   selection.
+4. Freeze high-precision, balanced, and high-recall operating modes.
+5. Run one final paired test evaluation against rules.
+6. Persist feature contributions or SHAP evidence, manifests, checksums, and
+   MLflow run/model references.
+
+Primary challenge cases are liquidity evaporation and subtle layering, rather
+than only reproducing already-easy spoofing or quote-stuffing results.
 
 ## Incident Investigation
 
@@ -492,9 +646,13 @@ Each use case is supported by specific architecture components:
 
 | Use Case | Primary Path | Key Components | ARDs |
 |----------|--------------|-----------------|------|
-| Live Arena Mode | Interactive | UI + Backend + Runtime + Exchange | [ARD-0001](architecture/ARD-0001-overall-architecture.md), [ARD-0002](architecture/ARD-0002-websocket-state-schema.md) |
+| Live Arena Mode | Interactive | UI + Java Control Plane + Exchange + Agent Runner | [ARD-0001](architecture/ARD-0001-overall-architecture.md), [ARD-0002](architecture/ARD-0002-websocket-state-schema.md), [ARD-0020](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md) |
 | Manual Scenario Launch | Interactive | Scenario Launcher + Backend API | [ARD-0006](architecture/ARD-0006-scenario-labeling-and-reproducibility.md) |
+| Historical Session Registration | Data governance | FastAPI Ingestion + Local Registry + Immutable Parquet | [ARD-0018](architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](architecture/ARD-0022-historical-market-data-ingestion.md) |
 | Hybrid Historical Replay | Interactive / Evaluation | Data Ingestion + Java Replay Adapter + Integer Exchange + Scenario Launcher + Comparison Artifacts | [ARD-0018](architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](architecture/ARD-0022-historical-market-data-ingestion.md), [ARD-0023](architecture/ARD-0023-hybrid-historical-replay.md) |
+| Governed Corpus Release | Data governance | Review/Adjudication + Coverage Gates + Frozen Split + Signed Release | [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) |
+| Shared MLflow Tracking | ML governance | MLflow + PostgreSQL + S3-Compatible Artifacts | [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md) |
+| Governed LightGBM v1 | ML development / Evaluation | Causal Features + Phase 0 Contracts + MLflow + Paired Benchmark | [ARD-0024](architecture/ARD-0024-versioned-causal-feature-engineering.md), [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md), [ARD-0026](architecture/ARD-0026-governed-lightgbm-release-boundary.md), [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md) |
 | Incident Investigation | Interactive | Incident Store + Nebius Endpoint | [ARD-0005](architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0008](architecture/ARD-0008-nebius-serverless-ai-endpoints.md), [ARD-0015](architecture/ARD-0015-nebius-ai-investigation-team.md) |
 | Red-Team Scenario Generation | Interactive | Nebius Endpoint /generate-scenario | [ARD-0005](architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0016](architecture/ARD-0016-ai-scenario-generator.md) |
 | Detector Tournament Benchmark | Batch | Nebius Jobs + Simulation + Metrics | [ARD-0004](architecture/ARD-0004-benchmark-artifact-format.md), [ARD-0007](architecture/ARD-0007-nebius-serverless-ai-jobs.md), [ARD-0017](architecture/ARD-0017-ai-detector-tournament.md) |
@@ -504,9 +662,11 @@ Each use case is supported by specific architecture components:
 ## Related Documentation
 
 - [Architecture Overview](architecture.md) — System design and data flow
+- [Functional Overview](FUNCTIONAL_OVERVIEW.md) — Capability status, actors, lifecycle and acceptance rules
 - [Architecture Records (ARDs)](architecture/README.md) — Detailed design decisions
 - [Runtime Model](runtime-model.md) — Simulation engine execution
 - [Benchmark Methodology](benchmark-methodology.md) — How we measure detector quality
 - [Nebius Deployment](nebius-deployment.md) — Setup instructions
+- [Shared MLflow Tracking](mlflow-tracking-server.md) — Experiment/model tracking operations and governance boundary
 - [Quick Start](QUICKSTART.md) — Get running in 5 minutes
 - [Safety & Disclaimers](safety-and-disclaimers.md) — Educational focus and limitations

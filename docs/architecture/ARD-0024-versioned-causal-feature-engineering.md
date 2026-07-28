@@ -48,12 +48,14 @@ graph LR
     Truth["External synthetic ground truth"]
     Dataset["Parquet + run/quality JSON"]
     Future["Future LightGBM trainer"]
+    MLflow["Shared MLflow tracking"]
 
     Java --> Canonical
     Canonical --> Pipeline
     Truth -->|"post-feature label join"| Pipeline
     Pipeline --> Dataset
     Dataset --> Future
+    Dataset -. "schema/config hashes + quality metadata" .-> MLflow
 ```
 
 ## Causality and leakage boundary
@@ -91,6 +93,16 @@ The metadata records the canonical input digest, Parquet/quality hashes, row
 counts, complete column inventory, source/session identity, and split policy.
 The quality report records missing values, distributions, class balance, and
 invalid rows.
+
+## Tracking boundary
+
+Feature files remain governed local artifacts referenced by checksum. The
+shared MLflow plane may index the feature schema/configuration hashes, row
+counts, quality metrics, and approved reports in the
+`lob-arena/lightgbm-development` experiment. It must not receive raw licensed
+LOBSTER records, infer labels, choose a fold, or make an incompatible dataset
+acceptable. A future trainer must first pass the ARD-0025 and ARD-0026
+compatibility checks.
 
 ## Alternatives considered
 
@@ -136,5 +148,7 @@ Tradeoffs:
 - [Feature engineering for LightGBM](../feature-engineering-lightgbm.md)
 - [ARD-0018: Canonical Exchange Event Stream](ARD-0018-canonical-exchange-event-stream.md)
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
+- [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
+- [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [Hybrid Dataset Validation](../hybrid-dataset-validation.md)
 - [Architecture Overview](../architecture.md)

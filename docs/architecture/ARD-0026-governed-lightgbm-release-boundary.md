@@ -57,6 +57,37 @@ with the runtime models.
 Phase 0 intentionally does not add LightGBM, train a model, score the test
 fold, or make a detector-performance claim.
 
+## MLflow mapping
+
+MLflow mirrors—but never relaxes—the release state machine:
+
+```mermaid
+graph LR
+    Corpus["Signed corpus + frozen split"]
+    Contract["Phase 0 compatibility gate"]
+    Dev["lightgbm-development experiment"]
+    Validation["Validation-only calibration + thresholds"]
+    Test["governed-evaluation experiment"]
+    Registry["lob-arena-lightgbm-attack-active"]
+    Bundle["Checksummed model bundle"]
+
+    Corpus --> Contract
+    Contract --> Dev
+    Dev --> Validation
+    Validation -->|"frozen candidate"| Test
+    Test --> Registry
+    Test --> Bundle
+    Bundle -. "authoritative hashes" .-> Registry
+```
+
+Training and validation runs belong in
+`lob-arena/lightgbm-development`. The final untouched-test run belongs in
+`lob-arena/governed-evaluation` only after thresholds and calibration are
+frozen. A registered model version is eligible for release only after the
+local model-bundle verifier succeeds. MLflow run IDs may be recorded as
+traceability references, but repository manifests and checksums remain the
+compatibility and release authority.
+
 ## Consequences
 
 Positive:
@@ -79,5 +110,6 @@ Tradeoffs:
 
 - [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
+- [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [Generated Contract Catalog](../../contracts/README.md)
 - [Architecture Overview](../architecture.md)

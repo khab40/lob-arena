@@ -192,6 +192,146 @@ services:
       - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
 
+  mlflow-postgres:
+    image: postgres:16.10-alpine
+    profiles: ["mlflow"]
+    environment:
+      POSTGRES_USER: ${MLFLOW_POSTGRES_USER:-mlflow}
+      POSTGRES_PASSWORD: ${MLFLOW_POSTGRES_PASSWORD:-local-compose-validation-only}
+      POSTGRES_DB: ${MLFLOW_POSTGRES_DB:-mlflow}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - mlflow-postgres-data:/var/lib/postgresql/data
+    networks:
+      - mlflow-internal
+
+  mlflow-minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    profiles: ["mlflow"]
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MLFLOW_MINIO_ROOT_USER:-mlflow-admin}
+      MINIO_ROOT_PASSWORD: ${MLFLOW_MINIO_ROOT_PASSWORD:-local-compose-validation-only}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - mlflow-minio-data:/data
+    networks:
+      - mlflow-internal
+
+  mlflow-minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+    profiles: ["mlflow"]
+    environment:
+      MC_CONFIG_DIR: /tmp/.mc
+      MINIO_ENDPOINT: http://mlflow-minio:9000
+      MINIO_ROOT_USER: ${MLFLOW_MINIO_ROOT_USER:-mlflow-admin}
+      MINIO_ROOT_PASSWORD: ${MLFLOW_MINIO_ROOT_PASSWORD:-local-compose-validation-only}
+      MLFLOW_MINIO_ACCESS_KEY: ${MLFLOW_MINIO_ACCESS_KEY:-mlflow-artifacts}
+      MLFLOW_MINIO_SECRET_KEY: ${MLFLOW_MINIO_SECRET_KEY:-local-compose-validation-only}
+      MLFLOW_S3_BUCKET: ${MLFLOW_S3_BUCKET:-lob-arena-mlflow}
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        mc alias set local "$${MINIO_ENDPOINT}" "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"
+        mc mb --ignore-existing "local/$${MLFLOW_S3_BUCKET}"
+        mc anonymous set none "local/$${MLFLOW_S3_BUCKET}"
+        mc admin user info local "$${MLFLOW_MINIO_ACCESS_KEY}" >/dev/null 2>&1 ||
+          mc admin user add local "$${MLFLOW_MINIO_ACCESS_KEY}" "$${MLFLOW_MINIO_SECRET_KEY}"
+        mc admin policy attach local readwrite --user "$${MLFLOW_MINIO_ACCESS_KEY}"
+    depends_on:
+      mlflow-minio:
+        condition: service_healthy
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - mlflow-internal
+
+  mlflow:
+    build:
+      context: ./deployments/mlflow
+      dockerfile: Dockerfile
+    image: lob-arena/mlflow:3.13.0
+    profiles: ["mlflow"]
+    environment:
+      MLFLOW_POSTGRES_HOST: mlflow-postgres
+      MLFLOW_POSTGRES_PORT: "5432"
+      MLFLOW_POSTGRES_USER: ${MLFLOW_POSTGRES_USER:-mlflow}
+      MLFLOW_POSTGRES_PASSWORD: ${MLFLOW_POSTGRES_PASSWORD:-local-compose-validation-only}
+      MLFLOW_POSTGRES_DB: ${MLFLOW_POSTGRES_DB:-mlflow}
+      MLFLOW_ARTIFACTS_DESTINATION: s3://${MLFLOW_S3_BUCKET:-lob-arena-mlflow}/${MLFLOW_ARTIFACTS_PREFIX:-artifacts}
+      MLFLOW_S3_ENDPOINT_URL: http://mlflow-minio:9000
+      AWS_ACCESS_KEY_ID: ${MLFLOW_MINIO_ACCESS_KEY:-mlflow-artifacts}
+      AWS_SECRET_ACCESS_KEY: ${MLFLOW_MINIO_SECRET_KEY:-local-compose-validation-only}
+      AWS_DEFAULT_REGION: ${MLFLOW_S3_REGION:-us-east-1}
+      MLFLOW_ADMIN_USERNAME: ${MLFLOW_ADMIN_USERNAME:-admin}
+      MLFLOW_ADMIN_PASSWORD: ${MLFLOW_ADMIN_PASSWORD:-local-compose-validation-only}
+      MLFLOW_FLASK_SERVER_SECRET_KEY: ${MLFLOW_FLASK_SERVER_SECRET_KEY:-local-compose-validation-only-change-before-use}
+      MLFLOW_ALLOWED_HOSTS: ${MLFLOW_ALLOWED_HOSTS:-localhost:*,127.0.0.1:*,mlflow:5000}
+      MLFLOW_CORS_ALLOWED_ORIGINS: ${MLFLOW_CORS_ALLOWED_ORIGINS:-http://localhost:5500,http://127.0.0.1:5500}
+      MLFLOW_ENABLE_WORKSPACES: ${MLFLOW_ENABLE_WORKSPACES:-false}
+      MLFLOW_SERVER_WORKERS: ${MLFLOW_SERVER_WORKERS:-2}
+    ports:
+      - "${MLFLOW_BIND_ADDRESS:-127.0.0.1}:${MLFLOW_PORT:-5500}:5000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    depends_on:
+      mlflow-postgres:
+        condition: service_healthy
+      mlflow-minio-init:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      - mlflow-internal
+      - mlflow-edge
+
 volumes:
   prometheus-data:
   grafana-data:
+  mlflow-postgres-data:
+  mlflow-minio-data:
+
+networks:
+  mlflow-internal:
+    internal: true
+  mlflow-edge:

@@ -1,6 +1,6 @@
 # LOB Arena
 
-**Adversarial Synthetic Market Simulation for Surveillance Benchmarking**
+**Governed Historical + Synthetic Order-Book Validation for Market Surveillance**
 
 ![LOB Arena GitHub banner](assets/img/01-lob-arena-banner.jpg)
 
@@ -8,32 +8,62 @@
   <a href="https://github.com/khab40/lob-arena"><img src="https://img.shields.io/badge/GitHub-khab40%2Flob--arena-181717?logo=github&amp;logoColor=white" alt="LOB Arena repository"></a>
   <a href="https://github.com/khab40/lob-arena/actions/workflows/ci.yml"><img src="https://github.com/khab40/lob-arena/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status"></a>
   <a href="https://github.com/nebius"><img src="https://img.shields.io/badge/Nebius-Serverless_AI-6C47FF?logo=nebius&amp;logoColor=white" alt="Nebius Serverless AI"></a>
+  <a href="https://openjdk.org/projects/jdk/25/"><img src="https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&amp;logoColor=white" alt="Java 25"></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring_Boot-Control_Plane-6DB33F?logo=springboot&amp;logoColor=white" alt="Spring Boot control plane"></a>
   <a href="https://github.com/python/cpython"><img src="https://img.shields.io/badge/Python-3.11-3776AB?logo=python&amp;logoColor=white" alt="Python 3.11"></a>
   <a href="https://github.com/fastapi/fastapi"><img src="https://img.shields.io/badge/FastAPI-Backend-009688?logo=fastapi&amp;logoColor=white" alt="FastAPI backend"></a>
   <a href="https://github.com/facebook/react"><img src="https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&amp;logoColor=black" alt="React frontend"></a>
   <a href="https://github.com/vitejs/vite"><img src="https://img.shields.io/badge/Vite-Build-646CFF?logo=vite&amp;logoColor=white" alt="Vite build tooling"></a>
+  <a href="https://mlflow.org/"><img src="https://img.shields.io/badge/MLflow-3.13-0194E2?logo=mlflow&amp;logoColor=white" alt="MLflow 3.13"></a>
+  <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-ML_Metadata-4169E1?logo=postgresql&amp;logoColor=white" alt="PostgreSQL ML metadata"></a>
+  <a href="https://min.io/"><img src="https://img.shields.io/badge/MinIO-ML_Artifacts-C72E49?logo=minio&amp;logoColor=white" alt="MinIO ML artifacts"></a>
+  <a href="https://parquet.apache.org/"><img src="https://img.shields.io/badge/Apache_Parquet-Market_Data-50ABF1?logo=apacheparquet&amp;logoColor=white" alt="Apache Parquet market data"></a>
   <a href="https://github.com/vllm-project/vllm"><img src="https://img.shields.io/badge/vLLM-Endpoint_Inference-7C3AED?logo=github&amp;logoColor=white" alt="vLLM endpoint inference"></a>
   <a href="https://github.com/langchain-ai/langgraph"><img src="https://img.shields.io/badge/LangGraph-Agents-1C3C3C?logo=langchain&amp;logoColor=white" alt="LangGraph agents"></a>
+  <a href="https://prometheus.io/"><img src="https://img.shields.io/badge/Prometheus-Metrics-E6522C?logo=prometheus&amp;logoColor=white" alt="Prometheus metrics"></a>
+  <a href="https://grafana.com/"><img src="https://img.shields.io/badge/Grafana-Observability-F46800?logo=grafana&amp;logoColor=white" alt="Grafana observability"></a>
   <a href="https://github.com/docker/compose"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&amp;logoColor=white" alt="Docker Compose"></a>
   <a href="https://github.com/kubernetes/kubernetes"><img src="https://img.shields.io/badge/Kubernetes-Deployment-326CE5?logo=kubernetes&amp;logoColor=white" alt="Kubernetes deployment"></a>
 </p>
 
-A multi-agent platform that generates realistic synthetic limit-order-book activity and benchmarks market-surveillance systems against adaptive manipulation strategies.
+A research and validation platform that replays licensed historical order-book
+data, injects controlled synthetic attacks, and benchmarks surveillance
+detectors against reproducible ground truth.
 
 ## Problem
 
-Market-surveillance systems need realistic, labeled abuse scenarios to measure detection quality. Real order-flow data is sensitive, confirmed manipulation examples are scarce, and static test fixtures do not represent strategies that adapt to surveillance controls.
+Market-surveillance systems need realistic, labeled abuse scenarios to measure
+detection quality. Real order flow is sensitive, confirmed manipulation
+examples are scarce, and historical windows cannot safely be assumed benign.
+Purely synthetic fixtures also miss the regime diversity of real books.
 
-Teams need a reproducible environment where they can generate synthetic limit-order-book activity, exercise detectors, explain alerts, and compare results without using customer or exchange data.
+Teams need a reproducible environment where they can validate licensed market
+data locally, preserve its provenance, overlay controlled attacks, exercise
+detectors, and compare results without converting raw history into invented
+ground truth.
 
-> **Safety boundary:** LOB Arena is educational and synthetic. It does not detect real manipulation, generate trading signals, or make compliance decisions.
+> **Safety boundary:** LOB Arena is a research and detector-validation
+> platform. Historical replay does not assert that real activity is benign or
+> abusive. The project does not provide trading signals or make compliance
+> decisions.
 
 ## Solution
 
-LOB Arena combines a live synthetic exchange, bounded multi-agent scenarios, deterministic detectors, AI-assisted investigation, and repeatable detector tournaments.
+LOB Arena combines a Java-authoritative exchange, immutable historical replay,
+bounded synthetic attacks, deterministic detectors, governed ML datasets,
+shared experiment tracking, AI-assisted investigation, and repeatable detector
+tournaments.
 
 - Generate normal and adversarial order-book activity with explicit ground-truth labels.
+- Validate and normalize paired LOBSTER message/book files without
+  redistributing licensed source data.
+- Compare an unlabeled historical control with a deterministic hybrid stream
+  containing a namespaced synthetic attack.
 - Run deterministic detectors before any LLM explanation is requested.
+- Build leakage-safe causal features, independently reviewed negative windows,
+  chronological splits, and signed corpus/evaluation releases.
+- Track corpus, LightGBM-development, and governed-evaluation experiments in a
+  shared authenticated MLflow deployment.
 - Investigate structured evidence through a vLLM-backed Nebius Serverless AI Endpoint.
 - Benchmark precision, recall, F1, false positives, and detection latency locally or with Nebius Serverless Jobs.
 - Preserve reports, metrics, logs, and artifacts in checksum-verified evidence bundles.
@@ -42,6 +72,10 @@ LOB Arena combines a live synthetic exchange, bounded multi-agent scenarios, det
 | Workflow | Runtime | Output |
 | --- | --- | --- |
 | Local Mock demo | Laptop + Docker Compose | Synthetic incidents and deterministic reports |
+| Historical validation | FastAPI ingestion + Java replay | Immutable Parquet, provenance, validation and signed evidence |
+| Hybrid detector challenge | Historical control + synthetic overlay | Separate ground truth, paired metrics and causal-locality evidence |
+| Governed ML preparation | Corpus review + causal features + frozen split | Hash-bound training inputs and release contracts |
+| Shared experiment tracking | MLflow + PostgreSQL + S3-compatible artifacts | Corpus, model-development and governed-evaluation history |
 | Endpoint investigation | Nebius Serverless Endpoint | Structured JSON investigation reports |
 | Detector tournament | Local fallback or Nebius Serverless Job | Metrics, leaderboard, benchmark report |
 | Evidence sync | Local store + Object Storage | Reviewable artifacts and integrity metadata |
@@ -50,37 +84,83 @@ LOB Arena combines a live synthetic exchange, bounded multi-agent scenarios, det
 
 ```mermaid
 flowchart LR
-    UI["React / Vite<br/>Command Center + Arena"]
-    Java["Java 25 / Spring<br/>REST + WebSocket + Arena"]
-    API["FastAPI<br/>AI/ML + Serverless APIs"]
-    Runtime["Authoritative Java Runtime<br/>Exchange + Matching"]
-    Detectors["Deterministic Detectors"]
-    Runner["Agent Runner<br/>normal, heavy, LangGraph agents"]
-    Endpoint["Nebius Serverless Endpoint<br/>investigation + generation"]
-    Jobs["Nebius Serverless Jobs<br/>detector tournaments"]
-    Store["Artifacts + Evidence<br/>local disk + S3"]
-    Prometheus["Prometheus<br/>operational metrics"]
-    Grafana["Grafana<br/>dashboards"]
+    subgraph Users["Users and client integrations"]
+        UI["React / Vite<br/>Data Ingestion + Arena + Control"]
+        Client["Research jobs / external detector adapters"]
+    end
 
-    UI <-->|commands + arena state| Java
-    Java --> Runtime
-    Runtime --> Detectors
-    Runtime -->|read-only snapshot| Runner
-    Runner -->|bounded intents| Runtime
-    API <-->|arena evidence| Java
-    API <-->|structured JSON| Endpoint
-    API -->|job request| Jobs
-    Detectors --> Store
-    Endpoint --> Store
-    Jobs --> Store
-    Store --> API
-    Prometheus -->|scrapes| Java
-    Prometheus -->|scrapes| API
-    Prometheus -->|scrapes| Runner
-    Grafana -->|PromQL queries| Prometheus
+    subgraph Sources["Market data and scenarios"]
+        LOBSTER["Licensed LOBSTER<br/>message + book CSV"]
+        Synthetic["Synthetic agents<br/>and attack scenarios"]
+    end
+
+    subgraph Python["Python AI / ML control plane"]
+        API["FastAPI<br/>ingestion + AI + jobs"]
+        Normalize["Validation + immutable<br/>Parquet + manifest"]
+        Corpus["Governed corpus<br/>review + frozen split"]
+        Features["Causal features<br/>lob_features_v1"]
+        Models["Planned learned detectors<br/>LightGBM v1 + sequence models"]
+    end
+
+    subgraph Java["Java 25 authoritative arena"]
+        Replay["Historical replay adapter"]
+        Exchange["Single-writer integer<br/>book + matching"]
+        Rules["Deterministic detectors"]
+        Canonical["Canonical events + snapshots"]
+        Labels["Separate synthetic<br/>ground truth"]
+    end
+
+    subgraph Tracking["Shared ML governance plane"]
+        MLflow["Authenticated MLflow<br/>tracking + registry"]
+        PostgreSQL["PostgreSQL<br/>metadata"]
+        MinIO["S3-compatible artifacts<br/>MinIO / managed storage"]
+    end
+
+    subgraph Outcomes["Evaluation and operations"]
+        Evaluate["Governed paired evaluation<br/>regimes + uncertainty"]
+        Evidence["Checksummed / signed<br/>evidence bundles"]
+        AI["Nebius AI<br/>investigation + jobs"]
+        Observe["Prometheus + Grafana"]
+    end
+
+    UI --> API
+    UI --> Exchange
+    Client --> API
+    LOBSTER --> Normalize
+    Normalize --> Replay
+    Replay -->|"historical phase"| Exchange
+    Synthetic -->|"bounded intents"| Exchange
+    Synthetic --> Labels
+    Exchange --> Canonical
+    Exchange --> Rules
+    Canonical --> Corpus
+    Labels --> Corpus
+    Corpus --> Features
+    Features --> Models
+    Rules --> Evaluate
+    Models --> Evaluate
+    Labels --> Evaluate
+    Corpus -. "hashes + release metadata" .-> MLflow
+    Models -. "runs + approved artifacts" .-> MLflow
+    Evaluate -. "metrics + manifests" .-> MLflow
+    MLflow --> PostgreSQL
+    MLflow --> MinIO
+    Evaluate --> Evidence
+    Rules --> AI
+    AI --> Evidence
+    API --> AI
+    Observe -. "read-only telemetry" .-> API
+    Observe -. "read-only telemetry" .-> Exchange
 ```
 
-Java is the only writer to the exchange and owns browser WebSocket delivery and runner orchestration. Agents receive read-only market snapshots and return bounded decisions. Python is retained for AI/ML, LangGraph-capable runner work, experiments, and serverless components; the LLM receives summarized evidence rather than raw order-book streams.
+Java is the only writer to the combined exchange and owns browser WebSocket
+delivery and runner orchestration. Historical records enter before the
+synthetic phase; agents receive read-only market snapshots and return bounded
+decisions. Python owns ingestion, corpus governance, causal features, ML,
+experiments, and serverless components. MLflow indexes runs and artifacts but
+does not replace the repository's hash compatibility, signatures, or release
+verification. The LLM receives summarized evidence rather than raw order-book
+streams.
 
 Prometheus and Grafana form an optional, read-only observability plane; neither is
 in the simulation or detector decision path. Prometheus scrapes operational
@@ -97,6 +177,7 @@ java/             Java 25 arena, exchange kernel, orchestration, REST, and WebSo
 agent-runner/     Out-of-process normal, heavy, and LangGraph agents
 frontend/         React UI for the arena, investigations, and tournaments
 serverless/       Nebius Endpoint and Job images, prompts, and runners
+deployments/      Shared MLflow and Nebius deployment assets
 scripts/          Deployment, evidence, CI, and secret utilities
 docs/             Architecture, deployment, safety, and benchmark docs
 outputs/          Commit-safe benchmark artifacts
@@ -267,8 +348,9 @@ Compose options can be combined:
 | Core only | `docker compose up --build` |
 | Core + Prometheus | `docker compose --profile prometheus up --build` |
 | Core + Prometheus + Grafana | `docker compose --profile grafana up --build` |
+| Shared MLflow tracking | `make mlflow-bootstrap && make mlflow-up && make mlflow-verify` |
 | Core + Nebius Serverless | `make docker-up-serverless` |
-| Everything | `make docker-up-all` |
+| Core + Nebius Serverless + monitoring | `make docker-up-all` |
 
 The older `monitoring` profile remains an alias for the Prometheus/Grafana pair:
 
@@ -473,11 +555,14 @@ make secrets-check
 | Quick start | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Architecture decisions | [docs/architecture/README.md](docs/architecture/README.md) |
+| Functional capability map | [docs/FUNCTIONAL_OVERVIEW.md](docs/FUNCTIONAL_OVERVIEW.md) |
+| Use cases | [docs/USE_CASES.md](docs/USE_CASES.md) |
 | Runtime model | [docs/runtime-model.md](docs/runtime-model.md) |
 | Prometheus and Grafana observability | [docs/kernel-observability.md](docs/kernel-observability.md) |
 | Benchmark methodology | [docs/benchmark-methodology.md](docs/benchmark-methodology.md) |
 | Causal LightGBM feature engineering | [docs/feature-engineering-lightgbm.md](docs/feature-engineering-lightgbm.md) |
 | Governed corpus and ML benchmark protocol | [docs/governed-corpus-benchmark-protocol.md](docs/governed-corpus-benchmark-protocol.md) |
+| Shared MLflow tracking server | [docs/mlflow-tracking-server.md](docs/mlflow-tracking-server.md) |
 | Nebius deployment | [docs/nebius-deployment.md](docs/nebius-deployment.md) |
 | L40S migration | [docs/l40s-migration.md](docs/l40s-migration.md) |
 | Prompting layer | [docs/surveillance-prompting.md](docs/surveillance-prompting.md) |

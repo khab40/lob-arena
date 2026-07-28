@@ -6,7 +6,7 @@ Date: 2026-05-31
 
 ## Implementation Status
 
-Status as of 2026-07-19: `[partial; live runtime ownership replaced]`
+Status as of 2026-07-28: `[historical decision; current ownership documented in ARD-0020 through ARD-0027]`
 
 Implemented:
 
@@ -15,6 +15,13 @@ Implemented:
 - Old standalone demo, blue-team, report, experiment, and deployment pages have been removed or folded into current Command Center and Arena surfaces.
 - Java/Spring live arena with simulation lifecycle APIs, WebSocket state, scenario launch, deterministic incidents, canonical replay, and JSONL journals.
 - FastAPI retained for AI/ML, Nebius, experiments, evidence, and serverless APIs through a thin Java arena client.
+- Validated LOBSTER ingestion, immutable normalized Parquet, historical control
+  replay, deterministic hybrid streams, and signed causal-locality evidence.
+- Governed negative-window review contracts, chronological corpus splits,
+  causal feature Parquet, statistical evaluation, and signed releases.
+- Authenticated shared MLflow tracking with PostgreSQL metadata,
+  S3-compatible artifacts, roadmap experiments, and a governed
+  `attack_active` model namespace.
 - Java runner orchestration with remote Python HTTP `MarketSnapshot` / `AgentIntent` services, heavy-agent worker pools, and LangGraph-compatible agents.
 - Baseline liquidity invariant with additive per-agent quote ownership and quote-size guardrails.
 - UI shell with compact navigation, persisted day/night/system theme, Command Center orchestration, and paused-state-stable Liquidity Map behavior.
@@ -22,7 +29,26 @@ Implemented:
 - Production Serverless Job and Endpoint evidence archived in the compact frozen [benchmark bundle](../../evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md).
 - Measured runtime/cost records are linked from the submission index; sanitized UI screenshots are committed under `assets/screenshots/`.
 
-Production-grade surveillance integrations, real market data ingestion, compliance workflows, and trading signals remain intentionally out of scope.
+Production surveillance integrations, automated compliance workflows, and
+trading signals remain intentionally out of scope. Historical ingestion is
+implemented as a local licensed-data validation path, not a production market
+feed or assertion that real activity is benign.
+
+## Current Architecture Addendum
+
+The original FastAPI-owned simulator decision below is retained as history. The
+current high-level design is maintained in
+[High-Level Architecture](../architecture.md#system-high-level-design):
+
+- Java is the sole exchange, matching, replay, scenario, deterministic detector,
+  incident, REST, and WebSocket authority.
+- FastAPI owns ingestion, corpus/features/ML, Nebius and evidence tooling.
+- Historical records enter the Java book before the synthetic phase; only the
+  synthetic overlay creates attack labels.
+- Governed corpus, split, feature and model contracts remain the approval
+  authority.
+- MLflow indexes release hashes, runs, metrics and permitted artifacts but
+  cannot approve a corpus or model release.
 
 ## Context
 

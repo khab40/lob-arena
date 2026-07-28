@@ -169,183 +169,119 @@ Detection and Experiments summarize offline detector quality by scenario family,
 | Quote stuffing | 0.96 | 0.92 | 0.94 |
 | Liquidity shock | 0.89 | 0.83 | 0.86 |
 
-## Core Runtime Modules
+## Historical And Hybrid Runtime
 
-### `exchange/`
+```mermaid
+flowchart TD
+    Source["Validated normalized LOBSTER dataset"]
+    Batch["Read next bounded source batch"]
+    Historical["Apply historical phase"]
+    Scenario["Apply synthetic scenario phase"]
+    Combined["Combined Java live book"]
+    Checkpoint["Canonical combined-book checkpoint"]
+    Detector["Deterministic detectors"]
+    Labels["Separate synthetic labels"]
 
-`order_book.py`
-
-- `add_limit_order()`
-- `cancel_order()`
-- `apply_market_order()`
-- `get_l2_snapshot()`
-- `get_best_bid_ask()`
-
-`matching_engine.py`
-
-- `process_event()`
-- `match_market_order()`
-- `update_book()`
-
-`event_log.py`
-
-- `append_event()`
-- `replay_events()`
-
-### `agents/`
-
-`runtime.py`
-
-- `AgentIntent`
-- `MarketSnapshot`
-- `AgentManager`
-- `build_normal_agents()`
-- `build_heavy_agents()`
-
-`TopOfBookMarketMaker`
-
-- maintains bid and ask liquidity around mid price
-
-`DeterministicNoiseTrader`
-
-- emits deterministic small depth updates
-
-`PeriodicLiquidityTaker`
-
-- occasionally sends aggressive buy and sell orders
-
-`SpoofingLikeAgent`
-
-- places a large short-lived wall and cancels before execution
-
-`LayeringLikeAgent`
-
-- places multiple same-side levels and then cancels them
-
-`QuoteStuffingLikeAgent`
-
-- generates many place and cancel updates in a short window
-
-### `detectors/`
-
-`features.py`
-
-- `spread_bps`
-- `depth_top_n`
-- `imbalance`
-- `message_rate`
-- `cancel_to_trade_ratio`
-- `order_lifetime`
-- `wall_size_ratio`
-- `depth_change_pct`
-
-`spoofing_detector.py`
-
-- detects short-lived large visible walls
-
-`layering_detector.py`
-
-- detects coordinated same-side multi-level orders
-
-`quote_stuffing_detector.py`
-
-- detects high update and cancel rates with low execution ratio
-
-`liquidity_shock_detector.py`
-
-- detects depth collapse and spread widening
-
-### `explain/`
-
-The explanation layer receives structured incident evidence and returns a user-facing summary.
-
-Input:
-
-```json
-{
-  "incident_id": "INC-00042",
-  "type": "spoofing_like_wall",
-  "confidence": 0.91,
-  "evidence": {
-    "wall_size_ratio": 8.4,
-    "order_lifetime_ms": 1800,
-    "cancelled_before_execution": true,
-    "imbalance_before": 0.08,
-    "imbalance_after": -0.74
-  }
-}
+    Source --> Batch
+    Batch --> Historical
+    Historical --> Scenario
+    Scenario --> Combined
+    Combined --> Checkpoint
+    Combined --> Detector
+    Scenario --> Labels
+    Checkpoint --> Batch
 ```
 
-Output:
+Historical-only and hybrid modes use the same Java book and source window. In
+historical-only mode the synthetic phase is empty. In hybrid mode, the scenario
+runs after the current source batch and can read the reconstructed current book
+but not unread Parquet rows. Historical identities use `HIST:` and synthetic
+identities use `SYN:`. Only the synthetic scenario produces attack labels.
 
-```json
-{
-  "title": "Spoofing-like liquidity wall detected",
-  "risk_level": "high",
-  "plain_english_summary": "...",
-  "evidence": ["...", "..."],
-  "recommended_action": "Flag this interval for manual review."
-}
+## Runtime Ownership
+
+| Area | Implemented owner | Main responsibility |
+| --- | --- | --- |
+| Integer order book, matching and deterministic kernel | `java/simulation-kernel` | FIFO book mutation, execution, canonical ordering, hashing, scenario programs and batch determinism |
+| Live scheduling, historical replay, detectors and browser state | `java/control-plane` | Single-writer arena, LOBSTER/CSV adapters, REST, WebSocket, incidents, journals and agent orchestration |
+| Remote agent decisions | `agent-runner` | Convert read-only `MarketSnapshot` into bounded `AgentIntent`; never mutate the book |
+| LOBSTER ingestion and local registry | `backend/app/data_ingestion` | Discover, validate, normalize and atomically register immutable local datasets |
+| Corpus, features and ML release boundary | `backend/app/corpus`, `backend/app/features`, `backend/app/ml` | Independent negative labels, frozen splits, causal features and hash-bound model contracts |
+| AI, experiments and Nebius jobs | `backend/app/api`, `backend/app/nebius`, `backend/app/experiments` | Evidence explanation, scenario generation, batch orchestration and artifact collection |
+| Shared experiment tracking | Docker `mlflow` profile | Authenticated run/model index backed by PostgreSQL and S3-compatible artifacts |
+
+## Offline ML Lifecycle
+
+The shared tracking server is outside the live exchange path:
+
+```mermaid
+graph LR
+    Events["Canonical events + snapshots"]
+    Truth["Separate labels + reviewed negatives"]
+    Corpus["Signed corpus + frozen split"]
+    Features["lob_features_v1"]
+    Model["LightGBM v1<br/>next delivery"]
+    Evaluation["Rules vs model evaluation"]
+    Release["Checksummed model release"]
+    MLflow["MLflow tracking + registry"]
+
+    Events --> Corpus
+    Truth --> Corpus
+    Corpus --> Features
+    Features --> Model
+    Model --> Evaluation
+    Evaluation --> Release
+    Corpus -. "hashes" .-> MLflow
+    Model -. "development runs" .-> MLflow
+    Release -. "verified artifacts" .-> MLflow
 ```
 
-## Nebius Components
+MLflow does not receive exchange write authority, decide which windows are
+clean, fit preprocessing, select thresholds, open the test fold, or sign a
+release. Those responsibilities remain in the governed repository pipelines.
 
-### Serverless AI Job
+## API Ownership
 
-Purpose: run offline benchmark simulations.
-
-```bash
-python -m serverless.jobs.run_batch_benchmark \
-  --runs 200 \
-  --scenarios spoofing,layering,quote_stuffing,liquidity_evaporation \
-  --output outputs/benchmark
-```
-
-Expected output structure:
+Representative Java control-plane endpoints:
 
 ```text
-outputs/benchmark/
-  benchmark_report.md
-  benchmark_results.json
-  incidents.jsonl
-  detector_metrics.csv
-  charts/
-    f1_by_scenario.png
-    confidence_distribution.png
-    detection_latency.png
+GET  /api/kernel/status
+GET  /api/arena/state
+GET  /api/arena/exchange-events
+GET  /api/arena/historical-datasets
+POST /api/simulation/start
+POST /api/simulation/pause
+POST /api/simulation/reset
+POST /api/arena/data-source
+POST /api/arena/replay-comparison
+POST /api/scenarios/{scenario}
+GET  /api/incidents
 ```
 
-### Serverless AI Endpoint
-
-Purpose: explain detected incidents and simulation outcomes.
+Representative FastAPI AI/data endpoints:
 
 ```text
-GET  /health
-POST /explain-event
-POST /explain-simulation
-POST /generate-report
+GET    /health
+GET    /api/status
+GET    /api/data-ingestion/lobster/candidates
+POST   /api/data-ingestion/lobster/candidates/{candidate_id}/import
+GET    /api/data-ingestion/datasets
+GET    /api/nebius/status
+POST   /api/incidents/{incident_id}/explain
+POST   /api/nebius/tournament/start
+GET    /api/experiments
+POST   /api/experiments
 ```
 
-## API Design
+The frontend routes arena traffic directly to Java where practical and uses
+FastAPI for ingestion, AI, experiment, and serverless functions. Consult the
+generated FastAPI OpenAPI page and Spring controller tests for the complete
+current contract.
 
-The live demo backend should expose a compact control API for the UI.
+## Related Documentation
 
-```text
-GET  /health
-
-POST /simulation/start
-POST /simulation/pause
-POST /simulation/reset
-
-POST /scenario/spoofing-like
-POST /scenario/layering-like
-POST /scenario/quote-stuffing
-POST /scenario/liquidity-evaporation
-
-GET  /incidents
-POST /incidents/{id}/explain
-
-GET  /benchmark/latest
-```
-
-WebSocket updates should publish the latest order book snapshot, active agent list, recent events, detector scores, active incidents, and simulation status.
+- [High-Level Architecture](architecture.md)
+- [Functional Overview](FUNCTIONAL_OVERVIEW.md)
+- [Use Cases](USE_CASES.md)
+- [Hybrid Dataset Validation](hybrid-dataset-validation.md)
+- [Shared MLflow Tracking Server](mlflow-tracking-server.md)

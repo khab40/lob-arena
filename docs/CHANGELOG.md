@@ -68,6 +68,21 @@ Update this file with each significant commit before pushing.
 
 ### Current - feat: add governed corpus and benchmark protocol
 
+- Added an opt-in, pinned shared MLflow 3.13 Docker deployment with PostgreSQL
+  metadata, private MinIO artifacts, basic authentication, generated local
+  secrets, health-gated startup, persistent volumes, and hardened containers.
+- Review hardening replaced MLflow's use of MinIO root credentials with a
+  dedicated non-root artifact-service identity, added a safe in-place
+  credential upgrade, and extended contract coverage for private storage,
+  bootstrap secrecy, and policy attachment.
+- Added roadmap experiment/model bootstrap and an end-to-end verification run
+  covering authentication, registry metadata, artifact upload, and artifact
+  download without replacing checksum-verified governed release manifests.
+- Consolidated the main README, architecture overview, runtime model, use
+  cases, functional overview, quick start, and ARD-0001/0022-0027 around one
+  high-level design for historical ingestion, deterministic hybrid replay,
+  governed corpus/features, MLflow tracking, learned detectors, and signed
+  client evidence.
 - Added the LightGBM Phase 0 release boundary: strict training-run, calibration,
   model-bundle, and prediction manifests bind stable model/run IDs to exact
   protocol, corpus, chronological assignment, feature, Git, and artifact

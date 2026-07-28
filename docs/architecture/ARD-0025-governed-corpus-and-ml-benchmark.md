@@ -53,6 +53,7 @@ graph LR
     Features["Causal features"]
     Evaluation["Governed evaluation"]
     Release["Signed benchmark bundle"]
+    MLflow["Shared MLflow index"]
 
     Source --> Java
     Java --> Corpus
@@ -62,6 +63,8 @@ graph LR
     Features --> Evaluation
     Java --> Evaluation
     Evaluation --> Release
+    Corpus -. "release ID + signed hashes" .-> MLflow
+    Release -. "metrics + artifact references" .-> MLflow
 ```
 
 Model outputs never feed the clean-window review. Unreviewed or ambiguous
@@ -84,6 +87,13 @@ No model trainer may be promoted before every phase gate passes. All eight
 phases now have executable contracts, CLI entry points, focused tests, and an
 end-to-end signed-release test. Production training remains blocked until a
 real client corpus meets the configured coverage and independent-review gates.
+
+MLflow is an operational index over this process, not the corpus authority.
+Only immutable release identities, hashes, review aggregates, permitted
+reports, and later evaluation results may be logged. Raw licensed sessions and
+individual blind-review decisions remain in governed corpus storage. A
+different MLflow run, tag, or registered-model version cannot override a
+frozen split or signed corpus release.
 
 ## Consequences
 
@@ -108,4 +118,6 @@ Tradeoffs:
 - [ARD-0018: Canonical Exchange Event Stream](ARD-0018-canonical-exchange-event-stream.md)
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
 - [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
+- [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
+- [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [Hybrid Dataset Validation](../hybrid-dataset-validation.md)
