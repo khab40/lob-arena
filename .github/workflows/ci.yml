@@ -391,7 +391,7 @@ jobs:
 
       - name: Validate MLflow profile
         run: |
-          test "$(docker compose --profile mlflow config --services | grep '^mlflow' | sort | paste -sd, -)" = "mlflow,mlflow-minio,mlflow-minio-init,mlflow-postgres"
+          test "$(docker compose --profile mlflow config --services | grep '^mlflow' | sort | paste -sd, -)" = "mlflow,mlflow-exporter,mlflow-exporter-init,mlflow-minio,mlflow-minio-init,mlflow-postgres"
 
       - name: Verify local mode defaults to the serverless guard
         env:
