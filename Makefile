@@ -141,25 +141,32 @@ mlflow-bootstrap:
 
 mlflow-up:
 	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
-	docker compose --env-file deployments/mlflow/.env --profile mlflow up -d --build --wait mlflow
+	docker compose --env-file deployments/mlflow/.env --profile mlflow up -d --build --wait \
+		mlflow mlflow-exporter
 
 mlflow-status:
 	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
-	docker compose --env-file deployments/mlflow/.env --profile mlflow ps -a mlflow mlflow-postgres mlflow-minio mlflow-minio-init
+	docker compose --env-file deployments/mlflow/.env --profile mlflow ps -a \
+		mlflow mlflow-exporter mlflow-exporter-init mlflow-postgres mlflow-minio mlflow-minio-init
 
 mlflow-logs:
 	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
-	docker compose --env-file deployments/mlflow/.env --profile mlflow logs --tail=200 mlflow mlflow-postgres mlflow-minio mlflow-minio-init
+	docker compose --env-file deployments/mlflow/.env --profile mlflow logs --tail=200 \
+		mlflow mlflow-exporter mlflow-exporter-init mlflow-postgres mlflow-minio mlflow-minio-init
 
 mlflow-verify:
 	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
 	docker compose --env-file deployments/mlflow/.env --profile mlflow exec -T mlflow \
 		python /opt/lob-arena/mlflow/smoke_test.py
+	docker compose --env-file deployments/mlflow/.env --profile mlflow exec -T mlflow-exporter \
+		python -c "import urllib.request; body = urllib.request.urlopen('http://127.0.0.1:9464/metrics', timeout=5).read().decode(); assert 'mlflow_exporter_up 1' in body"
 
 mlflow-down:
 	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }
-	docker compose --env-file deployments/mlflow/.env --profile mlflow stop mlflow mlflow-minio mlflow-postgres
-	docker compose --env-file deployments/mlflow/.env --profile mlflow rm -f mlflow mlflow-minio-init mlflow-minio mlflow-postgres
+	docker compose --env-file deployments/mlflow/.env --profile mlflow stop \
+		mlflow-exporter mlflow mlflow-minio mlflow-postgres
+	docker compose --env-file deployments/mlflow/.env --profile mlflow rm -f \
+		mlflow-exporter mlflow-exporter-init mlflow mlflow-minio-init mlflow-minio mlflow-postgres
 
 serverless-benchmark:
 	cd serverless/jobs && uv run python run_batch_benchmark.py --config job_config.example.yaml

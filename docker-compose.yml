@@ -325,6 +325,81 @@ services:
       - mlflow-internal
       - mlflow-edge
 
+  mlflow-exporter-init:
+    image: lob-arena/mlflow:3.13.0
+    profiles: ["mlflow"]
+    entrypoint: ["python", "/opt/lob-arena/mlflow/exporter_bootstrap.py"]
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_ADMIN_USERNAME: ${MLFLOW_ADMIN_USERNAME:-admin}
+      MLFLOW_ADMIN_PASSWORD: ${MLFLOW_ADMIN_PASSWORD:-local-compose-validation-only}
+      MLFLOW_EXPORTER_USERNAME: ${MLFLOW_EXPORTER_USERNAME:-prometheus}
+      MLFLOW_EXPORTER_PASSWORD: ${MLFLOW_EXPORTER_PASSWORD:-local-compose-validation-only}
+      MLFLOW_EXPORTER_EXPERIMENTS: ${MLFLOW_EXPORTER_EXPERIMENTS:-lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation}
+      MLFLOW_EXPORTER_MODEL_NAMES: ${MLFLOW_EXPORTER_MODEL_NAMES:-lob-arena-lightgbm-attack-active}
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - mlflow-edge
+
+  mlflow-exporter:
+    image: lob-arena/mlflow:3.13.0
+    profiles: ["mlflow"]
+    entrypoint: ["python", "/opt/lob-arena/mlflow/exporter.py"]
+    environment:
+      LOG_LEVEL: ${MLFLOW_EXPORTER_LOG_LEVEL:-INFO}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPORTER_USERNAME: ${MLFLOW_EXPORTER_USERNAME:-prometheus}
+      MLFLOW_EXPORTER_PASSWORD: ${MLFLOW_EXPORTER_PASSWORD:-local-compose-validation-only}
+      MLFLOW_EXPORTER_EXPERIMENTS: ${MLFLOW_EXPORTER_EXPERIMENTS:-lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation}
+      MLFLOW_EXPORTER_METRIC_KEYS: ${MLFLOW_EXPORTER_METRIC_KEYS:-precision,recall,f1,false_alerts_per_million_events}
+      MLFLOW_EXPORTER_MODEL_NAMES: ${MLFLOW_EXPORTER_MODEL_NAMES:-lob-arena-lightgbm-attack-active}
+      MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT: ${MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT:-1000}
+      MLFLOW_EXPORTER_MAX_MODEL_VERSIONS: ${MLFLOW_EXPORTER_MAX_MODEL_VERSIONS:-1000}
+      MLFLOW_EXPORTER_CACHE_SECONDS: ${MLFLOW_EXPORTER_CACHE_SECONDS:-30}
+      MLFLOW_HTTP_REQUEST_TIMEOUT: ${MLFLOW_EXPORTER_HTTP_REQUEST_TIMEOUT:-3}
+      MLFLOW_HTTP_REQUEST_MAX_RETRIES: ${MLFLOW_EXPORTER_HTTP_REQUEST_MAX_RETRIES:-0}
+      MLFLOW_EXPORTER_PORT: "9464"
+    expose:
+      - "9464"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9464/ready', timeout=5)",
+        ]
+      interval: 15s
+      timeout: 6s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      mlflow-exporter-init:
+        condition: service_completed_successfully
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - default
+      - mlflow-edge
+
 volumes:
   prometheus-data:
   grafana-data:

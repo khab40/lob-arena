@@ -1,0 +1,196 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "links": [
+    {
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": false,
+      "tags": [],
+      "targetBlank": true,
+      "title": "Open MLflow",
+      "type": "link",
+      "url": "http://127.0.0.1:5500"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {"color": "red", "text": "DOWN"},
+                "1": {"color": "green", "text": "UP"}
+              },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 1}
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "background", "graphMode": "none", "textMode": "auto"},
+      "targets": [{"expr": "mlflow_exporter_up", "refId": "A"}],
+      "title": "MLflow Exporter",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 5, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "targets": [
+        {
+          "expr": "time() - mlflow_exporter_last_success_timestamp_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "Collection Age",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 5, "w": 6, "x": 12, "y": 0},
+      "id": 3,
+      "targets": [
+        {
+          "expr": "mlflow_exporter_collection_duration_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "Collection Duration",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 0},
+      "id": 4,
+      "targets": [
+        {
+          "expr": "mlflow_exporter_collection_errors_total",
+          "refId": "A"
+        }
+      ],
+      "title": "Collection Errors",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 5},
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum(mlflow_runs_observed) by (experiment, status)",
+          "legendFormat": "{{experiment}} · {{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Observed Runs by Status",
+      "type": "barchart"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 5},
+      "id": 6,
+      "targets": [
+        {
+          "expr": "mlflow_latest_finished_run_metric",
+          "legendFormat": "{{experiment}} · {{metric}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest Finished-Run Metrics",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 13},
+      "id": 7,
+      "targets": [
+        {
+          "expr": "mlflow_run_duration_seconds{statistic=\"average\"}",
+          "legendFormat": "{{experiment}} · {{status}}",
+          "refId": "A"
+        },
+        {
+          "expr": "mlflow_run_duration_seconds{statistic=\"maximum\"}",
+          "legendFormat": "{{experiment}} · {{status}} max",
+          "refId": "B"
+        }
+      ],
+      "title": "Observed Run Durations",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 13},
+      "id": 8,
+      "targets": [
+        {
+          "expr": "mlflow_registered_model_versions",
+          "legendFormat": "{{model}} · {{status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Registered Model Versions",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "0": {"color": "green", "text": "COMPLETE"},
+                "1": {"color": "orange", "text": "TRUNCATED"}
+              },
+              "type": "value"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "gridPos": {"h": 5, "w": 24, "x": 0, "y": 21},
+      "id": 9,
+      "targets": [
+        {
+          "expr": "mlflow_run_window_limited",
+          "legendFormat": "runs · {{experiment}}",
+          "refId": "A"
+        },
+        {
+          "expr": "mlflow_model_version_window_limited",
+          "legendFormat": "models · {{model}}",
+          "refId": "B"
+        }
+      ],
+      "title": "Exporter Observation Windows",
+      "type": "stat"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": ["lob-arena", "mlflow", "observability"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "LOB Arena MLflow",
+  "uid": "lob-arena-mlflow",
+  "version": 1
+}

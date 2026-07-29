@@ -14,11 +14,17 @@ flowchart LR
     MLflow["MLflow 3.13<br/>tracking + registry + auth"]
     PostgreSQL["PostgreSQL 16<br/>metadata"]
     MinIO["MinIO<br/>S3-compatible artifacts"]
+    Exporter["Read-only MLflow exporter<br/>bounded Prometheus metrics"]
+    Prometheus["Prometheus"]
+    Grafana["Grafana"]
     Contracts["Governed manifests<br/>hashes + signatures"]
 
     Clients -->|"HTTPS in shared deployments"| MLflow
     MLflow --> PostgreSQL
     MLflow -->|"artifact proxy"| MinIO
+    Exporter -->|"authenticated reads"| MLflow
+    Prometheus -->|"scrape"| Exporter
+    Grafana --> Prometheus
     Clients --> Contracts
     MLflow -. "indexes, never replaces" .-> Contracts
 ```
@@ -26,9 +32,11 @@ flowchart LR
 The Compose deployment uses pinned images, basic authentication, fail-closed
 default permissions, an internal-only container network, health checks,
 persistent volumes, a read-only MLflow filesystem, dropped Linux capabilities,
-generated local secrets, and a dedicated non-root MinIO service identity for
-artifact access. PostgreSQL and MinIO have no host port. Only the MLflow UI/API
-joins the edge network and binds to `127.0.0.1` by default.
+generated local secrets, a dedicated non-root MinIO service identity for
+artifact access, and a non-admin telemetry identity with read-only access to
+the allow-listed experiments and model. PostgreSQL, MinIO, and the exporter
+have no host port. Only the MLflow UI/API joins the edge network and binds to
+`127.0.0.1` by default.
 
 ## Start and verify
 
@@ -47,8 +55,9 @@ make mlflow-verify
 make mlflow-status
 ```
 
-Deployments created before the dedicated MinIO service identity was added can
-be upgraded without rotating initialized PostgreSQL or MinIO root credentials:
+Deployments created before the dedicated MinIO or exporter service identities
+were added can be upgraded without rotating initialized PostgreSQL, MinIO root,
+or MLflow administrator credentials:
 
 ```bash
 ./scripts/bootstrap-mlflow-env.sh --upgrade-service-credentials
@@ -56,8 +65,8 @@ make mlflow-up
 make mlflow-verify
 ```
 
-The upgrade appends only the missing artifact-service identity and secret. It
-fails closed on a partial credential pair and does not print existing secrets.
+The upgrade appends only missing service identities and secrets. It fails
+closed on a partial credential pair and does not print existing secrets.
 
 The verification creates or confirms these roadmap resources:
 
@@ -82,9 +91,33 @@ make mlflow-verify
 make mlflow-down
 ```
 
-`mlflow-down` removes the four MLflow containers but preserves both named
+`mlflow-down` removes the MLflow profile containers but preserves both named
 volumes. It does not stop the core arena services and does not delete tracking
 data.
+
+## Prometheus and Grafana telemetry
+
+The `mlflow-exporter` service authenticates with a generated, non-admin MLflow
+account. A one-shot initializer grants that account `READ` permission only for
+the experiments and registered models in these allow lists:
+
+- `MLFLOW_EXPORTER_EXPERIMENTS`;
+- `MLFLOW_EXPORTER_MODEL_NAMES`; and
+- `MLFLOW_EXPORTER_METRIC_KEYS`.
+
+The exporter caches MLflow queries and exposes aggregate snapshots at
+`mlflow-exporter:9464/metrics` on the Compose network. It exports run counts by
+status, latest allow-listed finished-run metrics, bounded duration statistics,
+registered-model version counts, collection health, and explicit truncation
+signals when an observation limit is reached. Run IDs, hashes, parameters,
+tags, and other unbounded values are never Prometheus labels. Collection uses
+short, configurable MLflow HTTP timeouts and retries so an unavailable tracking
+server cannot hold the Prometheus scrape or readiness endpoint indefinitely.
+
+Start the `mlflow` and `monitoring` profiles, then open the provisioned
+**LOB Arena MLflow** dashboard at <http://127.0.0.1:3000>. MLflow remains the
+source of truth for individual runs; Prometheus stores only operational
+aggregates and current metric snapshots.
 
 ## Track A: LightGBM
 

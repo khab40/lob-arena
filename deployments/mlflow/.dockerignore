@@ -2,4 +2,6 @@
 !Dockerfile
 !entrypoint.py
 !bootstrap_resources.py
+!exporter.py
+!exporter_bootstrap.py
 !smoke_test.py

@@ -5,7 +5,13 @@ RUN python -m pip install --no-cache-dir \
     "boto3==1.40.61" \
     "psycopg2-binary==2.9.11"
 
-COPY entrypoint.py bootstrap_resources.py smoke_test.py /opt/lob-arena/mlflow/
+COPY \
+    entrypoint.py \
+    bootstrap_resources.py \
+    exporter.py \
+    exporter_bootstrap.py \
+    smoke_test.py \
+    /opt/lob-arena/mlflow/
 
 USER 10001:10001
 
