@@ -320,10 +320,12 @@ ordering, provenance, seed derivation, label isolation, metrics, and artifacts.
 The retained Python AI/ML layer can convert the Java canonical event stream
 from LOBSTER, synthetic, or hybrid runs into the same versioned causal feature
 schema for a future LightGBM detector. It writes typed Parquet, run metadata,
-and a feature-quality report. The Phase 1 governed loader verifies exact
-protocol, corpus, split, feature and artifact bindings, exposes only supervised
-rows, and separates development access from the frozen test fold. It does not
-yet train a model or treat unlabeled history as benign.
+and a feature-quality report. The Phase 1 governed loader requires an
+externally hash-anchored feature release, revalidates clean adjudications,
+reconstructs labels from governed ground truth, binds market units to canonical
+Java replays, exposes only supervised rows, and separates development access
+from the frozen test fold. It does not yet train a model or treat unlabeled
+history as benign.
 
 Generate the checked-in reproducible fixture:
 

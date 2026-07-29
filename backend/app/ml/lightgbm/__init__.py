@@ -23,6 +23,13 @@ from app.ml.lightgbm.data import (
     GovernedFeatureShard,
     load_governed_feature_dataset,
 )
+from app.ml.lightgbm.feature_release import (
+    GovernedFeatureReleaseManifest,
+    GovernedFeatureReleaseShard,
+    artifact_digest,
+    load_governed_feature_release,
+    write_governed_feature_release,
+)
 from app.ml.lightgbm.release import verify_phase_zero_release
 
 __all__ = [
@@ -34,6 +41,8 @@ __all__ = [
     "FoldFeatureInput",
     "GovernedFeatureDataset",
     "GovernedFeatureFold",
+    "GovernedFeatureReleaseManifest",
+    "GovernedFeatureReleaseShard",
     "GovernedFeatureShard",
     "GovernedModelBinding",
     "LightGbmTrainingRun",
@@ -43,7 +52,10 @@ __all__ = [
     "OperatingPointConstraints",
     "OperatingPointMetrics",
     "PreprocessingEvidence",
+    "artifact_digest",
+    "load_governed_feature_release",
     "load_governed_feature_dataset",
     "validate_phase_zero_compatibility",
     "verify_phase_zero_release",
+    "write_governed_feature_release",
 ]

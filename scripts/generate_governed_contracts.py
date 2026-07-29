@@ -24,6 +24,9 @@ from app.ml.lightgbm.contracts import (  # noqa: E402
     LightGbmTrainingRun,
     ModelBundleManifest,
 )
+from app.ml.lightgbm.feature_release import (  # noqa: E402
+    GovernedFeatureReleaseManifest,
+)
 
 
 CONTRACTS: dict[str, tuple[Type[BaseModel], str]] = {
@@ -50,6 +53,10 @@ CONTRACTS: dict[str, tuple[Type[BaseModel], str]] = {
     "governed-regime-evidence-v1.schema.json": (
         GovernedRegimeEvidence,
         "LOB Arena Governed Regime Evidence v1",
+    ),
+    "governed-feature-release-v1.schema.json": (
+        GovernedFeatureReleaseManifest,
+        "LOB Arena Governed Feature Release v1",
     ),
     "lightgbm-training-run-v1.schema.json": (
         LightGbmTrainingRun,

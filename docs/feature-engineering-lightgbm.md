@@ -250,14 +250,25 @@ brew install libomp
 ```
 
 `load_governed_feature_dataset` accepts a protocol, locally validated corpus,
-frozen split, feature configuration, artifact root, and the complete feature
-run inventory for the selected access mode. It recomputes bindings and hashes,
-verifies every Parquet identity and label source, rejects incomplete
-session/campaign coverage, and yields only supervised rows.
+frozen split, feature configuration, corpus artifact root, and a
+`governed_feature_release_v1` manifest with its externally frozen SHA-256
+digest. The release inventories every train, validation and test replay,
+run-metadata file, Parquet shard and quality report without opening test
+artifacts during development access.
+
+The loader revalidates the release-pinned clean adjudications, reconstructs
+labels from governed campaign ground truth, and compares all four label fields
+row by row. It also binds run identity, price tick size, quantity lot size and
+tick interval to the exact canonical Java replay manifest. Updating
+bundle-local checksums cannot preserve the externally supplied release digest.
 
 `development` access returns train and validation. `final_test` returns only
 test. No API mode loads all folds together. Null historical labels remain in
 the immutable Parquet source and are never converted into negatives.
+
+The release runtime model and checked-in JSON Schema are
+`GovernedFeatureReleaseManifest` and
+`contracts/governed-feature-release-v1.schema.json`.
 
 Run the Phase 0 and Phase 1 contract suite with:
 

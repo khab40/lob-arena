@@ -22,11 +22,19 @@ The loader:
 
 - locally recomputes corpus validation against the configured artifact root;
 - validates the exact protocol, corpus, split and feature-configuration hashes;
-- verifies feature and quality-file SHA-256 digests and Parquet schema metadata;
+- requires a complete `governed_feature_release_v1` manifest whose bytes match
+  an externally supplied frozen SHA-256 digest;
+- verifies release-pinned replay, run-metadata, feature and quality artifacts;
 - maps each feature run to one registered base session and, when seeded, one
   registered synthetic campaign;
+- binds run identity, tick size, lot size and tick interval to the exact
+  canonical Java replay manifest;
 - requires exact control/campaign coverage for every selected fold;
-- rejects invalid, non-finite, misordered or incorrectly sourced labeled rows;
+- locally revalidates the exact clean-window adjudication artifact and its
+  reviewer/equivalence evidence;
+- reconstructs every expected row label from governed campaign ground truth
+  plus eligible verified-clean windows;
+- rejects invalid, non-finite, misordered or incorrectly labeled rows;
 - keeps unlabeled rows immutable but excludes them from supervised batches;
 - admits only independently verified clean negatives and synthetic-scenario
   positives; and
@@ -54,6 +62,9 @@ adapter exists.
   corpus, split or label semantics.
 - Feature files remain local and licence-controlled; the loader returns hashes
   suitable for Phase 0 manifests and MLflow traceability.
+- Editing a feature bundle, replay, adjudication or release manifest requires a
+  new explicitly frozen release digest; bundle-local checksum rewrites cannot
+  preserve the previous release identity.
 
 The loader does not train, calibrate, score or release a model. Those remain
 later Track A phases.

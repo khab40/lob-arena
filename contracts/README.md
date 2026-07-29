@@ -40,6 +40,7 @@ The governed ML workflow adds fail-closed JSON contracts for:
 - `canonical-java-replay-bundle-v1.schema.json`;
 - `feature-streaming-validation-v1.schema.json`;
 - `governed-regime-evidence-v1.schema.json`;
+- `governed-feature-release-v1.schema.json`;
 - `benchmark-results-v2.schema.json`;
 - `lightgbm-training-run-v1.schema.json`;
 - `lightgbm-model-bundle-v1.schema.json`;

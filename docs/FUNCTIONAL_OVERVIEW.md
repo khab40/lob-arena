@@ -36,7 +36,7 @@ generate trading signals, or make compliance decisions.
 | Multi-reviewer corpus API/UI | Planned Track B | Blind decisions, conflict resolution, freeze and signed corpus release workflow |
 | Causal feature pipeline | Implemented | `lob_features_v1` Parquet, quality metadata and leakage checks |
 | LightGBM Phase 0 boundary | Implemented | Hash-bound training, calibration, prediction and model-bundle contracts |
-| LightGBM Phase 1 data boundary | Implemented | Exact governed feature loading, fold inventory, label provenance and isolated test access |
+| LightGBM Phase 1 data boundary | Implemented | Externally anchored feature release, reconstructed governed labels, replay-unit binding and isolated test access |
 | Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
 | LightGBM v1 trainer and detector | Planned Track A next | Binary training, calibrated operating modes, contributions and paired test |
 | GRU/Transformer challenger | Future | Sequence-aware attack state/phase model after LightGBM establishes value |

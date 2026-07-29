@@ -4,7 +4,7 @@ import hashlib
 import json
 import math
 from collections import Counter
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -17,9 +17,13 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
 
 from app.corpus.governance import (
     CampaignManifest,
+    CleanWindowAdjudication,
     CorpusValidationReport,
     GovernedCorpusManifest,
     GovernedSession,
+    load_adjudications,
+    merge_verified_clean_feature_labels,
+    validate_adjudications,
     validate_corpus,
 )
 from app.corpus.models import GovernedBenchmarkProtocol
@@ -30,20 +34,33 @@ from app.corpus.splits import (
     validate_split_manifest,
 )
 from app.features.io import feature_arrow_schema
-from app.features.models import FeaturePipelineConfig, FeatureRunMetadata
+from app.features.io import load_labels
+from app.features.models import (
+    FeaturePipelineConfig,
+    FeatureRunMetadata,
+    LabelSpec,
+    assign_label,
+)
 from app.features.pipeline import (
     FEATURE_COLUMNS,
     FEATURE_SCHEMA_VERSION,
     METADATA_COLUMNS,
     feature_split_group,
 )
+from app.evaluation.canonical_bundle import (
+    CanonicalJavaReplayManifest,
+    bind_replay_manifest_to_corpus_session,
+)
+from app.ml.lightgbm.feature_release import (
+    GovernedFeatureReleaseManifest,
+    GovernedFeatureReleaseShard,
+    load_governed_feature_release,
+    resolve_verified_artifact,
+)
 
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
 AccessMode = Literal["development", "final_test"]
-FEATURE_RUN_SCHEMA_VERSIONS = frozenset(
-    {"feature_run_metadata_v1", "feature_stream_run_metadata_v1"}
-)
 SUPERVISED_LABEL_SOURCES = {
     0: "independently_verified_clean",
     1: "synthetic_scenario",
@@ -172,6 +189,8 @@ class GovernedFeatureDataset:
     assignment_hash: str
     feature_schema_version: str
     feature_config_hash: str
+    feature_release_id: str
+    feature_release_sha256: str
     ordered_feature_columns: tuple[str, ...]
     folds: tuple[GovernedFeatureFold, ...]
 
@@ -189,8 +208,10 @@ def load_governed_feature_dataset(
     corpus_validation_path: Path,
     split_manifest_path: Path,
     feature_config_path: Path,
-    feature_run_dirs: Sequence[Path],
-    artifact_root: Path,
+    feature_release_manifest_path: Path,
+    expected_feature_release_sha256: str,
+    feature_artifact_root: Path,
+    corpus_artifact_root: Path,
     access_mode: AccessMode = "development",
 ) -> GovernedFeatureDataset:
     """Load only locally verified, hash-compatible, fold-governed feature rows.
@@ -217,6 +238,10 @@ def load_governed_feature_dataset(
     )
     feature_config_payload = _load_json_object(feature_config_path)
     feature_config = FeaturePipelineConfig.model_validate(feature_config_payload)
+    release = load_governed_feature_release(
+        feature_release_manifest_path,
+        expected_sha256=expected_feature_release_sha256,
+    )
     _validate_governed_inputs(
         protocol=protocol,
         corpus=corpus,
@@ -224,17 +249,30 @@ def load_governed_feature_dataset(
         split=split,
         feature_config=feature_config,
         feature_config_payload=feature_config_payload,
-        artifact_root=artifact_root,
+        artifact_root=corpus_artifact_root,
+    )
+    _validate_feature_release(
+        release,
+        protocol=protocol,
+        corpus=corpus,
+        split=split,
+        feature_config=feature_config,
+    )
+    adjudications_path = resolve_verified_artifact(
+        release.adjudications,
+        root=feature_artifact_root,
+    )
+    adjudications = load_adjudications(adjudications_path)
+    validate_adjudications(
+        adjudications,
+        manifest=corpus,
+        protocol=protocol,
+        artifact_root=corpus_artifact_root,
     )
 
     requested_folds: tuple[FoldName, ...] = (
         ("train", "validation") if access_mode == "development" else ("test",)
     )
-    if not feature_run_dirs:
-        raise ValueError("governed feature loading requires at least one feature run")
-    resolved_dirs = [path.resolve() for path in feature_run_dirs]
-    if len(resolved_dirs) != len(set(resolved_dirs)):
-        raise ValueError("governed feature run directories must be unique")
 
     sessions_by_identity = {
         _session_identity(session): session
@@ -248,16 +286,28 @@ def load_governed_feature_dataset(
     shards: list[GovernedFeatureShard] = []
     run_ids: set[str] = set()
     inventory: set[tuple[str, str | None]] = set()
-    for directory in sorted(resolved_dirs, key=str):
+    selected_release_shards = [
+        shard for shard in release.shards if shard.fold in requested_folds
+    ]
+    for release_shard in sorted(
+        selected_release_shards,
+        key=lambda item: (
+            item.base_session_id,
+            item.campaign_id or "",
+            item.run_id,
+        ),
+    ):
         shard = _load_feature_shard(
-            directory,
+            release_shard,
             protocol=protocol,
             corpus=corpus,
-            split=split,
             feature_config=feature_config,
             sessions_by_identity=sessions_by_identity,
             assignments_by_session=assignments_by_session,
-            artifact_root=artifact_root,
+            adjudications=adjudications,
+            adjudications_sha256=release.adjudications.sha256,
+            feature_artifact_root=feature_artifact_root,
+            corpus_artifact_root=corpus_artifact_root,
         )
         if shard.run_id in run_ids:
             raise ValueError(f"duplicate governed feature run ID: {shard.run_id}")
@@ -308,6 +358,8 @@ def load_governed_feature_dataset(
         assignment_hash=split.assignment_hash,
         feature_schema_version=FEATURE_SCHEMA_VERSION,
         feature_config_hash=feature_config.config_hash(),
+        feature_release_id=release.release_id,
+        feature_release_sha256=expected_feature_release_sha256,
         ordered_feature_columns=tuple(FEATURE_COLUMNS),
         folds=loaded_folds,
     )
@@ -347,22 +399,71 @@ def _validate_governed_inputs(
     validate_split_manifest(split, corpus=corpus, protocol=protocol)
 
 
-def _load_feature_shard(
-    directory: Path,
+def _validate_feature_release(
+    release: GovernedFeatureReleaseManifest,
     *,
     protocol: GovernedBenchmarkProtocol,
     corpus: GovernedCorpusManifest,
     split: GovernedSplitManifest,
     feature_config: FeaturePipelineConfig,
+) -> None:
+    required = {
+        "protocol_id": protocol.protocol_id,
+        "protocol_hash": protocol.protocol_hash(),
+        "corpus_id": corpus.corpus_id,
+        "corpus_hash": corpus.corpus_hash(),
+        "split_id": split.split_id,
+        "assignment_hash": split.assignment_hash,
+        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "feature_config_hash": feature_config.config_hash(),
+    }
+    if any(getattr(release, name) != value for name, value in required.items()):
+        raise ValueError("feature release is incompatible with governed inputs")
+
+    assignments = {
+        assignment.base_session_id: assignment.fold
+        for assignment in split.assignments
+    }
+    sessions = {session.base_session_id: session for session in corpus.sessions}
+    expected = {
+        (base_session_id, None, fold)
+        for base_session_id, fold in assignments.items()
+    }
+    expected.update(
+        (base_session_id, campaign.campaign_id, assignments[base_session_id])
+        for base_session_id, session in sessions.items()
+        if base_session_id in assignments
+        for campaign in session.campaigns
+    )
+    observed = {
+        (shard.base_session_id, shard.campaign_id, shard.fold)
+        for shard in release.shards
+    }
+    if observed != expected:
+        raise ValueError(
+            "feature release does not exactly inventory the frozen split domains"
+        )
+
+
+def _load_feature_shard(
+    release_shard: GovernedFeatureReleaseShard,
+    *,
+    protocol: GovernedBenchmarkProtocol,
+    corpus: GovernedCorpusManifest,
+    feature_config: FeaturePipelineConfig,
     sessions_by_identity: dict[tuple[str, str, date, str], GovernedSession],
     assignments_by_session: dict[str, SessionSplitAssignment],
-    artifact_root: Path,
+    adjudications: list[CleanWindowAdjudication],
+    adjudications_sha256: str,
+    feature_artifact_root: Path,
+    corpus_artifact_root: Path,
 ) -> GovernedFeatureShard:
-    if not directory.is_dir():
-        raise ValueError(f"governed feature run directory is missing: {directory}")
-    metadata_path = directory / "run-metadata.json"
+    metadata_path = resolve_verified_artifact(
+        release_shard.run_metadata,
+        root=feature_artifact_root,
+    )
     manifest = _FeatureRunManifest.model_validate(_load_json_object(metadata_path))
-    if manifest.schema_version not in FEATURE_RUN_SCHEMA_VERSIONS:
+    if manifest.schema_version != release_shard.run_metadata.schema_version:
         raise ValueError("feature run metadata schema is unsupported")
     if (
         manifest.feature_schema_version != FEATURE_SCHEMA_VERSION
@@ -378,55 +479,98 @@ def _load_feature_shard(
     )
     if manifest.columns != expected_columns:
         raise ValueError("feature run column inventory is incompatible")
-    _validate_provenance(manifest, protocol=protocol, corpus=corpus)
-
     session = sessions_by_identity.get(_run_identity(manifest.run))
-    if session is None or manifest.run.dataset_id != session.dataset_id:
+    if (
+        session is None
+        or manifest.run.dataset_id != session.dataset_id
+        or release_shard.base_session_id != session.base_session_id
+    ):
         raise ValueError("feature run is not bound to a governed corpus session")
     assignment = assignments_by_session.get(session.base_session_id)
-    if assignment is None:
+    if assignment is None or release_shard.fold != assignment.fold:
         raise ValueError(
             "feature run belongs to a fold that is unavailable in this access mode"
         )
-    expected_split_group = feature_split_group(manifest.run)
-    campaign = _resolve_campaign(session, manifest.run.seed)
+
+    replay_path = resolve_verified_artifact(
+        release_shard.replay_manifest,
+        root=feature_artifact_root,
+    )
+    replay = CanonicalJavaReplayManifest.model_validate(
+        _load_json_object(replay_path)
+    )
+    bind_replay_manifest_to_corpus_session(replay, session)
+    expected_run_metadata = _feature_metadata_from_replay(replay)
     if (
-        (campaign is None and manifest.run.source_type != "lobster")
+        manifest.run.model_dump(mode="json")
+        != expected_run_metadata.model_dump(mode="json")
+        or manifest.run.run_id != release_shard.run_id
+    ):
+        raise ValueError(
+            "feature run identity or market units do not match its canonical replay"
+        )
+    campaign = _resolve_campaign(session, replay.seed)
+    if (
+        release_shard.campaign_id != replay.campaign_id
         or (
             campaign is not None
-            and manifest.run.source_type not in {"hybrid", "synthetic"}
+            and campaign.campaign_id != release_shard.campaign_id
         )
     ):
-        raise ValueError("feature run source type does not match its replay domain")
+        raise ValueError("feature release campaign identity is incompatible")
+    expected_labels = _expected_labels(
+        replay,
+        session=session,
+        campaign=campaign,
+        adjudications=adjudications,
+        corpus_artifact_root=corpus_artifact_root,
+    )
+    clean_window_ids = sorted(
+        window.provenance_id
+        for window in expected_labels.labels
+        if window.label == 0 and window.provenance_id is not None
+    )
+    _validate_provenance(
+        manifest,
+        protocol=protocol,
+        corpus=corpus,
+        replay_manifest_sha256=release_shard.replay_manifest.sha256,
+        adjudications_sha256=adjudications_sha256,
+        clean_window_ids=clean_window_ids,
+    )
+
+    expected_split_group = feature_split_group(manifest.run)
     validation_reference = (
         session.control_validation if campaign is None else campaign.validation
     )
     validation_payload = _load_json_object(
-        _resolve_artifact(artifact_root, validation_reference.uri)
+        _resolve_artifact(corpus_artifact_root, validation_reference.uri)
     )
     if (
         validation_payload.get("canonical_event_stream_hash")
-        != manifest.input.get("java_canonical_event_stream_hash")
+        != replay.canonical_event_stream_hash
+        or manifest.input.get("java_canonical_event_stream_hash")
+        != replay.canonical_event_stream_hash
     ):
         raise ValueError(
             "feature run canonical event hash does not match its governed replay"
         )
 
-    feature_path = directory / manifest.output.feature_file
-    quality_path = directory / manifest.output.quality_file
-    _verify_file(
-        feature_path,
-        expected_sha256=manifest.output.feature_file_sha256,
-        expected_size=manifest.output.feature_file_size_bytes,
-        description=f"feature shard {manifest.run.run_id}",
+    feature_path = resolve_verified_artifact(
+        release_shard.features,
+        root=feature_artifact_root,
     )
-    quality_size = quality_path.stat().st_size if quality_path.is_file() else -1
-    _verify_file(
-        quality_path,
-        expected_sha256=manifest.output.quality_file_sha256,
-        expected_size=quality_size,
-        description=f"feature quality {manifest.run.run_id}",
+    quality_path = resolve_verified_artifact(
+        release_shard.quality,
+        root=feature_artifact_root,
     )
+    if (
+        manifest.output.feature_file_sha256 != release_shard.features.sha256
+        or manifest.output.feature_file_size_bytes
+        != release_shard.features.size_bytes
+        or manifest.output.quality_file_sha256 != release_shard.quality.sha256
+    ):
+        raise ValueError("feature run outputs do not match the frozen feature release")
     parquet = pq.ParquetFile(feature_path)
     if not parquet.schema_arrow.equals(
         feature_arrow_schema(feature_config.config_hash()),
@@ -440,9 +584,8 @@ def _load_feature_shard(
         parquet,
         manifest=manifest,
         session=session,
-        assignment=assignment,
         campaign_id=campaign.campaign_id if campaign is not None else None,
-        campaign_family=campaign.attack_family if campaign is not None else None,
+        expected_labels=expected_labels,
         expected_split_group=expected_split_group,
     )
     quality = _load_json_object(quality_path)
@@ -457,7 +600,7 @@ def _load_feature_shard(
         feature_sha256=manifest.output.feature_file_sha256,
         feature_size_bytes=manifest.output.feature_file_size_bytes,
         run_metadata_path=metadata_path.resolve(),
-        run_metadata_sha256=_sha256(metadata_path),
+        run_metadata_sha256=release_shard.run_metadata.sha256,
         total_row_count=counts["total"],
         supervised_row_count=counts["positive"] + counts["negative"],
         positive_row_count=counts["positive"],
@@ -467,11 +610,70 @@ def _load_feature_shard(
     )
 
 
+def _feature_metadata_from_replay(
+    replay: CanonicalJavaReplayManifest,
+) -> FeatureRunMetadata:
+    source_type = {
+        "historical_control": "lobster",
+        "synthetic": "synthetic",
+        "hybrid": "hybrid",
+    }[replay.mode]
+    return FeatureRunMetadata(
+        run_id=replay.run_id,
+        dataset_id=replay.dataset_id,
+        source_type=source_type,
+        instrument=replay.instrument,
+        venue=replay.venue,
+        session_id=replay.session_id,
+        session_date=replay.session_date,
+        seed=replay.seed,
+        price_tick_size=replay.price_tick_size,
+        quantity_lot_size=replay.quantity_lot_size,
+        tick_interval_ns=replay.tick_interval_ns,
+    )
+
+
+def _expected_labels(
+    replay: CanonicalJavaReplayManifest,
+    *,
+    session: GovernedSession,
+    campaign: CampaignManifest | None,
+    adjudications: list[CleanWindowAdjudication],
+    corpus_artifact_root: Path,
+) -> LabelSpec:
+    base_labels = LabelSpec()
+    if campaign is not None:
+        base_labels = load_labels(
+            _resolve_artifact(corpus_artifact_root, campaign.ground_truth.uri)
+        )
+        if (
+            len(base_labels.labels) != replay.label_count
+            or any(window.label != 1 for window in base_labels.labels)
+            or any(
+                window.attack_family != campaign.attack_family
+                or window.label_source != "synthetic_scenario"
+                for window in base_labels.labels
+            )
+        ):
+            raise ValueError(
+                "campaign ground truth does not define the governed synthetic labels"
+            )
+    return merge_verified_clean_feature_labels(
+        base_labels,
+        adjudications,
+        base_session_id=session.base_session_id,
+        replay_mode=replay.mode,
+    )
+
+
 def _validate_provenance(
     manifest: _FeatureRunManifest,
     *,
     protocol: GovernedBenchmarkProtocol,
     corpus: GovernedCorpusManifest,
+    replay_manifest_sha256: str,
+    adjudications_sha256: str,
+    clean_window_ids: list[str],
 ) -> None:
     required = {
         "governed_corpus_id": corpus.corpus_id,
@@ -480,14 +682,16 @@ def _validate_provenance(
         "governed_protocol_sha256": protocol.protocol_hash(),
         "clean_label_artifact_verification_mode": "local",
         "canonical_java_replay_bundle": "canonical_java_replay_bundle_v1",
+        "replay_manifest_sha256": replay_manifest_sha256,
+        "clean_adjudications_sha256": adjudications_sha256,
+        "clean_negative_window_ids": clean_window_ids,
+        "clean_negative_window_count": len(clean_window_ids),
     }
     if any(manifest.input.get(name) != value for name, value in required.items()):
         raise ValueError("feature run governed provenance is incompatible")
     for name in (
         "canonical_event_stream_sha256",
         "java_canonical_event_stream_hash",
-        "replay_manifest_sha256",
-        "clean_adjudications_sha256",
     ):
         _require_sha256(manifest.input.get(name), name)
 
@@ -497,9 +701,8 @@ def _validate_feature_rows(
     *,
     manifest: _FeatureRunManifest,
     session: GovernedSession,
-    assignment: SessionSplitAssignment,
     campaign_id: str | None,
-    campaign_family: str | None,
+    expected_labels: LabelSpec,
     expected_split_group: str,
 ) -> Counter[str]:
     counts: Counter[str] = Counter()
@@ -546,13 +749,26 @@ def _validate_feature_rows(
                 ):
                     raise ValueError(f"feature row contains a non-finite value: {name}")
 
-            label = row["label"]
+            expected_label = assign_label(
+                expected_labels,
+                tick=tick,
+                prediction_timestamp_ns=timestamp,
+            )
+            if any(
+                row[name] != value
+                for name, value in {
+                    "label": expected_label.label,
+                    "attack_family": expected_label.attack_family,
+                    "attack_phase": expected_label.attack_phase,
+                    "label_source": expected_label.label_source,
+                }.items()
+            ):
+                raise ValueError(
+                    "feature row label does not match governed ground truth "
+                    "and clean-window adjudications"
+                )
+            label = expected_label.label
             if label is None:
-                if any(
-                    row[name] is not None
-                    for name in ("attack_family", "attack_phase", "label_source")
-                ):
-                    raise ValueError("unlabeled feature rows cannot carry label metadata")
                 counts["unlabeled"] += 1
                 continue
             if label not in (0, 1):
@@ -574,8 +790,8 @@ def _validate_feature_rows(
                 continue
             if (
                 campaign_id is None
-                or row["attack_family"] != campaign_family
-                or not row["attack_phase"]
+                or not expected_label.attack_family
+                or not expected_label.attack_phase
             ):
                 raise ValueError("positive feature row is not bound to its governed campaign")
             counts["positive"] += 1
