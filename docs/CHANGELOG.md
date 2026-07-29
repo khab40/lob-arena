@@ -68,6 +68,16 @@ Update this file with each significant commit before pushing.
 
 ### Current - feat: add governed corpus and benchmark protocol
 
+- Hardened the LightGBM Phase 1 boundary after review: added the externally
+  SHA-256-anchored governed feature-release contract, exact replay-unit
+  bindings, locally revalidated adjudications and evidence, row-level label
+  reconstruction from governed ground truth, and mutation tests covering each
+  fail-closed boundary.
+- Added the LightGBM Phase 1 governed data boundary with locked optional
+  LightGBM, scikit-learn, and MLflow client dependencies; exact local
+  protocol/corpus/split/feature verification; complete fold inventory checks;
+  supervised-label provenance enforcement; bounded Parquet batch iteration;
+  and separate development versus final-test access.
 - Fixed the post-MLflow CI regressions by aligning the frontend branding
   contract with the historical/hybrid product positioning and recording the
   exact Gitleaks fingerprint of a committed non-secret example placeholder.

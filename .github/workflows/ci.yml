@@ -88,6 +88,36 @@ jobs:
       - name: Build production frontend
         run: pnpm run build
 
+  lightgbm-phase1:
+    name: LightGBM governed data boundary
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install governed ML dependencies
+        run: uv sync --project backend --dev --extra ml --frozen
+
+      - name: Verify ML dependency imports
+        run: uv run --project backend --extra ml python -c "import lightgbm, mlflow, sklearn"
+
+      - name: Run LightGBM Phase 0 and Phase 1 tests
+        working-directory: backend
+        run: uv run --extra ml pytest tests/test_lightgbm_phase0_contracts.py tests/test_lightgbm_governed_data.py
+
   java-kernel:
     name: Java 25 kernel and control plane
     runs-on: ubuntu-latest

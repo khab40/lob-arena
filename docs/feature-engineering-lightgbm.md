@@ -12,7 +12,7 @@ the same contract for:
   Arena workflow.
 
 This layer does **not** train or serve LightGBM. It establishes the deterministic
-data contract a future trainer must consume.
+data contract and the fail-closed governed loader a future trainer must consume.
 
 ## Architecture
 
@@ -234,6 +234,50 @@ The endpoint reader follows the bounded cursor until `has_more` is false.
 For durable production runs, archive the canonical JSONL beside the generated
 artifacts so the recorded input digest can be reproduced independently.
 
+## Governed Phase 1 loader
+
+Install the isolated ML dependency set for training jobs:
+
+```bash
+uv sync --project backend --dev --extra ml --frozen
+```
+
+On macOS, install the OpenMP runtime required by the native LightGBM wheel
+before importing it:
+
+```bash
+brew install libomp
+```
+
+`load_governed_feature_dataset` accepts a protocol, locally validated corpus,
+frozen split, feature configuration, corpus artifact root, and a
+`governed_feature_release_v1` manifest with its externally frozen SHA-256
+digest. The release inventories every train, validation and test replay,
+run-metadata file, Parquet shard and quality report without opening test
+artifacts during development access.
+
+The loader revalidates the release-pinned clean adjudications, reconstructs
+labels from governed campaign ground truth, and compares all four label fields
+row by row. It also binds run identity, price tick size, quantity lot size and
+tick interval to the exact canonical Java replay manifest. Updating
+bundle-local checksums cannot preserve the externally supplied release digest.
+
+`development` access returns train and validation. `final_test` returns only
+test. No API mode loads all folds together. Null historical labels remain in
+the immutable Parquet source and are never converted into negatives.
+
+The release runtime model and checked-in JSON Schema are
+`GovernedFeatureReleaseManifest` and
+`contracts/governed-feature-release-v1.schema.json`.
+
+Run the Phase 0 and Phase 1 contract suite with:
+
+```bash
+make lightgbm-phase1-test
+```
+
+See [ARD-0028](architecture/ARD-0028-governed-lightgbm-feature-loading.md).
+
 ## Leakage-safe training rules
 
 A future trainer must:
@@ -287,9 +331,10 @@ integrity and statistical equivalence.
   selected window; pre-window order ages are unknown.
 - The current artifact writer is local-filesystem based. Remote object-store
   publication should reuse the existing evidence-bundle transport.
-- The future LightGBM work should add schema-locked dataset assembly,
-  chronological grouped cross-validation, fold-local preprocessing,
-  probability calibration, explainability, and model-card/evidence artifacts.
+- The next LightGBM phase should add binary training, training-only class
+  weighting/preprocessing, validation early stopping, probability calibration,
+  frozen operating points, explanations, and model-card/evidence artifacts on
+  top of the governed Phase 1 loader.
 
 ## Related documentation
 
