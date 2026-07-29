@@ -45,29 +45,48 @@ if [[ "${upgrade_service_credentials}" == "true" ]]; then
     echo "cannot upgrade missing MLflow environment: ${output}" >&2
     exit 1
   fi
-  if grep -q '^MLFLOW_MINIO_ACCESS_KEY=' "${output}" ||
-     grep -q '^MLFLOW_MINIO_SECRET_KEY=' "${output}"; then
-    if grep -q '^MLFLOW_MINIO_ACCESS_KEY=' "${output}" &&
-       grep -q '^MLFLOW_MINIO_SECRET_KEY=' "${output}"; then
-      echo "MLflow artifact service credentials already exist in ${output}."
-      exit 0
-    fi
+  minio_access_key=false
+  minio_secret_key=false
+  exporter_username=false
+  exporter_password=false
+  grep -q '^MLFLOW_MINIO_ACCESS_KEY=' "${output}" && minio_access_key=true
+  grep -q '^MLFLOW_MINIO_SECRET_KEY=' "${output}" && minio_secret_key=true
+  grep -q '^MLFLOW_EXPORTER_USERNAME=' "${output}" && exporter_username=true
+  grep -q '^MLFLOW_EXPORTER_PASSWORD=' "${output}" && exporter_password=true
+  if [[ "${minio_access_key}" != "${minio_secret_key}" ]]; then
     echo "refusing to repair a partial MLflow service-credential configuration" >&2
     exit 1
+  fi
+  if [[ "${exporter_username}" != "${exporter_password}" ]]; then
+    echo "refusing to repair a partial MLflow exporter-credential configuration" >&2
+    exit 1
+  fi
+  if [[ "${minio_access_key}" == "true" && "${exporter_username}" == "true" ]]; then
+    echo "MLflow service credentials already exist in ${output}."
+    exit 0
   fi
   umask 077
   temporary="$(mktemp "${output}.tmp.XXXXXX")"
   trap 'rm -f "${temporary}"' EXIT
-  service_password="$(openssl rand -hex 24)"
   cp "${output}" "${temporary}"
-  {
-    printf '\nMLFLOW_MINIO_ACCESS_KEY=mlflow-artifacts\n'
-    printf 'MLFLOW_MINIO_SECRET_KEY=%s\n' "${service_password}"
-  } >>"${temporary}"
+  if [[ "${minio_access_key}" == "false" ]]; then
+    service_password="$(openssl rand -hex 24)"
+    {
+      printf '\nMLFLOW_MINIO_ACCESS_KEY=mlflow-artifacts\n'
+      printf 'MLFLOW_MINIO_SECRET_KEY=%s\n' "${service_password}"
+    } >>"${temporary}"
+  fi
+  if [[ "${exporter_username}" == "false" ]]; then
+    exporter_service_password="$(openssl rand -hex 24)"
+    {
+      printf '\nMLFLOW_EXPORTER_USERNAME=prometheus\n'
+      printf 'MLFLOW_EXPORTER_PASSWORD=%s\n' "${exporter_service_password}"
+    } >>"${temporary}"
+  fi
   chmod 600 "${temporary}"
   mv "${temporary}" "${output}"
   trap - EXIT
-  echo "Added private MLflow artifact service credentials to ${output}."
+  echo "Added missing private MLflow service credentials to ${output}."
   exit 0
 fi
 
@@ -86,6 +105,7 @@ postgres_password="$(openssl rand -hex 24)"
 minio_password="$(openssl rand -hex 24)"
 minio_service_password="$(openssl rand -hex 24)"
 admin_password="$(openssl rand -hex 24)"
+exporter_password="$(openssl rand -hex 24)"
 flask_secret="$(openssl rand -hex 32)"
 
 cat >"${temporary}" <<EOF
@@ -104,6 +124,17 @@ MLFLOW_S3_REGION=us-east-1
 MLFLOW_ADMIN_USERNAME=admin
 MLFLOW_ADMIN_PASSWORD=${admin_password}
 MLFLOW_FLASK_SERVER_SECRET_KEY=${flask_secret}
+
+MLFLOW_EXPORTER_USERNAME=prometheus
+MLFLOW_EXPORTER_PASSWORD=${exporter_password}
+MLFLOW_EXPORTER_EXPERIMENTS=lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation
+MLFLOW_EXPORTER_METRIC_KEYS=precision,recall,f1,false_alerts_per_million_events
+MLFLOW_EXPORTER_MODEL_NAMES=lob-arena-lightgbm-attack-active
+MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT=1000
+MLFLOW_EXPORTER_MAX_MODEL_VERSIONS=1000
+MLFLOW_EXPORTER_CACHE_SECONDS=30
+MLFLOW_EXPORTER_HTTP_REQUEST_TIMEOUT=3
+MLFLOW_EXPORTER_HTTP_REQUEST_MAX_RETRIES=0
 
 MLFLOW_BIND_ADDRESS=127.0.0.1
 MLFLOW_PORT=5500

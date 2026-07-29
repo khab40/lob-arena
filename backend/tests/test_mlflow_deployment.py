@@ -198,12 +198,22 @@ def test_mlflow_smoke_provisions_roadmap_resources() -> None:
 
 def test_mlflow_operational_targets_include_initializer_diagnostics() -> None:
     makefile = MAKEFILE.read_text(encoding="utf-8")
+    status_target = makefile.split("mlflow-status:", maxsplit=1)[1].split(
+        "\n\n", maxsplit=1
+    )[0]
+    logs_target = makefile.split("mlflow-logs:", maxsplit=1)[1].split(
+        "\n\n", maxsplit=1
+    )[0]
+    diagnostic_services = {
+        "mlflow",
+        "mlflow-exporter",
+        "mlflow-exporter-init",
+        "mlflow-postgres",
+        "mlflow-minio",
+        "mlflow-minio-init",
+    }
 
-    assert (
-        "ps -a mlflow mlflow-postgres mlflow-minio mlflow-minio-init"
-        in makefile
-    )
-    assert (
-        "logs --tail=200 mlflow mlflow-postgres mlflow-minio mlflow-minio-init"
-        in makefile
-    )
+    assert " ps -a " in status_target
+    assert " logs --tail=200 " in logs_target
+    assert diagnostic_services <= set(status_target.split())
+    assert diagnostic_services <= set(logs_target.split())

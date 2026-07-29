@@ -78,3 +78,6 @@ java/**/bin/
 .mypy_cache/
 .next/
 .vite/
+
+# Keep macOS metadata ignored after the dataset allow-list negations above.
+.DS_Store

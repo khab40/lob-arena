@@ -233,6 +233,11 @@ development, and governed evaluation, plus the governed binary `attack_active`
 registered-model namespace. A deployment smoke test exercises authentication,
 registry bootstrap, database writes, and artifact upload/download.
 
+A non-admin, read-only exporter projects bounded experiment, run, and model
+aggregates into Prometheus. Grafana provisions a dedicated MLflow dashboard;
+high-cardinality run IDs, hashes, parameters, and tags remain exclusively in
+MLflow.
+
 MLflow indexes experiments and approved artifacts but is not a release
 authority. Protocol, corpus, split, feature, model, calibration, prediction,
 checksum, and signature compatibility continues to be enforced by the
