@@ -107,6 +107,7 @@ class TrainingDataPolicy(_StrictModel):
     positive_label_source: Literal["synthetic_scenario"] = "synthetic_scenario"
     invalid_row_policy: Literal["reject"] = "reject"
     missing_value_policy: Literal["lightgbm_native"] = "lightgbm_native"
+    numeric_storage_dtype: Literal["float32"] = "float32"
     class_weights_fit_on: Literal["training_fold_only"] = "training_fold_only"
     preprocessing_fit_on: Literal["training_fold_only"] = "training_fold_only"
     base_session_weighting: Literal["normalize_within_class"] = "normalize_within_class"
@@ -192,6 +193,9 @@ class EarlyStoppingEvidence(_StrictModel):
 class LightGbmTrainingRun(_CanonicalManifest):
     schema_version: Literal["lightgbm_training_run_v1"] = "lightgbm_training_run_v1"
     binding: GovernedModelBinding
+    feature_release_id: str = Field(min_length=1)
+    feature_release_sha256: str = Field(pattern=SHA256_PATTERN)
+    model_artifact: ArtifactDigest
     git_commit: str = Field(pattern=GIT_COMMIT_PATTERN)
     created_at: AwareDatetime
     training_seed: int = Field(ge=0)
@@ -205,6 +209,8 @@ class LightGbmTrainingRun(_CanonicalManifest):
 
     @model_validator(mode="after")
     def validate_training_inputs(self) -> "LightGbmTrainingRun":
+        if self.model_artifact.logical_name != "model" or self.model_artifact.schema_version != "lightgbm_text_v1":
+            raise ValueError("training model artifact must use the governed LightGBM text format")
         if any(not column for column in self.ordered_feature_columns):
             raise ValueError("ordered feature columns must be non-empty")
         if len(self.ordered_feature_columns) != len(set(self.ordered_feature_columns)):
@@ -418,6 +424,8 @@ def validate_phase_zero_compatibility(
     artifacts = bundle.artifact_map()
     if artifacts["model"].schema_version != bundle.model_format:
         raise ValueError("model artifact schema version does not match the bundle model format")
+    if artifacts["model"] != training.model_artifact:
+        raise ValueError("model bundle artifact does not match the training run")
     if artifacts["feature_schema"].schema_version != bundle.binding.feature_schema_version:
         raise ValueError("feature schema artifact does not match the bound feature schema")
     if artifacts["checksums"].schema_version != CHECKSUM_INVENTORY_SCHEMA_VERSION:

@@ -103,9 +103,18 @@ def _training(
     binding: GovernedModelBinding | None = None,
     *,
     input_features: tuple[FoldFeatureInput, ...] | None = None,
+    model_artifact: ArtifactDigest | None = None,
 ) -> LightGbmTrainingRun:
     return LightGbmTrainingRun(
         binding=binding or _binding(),
+        feature_release_id="governed-feature-release-001",
+        feature_release_sha256=HASH_A,
+        model_artifact=model_artifact
+        or _artifact(
+            "model",
+            uri="artifacts/model.txt",
+            schema_version="lightgbm_text_v1",
+        ),
         git_commit="c" * 40,
         created_at=CREATED_AT,
         training_seed=42,
@@ -239,7 +248,7 @@ def _bundle(
         calibration_id=calibration.calibration_id,
         created_at=CREATED_AT,
         artifacts=(
-            _artifact("model", schema_version="lightgbm_text_v1"),
+            training.model_artifact,
             _manifest_artifact("training_manifest", training),
             _manifest_artifact("calibration_manifest", calibration),
             _manifest_artifact("prediction_manifest", predictions),
@@ -299,11 +308,19 @@ def _release_fixture(
         b"validation-features",
         "lob_features_v1",
     )
+    model_artifact = _write_artifact(
+        root,
+        "model",
+        "artifacts/model.txt",
+        b"lightgbm-model",
+        "lightgbm_text_v1",
+    )
     training = _training(
         input_features=(
             _fold_input("train", artifact=train_features),
             _fold_input("validation", artifact=validation_features),
-        )
+        ),
+        model_artifact=model_artifact,
     )
     validation_predictions = _write_artifact(
         root,
@@ -332,7 +349,7 @@ def _release_fixture(
         predictions=prediction_rows,
     )
     artifacts = [
-        _write_artifact(root, "model", "artifacts/model.txt", b"lightgbm-model", "lightgbm_text_v1"),
+        model_artifact,
         _write_artifact(
             root,
             "training_manifest",
@@ -472,6 +489,16 @@ def test_training_contract_fails_closed_on_leakage_and_contradictory_configurati
     with pytest.raises(ValidationError, match="bound feature schema"):
         LightGbmTrainingRun.model_validate(payload)
 
+    payload = _training().model_dump(mode="json")
+    payload["model_artifact"]["schema_version"] = "pickle_v1"
+    with pytest.raises(ValidationError, match="governed LightGBM text format"):
+        LightGbmTrainingRun.model_validate(payload)
+
+    payload = _training().model_dump(mode="json")
+    payload["feature_release_sha256"] = "not-a-sha256"
+    with pytest.raises(ValidationError, match="String should match pattern"):
+        LightGbmTrainingRun.model_validate(payload)
+
 
 def test_calibration_requires_fitted_parameters_and_all_operating_modes() -> None:
     with pytest.raises(ValidationError, match="requires slope and intercept"):
@@ -541,6 +568,17 @@ def test_model_bundle_requires_checksums_unique_paths_and_bound_manifests() -> N
     next(item for item in payload["artifacts"] if item["logical_name"] == "training_manifest")["sha256"] = HASH_B
     changed_bundle = ModelBundleManifest.model_validate(payload)
     with pytest.raises(ValueError, match="training manifest digest"):
+        validate_phase_zero_compatibility(
+            training=training,
+            calibration=calibration,
+            bundle=changed_bundle,
+            predictions=predictions,
+        )
+
+    payload = bundle.model_dump(mode="json")
+    next(item for item in payload["artifacts"] if item["logical_name"] == "model")["sha256"] = HASH_B
+    changed_bundle = ModelBundleManifest.model_validate(payload)
+    with pytest.raises(ValueError, match="does not match the training run"):
         validate_phase_zero_compatibility(
             training=training,
             calibration=calibration,

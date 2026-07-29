@@ -86,7 +86,7 @@ flowchart LR
     Review["Blind clean-window<br/>review / adjudication"]
     Freeze["Frozen corpus +<br/>chronological split"]
     Features["Causal features"]
-    Train["LightGBM v1<br/>next delivery"]
+    Train["LightGBM v1<br/>Phase 2 trainer implemented"]
     Compare["Rules vs model<br/>governed evaluation"]
     Track["MLflow experiments<br/>and approved artifacts"]
     Client["Client coverage report<br/>and investigation"]
@@ -117,7 +117,7 @@ flowchart LR
 | Hybrid Historical Replay | Demo Operator / Research User | Replay a LOBSTER window as an unlabeled control, then inject the same predefined synthetic attack over that window for reproducible comparison. |
 | Governed Corpus Release | Data Steward / Independent Reviewers | Admit sessions and clean windows only after coverage, provenance, blind review, conflict resolution, and signed release gates pass. |
 | Shared MLflow Tracking | ML Engineer / Reviewer | Keep corpus, LightGBM-development, governed-evaluation, and approved model metadata in one authenticated tracking plane. |
-| Governed LightGBM v1 | ML Engineer / Model Validator | Train binary `attack_active`, freeze validation-selected operating modes, and compare against rules without test leakage. This is the next planned detector delivery. |
+| Governed LightGBM v1 | ML Engineer / Model Validator | Train deterministic binary `attack_active` candidates now; next freeze validation-selected operating modes and compare against rules without test leakage. |
 | Incident Investigation | Demo Operator / Reviewer | Use AI Investigator to turn detector evidence into a clear explanation. |
 | Red-Team Scenario Generation | Demo Operator | Use Scenario Generator to create a launchable synthetic scenario configuration. |
 | Detector Tournament Benchmark | Research / Benchmark User | Use Managed Experiment jobs to compare detector precision, recall, F1, and latency. |
@@ -652,7 +652,7 @@ Each use case is supported by specific architecture components:
 | Hybrid Historical Replay | Interactive / Evaluation | Data Ingestion + Java Replay Adapter + Integer Exchange + Scenario Launcher + Comparison Artifacts | [ARD-0018](architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](architecture/ARD-0022-historical-market-data-ingestion.md), [ARD-0023](architecture/ARD-0023-hybrid-historical-replay.md) |
 | Governed Corpus Release | Data governance | Review/Adjudication + Coverage Gates + Frozen Split + Signed Release | [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) |
 | Shared MLflow Tracking | ML governance | MLflow + PostgreSQL + S3-Compatible Artifacts | [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md) |
-| Governed LightGBM v1 | ML development / Evaluation | Causal Features + Phase 0 Contracts + MLflow + Paired Benchmark | [ARD-0024](architecture/ARD-0024-versioned-causal-feature-engineering.md), [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md), [ARD-0026](architecture/ARD-0026-governed-lightgbm-release-boundary.md), [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md) |
+| Governed LightGBM v1 | ML development / Evaluation | Causal Features + Governed Loader + Deterministic Trainer + MLflow + Paired Benchmark | [ARD-0024](architecture/ARD-0024-versioned-causal-feature-engineering.md), [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md), [ARD-0026](architecture/ARD-0026-governed-lightgbm-release-boundary.md), [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md), [ARD-0028](architecture/ARD-0028-governed-lightgbm-feature-loading.md), [ARD-0029](architecture/ARD-0029-deterministic-lightgbm-binary-training.md) |
 | Incident Investigation | Interactive | Incident Store + Nebius Endpoint | [ARD-0005](architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0008](architecture/ARD-0008-nebius-serverless-ai-endpoints.md), [ARD-0015](architecture/ARD-0015-nebius-ai-investigation-team.md) |
 | Red-Team Scenario Generation | Interactive | Nebius Endpoint /generate-scenario | [ARD-0005](architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0016](architecture/ARD-0016-ai-scenario-generator.md) |
 | Detector Tournament Benchmark | Batch | Nebius Jobs + Simulation + Metrics | [ARD-0004](architecture/ARD-0004-benchmark-artifact-format.md), [ARD-0007](architecture/ARD-0007-nebius-serverless-ai-jobs.md), [ARD-0017](architecture/ARD-0017-ai-detector-tournament.md) |

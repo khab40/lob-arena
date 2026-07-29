@@ -26,8 +26,9 @@ Define four strict, versioned contracts before implementing the trainer:
 All four bind a stable model and training-run identity to the exact benchmark
 protocol, corpus release, frozen chronological assignment, feature schema, and
 feature configuration hashes. The training manifest additionally records the
-Git commit, training seed, ordered columns, input artifact digests,
-hyperparameters, and immutable leakage-prevention policy.
+governed feature-release ID and digest, exact model artifact digest, Git commit,
+training seed, ordered columns, input artifact digests, hyperparameters, and
+immutable leakage-prevention policy.
 
 Calibration may use only the validation fold. It must freeze one threshold for
 each supported operating mode: high precision, balanced, and high recall.
@@ -111,5 +112,6 @@ Tradeoffs:
 - [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
+- [ARD-0029: Deterministic LightGBM Binary Training](ARD-0029-deterministic-lightgbm-binary-training.md)
 - [Generated Contract Catalog](../../contracts/README.md)
 - [Architecture Overview](../architecture.md)

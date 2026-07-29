@@ -124,6 +124,7 @@ class GovernedFeatureShard:
     run_id: str
     source_type: str
     feature_path: Path
+    feature_uri: str
     feature_sha256: str
     feature_size_bytes: int
     run_metadata_path: Path
@@ -597,6 +598,7 @@ def _load_feature_shard(
         run_id=manifest.run.run_id,
         source_type=manifest.run.source_type,
         feature_path=feature_path.resolve(),
+        feature_uri=release_shard.features.uri,
         feature_sha256=manifest.output.feature_file_sha256,
         feature_size_bytes=manifest.output.feature_file_size_bytes,
         run_metadata_path=metadata_path.resolve(),

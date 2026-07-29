@@ -1,4 +1,4 @@
-# Causal Feature Engineering for a Future LightGBM Detector
+# Causal Feature Engineering for LightGBM
 
 ## Scope
 
@@ -11,8 +11,9 @@ the same contract for:
 - a LOBSTER replay with a synthetic scenario injected through the existing
   Arena workflow.
 
-This layer does **not** train or serve LightGBM. It establishes the deterministic
-data contract and the fail-closed governed loader a future trainer must consume.
+Feature generation does **not** train or serve LightGBM. It establishes the
+deterministic data contract consumed by the fail-closed governed loader and the
+Phase 2 binary trainer.
 
 ## Architecture
 
@@ -25,7 +26,7 @@ graph LR
     Labels["Separate synthetic ground truth"]
     Parquet["Typed features.parquet"]
     Quality["Quality + run metadata JSON"]
-    Trainer["Future LightGBM trainer"]
+    Trainer["Governed LightGBM Phase 2 trainer"]
 
     Source --> Java
     Java --> Events
@@ -134,6 +135,11 @@ Each run directory contains:
 | `features.parquet` | Zstandard-compressed Arrow table with stable metadata, label, and float64 feature columns |
 | `run-metadata.json` | Version/config/input hashes, run identity, schema/column inventory, output hashes, row counts, and split policy |
 | `feature-quality.json` | Missing counts, min/max/mean/stddev/p01/p50/p99 distributions, class balance, attack-family counts, and up to 100 invalid-row diagnostics |
+
+The immutable Parquet release keeps float64 feature columns for compatibility
+and reproducible exchange. The Phase 2 trainer materializes the governed 60
+columns once per fold as float32. This is an execution representation, not a
+feature-schema change.
 
 The writer uses a per-output-directory lock and unique staging files so two
 processes cannot interleave one artifact bundle. A lock left by an interrupted
@@ -331,10 +337,14 @@ integrity and statistical equivalence.
   selected window; pre-window order ages are unknown.
 - The current artifact writer is local-filesystem based. Remote object-store
   publication should reuse the existing evidence-bundle transport.
-- The next LightGBM phase should add binary training, training-only class
-  weighting/preprocessing, validation early stopping, probability calibration,
-  frozen operating points, explanations, and model-card/evidence artifacts on
-  top of the governed Phase 1 loader.
+- Phase 2 adds deterministic binary training, training-only class/session
+  weighting, approved identity-preserving training-fitted scalers, bounded
+  float32 materialization and validation early stopping on top of the governed
+  Phase 1 loader. All 60 governed features remain in the v1 baseline; any
+  reduced feature set requires a separately versioned release. The next phase
+  should add
+  probability calibration, frozen operating points, explanations, MLflow
+  development-run logging and model-card/evidence artifacts.
 
 ## Related documentation
 
