@@ -69,6 +69,7 @@ def metadata(
 
 def config() -> FeaturePipelineConfig:
     return FeaturePipelineConfig(
+        schema_version="lob_features_v1",
         short_window_ns=2_000_000_000,
         long_window_ns=5_000_000_000,
         zscore_min_periods=3,
@@ -240,7 +241,10 @@ def features_by_tick(rows: list[dict[str, object]]) -> dict[int, tuple[object, .
 
 def test_feature_schema_has_stable_order_types_and_config_hash() -> None:
     pipeline_config = config()
-    schema = feature_arrow_schema(pipeline_config.config_hash())
+    schema = feature_arrow_schema(
+        pipeline_config.config_hash(),
+        pipeline_config.schema_version,
+    )
 
     assert schema.names == [*METADATA_COLUMNS, *FEATURE_COLUMNS]
     assert schema.field("prediction_timestamp_ns").type == pa.int64()
@@ -251,6 +255,69 @@ def test_feature_schema_has_stable_order_types_and_config_hash() -> None:
         pipeline_config.config_hash()
         == FeaturePipelineConfig.model_validate(pipeline_config.model_dump()).config_hash()
     )
+
+
+def test_float32_v2_preserves_v1_nulls_and_bounded_values(tmp_path: Path) -> None:
+    v1_config = config()
+    v2_config = v1_config.model_copy(update={"schema_version": "lob_features_v2"})
+    events = canonical_stream(hybrid=True, ticks=32)
+    run_metadata = metadata(source_type="hybrid")
+    labels = LabelSpec(
+        labels=[
+            LabelWindow(
+                attack_family="layering",
+                start_tick=5,
+                end_tick=6,
+            )
+        ]
+    )
+    v1_result = FeaturePipeline(v1_config, run_metadata, labels).generate(events)
+    v2_result = FeaturePipeline(v2_config, run_metadata, labels).generate(events)
+
+    write_feature_run(
+        tmp_path / "v1",
+        result=v1_result,
+        config=v1_config,
+        metadata=run_metadata,
+    )
+    v2_manifest = write_feature_run(
+        tmp_path / "v2",
+        result=v2_result,
+        config=v2_config,
+        metadata=run_metadata,
+    )
+    v1_table = pq.read_table(tmp_path / "v1" / "features.parquet")
+    v2_table = pq.read_table(tmp_path / "v2" / "features.parquet")
+
+    assert all(v1_table.schema.field(name).type == pa.float64() for name in FEATURE_COLUMNS)
+    assert all(v2_table.schema.field(name).type == pa.float32() for name in FEATURE_COLUMNS)
+    assert v2_table.schema.metadata[b"feature_schema_version"] == b"lob_features_v2"
+    assert v2_manifest["feature_schema_version"] == "lob_features_v2"
+    assert v2_manifest["config"]["schema_version"] == "lob_features_v2"
+    assert v2_config.config_hash() != v1_config.config_hash()
+    assert v2_table.to_pylist() == v2_result.rows
+
+    max_absolute_error = 0.0
+    max_relative_error = 0.0
+    for name in FEATURE_COLUMNS:
+        v1_values = v1_table[name].to_pylist()
+        v2_values = v2_table[name].to_pylist()
+        assert [value is None for value in v2_values] == [
+            value is None for value in v1_values
+        ]
+        for v1_value, v2_value in zip(v1_values, v2_values, strict=True):
+            if v1_value is None:
+                continue
+            absolute_error = abs(v1_value - v2_value)
+            max_absolute_error = max(max_absolute_error, absolute_error)
+            if abs(v1_value) >= 1e-6:
+                max_relative_error = max(
+                    max_relative_error,
+                    absolute_error / abs(v1_value),
+                )
+
+    assert max_absolute_error <= 5e-5
+    assert max_relative_error <= 1e-6
 
 
 def test_future_events_cannot_change_past_rows_and_pipeline_reuse_is_clean() -> None:
@@ -593,6 +660,29 @@ def test_cli_generates_fixture_artifacts(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert pq.read_table(tmp_path / "features.parquet").num_rows == 5
+
+
+def test_cli_defaults_to_float32_v2(tmp_path: Path) -> None:
+    repository_root = Path(__file__).resolve().parents[2]
+    fixture = repository_root / "data" / "features" / "fixture"
+
+    exit_code = generate_features(
+        [
+            "--events",
+            str(fixture / "events.jsonl"),
+            "--metadata",
+            str(fixture / "run-metadata.json"),
+            "--labels",
+            str(fixture / "labels.json"),
+            "--output",
+            str(tmp_path),
+        ]
+    )
+
+    assert exit_code == 0
+    table = pq.read_table(tmp_path / "features.parquet")
+    assert table.schema.metadata[b"feature_schema_version"] == b"lob_features_v2"
+    assert all(table.schema.field(name).type == pa.float32() for name in FEATURE_COLUMNS)
 
 
 def test_java_event_endpoint_pagination_is_strict_and_deterministic(monkeypatch) -> None:

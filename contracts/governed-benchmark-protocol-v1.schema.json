@@ -349,7 +349,7 @@
       "$ref": "#/$defs/CorpusMinimums"
     },
     "feature_schema_version": {
-      "default": "lob_features_v1",
+      "default": "lob_features_v2",
       "minLength": 1,
       "title": "Feature Schema Version",
       "type": "string"

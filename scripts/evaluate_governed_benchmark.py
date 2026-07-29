@@ -91,7 +91,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--protocol",
         type=Path,
-        default=ROOT / "configs" / "benchmark" / "governed-benchmark-v1.json",
+        default=ROOT / "configs" / "benchmark" / "governed-benchmark-v2-float32.json",
     )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--signing-key", type=Path)

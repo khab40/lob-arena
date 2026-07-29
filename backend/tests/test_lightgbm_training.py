@@ -23,9 +23,10 @@ PCA = sklearn_decomposition.PCA
 StandardScaler = sklearn_preprocessing.StandardScaler
 
 import app.ml.lightgbm as lightgbm_boundary  # noqa: E402
+from app.features.io import feature_arrow_schema  # noqa: E402
 from app.features.pipeline import (  # noqa: E402
     FEATURE_COLUMNS,
-    FEATURE_SCHEMA_VERSION,
+    FEATURE_SCHEMA_V2,
 )
 from app.ml.lightgbm.data import (  # noqa: E402
     GovernedFeatureDataset,
@@ -59,7 +60,7 @@ def _feature_row(
 ) -> dict[str, object]:
     signal = (2.0 if label else -2.0) + (row_index % 5) * 0.05
     row: dict[str, object] = {
-        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "feature_schema_version": FEATURE_SCHEMA_V2,
         "feature_config_hash": _sha256("feature-config"),
         "run_id": run_id,
         "dataset_id": f"dataset-{base_session_id}",
@@ -109,7 +110,17 @@ def _write_shard(
     ]
     path = root / "inputs" / fold / base_session_id / f"{domain}.parquet"
     path.parent.mkdir(parents=True, exist_ok=True)
-    pq.write_table(pa.Table.from_pylist(rows), path, compression="zstd")
+    pq.write_table(
+        pa.Table.from_pylist(
+            rows,
+            schema=feature_arrow_schema(
+                _sha256("feature-config"),
+                FEATURE_SCHEMA_V2,
+            ),
+        ),
+        path,
+        compression="zstd",
+    )
     payload = path.read_bytes()
     return GovernedFeatureShard(
         fold=fold,
@@ -193,7 +204,7 @@ def nontrivial_dataset(tmp_path: Path) -> GovernedFeatureDataset:
         corpus_hash=_sha256("corpus"),
         split_id="phase2-split",
         assignment_hash=_sha256("assignment"),
-        feature_schema_version=FEATURE_SCHEMA_VERSION,
+        feature_schema_version=FEATURE_SCHEMA_V2,
         feature_config_hash=_sha256("feature-config"),
         feature_release_id="phase2-feature-release",
         feature_release_sha256=_sha256("feature-release"),
@@ -243,6 +254,7 @@ def test_phase2_training_builds_a_nontrivial_reproducible_model(
     assert first.training_manifest.model_artifact == first.model_artifact
     assert first.training_manifest.feature_release_sha256 == nontrivial_dataset.feature_release_sha256
     assert first.training_manifest.feature_release_id == nontrivial_dataset.feature_release_id
+    assert first.training_manifest.binding.feature_schema_version == FEATURE_SCHEMA_V2
     assert first.training_manifest.data_policy.numeric_storage_dtype == "float32"
     assert first.training_manifest.preprocessing.mode == "none"
     assert all(0.0 <= probability <= 1.0 for probability in first.validation_predictions)

@@ -34,7 +34,7 @@ generate trading signals, or make compliance decisions.
 | Hybrid realism/equivalence validation | Implemented | Before/during/after locality evidence and signed validation bundle |
 | Governed corpus and split | Implemented as contracts/CLI | Reviewed negatives, family/seed coverage, chronological grouping and signed release |
 | Multi-reviewer corpus API/UI | Planned Track B | Blind decisions, conflict resolution, freeze and signed corpus release workflow |
-| Causal feature pipeline | Implemented | `lob_features_v1` Parquet, quality metadata and leakage checks |
+| Causal feature pipeline | Implemented | Default `lob_features_v2` float32 Parquet, v1 compatibility, quality metadata and leakage checks |
 | LightGBM Phase 0 boundary | Implemented | Hash-bound training, calibration, prediction and model-bundle contracts |
 | LightGBM Phase 1 data boundary | Implemented | Externally anchored feature release, reconstructed governed labels, replay-unit binding and isolated test access |
 | LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |

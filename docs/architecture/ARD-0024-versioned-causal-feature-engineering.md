@@ -18,18 +18,21 @@ adjacent rolling windows would overstate generalization.
 ## Decision
 
 Keep Java authoritative for ordering, matching, and canonical exchange events.
-Add a Python, offline, single-pass `lob_features_v1` pipeline that consumes
+Add a Python, offline, single-pass versioned feature pipeline that consumes
 those events and emits one typed row for each simulation-source combined-book
-checkpoint. Immutable historical-source snapshots remain validation/provenance
-inputs and never become prediction rows because they omit the synthetic
-overlay by design.
+checkpoint. The initial `lob_features_v1` contract uses float64 storage;
+`lob_features_v2` retains the formulas/order and uses float32 storage under
+[ARD-0030](ARD-0030-float32-governed-feature-release.md). Immutable
+historical-source snapshots remain validation/provenance inputs and never
+become prediction rows because they omit the synthetic overlay by design.
 
 The pipeline:
 
 - uses only events already ordered before the prediction snapshot;
 - calculates source-agnostic numeric features before joining external labels;
 - hashes the complete versioned configuration;
-- has an immutable ordered list of float64 feature names;
+- has an immutable ordered list of numeric feature names with versioned Arrow
+  storage types;
 - validates sequence, timestamp, book, tick, and lot semantics;
 - writes Parquet plus checksummed run and feature-quality metadata; and
 - assigns a stable session-level split group.
@@ -44,7 +47,7 @@ surveillance claim.
 graph LR
     Java["Java exchange authority"]
     Canonical["Canonical events"]
-    Pipeline["lob_features_v1 single-pass pipeline"]
+    Pipeline["lob_features_v1/v2 single-pass pipeline"]
     Truth["External synthetic ground truth"]
     Dataset["Parquet + run/quality JSON"]
     Future["Future LightGBM trainer"]
@@ -81,7 +84,8 @@ ground truth remains null rather than being interpreted as benign.
 
 The feature schema and configuration hash appear in every row and in Arrow
 schema metadata. Metadata/label fields use explicit Arrow string, date32,
-int64, int8, and boolean types; numeric features use float64 in a fixed order.
+int64, int8, and boolean types. Numeric features use float64 in v1 and float32
+in v2, in the same fixed order.
 
 Each run writes:
 
@@ -141,7 +145,8 @@ Tradeoffs:
 - The initial pipeline is offline and combined-checkpoint-sampled.
 - Warm-up and denominator-zero features are nullable.
 - Exact order age is unavailable when an imported window starts after entry.
-- A future online implementation must prove parity with `lob_features_v1`.
+- A future online implementation must prove parity with its declared feature
+  schema version.
 
 ## Related documentation
 
@@ -150,5 +155,6 @@ Tradeoffs:
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
+- [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)
 - [Hybrid Dataset Validation](../hybrid-dataset-validation.md)
 - [Architecture Overview](../architecture.md)

@@ -166,7 +166,7 @@ scenario and is never part of detector input.
 ```mermaid
 graph LR
     Canonical["Java canonical event stream"]
-    Feature["lob_features_v1 causal pipeline"]
+    Feature["lob_features_v2 causal pipeline<br/>v1 compatible"]
     Truth["Separate scenario ground truth"]
     Parquet["Typed feature Parquet"]
     Quality["Run + quality metadata"]
@@ -196,7 +196,7 @@ adjacent rolling windows.
 ```mermaid
 graph LR
     Protocol["Protocol + corpus + frozen split"]
-    Features["lob_features_v1 artifacts"]
+    Features["lob_features_v2 float32 artifacts<br/>v1 readable"]
     Training["Training-run manifest"]
     Calibration["Validation-only calibration<br/>and operating points"]
     Bundle["Checksummed model bundle"]

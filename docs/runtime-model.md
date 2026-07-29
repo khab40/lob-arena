@@ -219,7 +219,7 @@ graph LR
     Events["Canonical events + snapshots"]
     Truth["Separate labels + reviewed negatives"]
     Corpus["Signed corpus + frozen split"]
-    Features["lob_features_v1"]
+    Features["lob_features_v2 float32<br/>v1 readable"]
     Model["LightGBM v1<br/>next delivery"]
     Evaluation["Rules vs model evaluation"]
     Release["Checksummed model release"]

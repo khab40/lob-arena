@@ -98,7 +98,7 @@ flowchart LR
         API["FastAPI<br/>ingestion + AI + jobs"]
         Normalize["Validation + immutable<br/>Parquet + manifest"]
         Corpus["Governed corpus<br/>review + frozen split"]
-        Features["Causal features<br/>lob_features_v1"]
+        Features["Causal features<br/>lob_features_v2 float32"]
         Models["Learned detectors<br/>LightGBM Phase 2 trainer + planned sequence models"]
     end
 

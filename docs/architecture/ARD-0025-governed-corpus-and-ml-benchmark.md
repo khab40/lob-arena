@@ -37,6 +37,8 @@ Adopt `governed_benchmark_protocol_v1` as a training prerequisite.
 - Release corpus and benchmark manifests are checksummed and signed.
 
 The checked-in policy is
+[`configs/benchmark/governed-benchmark-v2-float32.json`](../../configs/benchmark/governed-benchmark-v2-float32.json);
+the legacy float64 policy remains in
 [`configs/benchmark/governed-benchmark-v1.json`](../../configs/benchmark/governed-benchmark-v1.json);
 its contract is
 [`contracts/governed-benchmark-protocol-v1.schema.json`](../../contracts/governed-benchmark-protocol-v1.schema.json).

@@ -43,8 +43,8 @@ from app.features.models import (
 )
 from app.features.pipeline import (
     FEATURE_COLUMNS,
-    FEATURE_SCHEMA_VERSION,
     METADATA_COLUMNS,
+    SUPPORTED_FEATURE_SCHEMA_VERSIONS,
     feature_split_group,
 )
 from app.evaluation.canonical_bundle import (
@@ -357,7 +357,7 @@ def load_governed_feature_dataset(
         corpus_hash=corpus.corpus_hash(),
         split_id=split.split_id,
         assignment_hash=split.assignment_hash,
-        feature_schema_version=FEATURE_SCHEMA_VERSION,
+        feature_schema_version=feature_config.schema_version,
         feature_config_hash=feature_config.config_hash(),
         feature_release_id=release.release_id,
         feature_release_sha256=expected_feature_release_sha256,
@@ -379,8 +379,8 @@ def _validate_governed_inputs(
     if feature_config_payload != feature_config.model_dump(mode="json"):
         raise ValueError("feature configuration contains unknown or non-canonical fields")
     if (
-        protocol.feature_schema_version != FEATURE_SCHEMA_VERSION
-        or feature_config.schema_version != FEATURE_SCHEMA_VERSION
+        protocol.feature_schema_version != feature_config.schema_version
+        or feature_config.schema_version not in SUPPORTED_FEATURE_SCHEMA_VERSIONS
     ):
         raise ValueError("feature schema is incompatible with the governed protocol")
     recomputed = validate_corpus(
@@ -415,7 +415,7 @@ def _validate_feature_release(
         "corpus_hash": corpus.corpus_hash(),
         "split_id": split.split_id,
         "assignment_hash": split.assignment_hash,
-        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "feature_schema_version": feature_config.schema_version,
         "feature_config_hash": feature_config.config_hash(),
     }
     if any(getattr(release, name) != value for name, value in required.items()):
@@ -467,7 +467,7 @@ def _load_feature_shard(
     if manifest.schema_version != release_shard.run_metadata.schema_version:
         raise ValueError("feature run metadata schema is unsupported")
     if (
-        manifest.feature_schema_version != FEATURE_SCHEMA_VERSION
+        manifest.feature_schema_version != feature_config.schema_version
         or manifest.feature_schema_version != protocol.feature_schema_version
         or manifest.feature_config_hash != feature_config.config_hash()
         or manifest.config != feature_config.model_dump(mode="json")
@@ -574,7 +574,10 @@ def _load_feature_shard(
         raise ValueError("feature run outputs do not match the frozen feature release")
     parquet = pq.ParquetFile(feature_path)
     if not parquet.schema_arrow.equals(
-        feature_arrow_schema(feature_config.config_hash()),
+        feature_arrow_schema(
+            feature_config.config_hash(),
+            feature_config.schema_version,
+        ),
         check_metadata=True,
     ):
         raise ValueError("feature Parquet schema or metadata is incompatible")
@@ -715,7 +718,7 @@ def _validate_feature_rows(
         for row in batch.to_pylist():
             counts["total"] += 1
             expected = {
-                "feature_schema_version": FEATURE_SCHEMA_VERSION,
+                "feature_schema_version": manifest.feature_schema_version,
                 "feature_config_hash": manifest.feature_config_hash,
                 "run_id": manifest.run.run_id,
                 "dataset_id": session.dataset_id,

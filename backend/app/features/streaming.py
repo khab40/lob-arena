@@ -20,7 +20,6 @@ from app.features.io import feature_arrow_schema
 from app.features.models import FeaturePipelineConfig, FeatureRunMetadata
 from app.features.pipeline import (
     FEATURE_COLUMNS,
-    FEATURE_SCHEMA_VERSION,
     METADATA_COLUMNS,
     FeaturePipeline,
     feature_split_group,
@@ -255,7 +254,7 @@ def _write_streaming_locked(
         name: path.with_name(f".{path.name}.{token}.tmp")
         for name, path in targets.items()
     }
-    schema = feature_arrow_schema(config.config_hash())
+    schema = feature_arrow_schema(config.config_hash(), config.schema_version)
     writer: pq.ParquetWriter | None = None
     buffer: list[dict[str, Any]] = []
     quality = StreamingQualityAccumulator(sample_size=quantile_sample_size)
@@ -284,7 +283,7 @@ def _write_streaming_locked(
         _write_json(temporary["quality"], quality_report)
         run_manifest = {
             "schema_version": "feature_stream_run_metadata_v1",
-            "feature_schema_version": FEATURE_SCHEMA_VERSION,
+            "feature_schema_version": config.schema_version,
             "feature_config_hash": config.config_hash(),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "run": metadata.model_dump(mode="json"),
@@ -343,7 +342,7 @@ def _validate_stream_row(
     if set(row) != expected_columns:
         raise ValueError("streaming feature row does not match the versioned column contract")
     expected = {
-        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "feature_schema_version": config.schema_version,
         "feature_config_hash": config.config_hash(),
         "run_id": metadata.run_id,
         "dataset_id": metadata.dataset_id,
