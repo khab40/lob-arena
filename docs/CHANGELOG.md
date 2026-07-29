@@ -3,6 +3,10 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Preserved the core backend's optional-dependency boundary by lazy-loading
+  trainer exports and skipping Phase 2 trainer tests when the `ml` extra is not
+  installed; the dedicated governed-ML CI job remains authoritative.
+
 - Added the governed LightGBM Phase 2 binary trainer with deterministic CPU
   settings, training-only class and base-session weighting, native missing
   values, bounded float32 fold materialization, validation early stopping,

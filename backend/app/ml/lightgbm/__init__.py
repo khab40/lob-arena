@@ -1,5 +1,7 @@
 """Governed LightGBM detector boundary."""
 
+from typing import TYPE_CHECKING, Any
+
 from app.ml.lightgbm.contracts import (
     ArtifactDigest,
     CalibrationManifest,
@@ -31,11 +33,17 @@ from app.ml.lightgbm.feature_release import (
     write_governed_feature_release,
 )
 from app.ml.lightgbm.release import verify_phase_zero_release
-from app.ml.lightgbm.training import (
-    DeterministicTrainingResult,
-    calculate_base_session_sample_weights,
-    calculate_training_class_weights,
-    train_binary_attack_model,
+
+if TYPE_CHECKING:
+    from app.ml.lightgbm.training import DeterministicTrainingResult
+
+_TRAINING_EXPORTS = frozenset(
+    {
+        "DeterministicTrainingResult",
+        "calculate_base_session_sample_weights",
+        "calculate_training_class_weights",
+        "train_binary_attack_model",
+    }
 )
 
 __all__ = [
@@ -69,3 +77,15 @@ __all__ = [
     "verify_phase_zero_release",
     "write_governed_feature_release",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    """Load trainer symbols only when the optional ``ml`` extra is installed."""
+
+    if name not in _TRAINING_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from app.ml.lightgbm import training
+
+    value = getattr(training, name)
+    globals()[name] = value
+    return value

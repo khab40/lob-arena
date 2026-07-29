@@ -5,25 +5,34 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 
-import lightgbm as lgb
-import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
-import app.ml.lightgbm as lightgbm_boundary
-from app.features.pipeline import (
+lgb = pytest.importorskip("lightgbm", reason="LightGBM Phase 2 tests require the ml extra")
+np = pytest.importorskip("numpy", reason="LightGBM Phase 2 tests require the ml extra")
+sklearn_decomposition = pytest.importorskip(
+    "sklearn.decomposition",
+    reason="LightGBM Phase 2 tests require the ml extra",
+)
+sklearn_preprocessing = pytest.importorskip(
+    "sklearn.preprocessing",
+    reason="LightGBM Phase 2 tests require the ml extra",
+)
+PCA = sklearn_decomposition.PCA
+StandardScaler = sklearn_preprocessing.StandardScaler
+
+import app.ml.lightgbm as lightgbm_boundary  # noqa: E402
+from app.features.pipeline import (  # noqa: E402
     FEATURE_COLUMNS,
     FEATURE_SCHEMA_VERSION,
 )
-from app.ml.lightgbm.data import (
+from app.ml.lightgbm.data import (  # noqa: E402
     GovernedFeatureDataset,
     GovernedFeatureFold,
     GovernedFeatureShard,
 )
-from app.ml.lightgbm.training import (
+from app.ml.lightgbm.training import (  # noqa: E402
     _clone_preprocessor,
     _fit_optional_preprocessor,
     _materialize_fold,
