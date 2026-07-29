@@ -3,6 +3,13 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Added the backward-compatible `lob_features_v2` governed release:
+  calculations remain binary64, completed feature rows are rounded to float32
+  before quality/logical hashes and persisted as Arrow float32, exact metadata
+  types are unchanged, protocol/config/release hashes bind the dtype, v1
+  remains readable, feature commands default to v2, and precision, streaming,
+  loader-mismatch and deterministic LightGBM tests cover the migration.
+
 - Preserved the core backend's optional-dependency boundary by lazy-loading
   trainer exports and skipping Phase 2 trainer tests when the `ml` extra is not
   installed; the dedicated governed-ML CI job remains authoritative.

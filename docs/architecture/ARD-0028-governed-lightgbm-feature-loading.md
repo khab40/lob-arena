@@ -75,4 +75,5 @@ later Track A phases.
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
+- [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)
 - [Causal Feature Engineering for LightGBM](../feature-engineering-lightgbm.md)

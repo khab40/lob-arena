@@ -11,6 +11,9 @@ from scripts.generate_governed_contracts import CONTRACTS, render_contract
 
 ROOT = Path(__file__).resolve().parents[2]
 PROTOCOL_PATH = ROOT / "configs" / "benchmark" / "governed-benchmark-v1.json"
+FLOAT32_PROTOCOL_PATH = (
+    ROOT / "configs" / "benchmark" / "governed-benchmark-v2-float32.json"
+)
 SCHEMA_PATH = ROOT / "contracts" / "governed-benchmark-protocol-v1.schema.json"
 
 
@@ -27,6 +30,20 @@ def test_checked_in_governed_protocol_is_valid_and_stable() -> None:
     assert "liquidity_evaporation" in protocol.corpus.required_attack_families
     assert len(protocol.protocol_hash()) == 64
     assert protocol.protocol_hash() == load_benchmark_protocol(PROTOCOL_PATH).protocol_hash()
+
+
+def test_checked_in_float32_protocol_is_the_new_default() -> None:
+    protocol = load_benchmark_protocol(FLOAT32_PROTOCOL_PATH)
+
+    assert protocol.protocol_id == "lob-arena-governed-benchmark-v2-float32"
+    assert protocol.feature_schema_version == "lob_features_v2"
+    assert GovernedBenchmarkProtocol(
+        protocol_id="default-feature-schema"
+    ).feature_schema_version == "lob_features_v2"
+    assert tuple(protocol.corpus.required_attack_families) == IMPLEMENTED_SCENARIO_TYPES
+    assert protocol.protocol_hash() == load_benchmark_protocol(
+        FLOAT32_PROTOCOL_PATH
+    ).protocol_hash()
 
 
 def test_protocol_rejects_weak_label_and_leaky_split_policies() -> None:

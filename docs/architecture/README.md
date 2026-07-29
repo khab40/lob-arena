@@ -37,6 +37,7 @@ Status as of 2026-07-29:
 | [ARD-0027](ARD-0027-shared-mlflow-tracking.md) | `[done]` | Authenticated shared MLflow tracking with PostgreSQL metadata, S3-compatible artifacts, and governed experiment/model namespaces |
 | [ARD-0028](ARD-0028-governed-lightgbm-feature-loading.md) | `[phase-1 done]` | Externally anchored feature release, reconstructed labels, replay-unit binding, exact fold inventory, and separate development/test access |
 | [ARD-0029](ARD-0029-deterministic-lightgbm-binary-training.md) | `[phase-2 done]` | Deterministic binary training with training-only class/session weighting, native missing values, validation early stopping, and atomic model/training manifests |
+| [ARD-0030](ARD-0030-float32-governed-feature-release.md) | `[done]` | Backward-compatible `lob_features_v2` float32 release with governed schema binding, bounded precision gates, and v2 trainer determinism |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -67,6 +68,7 @@ diagrams document the execution boundaries.
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md) — Docker deployment, storage, authentication, roadmap namespaces, and governance boundary
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md) — Frozen feature-release hashes, exact session/campaign coverage, governed label reconstruction, replay-unit checks, and isolated final-test access
 - [ARD-0029: Deterministic LightGBM Binary Training](ARD-0029-deterministic-lightgbm-binary-training.md) — Phase 2 training-only weighting, deterministic LightGBM settings, validation early stopping, and reproducible artifacts
+- [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md) — Versioned float32 Parquet, v1 compatibility, precision gates, and release/model migration rules
 
 ### Agent Execution
 

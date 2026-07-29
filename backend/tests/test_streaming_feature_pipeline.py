@@ -1,8 +1,10 @@
 import json
+import math
 import tracemalloc
 from dataclasses import replace
 from pathlib import Path
 
+import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
@@ -26,6 +28,7 @@ from scripts.generate_features import main as generate_features
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURE = ROOT / "data" / "features" / "fixture"
 CONFIG = ROOT / "configs" / "features" / "lightgbm-v1.json"
+CONFIG_V2 = ROOT / "configs" / "features" / "lightgbm-v2.json"
 
 
 def _inputs():
@@ -60,6 +63,47 @@ def test_streaming_rows_match_in_memory_pipeline_and_use_bounded_row_groups(tmp_
     assert quality["missing_values"] == expected.quality_report["missing_values"]
     assert quality["class_balance"] == expected.quality_report["class_balance"]
     assert quality["quantiles"]["maximum_retained_per_feature"] <= 128
+
+
+def test_streaming_float32_v2_matches_in_memory_values_within_contract(
+    tmp_path: Path,
+) -> None:
+    config = load_config(CONFIG_V2)
+    metadata = load_run_metadata(FIXTURE / "run-metadata.json")
+    labels = load_labels(FIXTURE / "labels.json")
+    events = load_events_jsonl(FIXTURE / "events.jsonl")
+    expected = FeaturePipeline(config, metadata, labels).generate(events)
+
+    manifest = write_streaming_feature_run(
+        tmp_path,
+        events=iter(events),
+        pipeline=FeaturePipeline(config, metadata, labels),
+        config=config,
+        metadata=metadata,
+        row_group_size=2,
+        quantile_sample_size=128,
+    )
+    table = pq.read_table(tmp_path / "features.parquet")
+    actual_rows = table.to_pylist()
+
+    assert manifest["feature_schema_version"] == "lob_features_v2"
+    assert all(
+        table.schema.field(name).type == pa.float32()
+        for name in FEATURE_COLUMNS
+    )
+    for expected_row, actual_row in zip(expected.rows, actual_rows, strict=True):
+        for name in FEATURE_COLUMNS:
+            expected_value = expected_row[name]
+            actual_value = actual_row[name]
+            if expected_value is None:
+                assert actual_value is None
+            else:
+                assert math.isclose(
+                    actual_value,
+                    expected_value,
+                    rel_tol=1e-6,
+                    abs_tol=5e-5,
+                )
 
 
 def test_logical_output_is_chunk_and_row_group_invariant(tmp_path: Path) -> None:

@@ -8,7 +8,10 @@ uncertainty estimates.
 ## Versioned policy
 
 The machine-readable policy is
-[`governed-benchmark-v1.json`](../configs/benchmark/governed-benchmark-v1.json).
+[`governed-benchmark-v2-float32.json`](../configs/benchmark/governed-benchmark-v2-float32.json).
+The original
+[`governed-benchmark-v1.json`](../configs/benchmark/governed-benchmark-v1.json)
+remains available for legacy float64 feature releases.
 `backend.app.corpus.models.GovernedBenchmarkProtocol` validates it and computes
 a canonical SHA-256 hash. Every corpus, split, feature run, evaluation, and
 release manifest must record that protocol ID and hash.
@@ -92,7 +95,7 @@ backend/.venv/bin/python scripts/benchmark_feature_streaming.py \
   --replay-manifest /secure/corpus/session/control-replay-manifest.json \
   --artifact-root /secure/corpus/artifacts \
   --corpus outputs/governed/client-corpus-v1/corpus-manifest.json \
-  --protocol configs/benchmark/governed-benchmark-v1.json \
+  --protocol configs/benchmark/governed-benchmark-v2-float32.json \
   --output outputs/features/client-session-stream-primary \
   --comparison-output outputs/features/client-session-stream-comparison \
   --report outputs/governed/evidence/client-session-streaming.json
@@ -148,7 +151,8 @@ backend/.venv/bin/python scripts/generate_features.py \
   --replay-manifest /secure/corpus/session/replay-manifest.json \
   --clean-adjudications /secure/corpus/adjudications.jsonl \
   --corpus-manifest outputs/governed/client-corpus-v1/corpus-manifest.json \
-  --benchmark-protocol configs/benchmark/governed-benchmark-v1.json \
+  --benchmark-protocol configs/benchmark/governed-benchmark-v2-float32.json \
+  --config configs/features/lightgbm-v2.json \
   --artifact-root /secure/corpus/artifacts \
   --output outputs/features/client-session
 ```

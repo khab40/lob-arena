@@ -23,7 +23,7 @@ generate-features:
 		--events "$${FEATURE_EVENTS:-data/features/fixture/events.jsonl}" \
 		--metadata "$${FEATURE_METADATA:-data/features/fixture/run-metadata.json}" \
 		--labels "$${FEATURE_LABELS:-data/features/fixture/labels.json}" \
-		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v1.json}" \
+		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v2.json}" \
 		--output "$${FEATURE_OUTPUT:-outputs/features/sample}" \
 		$${FEATURE_OVERWRITE:+--overwrite}
 
@@ -32,7 +32,7 @@ generate-features-streaming:
 		--events "$${FEATURE_EVENTS:-data/features/fixture/events.jsonl}" \
 		--metadata "$${FEATURE_METADATA:-data/features/fixture/run-metadata.json}" \
 		--labels "$${FEATURE_LABELS:-data/features/fixture/labels.json}" \
-		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v1.json}" \
+		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v2.json}" \
 		--output "$${FEATURE_OUTPUT:-outputs/features/sample-streaming}" \
 		--streaming \
 		--row-group-size "$${FEATURE_ROW_GROUP_SIZE:-25000}" \
@@ -44,9 +44,9 @@ generate-governed-features:
 		--replay-manifest "$${GOVERNED_REPLAY_MANIFEST}" \
 		--clean-adjudications "$${GOVERNED_ADJUDICATIONS}" \
 		--corpus-manifest "$${GOVERNED_CORPUS_MANIFEST}" \
-		--benchmark-protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v1.json}" \
+		--benchmark-protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v2-float32.json}" \
 		--artifact-root "$${GOVERNED_ARTIFACT_ROOT}" \
-		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v1.json}" \
+		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v2.json}" \
 		--output "$${FEATURE_OUTPUT:-outputs/features/governed}" \
 		$${FEATURE_STREAMING:+--streaming} \
 		$${FEATURE_OVERWRITE:+--overwrite}
@@ -56,7 +56,7 @@ benchmark-feature-streaming:
 		--events "$${FEATURE_EVENTS:-data/features/fixture/events.jsonl}" \
 		--metadata "$${FEATURE_METADATA:-data/features/fixture/run-metadata.json}" \
 		--labels "$${FEATURE_LABELS:-data/features/fixture/labels.json}" \
-		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v1.json}" \
+		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v2.json}" \
 		--output "$${FEATURE_OUTPUT:-outputs/features/benchmark}" \
 		--report "$${FEATURE_BENCHMARK_REPORT:-outputs/features/benchmark-performance.json}" \
 		$${FEATURE_OVERWRITE:+--overwrite}
@@ -66,8 +66,8 @@ benchmark-governed-feature-streaming:
 		--replay-manifest "$${GOVERNED_REPLAY_MANIFEST}" \
 		--artifact-root "$${GOVERNED_ARTIFACT_ROOT}" \
 		--corpus "$${GOVERNED_CORPUS_MANIFEST}" \
-		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v1.json}" \
-		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v1.json}" \
+		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v2-float32.json}" \
+		--config "$${FEATURE_CONFIG:-configs/features/lightgbm-v2.json}" \
 		--output "$${FEATURE_OUTPUT:-outputs/features/governed-benchmark-primary}" \
 		--comparison-output "$${FEATURE_COMPARISON_OUTPUT:-outputs/features/governed-benchmark-comparison}" \
 		--report "$${FEATURE_STREAMING_EVIDENCE:-outputs/governed/evidence/feature-streaming.json}" \
@@ -113,7 +113,7 @@ build-governed-corpus:
 	backend/.venv/bin/python scripts/build_governed_corpus.py \
 		--sessions "$${GOVERNED_SESSIONS}" \
 		--adjudications "$${GOVERNED_ADJUDICATIONS}" \
-		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v1.json}" \
+		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v2-float32.json}" \
 		--corpus-id "$${GOVERNED_CORPUS_ID}" \
 		--artifact-root "$${GOVERNED_ARTIFACT_ROOT}" \
 		--output "$${GOVERNED_CORPUS_OUTPUT}" \
@@ -122,7 +122,7 @@ build-governed-corpus:
 generate-governed-split:
 	backend/.venv/bin/python scripts/generate_split_manifest.py \
 		--corpus "$${GOVERNED_CORPUS_MANIFEST}" \
-		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v1.json}" \
+		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v2-float32.json}" \
 		--split-id "$${GOVERNED_SPLIT_ID}" \
 		--output "$${GOVERNED_SPLIT_OUTPUT}" \
 		$${GOVERNED_OVERWRITE:+--overwrite}
@@ -133,7 +133,7 @@ evaluate-governed-benchmark:
 		--corpus "$${GOVERNED_CORPUS_MANIFEST}" \
 		--corpus-validation "$${GOVERNED_CORPUS_VALIDATION}" \
 		--split "$${GOVERNED_SPLIT_MANIFEST}" \
-		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v1.json}" \
+		--protocol "$${GOVERNED_PROTOCOL:-configs/benchmark/governed-benchmark-v2-float32.json}" \
 		--output "$${GOVERNED_BENCHMARK_OUTPUT}" \
 		--signing-key "$${GOVERNED_SIGNING_KEY}" \
 		--signer "$${GOVERNED_SIGNER:-Market Surveillance QA}" \

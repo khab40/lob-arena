@@ -22,8 +22,8 @@ training entry point. It:
   validation folds;
 - fixes the target to `attack_active`;
 - passes raw features and nulls to LightGBM by default;
-- retains the governed 60-column `lob_features_v1` input contract while
-  materializing each fold once as a bounded float32 memory map;
+- accepts the governed 60-column v1 or v2 feature contract and materializes
+  each fold once as a bounded float32 memory map;
 - derives balanced class weights from training labels only;
 - normalizes each base session's contribution within each class while
   preserving equal total class weight;
@@ -59,9 +59,9 @@ probabilities and training-manifest bytes.
 - Phase 2 cannot read or score the frozen test fold.
 - Large sessions cannot dominate merely by contributing more labeled windows.
 - Missing values retain LightGBM's native semantics on the default path.
-- Float64 remains the immutable feature-release interchange format; float32 is
-  the governed trainer representation. This halves matrix storage without
-  silently changing the feature contract.
+- Existing float64 v1 releases remain immutable. New float32 v2 releases bind
+  the reduced-width storage explicitly into protocol/config/release hashes and
+  still use the same bounded trainer representation.
 - All 60 governed features remain available for the v1 baseline and paired
   evaluation. Feature selection is deferred to a separately versioned,
   evidence-backed schema rather than being embedded in this trainer.
@@ -73,3 +73,4 @@ probabilities and training-manifest bytes.
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md)
 - [Causal Feature Engineering for LightGBM](../feature-engineering-lightgbm.md)
+- [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)

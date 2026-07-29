@@ -28,7 +28,7 @@ from app.features.io import write_feature_run
 from app.features.models import FeaturePipelineConfig, FeatureRunMetadata
 from app.features.pipeline import (
     FEATURE_COLUMNS,
-    FEATURE_SCHEMA_VERSION,
+    FEATURE_SCHEMA_V2,
     FeatureRunResult,
     feature_quality_report,
     feature_split_group,
@@ -200,7 +200,7 @@ def _feature_row(
     label: int | None,
 ) -> dict[str, object]:
     row: dict[str, object] = {
-        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "feature_schema_version": config.schema_version,
         "feature_config_hash": config.config_hash(),
         "run_id": metadata.run_id,
         "dataset_id": metadata.dataset_id,
@@ -433,6 +433,7 @@ def governed_fixture(tmp_path: Path) -> GovernedFixture:
     artifact_root = tmp_path / "artifacts"
     protocol = GovernedBenchmarkProtocol(
         protocol_id="lightgbm-phase1-fixture",
+        feature_schema_version=FEATURE_SCHEMA_V2,
         corpus={
             "complete_sessions": 5,
             "instruments": 1,
@@ -467,7 +468,7 @@ def governed_fixture(tmp_path: Path) -> GovernedFixture:
         protocol=protocol,
         generated_at=GENERATED_AT,
     )
-    config = FeaturePipelineConfig()
+    config = FeaturePipelineConfig(schema_version=FEATURE_SCHEMA_V2)
     protocol_path = tmp_path / "protocol.json"
     corpus_path = tmp_path / "corpus.json"
     corpus_validation_path = tmp_path / "corpus-validation.json"
@@ -568,7 +569,7 @@ def governed_fixture(tmp_path: Path) -> GovernedFixture:
                             f"{session.base_session_id}-"
                             f"{'campaign' if campaign else 'control'}-features"
                         ),
-                        schema_version=FEATURE_SCHEMA_VERSION,
+                        schema_version=config.schema_version,
                     ),
                     quality=artifact_digest(
                         output / "feature-quality.json",
@@ -590,7 +591,7 @@ def governed_fixture(tmp_path: Path) -> GovernedFixture:
         corpus_hash=corpus.corpus_hash(),
         split_id=split.split_id,
         assignment_hash=split.assignment_hash,
-        feature_schema_version=FEATURE_SCHEMA_VERSION,
+        feature_schema_version=config.schema_version,
         feature_config_hash=config.config_hash(),
         adjudications=artifact_digest(
             adjudications_path,
@@ -767,6 +768,17 @@ def test_unknown_access_mode_fails_closed(
 ) -> None:
     with pytest.raises(ValueError, match="unsupported governed feature access mode"):
         _load(governed_fixture, access_mode="all")
+
+
+def test_float32_release_rejects_a_float64_protocol(
+    governed_fixture: GovernedFixture,
+) -> None:
+    protocol = json.loads(governed_fixture.protocol.read_text(encoding="utf-8"))
+    protocol["feature_schema_version"] = "lob_features_v1"
+    _json(governed_fixture.protocol, protocol)
+
+    with pytest.raises(ValueError, match="feature schema is incompatible"):
+        _load(governed_fixture)
 
 
 def test_governed_provenance_and_local_corpus_validation_are_exact(

@@ -22,7 +22,7 @@ graph LR
     Source["LOBSTER, synthetic, or hybrid"]
     Java["Authoritative Java exchange"]
     Events["Canonical ordered events"]
-    Features["Python causal feature pipeline v1"]
+    Features["Python causal feature pipeline v1/v2"]
     Labels["Separate synthetic ground truth"]
     Parquet["Typed features.parquet"]
     Quality["Quality + run metadata JSON"]
@@ -75,14 +75,16 @@ row to be byte-for-value identical.
 
 ## Configuration
 
-The checked-in configuration is
-[`configs/features/lightgbm-v1.json`](../configs/features/lightgbm-v1.json).
+The default checked-in configuration is
+[`configs/features/lightgbm-v2.json`](../configs/features/lightgbm-v2.json).
+[`configs/features/lightgbm-v1.json`](../configs/features/lightgbm-v1.json)
+remains available for existing releases.
 Its canonical sorted JSON SHA-256 is stored as `feature_config_hash` in every
 row and in the Parquet schema metadata.
 
 | Setting | Meaning |
 | --- | --- |
-| `schema_version` | Feature contract; currently `lob_features_v1` |
+| `schema_version` | `lob_features_v2` float32 release or legacy `lob_features_v1` float64 release |
 | `short_window_ns` | Near-horizon event and snapshot window |
 | `long_window_ns` | Context, comparison, and z-score window |
 | `depth_levels` | Maximum levels per side used for depth features |
@@ -132,14 +134,20 @@ Each run directory contains:
 
 | File | Contract |
 | --- | --- |
-| `features.parquet` | Zstandard-compressed Arrow table with stable metadata, label, and float64 feature columns |
+| `features.parquet` | Zstandard-compressed Arrow table with stable metadata/labels and versioned float32 v2 or float64 v1 feature columns |
 | `run-metadata.json` | Version/config/input hashes, run identity, schema/column inventory, output hashes, row counts, and split policy |
 | `feature-quality.json` | Missing counts, min/max/mean/stddev/p01/p50/p99 distributions, class balance, attack-family counts, and up to 100 invalid-row diagnostics |
 
-The immutable Parquet release keeps float64 feature columns for compatibility
-and reproducible exchange. The Phase 2 trainer materializes the governed 60
-columns once per fold as float32. This is an execution representation, not a
-feature-schema change.
+New releases use `lob_features_v2`, which calculates in binary64 and rounds the
+completed 60 numeric model inputs to float32 at the schema-output boundary
+before quality reporting, logical hashing, and Arrow writing. Exact metadata,
+time, sequence, label, and identity fields retain their integer/string types.
+Legacy `lob_features_v1` float64 releases remain readable. The schema/config
+hashes distinguish the formats, and the governed loader rejects any
+protocol/config/manifest/Parquet mismatch. A v2 release therefore requires a
+new model, calibration, thresholds, predictions, and checksummed bundle; v1
+artifacts are never rewritten in place. See
+[ARD-0030](architecture/ARD-0030-float32-governed-feature-release.md).
 
 The writer uses a per-output-directory lock and unique staging files so two
 processes cannot interleave one artifact bundle. A lock left by an interrupted
@@ -200,7 +208,7 @@ backend/.venv/bin/python scripts/generate_features.py \
   --events data/features/fixture/events.jsonl \
   --metadata data/features/fixture/run-metadata.json \
   --labels data/features/fixture/labels.json \
-  --config configs/features/lightgbm-v1.json \
+  --config configs/features/lightgbm-v2.json \
   --output outputs/features/sample \
   --overwrite
 ```
@@ -213,7 +221,8 @@ backend/.venv/bin/python scripts/generate_features.py \
   --replay-manifest /secure/corpus/session/replay-manifest.json \
   --clean-adjudications /secure/corpus/adjudications.jsonl \
   --corpus-manifest outputs/governed/client-corpus-v1/corpus-manifest.json \
-  --benchmark-protocol configs/benchmark/governed-benchmark-v1.json \
+  --benchmark-protocol configs/benchmark/governed-benchmark-v2-float32.json \
+  --config configs/features/lightgbm-v2.json \
   --artifact-root /secure/corpus/artifacts \
   --output outputs/features/client-session
 ```

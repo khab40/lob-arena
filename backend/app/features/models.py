@@ -14,7 +14,7 @@ LABEL_SCHEMA_VERSION = "feature_labels_v2"
 class FeaturePipelineConfig(BaseModel):
     """Versioned causal-window and threshold configuration."""
 
-    schema_version: Literal["lob_features_v1"] = "lob_features_v1"
+    schema_version: Literal["lob_features_v1", "lob_features_v2"] = "lob_features_v2"
     short_window_ns: int = Field(default=2_000_000_000, gt=0)
     long_window_ns: int = Field(default=10_000_000_000, gt=0)
     depth_levels: int = Field(default=5, ge=1, le=100)

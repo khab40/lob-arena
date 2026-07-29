@@ -113,5 +113,6 @@ Tradeoffs:
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [ARD-0029: Deterministic LightGBM Binary Training](ARD-0029-deterministic-lightgbm-binary-training.md)
+- [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)
 - [Generated Contract Catalog](../../contracts/README.md)
 - [Architecture Overview](../architecture.md)

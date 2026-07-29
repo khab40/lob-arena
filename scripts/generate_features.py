@@ -58,7 +58,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=ROOT / "configs" / "features" / "lightgbm-v1.json",
+        default=ROOT / "configs" / "features" / "lightgbm-v2.json",
         help="Versioned feature configuration JSON",
     )
     parser.add_argument(
@@ -85,7 +85,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--benchmark-protocol",
         type=Path,
-        default=ROOT / "configs" / "benchmark" / "governed-benchmark-v1.json",
+        default=ROOT / "configs" / "benchmark" / "governed-benchmark-v2-float32.json",
         help="Protocol used to verify governed corpus and clean-window decisions",
     )
     parser.add_argument("--overwrite", action="store_true")

@@ -136,7 +136,7 @@ class GovernedBenchmarkProtocol(_StrictModel):
     metrics: MetricPolicy = Field(default_factory=MetricPolicy)
     streaming: StreamingPolicy = Field(default_factory=StreamingPolicy)
     canonical_event_schema_version: int = Field(default=1, ge=1)
-    feature_schema_version: str = Field(default="lob_features_v1", min_length=1)
+    feature_schema_version: str = Field(default="lob_features_v2", min_length=1)
     freeze_test_before_training: Literal[True] = True
     require_signed_release_manifest: Literal[True] = True
 

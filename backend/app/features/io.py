@@ -23,8 +23,10 @@ from app.features.models import (
 )
 from app.features.pipeline import (
     FEATURE_COLUMNS,
+    FEATURE_SCHEMA_V2,
     FEATURE_SCHEMA_VERSION,
     METADATA_COLUMNS,
+    SUPPORTED_FEATURE_SCHEMA_VERSIONS,
     FeatureRunResult,
     feature_quality_report,
     feature_split_group,
@@ -197,7 +199,13 @@ def _is_plain_int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
-def feature_arrow_schema(config_hash: str) -> pa.Schema:
+def feature_arrow_schema(
+    config_hash: str,
+    schema_version: str = FEATURE_SCHEMA_VERSION,
+) -> pa.Schema:
+    if schema_version not in SUPPORTED_FEATURE_SCHEMA_VERSIONS:
+        raise ValueError(f"unsupported feature schema version: {schema_version}")
+    feature_type = pa.float32() if schema_version == FEATURE_SCHEMA_V2 else pa.float64()
     fields = [
         pa.field("feature_schema_version", pa.string(), nullable=False),
         pa.field("feature_config_hash", pa.string(), nullable=False),
@@ -219,12 +227,12 @@ def feature_arrow_schema(config_hash: str) -> pa.Schema:
         pa.field("label_source", pa.string()),
         pa.field("row_valid", pa.bool_(), nullable=False),
         pa.field("invalid_reason", pa.string()),
-        *(pa.field(name, pa.float64()) for name in FEATURE_COLUMNS),
+        *(pa.field(name, feature_type) for name in FEATURE_COLUMNS),
     ]
     return pa.schema(
         fields,
         metadata={
-            b"feature_schema_version": FEATURE_SCHEMA_VERSION.encode(),
+            b"feature_schema_version": schema_version.encode(),
             b"feature_config_hash": config_hash.encode(),
             b"feature_columns": json.dumps(FEATURE_COLUMNS).encode(),
             b"split_policy": b"group_by_instrument_session_no_random_adjacent_rows",
@@ -277,13 +285,13 @@ def _write_feature_run_locked(
     write_token = uuid.uuid4().hex
     temporary = {name: path.with_name(f".{path.name}.{write_token}.tmp") for name, path in targets.items()}
     try:
-        schema = feature_arrow_schema(config.config_hash())
+        schema = feature_arrow_schema(config.config_hash(), config.schema_version)
         table = pa.Table.from_pylist(result.rows, schema=schema)
         pq.write_table(table, temporary["features"], compression="zstd")
         _write_json(temporary["quality"], result.quality_report)
         run_manifest = {
             "schema_version": "feature_run_metadata_v1",
-            "feature_schema_version": FEATURE_SCHEMA_VERSION,
+            "feature_schema_version": config.schema_version,
             "feature_config_hash": config.config_hash(),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "run": metadata.model_dump(mode="json"),
@@ -331,7 +339,7 @@ def _validate_feature_run(
         raise ValueError("feature output requires at least one snapshot row")
     expected_columns = {*METADATA_COLUMNS, *FEATURE_COLUMNS}
     expected_values: dict[str, Any] = {
-        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "feature_schema_version": config.schema_version,
         "feature_config_hash": config.config_hash(),
         "run_id": metadata.run_id,
         "dataset_id": metadata.dataset_id,

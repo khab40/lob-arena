@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import statistics
+import struct
 from collections import Counter, deque
 from dataclasses import dataclass
 from typing import Any, Iterable, Sequence
@@ -26,7 +27,12 @@ from app.features.models import (
     assign_label,
 )
 
-FEATURE_SCHEMA_VERSION = "lob_features_v1"
+FEATURE_SCHEMA_V1 = "lob_features_v1"
+FEATURE_SCHEMA_V2 = "lob_features_v2"
+FEATURE_SCHEMA_VERSION = FEATURE_SCHEMA_V2
+SUPPORTED_FEATURE_SCHEMA_VERSIONS = frozenset(
+    {FEATURE_SCHEMA_V1, FEATURE_SCHEMA_V2}
+)
 
 FEATURE_COLUMNS = (
     "spread",
@@ -590,6 +596,15 @@ class FeaturePipeline:
         if missing_features:
             raise AssertionError(f"feature implementation is incomplete: {missing_features}")
         invalid.extend(name for name, value in features.items() if value is not None and not math.isfinite(value))
+        if self.config.schema_version == FEATURE_SCHEMA_V2:
+            for name, value in features.items():
+                if value is None or not math.isfinite(value):
+                    continue
+                try:
+                    features[name] = struct.unpack("!f", struct.pack("!f", value))[0]
+                except OverflowError:
+                    features[name] = None
+                    invalid.append(f"{name}: outside float32 range")
         label = assign_label(
             self.labels,
             tick=prediction_tick,
@@ -597,7 +612,7 @@ class FeaturePipeline:
         )
         split_group = feature_split_group(self.metadata)
         row: dict[str, Any] = {
-            "feature_schema_version": FEATURE_SCHEMA_VERSION,
+            "feature_schema_version": self.config.schema_version,
             "feature_config_hash": self.config.config_hash(),
             "run_id": self.metadata.run_id,
             "dataset_id": self.metadata.dataset_id,
