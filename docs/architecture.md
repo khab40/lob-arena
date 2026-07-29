@@ -49,7 +49,7 @@ flowchart LR
         Runner["agent-runner<br/>normal + heavy + LangGraph"]
         Corpus["Reviewed corpus +<br/>frozen chronological split"]
         Features["Causal feature pipeline"]
-        Models["Planned learned detectors<br/>LightGBM v1 + sequence challengers"]
+        Models["Learned detectors<br/>LightGBM Phase 2 trainer + sequence challengers"]
         Evaluate["Rules / model paired evaluation"]
     end
 
@@ -170,7 +170,7 @@ graph LR
     Truth["Separate scenario ground truth"]
     Parquet["Typed feature Parquet"]
     Quality["Run + quality metadata"]
-    Trainer["LightGBM v1 trainer<br/>next delivery"]
+    Trainer["Deterministic LightGBM v1 trainer<br/>Phase 2 implemented"]
     MLflow["MLflow development run"]
 
     Canonical --> Feature

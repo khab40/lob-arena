@@ -99,7 +99,7 @@ flowchart LR
         Normalize["Validation + immutable<br/>Parquet + manifest"]
         Corpus["Governed corpus<br/>review + frozen split"]
         Features["Causal features<br/>lob_features_v1"]
-        Models["Planned learned detectors<br/>LightGBM v1 + sequence models"]
+        Models["Learned detectors<br/>LightGBM Phase 2 trainer + planned sequence models"]
     end
 
     subgraph Java["Java 25 authoritative arena"]
@@ -342,7 +342,7 @@ for the complete command and required artifact bindings.
 
 The formulas, configuration, label boundary, prefix-invariance guarantee, and
 session-grouped training rules are documented in
-[Causal Feature Engineering for a Future LightGBM Detector](docs/feature-engineering-lightgbm.md),
+[Causal Feature Engineering for LightGBM](docs/feature-engineering-lightgbm.md),
 [ARD-0024](docs/architecture/ARD-0024-versioned-causal-feature-engineering.md),
 and [ARD-0028](docs/architecture/ARD-0028-governed-lightgbm-feature-loading.md).
 

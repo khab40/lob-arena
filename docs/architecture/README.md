@@ -6,7 +6,7 @@ ARDs capture architecture decisions, context, tradeoffs, implementation phases, 
 
 ## Implementation Summary
 
-Status as of 2026-07-28:
+Status as of 2026-07-29:
 
 | ARD | Implementation | Notes |
 |-----|----------------|-------|
@@ -36,6 +36,7 @@ Status as of 2026-07-28:
 | [ARD-0026](ARD-0026-governed-lightgbm-release-boundary.md) | `[phase-0 done]` | Stable LightGBM training/release identity, validation-only calibration, operating modes, predictions, and checksummed artifact contracts |
 | [ARD-0027](ARD-0027-shared-mlflow-tracking.md) | `[done]` | Authenticated shared MLflow tracking with PostgreSQL metadata, S3-compatible artifacts, and governed experiment/model namespaces |
 | [ARD-0028](ARD-0028-governed-lightgbm-feature-loading.md) | `[phase-1 done]` | Externally anchored feature release, reconstructed labels, replay-unit binding, exact fold inventory, and separate development/test access |
+| [ARD-0029](ARD-0029-deterministic-lightgbm-binary-training.md) | `[phase-2 done]` | Deterministic binary training with training-only class/session weighting, native missing values, validation early stopping, and atomic model/training manifests |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -65,6 +66,7 @@ diagrams document the execution boundaries.
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md) — Phase 0 identity, provenance, calibration, operating-point, prediction, and checksummed bundle contracts
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md) — Docker deployment, storage, authentication, roadmap namespaces, and governance boundary
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md) — Frozen feature-release hashes, exact session/campaign coverage, governed label reconstruction, replay-unit checks, and isolated final-test access
+- [ARD-0029: Deterministic LightGBM Binary Training](ARD-0029-deterministic-lightgbm-binary-training.md) — Phase 2 training-only weighting, deterministic LightGBM settings, validation early stopping, and reproducible artifacts
 
 ### Agent Execution
 

@@ -28,6 +28,7 @@ def verify_phase_zero_release(
         predictions=predictions,
     )
     references = (
+        training.model_artifact,
         *(item.artifact for item in training.input_features),
         *((training.preprocessing.transformer,) if training.preprocessing.transformer is not None else ()),
         calibration.input_predictions,

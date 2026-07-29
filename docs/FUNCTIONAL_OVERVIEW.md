@@ -37,8 +37,9 @@ generate trading signals, or make compliance decisions.
 | Causal feature pipeline | Implemented | `lob_features_v1` Parquet, quality metadata and leakage checks |
 | LightGBM Phase 0 boundary | Implemented | Hash-bound training, calibration, prediction and model-bundle contracts |
 | LightGBM Phase 1 data boundary | Implemented | Externally anchored feature release, reconstructed governed labels, replay-unit binding and isolated test access |
+| LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |
 | Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
-| LightGBM v1 trainer and detector | Planned Track A next | Binary training, calibrated operating modes, contributions and paired test |
+| LightGBM v1 calibration and detector | Planned Track A next | Calibrated operating modes, contributions, detector adapter and paired frozen test |
 | GRU/Transformer challenger | Future | Sequence-aware attack state/phase model after LightGBM establishes value |
 | RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
 

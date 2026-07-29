@@ -391,6 +391,9 @@
         "negative_label_source": {
           "const": "independently_verified_clean"
         },
+        "numeric_storage_dtype": {
+          "const": "float32"
+        },
         "positive_label_source": {
           "const": "synthetic_scenario"
         },
@@ -415,6 +418,7 @@
         "positive_label_source",
         "invalid_row_policy",
         "missing_value_policy",
+        "numeric_storage_dtype",
         "class_weights_fit_on",
         "preprocessing_fit_on",
         "base_session_weighting",
@@ -445,6 +449,16 @@
     "early_stopping": {
       "$ref": "#/$defs/EarlyStoppingEvidence"
     },
+    "feature_release_id": {
+      "minLength": 1,
+      "title": "Feature Release Id",
+      "type": "string"
+    },
+    "feature_release_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Feature Release Sha256",
+      "type": "string"
+    },
     "git_commit": {
       "pattern": "^[0-9a-f]{40}$",
       "title": "Git Commit",
@@ -460,6 +474,9 @@
       "minItems": 2,
       "title": "Input Features",
       "type": "array"
+    },
+    "model_artifact": {
+      "$ref": "#/$defs/ArtifactDigest"
     },
     "ordered_feature_columns": {
       "items": {
@@ -484,6 +501,9 @@
   "required": [
     "schema_version",
     "binding",
+    "feature_release_id",
+    "feature_release_sha256",
+    "model_artifact",
     "git_commit",
     "created_at",
     "training_seed",

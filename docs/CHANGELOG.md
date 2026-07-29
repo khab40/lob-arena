@@ -3,6 +3,13 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Added the governed LightGBM Phase 2 binary trainer with deterministic CPU
+  settings, training-only class and base-session weighting, native missing
+  values, bounded float32 fold materialization, validation early stopping,
+  approved identity-preserving optional scalers, explicit feature-release/model
+  digest bindings, atomic `lightgbm_text_v1`/`lightgbm_training_run_v1`
+  artifacts, and non-trivial repeated-run byte/prediction determinism tests.
+
 - Bounded the authoritative Java arena's canonical in-memory event history,
   added stream-scoped segmented JSONL persistence with archive-backed cursor
   replay and incremental deterministic summaries, closed embedded DuckDB
