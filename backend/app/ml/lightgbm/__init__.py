@@ -17,6 +17,12 @@ from app.ml.lightgbm.contracts import (
     PreprocessingEvidence,
     validate_phase_zero_compatibility,
 )
+from app.ml.lightgbm.data import (
+    GovernedFeatureDataset,
+    GovernedFeatureFold,
+    GovernedFeatureShard,
+    load_governed_feature_dataset,
+)
 from app.ml.lightgbm.release import verify_phase_zero_release
 
 __all__ = [
@@ -26,6 +32,9 @@ __all__ = [
     "DetectorPredictionsManifest",
     "EarlyStoppingEvidence",
     "FoldFeatureInput",
+    "GovernedFeatureDataset",
+    "GovernedFeatureFold",
+    "GovernedFeatureShard",
     "GovernedModelBinding",
     "LightGbmTrainingRun",
     "LightGbmV1Hyperparameters",
@@ -34,6 +43,7 @@ __all__ = [
     "OperatingPointConstraints",
     "OperatingPointMetrics",
     "PreprocessingEvidence",
+    "load_governed_feature_dataset",
     "validate_phase_zero_compatibility",
     "verify_phase_zero_release",
 ]
