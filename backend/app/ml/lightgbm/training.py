@@ -592,13 +592,4 @@ def _training_run_id(
 
 
 def _write_manifest(path: Path, manifest: LightGbmTrainingRun) -> None:
-    path.write_text(
-        json.dumps(
-            manifest.model_dump(mode="json"),
-            allow_nan=False,
-            indent=2,
-            sort_keys=True,
-        )
-        + "\n",
-        encoding="utf-8",
-    )
+    path.write_bytes(manifest.canonical_bytes())
