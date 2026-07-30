@@ -250,6 +250,10 @@ def test_phase2_training_builds_a_nontrivial_reproducible_model(
     assert first.training_manifest.early_stopping.best_iteration < common["hyperparameters"].num_boost_round
     assert first.model_path.read_bytes() == second.model_path.read_bytes()
     assert first.training_manifest_path.read_bytes() == second.training_manifest_path.read_bytes()
+    assert (
+        first.training_manifest_path.read_bytes()
+        == first.training_manifest.canonical_bytes()
+    )
     assert first.validation_predictions == second.validation_predictions
     assert first.training_manifest.model_artifact == first.model_artifact
     assert first.training_manifest.feature_release_sha256 == nontrivial_dataset.feature_release_sha256
