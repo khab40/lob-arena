@@ -1,5 +1,6 @@
 """Governed LightGBM detector boundary."""
 
+from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 from app.ml.lightgbm.contracts import (
@@ -38,32 +39,27 @@ from app.ml.lightgbm.release import (
     verify_complete_lightgbm_v1_release,
     verify_phase_zero_release,
 )
-from app.ml.lightgbm.scoring import (
-    CalibrationResult,
-    PredictionResult,
-    apply_calibration,
-    calibrate_validation_predictions,
-    calibration_metrics,
-    predict_governed_fold,
-    select_operating_points,
-)
-from app.ml.lightgbm.detector import (
-    FeatureContribution,
-    LightGbmDetectorScore,
-    LightGbmV1Detector,
-)
-
 if TYPE_CHECKING:
+    from app.ml.lightgbm.detector import FeatureContribution, LightGbmDetectorScore, LightGbmV1Detector
+    from app.ml.lightgbm.scoring import CalibrationResult, PredictionResult
     from app.ml.lightgbm.training import DeterministicTrainingResult
 
-_TRAINING_EXPORTS = frozenset(
-    {
-        "DeterministicTrainingResult",
-        "calculate_base_session_sample_weights",
-        "calculate_training_class_weights",
-        "train_binary_attack_model",
-    }
-)
+_OPTIONAL_EXPORT_MODULES = {
+    "CalibrationResult": "app.ml.lightgbm.scoring",
+    "DeterministicTrainingResult": "app.ml.lightgbm.training",
+    "FeatureContribution": "app.ml.lightgbm.detector",
+    "LightGbmDetectorScore": "app.ml.lightgbm.detector",
+    "LightGbmV1Detector": "app.ml.lightgbm.detector",
+    "PredictionResult": "app.ml.lightgbm.scoring",
+    "apply_calibration": "app.ml.lightgbm.scoring",
+    "calculate_base_session_sample_weights": "app.ml.lightgbm.training",
+    "calculate_training_class_weights": "app.ml.lightgbm.training",
+    "calibrate_validation_predictions": "app.ml.lightgbm.scoring",
+    "calibration_metrics": "app.ml.lightgbm.scoring",
+    "predict_governed_fold": "app.ml.lightgbm.scoring",
+    "select_operating_points": "app.ml.lightgbm.scoring",
+    "train_binary_attack_model": "app.ml.lightgbm.training",
+}
 
 __all__ = [
     "ArtifactDigest",
@@ -112,12 +108,11 @@ __all__ = [
 
 
 def __getattr__(name: str) -> Any:
-    """Load trainer symbols only when the optional ``ml`` extra is installed."""
+    """Load runtime ML symbols only when the optional ``ml`` extra is installed."""
 
-    if name not in _TRAINING_EXPORTS:
+    module_name = _OPTIONAL_EXPORT_MODULES.get(name)
+    if module_name is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    from app.ml.lightgbm import training
-
-    value = getattr(training, name)
+    value = getattr(import_module(module_name), name)
     globals()[name] = value
     return value

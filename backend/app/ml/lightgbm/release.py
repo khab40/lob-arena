@@ -17,15 +17,6 @@ from app.ml.lightgbm.contracts import (
     validate_phase_zero_compatibility,
 )
 from app.ml.lightgbm.artifacts import artifact_digest_at_path
-from app.ml.lightgbm.evidence import validate_release_evidence
-from app.ml.lightgbm.scoring import (
-    CONTRIBUTIONS_SCHEMA_VERSION,
-    FEATURE_IMPORTANCE_SCHEMA_VERSION,
-    RELIABILITY_BINS_SCHEMA_VERSION,
-    RELIABILITY_DIAGRAM_SCHEMA_VERSION,
-    VALIDATION_METRICS_SCHEMA_VERSION,
-    validate_prediction_parquet,
-)
 
 
 MODEL_BUNDLE_FILE = "model-bundle.json"
@@ -60,6 +51,16 @@ def build_model_bundle(
     reliability_diagram_path: Path | None = None,
 ) -> ModelBundleResult:
     """Assemble and immediately verify the complete governed LightGBM bundle."""
+
+    from app.ml.lightgbm.evidence import validate_release_evidence
+    from app.ml.lightgbm.scoring import (
+        CONTRIBUTIONS_SCHEMA_VERSION,
+        FEATURE_IMPORTANCE_SCHEMA_VERSION,
+        RELIABILITY_BINS_SCHEMA_VERSION,
+        RELIABILITY_DIAGRAM_SCHEMA_VERSION,
+        VALIDATION_METRICS_SCHEMA_VERSION,
+        validate_prediction_parquet,
+    )
 
     artifact_root = artifact_root.resolve()
     output_dir = output_dir.resolve()
@@ -268,6 +269,9 @@ def verify_complete_lightgbm_v1_release(
     predictions: DetectorPredictionsManifest,
 ) -> None:
     """Verify Phase 0 bytes plus all Complete LightGBM v1 evidence semantics."""
+
+    from app.ml.lightgbm.evidence import validate_release_evidence
+    from app.ml.lightgbm.scoring import validate_prediction_parquet
 
     verify_phase_zero_release(
         artifact_root,

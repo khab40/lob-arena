@@ -54,7 +54,6 @@ from app.ml.lightgbm.contracts import (  # noqa: E402
     ModelBundleManifest,
 )
 from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release  # noqa: E402
-from app.ml.lightgbm.scoring import validate_prediction_parquet  # noqa: E402
 
 
 class SessionEvaluationPlan(BaseModel):
@@ -158,6 +157,8 @@ def main(argv: list[str] | None = None) -> int:
     prediction_run_ids: set[str] = set()
     prediction_manifest_path: Path | None = None
     if plan.detector_predictions_manifest is not None:
+        from app.ml.lightgbm.scoring import validate_prediction_parquet
+
         detector_root = _resolve(plan_root, plan.detector_artifact_root)
         training, calibration, bundle, prediction_manifest, prediction_manifest_path = (
             _load_verified_detector_release(
