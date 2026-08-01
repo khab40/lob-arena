@@ -1,7 +1,7 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
-	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
+	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
 
 grader-smoke:
 	./scripts/grader-smoke.sh
@@ -102,6 +102,89 @@ lightgbm-phase2-test:
 		tests/test_lightgbm_phase0_contracts.py \
 		tests/test_lightgbm_governed_data.py \
 		tests/test_lightgbm_training.py
+
+lightgbm-v1-test:
+	cd backend && uv run --extra ml pytest \
+		tests/test_lightgbm_phase0_contracts.py \
+		tests/test_lightgbm_governed_data.py \
+		tests/test_lightgbm_training.py \
+		tests/test_lightgbm_v1.py
+
+lightgbm-train-dev:
+	cd backend && uv run --extra ml python ../scripts/lightgbm_v1.py train \
+		--protocol "$${GOVERNED_PROTOCOL:-../configs/benchmark/governed-benchmark-v2-float32.json}" \
+		--corpus "$${GOVERNED_CORPUS_MANIFEST}" \
+		--corpus-validation "$${GOVERNED_CORPUS_VALIDATION}" \
+		--split "$${GOVERNED_SPLIT_MANIFEST}" \
+		--feature-config "$${FEATURE_CONFIG:-../configs/features/lightgbm-v2.json}" \
+		--feature-release "$${GOVERNED_FEATURE_RELEASE}" \
+		--feature-release-sha256 "$${GOVERNED_FEATURE_RELEASE_SHA256}" \
+		--feature-artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--corpus-artifact-root "$${GOVERNED_CORPUS_ARTIFACT_ROOT}" \
+		--artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--output "$${LIGHTGBM_TRAINING_OUTPUT}" \
+		--created-at "$${LIGHTGBM_CREATED_AT}" \
+		--git-commit "$${LIGHTGBM_GIT_COMMIT}"
+
+lightgbm-calibrate:
+	cd backend && uv run --extra ml python ../scripts/lightgbm_v1.py calibrate \
+		--protocol "$${GOVERNED_PROTOCOL:-../configs/benchmark/governed-benchmark-v2-float32.json}" \
+		--corpus "$${GOVERNED_CORPUS_MANIFEST}" \
+		--corpus-validation "$${GOVERNED_CORPUS_VALIDATION}" \
+		--split "$${GOVERNED_SPLIT_MANIFEST}" \
+		--feature-config "$${FEATURE_CONFIG:-../configs/features/lightgbm-v2.json}" \
+		--feature-release "$${GOVERNED_FEATURE_RELEASE}" \
+		--feature-release-sha256 "$${GOVERNED_FEATURE_RELEASE_SHA256}" \
+		--feature-artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--corpus-artifact-root "$${GOVERNED_CORPUS_ARTIFACT_ROOT}" \
+		--artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--training-manifest "$${LIGHTGBM_TRAINING_MANIFEST}" \
+		--output "$${LIGHTGBM_CALIBRATION_OUTPUT}" \
+		--created-at "$${LIGHTGBM_CREATED_AT}" \
+		$${MLFLOW_TRACKING_URI:+--mlflow-tracking-uri "$${MLFLOW_TRACKING_URI}"}
+
+lightgbm-evaluate-test:
+	cd backend && uv run --extra ml python ../scripts/lightgbm_v1.py predict-test \
+		--protocol "$${GOVERNED_PROTOCOL:-../configs/benchmark/governed-benchmark-v2-float32.json}" \
+		--corpus "$${GOVERNED_CORPUS_MANIFEST}" \
+		--corpus-validation "$${GOVERNED_CORPUS_VALIDATION}" \
+		--split "$${GOVERNED_SPLIT_MANIFEST}" \
+		--feature-config "$${FEATURE_CONFIG:-../configs/features/lightgbm-v2.json}" \
+		--feature-release "$${GOVERNED_FEATURE_RELEASE}" \
+		--feature-release-sha256 "$${GOVERNED_FEATURE_RELEASE_SHA256}" \
+		--feature-artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--corpus-artifact-root "$${GOVERNED_CORPUS_ARTIFACT_ROOT}" \
+		--artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--training-manifest "$${LIGHTGBM_TRAINING_MANIFEST}" \
+		--calibration-manifest "$${LIGHTGBM_CALIBRATION_MANIFEST}" \
+		--output "$${LIGHTGBM_PREDICTION_OUTPUT}" \
+		--created-at "$${LIGHTGBM_CREATED_AT}" \
+		--operating-mode "$${LIGHTGBM_OPERATING_MODE:-balanced}"
+
+lightgbm-build-bundle:
+	cd backend && uv run --extra ml python ../scripts/lightgbm_v1.py bundle \
+		--artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--output "$${LIGHTGBM_BUNDLE_OUTPUT}" \
+		--created-at "$${LIGHTGBM_CREATED_AT}" \
+		--training-manifest "$${LIGHTGBM_TRAINING_MANIFEST}" \
+		--calibration-manifest "$${LIGHTGBM_CALIBRATION_MANIFEST}" \
+		--prediction-manifest "$${LIGHTGBM_PREDICTION_MANIFEST}" \
+		--feature-schema "$${LIGHTGBM_FEATURE_SCHEMA}" \
+		--validation-metrics "$${LIGHTGBM_VALIDATION_METRICS}" \
+		--feature-importance "$${LIGHTGBM_FEATURE_IMPORTANCE}" \
+		--contributions "$${LIGHTGBM_CONTRIBUTIONS}" \
+		$${LIGHTGBM_RELIABILITY_BINS:+--reliability-bins "$${LIGHTGBM_RELIABILITY_BINS}"} \
+		$${LIGHTGBM_RELIABILITY_DIAGRAM:+--reliability-diagram "$${LIGHTGBM_RELIABILITY_DIAGRAM}"} \
+		$${GOVERNED_BENCHMARK_RESULTS:+--benchmark-results "$${GOVERNED_BENCHMARK_RESULTS}"} \
+		$${MLFLOW_TRACKING_URI:+--mlflow-tracking-uri "$${MLFLOW_TRACKING_URI}"}
+
+lightgbm-verify-release:
+	cd backend && uv run --extra ml python ../scripts/lightgbm_v1.py verify \
+		--artifact-root "$${LIGHTGBM_ARTIFACT_ROOT}" \
+		--training-manifest "$${LIGHTGBM_TRAINING_MANIFEST}" \
+		--calibration-manifest "$${LIGHTGBM_CALIBRATION_MANIFEST}" \
+		--prediction-manifest "$${LIGHTGBM_PREDICTION_MANIFEST}" \
+		--model-bundle "$${LIGHTGBM_MODEL_BUNDLE}"
 
 generate-governed-contracts:
 	backend/.venv/bin/python scripts/generate_governed_contracts.py

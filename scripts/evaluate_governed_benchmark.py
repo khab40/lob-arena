@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Literal
 
+import pyarrow.parquet as pq
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -25,6 +26,7 @@ from app.evaluation.canonical_bundle import (  # noqa: E402
     bind_replay_manifest_to_corpus_session,
 )
 from app.evaluation.governed_metrics import (  # noqa: E402
+    AlertObservation,
     SessionMetricComponents,
     aggregate_governed_metrics,
     combine_session_components,
@@ -44,6 +46,15 @@ from app.evaluation.statistics import (  # noqa: E402
     paired_session_comparison,
 )
 from app.features.streaming import StreamingValidationEvidence  # noqa: E402
+from app.ml.lightgbm.artifacts import resolve_verified_artifact  # noqa: E402
+from app.ml.lightgbm.contracts import (  # noqa: E402
+    CalibrationManifest,
+    DetectorPredictionsManifest,
+    LightGbmTrainingRun,
+    ModelBundleManifest,
+)
+from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release  # noqa: E402
+from app.ml.lightgbm.scoring import validate_prediction_parquet  # noqa: E402
 
 
 class SessionEvaluationPlan(BaseModel):
@@ -67,6 +78,11 @@ class GovernedEvaluationPlan(BaseModel):
     adjudications: str
     regime_evidence: str
     baseline_session_metrics: str
+    detector_training_manifest: str | None = None
+    detector_calibration_manifest: str | None = None
+    detector_model_bundle: str | None = None
+    detector_predictions_manifest: str | None = None
+    detector_artifact_root: str | None = None
     streaming_evidence: list[str] = Field(min_length=1)
     sessions: list[SessionEvaluationPlan] = Field(min_length=1)
 
@@ -77,6 +93,19 @@ class GovernedEvaluationPlan(BaseModel):
             raise ValueError("evaluation plan base sessions must be unique")
         if len(self.streaming_evidence) != len(set(self.streaming_evidence)):
             raise ValueError("streaming evidence paths must be unique")
+        detector_release = (
+            self.detector_training_manifest,
+            self.detector_calibration_manifest,
+            self.detector_model_bundle,
+            self.detector_predictions_manifest,
+            self.detector_artifact_root,
+        )
+        if any(value is not None for value in detector_release) and any(
+            value is None for value in detector_release
+        ):
+            raise ValueError(
+                "external detector predictions require the complete verified release"
+            )
         return self
 
 
@@ -124,6 +153,61 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("the governed protocol requires --signing-key for a releasable benchmark")
 
     plan_root = args.plan.parent.resolve()
+    prediction_manifest: DetectorPredictionsManifest | None = None
+    prediction_alerts: dict[str, tuple[AlertObservation, ...]] = {}
+    prediction_run_ids: set[str] = set()
+    prediction_manifest_path: Path | None = None
+    if plan.detector_predictions_manifest is not None:
+        detector_root = _resolve(plan_root, plan.detector_artifact_root)
+        training, calibration, bundle, prediction_manifest, prediction_manifest_path = (
+            _load_verified_detector_release(
+                artifact_root=detector_root,
+                training_manifest_path=_resolve(
+                    plan_root,
+                    plan.detector_training_manifest,
+                ),
+                calibration_manifest_path=_resolve(
+                    plan_root,
+                    plan.detector_calibration_manifest,
+                ),
+                model_bundle_path=_resolve(plan_root, plan.detector_model_bundle),
+                prediction_manifest_path=_resolve(
+                    plan_root,
+                    plan.detector_predictions_manifest,
+                ),
+            )
+        )
+        prediction_path = resolve_verified_artifact(
+            prediction_manifest.predictions,
+            artifact_root=detector_root,
+        )
+        validate_prediction_parquet(
+            prediction_path,
+            manifest=prediction_manifest,
+        )
+        prediction_alerts, prediction_run_ids = _load_detector_prediction_alerts(
+            prediction_path,
+            detector=prediction_manifest.binding.model_id,
+        )
+        if (
+            prediction_manifest.fold != plan.fold
+            or prediction_manifest.binding.model_id != plan.model_id
+            or prediction_manifest.binding.protocol_id != protocol.protocol_id
+            or prediction_manifest.binding.protocol_hash != protocol.protocol_hash()
+            or prediction_manifest.binding.corpus_id != corpus.corpus_id
+            or prediction_manifest.binding.corpus_hash != corpus.corpus_hash()
+            or prediction_manifest.binding.split_id != split.split_id
+            or prediction_manifest.binding.assignment_hash != split.assignment_hash
+            or training.binding.identity_tuple() != prediction_manifest.binding.identity_tuple()
+            or calibration.binding.identity_tuple()
+            != prediction_manifest.binding.identity_tuple()
+            or bundle.binding.identity_tuple() != prediction_manifest.binding.identity_tuple()
+            or sum(len(alerts) for alerts in prediction_alerts.values())
+            != prediction_manifest.alert_count
+        ):
+            raise ValueError(
+                "external detector predictions are incompatible with the governed evaluation"
+            )
     adjudications_path = _resolve(plan_root, plan.adjudications)
     adjudications = load_adjudications(adjudications_path)
     validate_adjudications(
@@ -248,6 +332,28 @@ def main(argv: list[str] | None = None) -> int:
         }
         for path, item in zip(plan.streaming_evidence, streaming_evidence, strict=True)
     )
+    if prediction_manifest is not None and prediction_manifest_path is not None:
+        input_artifacts.extend(
+            {
+                "kind": kind,
+                "manifest": str(path),
+                "manifest_sha256": _sha256(path),
+            }
+            for kind, path in (
+                (
+                    "detector_training_manifest",
+                    _resolve(plan_root, plan.detector_training_manifest),
+                ),
+                (
+                    "detector_calibration_manifest",
+                    _resolve(plan_root, plan.detector_calibration_manifest),
+                ),
+                ("detector_model_bundle", _resolve(plan_root, plan.detector_model_bundle)),
+                ("detector_predictions", prediction_manifest_path),
+            )
+        )
+    evaluated_prediction_run_ids: set[str] = set()
+    family_components: dict[str, list[SessionMetricComponents]] = defaultdict(list)
     for session_plan in sorted(plan.sessions, key=lambda item: item.base_session_id):
         corpus_session = corpus_sessions[session_plan.base_session_id]
         replay_components: list[SessionMetricComponents] = []
@@ -298,14 +404,22 @@ def main(argv: list[str] | None = None) -> int:
                 verified_clean_windows=clean_windows,
                 artifact_root=artifact_root,
                 regimes=regimes_by_session[session_plan.base_session_id],
+                alert_override=(
+                    prediction_alerts.get(replay_manifest.run_id, ())
+                    if prediction_manifest is not None
+                    else None
+                ),
             )
-            replay_components.append(
-                evaluate_governed_session(
-                    unit,
-                    alert_deduplication_window_ns=protocol.metrics.alert_deduplication_window_ns,
-                    alert_matching_horizon_ns=protocol.splits.purge_alert_horizon_ns,
-                )
+            component = evaluate_governed_session(
+                unit,
+                alert_deduplication_window_ns=protocol.metrics.alert_deduplication_window_ns,
+                alert_matching_horizon_ns=protocol.splits.purge_alert_horizon_ns,
             )
+            replay_components.append(component)
+            if prediction_manifest is not None:
+                evaluated_prediction_run_ids.add(replay_manifest.run_id)
+            if replay_manifest.attack_family is not None:
+                family_components[replay_manifest.attack_family].append(component)
             input_artifacts.append(
                 {
                     "kind": "canonical_java_replay",
@@ -335,6 +449,10 @@ def main(argv: list[str] | None = None) -> int:
                 regimes=regimes_by_session[session_plan.base_session_id],
             )
         )
+    if prediction_manifest is not None and prediction_run_ids != evaluated_prediction_run_ids:
+        raise ValueError(
+            "external detector prediction runs do not exactly cover evaluated canonical replays"
+        )
     if (
         protocol.metrics.require_realized_benefit_event
         and sum(item.true_positive + item.false_negative for item in session_metrics)
@@ -343,6 +461,11 @@ def main(argv: list[str] | None = None) -> int:
         raise ValueError("every governed attack requires a realized-benefit event")
 
     metrics = aggregate_governed_metrics(session_metrics)
+    metrics["challenge_cases"] = {
+        family: aggregate_governed_metrics(components)
+        for family, components in sorted(family_components.items())
+        if family in {"liquidity_evaporation", "layering_like"}
+    }
     interval_metrics = [
         "precision",
         "attack_level_recall",
@@ -488,6 +611,83 @@ def _load_session_metrics(path: Path) -> list[SessionMetricComponents]:
     if not rows or len({item.base_session_id for item in rows}) != len(rows):
         raise ValueError("baseline session metrics must contain unique base sessions")
     return rows
+
+
+def _load_detector_prediction_alerts(
+    path: Path,
+    *,
+    detector: str,
+) -> tuple[dict[str, tuple[AlertObservation, ...]], set[str]]:
+    grouped: dict[str, list[AlertObservation]] = defaultdict(list)
+    run_ids: set[str] = set()
+    parquet = pq.ParquetFile(path)
+    for batch in parquet.iter_batches(
+        batch_size=65_536,
+        columns=[
+            "prediction_row_id",
+            "run_id",
+            "prediction_timestamp_ns",
+            "alert",
+        ],
+    ):
+        for row_id, run_id, timestamp, alert in zip(
+            *(batch.column(index).to_pylist() for index in range(batch.num_columns)),
+            strict=True,
+        ):
+            run_id = str(run_id)
+            run_ids.add(run_id)
+            if alert is True:
+                grouped[run_id].append(
+                    AlertObservation(
+                        alert_id=str(row_id),
+                        detector=detector,
+                        timestamp_ns=int(timestamp),
+                    )
+                )
+            elif alert is not False:
+                raise ValueError(
+                    "governed evaluation predictions require non-null alert decisions"
+                )
+    return {
+        run_id: tuple(sorted(alerts, key=lambda item: (item.timestamp_ns, item.alert_id)))
+        for run_id, alerts in grouped.items()
+    }, run_ids
+
+
+def _load_verified_detector_release(
+    *,
+    artifact_root: Path,
+    training_manifest_path: Path,
+    calibration_manifest_path: Path,
+    model_bundle_path: Path,
+    prediction_manifest_path: Path,
+) -> tuple[
+    LightGbmTrainingRun,
+    CalibrationManifest,
+    ModelBundleManifest,
+    DetectorPredictionsManifest,
+    Path,
+]:
+    training = LightGbmTrainingRun.model_validate_json(
+        training_manifest_path.read_text(encoding="utf-8")
+    )
+    calibration = CalibrationManifest.model_validate_json(
+        calibration_manifest_path.read_text(encoding="utf-8")
+    )
+    bundle = ModelBundleManifest.model_validate_json(
+        model_bundle_path.read_text(encoding="utf-8")
+    )
+    predictions = DetectorPredictionsManifest.model_validate_json(
+        prediction_manifest_path.read_text(encoding="utf-8")
+    )
+    verify_complete_lightgbm_v1_release(
+        artifact_root,
+        training=training,
+        calibration=calibration,
+        bundle=bundle,
+        predictions=predictions,
+    )
+    return training, calibration, bundle, predictions, prediction_manifest_path
 
 
 if __name__ == "__main__":

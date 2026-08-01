@@ -30,7 +30,10 @@ from app.ml.lightgbm.data import (
     GovernedFeatureDataset,
     GovernedFeatureFold,
 )
-from app.ml.lightgbm.feature_release import artifact_digest
+from app.ml.lightgbm.artifacts import (
+    artifact_digest_for_destination,
+    require_output_within_artifact_root,
+)
 
 
 MODEL_SCHEMA_VERSION = "lightgbm_text_v1"
@@ -73,13 +76,16 @@ def train_binary_attack_model(
     early_stopping_min_delta: float = 0.0,
     preprocessor: Any | None = None,
     batch_size: int = 65_536,
+    artifact_root: Path | None = None,
 ) -> DeterministicTrainingResult:
     """Train the governed Phase 2 binary detector without opening the test fold."""
 
     output_dir = output_dir.resolve()
+    artifact_root = output_dir if artifact_root is None else artifact_root.resolve()
     _validate_training_request(
         dataset,
         output_dir=output_dir,
+        artifact_root=artifact_root,
         created_at=created_at,
         training_seed=training_seed,
         early_stopping_rounds=early_stopping_rounds,
@@ -194,13 +200,19 @@ def train_binary_attack_model(
     try:
         model_path = staging / MODEL_FILE
         booster.save_model(model_path, num_iteration=best_iteration)
-        model_artifact = artifact_digest(
+        model_artifact = artifact_digest_for_destination(
             model_path,
-            root=staging,
+            destination=output_dir / MODEL_FILE,
+            artifact_root=artifact_root,
             logical_name="model",
             schema_version=MODEL_SCHEMA_VERSION,
         )
-        preprocessing = _persist_preprocessor(training_preprocessor, staging=staging)
+        preprocessing = _persist_preprocessor(
+            training_preprocessor,
+            staging=staging,
+            output_dir=output_dir,
+            artifact_root=artifact_root,
+        )
         training_run_id = _training_run_id(
             dataset=dataset,
             model_id=model_id,
@@ -247,9 +259,10 @@ def train_binary_attack_model(
         )
         manifest_path = staging / TRAINING_MANIFEST_FILE
         _write_manifest(manifest_path, manifest)
-        manifest_artifact = artifact_digest(
+        manifest_artifact = artifact_digest_for_destination(
             manifest_path,
-            root=staging,
+            destination=output_dir / TRAINING_MANIFEST_FILE,
+            artifact_root=artifact_root,
             logical_name="training_manifest",
             schema_version=manifest.schema_version,
         )
@@ -335,6 +348,7 @@ def _validate_training_request(
     dataset: GovernedFeatureDataset,
     *,
     output_dir: Path,
+    artifact_root: Path,
     created_at: datetime,
     training_seed: int,
     early_stopping_rounds: int,
@@ -357,6 +371,16 @@ def _validate_training_request(
         raise ValueError("training batch size must be positive")
     if output_dir.exists():
         raise ValueError("training output directory already exists")
+    if artifact_root == output_dir:
+        return
+    require_output_within_artifact_root(output_dir, artifact_root)
+    for fold in dataset.folds:
+        for shard in fold.shards:
+            expected = (artifact_root / shard.feature_uri).resolve()
+            if expected != shard.feature_path.resolve():
+                raise ValueError(
+                    "governed feature artifacts and training output must share one artifact root"
+                )
 
 
 def _materialize_fold(
@@ -486,6 +510,8 @@ def _persist_preprocessor(
     preprocessor: Any | None,
     *,
     staging: Path,
+    output_dir: Path,
+    artifact_root: Path,
 ) -> PreprocessingEvidence:
     if preprocessor is None:
         return PreprocessingEvidence(mode="none")
@@ -495,9 +521,10 @@ def _persist_preprocessor(
     joblib.dump(preprocessor, path, compress=0, protocol=5)
     return PreprocessingEvidence(
         mode="training_fitted",
-        transformer=artifact_digest(
+        transformer=artifact_digest_for_destination(
             path,
-            root=staging,
+            destination=output_dir / PREPROCESSOR_FILE,
+            artifact_root=artifact_root,
             logical_name="preprocessor",
             schema_version=PREPROCESSOR_SCHEMA_VERSION,
         ),

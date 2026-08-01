@@ -99,7 +99,7 @@ flowchart LR
         Normalize["Validation + immutable<br/>Parquet + manifest"]
         Corpus["Governed corpus<br/>review + frozen split"]
         Features["Causal features<br/>lob_features_v2 float32"]
-        Models["Learned detectors<br/>LightGBM Phase 2 trainer + planned sequence models"]
+        Models["Learned detectors<br/>governed LightGBM v1 + planned sequence models"]
     end
 
     subgraph Java["Java 25 authoritative arena"]
@@ -317,15 +317,22 @@ ordering, provenance, seed derivation, label isolation, metrics, and artifacts.
 
 ### Model-ready causal features
 
-The retained Python AI/ML layer can convert the Java canonical event stream
-from LOBSTER, synthetic, or hybrid runs into the same versioned causal feature
-schema for a future LightGBM detector. It writes typed Parquet, run metadata,
-and a feature-quality report. The Phase 1 governed loader requires an
+The retained Python AI/ML layer converts the Java canonical event stream from
+LOBSTER, synthetic, or hybrid runs into the same versioned causal feature
+schema and a governed LightGBM v1 binary detector. It writes typed Parquet, run
+metadata, and a feature-quality report. The Phase 1 governed loader requires an
 externally hash-anchored feature release, revalidates clean adjudications,
 reconstructs labels from governed ground truth, binds market units to canonical
 Java replays, exposes only supervised rows, and separates development access
-from the frozen test fold. It does not yet train a model or treat unlabeled
-history as benign.
+from the frozen test fold. Unlabeled history never becomes benign ground truth.
+
+LightGBM v1 now provides deterministic CPU training, validation-only
+Platt/isotonic calibration, frozen high-precision/balanced/high-recall modes,
+schema-locked test predictions, per-alert tree contributions, a fail-closed
+detector adapter, explicit MLflow development/evaluation logging, and a
+checksummed model bundle. Software completion is not a performance claim: the
+final governed evaluation remains blocked until the licensed real corpus is
+reviewed, split and signed.
 
 Generate the checked-in reproducible fixture:
 
@@ -344,7 +351,10 @@ The formulas, configuration, label boundary, prefix-invariance guarantee, and
 session-grouped training rules are documented in
 [Causal Feature Engineering for LightGBM](docs/feature-engineering-lightgbm.md),
 [ARD-0024](docs/architecture/ARD-0024-versioned-causal-feature-engineering.md),
-and [ARD-0028](docs/architecture/ARD-0028-governed-lightgbm-feature-loading.md).
+[ARD-0028](docs/architecture/ARD-0028-governed-lightgbm-feature-loading.md), and
+[ARD-0031](docs/architecture/ARD-0031-complete-lightgbm-v1.md).
+Operational commands and artifact boundaries are in the
+[Governed LightGBM v1 Runbook](docs/lightgbm-v1-runbook.md).
 
 Compose options can be combined:
 

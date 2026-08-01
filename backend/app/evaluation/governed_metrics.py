@@ -292,6 +292,7 @@ def governed_unit_from_canonical_bundle(
     verified_clean_windows: list[CleanWindowAdjudication],
     artifact_root: Path | None = None,
     regimes: dict[str, str] | None = None,
+    alert_override: tuple[AlertObservation, ...] | None = None,
 ) -> GovernedSessionUnit:
     replay = load_canonical_evaluation_input(replay_manifest, artifact_root=artifact_root)
     manifest = replay.manifest
@@ -326,9 +327,10 @@ def governed_unit_from_canonical_bundle(
         )
         for window in verified_clean_windows
     )
-    alerts = tuple(
-        _alert_observation(record, timestamp_by_tick)
-        for record in replay.alerts
+    alerts = (
+        tuple(_alert_observation(record, timestamp_by_tick) for record in replay.alerts)
+        if alert_override is None
+        else alert_override
     )
     evaluable_count = sum(
         _timestamp_is_evaluable(timestamp, attacks, clean)

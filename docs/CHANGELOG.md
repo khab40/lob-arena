@@ -3,6 +3,13 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Completed governed LightGBM v1 with validation-only calibration, frozen
+  operating modes, isolated test scoring, tree contributions, semantic and
+  checksummed release evidence, a mode-locked detector adapter, MLflow
+  indexing, and paired rules-versus-model evaluation. Governed evaluation now
+  requires the complete verified model release, while prediction validation
+  uses bounded batches and disk-backed exact identity checks.
+
 - Added the backward-compatible `lob_features_v2` governed release:
   calculations remain binary64, completed feature rows are rounded to float32
   before quality/logical hashes and persisted as Arrow float32, exact metadata
