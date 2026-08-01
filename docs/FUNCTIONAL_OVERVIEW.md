@@ -39,7 +39,7 @@ generate trading signals, or make compliance decisions.
 | LightGBM Phase 1 data boundary | Implemented | Externally anchored feature release, reconstructed governed labels, replay-unit binding and isolated test access |
 | LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |
 | Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
-| LightGBM v1 calibration and detector | Planned Track A next | Calibrated operating modes, contributions, detector adapter and paired frozen test |
+| LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
 | GRU/Transformer challenger | Future | Sequence-aware attack state/phase model after LightGBM establishes value |
 | RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
 
@@ -123,6 +123,10 @@ when it:
 - records model, calibration and prediction manifests with checksums;
 - compares rules and LightGBM on identical governed observations; and
 - reports liquidity evaporation and subtle layering challenge performance.
+
+The implementation now satisfies this software boundary. Performance acceptance
+remains pending until the licensed 30-session corpus, independent clean-window
+reviews and signed chronological test release exist.
 
 ## Track B: Corpus Operations Acceptance
 

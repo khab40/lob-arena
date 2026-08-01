@@ -251,6 +251,20 @@ def test_evaluation_plan_rejects_duplicate_sessions_and_replays() -> None:
                 ],
             }
         )
+    with pytest.raises(ValidationError, match="complete verified release"):
+        GovernedEvaluationPlan.model_validate(
+            {
+                **common,
+                "detector_predictions_manifest": "predictions.json",
+                "detector_artifact_root": "artifacts",
+                "sessions": [
+                    {
+                        "base_session_id": "one",
+                        "replay_manifests": ["one.json"],
+                    }
+                ],
+            }
+        )
 
 
 def test_governed_canonical_benchmark_produces_verified_signed_release(tmp_path: Path) -> None:
