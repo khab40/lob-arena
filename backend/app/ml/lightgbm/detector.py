@@ -16,7 +16,7 @@ from app.ml.lightgbm.contracts import (
     OperatingMode,
 )
 from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release
-from app.ml.lightgbm.scoring import apply_calibration, validate_prediction_parquet
+from app.ml.lightgbm.scoring import apply_calibration
 
 
 @dataclass(frozen=True)
@@ -62,13 +62,6 @@ class LightGbmV1Detector:
             calibration=calibration,
             bundle=bundle,
             predictions=release_predictions,
-        )
-        validate_prediction_parquet(
-            resolve_verified_artifact(
-                release_predictions.predictions,
-                artifact_root=artifact_root,
-            ),
-            manifest=release_predictions,
         )
         if not 1 <= top_contributions <= len(training.ordered_feature_columns):
             raise ValueError("detector contribution count is outside the feature inventory")

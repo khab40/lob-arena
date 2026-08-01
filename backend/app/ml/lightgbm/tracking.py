@@ -117,10 +117,6 @@ def log_governed_evaluation_run(
         bundle=bundle,
         predictions=predictions,
     )
-    validate_prediction_parquet(
-        resolve_verified_artifact(predictions.predictions, artifact_root=artifact_root),
-        manifest=predictions,
-    )
     if bundle_path.read_bytes() != bundle.canonical_bytes():
         raise ValueError("MLflow model bundle path is not its canonical governed manifest")
     _require_artifact_root_file(checksum_path, artifact_root)

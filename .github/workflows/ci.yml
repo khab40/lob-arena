@@ -114,9 +114,14 @@ jobs:
       - name: Verify ML dependency imports
         run: uv run --project backend --extra ml python -c "import lightgbm, mlflow, sklearn"
 
-      - name: Run LightGBM Phase 0, Phase 1 and Phase 2 tests
+      - name: Run governed LightGBM tests
         working-directory: backend
-        run: uv run --extra ml pytest tests/test_lightgbm_phase0_contracts.py tests/test_lightgbm_governed_data.py tests/test_lightgbm_training.py
+        run: |
+          uv run --extra ml pytest \
+            tests/test_lightgbm_phase0_contracts.py \
+            tests/test_lightgbm_governed_data.py \
+            tests/test_lightgbm_training.py \
+            tests/test_lightgbm_v1.py
 
   java-kernel:
     name: Java 25 kernel and control plane

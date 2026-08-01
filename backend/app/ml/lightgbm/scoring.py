@@ -6,6 +6,7 @@ import os
 import shutil
 import sqlite3
 import tempfile
+from contextlib import ExitStack
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -61,6 +62,7 @@ FEATURE_SCHEMA_ARTIFACT_VERSION = "lightgbm_feature_schema_v1"
 RELIABILITY_BINS_SCHEMA_VERSION = "reliability_bins_v1"
 RELIABILITY_DIAGRAM_SCHEMA_VERSION = "reliability_diagram_svg_v1"
 CONTRIBUTIONS_SCHEMA_VERSION = "lightgbm_feature_contributions_v1"
+CHALLENGE_FAMILIES = ("liquidity_evaporation", "layering_like")
 
 
 PREDICTION_ARROW_SCHEMA = pa.schema(
@@ -185,7 +187,9 @@ def calibrate_validation_predictions(
         writer = pq.ParquetWriter(raw_path, PREDICTION_ARROW_SCHEMA, compression="zstd")
         probability_chunks: list[np.ndarray] = []
         label_chunks: list[np.ndarray] = []
-        family_chunks: list[np.ndarray] = []
+        family_mask_chunks: dict[str, list[np.ndarray]] = {
+            family: [] for family in CHALLENGE_FAMILIES
+        }
         contribution_totals = np.zeros(len(dataset.ordered_feature_columns), dtype=np.float64)
         observed_rows = 0
         try:
@@ -198,10 +202,20 @@ def calibrate_validation_predictions(
                 batch_size=batch_size,
             ):
                 labels = _column_numpy(scored.batch, "label", dtype=np.int8)
-                families = _column_numpy(scored.batch, "attack_family", dtype=object)
                 probability_chunks.append(scored.raw_probabilities)
                 label_chunks.append(labels)
-                family_chunks.append(families)
+                family_column = scored.batch.column(
+                    scored.batch.schema.get_field_index("attack_family")
+                )
+                for family in CHALLENGE_FAMILIES:
+                    matches = pc.fill_null(pc.equal(family_column, family), False)
+                    family_mask_chunks[family].append(
+                        (labels == 1)
+                        & np.asarray(
+                            matches.to_numpy(zero_copy_only=False),
+                            dtype=np.bool_,
+                        )
+                    )
                 contribution_totals += np.abs(scored.contributions[:, :-1]).sum(axis=0)
                 observed_rows += scored.batch.num_rows
                 writer.write_table(
@@ -225,7 +239,10 @@ def calibrate_validation_predictions(
 
         raw_probabilities = np.concatenate(probability_chunks)
         labels = np.concatenate(label_chunks)
-        attack_families = np.concatenate(family_chunks)
+        challenge_family_masks = {
+            family: np.concatenate(chunks)
+            for family, chunks in family_mask_chunks.items()
+        }
         parameters = fit_calibration_parameters(method, raw_probabilities, labels)
         calibrated = apply_calibration(parameters, raw_probabilities)
         raw_metrics, raw_bins = calibration_metrics(labels, raw_probabilities, bins=ece_bins)
@@ -275,9 +292,8 @@ def calibrate_validation_predictions(
             "calibrated_metrics": calibrated_metrics.model_dump(mode="json"),
             "operating_points": [point.model_dump(mode="json") for point in operating_points],
             "challenge_cases": _challenge_case_metrics(
-                labels,
                 calibrated,
-                attack_families,
+                challenge_family_masks,
                 operating_points,
             ),
         }
@@ -440,19 +456,23 @@ def predict_governed_fold(
     try:
         predictions_path = staging / PREDICTIONS_FILE
         contributions_path = staging / CONTRIBUTIONS_FILE
-        prediction_writer = pq.ParquetWriter(
-            predictions_path,
-            PREDICTION_ARROW_SCHEMA,
-            compression="zstd",
-        )
-        contribution_writer = pq.ParquetWriter(
-            contributions_path,
-            CONTRIBUTION_ARROW_SCHEMA,
-            compression="zstd",
-        )
         observed_rows = 0
         alert_count = 0
-        try:
+        with ExitStack() as writers:
+            prediction_writer = writers.enter_context(
+                pq.ParquetWriter(
+                    predictions_path,
+                    PREDICTION_ARROW_SCHEMA,
+                    compression="zstd",
+                )
+            )
+            contribution_writer = writers.enter_context(
+                pq.ParquetWriter(
+                    contributions_path,
+                    CONTRIBUTION_ARROW_SCHEMA,
+                    compression="zstd",
+                )
+            )
             for scored in _iter_scored_batches(
                 fold,
                 booster=booster,
@@ -481,9 +501,6 @@ def predict_governed_fold(
                 )
                 if contribution_table.num_rows:
                     contribution_writer.write_table(contribution_table)
-        finally:
-            prediction_writer.close()
-            contribution_writer.close()
         if observed_rows != fold.row_count:
             raise ValueError("test prediction rows do not match the governed fold")
 
@@ -655,14 +672,49 @@ def select_operating_points(
     recall_floor: float,
 ) -> tuple[OperatingPoint, ...]:
     probabilities, targets = _validate_probability_labels(probabilities, labels)
+    order = np.argsort(-probabilities, kind="stable")
+    sorted_probabilities = probabilities[order]
+    sorted_targets = targets[order]
+    distinct_ends = np.flatnonzero(
+        sorted_probabilities[:-1] != sorted_probabilities[1:]
+    )
+    cuts = np.append(distinct_ends, sorted_probabilities.size - 1)
+    cumulative_true_positives = np.cumsum(
+        sorted_targets == 1,
+        dtype=np.int64,
+    )[cuts]
+    predicted_positives = cuts + 1
+    total_positives = int(np.count_nonzero(targets == 1))
     candidates: list[tuple[float, OperatingPointMetrics]] = []
-    for threshold in sorted({float(value) for value in probabilities}, reverse=True):
-        predicted = probabilities >= threshold
-        if not np.any(predicted):
-            continue
-        candidates.append((threshold, _binary_metrics(targets, predicted)))
-    if not candidates:
-        raise ValueError("validation probabilities do not provide an operating point")
+    for index, cut in enumerate(cuts):
+        true_positive = int(cumulative_true_positives[index])
+        false_positive = int(predicted_positives[index]) - true_positive
+        false_negative = total_positives - true_positive
+        precision = (
+            true_positive / (true_positive + false_positive)
+            if true_positive + false_positive
+            else 0.0
+        )
+        recall = (
+            true_positive / (true_positive + false_negative)
+            if true_positive + false_negative
+            else 0.0
+        )
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if precision + recall
+            else 0.0
+        )
+        candidates.append(
+            (
+                float(sorted_probabilities[cut]),
+                OperatingPointMetrics(
+                    precision=precision,
+                    recall=recall,
+                    f1=f1,
+                ),
+            )
+        )
     high_precision = [item for item in candidates if item[1].precision >= precision_floor]
     high_recall = [item for item in candidates if item[1].recall >= recall_floor]
     if not high_precision:
@@ -1064,25 +1116,14 @@ def _contribution_table(
     return pa.Table.from_pylist(rows, schema=CONTRIBUTION_ARROW_SCHEMA)
 
 
-def _binary_metrics(labels: np.ndarray, predicted: np.ndarray) -> OperatingPointMetrics:
-    tp = int(np.count_nonzero((labels == 1) & predicted))
-    fp = int(np.count_nonzero((labels == 0) & predicted))
-    fn = int(np.count_nonzero((labels == 1) & ~predicted))
-    precision = tp / (tp + fp) if tp + fp else 0.0
-    recall = tp / (tp + fn) if tp + fn else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    return OperatingPointMetrics(precision=precision, recall=recall, f1=f1)
-
-
 def _challenge_case_metrics(
-    labels: np.ndarray,
     probabilities: np.ndarray,
-    families: np.ndarray,
+    family_masks: dict[str, np.ndarray],
     points: tuple[OperatingPoint, ...],
 ) -> dict[str, object]:
     result: dict[str, object] = {}
-    for family in ("liquidity_evaporation", "layering_like"):
-        mask = (labels == 1) & (families == family)
+    for family in CHALLENGE_FAMILIES:
+        mask = family_masks[family]
         result[family] = {
             "positive_rows": int(np.count_nonzero(mask)),
             "recall_by_operating_mode": {

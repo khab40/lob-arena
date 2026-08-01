@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -26,6 +27,7 @@ from app.ml.lightgbm.contracts import (  # noqa: E402
     LightGbmV1Hyperparameters,
 )
 from app.ml.lightgbm.release import build_model_bundle, verify_phase_zero_release  # noqa: E402
+from app.ml.lightgbm import scoring as scoring_module  # noqa: E402
 from app.ml.lightgbm.scoring import (  # noqa: E402
     PREDICTION_ARROW_SCHEMA,
     apply_calibration,
@@ -283,6 +285,11 @@ def test_complete_lightgbm_v1_release_detector_and_mlflow(
         recall_floor=0.90,
         batch_size=7,
     )
+    validation_metrics = json.loads(calibration.validation_metrics_path.read_text(encoding="utf-8"))
+    assert {
+        family: metrics["positive_rows"]
+        for family, metrics in validation_metrics["challenge_cases"].items()
+    } == {"layering_like": 6, "liquidity_evaporation": 6}
     final_test = _dataset(artifact_root, access_mode="final_test")
     predictions = predict_governed_fold(
         final_test,
@@ -442,6 +449,39 @@ def test_complete_lightgbm_v1_release_detector_and_mlflow(
             created_at=CREATED_AT,
         )
 
+    class _TrackingWriter:
+        closed = False
+
+        def __enter__(self) -> "_TrackingWriter":
+            return self
+
+        def __exit__(self, *_: object) -> None:
+            self.closed = True
+
+    opened_writers: list[_TrackingWriter] = []
+
+    def fail_second_writer(*_: object, **__: object) -> _TrackingWriter:
+        if opened_writers:
+            raise OSError("contribution writer failed")
+        writer = _TrackingWriter()
+        opened_writers.append(writer)
+        return writer
+
+    monkeypatch.setattr(scoring_module.pq, "ParquetWriter", fail_second_writer)
+    failed_prediction_dir = artifact_root / "model" / "writer-failure"
+    with pytest.raises(OSError, match="contribution writer failed"):
+        predict_governed_fold(
+            final_test,
+            training=training.training_manifest,
+            calibration=calibration.manifest,
+            artifact_root=artifact_root,
+            output_dir=failed_prediction_dir,
+            created_at=CREATED_AT,
+            operating_mode="balanced",
+        )
+    assert opened_writers[0].closed
+    assert not failed_prediction_dir.exists()
+
 
 def test_calibration_and_test_access_fail_closed(tmp_path: Path) -> None:
     root = tmp_path / "artifacts"
@@ -508,6 +548,61 @@ def test_operating_points_and_platt_application_are_deterministic() -> None:
     )
     assert calibrated.tolist() == pytest.approx(probabilities.tolist())
     assert calibration_parameters.method == "platt"
+
+
+def test_operating_points_match_brute_force_selection_with_duplicate_probabilities() -> None:
+    rng = np.random.default_rng(31)
+    probabilities = rng.choice(np.linspace(0.01, 0.99, 51), size=513, replace=True)
+    labels = (probabilities >= 0.55).astype(np.int8)
+    labels[::11] = 1 - labels[::11]
+    precision_floor = 0.70
+    recall_floor = 0.85
+
+    candidates: list[tuple[float, float, float, float]] = []
+    for threshold in sorted({float(value) for value in probabilities}, reverse=True):
+        predicted = probabilities >= threshold
+        true_positive = int(np.count_nonzero((labels == 1) & predicted))
+        false_positive = int(np.count_nonzero((labels == 0) & predicted))
+        false_negative = int(np.count_nonzero((labels == 1) & ~predicted))
+        precision = true_positive / (true_positive + false_positive)
+        recall = true_positive / (true_positive + false_negative)
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if precision + recall
+            else 0.0
+        )
+        candidates.append((threshold, precision, recall, f1))
+
+    expected = {
+        "high_precision": max(
+            (item for item in candidates if item[1] >= precision_floor),
+            key=lambda item: (item[2], item[1], item[3], item[0]),
+        ),
+        "balanced": max(
+            candidates,
+            key=lambda item: (item[3], item[1], item[2], item[0]),
+        ),
+        "high_recall": max(
+            (item for item in candidates if item[2] >= recall_floor),
+            key=lambda item: (item[1], item[2], item[3], item[0]),
+        ),
+    }
+    observed = select_operating_points(
+        labels,
+        probabilities,
+        precision_floor=precision_floor,
+        recall_floor=recall_floor,
+    )
+
+    assert {
+        point.mode: (
+            point.threshold,
+            point.validation_metrics.precision,
+            point.validation_metrics.recall,
+            point.validation_metrics.f1,
+        )
+        for point in observed
+    } == expected
 
 
 def test_governed_evaluator_reads_only_frozen_alert_rows(tmp_path: Path) -> None:
