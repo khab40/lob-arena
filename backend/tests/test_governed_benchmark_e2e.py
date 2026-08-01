@@ -34,6 +34,7 @@ from app.evaluation.regimes import (
 from scripts.benchmark_feature_streaming import main as benchmark_features
 from scripts.evaluate_governed_benchmark import (
     GovernedEvaluationPlan,
+    _aggregate_attack_challenge_case,
     main as evaluate_benchmark,
 )
 from scripts.generate_features import main as generate_features
@@ -265,6 +266,50 @@ def test_evaluation_plan_rejects_duplicate_sessions_and_replays() -> None:
                 ],
             }
         )
+
+
+def test_challenge_case_metrics_publish_only_attack_scoped_values() -> None:
+    component = SessionMetricComponents(
+        base_session_id="base-1",
+        instrument="SPY",
+        regimes={},
+        true_positive=1,
+        false_positive=3,
+        false_negative=1,
+        true_negative=4,
+        evaluable_event_count=1_000,
+        raw_false_alert_count=5,
+        false_alert_cluster_count=3,
+        raw_evaluable_alert_count=7,
+        evaluable_alert_cluster_count=5,
+        benefit_eligible_attack_count=2,
+        detected_before_benefit_count=1,
+        detection_latencies_ns=(20,),
+    )
+
+    metrics = _aggregate_attack_challenge_case("layering_like", [component])
+
+    assert set(metrics) == {
+        "schema_version",
+        "scope",
+        "attack_family",
+        "replay_count",
+        "true_positive",
+        "false_negative",
+        "attack_count",
+        "attack_level_recall",
+        "benefit_eligible_attack_count",
+        "detected_before_benefit_count",
+        "detection_before_benefit_rate",
+        "detection_latency_ns",
+    }
+    assert metrics["scope"] == "hybrid_attack_replays_only"
+    assert metrics["attack_family"] == "layering_like"
+    assert metrics["attack_level_recall"] == 0.5
+    assert "precision" not in metrics
+    assert "false_alerts_per_million_events" not in metrics
+    assert "verified_clean_window_count" not in metrics
+    assert "true_negative" not in metrics
 
 
 def test_governed_canonical_benchmark_produces_verified_signed_release(tmp_path: Path) -> None:

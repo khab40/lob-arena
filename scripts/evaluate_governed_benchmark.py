@@ -56,6 +56,19 @@ from app.ml.lightgbm.contracts import (  # noqa: E402
 from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release  # noqa: E402
 
 
+CHALLENGE_CASE_FAMILIES = frozenset({"liquidity_evaporation", "layering_like"})
+ATTACK_SCOPED_CHALLENGE_METRICS = (
+    "true_positive",
+    "false_negative",
+    "attack_count",
+    "attack_level_recall",
+    "benefit_eligible_attack_count",
+    "detected_before_benefit_count",
+    "detection_before_benefit_rate",
+    "detection_latency_ns",
+)
+
+
 class SessionEvaluationPlan(BaseModel):
     model_config = ConfigDict(extra="forbid")
     base_session_id: str = Field(min_length=1)
@@ -157,8 +170,6 @@ def main(argv: list[str] | None = None) -> int:
     prediction_run_ids: set[str] = set()
     prediction_manifest_path: Path | None = None
     if plan.detector_predictions_manifest is not None:
-        from app.ml.lightgbm.scoring import validate_prediction_parquet
-
         detector_root = _resolve(plan_root, plan.detector_artifact_root)
         training, calibration, bundle, prediction_manifest, prediction_manifest_path = (
             _load_verified_detector_release(
@@ -181,10 +192,6 @@ def main(argv: list[str] | None = None) -> int:
         prediction_path = resolve_verified_artifact(
             prediction_manifest.predictions,
             artifact_root=detector_root,
-        )
-        validate_prediction_parquet(
-            prediction_path,
-            manifest=prediction_manifest,
         )
         prediction_alerts, prediction_run_ids = _load_detector_prediction_alerts(
             prediction_path,
@@ -419,7 +426,7 @@ def main(argv: list[str] | None = None) -> int:
             replay_components.append(component)
             if prediction_manifest is not None:
                 evaluated_prediction_run_ids.add(replay_manifest.run_id)
-            if replay_manifest.attack_family is not None:
+            if replay_manifest.attack_family in CHALLENGE_CASE_FAMILIES:
                 family_components[replay_manifest.attack_family].append(component)
             input_artifacts.append(
                 {
@@ -463,9 +470,8 @@ def main(argv: list[str] | None = None) -> int:
 
     metrics = aggregate_governed_metrics(session_metrics)
     metrics["challenge_cases"] = {
-        family: aggregate_governed_metrics(components)
+        family: _aggregate_attack_challenge_case(family, components)
         for family, components in sorted(family_components.items())
-        if family in {"liquidity_evaporation", "layering_like"}
     }
     interval_metrics = [
         "precision",
@@ -612,6 +618,20 @@ def _load_session_metrics(path: Path) -> list[SessionMetricComponents]:
     if not rows or len({item.base_session_id for item in rows}) != len(rows):
         raise ValueError("baseline session metrics must contain unique base sessions")
     return rows
+
+
+def _aggregate_attack_challenge_case(
+    family: str,
+    components: list[SessionMetricComponents],
+) -> dict[str, object]:
+    metrics = aggregate_governed_metrics(components)
+    return {
+        "schema_version": "governed_challenge_case_metrics_v1",
+        "scope": "hybrid_attack_replays_only",
+        "attack_family": family,
+        "replay_count": len(components),
+        **{name: metrics[name] for name in ATTACK_SCOPED_CHALLENGE_METRICS},
+    }
 
 
 def _load_detector_prediction_alerts(
