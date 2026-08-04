@@ -62,6 +62,10 @@ outputs/*
 !/data/features/
 !/data/features/**
 
+# Keep locally derived licensed-market profiles out of commits by default.
+/configs/market-profiles/*.json
+!/configs/market-profiles/fixture-aapl-itch-v1.json
+
 aimada-latest.zip
 .coverage
 backend/.coverage

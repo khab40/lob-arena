@@ -30,6 +30,7 @@ class ArenaConfiguration {
             ArenaJournal journal,
             @Value("${lob.arena.historical-data-dir:../../data/processed/lobster}") String historicalDataDir,
             @Value("${lob.arena.historical-csv-data-dir:../../data/historical}") String historicalCsvDataDir,
+            @Value("${lob.arena.market-profiles-dir:../../configs/market-profiles}") String marketProfilesDir,
             @Value("${lob.arena.historical-rows-per-tick:250}") int historicalRowsPerTick,
             @Value("${lob.arena.master-seed:42}") long masterSeed,
             @Value("${lob.arena.event-history-capacity:50000}") int eventHistoryCapacity,
@@ -54,7 +55,8 @@ class ArenaConfiguration {
                         duckDbMemoryLimit,
                         duckDbThreads,
                         normalizePath(duckDbTempDirectory),
-                        duckDbMaxTempDirectorySize));
+                        duckDbMaxTempDirectorySize),
+                normalizePath(marketProfilesDir));
     }
 
     static Path normalizePath(String value) {

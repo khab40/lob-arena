@@ -94,6 +94,11 @@ final class ArenaController {
         return arena.historicalCsvDatasets();
     }
 
+    @GetMapping("/api/arena/market-profiles")
+    JsonNode marketProfiles() {
+        return arena.marketProfileSummaries();
+    }
+
     @PostMapping("/api/arena/replay-comparison")
     JsonNode replayComparison(@RequestBody Map<String, Object> body) {
         try {

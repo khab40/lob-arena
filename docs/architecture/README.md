@@ -41,6 +41,7 @@ Status as of 2026-08-04:
 | [ARD-0031](ARD-0031-complete-lightgbm-v1.md) | `[lightgbm-v1 done]` | Validation-only calibration, frozen operating modes, test predictions, feature contributions, detector adapter, MLflow indexing, paired evaluation and verified bundle |
 | [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
 | [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
+| [ARD-0034](ARD-0034-itch-market-profile-calibration.md) | `[phase-3 done]` | Versioned ITCH distributions, deterministic parameter compilation, profile-bound Java simulation, dynamic reference path, and held-out realism reports |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -75,6 +76,7 @@ diagrams document the execution boundaries.
 - [ARD-0031: Complete Governed LightGBM v1](ARD-0031-complete-lightgbm-v1.md) — Calibration, frozen thresholds, isolated test scoring, explanations, detector loading, paired evaluation and release verification
 - [ARD-0032: Nasdaq TotalView-ITCH Ingestion](ARD-0032-nasdaq-itch-ingestion.md) — Streaming local ITCH parsing, lifecycle validation, aligned Parquet, quotas, and manifest-driven Java replay
 - [ARD-0033: Deterministic Hybrid Injection Scheduling](ARD-0033-deterministic-hybrid-scheduling.md) — Exact historical trigger partitioning, scenario parameter hashes, label timing, and evidence bindings
+- [ARD-0034: ITCH Market-Profile Calibration](ARD-0034-itch-market-profile-calibration.md) — Profile extraction, Java runtime selection, checksum/run binding, dynamic baselines, and held-out realism gates
 
 ### Agent Execution
 

@@ -20,6 +20,7 @@ services:
       ARENA_OUTPUT_DIR: /app/outputs
       LOB_ARENA_HISTORICAL_DATA_DIR: /app/data/processed/lobster
       LOB_ARENA_HISTORICAL_CSV_DATA_DIR: /app/data/historical
+      LOB_ARENA_MARKET_PROFILES_DIR: /app/configs/market-profiles
       LOB_ARENA_HISTORICAL_ROWS_PER_TICK: ${LOB_ARENA_HISTORICAL_ROWS_PER_TICK:-250}
       LOB_ARENA_EVENT_HISTORY_CAPACITY: ${LOB_ARENA_EVENT_HISTORY_CAPACITY:-50000}
       LOB_ARENA_EVENT_ARCHIVE_SEGMENT_EVENTS: ${LOB_ARENA_EVENT_ARCHIVE_SEGMENT_EVENTS:-25000}
@@ -44,6 +45,7 @@ services:
       - ./outputs:/app/outputs
       - ./data/processed/lobster:/app/data/processed/lobster:ro
       - ./data/historical:/app/data/historical:ro
+      - ./configs/market-profiles:/app/configs/market-profiles:ro
 
   agent-runner:
     build:
