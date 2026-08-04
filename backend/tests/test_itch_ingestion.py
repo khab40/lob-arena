@@ -5,6 +5,7 @@ from pathlib import Path
 import pyarrow.parquet as pq
 import pytest
 
+from app.data_ingestion import itch
 from app.data_ingestion.itch import (
     FORMAT_VERSION,
     PARSER_VERSION,
@@ -185,6 +186,42 @@ def test_disk_reserve_fails_before_creating_a_temporary_dataset(tmp_path: Path) 
         convert_itch(candidate, FIXTURE_DIR, registry, min_free_bytes=2**63)
 
     assert list(registry.iterdir()) == []
+
+
+def test_source_larger_than_working_set_is_rejected_before_normalization(tmp_path: Path) -> None:
+    candidate = next(
+        item for item in discover_candidates(FIXTURE_DIR, tmp_path / "registry") if item.symbol == "AAPL"
+    )
+    source_size = (FIXTURE_DIR / candidate.source_file).stat().st_size
+    registry = tmp_path / "registry"
+
+    with pytest.raises(ValueError, match="source exceeds"):
+        convert_itch(
+            candidate,
+            FIXTURE_DIR,
+            registry,
+            min_free_bytes=0,
+            max_working_bytes=source_size - 1,
+        )
+
+    assert list(registry.iterdir()) == []
+
+
+def test_process_memory_is_included_in_working_set(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    candidate = next(
+        item for item in discover_candidates(FIXTURE_DIR, tmp_path / "registry") if item.symbol == "AAPL"
+    )
+    source_size = (FIXTURE_DIR / candidate.source_file).stat().st_size
+    monkeypatch.setattr(itch, "_process_resident_bytes", lambda: 10_000)
+
+    with pytest.raises(ValueError, match="normalization exceeded"):
+        convert_itch(
+            candidate,
+            FIXTURE_DIR,
+            tmp_path / "registry",
+            min_free_bytes=0,
+            max_working_bytes=source_size + 9_999,
+        )
 
 
 def _record(message_type: str, sequence: int, body: bytes) -> ParsedRecord:

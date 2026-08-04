@@ -3,8 +3,11 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
+import os
+import resource
 import shutil
 import struct
+import sys
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -22,6 +25,7 @@ DEFAULT_DEPTH = 10
 DEFAULT_MIN_FREE_BYTES = 20 * 1024**3
 DEFAULT_MAX_WORKING_BYTES = 12 * 1024**3
 CHUNK_ROWS = 50_000
+RESOURCE_CHECK_RECORDS = 50_000
 MESSAGE_LENGTHS = {
     "S": 12,
     "R": 39,
@@ -172,6 +176,7 @@ def convert_itch(
     destination = destination.resolve()
     destination.mkdir(parents=True, exist_ok=True)
     _check_disk_quota(destination, min_free_bytes=min_free_bytes)
+    _check_source_quota(source_path, max_working_bytes=max_working_bytes)
     source_file = _file_metadata(source_path, candidate.source_file)
     config = {
         "depth": effective_depth,
@@ -210,6 +215,7 @@ def convert_itch(
         )
         _check_working_set(
             temporary,
+            source_path=source_path,
             min_free_bytes=min_free_bytes,
             max_working_bytes=max_working_bytes,
         )
@@ -252,6 +258,12 @@ def convert_itch(
             },
         )
         (temporary / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
+        _check_working_set(
+            temporary,
+            source_path=source_path,
+            min_free_bytes=min_free_bytes,
+            max_working_bytes=max_working_bytes,
+        )
         temporary.rename(final_dir)
         return manifest
     except Exception:
@@ -339,6 +351,13 @@ def _normalize(
     try:
         for record in iter_records(source_path):
             counts[record.message_type] += 1
+            if record.source_sequence % RESOURCE_CHECK_RECORDS == 0:
+                _check_working_set(
+                    directory,
+                    source_path=source_path,
+                    min_free_bytes=min_free_bytes,
+                    max_working_bytes=max_working_bytes,
+                )
             if record.message_type == "R":
                 directory_symbol = _alpha(record.payload[11:19])
                 previous_symbol = symbol_by_locate.setdefault(record.stock_locate, directory_symbol)
@@ -382,6 +401,7 @@ def _normalize(
                 book_rows.clear()
                 _check_working_set(
                     directory,
+                    source_path=source_path,
                     min_free_bytes=min_free_bytes,
                     max_working_bytes=max_working_bytes,
                 )
@@ -596,11 +616,33 @@ def _validate_book(book: dict[str, dict[int, int]], sequence: int) -> None:
         raise ValueError(f"ITCH message {sequence}: visible book is crossed")
 
 
-def _check_working_set(directory: Path, *, min_free_bytes: int, max_working_bytes: int) -> None:
-    used = sum(path.stat().st_size for path in directory.iterdir() if path.is_file())
-    if used > max_working_bytes:
+def _check_source_quota(source_path: Path, *, max_working_bytes: int) -> None:
+    if source_path.stat().st_size > max_working_bytes:
+        raise ValueError("ITCH source exceeds the configured maximum working set")
+
+
+def _check_working_set(
+    directory: Path,
+    *,
+    source_path: Path,
+    min_free_bytes: int,
+    max_working_bytes: int,
+) -> None:
+    output_bytes = sum(path.stat().st_size for path in directory.iterdir() if path.is_file())
+    working_bytes = source_path.stat().st_size + output_bytes + _process_resident_bytes()
+    if working_bytes > max_working_bytes:
         raise ValueError("ITCH normalization exceeded the configured maximum working set")
     _check_disk_quota(directory, min_free_bytes=min_free_bytes)
+
+
+def _process_resident_bytes() -> int:
+    statm = Path("/proc/self/statm")
+    if statm.is_file():
+        fields = statm.read_text(encoding="ascii").split()
+        if len(fields) >= 2:
+            return int(fields[1]) * os.sysconf("SC_PAGE_SIZE")
+    maximum_rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return int(maximum_rss if sys.platform == "darwin" else maximum_rss * 1024)
 
 
 def _check_disk_quota(directory: Path, *, min_free_bytes: int) -> None:
