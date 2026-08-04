@@ -133,6 +133,18 @@ def write_bundle(
         "dataset_id": raw["dataset_id"],
         "master_seed": raw.get("master_seed", 42),
         "events_sha256": raw["events_sha256"],
+        "source_integrity": raw["control"].get("source_integrity"),
+        "source_counts": {
+            "row_count": raw["control"].get("source_row_count"),
+            "rows_replayed": raw["control"].get("source_rows_replayed"),
+            "historical_source_sequences": raw["control"].get(
+                "historical_source_sequences"
+            ),
+        },
+        "injection_schedule": raw.get("injection_schedule"),
+        "synthetic_lifecycle": artifacts.get("validation-report.json", {})
+        .get("checks", {})
+        .get("injected_order_lifecycle"),
         "artifacts": _artifact_inventory(output, inventory_names),
         "validation_verdict": artifacts.get("validation-report.json", {}).get(
             "verdict"
@@ -162,6 +174,9 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "scenario_family": args.scenario,
             "max_ticks": args.max_ticks,
             "master_seed": args.master_seed,
+            "trigger_source_sequence": args.trigger_source_sequence,
+            "trigger_timestamp_ns": args.trigger_timestamp_ns,
+            "scenario_parameters": json.loads(args.scenario_parameters),
         }
     ).encode()
     request = urllib.request.Request(
@@ -194,6 +209,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--scenario", default="spoofing_like_wall")
     parser.add_argument("--max-ticks", type=int, default=10_000)
     parser.add_argument("--master-seed", type=int, default=42)
+    trigger = parser.add_mutually_exclusive_group()
+    trigger.add_argument("--trigger-source-sequence", type=int)
+    trigger.add_argument("--trigger-timestamp-ns", type=int)
+    parser.add_argument(
+        "--scenario-parameters",
+        default="{}",
+        help="JSON object overriding bounded parameters for the selected existing scenario",
+    )
     parser.add_argument("--timeout", type=float, default=60)
     parser.add_argument(
         "--output", type=Path, default=ROOT / "outputs" / "historical-replay"

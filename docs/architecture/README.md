@@ -40,6 +40,7 @@ Status as of 2026-08-04:
 | [ARD-0030](ARD-0030-float32-governed-feature-release.md) | `[done]` | Backward-compatible `lob_features_v2` float32 release with governed schema binding, bounded precision gates, and v2 trainer determinism |
 | [ARD-0031](ARD-0031-complete-lightgbm-v1.md) | `[lightgbm-v1 done]` | Validation-only calibration, frozen operating modes, test predictions, feature contributions, detector adapter, MLflow indexing, paired evaluation and verified bundle |
 | [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
+| [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -73,6 +74,7 @@ diagrams document the execution boundaries.
 - [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md) — Versioned float32 Parquet, v1 compatibility, precision gates, and release/model migration rules
 - [ARD-0031: Complete Governed LightGBM v1](ARD-0031-complete-lightgbm-v1.md) — Calibration, frozen thresholds, isolated test scoring, explanations, detector loading, paired evaluation and release verification
 - [ARD-0032: Nasdaq TotalView-ITCH Ingestion](ARD-0032-nasdaq-itch-ingestion.md) — Streaming local ITCH parsing, lifecycle validation, aligned Parquet, quotas, and manifest-driven Java replay
+- [ARD-0033: Deterministic Hybrid Injection Scheduling](ARD-0033-deterministic-hybrid-scheduling.md) — Exact historical trigger partitioning, scenario parameter hashes, label timing, and evidence bindings
 
 ### Agent Execution
 

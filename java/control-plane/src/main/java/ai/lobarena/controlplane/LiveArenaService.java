@@ -16,7 +16,10 @@ import ai.lobarena.kernel.hashing.CanonicalHashes;
 import jakarta.annotation.PreDestroy;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -72,6 +75,11 @@ final class LiveArenaService {
     private int incidentCounter;
     private List<String> activeAgentIds = List.of();
     private LiveScenario scenario;
+    private ObjectNode scenarioParameters;
+    private InjectionScheduleState injectionSchedule;
+    private long normalizedAppliedRows;
+    private long normalizedAppliedSourceSequence;
+    private long normalizedAppliedTimestampNs;
     private double previousDepth;
     private String replaySourceType;
     private long replayMasterSeed;
@@ -81,6 +89,8 @@ final class LiveArenaService {
     private volatile String streamError;
     private final Set<Long> historicalBidPrices = new HashSet<>();
     private final Set<Long> historicalAskPrices = new HashSet<>();
+    private final Deque<HistoricalMarketDataSource.HistoricalSnapshotRecord> scheduledHistoricalRecords =
+            new ArrayDeque<>();
 
     LiveArenaService(ObjectMapper mapper, AgentOrchestrator orchestrator, ArenaJournal journal) {
         this(
@@ -267,6 +277,12 @@ final class LiveArenaService {
         running = false;
         tick = 0;
         scenario = null;
+        scenarioParameters = null;
+        injectionSchedule = null;
+        scheduledHistoricalRecords.clear();
+        normalizedAppliedRows = 0;
+        normalizedAppliedSourceSequence = 0;
+        normalizedAppliedTimestampNs = 0;
         agentEvents.clear();
         incidents.clear();
         metricsIncidentCount = 0;
@@ -280,6 +296,11 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode launchScenario(String family) {
+        String normalized = normalizeScenario(family);
+        return launchScenario(normalized, resolveScenarioParameters(normalized, Map.of()));
+    }
+
+    private JsonNode launchScenario(String family, ObjectNode parameters) {
         if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             throw new IllegalArgumentException("scenarios are unavailable for historical market data");
         }
@@ -288,20 +309,36 @@ final class LiveArenaService {
         }
         ensureReplayArchiveCapacity();
         String normalized = normalizeScenario(family);
+        armScenario(normalized, parameters, tick + 1, null, null);
+        return scenarioJson();
+    }
+
+    private void armScenario(
+            String normalized,
+            ObjectNode parameters,
+            long startTick,
+            Long triggerSourceSequence,
+            Long triggerTimestampNs) {
         scenarioCounter++;
         String scenarioAgentId = kernelHistoricalLoaded() ? "SYN:ABUSER_01" : "ABUSER_01";
         long scenarioSeed = kernelHistoricalLoaded()
                 ? DeterministicValues.deriveStreamSeed(
                         replayMasterSeed,
-                        "hybrid:" + replayDatasetId() + ":" + normalized + ":" + scenarioCounter)
+                        "hybrid:" + replayDatasetId() + ":" + normalized + ":" + scenarioCounter
+                                + (injectionSchedule == null ? "" : ":" + injectionSchedule.scheduleSha256))
                 : 0L;
         scenario = new LiveScenario(
                 "SCN-%06d".formatted(scenarioCounter),
                 normalized,
                 displayName(normalized),
                 scenarioAgentId,
-                tick + 1,
+                startTick,
                 scenarioSeed);
+        scenarioParameters = parameters.deepCopy();
+        if (injectionSchedule != null) {
+            injectionSchedule.actualSourceSequence = triggerSourceSequence;
+            injectionSchedule.actualTimestampNs = triggerTimestampNs;
+        }
         running = true;
         addAgentEvent(event("red_team", scenarioAgentId, "scenario armed")
                 .put("scenario_id", scenario.id())
@@ -310,7 +347,6 @@ final class LiveArenaService {
                 .put("stage", "armed"));
         journal.append("attacks/attacks.jsonl", scenarioJson());
         journal.append("labels/scenario_labels.jsonl", groundTruthLabel());
-        return scenarioJson();
     }
 
     synchronized JsonNode incident(String incidentId) {
@@ -465,20 +501,51 @@ final class LiveArenaService {
 
     synchronized JsonNode runReplayComparison(
             String datasetId, String scenarioFamily, int maxTicks, long masterSeed) {
+        return runReplayComparison(
+                datasetId, scenarioFamily, maxTicks, masterSeed, null, null, Map.of());
+    }
+
+    synchronized JsonNode runReplayComparison(
+            String datasetId,
+            String scenarioFamily,
+            int maxTicks,
+            long masterSeed,
+            Long triggerSourceSequence,
+            Long triggerTimestampNs,
+            Map<String, Object> parameterOverrides) {
         if (maxTicks < 1 || maxTicks > 100_000) {
             throw new IllegalArgumentException("max_ticks must be between 1 and 100000");
         }
+        if (triggerSourceSequence != null && triggerTimestampNs != null) {
+            throw new IllegalArgumentException(
+                    "trigger_source_sequence and trigger_timestamp_ns are mutually exclusive");
+        }
+        if (triggerSourceSequence != null && triggerSourceSequence <= 0) {
+            throw new IllegalArgumentException("trigger_source_sequence must be positive");
+        }
+        if (triggerTimestampNs != null
+                && (triggerTimestampNs < 0 || triggerTimestampNs >= 86_400_000_000_000L)) {
+            throw new IllegalArgumentException("trigger_timestamp_ns must be within one trading day");
+        }
         String normalizedScenario = normalizeScenario(scenarioFamily);
+        ObjectNode parameters = resolveScenarioParameters(normalizedScenario, parameterOverrides);
+        boolean scheduled = triggerSourceSequence != null || triggerTimestampNs != null;
         scenarioCounter = 0;
         incidentCounter = 0;
-        ObjectNode control = runReplayOnce("historical", datasetId, null, maxTicks, masterSeed);
-        ObjectNode hybrid = runReplayOnce("hybrid", datasetId, normalizedScenario, maxTicks, masterSeed);
+        ObjectNode control = runReplayOnce(
+                "historical", datasetId, normalizedScenario, maxTicks, masterSeed,
+                triggerSourceSequence, triggerTimestampNs, parameters, false);
+        ObjectNode hybrid = runReplayOnce(
+                "hybrid", datasetId, normalizedScenario, maxTicks, masterSeed,
+                triggerSourceSequence, triggerTimestampNs, parameters, true);
         scenarioCounter = 0;
         incidentCounter = 0;
-        ObjectNode repeatedControl =
-                runReplayOnce("historical", datasetId, null, maxTicks, masterSeed);
-        ObjectNode repeatedHybrid =
-                runReplayOnce("hybrid", datasetId, normalizedScenario, maxTicks, masterSeed);
+        ObjectNode repeatedControl = runReplayOnce(
+                "historical", datasetId, normalizedScenario, maxTicks, masterSeed,
+                triggerSourceSequence, triggerTimestampNs, parameters, false);
+        ObjectNode repeatedHybrid = runReplayOnce(
+                "hybrid", datasetId, normalizedScenario, maxTicks, masterSeed,
+                triggerSourceSequence, triggerTimestampNs, parameters, true);
         ObjectNode result = mapper.createObjectNode()
                 .put("schema_version", "historical_replay_comparison_v1")
                 .put("dataset_id", datasetId)
@@ -486,6 +553,12 @@ final class LiveArenaService {
                 .put("events_sha256", replayEventsSha256())
                 .set("control", control)
                 .set("hybrid", hybrid);
+        result.put("scheduled_injection", scheduled);
+        if (scheduled) {
+            result.set("injection_schedule", hybrid.path("injection_schedule").deepCopy());
+        } else {
+            result.putNull("injection_schedule");
+        }
         ObjectNode determinism = result.putObject("determinism");
         determinism.put(
                 "control_stream_match",
@@ -525,10 +598,37 @@ final class LiveArenaService {
     }
 
     private ObjectNode runReplayOnce(
-            String sourceType, String datasetId, String scenarioFamily, int maxTicks, long masterSeed) {
+            String sourceType,
+            String datasetId,
+            String scenarioFamily,
+            int maxTicks,
+            long masterSeed,
+            Long triggerSourceSequence,
+            Long triggerTimestampNs,
+            ObjectNode parameters,
+            boolean inject) {
         loadDataSource(sourceType, datasetId, masterSeed);
-        if (scenarioFamily != null) {
-            launchScenario(scenarioFamily);
+        if (triggerSourceSequence != null || triggerTimestampNs != null) {
+            if (!normalizedHistoricalKernelReplay) {
+                throw new IllegalArgumentException(
+                        "scheduled injection requires normalized historical Parquet data");
+            }
+            injectionSchedule = new InjectionScheduleState(
+                    scenarioFamily,
+                    triggerSourceSequence,
+                    triggerTimestampNs,
+                    parameters.deepCopy(),
+                    injectionScheduleHash(
+                            datasetId,
+                            scenarioFamily,
+                            masterSeed,
+                            triggerSourceSequence,
+                            triggerTimestampNs,
+                            parameters),
+                    inject);
+            start();
+        } else if (inject) {
+            launchScenario(scenarioFamily, parameters);
         } else {
             start();
         }
@@ -538,6 +638,17 @@ final class LiveArenaService {
             advanced++;
         }
         running = false;
+        if (injectionSchedule != null && !injectionSchedule.triggered) {
+            throw new IllegalArgumentException("injection trigger was not reached in the selected window");
+        }
+        if (injectionSchedule != null
+                && injectionSchedule.triggered
+                && tick < injectionSchedule.completionTick) {
+            throw new IllegalArgumentException("max_ticks ended before the injection schedule completed");
+        }
+        if (inject && scenario == null) {
+            throw new IllegalArgumentException("scheduled synthetic scenario was not launched");
+        }
         ObjectNode summary = replaySummary(sourceType);
         summary.put("ticks_executed", advanced);
         return summary;
@@ -620,15 +731,29 @@ final class LiveArenaService {
     }
 
     private void advanceNormalizedHistoricalReplay() {
-        if (historical.eof()) {
-            running = false;
+        if (scheduledHistoricalRecords.isEmpty() && historical.eof()) {
+            if (injectionSchedule != null
+                    && injectionSchedule.triggered
+                    && tick < injectionSchedule.completionTick) {
+                advanceScheduledPostSourceTick();
+            } else {
+                running = false;
+            }
             return;
         }
         tick++;
         BookSnapshot before = matching.book().snapshot(5);
         double depthBefore = topDepth(before);
-        List<HistoricalMarketDataSource.HistoricalSnapshotRecord> records =
-                new ArrayList<>(historical.nextKernelBatch());
+        List<HistoricalMarketDataSource.HistoricalSnapshotRecord> records = new ArrayList<>();
+        if (scheduledHistoricalRecords.isEmpty()) {
+            records.addAll(historical.nextKernelBatch());
+        } else {
+            while (!scheduledHistoricalRecords.isEmpty()) {
+                records.add(scheduledHistoricalRecords.removeFirst());
+            }
+        }
+        HistoricalMarketDataSource.HistoricalSnapshotRecord triggerRecord =
+                splitAtScheduledInjection(records);
         records.sort(Comparator.comparing(record -> new EventOrderKey(
                 record.timestampNs(),
                 EventPhase.HISTORICAL.code(),
@@ -637,6 +762,23 @@ final class LiveArenaService {
                 record.sourceSequence(),
                 record.sourceSequence())));
         records.forEach(this::applyNormalizedHistoricalSnapshot);
+        if (triggerRecord != null && injectionSchedule != null) {
+            injectionSchedule.triggered = true;
+            injectionSchedule.actualSourceSequence = triggerRecord.sourceSequence();
+            injectionSchedule.actualTimestampNs = triggerRecord.timestampNs();
+            injectionSchedule.completionTick = scenarioEndTick(
+                    injectionSchedule.scenarioFamily,
+                    tick,
+                    injectionSchedule.parameters) + 1;
+            if (injectionSchedule.inject) {
+                armScenario(
+                        normalizeScenario(injectionSchedule.scenarioFamily),
+                        injectionSchedule.parameters,
+                        tick,
+                        triggerRecord.sourceSequence(),
+                        triggerRecord.timestampNs());
+            }
+        }
         if ("hybrid".equals(replaySourceType)) {
             applyScenario();
         }
@@ -644,14 +786,85 @@ final class LiveArenaService {
                 SNAPSHOT_DEPTH,
                 new MutationContext(
                         tick, null, null, null, EventSource.EVENT_SOURCE_SIMULATION,
-                        null, historical.currentTimestampNs(), historical.currentTimestampNs()));
+                        null, replayCurrentTimestampNs(), replayCurrentTimestampNs()));
         completeCanonicalTick();
         previousDepth = depthBefore;
-        if (historical.eof()) running = false;
+        if (historical.eof()
+                && scheduledHistoricalRecords.isEmpty()
+                && (injectionSchedule == null
+                        || !injectionSchedule.triggered
+                        || tick >= injectionSchedule.completionTick)) {
+            running = false;
+        }
         journal.append("snapshots/ticks.jsonl", buildState());
     }
 
+    private void advanceScheduledPostSourceTick() {
+        tick++;
+        BookSnapshot before = matching.book().snapshot(5);
+        double depthBefore = topDepth(before);
+        if ("hybrid".equals(replaySourceType)) {
+            applyScenario();
+        }
+        matching.recordSnapshot(
+                SNAPSHOT_DEPTH,
+                new MutationContext(
+                        tick, null, null, null, EventSource.EVENT_SOURCE_SIMULATION,
+                        null, replayCurrentTimestampNs(), replayCurrentTimestampNs()));
+        completeCanonicalTick();
+        previousDepth = depthBefore;
+        if (tick >= injectionSchedule.completionTick) {
+            running = false;
+        }
+        journal.append("snapshots/ticks.jsonl", buildState());
+    }
+
+    private HistoricalMarketDataSource.HistoricalSnapshotRecord splitAtScheduledInjection(
+            List<HistoricalMarketDataSource.HistoricalSnapshotRecord> records) {
+        if (injectionSchedule == null || injectionSchedule.triggered || records.isEmpty()) {
+            return null;
+        }
+        int triggerIndex = -1;
+        for (int index = 0; index < records.size(); index++) {
+            HistoricalMarketDataSource.HistoricalSnapshotRecord record = records.get(index);
+            if (injectionSchedule.triggerSourceSequence != null
+                    && record.sourceSequence() == injectionSchedule.triggerSourceSequence) {
+                triggerIndex = index;
+                break;
+            }
+            if (injectionSchedule.triggerTimestampNs != null
+                    && record.timestampNs() >= injectionSchedule.triggerTimestampNs) {
+                triggerIndex = index;
+                break;
+            }
+        }
+        if (triggerIndex < 0) {
+            return null;
+        }
+        long triggerTimestamp = records.get(triggerIndex).timestampNs();
+        while (!historical.eof() && records.get(records.size() - 1).timestampNs() == triggerTimestamp) {
+            List<HistoricalMarketDataSource.HistoricalSnapshotRecord> next = historical.nextKernelBatch();
+            if (next.isEmpty()) {
+                break;
+            }
+            records.addAll(next);
+        }
+        int lastTieIndex = triggerIndex;
+        while (lastTieIndex + 1 < records.size()
+                && records.get(lastTieIndex + 1).timestampNs() == triggerTimestamp) {
+            lastTieIndex++;
+        }
+        for (int index = lastTieIndex + 1; index < records.size(); index++) {
+            scheduledHistoricalRecords.addLast(records.get(index));
+        }
+        records.subList(lastTieIndex + 1, records.size()).clear();
+        return records.get(triggerIndex);
+    }
+
     private void applyNormalizedHistoricalSnapshot(HistoricalMarketDataSource.HistoricalSnapshotRecord record) {
+        normalizedAppliedRows++;
+        normalizedAppliedSourceSequence = record.sourceSequence();
+        normalizedAppliedTimestampNs = record.timestampNs();
         MutationContext context = new MutationContext(
                 tick,
                 null,
@@ -832,12 +1045,13 @@ final class LiveArenaService {
                 default -> throw new IllegalStateException("unsupported live scenario");
             }
         });
-        if (age > 0 && age <= 5) {
-            ObjectNode event = event("red_team", scenario.agentId(), scenario.name() + " " + scenario.stage(tick));
+        if (age > 0 && tick <= scenarioEndTick(scenario.family(), scenario.startTick(), scenarioParameters) + 1) {
+            String stage = scenarioStage();
+            ObjectNode event = event("red_team", scenario.agentId(), scenario.name() + " " + stage);
             event.put("scenario_id", scenario.id());
             event.put("scenario_name", scenario.name());
             event.put("scenario_family", scenario.family());
-            event.put("stage", scenario.stage(tick));
+            event.put("stage", stage);
             addAgentEvent(event);
         }
     }
@@ -846,9 +1060,12 @@ final class LiveArenaService {
         Side side = hybridAttackSide();
         int direction = side == Side.SIDE_SELL ? 1 : -1;
         long price = referencePriceTicks()
-                + direction * (2 + Math.floorMod(scenario.seed(), 2)) * LEVEL_SPACING_TICKS;
+                + direction * (scenarioParameter("distance_levels") + Math.floorMod(scenario.seed(), 2))
+                        * LEVEL_SPACING_TICKS;
         matching.book().updateAgentLevel(
-                side, price, age < 3 ? 30_000 : 0, scenario.agentId(), "abuser",
+                side, price, age < scenarioParameter("duration_ticks")
+                        ? scenarioParameter("quantity_lots") : 0,
+                scenario.agentId(), "abuser",
                 scenarioOrderId("WALL"), tick, scenario.id(), scenario.name(), scenario.family());
     }
 
@@ -856,11 +1073,15 @@ final class LiveArenaService {
         long referencePrice = referencePriceTicks();
         Side side = hybridAttackSide();
         int direction = side == Side.SIDE_SELL ? 1 : -1;
-        for (int level = 2; level <= 4; level++) {
+        for (long level = scenarioParameter("first_level");
+                level <= scenarioParameter("last_level"); level++) {
             matching.book().updateAgentLevel(
                     side,
                     referencePrice + direction * level * LEVEL_SPACING_TICKS,
-                    age < 4 ? 10_000 + level * 1_000L : 0,
+                    age < scenarioParameter("duration_ticks")
+                            ? scenarioParameter("base_quantity_lots")
+                                    + level * scenarioParameter("level_increment_lots")
+                            : 0,
                     scenario.agentId(),
                     "abuser",
                     scenarioOrderId("LAYER-" + level),
@@ -872,19 +1093,21 @@ final class LiveArenaService {
     }
 
     private void applyQuoteStuffing(long age) {
-        if (age > 5) {
+        if (age >= scenarioParameter("duration_ticks")) {
             return;
         }
         long referencePrice = referencePriceTicks();
-        for (int burst = 0; burst < 6; burst++) {
+        for (int burst = 0; burst < scenarioParameter("bursts_per_tick"); burst++) {
             Side side = burst % 2 == 0 ? Side.SIDE_BUY : Side.SIDE_SELL;
             int direction = side == Side.SIDE_BUY ? -1 : 1;
-            long price = referencePrice + direction * (burst + 2L) * LEVEL_SPACING_TICKS;
+            long price = referencePrice
+                    + direction * (burst + scenarioParameter("start_distance_levels"))
+                            * LEVEL_SPACING_TICKS;
             String orderId = scenarioOrderId("STUFF-" + age + "-" + burst);
             matching.book().updateAgentLevel(
                     side,
                     price,
-                    1_000,
+                    scenarioParameter("quantity_lots"),
                     scenario.agentId(),
                     "abuser",
                     orderId,
@@ -910,10 +1133,11 @@ final class LiveArenaService {
         if (age != 1) {
             return;
         }
-        for (long price : matching.book().prices(Side.SIDE_BUY, 5)) {
+        int depthLevels = Math.toIntExact(scenarioParameter("depth_levels"));
+        for (long price : matching.book().prices(Side.SIDE_BUY, depthLevels)) {
             matching.book().removeLevel(Side.SIDE_BUY, price);
         }
-        for (long price : matching.book().prices(Side.SIDE_SELL, 5)) {
+        for (long price : matching.book().prices(Side.SIDE_SELL, depthLevels)) {
             matching.book().removeLevel(Side.SIDE_SELL, price);
         }
     }
@@ -1102,31 +1326,39 @@ final class LiveArenaService {
     }
 
     private ObjectNode scenarioJson() {
+        String stage = scenarioStage();
         ObjectNode result = mapper.createObjectNode()
                 .put("scenario_id", scenario.id())
                 .put("scenario_name", scenario.name())
                 .put("scenario_family", scenario.family())
                 .put("agent_id", scenario.agentId())
-                .put("current_stage", scenario.stage(tick))
+                .put("current_stage", stage)
                 .put("start_tick", scenario.startTick())
                 .put("attack_seed", scenario.seed())
-                .put("status", scenario.stage(tick));
+                .put("status", stage);
+        result.set("parameters", scenarioParameters.deepCopy());
+        if (injectionSchedule == null) {
+            result.putNull("injection_schedule");
+        } else {
+            result.set("injection_schedule", injectionScheduleJson());
+        }
         result.putArray("stages");
         result.putArray("evidence");
         return result;
+    }
+
+    private String scenarioStage() {
+        long durationTicks = "liquidity_evaporation".equals(scenario.family())
+                ? 1
+                : scenarioParameter("duration_ticks");
+        return scenario.stage(tick, durationTicks);
     }
 
     private ObjectNode groundTruthLabel() {
         if (scenario == null) {
             throw new IllegalStateException("ground truth requires an active synthetic scenario");
         }
-        long endTick = switch (scenario.family()) {
-            case "spoofing_like_wall" -> scenario.startTick() + 3;
-            case "layering_like" -> scenario.startTick() + 4;
-            case "quote_stuffing" -> scenario.startTick() + 5;
-            case "liquidity_evaporation" -> scenario.startTick() + 1;
-            default -> throw new IllegalStateException("unsupported scenario family");
-        };
+        long endTick = scenarioEndTick(scenario.family(), scenario.startTick(), scenarioParameters);
         ObjectNode result = mapper.createObjectNode()
                 .put("schema_version", "scenario_ground_truth_v1")
                 .put("scenario_id", scenario.id())
@@ -1135,6 +1367,20 @@ final class LiveArenaService {
                 .put("has_attack", true)
                 .put("start_tick", scenario.startTick())
                 .put("end_tick", endTick);
+        result.set("parameters", scenarioParameters.deepCopy());
+        if (injectionSchedule == null) {
+            result.putNull("trigger_source_sequence");
+            result.putNull("trigger_timestamp_ns");
+            result.putNull("start_exchange_timestamp_ns");
+            result.putNull("end_exchange_timestamp_ns");
+            result.putNull("schedule_sha256");
+        } else {
+            putNullableLong(result, "trigger_source_sequence", injectionSchedule.actualSourceSequence);
+            putNullableLong(result, "trigger_timestamp_ns", injectionSchedule.actualTimestampNs);
+            putNullableLong(result, "start_exchange_timestamp_ns", injectionSchedule.actualTimestampNs);
+            putNullableLong(result, "end_exchange_timestamp_ns", exchangeTimestampAtTick(endTick));
+            result.put("schedule_sha256", injectionSchedule.scheduleSha256);
+        }
         result.putArray("agent_ids").add(scenario.agentId());
         ArrayNode orderIds = result.putArray("order_ids");
         expectedScenarioOrderIds().forEach(orderIds::add);
@@ -1145,8 +1391,8 @@ final class LiveArenaService {
                 .put("scenario_family", scenario.family()));
         ObjectNode phases = result.putObject("phase_windows");
         long cancellationStart = switch (scenario.family()) {
-            case "spoofing_like_wall" -> scenario.startTick() + 3;
-            case "layering_like" -> scenario.startTick() + 4;
+            case "spoofing_like_wall", "layering_like" ->
+                    scenario.startTick() + scenarioParameter("duration_ticks");
             case "quote_stuffing" -> scenario.startTick();
             case "liquidity_evaporation" -> scenario.startTick();
             default -> throw new IllegalStateException("unsupported scenario family");
@@ -1168,13 +1414,15 @@ final class LiveArenaService {
         return switch (scenario.family()) {
             case "spoofing_like_wall" -> List.of(scenarioOrderId("WALL"));
             case "layering_like" -> List.of(
-                    scenarioOrderId("LAYER-2"),
-                    scenarioOrderId("LAYER-3"),
-                    scenarioOrderId("LAYER-4"));
+                    java.util.stream.LongStream.rangeClosed(
+                                    scenarioParameter("first_level"),
+                                    scenarioParameter("last_level"))
+                            .mapToObj(level -> scenarioOrderId("LAYER-" + level))
+                            .toArray(String[]::new));
             case "quote_stuffing" -> {
                 List<String> ids = new ArrayList<>();
-                for (int age = 0; age <= 5; age++) {
-                    for (int burst = 0; burst < 6; burst++) {
+                for (int age = 0; age < scenarioParameter("duration_ticks"); age++) {
+                    for (int burst = 0; burst < scenarioParameter("bursts_per_tick"); burst++) {
                         ids.add(scenarioOrderId("STUFF-" + age + "-" + burst));
                     }
                 }
@@ -1183,6 +1431,39 @@ final class LiveArenaService {
             case "liquidity_evaporation" -> List.of();
             default -> throw new IllegalStateException("unsupported scenario family");
         };
+    }
+
+    private static long scenarioEndTick(String family, long startTick, ObjectNode parameters) {
+        return switch (family) {
+            case "spoofing_like_wall", "layering_like" ->
+                    startTick + parameters.path("duration_ticks").longValue();
+            case "quote_stuffing" ->
+                    startTick + parameters.path("duration_ticks").longValue() - 1;
+            case "liquidity_evaporation" -> startTick + 1;
+            default -> throw new IllegalStateException("unsupported scenario family");
+        };
+    }
+
+    private Long exchangeTimestampAtTick(long targetTick) {
+        if (targetTick > tick) {
+            return null;
+        }
+        Long latest = null;
+        for (EventStreamSummary.ValidationPoint point : eventSummary.validationPoints()) {
+            if (point.tick() > targetTick) {
+                break;
+            }
+            latest = point.exchangeTimestampNs();
+        }
+        return latest;
+    }
+
+    private static void putNullableLong(ObjectNode node, String field, Long value) {
+        if (value == null) {
+            node.putNull(field);
+        } else {
+            node.put(field, value);
+        }
     }
 
     private ObjectNode replaySummary(String sourceType) {
@@ -1200,6 +1481,11 @@ final class LiveArenaService {
                 .put("historical_snapshot_stream_hash", historicalSnapshotStreamHash())
                 .put("historical_source_sequences", eventSummary.historicalSourceSequences());
         summary.set("source_integrity", replaySourceIntegrity());
+        if (injectionSchedule == null) {
+            summary.putNull("injection_schedule");
+        } else {
+            summary.set("injection_schedule", injectionScheduleJson());
+        }
         ObjectNode counts = summary.putObject("event_counts");
         ObjectNode sourceCounts = counts.putObject("by_source");
         ObjectNode typeCounts = counts.putObject("by_type");
@@ -1372,13 +1658,13 @@ final class LiveArenaService {
     private long replayCurrentTimestampNs() {
         return historicalCsv.loaded()
                 ? historicalCsv.currentTimestampNs()
-                : historical.currentTimestampNs();
+                : normalizedAppliedTimestampNs;
     }
 
     private long replayPosition() {
         return historicalCsv.loaded()
                 ? historicalCsv.replayPosition()
-                : historical.replayPosition();
+                : normalizedAppliedRows;
     }
 
     private long replayRowCount() {
@@ -1406,9 +1692,18 @@ final class LiveArenaService {
     }
 
     private JsonNode replayContext() {
-        return historicalCsv.loaded()
-                ? historicalCsv.context(replaySourceType)
-                : historical.context(replaySourceType);
+        if (historicalCsv.loaded()) {
+            return historicalCsv.context(replaySourceType);
+        }
+        ObjectNode context = (ObjectNode) historical.context(replaySourceType).deepCopy();
+        context.put("source_sequence", normalizedAppliedSourceSequence);
+        context.put("replay_position", normalizedAppliedRows);
+        context.put("exchange_timestamp_ns", normalizedAppliedTimestampNs);
+        context.put("progress", historical.rowCount() == 0
+                ? 0
+                : Math.min(1.0, (double) normalizedAppliedRows / historical.rowCount()));
+        context.put("eof", historical.eof() && scheduledHistoricalRecords.isEmpty());
+        return context;
     }
 
     private String normalizedHistoricalParticipantId() {
@@ -1745,6 +2040,117 @@ final class LiveArenaService {
                 + book.getAsksList().stream().mapToDouble(level -> quantity(level.getQuantityLots())).sum();
     }
 
+    private ObjectNode resolveScenarioParameters(String family, Map<String, Object> overrides) {
+        ObjectNode result = mapper.createObjectNode();
+        switch (family) {
+            case "spoofing_like_wall" -> result
+                    .put("quantity_lots", 30_000)
+                    .put("duration_ticks", 3)
+                    .put("distance_levels", 2);
+            case "layering_like" -> result
+                    .put("base_quantity_lots", 10_000)
+                    .put("level_increment_lots", 1_000)
+                    .put("duration_ticks", 4)
+                    .put("first_level", 2)
+                    .put("last_level", 4);
+            case "quote_stuffing" -> result
+                    .put("quantity_lots", 1_000)
+                    .put("duration_ticks", 6)
+                    .put("bursts_per_tick", 6)
+                    .put("start_distance_levels", 2);
+            case "liquidity_evaporation" -> result.put("depth_levels", 5);
+            default -> throw new IllegalArgumentException("unknown scenario: " + family);
+        }
+        for (Map.Entry<String, Object> override : overrides.entrySet()) {
+            if (!result.has(override.getKey())) {
+                throw new IllegalArgumentException("unsupported scenario parameter: " + override.getKey());
+            }
+            long value;
+            try {
+                value = new BigDecimal(String.valueOf(override.getValue())).longValueExact();
+            } catch (ArithmeticException | NumberFormatException exception) {
+                throw new IllegalArgumentException(
+                        "scenario parameter must be an integer: " + override.getKey(), exception);
+            }
+            long maximum = override.getKey().contains("quantity") || override.getKey().contains("increment")
+                    ? 1_000_000_000L
+                    : 100L;
+            if (value < 1 || value > maximum) {
+                throw new IllegalArgumentException(
+                        "scenario parameter is outside its supported range: " + override.getKey());
+            }
+            result.put(override.getKey(), value);
+        }
+        if (result.has("first_level")
+                && result.path("first_level").longValue() > result.path("last_level").longValue()) {
+            throw new IllegalArgumentException("first_level must not exceed last_level");
+        }
+        return result;
+    }
+
+    private long scenarioParameter(String name) {
+        if (scenarioParameters == null || !scenarioParameters.path(name).isIntegralNumber()) {
+            throw new IllegalStateException("scenario parameter is unavailable: " + name);
+        }
+        return scenarioParameters.path(name).longValue();
+    }
+
+    private String injectionScheduleHash(
+            String datasetId,
+            String family,
+            long masterSeed,
+            Long triggerSourceSequence,
+            Long triggerTimestampNs,
+            ObjectNode parameters) {
+        return sha256Hex(
+                datasetId + "\n" + family + "\n" + masterSeed + "\n"
+                        + triggerSourceSequence + "\n" + triggerTimestampNs + "\n" + parameters);
+    }
+
+    private static String sha256Hex(String value) {
+        try {
+            return HexFormat.of().formatHex(
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 must be available", exception);
+        }
+    }
+
+    private ObjectNode injectionScheduleJson() {
+        if (injectionSchedule == null) {
+            throw new IllegalStateException("injection schedule is unavailable");
+        }
+        ObjectNode result = mapper.createObjectNode()
+                .put("schema_version", "historical_injection_schedule_v1")
+                .put("scenario_family", injectionSchedule.scenarioFamily)
+                .put("schedule_sha256", injectionSchedule.scheduleSha256)
+                .put("triggered", injectionSchedule.triggered)
+                .put("completion_tick", injectionSchedule.completionTick);
+        if (injectionSchedule.triggerSourceSequence == null) {
+            result.putNull("requested_source_sequence");
+        } else {
+            result.put("requested_source_sequence", injectionSchedule.triggerSourceSequence);
+        }
+        if (injectionSchedule.triggerTimestampNs == null) {
+            result.putNull("requested_timestamp_ns");
+        } else {
+            result.put("requested_timestamp_ns", injectionSchedule.triggerTimestampNs);
+        }
+        if (injectionSchedule.actualSourceSequence == null) {
+            result.putNull("actual_source_sequence");
+        } else {
+            result.put("actual_source_sequence", injectionSchedule.actualSourceSequence);
+        }
+        if (injectionSchedule.actualTimestampNs == null) {
+            result.putNull("actual_timestamp_ns");
+        } else {
+            result.put("actual_timestamp_ns", injectionSchedule.actualTimestampNs);
+        }
+        result.set("parameters", injectionSchedule.parameters.deepCopy());
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     private static List<Object> listValue(Object value) {
         return value instanceof List<?> list ? (List<Object>) list : List.of();
@@ -1775,4 +2181,32 @@ final class LiveArenaService {
     }
 
     private record DetectorScore(String name, double confidence) {}
+
+    private static final class InjectionScheduleState {
+        private final String scenarioFamily;
+        private final Long triggerSourceSequence;
+        private final Long triggerTimestampNs;
+        private final ObjectNode parameters;
+        private final String scheduleSha256;
+        private final boolean inject;
+        private boolean triggered;
+        private Long actualSourceSequence;
+        private Long actualTimestampNs;
+        private long completionTick;
+
+        private InjectionScheduleState(
+                String scenarioFamily,
+                Long triggerSourceSequence,
+                Long triggerTimestampNs,
+                ObjectNode parameters,
+                String scheduleSha256,
+                boolean inject) {
+            this.scenarioFamily = scenarioFamily;
+            this.triggerSourceSequence = triggerSourceSequence;
+            this.triggerTimestampNs = triggerTimestampNs;
+            this.parameters = parameters;
+            this.scheduleSha256 = scheduleSha256;
+            this.inject = inject;
+        }
+    }
 }

@@ -1,0 +1,12 @@
+{
+  "dataset_id": "itch-aapl-window",
+  "scenario_family": "spoofing_like_wall",
+  "master_seed": 42,
+  "max_ticks": 10000,
+  "trigger_source_sequence": 125000,
+  "scenario_parameters": {
+    "quantity_lots": 30000,
+    "duration_ticks": 3,
+    "distance_levels": 2
+  }
+}

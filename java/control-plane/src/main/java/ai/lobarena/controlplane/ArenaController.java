@@ -1,5 +1,7 @@
 package ai.lobarena.controlplane;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
-import java.util.Map;
 
 @RestController
 final class ArenaController {
@@ -100,7 +101,10 @@ final class ArenaController {
                     String.valueOf(body.getOrDefault("dataset_id", "")),
                     String.valueOf(body.getOrDefault("scenario_family", "")),
                     integerValue(body.get("max_ticks"), 10_000),
-                    longValue(body.get("master_seed"), arena.defaultMasterSeed()));
+                    longValue(body.get("master_seed"), arena.defaultMasterSeed()),
+                    nullableLongValue(body.get("trigger_source_sequence"), "trigger_source_sequence"),
+                    nullableLongValue(body.get("trigger_timestamp_ns"), "trigger_timestamp_ns"),
+                    stringObjectMap(body.get("scenario_parameters")));
         } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
@@ -167,5 +171,36 @@ final class ArenaController {
         } catch (NumberFormatException exception) {
             throw new IllegalArgumentException("master_seed must be an integer", exception);
         }
+    }
+
+    private static Long nullableLongValue(Object value, String field) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException(field + " must be an integer", exception);
+        }
+    }
+
+    private static Map<String, Object> stringObjectMap(Object value) {
+        if (value == null) {
+            return Map.of();
+        }
+        if (!(value instanceof Map<?, ?> raw)) {
+            throw new IllegalArgumentException("scenario_parameters must be an object");
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        raw.forEach((key, item) -> {
+            if (!(key instanceof String field)) {
+                throw new IllegalArgumentException("scenario parameter names must be strings");
+            }
+            result.put(field, item);
+        });
+        return Map.copyOf(result);
     }
 }

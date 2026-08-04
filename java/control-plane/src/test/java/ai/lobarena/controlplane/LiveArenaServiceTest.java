@@ -1,6 +1,7 @@
 package ai.lobarena.controlplane;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import ai.lobarena.kernel.determinism.DeterministicValues;
 import java.net.URI;
@@ -13,6 +14,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -375,6 +377,77 @@ class LiveArenaServiceTest {
     }
 
     @Test
+    void scheduledInjectionSplitsBothRunsAtExactSourceRowAndOrdersTimestampTiesFirst(
+            @TempDir Path root) throws Exception {
+        Path registry = createLobsterDataset(root.resolve("scheduled"));
+        LiveArenaService arena = lobsterArena(root.resolve("output"), registry, 8);
+
+        JsonNode comparison = arena.runReplayComparison(
+                "lobster-spy-fixture",
+                "spoofing_like_wall",
+                20,
+                7,
+                3L,
+                null,
+                Map.of("quantity_lots", 12_345));
+
+        JsonNode controlSchedule = comparison.path("control").path("injection_schedule");
+        JsonNode hybridSchedule = comparison.path("hybrid").path("injection_schedule");
+        JsonNode label = comparison.path("hybrid").path("ground_truth");
+        assertThat(controlSchedule).isEqualTo(hybridSchedule);
+        assertThat(hybridSchedule.path("actual_source_sequence").longValue()).isEqualTo(3);
+        assertThat(hybridSchedule.path("actual_timestamp_ns").longValue())
+                .isEqualTo(34_200_000_000_003L);
+        assertThat(hybridSchedule.path("parameters").path("quantity_lots").longValue())
+                .isEqualTo(12_345);
+        assertThat(label.path("trigger_source_sequence").longValue()).isEqualTo(3);
+        assertThat(label.path("start_exchange_timestamp_ns").longValue())
+                .isEqualTo(34_200_000_000_003L);
+        assertThat(label.path("end_exchange_timestamp_ns").isIntegralNumber()).isTrue();
+        assertThat(label.path("schedule_sha256").textValue())
+                .isEqualTo(hybridSchedule.path("schedule_sha256").textValue());
+        assertThat(comparison.path("determinism").path("hybrid_trace_match").booleanValue())
+                .isTrue();
+
+        JsonNode events = arena.exchangeEvents(0, 1_000).path("events");
+        long firstSyntheticAtTrigger = Long.MAX_VALUE;
+        long lastHistoricalAtTrigger = Long.MIN_VALUE;
+        for (JsonNode event : events) {
+            if (event.path("exchange_timestamp_ns").longValue() != 34_200_000_000_003L) {
+                continue;
+            }
+            if ("historical".equals(event.path("source").textValue())) {
+                lastHistoricalAtTrigger = Math.max(lastHistoricalAtTrigger, event.path("sequence").longValue());
+            } else if (event.hasNonNull("scenario_id")) {
+                firstSyntheticAtTrigger = Math.min(firstSyntheticAtTrigger, event.path("sequence").longValue());
+            }
+        }
+        assertThat(lastHistoricalAtTrigger).isPositive();
+        assertThat(firstSyntheticAtTrigger).isLessThan(Long.MAX_VALUE);
+        assertThat(lastHistoricalAtTrigger).isLessThan(firstSyntheticAtTrigger);
+        assertThat(events)
+                .filteredOn(event -> event.hasNonNull("scenario_id"))
+                .allMatch(event -> "simulation".equals(event.path("source").textValue()));
+    }
+
+    @Test
+    void scheduledInjectionRejectsMissingSourceRowsAndConflictingTriggers(@TempDir Path root)
+            throws Exception {
+        Path registry = createLobsterDataset(root.resolve("scheduled-invalid"));
+        LiveArenaService arena = lobsterArena(root.resolve("output"), registry, 2);
+
+        assertThatThrownBy(() -> arena.runReplayComparison(
+                        "lobster-spy-fixture", "layering_like", 20, 7, 999L, null, Map.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("trigger was not reached");
+        assertThatThrownBy(() -> arena.runReplayComparison(
+                        "lobster-spy-fixture", "layering_like", 20, 7,
+                        3L, 34_200_000_000_003L, Map.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("mutually exclusive");
+    }
+
+    @Test
     void hybridAttackAtInjectionTimeCannotObserveFutureLobsterRows(@TempDir Path root)
             throws Exception {
         Path firstRegistry = createLobsterDataset(root.resolve("first"), 0);
@@ -461,7 +534,8 @@ class LiveArenaServiceTest {
             statement.execute("""
                     CREATE TABLE events AS
                     SELECT i::BIGINT source_sequence,
-                           (34200000000000 + i)::BIGINT timestamp_ns_since_midnight,
+                           (34200000000000 + CASE WHEN i = 4 THEN 3 ELSE i END)::BIGINT
+                               timestamp_ns_since_midnight,
                            'ADD'::VARCHAR event_kind, 1::TINYINT source_event_code,
                            (1000 + i)::BIGINT source_order_id, 10::BIGINT size,
                            1000000::BIGINT price_x10000, 1::TINYINT direction,
@@ -473,7 +547,8 @@ class LiveArenaServiceTest {
             statement.execute("""
                     CREATE TABLE books AS
                     SELECT i::BIGINT source_sequence,
-                           (34200000000000 + i)::BIGINT timestamp_ns_since_midnight,
+                           (34200000000000 + CASE WHEN i = 4 THEN 3 ELSE i END)::BIGINT
+                               timestamp_ns_since_midnight,
                            2::SMALLINT depth,
                            [{'level': 1::SMALLINT, 'price_x10000': 1001000::BIGINT, 'quantity': 200::BIGINT},
                             {'level': 2::SMALLINT, 'price_x10000': 1002000::BIGINT, 'quantity': 300::BIGINT}] asks,

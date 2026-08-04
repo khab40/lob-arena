@@ -3,6 +3,14 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Added deterministic source-sequence or exchange-timestamp hybrid scheduling
+  for normalized historical Parquet. Control and hybrid runs share the exact
+  schedule partition, historical timestamp ties precede synthetic mutations,
+  future rows are deferred, existing scenario parameters are bounded and hash
+  bound, ground truth includes trigger/exchange-time fields, and signed evidence
+  manifests retain ITCH source/parser/output hashes, counts, schedule, and
+  synthetic lifecycle validation.
+
 - Added Nasdaq TotalView-ITCH 5.x as a peer historical adapter: streaming gzip
   parsing, daily Stock Locate resolution, complete visible-order lifecycle and
   top-N book reconstruction, deterministic aligned Parquet, source-neutral

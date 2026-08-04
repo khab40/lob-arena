@@ -158,7 +158,8 @@ def build_hybrid_validation(raw: dict[str, Any]) -> dict[str, Any]:
         and _valid_sha256(snapshot_hash)
         and control_integrity.get("validated") is True
         and hybrid_integrity.get("validated") is True
-        and control_integrity.get("format") in {"lobster_parquet_v1", "canonical_csv_v1"}
+        and control_integrity.get("format")
+        in {"lobster_parquet_v1", "itch_parquet_v1", "canonical_csv_v1"}
         and control_integrity.get("format") == hybrid_integrity.get("format")
         and control_integrity.get("row_count") == source_row_count
         and hybrid_integrity.get("row_count") == source_row_count
@@ -167,7 +168,29 @@ def build_hybrid_validation(raw: dict[str, Any]) -> dict[str, Any]:
         and bool(control_output_hashes)
         and all(_valid_sha256(value) for value in control_output_hashes.values())
         and control_output_hashes == hybrid_integrity.get("output_sha256")
+        and all(
+            control_integrity.get(field) == hybrid_integrity.get(field)
+            for field in (
+                "source_type",
+                "venue",
+                "parser_version",
+                "source_stream_sha256",
+                "parser_config_sha256",
+                "filters",
+                "message_counts",
+                "truncation_limits",
+            )
+        )
     )
+    if control_integrity.get("format") == "itch_parquet_v1":
+        same_source = bool(
+            same_source
+            and control_integrity.get("source_type") == "nasdaq_itch"
+            and control_integrity.get("venue") == "XNAS"
+            and _valid_sha256(control_integrity.get("source_stream_sha256"))
+            and _valid_sha256(control_integrity.get("parser_config_sha256"))
+            and isinstance(control_integrity.get("message_counts"), dict)
+        )
     _check(
         checks,
         "historical_source_immutability",
@@ -190,6 +213,30 @@ def build_hybrid_validation(raw: dict[str, Any]) -> dict[str, Any]:
     )
 
     label = hybrid.get("ground_truth") or {}
+    scheduled = raw.get("scheduled_injection") is True
+    control_schedule = control.get("injection_schedule")
+    hybrid_schedule = hybrid.get("injection_schedule")
+    schedule_valid = not scheduled or bool(
+        isinstance(control_schedule, dict)
+        and isinstance(hybrid_schedule, dict)
+        and control_schedule == hybrid_schedule
+        and hybrid_schedule.get("triggered") is True
+        and _valid_sha256(hybrid_schedule.get("schedule_sha256"))
+        and hybrid_schedule.get("actual_source_sequence") == label.get("trigger_source_sequence")
+        and hybrid_schedule.get("actual_timestamp_ns") == label.get("trigger_timestamp_ns")
+        and label.get("start_exchange_timestamp_ns") == label.get("trigger_timestamp_ns")
+        and _valid_sha256(label.get("schedule_sha256"))
+        and label.get("schedule_sha256") == hybrid_schedule.get("schedule_sha256")
+        and label.get("parameters") == hybrid_schedule.get("parameters")
+    )
+    _check(
+        checks,
+        "deterministic_injection_schedule",
+        schedule_valid,
+        scheduled=scheduled,
+        control_schedule=control_schedule,
+        hybrid_schedule=hybrid_schedule,
+    )
     start_tick = int(label.get("start_tick", 0))
     end_tick = int(label.get("end_tick", -1))
     before = [tick for tick in paired_ticks if tick < start_tick]
@@ -252,8 +299,14 @@ def build_hybrid_validation(raw: dict[str, Any]) -> dict[str, Any]:
         checks,
         "ground_truth_isolation",
         control.get("ground_truth") is None
+        and not control.get("synthetic_events")
         and label.get("source") == "synthetic_scenario"
-        and all(str(value).startswith("SYN:") for value in label.get("order_ids", [])),
+        and all(str(value).startswith("SYN:") for value in label.get("order_ids", []))
+        and all(
+            event.get("source") == "simulation"
+            and event.get("scenario_id") == label.get("scenario_id")
+            for event in synthetic_events
+        ),
         control_ground_truth=control.get("ground_truth"),
         hybrid_label_source=label.get("source"),
     )
