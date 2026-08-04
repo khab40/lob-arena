@@ -148,9 +148,11 @@ curl -X POST http://localhost:5173/api/scenarios/spoofing-like
 
 ### Historical And Hybrid Replay
 
-1. Open **Data Ingestion** and import a paired LOBSTER message/order-book
-   dataset. The repository includes a small public fixture under
-   [data/lobster/fixture](../data/lobster/README.md).
+1. Open **Data Ingestion** and import either a paired LOBSTER message/order-book
+   dataset or a bounded symbol window from a length-prefixed Nasdaq ITCH 5.x
+   stream. The repository includes small synthetic fixtures under
+   [data/lobster/fixture](../data/lobster/README.md) and
+   [data/nasdaq-itch/fixture](../data/nasdaq-itch/README.md).
 2. Open Arena, select **Historical control**, choose the imported dataset, and
    load it for an unlabeled control replay.
 3. Select **Hybrid + attacks**, load the same dataset, then launch spoofing-like

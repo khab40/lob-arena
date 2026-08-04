@@ -3,6 +3,13 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Added Nasdaq TotalView-ITCH 5.x as a peer historical adapter: streaming gzip
+  parsing, daily Stock Locate resolution, complete visible-order lifecycle and
+  top-N book reconstruction, deterministic aligned Parquet, source-neutral
+  checksummed manifests, disk quotas, a synthetic binary fixture, source-aware
+  UI/API discovery, and manifest-driven Java replay provenance. Existing
+  LOBSTER endpoints, manifests, and replay remain backward compatible.
+
 - Completed governed LightGBM v1 with validation-only calibration, frozen
   operating modes, isolated test scoring, tree contributions, semantic and
   checksummed release evidence, a mode-locked detector adapter, MLflow

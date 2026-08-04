@@ -1,11 +1,13 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
 
-class LobsterCandidate(BaseModel):
+class IngestionCandidate(BaseModel):
     candidate_id: str
+    source_type: Literal["lobster", "nasdaq_itch"] = "lobster"
+    venue: str = "LOBSTER"
     symbol: str
     trade_date: str
     start_time_ms: int
@@ -17,9 +19,15 @@ class LobsterCandidate(BaseModel):
     orderbook_file: str | None = None
     message_file_size: int | None = None
     orderbook_file_size: int | None = None
+    source_file: str | None = None
+    source_file_size: int | None = None
     status: Literal["ready", "invalid", "importing", "failed", "imported"]
     errors: list[str] = Field(default_factory=list)
     dataset_id: str | None = None
+
+
+# Compatibility alias for callers of the original LOBSTER-only API.
+LobsterCandidate = IngestionCandidate
 
 
 class ValidationReport(BaseModel):
@@ -44,6 +52,9 @@ class DatasetManifest(BaseModel):
     dataset_id: str
     status: Literal["ready"] = "ready"
     source_type: str = "lobster"
+    format: str = "lobster_parquet_v1"
+    venue: str = "LOBSTER"
+    parser_version: str | None = None
     ingestion_mode: Literal["batch", "micro_batch", "streaming"] = "batch"
     symbol: str
     trade_date: str
@@ -56,6 +67,13 @@ class DatasetManifest(BaseModel):
     imported_at: datetime
     source_files: list[DatasetFile]
     output_files: list[DatasetFile]
+    source_name: str | None = None
+    source_url: str | None = None
+    source_stream_sha256: str | None = None
+    parser_config_sha256: str | None = None
+    filters: dict[str, Any] = Field(default_factory=dict)
+    message_counts: dict[str, int] = Field(default_factory=dict)
+    truncation_limits: dict[str, int] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
 
 
@@ -114,6 +132,10 @@ class ImportWindowRequest(BaseModel):
         ):
             raise ValueError("start_time_ms must be before end_time_ms")
         return self
+
+
+class SourceImportRequest(ImportWindowRequest):
+    depth: int | None = Field(default=None, ge=1, le=100)
 
 
 def format_milliseconds(value: int) -> str:

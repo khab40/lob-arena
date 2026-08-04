@@ -245,7 +245,18 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
     }
 
     synchronized String venue() {
-        return "LOBSTER";
+        requireLoaded();
+        return manifest.path("venue").asText("LOBSTER");
+    }
+
+    synchronized String format() {
+        requireLoaded();
+        return manifest.path("format").asText("lobster_parquet_v1");
+    }
+
+    synchronized String historicalSourceType() {
+        requireLoaded();
+        return manifest.path("source_type").asText("lobster");
     }
 
     synchronized long priceTickSizeNanos() {
@@ -273,7 +284,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         requireLoaded();
         ObjectNode result = mapper.createObjectNode()
                 .put("validated", true)
-                .put("format", "lobster_parquet_v1")
+                .put("format", format())
                 .put("row_count", totalRows)
                 .put("paired_rows", pairedRows);
         result.putObject("output_sha256")
@@ -286,8 +297,9 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         requireLoaded();
         return mapper.createObjectNode()
                 .put("source_type", sourceType)
+                .put("historical_source_type", historicalSourceType())
                 .put("dataset_id", datasetId)
-                .put("format", "lobster_parquet_v1")
+                .put("format", format())
                 .put("symbol", symbol())
                 .put("venue", venue())
                 .put("trade_date", manifest.path("trade_date").asText())
@@ -315,9 +327,10 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
                     if (!"ready".equals(candidate.path("status").asText())) return;
                     result.add(mapper.createObjectNode()
                             .put("dataset_id", candidate.path("dataset_id").asText())
-                            .put("source_type", "lobster")
+                            .put("source_type", candidate.path("source_type").asText("lobster"))
                             .put("symbol", candidate.path("symbol").asText())
-                            .put("venue", "LOBSTER")
+                            .put("venue", candidate.path("venue").asText("LOBSTER"))
+                            .put("format", candidate.path("format").asText("lobster_parquet_v1"))
                             .put("trade_date", candidate.path("trade_date").asText())
                             .put("start_time", formatMilliseconds(candidate.path("start_time_ms").longValue()))
                             .put("end_time", formatMilliseconds(candidate.path("end_time_ms").longValue()))
@@ -328,7 +341,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
                 }
             });
         } catch (IOException exception) {
-            throw new IllegalStateException("failed to list LOBSTER datasets", exception);
+            throw new IllegalStateException("failed to list historical datasets", exception);
         }
         return result;
     }
@@ -358,7 +371,10 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         result.putArray("incidents");
         ObjectNode context = result.putObject("market_data");
         context.put("source_type", "historical");
+        context.put("historical_source_type", historicalSourceType());
         context.put("dataset_id", datasetId);
+        context.put("format", format());
+        context.put("venue", venue());
         context.put("symbol", manifest.path("symbol").asText());
         context.put("trade_date", manifest.path("trade_date").asText());
         context.put("depth", manifest.path("depth").intValue());

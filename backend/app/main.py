@@ -47,6 +47,7 @@ app.state.settings = settings
 app.state.data_ingestion = DataIngestionService(
     settings.arena_lobster_raw_dir,
     settings.arena_historical_data_dir,
+    settings.arena_itch_raw_dir,
 )
 app.state.simulation = JavaArenaClient(
     settings.java_arena_base_url,

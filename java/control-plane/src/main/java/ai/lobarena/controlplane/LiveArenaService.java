@@ -25,6 +25,7 @@ import java.util.HexFormat;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -74,12 +75,12 @@ final class LiveArenaService {
     private double previousDepth;
     private String replaySourceType;
     private long replayMasterSeed;
-    private volatile boolean lobsterKernelReplay;
+    private volatile boolean normalizedHistoricalKernelReplay;
     private EventStreamSummary eventSummary;
     private String streamId;
     private volatile String streamError;
-    private final Set<Long> lobsterBidPrices = new HashSet<>();
-    private final Set<Long> lobsterAskPrices = new HashSet<>();
+    private final Set<Long> historicalBidPrices = new HashSet<>();
+    private final Set<Long> historicalAskPrices = new HashSet<>();
 
     LiveArenaService(ObjectMapper mapper, AgentOrchestrator orchestrator, ArenaJournal journal) {
         this(
@@ -205,14 +206,14 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode state() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             return historical.state();
         }
         return buildState();
     }
 
     JsonNode metricsState() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             return historical.metricsState();
         }
         return mapper.createObjectNode()
@@ -226,7 +227,7 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode start() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             return historical.start();
         }
         ensureReplayArchiveCapacity();
@@ -235,7 +236,7 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode pause() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             return historical.pause();
         }
         running = false;
@@ -243,7 +244,7 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode reset() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             return historical.reset();
         }
         if (historicalCsv.loaded()) {
@@ -251,10 +252,10 @@ final class LiveArenaService {
             resetRuntime(newHistoricalMatchingEngine());
             return buildState();
         }
-        if (lobsterKernelReplay) {
+        if (normalizedHistoricalKernelReplay) {
             historical.reset();
-            lobsterBidPrices.clear();
-            lobsterAskPrices.clear();
+            historicalBidPrices.clear();
+            historicalAskPrices.clear();
             resetRuntime(newHistoricalMatchingEngine());
             return buildState();
         }
@@ -273,13 +274,13 @@ final class LiveArenaService {
         detectorAlertTicks.clear();
         activeAgentIds = List.of();
         matching = replacement;
-        lobsterBidPrices.clear();
-        lobsterAskPrices.clear();
+        historicalBidPrices.clear();
+        historicalAskPrices.clear();
         previousDepth = topDepth(matching.book().snapshot(5));
     }
 
     synchronized JsonNode launchScenario(String family) {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             throw new IllegalArgumentException("scenarios are unavailable for historical market data");
         }
         if (kernelHistoricalLoaded() && !"hybrid".equals(replaySourceType)) {
@@ -331,7 +332,7 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode exchangeEvents(String requestedStreamId, long afterSequence, int limit) {
-        if (requestedStreamId == null && historical.loaded() && !lobsterKernelReplay) {
+        if (requestedStreamId == null && historical.loaded() && !normalizedHistoricalKernelReplay) {
             ObjectNode replay = mapper.createObjectNode();
             replay.putArray("events");
             return replay.put("after_sequence", afterSequence)
@@ -365,7 +366,7 @@ final class LiveArenaService {
 
     @Scheduled(fixedDelayString = "${lob.arena.tick-interval-ms:500}")
     synchronized void scheduledTick() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             historical.advance();
             return;
         }
@@ -375,7 +376,7 @@ final class LiveArenaService {
     }
 
     synchronized JsonNode stepForTest() {
-        if (historical.loaded() && !lobsterKernelReplay) {
+        if (historical.loaded() && !normalizedHistoricalKernelReplay) {
             historical.start();
             historical.advance();
             return historical.state();
@@ -410,7 +411,7 @@ final class LiveArenaService {
         if ("historical".equals(sourceType)) {
             if (historicalCsv.supports(datasetId)) {
                 historical.clear();
-                lobsterKernelReplay = false;
+                normalizedHistoricalKernelReplay = false;
                 replaySourceType = "historical";
                 historicalCsv.load(datasetId);
                 resetRuntime(newHistoricalMatchingEngine());
@@ -418,25 +419,25 @@ final class LiveArenaService {
             }
             historicalCsv.clear();
             replaySourceType = "historical";
-            lobsterKernelReplay = false;
+            normalizedHistoricalKernelReplay = false;
             historical.load(datasetId);
-            lobsterKernelReplay = true;
+            normalizedHistoricalKernelReplay = true;
             resetRuntime(newHistoricalMatchingEngine());
             return buildState();
         }
         if ("hybrid".equals(sourceType)) {
             if (historicalCsv.supports(datasetId)) {
                 historical.clear();
-                lobsterKernelReplay = false;
+                normalizedHistoricalKernelReplay = false;
                 replaySourceType = "hybrid";
                 historicalCsv.load(datasetId);
                 resetRuntime(newHistoricalMatchingEngine());
                 return buildState();
             }
             historicalCsv.clear();
-            lobsterKernelReplay = false;
+            normalizedHistoricalKernelReplay = false;
             historical.load(datasetId);
-            lobsterKernelReplay = true;
+            normalizedHistoricalKernelReplay = true;
             replaySourceType = "hybrid";
             resetRuntime(newHistoricalMatchingEngine());
             return buildState();
@@ -444,7 +445,7 @@ final class LiveArenaService {
         if ("synthetic".equals(sourceType)) {
             historical.clear();
             historicalCsv.clear();
-            lobsterKernelReplay = false;
+            normalizedHistoricalKernelReplay = false;
             replaySourceType = null;
             return reset();
         }
@@ -543,8 +544,8 @@ final class LiveArenaService {
     }
 
     private void advance() {
-        if (lobsterKernelReplay) {
-            advanceLobsterReplay();
+        if (normalizedHistoricalKernelReplay) {
+            advanceNormalizedHistoricalReplay();
             return;
         }
         if (historicalCsv.loaded()) {
@@ -618,7 +619,7 @@ final class LiveArenaService {
         journal.append("snapshots/ticks.jsonl", state);
     }
 
-    private void advanceLobsterReplay() {
+    private void advanceNormalizedHistoricalReplay() {
         if (historical.eof()) {
             running = false;
             return;
@@ -635,7 +636,7 @@ final class LiveArenaService {
                 "HIST:" + historical.datasetId(),
                 record.sourceSequence(),
                 record.sourceSequence())));
-        records.forEach(this::applyLobsterSnapshot);
+        records.forEach(this::applyNormalizedHistoricalSnapshot);
         if ("hybrid".equals(replaySourceType)) {
             applyScenario();
         }
@@ -650,7 +651,7 @@ final class LiveArenaService {
         journal.append("snapshots/ticks.jsonl", buildState());
     }
 
-    private void applyLobsterSnapshot(HistoricalMarketDataSource.HistoricalSnapshotRecord record) {
+    private void applyNormalizedHistoricalSnapshot(HistoricalMarketDataSource.HistoricalSnapshotRecord record) {
         MutationContext context = new MutationContext(
                 tick,
                 null,
@@ -661,14 +662,14 @@ final class LiveArenaService {
                 record.timestampNs(),
                 record.timestampNs());
         matching.runWithMutationContext(context, () -> {
-            syncLobsterSide(Side.SIDE_BUY, record.bids(), lobsterBidPrices, record);
-            syncLobsterSide(Side.SIDE_SELL, record.asks(), lobsterAskPrices, record);
+            syncNormalizedHistoricalSide(Side.SIDE_BUY, record.bids(), historicalBidPrices, record);
+            syncNormalizedHistoricalSide(Side.SIDE_SELL, record.asks(), historicalAskPrices, record);
             int depth = Math.max(1, historical.context(replaySourceType).path("depth").intValue());
-            matching.recordSnapshot(lobsterSourceSnapshot(record), depth, context);
+            matching.recordSnapshot(normalizedHistoricalSourceSnapshot(record), depth, context);
         });
     }
 
-    private BookSnapshot lobsterSourceSnapshot(
+    private BookSnapshot normalizedHistoricalSourceSnapshot(
             HistoricalMarketDataSource.HistoricalSnapshotRecord record) {
         BookSnapshot.Builder snapshot = BookSnapshot.newBuilder();
         record.bids().forEach(level -> snapshot.addBids(PriceLevel.newBuilder()
@@ -694,7 +695,7 @@ final class LiveArenaService {
         return snapshot.build();
     }
 
-    private void syncLobsterSide(
+    private void syncNormalizedHistoricalSide(
             Side side,
             JsonNode levels,
             Set<Long> priorPrices,
@@ -706,14 +707,14 @@ final class LiveArenaService {
         for (long price : new HashSet<>(priorPrices)) {
             if (!desired.containsKey(price)) {
                 matching.book().updateAgentLevel(
-                        side, price, 0, lobsterParticipantId(), "historical",
-                        lobsterLevelOrderId(side, price), record.timestampNs(),
+                        side, price, 0, normalizedHistoricalParticipantId(), "historical",
+                        normalizedHistoricalLevelOrderId(side, price), record.timestampNs(),
                         null, null, null);
             }
         }
         desired.forEach((price, quantity) -> matching.book().updateAgentLevel(
-                side, price, quantity, lobsterParticipantId(), "historical",
-                lobsterLevelOrderId(side, price), record.timestampNs(),
+                side, price, quantity, normalizedHistoricalParticipantId(), "historical",
+                normalizedHistoricalLevelOrderId(side, price), record.timestampNs(),
                 null, null, null));
         priorPrices.clear();
         priorPrices.addAll(desired.keySet());
@@ -1317,7 +1318,7 @@ final class LiveArenaService {
     }
 
     private boolean kernelHistoricalLoaded() {
-        return historicalCsv.loaded() || lobsterKernelReplay;
+        return historicalCsv.loaded() || normalizedHistoricalKernelReplay;
     }
 
     private void ensureReplayArchiveCapacity() {
@@ -1410,11 +1411,12 @@ final class LiveArenaService {
                 : historical.context(replaySourceType);
     }
 
-    private String lobsterParticipantId() {
-        return "HIST:" + replayDatasetId() + ":P:LOBSTER";
+    private String normalizedHistoricalParticipantId() {
+        return "HIST:" + replayDatasetId() + ":P:"
+                + historical.historicalSourceType().toUpperCase(Locale.ROOT);
     }
 
-    private String lobsterLevelOrderId(Side side, long priceTicks) {
+    private String normalizedHistoricalLevelOrderId(Side side, long priceTicks) {
         String bookSide = side == Side.SIDE_BUY ? "B" : "S";
         return "HIST:" + replayDatasetId() + ":L2:" + bookSide + ":" + priceTicks;
     }

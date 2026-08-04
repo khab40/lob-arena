@@ -53,6 +53,12 @@ outputs/*
 !/data/lobster/README.md
 !/data/lobster/fixture/
 !/data/lobster/fixture/**
+!/data/nasdaq-itch/
+/data/nasdaq-itch/*
+!/data/nasdaq-itch/README.md
+!/data/nasdaq-itch/fixture/
+!/data/nasdaq-itch/fixture/build_fixture.py
+!/data/nasdaq-itch/fixture/2026-01-02.NASDAQ_ITCH50.fixture.gz
 !/data/features/
 !/data/features/**
 

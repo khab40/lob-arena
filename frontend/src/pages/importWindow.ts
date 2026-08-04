@@ -1,6 +1,6 @@
-import type { LobsterCandidate } from "@/api/client";
+import type { IngestionCandidate } from "@/api/client";
 
-export type ImportDuration = "1" | "5" | "custom" | "full";
+export type ImportDuration = "1" | "5" | "30" | "60" | "custom" | "full";
 
 export type ImportWindowSelection = {
   customMinutes: string;
@@ -8,16 +8,22 @@ export type ImportWindowSelection = {
   startTime: string;
 };
 
-export function defaultImportWindow(candidate: LobsterCandidate): ImportWindowSelection {
+export function defaultImportWindow(candidate: IngestionCandidate): ImportWindowSelection {
+  const itchDefaultStart = 34_200_000;
+  const startTimeMs = candidate.source_type === "nasdaq_itch"
+    && itchDefaultStart >= candidate.start_time_ms
+    && itchDefaultStart < candidate.end_time_ms
+    ? itchDefaultStart
+    : candidate.start_time_ms;
   return {
     customMinutes: "10",
-    duration: "1",
-    startTime: formatTimeInput(candidate.start_time_ms)
+    duration: candidate.source_type === "nasdaq_itch" ? "30" : "1",
+    startTime: formatTimeInput(startTimeMs)
   };
 }
 
 export function resolveImportWindow(
-  candidate: LobsterCandidate,
+  candidate: IngestionCandidate,
   selection = defaultImportWindow(candidate)
 ): {
   error: string;

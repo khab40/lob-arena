@@ -352,6 +352,29 @@ class LiveArenaServiceTest {
     }
 
     @Test
+    void normalizedItchReplayUsesManifestSourceInHistoricalParticipantIds(@TempDir Path root)
+            throws Exception {
+        Path registry = createLobsterDataset(root.resolve("itch"));
+        Path manifestPath = registry.resolve("lobster-spy-fixture/manifest.json");
+        String manifest = Files.readString(manifestPath)
+                .replace("\"source_type\": \"lobster\"", "\"source_type\": \"nasdaq_itch\"")
+                .replace("\"symbol\": \"SPY\"", "\"format\": \"itch_parquet_v1\",\n"
+                        + "                  \"venue\": \"XNAS\",\n"
+                        + "                  \"symbol\": \"SPY\"");
+        Files.writeString(manifestPath, manifest);
+        LiveArenaService arena = lobsterArena(root.resolve("output"), registry, 1);
+
+        JsonNode loaded = arena.loadDataSource("historical", "lobster-spy-fixture");
+        JsonNode state = arena.stepForTest();
+
+        assertThat(loaded.path("market_data").path("historical_source_type").textValue())
+                .isEqualTo("nasdaq_itch");
+        assertThat(state.path("exchange_events"))
+                .filteredOn(event -> "historical".equals(event.path("source").textValue()))
+                .anyMatch(event -> event.path("agent_id").asText("").contains(":P:NASDAQ_ITCH"));
+    }
+
+    @Test
     void hybridAttackAtInjectionTimeCannotObserveFutureLobsterRows(@TempDir Path root)
             throws Exception {
         Path firstRegistry = createLobsterDataset(root.resolve("first"), 0);

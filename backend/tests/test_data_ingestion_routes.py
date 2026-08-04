@@ -4,14 +4,28 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.api.routes_data_ingestion import router
+from app.data_ingestion.models import ImportAccepted
 
 
 class StubIngestion:
     def __init__(self) -> None:
         self.deleted: list[str] = []
+        self.discovery: list[tuple[str, str | None]] = []
+        self.imports: list[tuple[object, ...]] = []
 
     def delete_dataset(self, dataset_id: str) -> None:
         self.deleted.append(dataset_id)
+
+    def candidates(self, source_type: str, symbol: str | None = None) -> list[object]:
+        self.discovery.append((source_type, symbol))
+        return []
+
+    def begin_import(self, candidate_id: str, **options: object) -> tuple[ImportAccepted, bool]:
+        self.imports.append(("begin", candidate_id, options))
+        return ImportAccepted(candidate_id=candidate_id, status="importing"), True
+
+    def execute_import(self, *args: object) -> None:
+        self.imports.append(("execute", *args))
 
 
 class StubSimulation:
@@ -62,3 +76,36 @@ def test_delete_dataset_fails_closed_when_arena_state_is_unavailable() -> None:
     assert response.status_code == 503
     assert "safely delete" in response.json()["detail"]
     assert ingestion.deleted == []
+
+
+def test_source_neutral_discovery_and_import_forward_adapter_options() -> None:
+    client, ingestion = client_for(StubSimulation())
+
+    discovery = client.get("/api/data-ingestion/sources/nasdaq_itch/candidates?symbol=AAPL")
+    imported = client.post(
+        "/api/data-ingestion/sources/nasdaq_itch/candidates/candidate-1/import",
+        json={"start_time_ms": 34_200_000, "end_time_ms": 36_000_000, "depth": 10},
+    )
+
+    assert discovery.status_code == 200
+    assert ingestion.discovery == [("nasdaq_itch", "AAPL")]
+    assert imported.status_code == 202
+    assert imported.json()["status"] == "importing"
+    assert ingestion.imports[0] == (
+        "begin",
+        "candidate-1",
+        {
+            "start_time_ms": 34_200_000,
+            "end_time_ms": 36_000_000,
+            "depth": 10,
+            "source_type": "nasdaq_itch",
+        },
+    )
+    assert ingestion.imports[1] == (
+        "execute",
+        "candidate-1",
+        34_200_000,
+        36_000_000,
+        10,
+        "nasdaq_itch",
+    )

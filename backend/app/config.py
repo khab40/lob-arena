@@ -148,6 +148,10 @@ class Settings(BaseSettings):
         default=_PROJECT_ROOT / "data/lobster",
         alias="ARENA_LOBSTER_RAW_DIR",
     )
+    arena_itch_raw_dir: Path = Field(
+        default=_PROJECT_ROOT / "data/nasdaq-itch",
+        alias="ARENA_ITCH_RAW_DIR",
+    )
     arena_historical_data_dir: Path = Field(
         default=_PROJECT_ROOT / "data/processed/lobster",
         alias="ARENA_HISTORICAL_DATA_DIR",

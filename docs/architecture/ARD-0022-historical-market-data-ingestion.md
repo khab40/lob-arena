@@ -7,10 +7,11 @@ Date: 2026-07-23
 
 ## Context
 
-LOB Arena needs a one-time administrative path for importing licensed local
-LOBSTER files without turning the synthetic Arena into a vendor-specific data
-pipeline. Historical replay must retain the Java control plane as the browser
-WebSocket authority.
+LOB Arena needs an administrative path for importing licensed local historical
+sources without turning the synthetic Arena into a vendor-specific data
+pipeline. LOBSTER is the original adapter; Nasdaq ITCH is a peer adapter under
+[ARD-0032](ARD-0032-nasdaq-itch-ingestion.md). Historical replay must retain the
+Java control plane as the browser WebSocket authority.
 
 ## Decision
 
@@ -25,14 +26,15 @@ WebSocket authority.
 - The initial increment allowed either synthetic or historical execution. That
   temporary exclusivity constraint is superseded by ARD-0023, which reuses the
   same normalized datasets for deterministic hybrid execution.
-- Streaming ingestion, distributed import jobs, and timestamp-paced replay are
-  outside this increment.
+- Network acquisition, distributed import jobs, and timestamp-paced replay are
+  outside this increment. The ITCH adapter does stream local gzip input during
+  normalization and never materializes an uncompressed full session.
 
 ## Current Data Flow
 
 ```mermaid
 graph LR
-    Source["Licensed local LOBSTER pair"]
+    Source["Licensed local LOBSTER pair or ITCH stream"]
     FastAPI["FastAPI validation"]
     Dataset["Immutable Parquet + manifest"]
     Java["Java replay adapter"]
@@ -84,7 +86,8 @@ the source snapshot rather than from the combined book.
 The implemented hybrid path preserves this ARD's ingestion and storage
 contract:
 
-- FastAPI still discovers, validates, and converts paired LOBSTER CSV files.
+- FastAPI discovers, validates, and converts paired LOBSTER CSV files and
+  bounded Nasdaq ITCH symbol windows through source adapters.
 - Imported Parquet files and their manifest remain immutable.
 - Java reads only normalized Parquet and uses the integer matching engine as
   the sole live-book writer.
@@ -101,5 +104,6 @@ contract:
 - [ARD-0023: Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
 - [ARD-0025: Governed Corpus and Benchmark](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking](ARD-0027-shared-mlflow-tracking.md)
+- [ARD-0032: Nasdaq ITCH Ingestion](ARD-0032-nasdaq-itch-ingestion.md)
 - [Public LOBSTER-compatible fixture](../../data/lobster/README.md)
 - [Historical and hybrid replay instructions](../../README.md#historical-and-hybrid-replay)
