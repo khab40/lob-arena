@@ -257,9 +257,13 @@ At each replay step, records are ordered by exchange timestamp, historical
 phase, source priority, actor ID, source sequence, and insertion sequence.
 Historical records therefore win equal-timestamp ties; the attack generator
 then reads only the reconstructed live book. It never reads a future Parquet
-row. The attack seed is derived from the configured master seed, dataset,
-scenario family, and deterministic scenario number. Synthetic-only runs keep
-their previous fixed behavior.
+row. Batch comparisons may specify exactly one `trigger_source_sequence` or
+`trigger_timestamp_ns`. Control and hybrid runs split at the same point, all
+historical rows tied at that exchange timestamp are applied first, and later
+rows are deferred. The attack seed is derived from the configured master seed,
+dataset, scenario family, deterministic scenario number, and schedule hash.
+The schedule hash also binds bounded parameters for the existing scenario
+family. Synthetic-only and manually launched runs keep their previous defaults.
 
 Example request bodies are committed as
 [historical-control.json](configs/replay/historical-control.json) and
@@ -277,7 +281,7 @@ The Java comparison endpoint executes both modes over the same source:
 ```bash
 curl -sS -X POST http://localhost:8081/api/arena/replay-comparison \
   -H 'Content-Type: application/json' \
-  -d '{"dataset_id":"sample-btcusdt-0945","scenario_family":"spoofing_like_wall","master_seed":42,"max_ticks":10000}'
+  -d '{"dataset_id":"itch-aapl-window","scenario_family":"spoofing_like_wall","master_seed":42,"trigger_source_sequence":125000,"scenario_parameters":{"quantity_lots":30000},"max_ticks":10000}'
 ```
 
 To reuse the tournament precision/recall/F1 calculation and create a
@@ -289,6 +293,8 @@ backend/.venv/bin/python scripts/run_historical_replay_comparison.py \
   --dataset sample-btcusdt-0945 \
   --scenario spoofing_like_wall \
   --master-seed 42 \
+  --trigger-source-sequence 125000 \
+  --scenario-parameters '{"quantity_lots":30000}' \
   --signing-key /secure/lob-validation-key.pem \
   --signer "Market Surveillance QA" \
   --output outputs/historical-replay/sample-btcusdt-0945
@@ -327,6 +333,8 @@ Architecture decisions are recorded in
 ingestion/storage and
 [ARD-0032](docs/architecture/ARD-0032-nasdaq-itch-ingestion.md) for the ITCH
 adapter and source-neutral manifest contract, and
+[ARD-0033](docs/architecture/ARD-0033-deterministic-hybrid-scheduling.md) for
+exact in-window scheduling and evidence bindings, and
 [ARD-0023](docs/architecture/ARD-0023-hybrid-historical-replay.md) for hybrid
 ordering, provenance, seed derivation, label isolation, metrics, and artifacts.
 

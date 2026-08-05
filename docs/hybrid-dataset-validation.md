@@ -6,6 +6,13 @@ source integrity, replay determinism, injected-order lifecycle correctness,
 attack localisation, and the absence of unintended changes outside the
 attack's causal neighbourhood.
 
+The same validation applies to `itch_parquet_v1`. A scheduled comparison binds
+the selected source sequence or timestamp, resolved scenario parameters,
+master seed, and dataset in `historical_injection_schedule_v1`. Control and
+hybrid use the identical schedule partition. When multiple historical rows
+share the trigger timestamp, every tied row is applied before the synthetic
+mutation and later rows remain deferred.
+
 The validator reuses the authoritative Java replay and canonical book hashes.
 Before replay, Java independently verifies both normalized Parquet files
 against the manifest, checks their row counts, unique sequences, monotonic
@@ -43,6 +50,10 @@ and a compact per-tick book and event-flow trace. Validation requires:
 - identical repeat-run hashes and traces;
 - the same Java-verified immutable Parquet hashes, complete source sequence
   count, row count, and historical snapshot-stream hash in both runs;
+- ITCH compressed-stream and parser/config hashes, message counts, filters,
+  quota limits, and output hashes when the source is `nasdaq_itch`;
+- identical requested/actual trigger coordinates, schedule parameters, and
+  schedule hash in control and hybrid runs;
 - valid `SYN:` order lifecycles, including cancellation and execution
   quantities;
 - synthetic events contained by the separate ground-truth attack window;

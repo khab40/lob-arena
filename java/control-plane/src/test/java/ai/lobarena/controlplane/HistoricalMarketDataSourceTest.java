@@ -122,6 +122,10 @@ class HistoricalMarketDataSourceTest {
                 .replace("\"source_type\": \"lobster\"", "\"source_type\": \"nasdaq_itch\"")
                 .replace("\"symbol\": \"AAPL\"", "\"format\": \"itch_parquet_v1\",\n"
                         + "                  \"venue\": \"XNAS\",\n"
+                        + "                  \"parser_version\": \"nasdaq_itch_5_0_v1\",\n"
+                        + "                  \"source_stream_sha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\n"
+                        + "                  \"parser_config_sha256\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\n"
+                        + "                  \"message_counts\": {\"A\": 1},\n"
                         + "                  \"symbol\": \"AAPL\"");
         Files.writeString(manifestPath, manifest);
 
@@ -135,6 +139,9 @@ class HistoricalMarketDataSourceTest {
                 .isEqualTo("nasdaq_itch");
         assertThat(source.datasets().get(0).path("venue").textValue()).isEqualTo("XNAS");
         assertThat(source.datasets().get(0).path("format").textValue()).isEqualTo("itch_parquet_v1");
+        assertThat(source.integrity().path("source_stream_sha256").textValue()).hasSize(64);
+        assertThat(source.integrity().path("parser_config_sha256").textValue()).hasSize(64);
+        assertThat(source.integrity().path("message_counts").path("A").intValue()).isEqualTo(1);
         source.close();
     }
 

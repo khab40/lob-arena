@@ -195,6 +195,57 @@ def test_attack_lifecycle_rejects_duplicate_cancellation() -> None:
     assert any("duplicate cancel" in error for error in report["checks"]["injected_order_lifecycle"]["errors"])
 
 
+def test_scheduled_itch_injection_binds_trigger_parameters_and_source_provenance() -> None:
+    raw = _hybrid_comparison()
+    schedule = {
+        "schema_version": "historical_injection_schedule_v1",
+        "scenario_family": "spoofing_like_wall",
+        "schedule_sha256": SHA_D,
+        "triggered": True,
+        "requested_source_sequence": 3,
+        "requested_timestamp_ns": None,
+        "actual_source_sequence": 3,
+        "actual_timestamp_ns": 34_200_000_000_002,
+        "parameters": {"quantity_lots": 30_000, "duration_ticks": 3, "distance_levels": 2},
+    }
+    raw["scheduled_injection"] = True
+    raw["injection_schedule"] = schedule
+    raw["control"]["injection_schedule"] = schedule
+    raw["hybrid"]["injection_schedule"] = schedule
+    raw["hybrid"]["ground_truth"].update(
+        {
+            "trigger_source_sequence": 3,
+            "trigger_timestamp_ns": 34_200_000_000_002,
+            "start_exchange_timestamp_ns": 34_200_000_000_002,
+            "end_exchange_timestamp_ns": 34_200_000_000_003,
+            "schedule_sha256": SHA_D,
+            "parameters": schedule["parameters"],
+        }
+    )
+    itch_provenance = {
+        "source_type": "nasdaq_itch",
+        "venue": "XNAS",
+        "parser_version": "nasdaq_itch_5_0_v1",
+        "source_stream_sha256": SHA_A,
+        "parser_config_sha256": SHA_B,
+        "filters": {"symbol": "AAPL", "depth": 10},
+        "message_counts": {"A": 1, "D": 1},
+        "truncation_limits": {"max_working_bytes": 12 * 1024**3},
+    }
+    for run in (raw["control"], raw["hybrid"]):
+        run["source_integrity"] = {
+            **run["source_integrity"],
+            **itch_provenance,
+            "format": "itch_parquet_v1",
+        }
+
+    report = build_hybrid_validation(raw)
+
+    assert report["verdict"] == "pass"
+    assert report["checks"]["deterministic_injection_schedule"]["status"] == "pass"
+    assert report["checks"]["historical_source_immutability"]["status"] == "pass"
+
+
 def _hybrid_comparison() -> dict:
     control_trace = [_trace(tick, SHA_A, 10.0, 500.0, 0.0, 4) for tick in range(7)]
     hybrid_trace = [dict(row) for row in control_trace]

@@ -285,8 +285,18 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         ObjectNode result = mapper.createObjectNode()
                 .put("validated", true)
                 .put("format", format())
+                .put("source_type", historicalSourceType())
+                .put("venue", venue())
                 .put("row_count", totalRows)
                 .put("paired_rows", pairedRows);
+        copyManifestField(result, "parser_version");
+        copyManifestField(result, "source_name");
+        copyManifestField(result, "source_url");
+        copyManifestField(result, "source_stream_sha256");
+        copyManifestField(result, "parser_config_sha256");
+        copyManifestField(result, "filters");
+        copyManifestField(result, "message_counts");
+        copyManifestField(result, "truncation_limits");
         result.putObject("output_sha256")
                 .put("events.parquet", eventsParquetSha256)
                 .put("book_snapshots.parquet", booksParquetSha256);
@@ -690,6 +700,15 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
 
     private static void copyNullable(ObjectNode target, ObjectNode source, String field) {
         if (source.path(field).isNull()) target.putNull(field); else target.set(field, source.path(field));
+    }
+
+    private void copyManifestField(ObjectNode target, String field) {
+        JsonNode value = manifest.path(field);
+        if (value.isMissingNode() || value.isNull()) {
+            target.putNull(field);
+        } else {
+            target.set(field, value.deepCopy());
+        }
     }
 
     private static void putNullable(ObjectNode target, String field, String value, boolean lowerCase) {

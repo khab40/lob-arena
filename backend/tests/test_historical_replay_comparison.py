@@ -64,7 +64,15 @@ def test_builds_metrics_without_treating_control_history_as_ground_truth() -> No
 
 
 def test_writes_deterministic_manifest_and_checksums(tmp_path: Path) -> None:
-    write_bundle(_raw_comparison(), tmp_path)
+    raw = _raw_comparison()
+    raw["injection_schedule"] = {"schedule_sha256": "d" * 64}
+    raw["control"]["source_integrity"] = {
+        "format": "itch_parquet_v1",
+        "source_stream_sha256": "a" * 64,
+        "parser_config_sha256": "b" * 64,
+    }
+    raw["control"]["historical_source_sequences"] = 12
+    write_bundle(raw, tmp_path)
 
     assert {path.name for path in tmp_path.iterdir()} == {
         "control.json",
@@ -76,6 +84,10 @@ def test_writes_deterministic_manifest_and_checksums(tmp_path: Path) -> None:
     for line in (tmp_path / "checksums.sha256").read_text(encoding="utf-8").splitlines():
         expected, name = line.split("  ", 1)
         assert hashlib.sha256((tmp_path / name).read_bytes()).hexdigest() == expected
+    manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["source_integrity"]["format"] == "itch_parquet_v1"
+    assert manifest["source_counts"]["historical_source_sequences"] == 12
+    assert manifest["injection_schedule"]["schedule_sha256"] == "d" * 64
 
 
 def test_ed25519_signs_and_verifies_commercial_validation_report(tmp_path: Path) -> None:
