@@ -1,13 +1,19 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
-from app.data_ingestion.models import ImportAccepted, ImportedDataset, ImportWindowRequest, LobsterCandidate
+from app.data_ingestion.models import (
+    ImportAccepted,
+    IngestionCandidate,
+    ImportedDataset,
+    ImportWindowRequest,
+    SourceImportRequest,
+)
 
 router = APIRouter(prefix="/api/data-ingestion", tags=["data-ingestion"])
 
 
-@router.get("/lobster/candidates", response_model=list[LobsterCandidate])
-def list_lobster_candidates(request: Request) -> list[LobsterCandidate]:
-    return request.app.state.data_ingestion.candidates()
+@router.get("/lobster/candidates", response_model=list[IngestionCandidate])
+def list_lobster_candidates(request: Request) -> list[IngestionCandidate]:
+    return request.app.state.data_ingestion.candidates("lobster")
 
 
 @router.post(
@@ -37,6 +43,54 @@ def import_lobster_candidate(
             candidate_id,
             import_window.start_time_ms,
             import_window.end_time_ms,
+        )
+    return accepted
+
+
+@router.get("/sources/{source_type}/candidates", response_model=list[IngestionCandidate])
+def list_source_candidates(
+    source_type: str,
+    request: Request,
+    symbol: str | None = None,
+) -> list[IngestionCandidate]:
+    try:
+        return request.app.state.data_ingestion.candidates(source_type, symbol=symbol)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post(
+    "/sources/{source_type}/candidates/{candidate_id}/import",
+    response_model=ImportAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def import_source_candidate(
+    source_type: str,
+    candidate_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    import_options: SourceImportRequest,
+) -> ImportAccepted:
+    try:
+        accepted, started = request.app.state.data_ingestion.begin_import(
+            candidate_id,
+            start_time_ms=import_options.start_time_ms,
+            end_time_ms=import_options.end_time_ms,
+            depth=import_options.depth,
+            source_type=source_type,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="unknown candidate") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if started:
+        background_tasks.add_task(
+            request.app.state.data_ingestion.execute_import,
+            candidate_id,
+            import_options.start_time_ms,
+            import_options.end_time_ms,
+            import_options.depth,
+            source_type,
         )
     return accepted
 

@@ -56,6 +56,8 @@ class HistoricalMarketDataSourceTest {
         HistoricalMarketDataSource source = new HistoricalMarketDataSource(
                 mapper, root, 1, DuckDbResourceLimits.defaults(), 1);
         JsonNode loaded = source.load(datasetId);
+        assertThat(source.venue()).isEqualTo("LOBSTER");
+        assertThat(source.format()).isEqualTo("lobster_parquet_v1");
         assertThat(loaded.path("market_data").path("source_sequence").longValue()).isEqualTo(91);
         assertThat(loaded.path("market_data").path("replay_position").longValue()).isEqualTo(1);
         assertThat(loaded.path("market_data").path("progress").doubleValue()).isEqualTo(0.5);
@@ -87,6 +89,53 @@ class HistoricalMarketDataSourceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("output size does not match manifest");
         assertThat(tampered.loaded()).isFalse();
+    }
+
+    @Test
+    void readsSourceProvenanceFromTheManifest(@TempDir Path root) throws Exception {
+        String datasetId = "itch-aapl-2026-01-02-demo";
+        Path dataset = Files.createDirectories(root.resolve(datasetId));
+        Path events = dataset.resolve("events.parquet");
+        Path books = dataset.resolve("book_snapshots.parquet");
+        try (Connection connection = DriverManager.getConnection("jdbc:duckdb:");
+                Statement statement = connection.createStatement()) {
+            statement.execute("""
+                    CREATE TABLE events AS
+                    SELECT 5::BIGINT source_sequence, 34200000000004::BIGINT timestamp_ns_since_midnight,
+                           'ADD'::VARCHAR event_kind, 65::TINYINT source_event_code, 1::BIGINT source_order_id,
+                           100::BIGINT size, 1000000::BIGINT price_x10000, 1::TINYINT direction,
+                           'BUY'::VARCHAR book_side, NULL::VARCHAR aggressor_side, NULL::VARCHAR halt_state
+                    """);
+            statement.execute("COPY events TO '" + sqlPath(events) + "' (FORMAT PARQUET)");
+            statement.execute("""
+                    CREATE TABLE books AS
+                    SELECT 5::BIGINT source_sequence, 34200000000004::BIGINT timestamp_ns_since_midnight,
+                           10::SMALLINT depth, [] asks,
+                           [{'level': 1::SMALLINT, 'price_x10000': 1000000::BIGINT,
+                             'quantity': 100::BIGINT}] bids
+                    """);
+            statement.execute("COPY books TO '" + sqlPath(books) + "' (FORMAT PARQUET)");
+        }
+        writeManifest(dataset, datasetId, events, books, 1);
+        Path manifestPath = dataset.resolve("manifest.json");
+        String manifest = Files.readString(manifestPath)
+                .replace("\"source_type\": \"lobster\"", "\"source_type\": \"nasdaq_itch\"")
+                .replace("\"symbol\": \"AAPL\"", "\"format\": \"itch_parquet_v1\",\n"
+                        + "                  \"venue\": \"XNAS\",\n"
+                        + "                  \"symbol\": \"AAPL\"");
+        Files.writeString(manifestPath, manifest);
+
+        HistoricalMarketDataSource source = new HistoricalMarketDataSource(mapper, root, 1);
+        JsonNode loaded = source.load(datasetId);
+
+        assertThat(source.venue()).isEqualTo("XNAS");
+        assertThat(source.format()).isEqualTo("itch_parquet_v1");
+        assertThat(source.historicalSourceType()).isEqualTo("nasdaq_itch");
+        assertThat(loaded.path("market_data").path("historical_source_type").textValue())
+                .isEqualTo("nasdaq_itch");
+        assertThat(source.datasets().get(0).path("venue").textValue()).isEqualTo("XNAS");
+        assertThat(source.datasets().get(0).path("format").textValue()).isEqualTo("itch_parquet_v1");
+        source.close();
     }
 
     @Test

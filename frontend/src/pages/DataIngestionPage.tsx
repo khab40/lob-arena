@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   deleteImportedDataset,
-  importLobsterCandidate,
+  importIngestionCandidate,
   listImportedDatasets,
-  listLobsterCandidates,
+  listIngestionCandidates,
+  type IngestionCandidate,
   type ImportedDataset,
-  type LobsterCandidate
 } from "@/api/client";
 import {
   defaultImportWindow,
@@ -16,7 +16,7 @@ import {
 } from "@/pages/importWindow";
 
 export function DataIngestionPage() {
-  const [candidates, setCandidates] = useState<LobsterCandidate[]>([]);
+  const [candidates, setCandidates] = useState<IngestionCandidate[]>([]);
   const [datasets, setDatasets] = useState<ImportedDataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState<string | null>(null);
@@ -28,11 +28,12 @@ export function DataIngestionPage() {
     setLoading(true);
     setError(null);
     try {
-      const [nextCandidates, nextDatasets] = await Promise.all([
-        listLobsterCandidates(),
+      const [lobsterCandidates, itchCandidates, nextDatasets] = await Promise.all([
+        listIngestionCandidates("lobster"),
+        listIngestionCandidates("nasdaq_itch"),
         listImportedDatasets()
       ]);
-      setCandidates(nextCandidates);
+      setCandidates([...lobsterCandidates, ...itchCandidates]);
       setDatasets(nextDatasets);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Data discovery failed");
@@ -53,7 +54,7 @@ export function DataIngestionPage() {
     return () => window.clearTimeout(timer);
   }, [candidates, refresh]);
 
-  async function importCandidate(candidate: LobsterCandidate) {
+  async function importCandidate(candidate: IngestionCandidate) {
     const selectedWindow = resolveImportWindow(candidate, importWindows[candidate.candidate_id]);
     if (!selectedWindow.valid) {
       setError(selectedWindow.error);
@@ -62,7 +63,10 @@ export function DataIngestionPage() {
     setImporting(candidate.candidate_id);
     setError(null);
     try {
-      await importLobsterCandidate(candidate.candidate_id, selectedWindow.request);
+      await importIngestionCandidate(candidate, {
+        ...selectedWindow.request,
+        depth: candidate.depth
+      });
       await refresh();
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Import failed");
@@ -71,7 +75,7 @@ export function DataIngestionPage() {
     }
   }
 
-  function updateImportWindow(candidate: LobsterCandidate, patch: Partial<ImportWindowSelection>) {
+  function updateImportWindow(candidate: IngestionCandidate, patch: Partial<ImportWindowSelection>) {
     setImportWindows((current) => ({
       ...current,
       [candidate.candidate_id]: {
@@ -102,10 +106,10 @@ export function DataIngestionPage() {
     <section className="administrative-page data-ingestion-page" aria-label="Data Ingestion">
       <section className="panel ingestion-intro">
         <div>
-          <h2>LOBSTER batch import</h2>
+          <h2>Historical market-data import</h2>
           <p>
-            Discover paired message and order-book CSV files under <code>data/lobster</code>,
-            validate them, and register normalized Parquet datasets for historical replay.
+            Discover paired LOBSTER CSV data and Nasdaq TotalView-ITCH 5.x streams,
+            validate them, and register one source-neutral Parquet contract for historical replay.
           </p>
         </div>
         <button className="secondary-button" disabled={loading || importing !== null} onClick={() => void refresh()} type="button">
@@ -121,18 +125,18 @@ export function DataIngestionPage() {
           <span>{candidates.length} discovered</span>
         </header>
         {candidates.length === 0 && !loading ? (
-          <div className="empty-state">No LOBSTER file pairs were found.</div>
+          <div className="empty-state">No LOBSTER pairs or ITCH streams were found.</div>
         ) : (
           <div className="ingestion-table-wrap">
             <table className="ingestion-table">
               <thead>
                 <tr>
+                  <th>Source</th>
                   <th>Symbol</th>
                   <th>Date</th>
                   <th>Time range</th>
                   <th>Depth</th>
-                  <th>Message size</th>
-                  <th>Order-book size</th>
+                  <th>Source files</th>
                   <th>Import window</th>
                   <th>Status</th>
                   <th><span className="sr-only">Action</span></th>
@@ -144,12 +148,14 @@ export function DataIngestionPage() {
                   const selectedWindow = resolveImportWindow(candidate, selection);
                   return (
                   <tr key={candidate.candidate_id}>
+                    <td>{sourceLabel(candidate.source_type)}</td>
                     <td><strong>{candidate.symbol}</strong></td>
                     <td>{candidate.trade_date}</td>
                     <td>{candidate.start_time}–{candidate.end_time}</td>
                     <td>{candidate.depth}</td>
-                    <td>{formatBytes(candidate.message_file_size)}</td>
-                    <td>{formatBytes(candidate.orderbook_file_size)}</td>
+                    <td>{candidate.source_type === "nasdaq_itch"
+                      ? formatBytes(candidate.source_file_size)
+                      : `${formatBytes(candidate.message_file_size)} + ${formatBytes(candidate.orderbook_file_size)}`}</td>
                     <td>
                       <div className="import-window-controls">
                         <label>
@@ -174,6 +180,8 @@ export function DataIngestionPage() {
                           >
                             <option value="1">1 minute</option>
                             <option value="5">5 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="60">60 minutes</option>
                             <option value="custom">Custom</option>
                             <option value="full">Full range</option>
                           </select>
@@ -236,7 +244,7 @@ export function DataIngestionPage() {
           <div className="dataset-card-grid">
             {datasets.map((dataset) => (
               <article className="dataset-card" key={dataset.dataset_id}>
-                <div><strong>{dataset.symbol}</strong><span>LOBSTER · depth {dataset.depth}</span></div>
+                <div><strong>{dataset.symbol}</strong><span>{sourceLabel(dataset.source_type)} · depth {dataset.depth}</span></div>
                 <p>{dataset.trade_date} · {dataset.start_time}–{dataset.end_time}</p>
                 <p>{dataset.row_count.toLocaleString()} aligned events and snapshots</p>
                 <code>{dataset.dataset_id}</code>
@@ -255,6 +263,10 @@ export function DataIngestionPage() {
       </section>
     </section>
   );
+}
+
+function sourceLabel(sourceType: string) {
+  return sourceType === "nasdaq_itch" ? "Nasdaq ITCH" : "LOBSTER";
 }
 
 function formatBytes(value: number | null) {

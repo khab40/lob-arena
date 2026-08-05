@@ -144,12 +144,15 @@ describe("Core UI navigation and workflow contracts", () => {
       "<Route path=\"/data-ingestion\" element={<DataIngestionPage />} />"
     ]);
     expectIncludes(ingestion, [
-      "LOBSTER batch import",
+      "Historical market-data import",
+      "Nasdaq TotalView-ITCH 5.x",
       "Available source datasets",
       "Dataset registry",
-      "importLobsterCandidate",
+      "importIngestionCandidate",
       "1 minute",
       "5 minutes",
+      "30 minutes",
+      "60 minutes",
       "Full range",
       "Import window"
     ]);

@@ -82,6 +82,7 @@ services:
       LOG_LEVEL: INFO
       ARENA_OUTPUT_DIR: /app/outputs
       ARENA_LOBSTER_RAW_DIR: /app/data/lobster
+      ARENA_ITCH_RAW_DIR: /app/data/nasdaq-itch
       ARENA_HISTORICAL_DATA_DIR: /app/data/processed/lobster
       ARENA_DATA_RETENTION_DAYS: ${ARENA_DATA_RETENTION_DAYS:-1}
       ARENA_LOCAL_BATCH_MAX_WORKERS: ${ARENA_LOCAL_BATCH_MAX_WORKERS:-1}

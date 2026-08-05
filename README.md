@@ -214,23 +214,36 @@ The default Compose path builds `java-kernel`, `agent-runner`, `backend`, and `f
 
 ### Historical and hybrid replay
 
-The Java exchange replays both existing `canonical_csv_v1` order events and
-LOBSTER message/order-book imports through the same integer matching engine used
-by synthetic runs. LOBSTER ingestion remains the existing paired-file workflow:
+The Java exchange replays existing `canonical_csv_v1` order events, LOBSTER
+message/order-book imports, and normalized Nasdaq TotalView-ITCH 5.x streams
+through the same integer matching engine used by synthetic runs. LOBSTER
+ingestion remains the existing paired-file workflow:
 the Python adapter validates the public six-column message and `4 × depth`
 order-book formats, writes aligned Parquet plus a checksummed manifest, and the
 Java exchange reconstructs each contemporaneous book state from that immutable
 stream.
+
+The peer `nasdaq_itch` adapter streams length-prefixed plain or gzip ITCH input
+without materializing an uncompressed session. It resolves daily Stock Locate
+mappings and reconstructs `A`, `F`, `E`, `C`, `X`, `D`, and `U` visible-order
+lifecycles for one symbol and bounded time window. The adapter emits the same
+aligned Parquet columns plus additive ITCH provenance, while its manifest binds
+`source_type=nasdaq_itch`, `format=itch_parquet_v1`, `venue=XNAS`, parser/config
+versions, compressed-stream SHA-256, filters, message counts, output hashes, and
+disk limits. Unsupported non-book messages are counted but never interpreted as
+book mutations.
 
 The small public [LOBSTER-compatible fixture](data/lobster/README.md) contains
 synthetic test records covering add, partial cancel, delete, visible/hidden
 execution, cross trade, and halt messages. It can be imported from **Data
 Ingestion** without redistributing licensed market data. The older
 [canonical CSV fixture](data/historical/README.md) remains supported.
+The [synthetic ITCH fixture](data/nasdaq-itch/README.md) covers every supported
+transition and contains no real Nasdaq session data.
 
 In the Arena UI:
 
-1. Import a LOBSTER pair in **Data Ingestion**.
+1. Import a LOBSTER pair or a bounded Nasdaq ITCH symbol window in **Data Ingestion**.
 2. Select **Historical control**, choose the imported dataset, load it, and
    start replay for an unlabeled control run.
 3. Select **Hybrid + attacks**, load the same dataset, then launch the existing
@@ -312,6 +325,8 @@ the resulting live book.
 Architecture decisions are recorded in
 [ARD-0022](docs/architecture/ARD-0022-historical-market-data-ingestion.md) for
 ingestion/storage and
+[ARD-0032](docs/architecture/ARD-0032-nasdaq-itch-ingestion.md) for the ITCH
+adapter and source-neutral manifest contract, and
 [ARD-0023](docs/architecture/ARD-0023-hybrid-historical-replay.md) for hybrid
 ordering, provenance, seed derivation, label isolation, metrics, and artifacts.
 

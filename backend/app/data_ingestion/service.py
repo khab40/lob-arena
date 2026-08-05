@@ -3,21 +3,31 @@ from pathlib import Path
 from threading import Lock
 
 from app.data_ingestion.lobster import iter_manifests
-from app.data_ingestion.models import DatasetManifest, ImportAccepted, ImportedDataset, LobsterCandidate
-from app.data_ingestion.sources import LobsterBatchSourceAdapter
+from app.data_ingestion.models import DatasetManifest, ImportAccepted, ImportedDataset, IngestionCandidate
+from app.data_ingestion.sources import LobsterBatchSourceAdapter, NasdaqItchBatchSourceAdapter
 
 
 class DataIngestionService:
-    def __init__(self, raw_dir: Path, processed_dir: Path) -> None:
+    def __init__(self, raw_dir: Path, processed_dir: Path, itch_raw_dir: Path | None = None) -> None:
         self.raw_dir = raw_dir.resolve()
         self.processed_dir = processed_dir.resolve()
         self.lobster = LobsterBatchSourceAdapter(self.raw_dir, self.processed_dir)
+        self.itch = NasdaqItchBatchSourceAdapter(
+            (itch_raw_dir or self.raw_dir.parent / "nasdaq-itch").resolve(),
+            self.processed_dir,
+        )
+        self.adapters = {"lobster": self.lobster, "nasdaq_itch": self.itch}
         self._import_lock = Lock()
         self._job_lock = Lock()
         self._jobs: dict[str, tuple[str, str | None]] = {}
 
-    def candidates(self) -> list[LobsterCandidate]:
-        candidates = self.lobster.candidates()
+    def candidates(self, source_type: str = "lobster", symbol: str | None = None) -> list[IngestionCandidate]:
+        adapter = self.adapters.get(source_type)
+        if adapter is None:
+            raise ValueError(f"unsupported ingestion source: {source_type}")
+        candidates = adapter.candidates()
+        if symbol:
+            candidates = [item for item in candidates if item.symbol.upper() == symbol.upper()]
         with self._job_lock:
             jobs = dict(self._jobs)
         for candidate in candidates:
@@ -65,17 +75,23 @@ class DataIngestionService:
         *,
         start_time_ms: int | None = None,
         end_time_ms: int | None = None,
+        depth: int | None = None,
+        source_type: str = "lobster",
     ) -> DatasetManifest:
         with self._import_lock:
-            candidate = next((item for item in self.candidates() if item.candidate_id == candidate_id), None)
+            candidate = next(
+                (item for item in self.candidates(source_type) if item.candidate_id == candidate_id),
+                None,
+            )
             if candidate is None:
                 raise LookupError(candidate_id)
             if candidate.status == "invalid":
                 raise ValueError("; ".join(candidate.errors))
-            return self.lobster.import_candidate(
+            return self.adapters[source_type].import_candidate(
                 candidate,
                 start_time_ms=start_time_ms,
                 end_time_ms=end_time_ms,
+                depth=depth,
             )
 
     def begin_import(
@@ -84,8 +100,13 @@ class DataIngestionService:
         *,
         start_time_ms: int | None = None,
         end_time_ms: int | None = None,
+        depth: int | None = None,
+        source_type: str = "lobster",
     ) -> tuple[ImportAccepted, bool]:
-        candidate = next((item for item in self.candidates() if item.candidate_id == candidate_id), None)
+        candidate = next(
+            (item for item in self.candidates(source_type) if item.candidate_id == candidate_id),
+            None,
+        )
         if candidate is None:
             raise LookupError(candidate_id)
         if candidate.status == "invalid":
@@ -117,12 +138,16 @@ class DataIngestionService:
         candidate_id: str,
         start_time_ms: int | None = None,
         end_time_ms: int | None = None,
+        depth: int | None = None,
+        source_type: str = "lobster",
     ) -> None:
         try:
             self.import_candidate(
                 candidate_id,
                 start_time_ms=start_time_ms,
                 end_time_ms=end_time_ms,
+                depth=depth,
+                source_type=source_type,
             )
         except Exception as exc:  # Background task must surface errors through discovery status.
             with self._job_lock:

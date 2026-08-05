@@ -10,8 +10,10 @@ import type {
 
 export { API_BASE_URL };
 
-export type LobsterCandidate = {
+export type IngestionCandidate = {
   candidate_id: string;
+  source_type: "lobster" | "nasdaq_itch";
+  venue: string;
   symbol: string;
   trade_date: string;
   start_time_ms: number;
@@ -23,10 +25,14 @@ export type LobsterCandidate = {
   orderbook_file: string | null;
   message_file_size: number | null;
   orderbook_file_size: number | null;
+  source_file: string | null;
+  source_file_size: number | null;
   status: "ready" | "invalid" | "importing" | "failed" | "imported";
   errors: string[];
   dataset_id: string | null;
 };
+
+export type LobsterCandidate = IngestionCandidate;
 
 export type ImportedDataset = {
   dataset_id: string;
@@ -64,6 +70,20 @@ export async function listLobsterCandidates(): Promise<LobsterCandidate[]> {
   return response.json();
 }
 
+export async function listIngestionCandidates(
+  sourceType: IngestionCandidate["source_type"],
+  symbol?: string
+): Promise<IngestionCandidate[]> {
+  const query = symbol ? `?symbol=${encodeURIComponent(symbol)}` : "";
+  const response = await fetch(
+    `${API_BASE_URL}/api/data-ingestion/sources/${encodeURIComponent(sourceType)}/candidates${query}`
+  );
+  if (!response.ok) {
+    throw new Error(await apiErrorMessage(response, "Source discovery failed"));
+  }
+  return response.json();
+}
+
 export async function importLobsterCandidate(
   candidateId: string,
   importWindow: { start_time_ms?: number; end_time_ms?: number } = {}
@@ -82,6 +102,28 @@ export async function importLobsterCandidate(
   );
   if (!response.ok) {
     throw new Error(await apiErrorMessage(response, "LOBSTER import failed"));
+  }
+  return response.json();
+}
+
+export async function importIngestionCandidate(
+  candidate: IngestionCandidate,
+  importWindow: { start_time_ms?: number; end_time_ms?: number; depth?: number } = {}
+): Promise<{
+  candidate_id: string;
+  dataset_id: string | null;
+  status: "importing" | "imported";
+}> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/data-ingestion/sources/${encodeURIComponent(candidate.source_type)}/candidates/${encodeURIComponent(candidate.candidate_id)}/import`,
+    {
+      body: JSON.stringify(importWindow),
+      headers: { "Content-Type": "application/json" },
+      method: "POST"
+    }
+  );
+  if (!response.ok) {
+    throw new Error(await apiErrorMessage(response, "Source import failed"));
   }
   return response.json();
 }
