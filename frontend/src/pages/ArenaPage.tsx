@@ -18,7 +18,9 @@ import { arenaScenarioLabels } from "@/scenarios";
 import {
   listHistoricalReplayDatasets,
   listImportedDatasets,
-  type HistoricalReplayDataset
+  listMarketProfiles,
+  type HistoricalReplayDataset,
+  type MarketProfileSummary
 } from "@/api/client";
 
 const WIDGET_TICK_WINDOW = 48;
@@ -30,7 +32,7 @@ type HeatmapSnapshotFrame = {
 
 type DetectionSecondaryView = "evidence" | "exchange" | "timeline";
 type MarketSecondaryView = "heatmap" | "timeline";
-type MarketDataChoice = "synthetic" | "historical" | "hybrid";
+type MarketDataChoice = "synthetic" | "synthetic_profile" | "historical" | "hybrid";
 
 function formatScenarioLabel(name?: string | null) {
   return name ? arenaScenarioLabels[name as keyof typeof arenaScenarioLabels] ?? name : "None";
@@ -80,6 +82,7 @@ export function ArenaPage() {
   const marketDataChoiceTouchedRef = useRef(false);
   const [historicalDatasets, setHistoricalDatasets] = useState<HistoricalReplayDataset[]>([]);
   const [hybridDatasets, setHybridDatasets] = useState<HistoricalReplayDataset[]>([]);
+  const [marketProfiles, setMarketProfiles] = useState<MarketProfileSummary[]>([]);
   const [selectedDatasetId, setSelectedDatasetId] = useState("");
   const [datasetError, setDatasetError] = useState<string | null>(null);
   const [incidentDetailsMode, setIncidentDetailsMode] = useState<"live" | "replay">("live");
@@ -92,6 +95,7 @@ export function ArenaPage() {
   const historicalMode = state.market_data?.source_type === "historical" || state.market_data?.source_type === "hybrid";
   const hybridMode = state.market_data?.source_type === "hybrid";
   const historicalControlMode = state.market_data?.source_type === "historical";
+  const profileMode = state.market_data?.source_type === "synthetic_profile";
   const loadedMarketDataSource = state.market_data?.source_type;
   const loadedDatasetId = state.market_data?.dataset_id;
 
@@ -109,9 +113,10 @@ export function ArenaPage() {
     let cancelled = false;
     void Promise.all([
       listImportedDatasets().catch(() => []),
-      listHistoricalReplayDatasets()
+      listHistoricalReplayDatasets(),
+      listMarketProfiles().catch(() => [])
     ])
-      .then(([imported, replayable]) => {
+      .then(([imported, replayable, profiles]) => {
         if (cancelled) {
           return;
         }
@@ -129,6 +134,7 @@ export function ArenaPage() {
         replayable.forEach((dataset) => merged.set(dataset.dataset_id, dataset));
         setHistoricalDatasets([...merged.values()]);
         setHybridDatasets(replayable);
+        setMarketProfiles(profiles);
         setDatasetError(null);
       })
       .catch((error: unknown) => {
@@ -146,16 +152,23 @@ export function ArenaPage() {
     [historicalDatasets, hybridDatasets, marketDataChoice]
   );
 
+  const selectableIds = useMemo(
+    () => marketDataChoice === "synthetic_profile"
+      ? marketProfiles.map((profile) => profile.profile_id)
+      : selectableDatasets.map((dataset) => dataset.dataset_id),
+    [marketDataChoice, marketProfiles, selectableDatasets]
+  );
+
   useEffect(() => {
     if (marketDataChoice === "synthetic") {
       return;
     }
     setSelectedDatasetId((current) =>
-      selectableDatasets.some((dataset) => dataset.dataset_id === current)
+      selectableIds.includes(current)
         ? current
-        : selectableDatasets[0]?.dataset_id ?? ""
+        : selectableIds[0] ?? ""
     );
-  }, [marketDataChoice, selectableDatasets]);
+  }, [marketDataChoice, selectableIds]);
 
   const chooseMarketDataSource = useCallback((choice: MarketDataChoice) => {
     marketDataChoiceTouchedRef.current = true;
@@ -165,7 +178,9 @@ export function ArenaPage() {
 
   const loadSelectedMarketData = useCallback(() => {
     if (marketDataChoice !== "synthetic" && !selectedDatasetId) {
-      setDatasetError("Select an imported dataset first.");
+      setDatasetError(marketDataChoice === "synthetic_profile"
+        ? "Select a market profile first."
+        : "Select an imported dataset first.");
       return;
     }
     setDatasetError(null);
@@ -274,7 +289,11 @@ export function ArenaPage() {
         running={running}
         selectedScenario={historicalControlMode ? "Control run (no labels)" : formatScenarioLabel(state.active_scenario?.scenario_name)}
         tick={tick}
-        source={historicalMode ? `${state.market_data?.symbol} ${hybridMode ? "hybrid" : "historical"} · ${formatExchangeTime(state.market_data?.exchange_timestamp_ns)}` : mode === "websocket" ? `backend websocket:${sourceStatus}` : mode === "demo" ? demoConfig?.title ?? "demo mode" : `local mock:${sourceStatus}`}
+        source={historicalMode
+          ? `${state.market_data?.symbol} ${hybridMode ? "hybrid" : "historical"} · ${formatExchangeTime(state.market_data?.exchange_timestamp_ns)}`
+          : profileMode
+            ? `${state.market_data?.symbol} calibrated · ${state.market_data?.profile_id}`
+            : mode === "websocket" ? `backend websocket:${sourceStatus}` : mode === "demo" ? demoConfig?.title ?? "demo mode" : `local mock:${sourceStatus}`}
       />
 
       <section className="panel market-data-source-panel" aria-label="Market data source">
@@ -283,6 +302,10 @@ export function ArenaPage() {
           <label className={marketDataChoice === "synthetic" ? "selected" : ""}>
             <input checked={marketDataChoice === "synthetic"} disabled={mode !== "websocket"} name="market-data-source" onChange={() => chooseMarketDataSource("synthetic")} type="radio" />
             <span><strong>Synthetic</strong><small>Generated market</small></span>
+          </label>
+          <label className={marketDataChoice === "synthetic_profile" ? "selected" : ""}>
+            <input checked={marketDataChoice === "synthetic_profile"} disabled={mode !== "websocket"} name="market-data-source" onChange={() => chooseMarketDataSource("synthetic_profile")} type="radio" />
+            <span><strong>Calibrated synthetic</strong><small>ITCH-derived profile</small></span>
           </label>
           <label className={marketDataChoice === "historical" ? "selected" : ""}>
             <input checked={marketDataChoice === "historical"} disabled={mode !== "websocket"} name="market-data-source" onChange={() => chooseMarketDataSource("historical")} type="radio" />
@@ -295,20 +318,32 @@ export function ArenaPage() {
         </fieldset>
         {marketDataChoice !== "synthetic" ? (
           <label className="market-data-dataset-field">
-            <span>Historical dataset</span>
-            <select aria-label="Historical dataset" onChange={(event) => setSelectedDatasetId(event.target.value)} value={selectedDatasetId}>
-              <option value="">Select a dataset</option>
-              {selectableDatasets.map((dataset) => (
-                <option key={dataset.dataset_id} value={dataset.dataset_id}>
-                  {formatDatasetOption(dataset)}
-                </option>
-              ))}
+            <span>{marketDataChoice === "synthetic_profile" ? "Market profile" : "Historical dataset"}</span>
+            <select aria-label={marketDataChoice === "synthetic_profile" ? "Market profile" : "Historical dataset"} onChange={(event) => setSelectedDatasetId(event.target.value)} value={selectedDatasetId}>
+              <option value="">{marketDataChoice === "synthetic_profile" ? "Select a profile" : "Select a dataset"}</option>
+              {marketDataChoice === "synthetic_profile"
+                ? marketProfiles.map((profile) => (
+                  <option key={profile.profile_id} value={profile.profile_id}>
+                    {profile.symbol} · {profile.trade_date} · {profile.profile_id}
+                  </option>
+                ))
+                : selectableDatasets.map((dataset) => (
+                  <option key={dataset.dataset_id} value={dataset.dataset_id}>
+                    {formatDatasetOption(dataset)}
+                  </option>
+                ))}
             </select>
-            <small>{marketDataChoice === "hybrid" ? "Only canonical event streams support attack injection." : "Control replay does not create ground-truth labels."}</small>
+            <small>{marketDataChoice === "synthetic_profile"
+              ? "The profile SHA and master seed are bound to every run."
+              : marketDataChoice === "hybrid" ? "Only canonical event streams support attack injection." : "Control replay does not create ground-truth labels."}</small>
           </label>
         ) : null}
         <button className="primary-button" disabled={mode !== "websocket" || !connected || (marketDataChoice !== "synthetic" && !selectedDatasetId)} onClick={loadSelectedMarketData} type="button">
-          {marketDataChoice === "hybrid" ? "Load Hybrid Replay" : marketDataChoice === "historical" ? "Load Historical Control" : "Load Synthetic Data"}
+          {marketDataChoice === "hybrid"
+            ? "Load Hybrid Replay"
+            : marketDataChoice === "historical"
+              ? "Load Historical Control"
+              : marketDataChoice === "synthetic_profile" ? "Load Calibrated Synthetic" : "Load Synthetic Data"}
         </button>
         {historicalMode ? (
           <span className="historical-progress">

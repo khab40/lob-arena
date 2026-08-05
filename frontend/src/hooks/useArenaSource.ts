@@ -112,7 +112,7 @@ export function useArenaSource({ demo = false, demoScenario, symbol }: { demo?: 
     sendWebSocketCommand({ scenario: scenarioToBackendName(scenario), type: "launch_scenario" });
   }, [mockArena, mode, sendWebSocketCommand]);
 
-  const loadMarketDataSource = useCallback((sourceType: "synthetic" | "historical" | "hybrid", datasetId = "") => {
+  const loadMarketDataSource = useCallback((sourceType: "synthetic" | "synthetic_profile" | "historical" | "hybrid", datasetId = "") => {
     if (mode !== "websocket") {
       return false;
     }

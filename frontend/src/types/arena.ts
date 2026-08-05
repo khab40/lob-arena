@@ -244,7 +244,7 @@ export type HistoricalMarketEvent = {
 };
 
 export type MarketDataContext = {
-  source_type: "historical" | "hybrid";
+  source_type: "historical" | "hybrid" | "synthetic_profile";
   dataset_id: string;
   format?: string;
   symbol: string;
@@ -258,6 +258,11 @@ export type MarketDataContext = {
   progress: number;
   eof: boolean;
   events_sha256?: string;
+  profile_id?: string;
+  profile_sha256?: string;
+  training_dataset_id?: string;
+  current_reference_price_ticks?: number;
+  run_binding_sha256?: string;
 };
 
 export type ArenaWebSocketMessage = {

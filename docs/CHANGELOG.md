@@ -3,6 +3,13 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Added deterministic `market_profile_v1` extraction from normalized ITCH,
+  canonical profile/report checksums, distinct held-out realism evaluation,
+  pre-registered core distances and attack-response windows. Java validates and
+  binds selected profiles, replaces fixed ladder/reference behavior only in the
+  calibrated synthetic mode, preserves the hardcoded regression control, and
+  exposes profile selection through the API and Arena UI.
+
 - Added deterministic source-sequence or exchange-timestamp hybrid scheduling
   for normalized historical Parquet. Control and hybrid runs share the exact
   schedule partition, historical timestamp ties precede synthetic mutations,

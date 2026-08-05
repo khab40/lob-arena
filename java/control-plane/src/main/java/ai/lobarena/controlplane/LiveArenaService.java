@@ -55,6 +55,7 @@ final class LiveArenaService {
     private final ArenaJournal journal;
     private final HistoricalMarketDataSource historical;
     private final HistoricalCsvMarketDataSource historicalCsv;
+    private final MarketProfileRegistry marketProfiles;
     private final int eventHistoryCapacity;
     private final CanonicalEventArchive eventArchive;
     private final DuckDbResourceLimits duckDbResourceLimits;
@@ -75,6 +76,8 @@ final class LiveArenaService {
     private int incidentCounter;
     private List<String> activeAgentIds = List.of();
     private LiveScenario scenario;
+    private MarketProfileRegistry.MarketProfile activeMarketProfile;
+    private long baselineReferencePriceTicks = REFERENCE_PRICE_TICKS;
     private ObjectNode scenarioParameters;
     private InjectionScheduleState injectionSchedule;
     private long normalizedAppliedRows;
@@ -194,6 +197,34 @@ final class LiveArenaService {
             int archiveSegmentEvents,
             long archiveMaxStreamBytes,
             DuckDbResourceLimits duckDbResourceLimits) {
+        this(
+                mapper,
+                orchestrator,
+                journal,
+                historicalDataDir,
+                historicalCsvDataDir,
+                historicalRowsPerTick,
+                masterSeed,
+                eventHistoryCapacity,
+                archiveSegmentEvents,
+                archiveMaxStreamBytes,
+                duckDbResourceLimits,
+                Path.of("../../configs/market-profiles"));
+    }
+
+    LiveArenaService(
+            ObjectMapper mapper,
+            AgentOrchestrator orchestrator,
+            ArenaJournal journal,
+            Path historicalDataDir,
+            Path historicalCsvDataDir,
+            int historicalRowsPerTick,
+            long masterSeed,
+            int eventHistoryCapacity,
+            int archiveSegmentEvents,
+            long archiveMaxStreamBytes,
+            DuckDbResourceLimits duckDbResourceLimits,
+            Path marketProfilesDir) {
         this.mapper = mapper;
         this.orchestrator = orchestrator;
         this.journal = journal;
@@ -202,6 +233,7 @@ final class LiveArenaService {
         this.duckDbResourceLimits = duckDbResourceLimits;
         this.historicalCsv =
                 new HistoricalCsvMarketDataSource(mapper, historicalCsvDataDir, historicalRowsPerTick);
+        this.marketProfiles = new MarketProfileRegistry(mapper, marketProfilesDir);
         this.eventHistoryCapacity = eventHistoryCapacity;
         this.eventArchive = new CanonicalEventArchive(
                 journal.root(),
@@ -445,6 +477,7 @@ final class LiveArenaService {
         running = false;
         replayMasterSeed = masterSeed;
         if ("historical".equals(sourceType)) {
+            activeMarketProfile = null;
             if (historicalCsv.supports(datasetId)) {
                 historical.clear();
                 normalizedHistoricalKernelReplay = false;
@@ -462,6 +495,7 @@ final class LiveArenaService {
             return buildState();
         }
         if ("hybrid".equals(sourceType)) {
+            activeMarketProfile = null;
             if (historicalCsv.supports(datasetId)) {
                 historical.clear();
                 normalizedHistoricalKernelReplay = false;
@@ -479,13 +513,26 @@ final class LiveArenaService {
             return buildState();
         }
         if ("synthetic".equals(sourceType)) {
+            activeMarketProfile = null;
             historical.clear();
             historicalCsv.clear();
             normalizedHistoricalKernelReplay = false;
             replaySourceType = null;
             return reset();
         }
+        if ("synthetic_profile".equals(sourceType)) {
+            historical.clear();
+            historicalCsv.clear();
+            normalizedHistoricalKernelReplay = false;
+            replaySourceType = null;
+            activeMarketProfile = marketProfiles.load(datasetId);
+            return reset();
+        }
         throw new IllegalArgumentException("unknown market data source");
+    }
+
+    synchronized JsonNode marketProfileSummaries() {
+        return marketProfiles.summaries();
     }
 
     synchronized JsonNode historicalCsvDatasets() {
@@ -675,6 +722,7 @@ final class LiveArenaService {
             }
         }
         applyScenario();
+        advanceProfileReference();
         maintainBaseline();
         matching.recordSnapshot(
                 tick,
@@ -1061,7 +1109,7 @@ final class LiveArenaService {
         int direction = side == Side.SIDE_SELL ? 1 : -1;
         long price = referencePriceTicks()
                 + direction * (scenarioParameter("distance_levels") + Math.floorMod(scenario.seed(), 2))
-                        * LEVEL_SPACING_TICKS;
+                        * levelSpacingTicks();
         matching.book().updateAgentLevel(
                 side, price, age < scenarioParameter("duration_ticks")
                         ? scenarioParameter("quantity_lots") : 0,
@@ -1077,7 +1125,7 @@ final class LiveArenaService {
                 level <= scenarioParameter("last_level"); level++) {
             matching.book().updateAgentLevel(
                     side,
-                    referencePrice + direction * level * LEVEL_SPACING_TICKS,
+                    referencePrice + direction * level * levelSpacingTicks(),
                     age < scenarioParameter("duration_ticks")
                             ? scenarioParameter("base_quantity_lots")
                                     + level * scenarioParameter("level_increment_lots")
@@ -1102,7 +1150,7 @@ final class LiveArenaService {
             int direction = side == Side.SIDE_BUY ? -1 : 1;
             long price = referencePrice
                     + direction * (burst + scenarioParameter("start_distance_levels"))
-                            * LEVEL_SPACING_TICKS;
+                            * levelSpacingTicks();
             String orderId = scenarioOrderId("STUFF-" + age + "-" + burst);
             matching.book().updateAgentLevel(
                     side,
@@ -1145,15 +1193,55 @@ final class LiveArenaService {
     private void maintainBaseline() {
         MutationContext context = new MutationContext(tick, null, null, null);
         matching.runWithMutationContext(context, () -> {
-            for (int index = 0; index < BASELINE_LEVELS; index++) {
-                long distance = (index + 1L) * LEVEL_SPACING_TICKS;
-                long minimum = BASE_QUANTITY_LOTS + index * 1_000L;
+            for (int index = 0; index < baselineLevels(); index++) {
+                long distance = (index + 1L) * levelSpacingTicks();
+                long minimum = baseQuantityLots() + index * depthIncrementLots();
+                if (activeMarketProfile != null) {
+                    matching.book().updateAgentLevel(
+                            Side.SIDE_BUY,
+                            baselineReferencePriceTicks - distance,
+                            minimum,
+                            "BASELINE_MM",
+                            "normal",
+                            "PROFILE:BASE:BID:" + index,
+                            tick,
+                            null,
+                            null,
+                            null);
+                    matching.book().updateAgentLevel(
+                            Side.SIDE_SELL,
+                            baselineReferencePriceTicks + distance,
+                            minimum,
+                            "BASELINE_MM",
+                            "normal",
+                            "PROFILE:BASE:ASK:" + index,
+                            tick,
+                            null,
+                            null,
+                            null);
+                    continue;
+                }
                 matching.book().ensureLevelMinimum(
-                        Side.SIDE_BUY, REFERENCE_PRICE_TICKS - distance, minimum, "BASELINE_MM", "normal");
+                        Side.SIDE_BUY, baselineReferencePriceTicks - distance, minimum, "BASELINE_MM", "normal");
                 matching.book().ensureLevelMinimum(
-                        Side.SIDE_SELL, REFERENCE_PRICE_TICKS + distance, minimum, "BASELINE_MM", "normal");
+                        Side.SIDE_SELL, baselineReferencePriceTicks + distance, minimum, "BASELINE_MM", "normal");
             }
         });
+    }
+
+    private void advanceProfileReference() {
+        if (activeMarketProfile == null
+                || activeMarketProfile.referenceMaxStepTicks() == 0
+                || tick % activeMarketProfile.referenceUpdateIntervalTicks() != 0) {
+            return;
+        }
+        long derived = DeterministicValues.deriveStreamSeed(
+                replayMasterSeed,
+                "market-profile-reference:" + activeMarketProfile.sha256() + ":" + tick);
+        long direction = Math.floorMod(derived, 3) - 1;
+        long candidate = baselineReferencePriceTicks + direction * activeMarketProfile.referenceMaxStepTicks();
+        long minimum = (baselineLevels() + 1L) * levelSpacingTicks() + 1;
+        baselineReferencePriceTicks = Math.max(minimum, candidate);
     }
 
     private ObjectNode buildState() {
@@ -1183,6 +1271,13 @@ final class LiveArenaService {
                     .map(this::exchangeEventJson)
                     .forEach(historicalEvents::add);
             result.set("market_data", replayContext());
+        } else if (activeMarketProfile != null) {
+            result.set(
+                    "market_data",
+                    activeMarketProfile.runtimeContext(
+                            replayMasterSeed,
+                            baselineReferencePriceTicks,
+                            marketProfileRunBindingSha256()));
         }
         ObjectNode bookJson = bookJson(book);
         result.set("book", bookJson);
@@ -1593,7 +1688,27 @@ final class LiveArenaService {
         if (book.hasBestAskTicks()) {
             return book.getBestAskTicks();
         }
-        return REFERENCE_PRICE_TICKS;
+        return baselineReferencePriceTicks;
+    }
+
+    private int baselineLevels() {
+        return activeMarketProfile == null ? BASELINE_LEVELS : activeMarketProfile.baselineLevels();
+    }
+
+    private long levelSpacingTicks() {
+        return activeMarketProfile == null ? LEVEL_SPACING_TICKS : activeMarketProfile.levelSpacingTicks();
+    }
+
+    private long baseQuantityLots() {
+        return activeMarketProfile == null ? BASE_QUANTITY_LOTS : activeMarketProfile.baseQuantityLots();
+    }
+
+    private long depthIncrementLots() {
+        return activeMarketProfile == null ? 1_000L : activeMarketProfile.depthIncrementLots();
+    }
+
+    private String marketProfileRunBindingSha256() {
+        return sha256Hex(activeMarketProfile.sha256() + "\n" + replayMasterSeed);
     }
 
     private Side hybridAttackSide() {
@@ -1740,6 +1855,14 @@ final class LiveArenaService {
         copyNullable(result, rendered, "best_ask");
         copyNullable(result, rendered, "mid");
         copyNullable(result, rendered, "spread");
+        if (activeMarketProfile != null) {
+            ObjectNode profile = result.putObject("market_profile")
+                    .put("profile_id", activeMarketProfile.id())
+                    .put("profile_sha256", activeMarketProfile.sha256());
+            profile.set(
+                    "simulation_parameters",
+                    activeMarketProfile.document().path("simulation_parameters").deepCopy());
+        }
         return result;
     }
 
@@ -1862,11 +1985,54 @@ final class LiveArenaService {
     private IntegerMatchingEngine newMatchingEngine() {
         beginEventStream();
         IntegerOrderBook book = new IntegerOrderBook(UNIT_NANOS, UNIT_NANOS);
-        book.initialize(REFERENCE_PRICE_TICKS, BASELINE_LEVELS, LEVEL_SPACING_TICKS, BASE_QUANTITY_LOTS, "normal");
+        baselineReferencePriceTicks = activeMarketProfile == null
+                ? REFERENCE_PRICE_TICKS
+                : activeMarketProfile.referencePriceTicks();
+        if (activeMarketProfile == null) {
+            book.initialize(
+                    baselineReferencePriceTicks,
+                    baselineLevels(),
+                    levelSpacingTicks(),
+                    baseQuantityLots(),
+                    "normal");
+        } else {
+            book.initialize(
+                    baselineReferencePriceTicks,
+                    0,
+                    levelSpacingTicks(),
+                    baseQuantityLots(),
+                    "normal");
+            for (int index = 0; index < baselineLevels(); index++) {
+                long distance = (index + 1L) * levelSpacingTicks();
+                long quantity = baseQuantityLots() + index * depthIncrementLots();
+                book.updateAgentLevel(
+                        Side.SIDE_BUY,
+                        baselineReferencePriceTicks - distance,
+                        quantity,
+                        "BASELINE_MM",
+                        "normal",
+                        "PROFILE:BASE:BID:" + index,
+                        0,
+                        null,
+                        null,
+                        null);
+                book.updateAgentLevel(
+                        Side.SIDE_SELL,
+                        baselineReferencePriceTicks + distance,
+                        quantity,
+                        "BASELINE_MM",
+                        "normal",
+                        "PROFILE:BASE:ASK:" + index,
+                        0,
+                        null,
+                        null,
+                        null);
+            }
+        }
         return new IntegerMatchingEngine(
                 book,
-                "BTCUSDT",
-                "SIM",
+                activeMarketProfile == null ? "BTCUSDT" : activeMarketProfile.symbol(),
+                activeMarketProfile == null ? "SIM" : activeMarketProfile.venue(),
                 EventSource.EVENT_SOURCE_SIMULATION,
                 eventHistoryCapacity,
                 this::acceptCanonicalEvent);

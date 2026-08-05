@@ -62,6 +62,18 @@ export type HistoricalReplayDataset = {
   events_sha256?: string;
 };
 
+export type MarketProfileSummary = {
+  profile_id: string;
+  profile_sha256: string;
+  schema_version: "market_profile_v1";
+  dataset_id: string;
+  training_dataset_id: string;
+  symbol: string;
+  venue: string;
+  trade_date: string;
+  simulation_parameters: Record<string, string | number>;
+};
+
 export async function listLobsterCandidates(): Promise<LobsterCandidate[]> {
   const response = await fetch(`${API_BASE_URL}/api/data-ingestion/lobster/candidates`);
   if (!response.ok) {
@@ -150,6 +162,14 @@ export async function listHistoricalReplayDatasets(): Promise<HistoricalReplayDa
   const response = await fetch(`${API_BASE_URL}/api/arena/historical-datasets`);
   if (!response.ok) {
     throw new Error(await apiErrorMessage(response, "Historical replay registry request failed"));
+  }
+  return response.json();
+}
+
+export async function listMarketProfiles(): Promise<MarketProfileSummary[]> {
+  const response = await fetch(`${API_BASE_URL}/api/arena/market-profiles`);
+  if (!response.ok) {
+    throw new Error(await apiErrorMessage(response, "Market profile registry request failed"));
   }
   return response.json();
 }

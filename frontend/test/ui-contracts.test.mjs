@@ -159,14 +159,18 @@ describe("Core UI navigation and workflow contracts", () => {
     expectIncludes(arena, [
       "Market data source",
       "Synthetic",
+      "Calibrated synthetic",
+      "ITCH-derived profile",
       "Historical control",
       "Hybrid + attacks",
       "marketDataChoiceTouchedRef",
       "chooseMarketDataSource",
       "Historical dataset",
+      "Market profile",
       "Only canonical event streams support attack injection.",
       "Load Historical Control",
       "Load Hybrid Replay",
+      "Load Calibrated Synthetic",
       "formatReplayProgress",
       "\"<0.01%\"",
       "no inferred benign or attack labels"
