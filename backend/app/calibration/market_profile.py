@@ -62,7 +62,12 @@ def extract_market_profile(dataset_dir: Path, *, profile_id: str | None = None) 
     return payload
 
 
-def build_realism_report(profile: dict[str, Any], held_out_dataset_dir: Path) -> dict[str, Any]:
+def build_realism_report(
+    profile: dict[str, Any],
+    held_out_dataset_dir: Path,
+    *,
+    simulation_runs: dict[str, Any],
+) -> dict[str, Any]:
     """Evaluate calibrated and hardcoded simulations against a disjoint ITCH window."""
     _validate_profile(profile)
     manifest, events, books = _load_normalized_itch(held_out_dataset_dir)
@@ -87,10 +92,18 @@ def build_realism_report(profile: dict[str, Any], held_out_dataset_dir: Path) ->
         raise ValueError("held-out ITCH window must not overlap the calibration window")
     held_out_metrics = _measure(events, books)
     observed = _metric_points(held_out_metrics)
-    calibrated = _calibrated_points(profile["simulation_parameters"])
-    hardcoded = _hardcoded_points(profile["simulation_parameters"])
-    calibrated_distances = _distances(held_out_metrics, calibrated)
-    hardcoded_distances = _distances(held_out_metrics, hardcoded)
+    calibrated_run = _validate_simulation_run(
+        simulation_runs, "calibrated", profile=profile, expected_source_type="synthetic_profile"
+    )
+    hardcoded_run = _validate_simulation_run(
+        simulation_runs, "hardcoded", profile=profile, expected_source_type="synthetic"
+    )
+    calibrated_metrics = _simulation_distributions(calibrated_run["states"])
+    hardcoded_metrics = _simulation_distributions(hardcoded_run["states"])
+    calibrated = _metric_points(calibrated_metrics)
+    hardcoded = _metric_points(hardcoded_metrics)
+    calibrated_distances = _distribution_distances(held_out_metrics, calibrated_metrics)
+    hardcoded_distances = _distribution_distances(held_out_metrics, hardcoded_metrics)
     calibrated_median = _round(median(calibrated_distances.values()))
     hardcoded_median = _round(median(hardcoded_distances.values()))
     report: dict[str, Any] = {
@@ -119,6 +132,17 @@ def build_realism_report(profile: dict[str, Any], held_out_dataset_dir: Path) ->
         },
         "calibrated_simulation": calibrated,
         "hardcoded_regression_control": hardcoded,
+        "simulation_quantiles": {
+            "calibrated": calibrated_metrics,
+            "hardcoded": hardcoded_metrics,
+        },
+        "simulation_runs": {
+            "producer": simulation_runs["producer"],
+            "master_seed": simulation_runs["master_seed"],
+            "calibrated_trace_sha256": calibrated_run["trace_sha256"],
+            "hardcoded_trace_sha256": hardcoded_run["trace_sha256"],
+            "calibrated_attack_trace_sha256": calibrated_run["attack_trace_sha256"],
+        },
         "normalized_distribution_distances": {
             "calibrated": calibrated_distances,
             "hardcoded": hardcoded_distances,
@@ -129,13 +153,14 @@ def build_realism_report(profile: dict[str, Any], held_out_dataset_dir: Path) ->
             "improvement": _round(hardcoded_median - calibrated_median),
         },
         "completion_gate_passed": calibrated_median < hardcoded_median,
-        "attack_response": _attack_response(
-            profile["simulation_parameters"], profile["profile_sha256"], seed=42
-        ),
+        "attack_response": _attack_response_from_run(calibrated_run),
         "determinism": {
-            "seed": 42,
+            "seed": simulation_runs["master_seed"],
             "profile_sha_bound": True,
             "single_writer_required": True,
+            "calibrated_repeat_match": True,
+            "hardcoded_repeat_match": True,
+            "calibrated_attack_repeat_match": True,
         },
     }
     report["report_sha256"] = _artifact_sha(report)
@@ -214,8 +239,9 @@ def _measure(events: list[dict[str, Any]], books: list[dict[str, Any]]) -> dict[
             mids.append((ask + bid) / 2)
         if event["event_kind"] == "ADD":
             levels = bids if event.get("book_side") == "BUY" else asks
-            if levels:
-                distances.append(abs(int(event["price_x10000"]) - int(levels[0]["price_x10000"])))
+            prior_touch = _pre_add_touch(event, levels)
+            if prior_touch is not None:
+                distances.append(abs(int(event["price_x10000"]) - prior_touch))
     returns = [abs(right - left) / left * 10_000 for left, right in zip(mids, mids[1:], strict=False) if left]
     lifetimes = _order_lifetimes(events)
     refill_times, resilience_times = _recovery_times(
@@ -241,6 +267,17 @@ def _measure(events: list[dict[str, Any]], books: list[dict[str, Any]]) -> dict[
         "resilience_time_ns": _distribution(resilience_times),
         "event_kind_counts": dict(sorted(kinds.items())),
     }
+
+
+def _pre_add_touch(event: dict[str, Any], post_event_levels: list[dict[str, Any]]) -> int | None:
+    event_price = int(event["price_x10000"])
+    event_size = int(event["size"])
+    for level in post_event_levels:
+        price = int(level["price_x10000"])
+        quantity = int(level["quantity"])
+        if price != event_price or quantity > event_size:
+            return price
+    return None
 
 
 def _order_lifetimes(events: list[dict[str, Any]]) -> list[int]:
@@ -347,123 +384,149 @@ def _metric_points(metrics: dict[str, Any]) -> dict[str, float]:
     }
 
 
-def _calibrated_points(parameters: dict[str, Any]) -> dict[str, float]:
-    levels = int(parameters["baseline_levels"])
-    base = int(parameters["base_quantity_lots"])
-    increment = int(parameters["depth_increment_lots"])
-    top_depth_lots = 2 * sum(base + index * increment for index in range(levels))
-    reference = int(parameters["reference_price_ticks"])
-    step = int(parameters["reference_max_step_ticks"])
-    return {
-        "arrival_intensity_events_per_second": _round(parameters["arrival_events_per_tick"] * 2),
-        "order_size": _round(parameters["agent_order_size_lots"] / QUANTITY_LOT_SCALE),
-        "spread_x10000": float(parameters["level_spacing_ticks"] * 2 * PRICE_TICK_X10000),
-        "top_depth": _round(top_depth_lots / QUANTITY_LOT_SCALE),
-        "absolute_imbalance": float(parameters["target_absolute_imbalance"]),
-        "mid_volatility_bps": _round((step * PRICE_TICK_X10000) / max(1, reference * PRICE_TICK_X10000) * 10_000),
-    }
-
-
-def _hardcoded_points(parameters: dict[str, Any]) -> dict[str, float]:
-    levels = int(parameters["baseline_levels"])
-    top_depth_lots = 2 * sum(1_500 + index * 1_000 for index in range(levels))
-    return {
-        "arrival_intensity_events_per_second": 2.0,
-        "order_size": 1.5,
-        "spread_x10000": 20_000.0,
-        "top_depth": _round(top_depth_lots / QUANTITY_LOT_SCALE),
-        "absolute_imbalance": 0.0,
-        "mid_volatility_bps": 0.0,
-    }
-
-
-def _distances(
-    observed_distributions: dict[str, Any], simulated: dict[str, float]
+def _distribution_distances(
+    observed_distributions: dict[str, Any], simulated_distributions: dict[str, Any]
 ) -> dict[str, float]:
     result: dict[str, float] = {}
     for metric in CORE_METRICS:
-        quantiles = [
-            float(observed_distributions[metric][name])
-            for name in ("p25", "median", "p75")
-        ]
+        observed = observed_distributions[metric]
+        simulated = simulated_distributions[metric]
         result[metric] = _round(
             sum(
-                abs(simulated[metric] - value) / max(abs(value), 1.0)
-                for value in quantiles
+                abs(float(simulated[name]) - float(observed[name]))
+                / max(abs(float(observed[name])), 1.0)
+                for name in ("p25", "median", "p75")
             )
-            / len(quantiles)
+            / 3
         )
     return result
 
 
-def _attack_response(
-    parameters: dict[str, Any], profile_sha256: str, *, seed: int
+def _validate_simulation_run(
+    simulation_runs: dict[str, Any],
+    name: str,
+    *,
+    profile: dict[str, Any],
+    expected_source_type: str,
 ) -> dict[str, Any]:
-    baseline = _calibrated_points(parameters)
-    refill_ticks = int(parameters["refill_ticks"])
-    reference = int(parameters["reference_price_ticks"])
-    interval = int(parameters["reference_update_interval_ticks"])
-    step = int(parameters["reference_max_step_ticks"])
-    minimum_reference = (
-        int(parameters["baseline_levels"]) * int(parameters["level_spacing_ticks"])
-        + int(parameters["level_spacing_ticks"])
-        + 1
-    )
-    trace: list[dict[str, int | float]] = []
-    for tick in range(40):
-        if tick and tick % interval == 0:
-            digest = hashlib.sha256(
-                b"lob-arena-prng-v1\0"
-                + seed.to_bytes(8, byteorder="big", signed=True)
-                + f"market-profile-reference:{profile_sha256}:{tick}".encode("ascii")
-            ).digest()
-            derived = int.from_bytes(digest[:8], byteorder="big", signed=True)
-            reference = max(
-                minimum_reference,
-                reference + (derived % 3 - 1) * step,
-            )
-        if 20 <= tick <= 29:
-            depth = baseline["top_depth"] * 0.25
-            spread = baseline["spread_x10000"] * 2
-        elif tick >= 30:
-            recovery = 1 - math.exp(-(tick - 29) / max(1, refill_ticks))
-            depth = baseline["top_depth"] * (0.25 + 0.75 * recovery)
-            spread = baseline["spread_x10000"]
-        else:
-            depth = baseline["top_depth"]
-            spread = baseline["spread_x10000"]
-        trace.append(
-            {
-                "tick": tick,
-                "reference_price_ticks": reference,
-                "depth_top_n": _round(depth),
-                "spread_x10000": _round(spread),
-            }
-        )
+    if simulation_runs.get("schema_version") != "market_profile_simulation_runs_v1":
+        raise ValueError("realism report requires market_profile_simulation_runs_v1")
+    if simulation_runs.get("producer") != "java_control_plane":
+        raise ValueError("realism report requires Java control-plane simulation runs")
+    if not isinstance(simulation_runs.get("master_seed"), int):
+        raise ValueError("simulation runs require an integer master_seed")
+    run = simulation_runs.get(name)
+    if not isinstance(run, dict) or run.get("source_type") != expected_source_type:
+        raise ValueError(f"simulation run {name} has the wrong source type")
+    states = run.get("states")
+    attack_states = run.get("attack_states")
+    if not isinstance(states, list) or len(states) < 4:
+        raise ValueError(f"simulation run {name} requires at least four states")
+    if not isinstance(attack_states, list) or len(attack_states) < 3:
+        raise ValueError(f"simulation run {name} requires attack states")
+    expected_trace = hashlib.sha256(_canonical_json(states).encode()).hexdigest()
+    expected_attack_trace = hashlib.sha256(_canonical_json(attack_states).encode()).hexdigest()
+    if run.get("trace_sha256") != expected_trace or run.get("repeat_trace_sha256") != expected_trace:
+        raise ValueError(f"simulation run {name} is not repeat deterministic")
+    if (
+        run.get("attack_trace_sha256") != expected_attack_trace
+        or run.get("repeat_attack_trace_sha256") != expected_attack_trace
+    ):
+        raise ValueError(f"simulation attack run {name} is not repeat deterministic")
+    if expected_source_type == "synthetic_profile":
+        if run.get("profile_sha256") != profile["profile_sha256"]:
+            raise ValueError("calibrated simulation is not bound to the selected profile")
+        if any(
+            state.get("market_data", {}).get("profile_sha256") != profile["profile_sha256"]
+            for state in states + attack_states
+        ):
+            raise ValueError("calibrated simulation state lost its profile binding")
+    return run
 
-    def window_median(field: str, start: int, end: int) -> int | float:
-        return _round(median(float(row[field]) for row in trace[start : end + 1]))
+
+def _simulation_distributions(states: list[dict[str, Any]]) -> dict[str, Any]:
+    arrivals: list[float] = []
+    order_sizes: list[float] = []
+    spreads: list[float] = []
+    depths: list[float] = []
+    imbalances: list[float] = []
+    mids: list[float] = []
+    for state in states:
+        tick = int(state["tick"])
+        book = state.get("book") or {}
+        bids = book.get("bids") or []
+        asks = book.get("asks") or []
+        bid_depth = sum(float(level["quantity"]) for level in bids)
+        ask_depth = sum(float(level["quantity"]) for level in asks)
+        depth = bid_depth + ask_depth
+        depths.append(depth)
+        imbalances.append(0.0 if depth == 0 else abs(bid_depth - ask_depth) / depth)
+        if bids and asks:
+            best_bid = float(bids[0]["price"])
+            best_ask = float(asks[0]["price"])
+            spreads.append((best_ask - best_bid) * 10_000)
+            mids.append((best_ask + best_bid) / 2)
+        current_events = [
+            event
+            for event in state.get("exchange_events", [])
+            if int(event.get("tick") or -1) == tick and event.get("event_type") != "snapshot"
+        ]
+        arrivals.append(len(current_events) * 2.0)
+        order_sizes.extend(
+            float(event["quantity"])
+            for event in current_events
+            if event.get("event_type") == "add" and float(event.get("quantity") or 0) > 0
+        )
+    returns = [
+        abs(right - left) / left * 10_000
+        for left, right in zip(mids, mids[1:], strict=False)
+        if left
+    ]
+    return {
+        "arrival_intensity_events_per_second": _distribution(arrivals),
+        "order_size": _distribution(order_sizes),
+        "spread_x10000": _distribution(spreads),
+        "top_depth": _distribution(depths),
+        "absolute_imbalance": _distribution(imbalances),
+        "mid_volatility_bps": _distribution(returns),
+    }
+
+
+def _attack_response_from_run(run: dict[str, Any]) -> dict[str, Any]:
+    states = run["attack_states"]
+    windows = run.get("attack_windows")
+    if windows != {"before": [0, 19], "during": [20, 29], "after": [30, 39]} or len(states) < 40:
+        raise ValueError("simulation attack run has invalid before/during/after windows")
+
+    def measurements(state: dict[str, Any]) -> tuple[float, float]:
+        book = state.get("book") or {}
+        bids = book.get("bids") or []
+        asks = book.get("asks") or []
+        depth = sum(float(level["quantity"]) for level in bids + asks)
+        spread = 0.0
+        if bids and asks:
+            spread = (float(asks[0]["price"]) - float(bids[0]["price"])) * 10_000
+        return depth, spread
+
+    measured = [measurements(state) for state in states]
+
+    def window_median(field: int, start: int, end: int) -> int | float:
+        return _round(median(row[field] for row in measured[start : end + 1]))
 
     return {
         "scenario": "liquidity_evaporation",
-        "windows": {"before": [0, 19], "during": [20, 29], "after": [30, 39]},
+        "windows": windows,
         "depth_top_n": {
-            "before": window_median("depth_top_n", 0, 19),
-            "during": window_median("depth_top_n", 20, 29),
-            "after": window_median("depth_top_n", 30, 39),
+            "before": window_median(0, 0, 19),
+            "during": window_median(0, 20, 29),
+            "after": window_median(0, 30, 39),
         },
         "spread_x10000": {
-            "before": window_median("spread_x10000", 0, 19),
-            "during": window_median("spread_x10000", 20, 29),
-            "after": window_median("spread_x10000", 30, 39),
+            "before": window_median(1, 0, 19),
+            "during": window_median(1, 20, 29),
+            "after": window_median(1, 30, 39),
         },
-        "reference_price_range_ticks": [
-            min(int(row["reference_price_ticks"]) for row in trace),
-            max(int(row["reference_price_ticks"]) for row in trace),
-        ],
-        "simulation_trace_sha256": hashlib.sha256(
-            _canonical_json(trace).encode()
-        ).hexdigest(),
+        "simulation_trace_sha256": run["attack_trace_sha256"],
     }
 
 

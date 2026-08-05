@@ -38,10 +38,13 @@ experiments must remain a separate all-synthetic mode.
 Calibration and evaluation dataset IDs must differ. The checksummed
 `market_profile_realism_report_v1` pre-registers arrival intensity, order size,
 spread, top depth, absolute imbalance, and mid-volatility distances. It compares
-the profile-driven simulation with the hardcoded regression control and passes
-only when the calibrated median distance is lower. The report also freezes
-before/during/after liquidity-evaporation response windows and the deterministic
-seed/profile binding.
+quantiles captured from actual Java profile-driven runs with actual Java
+hardcoded regression-control runs and passes only when the calibrated median
+distance is lower. Both normal and attack traces are repeated with the same
+seed; a report is rejected unless their canonical hashes match and every
+calibrated state retains the selected profile SHA. The report also freezes
+before/during/after liquidity-evaporation response windows from the captured
+attack states rather than synthesizing them analytically.
 
 The tiny committed profile proves the contract only. A real completion report
 must be generated locally from licensed, bounded training and held-out ITCH

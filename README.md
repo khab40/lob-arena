@@ -356,13 +356,17 @@ backend/.venv/bin/python scripts/build_market_profile.py \
   --profile-id aapl-2026-01-02-v1 \
   --output configs/market-profiles/aapl-2026-01-02-v1.json \
   --held-out-dataset-dir data/processed/lobster/itch-aapl-held-out \
-  --report-output outputs/calibration/aapl-2026-01-02-v1-realism.json
+  --report-output outputs/calibration/aapl-2026-01-02-v1-realism.json \
+  --arena-base-url http://localhost:8080
 ```
 
-The evaluator pre-registers six core distances, reports calibrated and
-hardcoded medians, includes before/during/after liquidity-evaporation response
-metrics, and emits a canonical report SHA-256. It rejects reuse of the training
-dataset as holdout. The Arena's **Calibrated synthetic** source loads profiles
+For held-out evaluation, the selected profile must be visible to the running
+Java control plane at the output path. The evaluator captures calibrated and
+hardcoded Java runs twice with the same seed, rejects trace mismatches, computes
+six pre-registered quantile distances from the observed simulator states,
+includes actual before/during/after liquidity-evaporation response metrics, and
+emits a canonical report SHA-256. It rejects reuse of the training dataset as
+holdout. The Arena's **Calibrated synthetic** source loads profiles
 from `configs/market-profiles`; Java validates the canonical profile checksum,
 binds the profile SHA and master seed to each run, stays the single writer, and
 updates the reference path deterministically. The committed

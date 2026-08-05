@@ -104,7 +104,7 @@ class MarketProfileRuntimeTest {
                 new MarketProfileRegistry(mapper, profiles).load("fixture-aapl-itch-v1");
 
         assertThat(profile.sha256())
-                .isEqualTo("9598c62fd41789598cc7b509e3681a62b84587bcd3435c64b1f31186f3e9fd4f");
+                .isEqualTo("3f4666a5cf985b754ddab7894d09f8960123e02b93d81e715efe71b0cd993ad8");
         assertThat(profile.symbol()).isEqualTo("AAPL");
     }
 

@@ -24,6 +24,7 @@ class MarketSnapshot:
     best_ask: float | None
     mid: float | None
     spread: float | None
+    market_profile: dict[str, object] | None = None
 
 
 @dataclass(frozen=True)

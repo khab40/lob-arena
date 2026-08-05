@@ -9,6 +9,7 @@ import pytest
 from app.calibration.market_profile import (
     CORE_METRICS,
     PROFILE_SCHEMA_VERSION,
+    _pre_add_touch,
     build_realism_report,
     extract_market_profile,
     write_json_artifact,
@@ -73,9 +74,10 @@ def test_held_out_report_is_checksummed_and_calibration_improves_median_distance
     training = _dataset(tmp_path / "training", "training-window", price_offset=0)
     held_out = _dataset(tmp_path / "held-out", "held-out-window", price_offset=200)
     profile = extract_market_profile(training, profile_id="stable-stock-v1")
+    simulation_runs = _simulation_runs(profile)
 
-    first = build_realism_report(profile, held_out)
-    second = build_realism_report(profile, held_out)
+    first = build_realism_report(profile, held_out, simulation_runs=simulation_runs)
+    second = build_realism_report(profile, held_out, simulation_runs=simulation_runs)
 
     assert first == second
     assert first["preregistered_core_metrics"] == list(CORE_METRICS)
@@ -99,7 +101,121 @@ def test_report_rejects_training_window_reused_as_holdout(tmp_path: Path) -> Non
     profile = extract_market_profile(training)
 
     with pytest.raises(ValueError, match="must be distinct"):
-        build_realism_report(profile, training)
+        build_realism_report(profile, training, simulation_runs={})
+
+
+def test_report_rejects_non_deterministic_java_trace(tmp_path: Path) -> None:
+    training = _dataset(tmp_path / "training", "training-window", price_offset=0)
+    held_out = _dataset(tmp_path / "held-out", "held-out-window", price_offset=200)
+    profile = extract_market_profile(training)
+    simulation_runs = _simulation_runs(profile)
+    simulation_runs["calibrated"]["repeat_trace_sha256"] = "0" * 64
+
+    with pytest.raises(ValueError, match="not repeat deterministic"):
+        build_realism_report(profile, held_out, simulation_runs=simulation_runs)
+
+
+def test_distance_from_touch_uses_book_before_price_improving_add() -> None:
+    event = {"price_x10000": 1_000_010, "size": 100}
+    post_event_levels = [
+        {"price_x10000": 1_000_010, "quantity": 100},
+        {"price_x10000": 1_000_000, "quantity": 500},
+    ]
+
+    assert _pre_add_touch(event, post_event_levels) == 1_000_000
+
+
+def _simulation_runs(profile: dict[str, object]) -> dict[str, object]:
+    calibrated = [_simulation_state(index, profile_sha256=str(profile["profile_sha256"])) for index in range(1, 21)]
+    hardcoded = [_simulation_state(index, hardcoded=True) for index in range(1, 21)]
+    calibrated_attack = [
+        _simulation_state(
+            index + 1,
+            profile_sha256=str(profile["profile_sha256"]),
+            attack_phase="before" if index < 20 else "during" if index < 30 else "after",
+        )
+        for index in range(40)
+    ]
+    hardcoded_attack = [_simulation_state(index + 1, hardcoded=True) for index in range(40)]
+
+    def run(source_type: str, states: list[dict[str, object]], attack: list[dict[str, object]]) -> dict[str, object]:
+        trace_sha = _json_sha(states)
+        attack_sha = _json_sha(attack)
+        return {
+            "source_type": source_type,
+            "dataset_id": profile["profile_id"] if source_type == "synthetic_profile" else "",
+            "states": states,
+            "trace_sha256": trace_sha,
+            "repeat_trace_sha256": trace_sha,
+            "attack_states": attack,
+            "attack_trace_sha256": attack_sha,
+            "repeat_attack_trace_sha256": attack_sha,
+            "attack_windows": {"before": [0, 19], "during": [20, 29], "after": [30, 39]},
+        }
+
+    calibrated_run = run("synthetic_profile", calibrated, calibrated_attack)
+    calibrated_run["profile_sha256"] = profile["profile_sha256"]
+    return {
+        "schema_version": "market_profile_simulation_runs_v1",
+        "producer": "java_control_plane",
+        "master_seed": 42,
+        "calibrated": calibrated_run,
+        "hardcoded": run("synthetic", hardcoded, hardcoded_attack),
+    }
+
+
+def _simulation_state(
+    tick: int,
+    *,
+    profile_sha256: str | None = None,
+    hardcoded: bool = False,
+    attack_phase: str | None = None,
+) -> dict[str, object]:
+    bid = 68_124.0 if hardcoded else 100.0 + tick * 0.001
+    spread = 2.0 if hardcoded else 0.01
+    quantity = 10.0 if hardcoded else 500.0
+    if attack_phase == "during":
+        spread = 0.02
+        quantity = 125.0
+    elif attack_phase == "after":
+        quantity = 450.0
+    state: dict[str, object] = {
+        "tick": tick,
+        "book": {
+            "bids": [
+                {"price": bid, "quantity": quantity},
+                {"price": bid - 0.01, "quantity": quantity},
+            ],
+            "asks": [
+                {"price": bid + spread, "quantity": quantity},
+                {"price": bid + spread + 0.01, "quantity": quantity},
+            ],
+        },
+        "exchange_events": [
+            {
+                "tick": tick,
+                "event_type": "add",
+                "quantity": 1.5 if hardcoded else 100.0,
+            }
+        ],
+    }
+    if profile_sha256 is not None:
+        state["market_data"] = {
+            "source_type": "synthetic_profile",
+            "profile_sha256": profile_sha256,
+        }
+    return state
+
+
+def _json_sha(payload: object) -> str:
+    encoded = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
 
 
 def _dataset(root: Path, dataset_id: str, *, price_offset: int) -> Path:

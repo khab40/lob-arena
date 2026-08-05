@@ -25,6 +25,21 @@ def _snapshot(tick: int = 1) -> MarketSnapshot:
     )
 
 
+def test_market_snapshot_accepts_profile_context_from_java_control_plane() -> None:
+    snapshot = MarketSnapshot(
+        **{
+            **_snapshot().__dict__,
+            "market_profile": {
+                "profile_id": "fixture-profile",
+                "simulation_parameters": {"agent_order_size_lots": 500_000},
+            },
+        }
+    )
+
+    assert snapshot.market_profile is not None
+    assert snapshot.market_profile["profile_id"] == "fixture-profile"
+
+
 class SlowAgent:
     agent_id = "SLOW_01"
 

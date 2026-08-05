@@ -16,6 +16,7 @@ from app.calibration.market_profile import (  # noqa: E402
     extract_market_profile,
     write_json_artifact,
 )
+from app.calibration.simulation_capture import capture_simulation_runs  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
@@ -25,9 +26,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--held-out-dataset-dir", type=Path)
     parser.add_argument("--report-output", type=Path)
+    parser.add_argument("--arena-base-url")
+    parser.add_argument("--simulation-ticks", type=int, default=120)
+    parser.add_argument("--master-seed", type=int, default=42)
     args = parser.parse_args()
     if bool(args.held_out_dataset_dir) != bool(args.report_output):
         parser.error("--held-out-dataset-dir and --report-output must be supplied together")
+    if args.held_out_dataset_dir and not args.arena_base_url:
+        parser.error("--arena-base-url is required for a held-out realism report")
     return args
 
 
@@ -40,7 +46,17 @@ def main() -> int:
         "profile_sha256": profile["profile_sha256"],
     }
     if args.held_out_dataset_dir:
-        report = build_realism_report(profile, args.held_out_dataset_dir)
+        simulation_runs = capture_simulation_runs(
+            args.arena_base_url,
+            profile,
+            ticks=args.simulation_ticks,
+            master_seed=args.master_seed,
+        )
+        report = build_realism_report(
+            profile,
+            args.held_out_dataset_dir,
+            simulation_runs=simulation_runs,
+        )
         write_json_artifact(report, args.report_output)
         result.update(
             report=str(args.report_output),
