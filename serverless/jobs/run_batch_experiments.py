@@ -1,8 +1,6 @@
 import argparse
 import csv
 import json
-import os
-import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -38,6 +36,7 @@ from app.evaluation.run_planning import (  # noqa: E402
     parse_difficulty_mix,
 )
 from app.scenarios.catalog import BENCHMARK_SCENARIOS  # noqa: E402
+from app.nebius.object_storage import sync_s3  # noqa: E402
 
 
 SCENARIOS = list(BENCHMARK_SCENARIOS)
@@ -391,16 +390,7 @@ def _write_metrics(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def _sync_to_s3(output: Path, s3_output_uri: str, endpoint_url: str) -> None:
-    command = ["aws"]
-    if endpoint_url:
-        command.extend(["--endpoint-url", endpoint_url])
-    command.extend(["s3", "sync", str(output), s3_output_uri.rstrip("/"), "--only-show-errors"])
-    env = os.environ.copy()
-    env.setdefault("AWS_EC2_METADATA_DISABLED", "true")
-    completed = subprocess.run(command, capture_output=True, check=False, text=True, timeout=300, env=env)
-    if completed.returncode != 0:
-        details = (completed.stderr or completed.stdout or "").strip()
-        raise RuntimeError(f"S3 artifact upload failed: {details}")
+    sync_s3(str(output), s3_output_uri.rstrip("/"), endpoint_url=endpoint_url or None)
 
 
 def _build_report(results: list[BatchResult], metrics: list[dict[str, Any]], max_workers: int) -> str:

@@ -124,7 +124,7 @@ def test_refresh_does_not_complete_without_artifact_confirmation(monkeypatch: An
     assert "artifact collection is not confirmed" in refreshed[0].message
 
 
-def test_submit_with_s3_output_passes_upload_args_and_env(monkeypatch: Any, tmp_path: Path) -> None:
+def test_submit_with_s3_output_passes_upload_args_and_secret_refs(monkeypatch: Any, tmp_path: Path) -> None:
     repository = _repository_with_experiment(tmp_path)
     captured: dict[str, Any] = {}
 
@@ -140,8 +140,8 @@ def test_submit_with_s3_output_passes_upload_args_and_env(monkeypatch: Any, tmp_
         ),
         NEBIUS_JOB_OUTPUT_URI="s3://aimada-artifacts",
         NEBIUS_OBJECT_STORAGE_ENDPOINT_URL="https://storage.eu-north1.nebius.cloud",
-        NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID="access-key",
-        NEBIUS_OBJECT_STORAGE_SECRET_ACCESS_KEY="secret-key",
+        NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID="mysterybox-access-ref",
+        NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID="mysterybox-secret-ref",
     )
     orchestrator = NebiusExperimentOrchestrator(repository, settings)
 
@@ -154,9 +154,11 @@ def test_submit_with_s3_output_passes_upload_args_and_env(monkeypatch: Any, tmp_
     assert "--random-seed 42" in joined
     assert "s3://aimada-artifacts/experiments/EXP-SUBMIT/local-batch" in joined
     assert "--s3-endpoint-url" in joined
-    assert "--env" in argv
-    assert "AWS_ACCESS_KEY_ID=access-key" in argv
-    assert "AWS_SECRET_ACCESS_KEY=secret-key" in argv
+    assert "--env-secret" in argv
+    assert "AWS_ACCESS_KEY_ID=mysterybox-access-ref" in argv
+    assert "AWS_SECRET_ACCESS_KEY=mysterybox-secret-ref" in argv
+    assert "access-key" not in joined
+    assert "secret-key" not in joined
 
 
 def test_refresh_completed_job_syncs_s3_artifacts(monkeypatch: Any, tmp_path: Path) -> None:

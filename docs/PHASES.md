@@ -373,3 +373,161 @@ Exit criteria:
 - `[done]` The architecture and runtime model are documented.
 - `[partial]` The project includes research notes, a blog draft, GitHub banner, UI controls, demo narration, sanitized screenshots, and committed benchmark evidence; the rendered video and published article URL remain publication work.
 - `[done]` The submission avoids claims about real market manipulation detection, trading signals, or compliance use.
+
+## Future Roadmap: Nebius Learned-Detector Program
+
+Status: `[todo]`
+
+Roadmap decision date: 2026-08-16
+
+The next learned-detector work is deliberately sequential. Governed LightGBM
+v1 is already implemented locally, so the first wave is not a second LightGBM
+implementation. It is the production-shaped Nebius qualification of the
+existing release boundary. Transformer work starts only after that baseline is
+measured and frozen. The combined design then uses causal Transformer outputs
+as additional LightGBM inputs so GPU-heavy sequence learning can improve a
+CPU-efficient serving path.
+
+### Execution Order And Gates
+
+| Wave | Status | Primary Nebius resource | Outcome | Exit gate before next wave |
+| --- | --- | --- | --- | --- |
+| 1. Nebius LightGBM baseline | `[in progress]` | CPU Serverless AI Jobs, Standard Object Storage, shared MLflow | Train, calibrate, evaluate and package governed LightGBM v1 on immutable cloud inputs; publish runtime, throughput and cost evidence | Reproducible bundle verifies; declared quality/latency gates pass; cost per million scored rows is measured; no frozen-test reruns for tuning |
+| 2. Market-sequence Transformer | `[todo]` | Time-boxed GPU Serverless AI Jobs with CPU preprocessing/evaluation | Train and calibrate a causal sequence challenger on the same split and label contracts | Standalone Transformer bundle verifies; GPU hours/cost and inference latency are recorded; comparison with Wave 1 uses identical evaluation rows |
+| 3. Transformer to LightGBM cascade | `[todo]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize versioned causal Transformer embeddings/scores and train LightGBM with those features plus the existing tabular set | Ablation proves or rejects incremental value; serving-cost and failure-mode gates pass; champion/rollback decision is signed |
+
+### Wave 1: Qualify LightGBM On Nebius First
+
+Goal: establish the cheapest, fastest learned-detector baseline before paying
+for sequence-model development.
+
+Planned work:
+
+- `[done]` Establish the Wave 1 project, budget controls, four governed bucket
+  boundaries, three least-privilege identities, development-to-final denial
+  proof, Container Registry path, and shared MLflow stack.
+- `[done]` Replace the failed S3 filesystem-mount design with the July-proven
+  pattern: MysteryBox environment credentials plus prefix-scoped S3 API
+  download/upload through ephemeral job disk.
+- `[blocked]` Complete G4. Two mount-based Jobs stalled before container start;
+  three no-volume Jobs then failed on an old image or incorrect entrypoint.
+  Five of the 20 development-job slots are consumed and no run reached
+  LightGBM training. The next attempt requires a verified image/command/input
+  dry run and explicit authorization.
+- `[in progress]` Freeze one governed corpus, split, feature release, model
+  configuration, image digest and Git SHA for the cloud campaign.
+- `[todo]` Run smoke, deterministic-repeat, tuning, calibration and one
+  governed evaluation workflow through CPU Serverless AI Jobs.
+- `[todo]` Store immutable inputs and outputs in Standard Object Storage and
+  index hashes, parameters, metrics and artifact pointers in shared MLflow.
+- `[todo]` Compare rules and LightGBM on identical rows, including per-family
+  recall, PR-AUC, clean-window false alerts, detection delay and calibration.
+- `[todo]` Measure wall-clock duration, rows/second, CPU utilization, peak
+  memory, active compute time and estimated cost per run and per million rows.
+- `[todo]` Publish a verified model bundle with candidate and rollback
+  identities. Promotion remains a governed decision, not an automatic result
+  of a single metric.
+
+Why this is first:
+
+- LightGBM training and inference are CPU-friendly and already implemented.
+- Serverless Jobs terminate when work completes, avoiding idle VM cost while
+  preserving container, log and resource evidence.
+- Standard Object Storage is the low-cost durable boundary; enhanced-throughput
+  storage is deferred until measured I/O shows that it is needed.
+- The resulting quality, latency and cost baseline determines whether a
+  Transformer is worth its additional complexity and GPU spend.
+
+Wave 1 exit criteria:
+
+- Three identical repeat runs produce matching governed identities and
+  equivalent metrics within declared tolerances.
+- The final-test fold is opened once after operating modes are frozen.
+- Cloud artifacts include job ID, image digest, Git SHA, input hashes,
+  checksums, resource shape, timestamps, measured throughput and estimated
+  cost.
+- Performance claims remain scoped to synthetic/fixture or separately governed
+  licensed data, as applicable.
+
+### Wave 2: Add The Market-Sequence Transformer
+
+Goal: measure whether causal temporal context improves the frozen Wave 1
+baseline enough to justify GPU training and a larger operational surface.
+
+Planned work:
+
+- `[todo]` Define a versioned causal sequence contract with event-time cutoff,
+  sequence length, stride, padding/masking, feature ordering and split binding.
+- `[todo]` Use CPU Jobs for sequence materialization and time-boxed GPU Jobs for
+  training; do not use the vLLM investigation endpoint for this classifier.
+- `[todo]` Run architecture-size, sequence-length, encoding, class-weight/focal
+  loss and seed-stability experiments using validation only.
+- `[todo]` Register preprocessing, model weights, calibration, thresholds,
+  checkpoint hash, parameter count, GPU hours and cost metadata.
+- `[todo]` Compare standalone Transformer and LightGBM on the exact same frozen
+  observations and operational gates.
+
+Wave 2 exit criteria:
+
+- No future event or post-cutoff aggregation enters a sequence representation.
+- GPU endpoints/jobs are bounded by timeout and budget and leave no idle GPU
+  compute after the campaign.
+- The Transformer either clears a predeclared incremental-value gate or is
+  retained as research evidence without promotion.
+
+### Wave 3: Combine Transformer Outputs Into LightGBM
+
+Goal: test a cost-aware cascade in which the Transformer becomes an offline or
+bounded-batch temporal feature extractor and LightGBM remains the final
+tabular decision layer.
+
+Planned work:
+
+- `[todo]` Freeze a `transformer_feature_release_v1` contract containing the
+  source model/checkpoint hash, sequence contract hash, row/replay identity,
+  causal cutoff, embedding or score schema, null policy and content checksum.
+- `[todo]` Materialize Transformer-derived features without exposing labels or
+  future events, then join them to `lob_features_v2` only by governed row and
+  replay identities.
+- `[todo]` Train a new LightGBM candidate with the existing feature set plus
+  Transformer scores/embeddings. Do not overwrite the Wave 1 model family.
+- `[todo]` Run ablations for tabular-only LightGBM, standalone Transformer,
+  Transformer-to-LightGBM, and any late-fusion comparator on identical inputs.
+- `[todo]` Measure incremental quality against GPU feature-generation cost,
+  CPU inference throughput, staleness, unavailable-feature fallback and
+  operational complexity.
+
+Wave 3 exit criteria:
+
+- The cascade wins only if it clears predeclared quality, clean-window,
+  calibration, latency, throughput and cost gates.
+- The Wave 1 tabular LightGBM bundle remains a verified rollback and fallback
+  when Transformer features are absent, stale or incompatible.
+- The promotion record identifies every model, feature, split and evaluation
+  hash and documents whether the cascade was accepted or rejected.
+
+### Cost And Operations Guardrails
+
+- Use Serverless AI Jobs for bounded training, batch inference and evaluation;
+  they use Compute pricing but remove idle job VMs and disks after completion.
+- Use CPU resources for LightGBM, preprocessing, calibration and final cascade
+  scoring. Reserve GPUs for Transformer training and bounded feature
+  materialization.
+- Keep interactive GPU endpoints stopped by default and delete them after a
+  campaign when fast restart is unnecessary; stopped endpoint disks may still
+  incur storage cost. The existing vLLM endpoint remains an AI Investigator
+  surface and is not a detector-training dependency.
+- Use Standard Object Storage in the same region by default. Promote selected
+  data to Enhanced Throughput only after a measured I/O bottleneck and explicit
+  cost comparison.
+- Every campaign has a maximum job count, timeout, resource preset and spending
+  envelope. Record actual billed usage before increasing scale.
+- No Transformer or cascade work begins until the preceding wave has a verified
+  evidence bundle and recorded go/no-go decision.
+
+Primary architecture records:
+
+- `docs/nebius-lightgbm-wave1-implementation-plan.md`
+- `docs/architecture/ARD-0035-nebius-lightgbm-first.md`
+- `docs/architecture/ARD-0036-market-sequence-transformer.md`
+- `docs/architecture/ARD-0037-transformer-to-lightgbm-cascade.md`

@@ -1,4 +1,4 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
 	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
@@ -109,6 +109,27 @@ lightgbm-v1-test:
 		tests/test_lightgbm_governed_data.py \
 		tests/test_lightgbm_training.py \
 		tests/test_lightgbm_v1.py
+
+lightgbm-wave1-test:
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest \
+		tests/test_lightgbm_wave1.py \
+		tests/test_nebius_job_config_rendering.py \
+		tests/test_nebius_job_submit_adapter.py
+
+lightgbm-wave1-local-e2e:
+	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \
+		cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml python ../scripts/lightgbm_wave1.py local-e2e --output "$${WAVE1_TMP}/evidence"; \
+		test -f "$${WAVE1_TMP}/evidence/LOCAL-G2-SUCCESS"
+
+lightgbm-wave1-container-smoke:
+	docker build -f serverless/jobs/Dockerfile -t lob-arena-wave1-smoke:local .
+	docker run --rm --entrypoint python lob-arena-wave1-smoke:local -c \
+		"import lightgbm, mlflow, pyarrow; from app.ml.lightgbm.cloud_transport import execute_wave1_s3; print('wave1-s3-api-ok')"
+
+check-submit:
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run pytest \
+		tests/test_nebius_job_config_rendering.py \
+		tests/test_nebius_job_submit_adapter.py
 
 lightgbm-train-dev:
 	cd backend && uv run --extra ml python ../scripts/lightgbm_v1.py train \

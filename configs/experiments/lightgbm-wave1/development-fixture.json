@@ -1,0 +1,15 @@
+{
+  "calibration_method": "platt",
+  "early_stopping_rounds": 10,
+  "hyperparameters": {
+    "learning_rate": 0.1,
+    "min_data_in_leaf": 2,
+    "num_boost_round": 60,
+    "num_leaves": 8
+  },
+  "input_kind": "approved-research-fixture",
+  "precision_floor": 0.9,
+  "random_seed": 42,
+  "recall_floor": 0.9,
+  "schema_version": "lightgbm_wave1_experiment_spec_v1"
+}

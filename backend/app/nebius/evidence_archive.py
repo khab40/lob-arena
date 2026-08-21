@@ -42,6 +42,15 @@ class NebiusEvidenceRecord(BaseModel):
     request_bytes: int = 0
     response_bytes: int = 0
     artifact_bytes: int = 0
+    cpu_seconds: float = 0
+    peak_rss_bytes: int = 0
+    processed_rows: int = 0
+    rows_per_second: float = 0
+    cloud_project_id: str | None = None
+    cloud_region: str | None = None
+    cloud_platform: str | None = None
+    cloud_preset: str | None = None
+    image_digest: str | None = None
     run_id: str | None = None
     endpoint: str | None = None
     local_dir: str
@@ -212,6 +221,15 @@ class NebiusEvidenceArchive:
             request_bytes=len(request_text.encode("utf-8")),
             response_bytes=len(response_text.encode("utf-8")),
             artifact_bytes=artifact_bytes,
+            cpu_seconds=_optional_nonnegative_float(usage.get("cpu_seconds")) or 0.0,
+            peak_rss_bytes=_nonnegative_int(usage.get("peak_rss_bytes")),
+            processed_rows=_nonnegative_int(usage.get("processed_rows")),
+            rows_per_second=_optional_nonnegative_float(usage.get("rows_per_second")) or 0.0,
+            cloud_project_id=_optional_text(usage.get("cloud_project_id")),
+            cloud_region=_optional_text(usage.get("cloud_region")),
+            cloud_platform=_optional_text(usage.get("cloud_platform")),
+            cloud_preset=_optional_text(usage.get("cloud_preset")),
+            image_digest=_optional_text(usage.get("image_digest")),
             run_id=run_id,
             endpoint=endpoint,
             local_dir=str(local_dir),
@@ -439,6 +457,12 @@ def _optional_nonnegative_float(value: Any) -> float | None:
         return max(0.0, float(value)) if value is not None else None
     except (TypeError, ValueError):
         return None
+
+
+def _optional_text(value: Any) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    return _redact(value.strip())[:512]
 
 
 def _elapsed_between(started_at: Any, finished_at: Any) -> float:

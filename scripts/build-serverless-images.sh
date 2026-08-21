@@ -7,6 +7,12 @@ TAG="${TAG:-latest}"
 PLATFORM="${PLATFORM:-linux/amd64}"
 PUSH="${PUSH:-false}"
 SMOKE="${SMOKE:-false}"
+TARGET="${TARGET:-all}"
+
+if [[ "${TARGET}" != "all" && "${TARGET}" != "endpoint" && "${TARGET}" != "jobs" ]]; then
+  printf "%s\n" "TARGET must be one of: all, endpoint, jobs" >&2
+  exit 2
+fi
 
 ENDPOINT_IMAGE="${ENDPOINT_IMAGE:-${NEBIUS_ENDPOINT_IMAGE:-${IMAGE_NAMESPACE}/lob-arena-endpoint:${TAG}}}"
 JOBS_IMAGE="${JOBS_IMAGE:-${NEBIUS_JOB_IMAGE:-${IMAGE_NAMESPACE}/lob-arena-jobs:${TAG}}}"
@@ -32,26 +38,40 @@ jobs_args=(
   "${ROOT_DIR}"
 )
 
-printf "%s\n" "Building endpoint image: ${ENDPOINT_IMAGE}"
-"${endpoint_args[@]}"
+if [[ "${TARGET}" != "jobs" ]]; then
+  printf "%s\n" "Building endpoint image: ${ENDPOINT_IMAGE}"
+  "${endpoint_args[@]}"
+fi
 
-printf "%s\n" "Building jobs image: ${JOBS_IMAGE}"
-"${jobs_args[@]}"
+if [[ "${TARGET}" != "endpoint" ]]; then
+  printf "%s\n" "Building jobs image: ${JOBS_IMAGE}"
+  "${jobs_args[@]}"
+fi
 
 if [[ "${SMOKE}" == "true" ]]; then
-  printf "%s\n" "Smoke checking endpoint image metadata"
-  docker image inspect "${ENDPOINT_IMAGE}" >/dev/null
+  if [[ "${TARGET}" != "jobs" ]]; then
+    printf "%s\n" "Smoke checking endpoint image metadata"
+    docker image inspect "${ENDPOINT_IMAGE}" >/dev/null
+  fi
 
-  printf "%s\n" "Smoke checking jobs image metadata"
-  docker image inspect "${JOBS_IMAGE}" >/dev/null
+  if [[ "${TARGET}" != "endpoint" ]]; then
+    printf "%s\n" "Smoke checking jobs image metadata"
+    docker image inspect "${JOBS_IMAGE}" >/dev/null
+    docker run --rm --entrypoint python "${JOBS_IMAGE}" -c \
+      "import lightgbm, mlflow, pyarrow; from app.ml.lightgbm.cloud_runner import execute_wave1_request; print('wave1-ok')"
+  fi
 fi
 
 if [[ "${PUSH}" == "true" ]]; then
-  printf "%s\n" "Pushing endpoint image: ${ENDPOINT_IMAGE}"
-  docker push "${ENDPOINT_IMAGE}"
+  if [[ "${TARGET}" != "jobs" ]]; then
+    printf "%s\n" "Pushing endpoint image: ${ENDPOINT_IMAGE}"
+    docker push "${ENDPOINT_IMAGE}"
+  fi
 
-  printf "%s\n" "Pushing jobs image: ${JOBS_IMAGE}"
-  docker push "${JOBS_IMAGE}"
+  if [[ "${TARGET}" != "endpoint" ]]; then
+    printf "%s\n" "Pushing jobs image: ${JOBS_IMAGE}"
+    docker push "${JOBS_IMAGE}"
+  fi
 fi
 
 printf "%s\n" "Serverless image build complete"

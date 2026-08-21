@@ -1,0 +1,303 @@
+{
+  "$defs": {
+    "CloudArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_name": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Logical Name",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_name",
+        "uri",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "CloudArtifact",
+      "type": "object"
+    },
+    "Wave1FixtureInput": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_release_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Feature Release Sha256",
+          "type": "string"
+        },
+        "fixture_version": {
+          "const": "lightgbm-wave1-fixture-v1"
+        },
+        "kind": {
+          "const": "approved-research-fixture"
+        }
+      },
+      "required": [
+        "kind",
+        "fixture_version",
+        "feature_release_sha256"
+      ],
+      "title": "Wave1FixtureInput",
+      "type": "object"
+    },
+    "Wave1GovernedInput": {
+      "additionalProperties": false,
+      "properties": {
+        "corpus": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "corpus_artifact_root": {
+          "title": "Corpus Artifact Root",
+          "type": "string"
+        },
+        "corpus_validation": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "feature_artifact_root": {
+          "title": "Feature Artifact Root",
+          "type": "string"
+        },
+        "feature_config": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "feature_release": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "kind": {
+          "const": "governed-feature-release"
+        },
+        "protocol": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "split": {
+          "$ref": "#/$defs/CloudArtifact"
+        }
+      },
+      "required": [
+        "kind",
+        "protocol",
+        "corpus",
+        "corpus_validation",
+        "split",
+        "feature_config",
+        "feature_release",
+        "feature_artifact_root",
+        "corpus_artifact_root"
+      ],
+      "title": "Wave1GovernedInput",
+      "type": "object"
+    },
+    "Wave1ResourceRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_count": {
+          "const": 4
+        },
+        "gpu_count": {
+          "const": 0
+        },
+        "memory_gib": {
+          "const": 16
+        },
+        "platform": {
+          "const": "cpu-d3"
+        },
+        "preset": {
+          "const": "4vcpu-16gb"
+        },
+        "timeout_seconds": {
+          "default": 3600,
+          "maximum": 3600,
+          "minimum": 60,
+          "title": "Timeout Seconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "platform",
+        "preset",
+        "cpu_count",
+        "memory_gib",
+        "timeout_seconds",
+        "gpu_count"
+      ],
+      "title": "Wave1ResourceRequest",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/lightgbm-cloud-job-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "authorization": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "authorization_public_key": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "authorization_signature": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "campaign_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "candidate": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "git_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Git Commit",
+      "type": "string"
+    },
+    "image": {
+      "pattern": "^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$",
+      "title": "Image",
+      "type": "string"
+    },
+    "input": {
+      "discriminator": {
+        "mapping": {
+          "approved-research-fixture": "#/$defs/Wave1FixtureInput",
+          "governed-feature-release": "#/$defs/Wave1GovernedInput"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Wave1FixtureInput"
+        },
+        {
+          "$ref": "#/$defs/Wave1GovernedInput"
+        }
+      ],
+      "title": "Input"
+    },
+    "mlflow_tracking_uri": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mlflow Tracking Uri"
+    },
+    "mode": {
+      "enum": [
+        "preflight",
+        "development",
+        "final-evaluation",
+        "verify"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "project_id": {
+      "const": "project-e00g6zvxpr00waz8t3y51k"
+    },
+    "random_seed": {
+      "default": 42,
+      "minimum": 0,
+      "title": "Random Seed",
+      "type": "integer"
+    },
+    "region": {
+      "const": "eu-north1"
+    },
+    "resource": {
+      "$ref": "#/$defs/Wave1ResourceRequest"
+    },
+    "result_uri": {
+      "minLength": 1,
+      "title": "Result Uri",
+      "type": "string"
+    },
+    "run_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "lightgbm_cloud_job_v1"
+    }
+  },
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "run_id",
+    "mode",
+    "project_id",
+    "region",
+    "image",
+    "created_at",
+    "git_commit",
+    "random_seed",
+    "input",
+    "resource",
+    "result_uri",
+    "candidate",
+    "authorization",
+    "authorization_signature",
+    "authorization_public_key",
+    "mlflow_tracking_uri"
+  ],
+  "title": "LOB Arena LightGBM Cloud Job v1",
+  "type": "object"
+}

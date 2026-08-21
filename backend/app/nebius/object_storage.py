@@ -1,0 +1,484 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
+from urllib.parse import urlsplit
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from app.ml.lightgbm.contracts import IDENTIFIER_PATTERN, SHA256_PATTERN
+
+
+class _StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class InventoryEntry(_StrictModel):
+    path: str = Field(min_length=1)
+    sha256: str = Field(pattern=SHA256_PATTERN)
+    size_bytes: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_path(self) -> "InventoryEntry":
+        path = PurePosixPath(self.path)
+        if (
+            path.is_absolute()
+            or "\\" in self.path
+            or any(part in {"", ".", ".."} for part in path.parts)
+            or path.as_posix() != self.path
+        ):
+            raise ValueError("inventory path must be a normalized relative POSIX path")
+        return self
+
+
+class ChecksumInventory(_StrictModel):
+    schema_version: str = Field(default="lightgbm_wave1_input_inventory_v1", pattern=IDENTIFIER_PATTERN)
+    files: tuple[InventoryEntry, ...]
+
+    @model_validator(mode="after")
+    def validate_unique_paths(self) -> "ChecksumInventory":
+        paths = [item.path for item in self.files]
+        if len(paths) != len(set(paths)):
+            raise ValueError("inventory paths must be unique")
+        return self
+
+
+@dataclass(frozen=True)
+class TransferLimits:
+    max_files: int = 10_000
+    max_bytes: int = 20 * 1024 * 1024 * 1024
+
+
+@dataclass(frozen=True)
+class S3ObjectEvidence:
+    key: str
+    sha256: str
+    size_bytes: int
+    etag: str
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def inventory_directory(root: Path, *, exclude_markers: bool = False) -> ChecksumInventory:
+    root = root.resolve()
+    if not root.is_dir():
+        raise ValueError(f"inventory root is not a directory: {root}")
+    entries = []
+    for path in sorted(item for item in root.rglob("*") if item.is_file()):
+        relative = path.relative_to(root).as_posix()
+        if exclude_markers and relative in {"SUCCESS", "FAILED", "checksums.sha256"}:
+            continue
+        entries.append(
+            InventoryEntry(path=relative, sha256=sha256_file(path), size_bytes=path.stat().st_size)
+        )
+    return ChecksumInventory(files=tuple(entries))
+
+
+def verify_inventory(root: Path, inventory: ChecksumInventory, *, limits: TransferLimits = TransferLimits()) -> None:
+    root = root.resolve()
+    if len(inventory.files) > limits.max_files:
+        raise ValueError("input inventory exceeds the file-count limit")
+    if sum(item.size_bytes for item in inventory.files) > limits.max_bytes:
+        raise ValueError("input inventory exceeds the byte limit")
+    for item in inventory.files:
+        path = (root / item.path).resolve()
+        if root not in path.parents or not path.is_file():
+            raise ValueError(f"inventory file is missing or escapes the input root: {item.path}")
+        if path.stat().st_size != item.size_bytes or sha256_file(path) != item.sha256:
+            raise ValueError(f"inventory checksum mismatch: {item.path}")
+
+
+def write_checksum_file(root: Path, inventory: ChecksumInventory) -> Path:
+    target = root / "checksums.sha256"
+    target.write_text(
+        "".join(f"{item.sha256}  {item.path}\n" for item in inventory.files),
+        encoding="utf-8",
+    )
+    return target
+
+
+def publish_local_result(staging: Path, result_uri: str) -> Path:
+    """Atomically publish a verified local result and create SUCCESS last."""
+
+    destination = _file_uri_path(result_uri)
+    staging = staging.resolve()
+    if destination.exists():
+        raise FileExistsError(f"result run prefix already exists: {destination}")
+    if not staging.is_dir() or (staging / "SUCCESS").exists() or (staging / "FAILED").exists():
+        raise ValueError("result staging directory is invalid")
+    inventory = inventory_directory(staging, exclude_markers=True)
+    write_checksum_file(staging, inventory)
+    (staging / "SUCCESS").write_text(inventory.model_dump_json(indent=2), encoding="utf-8")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    os.replace(staging, destination)
+    verify_complete_result(destination)
+    return destination
+
+
+def verify_complete_result(root: Path) -> ChecksumInventory:
+    root = root.resolve()
+    success = root / "SUCCESS"
+    if not success.is_file() or (root / "FAILED").exists():
+        raise ValueError("result is partial or failed; SUCCESS is required and FAILED is forbidden")
+    inventory = ChecksumInventory.model_validate_json(success.read_text(encoding="utf-8"))
+    verify_inventory(root, inventory)
+    checksum_lines = (root / "checksums.sha256").read_text(encoding="utf-8")
+    expected = "".join(f"{item.sha256}  {item.path}\n" for item in inventory.files)
+    if checksum_lines != expected:
+        raise ValueError("result checksum inventory is not canonical")
+    return inventory
+
+
+def sync_s3(
+    source: str,
+    destination: str,
+    *,
+    endpoint_url: str | None = None,
+    limits: TransferLimits = TransferLimits(),
+) -> None:
+    """Run one bounded aws-cli sync; credentials come only from the process environment."""
+
+    _validate_transfer_endpoint(source)
+    _validate_transfer_endpoint(destination)
+    local_source = _local_endpoint(source)
+    if local_source is not None:
+        inventory = inventory_directory(local_source)
+        verify_inventory(local_source, inventory, limits=limits)
+    aws = shutil.which("aws")
+    if aws is None:
+        raise RuntimeError("aws CLI is required for Object Storage synchronization")
+    command = [aws]
+    if endpoint_url:
+        command.extend(["--endpoint-url", endpoint_url])
+    command.extend(["s3", "sync", source, destination, "--only-show-errors", "--no-follow-symlinks"])
+    completed = subprocess.run(command, check=False, text=True, capture_output=True)
+    if completed.returncode:
+        raise RuntimeError(f"Object Storage synchronization failed with exit code {completed.returncode}")
+
+
+def publish_s3_input_release(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+) -> tuple[S3ObjectEvidence, ...]:
+    """Publish a bounded input package and verify every object before SUCCESS."""
+
+    verify_complete_result(source)
+    return _publish_s3_directory(source, destination, endpoint_url=endpoint_url, marker="SUCCESS")
+
+
+def download_s3_release(
+    source: str,
+    destination: Path,
+    *,
+    endpoint_url: str,
+    limits: TransferLimits = TransferLimits(),
+) -> ChecksumInventory:
+    """Download one prefix with S3 API calls and verify its completion contract."""
+
+    destination = destination.resolve()
+    if destination.exists():
+        raise FileExistsError(f"local staging destination already exists: {destination}")
+    bucket, prefix = _s3_bucket_prefix(source)
+    objects = _list_s3_objects(bucket, prefix, endpoint_url=endpoint_url)
+    if not objects:
+        raise ValueError(f"S3 release prefix is empty: {source}")
+    if len(objects) > limits.max_files:
+        raise ValueError("S3 release exceeds the file-count limit")
+    if sum(size for _, size in objects) > limits.max_bytes:
+        raise ValueError("S3 release exceeds the byte limit")
+
+    destination.mkdir(parents=True)
+    try:
+        for key, _ in objects:
+            relative = _relative_s3_key(key, prefix)
+            target = (destination / relative).resolve()
+            if destination not in target.parents:
+                raise ValueError(f"S3 object escapes the staging directory: {key}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            _aws_json(
+                endpoint_url,
+                "s3api",
+                "get-object",
+                "--bucket",
+                bucket,
+                "--key",
+                key,
+                str(target),
+            )
+        return verify_complete_result(destination)
+    except Exception:
+        shutil.rmtree(destination, ignore_errors=True)
+        raise
+
+
+def publish_s3_result(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+) -> tuple[S3ObjectEvidence, ...]:
+    """Publish a verified successful result, making SUCCESS visible last."""
+
+    verify_complete_result(source)
+    return _publish_s3_directory(source, destination, endpoint_url=endpoint_url, marker="SUCCESS")
+
+
+def publish_s3_failure(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+) -> tuple[S3ObjectEvidence, ...]:
+    """Publish bounded failure evidence, making FAILED visible last."""
+
+    source = source.resolve()
+    if not (source / "FAILED").is_file() or (source / "SUCCESS").exists():
+        raise ValueError("failure staging directory must contain FAILED and must not contain SUCCESS")
+    return _publish_s3_directory(source, destination, endpoint_url=endpoint_url, marker="FAILED")
+
+
+def _publish_s3_directory(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+    marker: str,
+) -> tuple[S3ObjectEvidence, ...]:
+    """Publish one immutable directory and expose its terminal marker last."""
+
+    source = source.resolve()
+    complete_inventory = inventory_directory(source)
+    inventory = ChecksumInventory(
+        files=tuple(item for item in complete_inventory.files if item.path != marker)
+    )
+    verify_inventory(source, inventory)
+    bucket, prefix = _s3_bucket_prefix(destination)
+    if _list_s3_keys(bucket, prefix, endpoint_url=endpoint_url, limit=1):
+        raise FileExistsError(f"release prefix already exists: {destination}")
+
+    evidence: list[S3ObjectEvidence] = []
+    uploaded_keys: list[str] = []
+    try:
+        for item in inventory.files:
+            key = f"{prefix}/{item.path}"
+            uploaded_keys.append(key)
+            evidence.append(
+                _put_and_verify_s3_object(
+                    source / item.path,
+                    bucket=bucket,
+                    key=key,
+                    expected_sha256=item.sha256,
+                    endpoint_url=endpoint_url,
+                )
+            )
+
+        terminal_marker = source / marker
+        if not terminal_marker.is_file():
+            raise ValueError(f"published directory must contain {marker}")
+        marker_key = f"{prefix}/{marker}"
+        evidence.append(
+            _put_and_verify_s3_object(
+                terminal_marker,
+                bucket=bucket,
+                key=marker_key,
+                expected_sha256=sha256_file(terminal_marker),
+                endpoint_url=endpoint_url,
+            )
+        )
+        uploaded_keys.append(marker_key)
+    except Exception:
+        for key in uploaded_keys:
+            _aws_json(
+                endpoint_url,
+                "s3api",
+                "delete-object",
+                "--bucket",
+                bucket,
+                "--key",
+                key,
+            )
+        raise
+    return tuple(evidence)
+
+
+def _put_and_verify_s3_object(
+    source: Path,
+    *,
+    bucket: str,
+    key: str,
+    expected_sha256: str,
+    endpoint_url: str,
+) -> S3ObjectEvidence:
+    _aws_json(
+        endpoint_url,
+        "s3api",
+        "put-object",
+        "--bucket",
+        bucket,
+        "--key",
+        key,
+        "--body",
+        str(source),
+        "--metadata",
+        f"sha256={expected_sha256}",
+    )
+    head = _aws_json(
+        endpoint_url,
+        "s3api",
+        "head-object",
+        "--bucket",
+        bucket,
+        "--key",
+        key,
+    )
+    size = int(head.get("ContentLength", -1))
+    metadata = {str(key).lower(): value for key, value in (head.get("Metadata") or {}).items()}
+    remote_hash = metadata.get("sha256")
+    if size != source.stat().st_size or remote_hash != expected_sha256:
+        raise ValueError(f"remote Object Storage metadata mismatch: {key}")
+    with tempfile.TemporaryDirectory(prefix="wave1-s3-readback-") as directory:
+        target = Path(directory) / "object"
+        _aws_json(
+            endpoint_url,
+            "s3api",
+            "get-object",
+            "--bucket",
+            bucket,
+            "--key",
+            key,
+            str(target),
+        )
+        if sha256_file(target) != expected_sha256:
+            raise ValueError(f"remote Object Storage read-back checksum mismatch: {key}")
+    return S3ObjectEvidence(
+        key=key,
+        sha256=expected_sha256,
+        size_bytes=size,
+        etag=str(head.get("ETag", "")).strip('"'),
+    )
+
+
+def _list_s3_keys(bucket: str, prefix: str, *, endpoint_url: str, limit: int) -> tuple[str, ...]:
+    payload = _aws_json(
+        endpoint_url,
+        "s3api",
+        "list-objects-v2",
+        "--bucket",
+        bucket,
+        "--prefix",
+        f"{prefix}/",
+        "--max-keys",
+        str(limit),
+    )
+    return tuple(item["Key"] for item in payload.get("Contents", ()))
+
+
+def _list_s3_objects(bucket: str, prefix: str, *, endpoint_url: str) -> tuple[tuple[str, int], ...]:
+    payload = _aws_json(
+        endpoint_url,
+        "s3api",
+        "list-objects-v2",
+        "--bucket",
+        bucket,
+        "--prefix",
+        f"{prefix}/",
+    )
+    return tuple(
+        (str(item["Key"]), int(item["Size"]))
+        for item in payload.get("Contents", ())
+        if isinstance(item, dict) and "Key" in item and "Size" in item
+    )
+
+
+def _relative_s3_key(key: str, prefix: str) -> PurePosixPath:
+    expected = f"{prefix}/"
+    if not key.startswith(expected):
+        raise ValueError(f"S3 object is outside the requested prefix: {key}")
+    relative_value = key.removeprefix(expected)
+    relative = PurePosixPath(relative_value)
+    if (
+        not relative_value
+        or relative.is_absolute()
+        or "\\" in relative_value
+        or any(part in {"", ".", ".."} for part in relative.parts)
+        or relative.as_posix() != relative_value
+    ):
+        raise ValueError(f"S3 object key is not a normalized relative path: {key}")
+    return relative
+
+
+def _aws_json(endpoint_url: str, *args: str) -> dict[str, object]:
+    aws = shutil.which("aws")
+    if aws is None:
+        raise RuntimeError("aws CLI is required for Object Storage publication")
+    completed = subprocess.run(
+        [aws, "--endpoint-url", endpoint_url, *args, "--output", "json", "--no-cli-pager"],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode:
+        raise RuntimeError(f"Object Storage command failed with exit code {completed.returncode}")
+    return json.loads(completed.stdout or "{}")
+
+
+def _s3_bucket_prefix(uri: str) -> tuple[str, str]:
+    parsed = urlsplit(uri)
+    prefix = parsed.path.strip("/")
+    if (
+        parsed.scheme != "s3"
+        or not parsed.netloc
+        or not prefix
+        or parsed.query
+        or parsed.fragment
+        or parsed.username
+        or parsed.password
+        or parsed.port is not None
+    ):
+        raise ValueError("S3 release URI requires a bucket and bounded prefix")
+    if any(part in {"", ".", ".."} for part in PurePosixPath(prefix).parts):
+        raise ValueError("S3 release URI contains an invalid path")
+    return parsed.netloc, prefix.rstrip("/")
+
+
+def _file_uri_path(uri: str) -> Path:
+    parsed = urlsplit(uri)
+    if parsed.scheme != "file" or parsed.netloc not in {"", "localhost"} or not parsed.path:
+        raise ValueError("local result URI must be an absolute file:// URI")
+    return Path(parsed.path).resolve()
+
+
+def _validate_transfer_endpoint(value: str) -> None:
+    if value.startswith("s3://"):
+        parsed = urlsplit(value)
+        if not parsed.netloc or not parsed.path.strip("/"):
+            raise ValueError("S3 transfer endpoint requires a bucket and bounded prefix")
+        if any(part in {".", ".."} for part in PurePosixPath(parsed.path).parts):
+            raise ValueError("S3 transfer endpoint contains path traversal")
+        return
+    path = Path(value).resolve()
+    if str(path) in {"/", str(Path.home().resolve())}:
+        raise ValueError("local transfer endpoint is too broad")
+
+
+def _local_endpoint(value: str) -> Path | None:
+    return None if value.startswith("s3://") else Path(value).resolve()
+
+
+def temporary_staging(parent: Path, run_id: str) -> Path:
+    parent.mkdir(parents=True, exist_ok=True)
+    return Path(tempfile.mkdtemp(prefix=f".{run_id}.", dir=parent))

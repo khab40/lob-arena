@@ -62,10 +62,48 @@ class NebiusJobConfigRenderResponse(BaseModel):
     output_dir: str
 
 
+class NebiusWave1ConfigRenderResponse(BaseModel):
+    input_uri: str
+    work_root: str
+    path: str
+    image: str
+
+
 class NebiusExperimentOrchestrator:
     def __init__(self, repository: ExperimentRepository, settings: Settings | None = None) -> None:
         self.repository = repository
         self.settings = settings
+
+    def render_lightgbm_wave1_config(
+        self,
+        *,
+        input_uri: str,
+        work_root: str,
+        endpoint_url: str,
+        output_path: Path,
+    ) -> NebiusWave1ConfigRenderResponse:
+        """Reuse the existing renderer surface for a digest-pinned Wave 1 request."""
+
+        image = self._job_image()
+        module_path = _repo_root() / "serverless" / "jobs" / "render_job_config.py"
+        spec = importlib.util.spec_from_file_location("aimada_render_wave1_job_config", module_path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"could not load Nebius job config renderer from {module_path}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        path = module.render_lightgbm_job_config(
+            input_uri=input_uri,
+            endpoint_url=endpoint_url,
+            work_root=work_root,
+            image=image,
+            rendered_path=output_path,
+        )
+        return NebiusWave1ConfigRenderResponse(
+            input_uri=input_uri,
+            work_root=work_root,
+            path=str(path),
+            image=image,
+        )
 
     def submit(self, experiment_id: str) -> ExperimentJobRecord | None:
         experiment = self.repository.get(experiment_id)
@@ -516,9 +554,15 @@ class NebiusExperimentOrchestrator:
 
     def _object_storage_env_args(self) -> str:
         flags = [
-            self._optional_env("AWS_ACCESS_KEY_ID", self._settings_value("nebius_object_storage_access_key_id")),
-            self._optional_env("AWS_SECRET_ACCESS_KEY", self._settings_value("nebius_object_storage_secret_access_key")),
-            self._optional_env("AWS_SESSION_TOKEN", self._settings_value("nebius_object_storage_session_token")),
+            self._optional_secret(
+                "AWS_ACCESS_KEY_ID", self._settings_value("nebius_object_storage_access_key_secret_id")
+            ),
+            self._optional_secret(
+                "AWS_SECRET_ACCESS_KEY", self._settings_value("nebius_object_storage_secret_key_secret_id")
+            ),
+            self._optional_secret(
+                "AWS_SESSION_TOKEN", self._settings_value("nebius_object_storage_session_token_secret_id")
+            ),
             self._optional_env("AWS_DEFAULT_REGION", self._settings_value("nebius_object_storage_region")),
             self._optional_env("AWS_EC2_METADATA_DISABLED", "true"),
         ]
@@ -535,6 +579,12 @@ class NebiusExperimentOrchestrator:
         if not value.strip():
             return ""
         return f"--env {shlex.quote(f'{name}={value.strip()}')}"
+
+    @staticmethod
+    def _optional_secret(name: str, value: str) -> str:
+        if not value.strip():
+            return ""
+        return f"--env-secret {shlex.quote(f'{name}={value.strip()}')}"
 
     def _run_template_command(self, template: str, context: dict[str, str]) -> subprocess.CompletedProcess[str]:
         try:

@@ -487,5 +487,14 @@ Detailed architecture decisions are recorded in [Architecture Records (ARDs)](ar
 - [ARD-0026: Governed LightGBM Release Boundary](architecture/ARD-0026-governed-lightgbm-release-boundary.md) — Phase 0 identity, provenance, validation-only calibration, frozen operating points, predictions, and checksummed model bundles
 - [ARD-0027: Shared MLflow Tracking Plane](architecture/ARD-0027-shared-mlflow-tracking.md) — Authenticated shared tracking, PostgreSQL metadata, private S3-compatible artifacts, and governed namespaces
 - [ARD-0028: Governed LightGBM Feature Loading](architecture/ARD-0028-governed-lightgbm-feature-loading.md) — Externally anchored feature release, reconstructed labels, replay-unit binding, exact fold inventory, and separate development/final-test access
+- [ARD-0029: Deterministic LightGBM Binary Training](architecture/ARD-0029-deterministic-lightgbm-binary-training.md) — Training-only weighting, deterministic settings, validation early stopping, and reproducible artifacts
+- [ARD-0030: Float32 Governed Feature Release](architecture/ARD-0030-float32-governed-feature-release.md) — Versioned float32 features, compatibility and bounded precision gates
+- [ARD-0031: Complete Governed LightGBM v1](architecture/ARD-0031-complete-lightgbm-v1.md) — Calibration, frozen thresholds, isolated test scoring, explanations, paired evaluation and release verification
+- [ARD-0032: Nasdaq TotalView-ITCH Ingestion](architecture/ARD-0032-nasdaq-itch-ingestion.md) — Streaming ITCH parsing, visible-book reconstruction, source-neutral artifacts and replay provenance
+- [ARD-0033: Deterministic Hybrid Injection Scheduling](architecture/ARD-0033-deterministic-hybrid-scheduling.md) — Exact historical triggers, synthetic schedule identity, ground truth and evidence bindings
+- [ARD-0034: ITCH Market-Profile Calibration](architecture/ARD-0034-itch-market-profile-calibration.md) — Versioned ITCH distributions, profile-bound simulation and held-out realism gates
+- [ARD-0035: Nebius-First Qualification Of Governed LightGBM](architecture/ARD-0035-nebius-lightgbm-first.md) — CPU-first cloud execution, reproducibility, performance, cost and exit gates
+- [ARD-0036: Governed Market-Sequence Transformer Challenger](architecture/ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training and standalone evaluation
+- [ARD-0037: Transformer-Derived Features Into LightGBM](architecture/ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned temporal features, exact joins, CPU decision layer, fallback and promotion gates
 - [Hybrid Dataset Validation](hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
 - [Causal Feature Engineering for a Future LightGBM Detector](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and trainer consumption contract

@@ -51,6 +51,10 @@ backend/**
 # Protobuf bindings and deterministic contract helpers are CI/integration
 # tooling; the Python runtime no longer serves or executes the kernel.
 backend/app/contracts/**
+# The governed LightGBM loader validates canonical replay manifests and needs
+# the generated exchange message bindings in the shared Jobs image.
+!backend/app/contracts/
+!backend/app/contracts/**
 
 !agent-runner/
 agent-runner/**

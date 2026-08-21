@@ -365,7 +365,7 @@ services:
       MLFLOW_EXPORTER_USERNAME: ${MLFLOW_EXPORTER_USERNAME:-prometheus}
       MLFLOW_EXPORTER_PASSWORD: ${MLFLOW_EXPORTER_PASSWORD:-local-compose-validation-only}
       MLFLOW_EXPORTER_EXPERIMENTS: ${MLFLOW_EXPORTER_EXPERIMENTS:-lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation}
-      MLFLOW_EXPORTER_METRIC_KEYS: ${MLFLOW_EXPORTER_METRIC_KEYS:-precision,recall,f1,false_alerts_per_million_events}
+      MLFLOW_EXPORTER_METRIC_KEYS: ${MLFLOW_EXPORTER_METRIC_KEYS:-precision,recall,f1,false_alerts_per_million_events,cloud_wall_seconds,cloud_cpu_seconds,cloud_peak_rss_bytes,cloud_rows_per_second,cloud_estimated_cost_usd}
       MLFLOW_EXPORTER_MODEL_NAMES: ${MLFLOW_EXPORTER_MODEL_NAMES:-lob-arena-lightgbm-attack-active}
       MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT: ${MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT:-1000}
       MLFLOW_EXPORTER_MAX_MODEL_VERSIONS: ${MLFLOW_EXPORTER_MAX_MODEL_VERSIONS:-1000}

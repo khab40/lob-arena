@@ -24,12 +24,24 @@ from app.ml.lightgbm.contracts import (  # noqa: E402
     LightGbmTrainingRun,
     ModelBundleManifest,
 )
+from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
+    LightGbmCloudJobRequest,
+    LightGbmCloudRun,
+)
 from app.ml.lightgbm.feature_release import (  # noqa: E402
     GovernedFeatureReleaseManifest,
 )
 
 
 CONTRACTS: dict[str, tuple[Type[BaseModel], str]] = {
+    "lightgbm-cloud-job-v1.schema.json": (
+        LightGbmCloudJobRequest,
+        "LOB Arena LightGBM Cloud Job v1",
+    ),
+    "lightgbm-cloud-run-v1.schema.json": (
+        LightGbmCloudRun,
+        "LOB Arena LightGBM Cloud Run v1",
+    ),
     "governed-benchmark-protocol-v1.schema.json": (
         GovernedBenchmarkProtocol,
         "LOB Arena Governed Benchmark Protocol v1",

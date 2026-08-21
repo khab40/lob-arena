@@ -20,8 +20,8 @@ RUN if [ "${INSTALL_NEBIUS_CLI}" = "true" ]; then \
 # Add the Nebius binary directory directly to the system PATH
 ENV PATH="/root/.nebius/bin:${PATH}"
 
-COPY backend/pyproject.toml ./
-RUN pip install --no-cache-dir \
+# Install dependencies with pip cache and timeout settings to avoid network issues
+RUN pip install --no-cache-dir --retries 5 \
   "fastapi>=0.111.0" \
   pydantic \
   "pydantic-settings>=2.14.2" \
@@ -31,8 +31,9 @@ RUN pip install --no-cache-dir \
   uvicorn \
   uvloop \
   httptools \
-  && if [ "${INSTALL_NEBIUS_CLI}" = "true" ]; then pip install --no-cache-dir awscli; fi
+  && if [ "${INSTALL_NEBIUS_CLI}" = "true" ]; then pip install --no-cache-dir --retries 5 awscli; fi
 
+COPY backend/pyproject.toml ./
 COPY backend/app ./app
 COPY backend/compose-entrypoint.sh ./compose-entrypoint.sh
 COPY serverless/jobs ./serverless/jobs

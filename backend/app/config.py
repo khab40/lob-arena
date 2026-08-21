@@ -74,6 +74,18 @@ class Settings(BaseSettings):
         default=None,
         validation_alias=AliasChoices("NEBIUS_OBJECT_STORAGE_SESSION_TOKEN", "AWS_SESSION_TOKEN"),
     )
+    nebius_object_storage_access_key_secret_id: str | None = Field(
+        default=None,
+        alias="NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID",
+    )
+    nebius_object_storage_secret_key_secret_id: str | None = Field(
+        default=None,
+        alias="NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID",
+    )
+    nebius_object_storage_session_token_secret_id: str | None = Field(
+        default=None,
+        alias="NEBIUS_OBJECT_STORAGE_SESSION_TOKEN_SECRET_ID",
+    )
     nebius_object_storage_region: str = Field(
         default="eu-north1",
         validation_alias=AliasChoices("NEBIUS_OBJECT_STORAGE_REGION", "AWS_DEFAULT_REGION"),

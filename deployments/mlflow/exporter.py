@@ -23,6 +23,11 @@ DEFAULT_METRIC_KEYS = (
     "recall",
     "f1",
     "false_alerts_per_million_events",
+    "cloud_wall_seconds",
+    "cloud_cpu_seconds",
+    "cloud_peak_rss_bytes",
+    "cloud_rows_per_second",
+    "cloud_estimated_cost_usd",
 )
 DEFAULT_MODEL_NAMES = ("lob-arena-lightgbm-attack-active",)
 RUN_STATUSES = ("RUNNING", "SCHEDULED", "FINISHED", "FAILED", "KILLED", "OTHER")

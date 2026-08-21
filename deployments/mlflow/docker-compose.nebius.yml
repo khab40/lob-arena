@@ -1,0 +1,150 @@
+name: lob-arena-mlflow-nebius
+
+services:
+  mlflow-postgres:
+    image: postgres:16.10-alpine
+    environment:
+      POSTGRES_USER: ${MLFLOW_POSTGRES_USER:?required}
+      POSTGRES_PASSWORD: ${MLFLOW_POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${MLFLOW_POSTGRES_DB:?required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - mlflow-postgres-data:/var/lib/postgresql/data
+    networks:
+      - mlflow-internal
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.13.0-nebius}
+    environment:
+      MLFLOW_POSTGRES_HOST: mlflow-postgres
+      MLFLOW_POSTGRES_PORT: "5432"
+      MLFLOW_POSTGRES_USER: ${MLFLOW_POSTGRES_USER:?required}
+      MLFLOW_POSTGRES_PASSWORD: ${MLFLOW_POSTGRES_PASSWORD:?required}
+      MLFLOW_POSTGRES_DB: ${MLFLOW_POSTGRES_DB:?required}
+      MLFLOW_ARTIFACTS_DESTINATION: s3://${MLFLOW_S3_BUCKET:?required}/${MLFLOW_ARTIFACTS_PREFIX:-artifacts}
+      MLFLOW_S3_ENDPOINT_URL: ${MLFLOW_S3_ENDPOINT_URL:?required}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?required}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?required}
+      AWS_DEFAULT_REGION: ${MLFLOW_S3_REGION:-eu-north1}
+      MLFLOW_ADMIN_USERNAME: ${MLFLOW_ADMIN_USERNAME:?required}
+      MLFLOW_ADMIN_PASSWORD: ${MLFLOW_ADMIN_PASSWORD:?required}
+      MLFLOW_FLASK_SERVER_SECRET_KEY: ${MLFLOW_FLASK_SERVER_SECRET_KEY:?required}
+      MLFLOW_ALLOWED_HOSTS: ${MLFLOW_ALLOWED_HOSTS:?required}
+      MLFLOW_CORS_ALLOWED_ORIGINS: ${MLFLOW_CORS_ALLOWED_ORIGINS:?required}
+      MLFLOW_ENABLE_WORKSPACES: ${MLFLOW_ENABLE_WORKSPACES:-false}
+      MLFLOW_SERVER_WORKERS: ${MLFLOW_SERVER_WORKERS:-2}
+    ports:
+      - "${MLFLOW_BIND_ADDRESS:-0.0.0.0}:${MLFLOW_PORT:-5500}:5000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 30s
+    depends_on:
+      mlflow-postgres:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    networks:
+      - mlflow-internal
+      - mlflow-edge
+
+  mlflow-exporter-init:
+    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.13.0-nebius}
+    entrypoint: ["python", "/opt/lob-arena/mlflow/exporter_bootstrap.py"]
+    environment: &exporter-auth
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_ADMIN_USERNAME: ${MLFLOW_ADMIN_USERNAME:?required}
+      MLFLOW_ADMIN_PASSWORD: ${MLFLOW_ADMIN_PASSWORD:?required}
+      MLFLOW_EXPORTER_USERNAME: ${MLFLOW_EXPORTER_USERNAME:?required}
+      MLFLOW_EXPORTER_PASSWORD: ${MLFLOW_EXPORTER_PASSWORD:?required}
+      MLFLOW_EXPORTER_EXPERIMENTS: ${MLFLOW_EXPORTER_EXPERIMENTS:?required}
+      MLFLOW_EXPORTER_MODEL_NAMES: ${MLFLOW_EXPORTER_MODEL_NAMES:?required}
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    restart: "no"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - mlflow-edge
+
+  mlflow-exporter:
+    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.13.0-nebius}
+    entrypoint: ["python", "/opt/lob-arena/mlflow/exporter.py"]
+    environment:
+      <<: *exporter-auth
+      LOG_LEVEL: ${MLFLOW_EXPORTER_LOG_LEVEL:-INFO}
+      MLFLOW_EXPORTER_METRIC_KEYS: ${MLFLOW_EXPORTER_METRIC_KEYS:?required}
+      MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT: ${MLFLOW_EXPORTER_MAX_RUNS_PER_EXPERIMENT:-1000}
+      MLFLOW_EXPORTER_MAX_MODEL_VERSIONS: ${MLFLOW_EXPORTER_MAX_MODEL_VERSIONS:-1000}
+      MLFLOW_EXPORTER_CACHE_SECONDS: ${MLFLOW_EXPORTER_CACHE_SECONDS:-30}
+      MLFLOW_HTTP_REQUEST_TIMEOUT: ${MLFLOW_EXPORTER_HTTP_REQUEST_TIMEOUT:-3}
+      MLFLOW_HTTP_REQUEST_MAX_RETRIES: ${MLFLOW_EXPORTER_HTTP_REQUEST_MAX_RETRIES:-0}
+      MLFLOW_EXPORTER_PORT: "9464"
+    expose:
+      - "9464"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9464/ready', timeout=5)",
+        ]
+      interval: 15s
+      timeout: 6s
+      retries: 10
+      start_period: 10s
+    depends_on:
+      mlflow-exporter-init:
+        condition: service_completed_successfully
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - mlflow-edge
+
+volumes:
+  mlflow-postgres-data:
+
+networks:
+  mlflow-internal:
+    internal: true
+  mlflow-edge:

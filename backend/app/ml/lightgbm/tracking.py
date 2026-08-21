@@ -32,6 +32,7 @@ def log_development_run(
     reliability_diagram_path: Path,
     model_path: Path,
     tracking_uri: str | None = None,
+    cloud_metadata: dict[str, str | int | float] | None = None,
 ) -> str:
     """Log permitted development evidence without weakening local governance."""
 
@@ -53,7 +54,10 @@ def log_development_run(
     mlflow = _mlflow(tracking_uri)
     mlflow.set_experiment(DEVELOPMENT_EXPERIMENT)
     with mlflow.start_run(run_name=training.binding.training_run_id) as run:
-        mlflow.set_tags(_binding_tags(training, governance_state="validation_frozen"))
+        tags = _binding_tags(training, governance_state="validation_frozen")
+        cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
+        tags.update(cloud_tags)
+        mlflow.set_tags(tags)
         parameters = {
             **training.hyperparameters.model_dump(mode="json"),
             "training_seed": training.training_seed,
@@ -81,6 +85,7 @@ def log_development_run(
                     f"{prefix}_f1": point.validation_metrics.f1,
                 }
             )
+        metrics.update(cloud_metrics)
         mlflow.log_metrics(metrics)
         for path in (
             training_manifest_path,
@@ -107,6 +112,7 @@ def log_governed_evaluation_run(
     prediction_manifest_path: Path,
     benchmark_results_path: Path | None = None,
     tracking_uri: str | None = None,
+    cloud_metadata: dict[str, str | int | float] | None = None,
 ) -> str:
     """Index an already-verified frozen-test release in MLflow."""
 
@@ -135,12 +141,15 @@ def log_governed_evaluation_run(
                 "test_accessed": "true",
             }
         )
+        cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
+        tags.update(cloud_tags)
         mlflow.set_tags(tags)
         mlflow.log_metrics(
             {
                 "test_alert_count": float(predictions.alert_count),
                 "test_row_count": float(predictions.row_count),
                 "frozen_threshold": predictions.threshold,
+                **cloud_metrics,
             }
         )
         if benchmark_results_path is not None:
@@ -248,3 +257,24 @@ def _benchmark_metrics(path: Path) -> dict[str, float]:
         for name, value in metrics.items()
         if name in allowed and isinstance(value, (int, float))
     }
+
+
+def _validated_cloud_metadata(
+    values: dict[str, str | int | float] | None,
+) -> tuple[dict[str, str], dict[str, float]]:
+    if values is None:
+        return {}, {}
+    tag_names = {"cloud_provider", "cloud_region", "cloud_platform", "cloud_preset", "cloud_job_id", "image_digest"}
+    metric_names = {
+        "cloud_wall_seconds",
+        "cloud_cpu_seconds",
+        "cloud_peak_rss_bytes",
+        "cloud_rows_per_second",
+        "cloud_estimated_cost_usd",
+    }
+    unknown = set(values) - tag_names - metric_names
+    if unknown:
+        raise ValueError(f"unsupported cloud MLflow metadata: {', '.join(sorted(unknown))}")
+    tags = {name: str(values[name]) for name in tag_names & values.keys()}
+    metrics = {name: float(values[name]) for name in metric_names & values.keys()}
+    return tags, metrics

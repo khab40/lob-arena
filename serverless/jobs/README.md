@@ -135,3 +135,32 @@ The rendered config is written to
 `outputs/experiments/<experiment_id>/nebius_job_config.rendered.yaml` and
 overrides the runner args, scenarios, output directory, and image
 repository/tag without creating a parallel Dockerfile or job template.
+
+## Governed LightGBM Wave 1 profile
+
+The same Jobs image now includes the CPU-only governed LightGBM runner. Its
+profile requires an immutable image digest:
+
+```bash
+python serverless/jobs/render_job_config.py \
+  --workload lightgbm-wave1 \
+  --experiment-id wave1-development-001 \
+  --image registry.eu-north1.nebius.cloud/PROJECT/jobs@sha256:DIGEST \
+  --input-uri s3://aimada-wave1-dev-e00g6zvxpr00/releases/RELEASE_ID/staging \
+  --work-root /job/wave1 \
+  --endpoint-url https://storage.eu-north1.nebius.cloud \
+  --rendered-path outputs/lightgbm-wave1/job.yaml
+```
+
+Wave 1 never attaches an Object Storage filesystem volume. The container lists
+only the requested prefix, downloads it to ephemeral job disk with S3 API
+calls, verifies `SUCCESS` and `checksums.sha256`, runs the local-path model
+runner, verifies the result, uploads objects through the S3 API, and publishes
+`SUCCESS` last. `NEBIUS_VOLUME` therefore makes Wave 1 submission fail closed.
+
+The submission helpers accept only MysteryBox-backed IDs through
+`NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID`,
+`NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID`, and the optional session-token
+secret ID. Inline access-key values cause submission to fail before invoking
+the Nebius CLI. Both access-key ID and secret-key selectors are required for a
+Wave 1 Job.

@@ -40,7 +40,8 @@ generate trading signals, or make compliance decisions.
 | LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |
 | Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
 | LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
-| GRU/Transformer challenger | Future | Sequence-aware attack state/phase model after LightGBM establishes value |
+| Market-sequence Transformer challenger | Planned Wave 2 | Causal sequence-aware attack state/phase model after the Nebius LightGBM baseline is frozen |
+| Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
 | RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
 
 ## End-to-End Functional Flow

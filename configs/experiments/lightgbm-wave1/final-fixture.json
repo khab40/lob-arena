@@ -1,0 +1,8 @@
+{
+  "authorization_required": true,
+  "input_kind": "approved-research-fixture",
+  "operating_mode": "balanced",
+  "schema_version": "lightgbm_wave1_experiment_spec_v1",
+  "single_test_access": true,
+  "signer": "Alexey Khabalov — Wave 1 Release Approver"
+}

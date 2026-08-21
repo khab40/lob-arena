@@ -12,6 +12,8 @@ ROOT = Path(__file__).resolve().parents[2]
 COMPOSE_FILE = ROOT / "docker-compose.yml"
 DEPLOYMENT = ROOT / "deployments" / "mlflow"
 BOOTSTRAP = ROOT / "scripts" / "bootstrap-mlflow-env.sh"
+NEBIUS_BOOTSTRAP = ROOT / "scripts" / "bootstrap-nebius-mlflow-env.sh"
+NEBIUS_COMPOSE = DEPLOYMENT / "docker-compose.nebius.yml"
 MAKEFILE = ROOT / "Makefile"
 
 
@@ -217,3 +219,62 @@ def test_mlflow_operational_targets_include_initializer_diagnostics() -> None:
     assert " logs --tail=200 " in logs_target
     assert diagnostic_services <= set(status_target.split())
     assert diagnostic_services <= set(logs_target.split())
+
+
+def test_nebius_mlflow_profile_uses_object_storage_without_minio() -> None:
+    compose = yaml.safe_load(NEBIUS_COMPOSE.read_text(encoding="utf-8"))
+    services = compose["services"]
+
+    assert "mlflow-minio" not in services
+    assert "mlflow-minio-init" not in services
+    assert services["mlflow"]["depends_on"] == {
+        "mlflow-postgres": {"condition": "service_healthy"}
+    }
+    environment = services["mlflow"]["environment"]
+    assert environment["MLFLOW_S3_ENDPOINT_URL"] == "${MLFLOW_S3_ENDPOINT_URL:?required}"
+    assert environment["MLFLOW_ARTIFACTS_DESTINATION"].startswith("s3://")
+    assert environment["AWS_ACCESS_KEY_ID"] == "${AWS_ACCESS_KEY_ID:?required}"
+    assert environment["AWS_SECRET_ACCESS_KEY"] == "${AWS_SECRET_ACCESS_KEY:?required}"
+    assert services["mlflow-postgres"]["networks"] == ["mlflow-internal"]
+    assert services["mlflow"]["ports"] == [
+        "${MLFLOW_BIND_ADDRESS:-0.0.0.0}:${MLFLOW_PORT:-5500}:5000"
+    ]
+
+
+def test_nebius_mlflow_bootstrap_reads_s3_secret_from_stdin(tmp_path: Path) -> None:
+    output = tmp_path / "nebius-mlflow.env"
+    secret = "s" * 48
+    result = subprocess.run(
+        [
+            str(NEBIUS_BOOTSTRAP),
+            "--output",
+            str(output),
+            "--access-key-id",
+            "NAKIREDACTED",
+            "--bucket",
+            "aimada-mlflow-e00g6zvxpr00",
+            "--private-host",
+            "10.0.0.10",
+        ],
+        input=f"{secret}\n",
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert stat.S_IMODE(output.stat().st_mode) == 0o600
+    values = dict(
+        line.split("=", 1)
+        for line in output.read_text(encoding="utf-8").splitlines()
+        if line and not line.startswith("#")
+    )
+    assert values["MLFLOW_S3_BUCKET"] == "aimada-mlflow-e00g6zvxpr00"
+    assert values["MLFLOW_S3_ENDPOINT_URL"] == (
+        "https://storage.eu-north1.nebius.cloud"
+    )
+    assert values["AWS_ACCESS_KEY_ID"] == "NAKIREDACTED"
+    assert values["AWS_SECRET_ACCESS_KEY"] == secret
+    assert "10.0.0.10:*" in values["MLFLOW_ALLOWED_HOSTS"]
+    assert secret not in result.stdout

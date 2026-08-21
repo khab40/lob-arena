@@ -4,10 +4,18 @@ WORKDIR /job
 
 ENV PYTHONPATH=/job/backend
 
+COPY serverless/jobs/requirements.txt /job/serverless/jobs/requirements.txt
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libgomp1 openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir -r /job/serverless/jobs/requirements.txt
+
 COPY backend/app /job/backend/app
 COPY serverless/jobs /job/serverless/jobs
 
-RUN pip install --no-cache-dir -r /job/serverless/jobs/requirements.txt
+RUN python -c "import lightgbm, mlflow, pyarrow; from app.ml.lightgbm.cloud_transport import execute_wave1_s3"
 
 WORKDIR /job/serverless/jobs
 

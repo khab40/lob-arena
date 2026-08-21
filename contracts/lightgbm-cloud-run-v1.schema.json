@@ -1,0 +1,220 @@
+{
+  "$defs": {
+    "CloudArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "logical_name": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "title": "Logical Name",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "uri": {
+          "minLength": 1,
+          "title": "Uri",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_name",
+        "uri",
+        "sha256",
+        "size_bytes"
+      ],
+      "title": "CloudArtifact",
+      "type": "object"
+    },
+    "Wave1ResourceEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "cpu_count": {
+          "const": 4
+        },
+        "cpu_seconds": {
+          "minimum": 0,
+          "title": "Cpu Seconds",
+          "type": "number"
+        },
+        "gpu_count": {
+          "const": 0
+        },
+        "memory_gib": {
+          "const": 16
+        },
+        "peak_rss_bytes": {
+          "minimum": 0,
+          "title": "Peak Rss Bytes",
+          "type": "integer"
+        },
+        "platform": {
+          "const": "cpu-d3"
+        },
+        "preset": {
+          "const": "4vcpu-16gb"
+        },
+        "processed_rows": {
+          "minimum": 0,
+          "title": "Processed Rows",
+          "type": "integer"
+        },
+        "rows_per_second": {
+          "minimum": 0,
+          "title": "Rows Per Second",
+          "type": "number"
+        },
+        "wall_seconds": {
+          "minimum": 0,
+          "title": "Wall Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "platform",
+        "preset",
+        "cpu_count",
+        "memory_gib",
+        "gpu_count",
+        "wall_seconds",
+        "cpu_seconds",
+        "peak_rss_bytes",
+        "processed_rows",
+        "rows_per_second"
+      ],
+      "title": "Wave1ResourceEvidence",
+      "type": "object"
+    }
+  },
+  "$id": "https://lob-arena.local/contracts/lightgbm-cloud-run-v1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "campaign_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Campaign Id",
+      "type": "string"
+    },
+    "candidate_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Candidate Hash"
+    },
+    "completed_at": {
+      "format": "date-time",
+      "title": "Completed At",
+      "type": "string"
+    },
+    "error_type": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Error Type"
+    },
+    "image": {
+      "pattern": "^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$",
+      "title": "Image",
+      "type": "string"
+    },
+    "mlflow_run_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mlflow Run Id"
+    },
+    "mode": {
+      "enum": [
+        "preflight",
+        "development",
+        "final-evaluation",
+        "verify"
+      ],
+      "title": "Mode",
+      "type": "string"
+    },
+    "outputs": {
+      "items": {
+        "$ref": "#/$defs/CloudArtifact"
+      },
+      "title": "Outputs",
+      "type": "array"
+    },
+    "request_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Request Sha256",
+      "type": "string"
+    },
+    "resource": {
+      "$ref": "#/$defs/Wave1ResourceEvidence"
+    },
+    "run_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "title": "Run Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "lightgbm_cloud_run_v1"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "succeeded",
+        "failed",
+        "verified"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "run_id",
+    "mode",
+    "status",
+    "request_sha256",
+    "image",
+    "started_at",
+    "completed_at",
+    "resource",
+    "outputs",
+    "candidate_hash",
+    "mlflow_run_id",
+    "error_type"
+  ],
+  "title": "LOB Arena LightGBM Cloud Run v1",
+  "type": "object"
+}

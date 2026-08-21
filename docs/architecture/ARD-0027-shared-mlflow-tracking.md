@@ -17,7 +17,8 @@ validation-only selection, release checksums, corpus review, or signatures.
 Deploy pinned MLflow 3.13 in an opt-in Docker Compose profile with:
 
 - PostgreSQL as the metadata and registry backend;
-- private MinIO as the default S3-compatible artifact store;
+- private MinIO as the default local S3-compatible artifact store, with Nebius
+  Object Storage replacing MinIO in the Wave 1 cloud deployment;
 - proxied artifacts so clients need access only to MLflow;
 - a dedicated non-root MinIO service identity for MLflow artifact access;
 - basic authentication, fail-closed default permissions, generated secrets,
@@ -26,6 +27,13 @@ Deploy pinned MLflow 3.13 in an opt-in Docker Compose profile with:
   volumes, and container hardening; and
 - an idempotent verifier that creates the roadmap experiment/model namespaces
   and validates metadata plus artifact round trips.
+
+The Wave 1 Nebius deployment uses the same application image and verifier via
+`docker-compose.nebius.yml`. It keeps PostgreSQL on the CPU VM, points the
+artifact proxy at the region-local Nebius S3 endpoint, and pulls the MLflow
+image from Nebius Container Registry by immutable digest. The cloud profile
+does not start MinIO. Object access is supplied by the dedicated MLflow
+identity and remains scoped to the MLflow bucket/prefix.
 
 The canonical release authority remains the repository's checksummed and signed
 manifests. MLflow stores their hashes, artifacts, and lifecycle metadata but
@@ -68,8 +76,9 @@ The initial registered-model namespace is
 
 ## Security and data boundary
 
-- PostgreSQL and MinIO are private Compose services; only the MLflow UI/API is
-  host-bound, on loopback by default.
+- PostgreSQL and local MinIO are private Compose services; only the MLflow
+  UI/API is host-bound, on loopback by default. On Nebius, the API is admitted
+  only from the selected private subnet by a dedicated security group.
 - MLflow authenticates to MinIO with the dedicated `mlflow-artifacts` service
   identity. MinIO root credentials are reserved for bootstrap administration.
 - Runtime secrets live in ignored `deployments/mlflow/.env`; the checked-in
@@ -92,6 +101,8 @@ Positive:
   is opt-in.
 - A real smoke test covers authentication, registry, database writes, artifact
   upload, and artifact download.
+- The Nebius deployment removes a duplicate object-store service and verifies
+  the real Object Storage boundary used by Wave 1 Jobs.
 
 Tradeoffs:
 

@@ -95,6 +95,45 @@ make mlflow-down
 volumes. It does not stop the core arena services and does not delete tracking
 data.
 
+## Nebius Wave 1 deployment
+
+The cloud deployment reuses the same pinned MLflow application, PostgreSQL
+metadata store, authentication bootstrap, exporter and smoke test. Its
+`deployments/mlflow/docker-compose.nebius.yml` profile replaces MinIO with
+Nebius Object Storage at `https://storage.eu-north1.nebius.cloud` and requires
+all credentials explicitly; it has no local placeholder defaults for secrets.
+
+The deployed endpoint is private: `http://10.4.0.54:5500`. From the operator
+workstation, use an SSH tunnel rather than opening port 5500 publicly:
+
+```bash
+ssh -L 5500:10.4.0.54:5500 aimada@89.169.102.236
+```
+
+Then open <http://127.0.0.1:5500>. The VM security group permits MLflow only
+from `10.0.0.0/13` and SSH only from the recorded operator `/32`. The running
+application image is pinned to its Nebius Container Registry digest. A
+short-lived operator Registry token is used for an explicit pull and removed
+immediately afterward; restart uses the locally cached digest and does not
+retain Registry credentials.
+
+Generate a protected Nebius environment by passing the S3 secret on standard
+input; do not place the secret in a command argument or repository file:
+
+```bash
+printf '%s\n' "$AWS_SECRET_ACCESS_KEY" | \
+  ./scripts/bootstrap-nebius-mlflow-env.sh \
+    --output /tmp/aimada-nebius-mlflow.env \
+    --access-key-id "$AWS_ACCESS_KEY_ID" \
+    --bucket aimada-mlflow-e00g6zvxpr00 \
+    --private-host 10.4.0.54 \
+    --image 'cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-mlflow@sha256:2845ef39ff83f79748cda1aa507b2dcc0de6d379b7683e75d27d01ca9a020076'
+```
+
+The 2026-08-16 registry-backed verification run was
+`aa91baa2acba40dbbd005a197fa7ffa6`; its artifact round trip completed against
+`s3://aimada-mlflow-e00g6zvxpr00/artifacts`.
+
 ## Prometheus and Grafana telemetry
 
 The `mlflow-exporter` service authenticates with a generated, non-admin MLflow

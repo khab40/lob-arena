@@ -55,6 +55,52 @@ def test_render_job_config_defaults_image_tag_and_output_path(tmp_path: Path, mo
     assert config["scenarios"] == ["normal_market"]
 
 
+def test_render_lightgbm_job_config_requires_digest_and_governed_runner(tmp_path: Path) -> None:
+    renderer = _load_renderer()
+    rendered = tmp_path / "wave1.yaml"
+    image = "registry.eu-north1.nebius.cloud/project/jobs@sha256:" + "a" * 64
+
+    renderer.render_lightgbm_job_config(
+        input_uri="s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging",
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+        work_root="/job/wave1",
+        image=image,
+        rendered_path=rendered,
+    )
+    config = yaml.safe_load(rendered.read_text(encoding="utf-8"))
+    assert config["kind"] == "governed_lightgbm_wave1"
+    assert config["image"]["digest"] == "sha256:" + "a" * 64
+    assert "run_lightgbm_wave1.py run-s3" in config["args"]
+    assert "--input-uri s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging" in config["args"]
+    assert "/job/inputs" not in config["args"]
+
+    try:
+        renderer.render_lightgbm_job_config(
+            input_uri="s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging",
+            endpoint_url="https://storage.eu-north1.nebius.cloud",
+            work_root="/job/wave1",
+            image="registry.eu-north1.nebius.cloud/project/jobs:latest",
+            rendered_path=rendered,
+        )
+    except ValueError as error:
+        assert "sha256" in str(error)
+    else:
+        raise AssertionError("mutable Wave 1 image was accepted")
+
+    try:
+        renderer.render_lightgbm_job_config(
+            input_uri="s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging",
+            endpoint_url="https://unapproved.example.test",
+            work_root="/job/wave1",
+            image=image,
+            rendered_path=rendered,
+        )
+    except ValueError as error:
+        assert "approved eu-north1" in str(error)
+    else:
+        raise AssertionError("unapproved credential endpoint was accepted")
+
+
 def _load_renderer() -> ModuleType:
     module_path = Path(__file__).resolve().parents[2] / "serverless" / "jobs" / "render_job_config.py"
     spec = importlib.util.spec_from_file_location("render_job_config_for_tests", module_path)

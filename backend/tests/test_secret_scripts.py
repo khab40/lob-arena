@@ -11,6 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ROTATE = ROOT / "scripts" / "rotate-secrets.sh"
 CHECK = ROOT / "scripts" / "check-secrets.sh"
 CONFIGURE_ARTIFACTS = ROOT / "scripts" / "configure-nebius-artifact-storage.sh"
+PROVISION_WAVE1 = ROOT / "scripts" / "provision-nebius-wave1-identities.sh"
 
 
 def _run(script: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -181,6 +182,105 @@ def test_artifact_storage_requires_apply_before_restart(tmp_path: Path) -> None:
 
     assert result.returncode == 2
     assert "--restart requires --apply" in result.stderr
+
+
+def test_wave1_identity_dry_run_is_local_and_shows_exact_boundaries(tmp_path: Path) -> None:
+    state_file = tmp_path / "state.json"
+    result = _run(
+        PROVISION_WAVE1,
+        "--campaign-id",
+        "wave1-research-20260816",
+        "--state-file",
+        str(state_file),
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert not state_file.exists()
+    assert "Dry-run only" in result.stdout
+    assert "no policy on aimada-wave1-final-e00g6zvxpr00" in result.stdout
+    assert "campaigns/wave1-research-20260816/development/*" in result.stdout
+    assert "campaigns/wave1-research-20260816/final/*" in result.stdout
+    assert "access key deactivated" in result.stdout
+
+
+def test_wave1_identity_script_uses_current_non_inline_secret_flow() -> None:
+    source = PROVISION_WAVE1.read_text(encoding="utf-8")
+
+    assert "iam v2 access-key create" in source
+    assert "--secret-delivery-mode mystery_box" in source
+    assert "iam v2 access-key get-secret" not in source
+    assert "iam access-key create" not in source
+    assert "group-membership create" in source
+    assert "--member-id \"${service_account_id}\"" in source
+    assert "--name editors" not in source
+    assert "job_mounts" not in source
+    assert "job_s3_api" in source
+    assert "access_id_secret_reference_id" in source
+    assert "secret_key_secret_reference_id" in source
+
+
+def test_wave1_identity_script_rejects_wrong_project_and_region() -> None:
+    wrong_project = _run(
+        PROVISION_WAVE1,
+        "--campaign-id",
+        "wave1-research-20260816",
+        "--project-id",
+        "project-wrong",
+    )
+    wrong_region = _run(
+        PROVISION_WAVE1,
+        "--campaign-id",
+        "wave1-research-20260816",
+        "--region",
+        "eu-west1",
+    )
+
+    assert wrong_project.returncode == 2
+    assert "project ID is fixed" in wrong_project.stderr
+    assert wrong_region.returncode == 2
+    assert "region must be eu-north1" in wrong_region.stderr
+
+
+def test_wave1_identity_apply_never_treats_lookup_failure_as_not_found(tmp_path: Path) -> None:
+    fake_nebius = tmp_path / "nebius"
+    command_log = tmp_path / "commands.log"
+    fake_nebius.write_text(
+        "#!/usr/bin/env bash\n"
+        "printf '%s\\n' \"$*\" >>\"${FAKE_NEBIUS_LOG}\"\n"
+        "if [[ \"$*\" == *\"iam project get\"* ]]; then\n"
+        "  printf '%s\\n' '{\"metadata\":{\"parent_id\":\"tenant-test\"}}'\n"
+        "  exit 0\n"
+        "fi\n"
+        "printf '%s\\n' 'rpc error: code = Unavailable desc = simulated failure' >&2\n"
+        "exit 1\n",
+        encoding="utf-8",
+    )
+    fake_nebius.chmod(0o700)
+    result = subprocess.run(
+        [
+            "bash",
+            str(PROVISION_WAVE1),
+            "--campaign-id",
+            "wave1-research-20260816",
+            "--apply",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        env={
+            **os.environ,
+            "PATH": f"{tmp_path}:{os.environ['PATH']}",
+            "FAKE_NEBIUS_LOG": str(command_log),
+            "LC_ALL": "C",
+        },
+    )
+
+    commands = command_log.read_text(encoding="utf-8")
+    assert result.returncode == 70
+    assert "Nebius lookup failed; no create fallback was attempted" in result.stderr
+    assert "service-account get-by-name" in commands
+    assert "service-account create" not in commands
 
 
 def test_real_nebius_compose_passes_object_storage_credentials() -> None:

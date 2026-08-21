@@ -6,7 +6,7 @@ ARDs capture architecture decisions, context, tradeoffs, implementation phases, 
 
 ## Implementation Summary
 
-Status as of 2026-08-04:
+Status as of 2026-08-16:
 
 | ARD | Implementation | Notes |
 |-----|----------------|-------|
@@ -42,6 +42,9 @@ Status as of 2026-08-04:
 | [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
 | [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
 | [ARD-0034](ARD-0034-itch-market-profile-calibration.md) | `[phase-3 done]` | Versioned ITCH distributions, deterministic parameter compilation, profile-bound Java simulation, dynamic reference path, and held-out realism reports |
+| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[planned]` | Qualify the implemented governed LightGBM v1 first through CPU Nebius Jobs with reproducibility, performance and cost gates |
+| [ARD-0036](ARD-0036-market-sequence-transformer.md) | `[planned after ARD-0035]` | Train a causal market-sequence Transformer through bounded GPU Jobs only after the LightGBM baseline is frozen |
+| [ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) | `[planned after ARD-0036]` | Feed versioned causal Transformer features into a new LightGBM family with ablation, fallback and promotion gates |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -77,6 +80,9 @@ diagrams document the execution boundaries.
 - [ARD-0032: Nasdaq TotalView-ITCH Ingestion](ARD-0032-nasdaq-itch-ingestion.md) — Streaming local ITCH parsing, lifecycle validation, aligned Parquet, quotas, and manifest-driven Java replay
 - [ARD-0033: Deterministic Hybrid Injection Scheduling](ARD-0033-deterministic-hybrid-scheduling.md) — Exact historical trigger partitioning, scenario parameter hashes, label timing, and evidence bindings
 - [ARD-0034: ITCH Market-Profile Calibration](ARD-0034-itch-market-profile-calibration.md) — Profile extraction, Java runtime selection, checksum/run binding, dynamic baselines, and held-out realism gates
+- [ARD-0035: Nebius-First Qualification Of Governed LightGBM](ARD-0035-nebius-lightgbm-first.md) — CPU-first Nebius execution, evidence, performance, cost and exit gates for the existing LightGBM v1 boundary
+- [ARD-0036: Governed Market-Sequence Transformer Challenger](ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training, standalone evaluation and the gate into derived-feature work
+- [ARD-0037: Transformer-Derived Features Into LightGBM](ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned Transformer feature releases, exact joins, CPU decision layer, fallback and governed promotion
 
 ### Agent Execution
 
