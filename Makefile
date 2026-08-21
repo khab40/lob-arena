@@ -125,6 +125,8 @@ lightgbm-wave1-container-smoke:
 	docker build -f serverless/jobs/Dockerfile -t lob-arena-wave1-smoke:local .
 	docker run --rm --entrypoint python lob-arena-wave1-smoke:local -c \
 		"import lightgbm, mlflow, pyarrow; from app.ml.lightgbm.cloud_transport import execute_wave1_s3; print('wave1-s3-api-ok')"
+	docker run --rm --entrypoint python lob-arena-wave1-smoke:local \
+		/job/serverless/jobs/run_lightgbm_wave1.py run-s3 --help
 
 check-submit:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run pytest \

@@ -1,22 +1,26 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import resource
 import shutil
 import subprocess
 import time
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.ml.lightgbm.artifacts import sha256_file, write_canonical_json
 from app.ml.lightgbm.cloud_contracts import (
     CloudArtifact,
     LightGbmCloudJobRequest,
     LightGbmCloudRun,
+    Wave1ExecutionContext,
+    Wave1ExperimentSpec,
     Wave1FinalAuthorization,
     Wave1ResourceEvidence,
 )
@@ -25,13 +29,13 @@ from app.ml.lightgbm.contracts import (
     CalibrationManifest,
     DetectorPredictionsManifest,
     LightGbmTrainingRun,
-    LightGbmV1Hyperparameters,
     ModelBundleManifest,
 )
+from app.ml.lightgbm.data import GovernedFeatureDataset, load_governed_feature_dataset
 from app.ml.lightgbm.release import build_model_bundle, verify_complete_lightgbm_v1_release
 from app.ml.lightgbm.scoring import calibrate_validation_predictions, predict_governed_fold
 from app.ml.lightgbm.training import train_binary_attack_model
-from app.ml.lightgbm.data import load_governed_feature_dataset
+from app.ml.lightgbm.tracking import log_development_run, log_governed_evaluation_run
 from app.nebius.object_storage import (
     ChecksumInventory,
     InventoryEntry,
@@ -48,6 +52,8 @@ class _StrictModel(BaseModel):
 class FrozenCandidate(_StrictModel):
     schema_version: str = "lightgbm_wave1_candidate_v1"
     campaign_id: str
+    experiment: Wave1ExperimentSpec
+    reproducibility_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
     training_manifest: CloudArtifact
     calibration_manifest: CloudArtifact
     validation_metrics: CloudArtifact
@@ -68,8 +74,11 @@ def execute_wave1_request(
     *,
     input_root: Path,
     local_result_root: Path | None = None,
+    execution_context: Wave1ExecutionContext | None = None,
+    trusted_authorization_public_key_sha256: str | None = None,
 ) -> Path:
     request = LightGbmCloudJobRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
+    _validate_execution_context(request, execution_context)
     destination = _execution_destination(request, local_result_root)
     input_root = input_root.resolve()
     started_at = datetime.now(UTC)
@@ -81,15 +90,35 @@ def execute_wave1_request(
         (staging / "request.json").write_bytes(request.canonical_bytes())
         input_inventory = _request_inventory(input_root, request)
         (staging / "input-inventory.json").write_text(input_inventory.model_dump_json(indent=2), encoding="utf-8")
-        _write_environment(staging, request)
+        _write_environment(staging, request, execution_context)
         if request.mode == "preflight":
             processed_rows = 0
             candidate_hash = None
+            reproducibility_hash = None
+            mlflow_run_id = None
             metrics: dict[str, Any] = {"preflight_verified": True, "test_fold_accessed": False}
         elif request.mode == "development":
-            processed_rows, candidate_hash, metrics = _run_development(staging, input_root, request)
+            (
+                processed_rows,
+                candidate_hash,
+                reproducibility_hash,
+                mlflow_run_id,
+                metrics,
+            ) = _run_development(staging, input_root, request, execution_context)
         elif request.mode == "final-evaluation":
-            processed_rows, candidate_hash, metrics = _run_final(staging, input_root, request)
+            (
+                processed_rows,
+                candidate_hash,
+                reproducibility_hash,
+                mlflow_run_id,
+                metrics,
+            ) = _run_final(
+                staging,
+                input_root,
+                request,
+                execution_context,
+                trusted_authorization_public_key_sha256,
+            )
         else:
             raise ValueError("verify mode uses verify_wave1_result() and does not execute a new run")
         (staging / "metrics.json").write_text(
@@ -103,6 +132,9 @@ def execute_wave1_request(
             cpu_start=cpu_start,
             processed_rows=processed_rows,
             candidate_hash=candidate_hash,
+            reproducibility_hash=reproducibility_hash,
+            mlflow_run_id=mlflow_run_id,
+            execution_context=execution_context,
         )
         return publish_local_result(staging, destination.as_uri())
     except Exception as exc:
@@ -116,6 +148,15 @@ def verify_wave1_result(result_root: Path) -> LightGbmCloudRun:
     request = LightGbmCloudJobRequest.model_validate_json((result_root / "request.json").read_text(encoding="utf-8"))
     if run.request_sha256 != request.canonical_hash() or run.run_id != request.run_id:
         raise ValueError("cloud run is not bound to its request")
+    if request.mode == "development":
+        candidate_path = result_root / "candidate.json"
+        candidate = FrozenCandidate.model_validate_json(candidate_path.read_text(encoding="utf-8"))
+        if run.candidate_hash != sha256_file(candidate_path):
+            raise ValueError("cloud run candidate hash does not match candidate.json")
+        if run.reproducibility_hash != candidate.reproducibility_hash:
+            raise ValueError("cloud run reproducibility hash does not match candidate.json")
+        if candidate.experiment.canonical_hash() != request.experiment.canonical_hash():
+            raise ValueError("cloud run candidate experiment does not match its request")
     if request.mode == "final-evaluation":
         artifacts = result_root / "artifacts"
         training = _load(LightGbmTrainingRun, artifacts / "training" / "training-run.json")
@@ -136,9 +177,11 @@ def _run_development(
     staging: Path,
     input_root: Path,
     request: LightGbmCloudJobRequest,
-) -> tuple[int, str, dict[str, Any]]:
+    execution_context: Wave1ExecutionContext | None,
+) -> tuple[int, str, str, str | None, dict[str, Any]]:
     artifact_root = staging / "artifacts"
     dataset = _load_dataset(request, input_root=input_root, artifact_root=artifact_root, access_mode="development")
+    dataset = _apply_experiment(dataset, request.experiment)
     training = train_binary_attack_model(
         dataset,
         artifact_root=artifact_root,
@@ -146,10 +189,8 @@ def _run_development(
         created_at=request.created_at,
         git_commit=request.git_commit,
         training_seed=request.random_seed,
-        hyperparameters=LightGbmV1Hyperparameters(
-            num_boost_round=60, learning_rate=0.1, num_leaves=8, min_data_in_leaf=2
-        ),
-        early_stopping_rounds=10,
+        hyperparameters=request.experiment.hyperparameters,
+        early_stopping_rounds=request.experiment.early_stopping_rounds,
     )
     calibration = calibrate_validation_predictions(
         dataset,
@@ -157,12 +198,23 @@ def _run_development(
         artifact_root=artifact_root,
         output_dir=artifact_root / "calibration",
         created_at=request.created_at,
-        method="platt",
-        precision_floor=0.90,
-        recall_floor=0.90,
+        method=request.experiment.calibration_method,
+        precision_floor=request.experiment.precision_floor,
+        recall_floor=request.experiment.recall_floor,
+    )
+    reproducibility_hash = _reproducibility_hash(
+        request.experiment,
+        training.training_manifest,
+        calibration.manifest,
+        calibration.feature_importance_path,
+        calibration.feature_schema_path,
+        calibration.reliability_bins_path,
+        calibration.reliability_diagram_path,
     )
     candidate = FrozenCandidate(
         campaign_id=request.campaign_id,
+        experiment=request.experiment,
+        reproducibility_hash=reproducibility_hash,
         training_manifest=_cloud_artifact(training.training_manifest_path, artifact_root, "training_manifest"),
         calibration_manifest=_cloud_artifact(calibration.manifest_path, artifact_root, "calibration_manifest"),
         validation_metrics=_cloud_artifact(calibration.validation_metrics_path, artifact_root, "validation_metrics"),
@@ -176,21 +228,40 @@ def _run_development(
     candidate_path = staging / "candidate.json"
     candidate_path.write_bytes(candidate.canonical_bytes())
     candidate_hash = sha256_file(candidate_path)
+    mlflow_run_id = None
+    if request.mlflow_tracking_uri is not None:
+        mlflow_run_id = log_development_run(
+            artifact_root=artifact_root,
+            training=training.training_manifest,
+            calibration=calibration.manifest,
+            training_manifest_path=training.training_manifest_path,
+            calibration_manifest_path=calibration.manifest_path,
+            validation_metrics_path=calibration.validation_metrics_path,
+            feature_importance_path=calibration.feature_importance_path,
+            reliability_bins_path=calibration.reliability_bins_path,
+            reliability_diagram_path=calibration.reliability_diagram_path,
+            model_path=training.model_path,
+            tracking_uri=request.mlflow_tracking_uri,
+            cloud_metadata=_cloud_metadata(execution_context),
+        )
     rows = sum(fold.row_count for fold in dataset.folds)
     metrics = {
         "best_iteration": training.training_manifest.early_stopping.best_iteration,
         "validation_binary_logloss": training.training_manifest.early_stopping.best_score,
         "candidate_hash": candidate_hash,
+        "reproducibility_hash": reproducibility_hash,
         "test_fold_accessed": False,
     }
-    return rows, candidate_hash, metrics
+    return rows, candidate_hash, reproducibility_hash, mlflow_run_id, metrics
 
 
 def _run_final(
     staging: Path,
     input_root: Path,
     request: LightGbmCloudJobRequest,
-) -> tuple[int, str, dict[str, Any]]:
+    execution_context: Wave1ExecutionContext | None,
+    trusted_authorization_public_key_sha256: str | None,
+) -> tuple[int, str, str, str | None, dict[str, Any]]:
     candidate_ref = _required(request.candidate, "candidate")
     authorization_ref = _required(request.authorization, "authorization")
     signature_ref = _required(request.authorization_signature, "authorization signature")
@@ -205,18 +276,36 @@ def _run_final(
         raise ValueError("candidate/authorization campaign binding mismatch")
     if authorization.candidate_hash != candidate_ref.sha256:
         raise ValueError("authorization does not approve the exact candidate hash")
-    _verify_signature(authorization_path, signature_path, public_key_path)
+    _verify_signature(
+        authorization_path,
+        signature_path,
+        public_key_path,
+        trusted_public_key_sha256=trusted_authorization_public_key_sha256,
+    )
+    if candidate.experiment.canonical_hash() != request.experiment.canonical_hash():
+        raise ValueError("final request experiment does not match the frozen candidate")
 
     candidate_root = candidate_path.parent
     source_artifacts = candidate_root / "artifacts"
     if not source_artifacts.is_dir():
         raise ValueError("candidate artifact package is missing")
+    for reference in (
+        candidate.training_manifest,
+        candidate.calibration_manifest,
+        candidate.validation_metrics,
+        candidate.feature_importance,
+        candidate.feature_schema,
+        candidate.reliability_bins,
+        candidate.reliability_diagram,
+    ):
+        _verify_cloud_artifact(source_artifacts, reference)
     artifact_root = staging / "artifacts"
     shutil.rmtree(artifact_root)
     shutil.copytree(source_artifacts, artifact_root)
     training = _load(LightGbmTrainingRun, artifact_root / candidate.training_manifest.uri)
     calibration = _load(CalibrationManifest, artifact_root / candidate.calibration_manifest.uri)
     dataset = _load_dataset(request, input_root=input_root, artifact_root=artifact_root, access_mode="final_test")
+    dataset = _apply_experiment(dataset, candidate.experiment)
     prediction = predict_governed_fold(
         dataset,
         training=training,
@@ -224,7 +313,7 @@ def _run_final(
         artifact_root=artifact_root,
         output_dir=artifact_root / "prediction",
         created_at=request.created_at,
-        operating_mode="balanced",
+        operating_mode=candidate.experiment.operating_mode,
     )
     bundle = build_model_bundle(
         artifact_root,
@@ -250,8 +339,23 @@ def _run_final(
         predictions=prediction.manifest,
         bundle=bundle.bundle,
     )
-    return dataset.fold("test").row_count, candidate_ref.sha256, {
+    mlflow_run_id = None
+    if request.mlflow_tracking_uri is not None:
+        mlflow_run_id = log_governed_evaluation_run(
+            artifact_root=artifact_root,
+            training=training,
+            calibration=calibration,
+            predictions=prediction.manifest,
+            bundle=bundle.bundle,
+            bundle_path=bundle.bundle_path,
+            checksum_path=bundle.checksum_path,
+            prediction_manifest_path=prediction.manifest_path,
+            tracking_uri=request.mlflow_tracking_uri,
+            cloud_metadata=_cloud_metadata(execution_context),
+        )
+    return dataset.fold("test").row_count, candidate_ref.sha256, candidate.reproducibility_hash, mlflow_run_id, {
         "candidate_hash": candidate_ref.sha256,
+        "reproducibility_hash": candidate.reproducibility_hash,
         "test_fold_accessed": True,
         "test_row_count": prediction.manifest.row_count,
         "test_alert_count": prediction.manifest.alert_count,
@@ -292,6 +396,97 @@ def _request_inventory(input_root: Path, request: LightGbmCloudJobRequest) -> Ch
     )
 
 
+def _validate_execution_context(
+    request: LightGbmCloudJobRequest,
+    execution_context: Wave1ExecutionContext | None,
+) -> None:
+    if request.result_uri.startswith("s3://") and execution_context is None:
+        raise ValueError("cloud execution requires an independently supplied Job context")
+    if execution_context is None:
+        return
+    expected = (
+        request.project_id,
+        request.image,
+        request.resource.platform,
+        request.resource.preset,
+        request.resource.disk_size_gib,
+        request.resource.timeout_seconds,
+    )
+    actual = (
+        execution_context.project_id,
+        execution_context.image,
+        execution_context.platform,
+        execution_context.preset,
+        execution_context.disk_size_gib,
+        execution_context.timeout_seconds,
+    )
+    if actual != expected:
+        raise ValueError("actual Nebius Job context does not match the governed request")
+
+
+def _apply_experiment(
+    dataset: GovernedFeatureDataset,
+    experiment: Wave1ExperimentSpec,
+) -> GovernedFeatureDataset:
+    available = dataset.ordered_feature_columns
+    unknown = set(experiment.excluded_features) - set(available)
+    if unknown:
+        raise ValueError(f"experiment excludes unknown features: {', '.join(sorted(unknown))}")
+    selected = tuple(name for name in available if name not in set(experiment.excluded_features))
+    if not selected:
+        raise ValueError("experiment must retain at least one governed feature")
+    return replace(dataset, ordered_feature_columns=selected)
+
+
+def _reproducibility_hash(
+    experiment: Wave1ExperimentSpec,
+    training: LightGbmTrainingRun,
+    calibration: CalibrationManifest,
+    feature_importance_path: Path,
+    feature_schema_path: Path,
+    reliability_bins_path: Path,
+    reliability_diagram_path: Path,
+) -> str:
+    training_payload = training.model_dump(mode="json")
+    calibration_payload = calibration.model_dump(mode="json")
+    training_payload.pop("created_at", None)
+    calibration_payload.pop("created_at", None)
+    payload = {
+        "schema_version": "lightgbm_wave1_reproducibility_v1",
+        "experiment": experiment.model_dump(mode="json"),
+        "training": training_payload,
+        "calibration": calibration_payload,
+        "derived_artifacts": {
+            "feature_importance": sha256_file(feature_importance_path),
+            "feature_schema": sha256_file(feature_schema_path),
+            "reliability_bins": sha256_file(reliability_bins_path),
+            "reliability_diagram": sha256_file(reliability_diagram_path),
+        },
+    }
+    return hashlib.sha256(
+        json.dumps(payload, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _cloud_metadata(
+    execution_context: Wave1ExecutionContext | None,
+) -> dict[str, str | int | float] | None:
+    if execution_context is None:
+        return None
+    values: dict[str, str | int | float] = {
+        "cloud_provider": "nebius",
+        "cloud_region": "eu-north1",
+        "cloud_platform": execution_context.platform,
+        "cloud_preset": execution_context.preset,
+        "image_digest": execution_context.image,
+    }
+    if execution_context.nebius_job_id is not None:
+        values["cloud_job_id"] = execution_context.nebius_job_id
+    if execution_context.estimated_cost_usd is not None:
+        values["cloud_estimated_cost_usd"] = execution_context.estimated_cost_usd
+    return values
+
+
 def _load_dataset(
     request: LightGbmCloudJobRequest,
     *,
@@ -322,7 +517,11 @@ def _load_dataset(
     )
 
 
-def _write_environment(staging: Path, request: LightGbmCloudJobRequest) -> None:
+def _write_environment(
+    staging: Path,
+    request: LightGbmCloudJobRequest,
+    execution_context: Wave1ExecutionContext | None,
+) -> None:
     payload = {
         "schema_version": "lightgbm_wave1_environment_v1",
         "project_id": request.project_id,
@@ -332,9 +531,12 @@ def _write_environment(staging: Path, request: LightGbmCloudJobRequest) -> None:
         "preset": request.resource.preset,
         "cpu_count": request.resource.cpu_count,
         "memory_gib": request.resource.memory_gib,
+        "disk_size_gib": request.resource.disk_size_gib,
         "gpu_count": request.resource.gpu_count,
         "python": os.sys.version.split()[0],
     }
+    if execution_context is not None:
+        payload["execution_context"] = execution_context.model_dump(mode="json")
     (staging / "environment.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
@@ -347,6 +549,9 @@ def _write_cloud_run(
     cpu_start: float,
     processed_rows: int,
     candidate_hash: str | None,
+    reproducibility_hash: str | None,
+    mlflow_run_id: str | None,
+    execution_context: Wave1ExecutionContext | None,
 ) -> None:
     wall_seconds = max(time.perf_counter() - wall_start, 1e-9)
     usage = resource.getrusage(resource.RUSAGE_SELF)
@@ -366,6 +571,7 @@ def _write_cloud_run(
         started_at=started_at,
         completed_at=datetime.now(UTC),
         resource=Wave1ResourceEvidence(
+            disk_size_gib=request.resource.disk_size_gib,
             wall_seconds=wall_seconds,
             cpu_seconds=max(time.process_time() - cpu_start, 0.0),
             peak_rss_bytes=peak_rss,
@@ -374,6 +580,10 @@ def _write_cloud_run(
         ),
         outputs=outputs,
         candidate_hash=candidate_hash,
+        reproducibility_hash=reproducibility_hash,
+        mlflow_run_id=mlflow_run_id,
+        nebius_job_id=execution_context.nebius_job_id if execution_context else None,
+        estimated_cost_usd=execution_context.estimated_cost_usd if execution_context else None,
     )
     write_canonical_json(staging / "cloud-run.json", run)
 
@@ -401,7 +611,17 @@ def _verify_cloud_artifact(root: Path, artifact: CloudArtifact) -> Path:
     return path
 
 
-def _verify_signature(document: Path, signature: Path, public_key: Path) -> None:
+def _verify_signature(
+    document: Path,
+    signature: Path,
+    public_key: Path,
+    *,
+    trusted_public_key_sha256: str | None,
+) -> None:
+    if trusted_public_key_sha256 is None:
+        raise ValueError("final authorization requires an out-of-band trusted public-key hash")
+    if sha256_file(public_key) != trusted_public_key_sha256:
+        raise ValueError("final authorization public key does not match the trusted hash")
     completed = subprocess.run(
         [
             "openssl",

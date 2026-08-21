@@ -44,6 +44,9 @@
           "title": "Cpu Seconds",
           "type": "number"
         },
+        "disk_size_gib": {
+          "const": 100
+        },
         "gpu_count": {
           "const": 0
         },
@@ -82,6 +85,7 @@
         "preset",
         "cpu_count",
         "memory_gib",
+        "disk_size_gib",
         "gpu_count",
         "wall_seconds",
         "cpu_seconds",
@@ -133,6 +137,19 @@
       "default": null,
       "title": "Error Type"
     },
+    "estimated_cost_usd": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Estimated Cost Usd"
+    },
     "image": {
       "pattern": "^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$",
       "title": "Image",
@@ -161,12 +178,38 @@
       "title": "Mode",
       "type": "string"
     },
+    "nebius_job_id": {
+      "anyOf": [
+        {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Nebius Job Id"
+    },
     "outputs": {
       "items": {
         "$ref": "#/$defs/CloudArtifact"
       },
       "title": "Outputs",
       "type": "array"
+    },
+    "reproducibility_hash": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reproducibility Hash"
     },
     "request_sha256": {
       "pattern": "^[0-9a-f]{64}$",
@@ -212,7 +255,10 @@
     "resource",
     "outputs",
     "candidate_hash",
+    "reproducibility_hash",
     "mlflow_run_id",
+    "nebius_job_id",
+    "estimated_cost_usd",
     "error_type"
   ],
   "title": "LOB Arena LightGBM Cloud Run v1",

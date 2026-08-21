@@ -131,10 +131,20 @@ verified result to the exact campaign/run prefix with `SUCCESS` last.
 Prepare the dry run with:
 
 ```bash
+python scripts/lightgbm_wave1.py stage-fixture \
+  --release-id RELEASE_ID \
+  --run-id RUN_ID \
+  --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
+  --mlflow-tracking-uri http://PRIVATE_MLFLOW_HOST:5500 \
+  --output outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json
+
 NEBIUS_WAVE1_INPUT_URI=s3://aimada-wave1-dev-e00g6zvxpr00/releases/RELEASE_ID/staging \
+NEBIUS_WAVE1_REQUEST_EVIDENCE=outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json \
 NEBIUS_OBJECT_STORAGE_ENDPOINT_URL=https://storage.eu-north1.nebius.cloud \
 NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID=ACCESS_ID_SECRET_SELECTOR \
 NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID=SECRET_KEY_SELECTOR \
+NEBIUS_MLFLOW_USERNAME_SECRET_ID=MLFLOW_USERNAME_SECRET_SELECTOR \
+NEBIUS_MLFLOW_PASSWORD_SECRET_ID=MLFLOW_PASSWORD_SECRET_SELECTOR \
 python scripts/submit_nebius_job.py \
   --workload lightgbm-wave1 \
   --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
@@ -144,5 +154,9 @@ python scripts/submit_nebius_job.py \
 All five failed attempts count against the fixed 20-Job development ceiling;
 15 slots remain. The next cloud action remains one explicitly authorized,
 15-minute G4 development smoke after the image contents, command contract,
-input package, and dry run verify together. Mutable tags, inline credentials,
-filesystem mounts, broad bucket probes, and unbounded prefixes are rejected.
+input package, and dry run verify together. The submitter verifies the canonical
+request-evidence hash and forces the approved project, `cpu-d3`, `4vcpu-16gb`,
+100 GiB disk and one-hour Nebius timeout. Mutable tags, inline credentials,
+filesystem mounts, broad bucket probes, unbounded prefixes, and request/runtime
+mismatches are rejected. Final evaluation also requires the trusted signing-key
+SHA-256 from outside the candidate package.

@@ -491,7 +491,8 @@ trip passed and were rebound into the completed G3 exit record.
    MLflow run `aa91baa2acba40dbbd005a197fa7ffa6`, and the spend baseline. Only a
    passing record unlocks G4.
 8. **Operator — G4 manual action:** after reviewing the generated dry run,
-   submit exactly one 15-minute `cpu-d3 4vcpu-16gb` smoke Job and return only
+   submit exactly one `cpu-d3 4vcpu-16gb` smoke Job with the minimum one-hour
+   Nebius timeout and a 15-minute operator cancellation watchdog, and return only
    its Job ID and status. Codex performs all collection and interpretation.
 
 ### G4 — Cloud Smoke
@@ -499,8 +500,9 @@ trip passed and were rebound into the completed G3 exit record.
 Codex generates the dry run; Operator submits it exactly once and returns the
 Job ID/status; Codex collects and verifies the result.
 
-Limits: one `4vcpu-16gb` Job, 15 minutes, smallest permitted release, no test
-access, no parallelism, no automatic retry.
+Limits: one `4vcpu-16gb` Job, one-hour platform timeout, 15-minute operator
+watchdog, smallest permitted release, no test access, no parallelism, no
+automatic retry.
 
 **Gate:** `SUCCESS`, checksums, MLflow development record, Job identity, runtime
 and resource evidence verify; no secret appears in config/logs/artifacts.
@@ -549,19 +551,27 @@ explicitly authorizes one bounded attempt.
 
 Corrected G4 sequence:
 
-1. Codex builds and locally smokes a new `linux/amd64` image containing the S3
-   API runner, then pushes it through the existing Nebius Registry path and
-   resolves the immutable digest.
+1. Codex builds and locally smokes a new `linux/amd64` image containing the
+   exact S3 API CLI entrypoint, then pushes it through the existing Nebius
+   Registry path and resolves the immutable digest.
 2. Codex stages a new immutable development release whose canonical request names
-   the exact S3 result prefix. The old mounted-path request is not reused.
+   the exact S3 result prefix, experiment specification, approved project/image/
+   resource envelope, and private MLflow URI. The resulting request-evidence
+   file and its canonical hash are mandatory submitter inputs.
 3. Codex renders a dry run with no `--volume`, the fixed eu-north1 endpoint,
-   and separate MysteryBox selectors for both AWS credential environment
-   values; local policy tests must pass.
+   exact `cpu-d3` / `4vcpu-16gb` / 100 GiB / one-hour resources, separate
+   MysteryBox selectors for AWS and MLflow credentials, and the out-of-band
+   trusted public-key fingerprint for final evaluation; local policy tests pass.
 4. Operator reviews the redacted dry run and explicitly authorizes exactly one
    15-minute G4 submission. No authorization means no Job.
 5. After submission, Codex collects Job/log/result evidence, verifies the
-   downloaded result and MLflow record, reconciles spend, and either closes G4
-   or stops with one bounded failure record.
+   downloaded result and MLflow record, binds the returned Job ID, actual
+   project/image/resources and nonnegative cost estimate, reconciles spend, and
+   either closes G4 or stops with one bounded failure record.
+
+The stopped VM remains stopped during this baseline reconciliation. No prior
+evidence is re-archived; archive upload is opt-in and supports the standard AWS
+ambient credential chain when explicitly enabled.
 
 ### G5 — Reproducibility
 

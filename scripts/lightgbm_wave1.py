@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -21,6 +22,7 @@ from app.ml.lightgbm.artifacts import sha256_file  # noqa: E402
 from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
     CloudArtifact,
     LightGbmCloudJobRequest,
+    Wave1ExperimentSpec,
     Wave1FinalAuthorization,
     Wave1FixtureInput,
 )
@@ -38,6 +40,7 @@ SIGNER = "Alexey Khabalov — Wave 1 Release Approver"
 LOCAL_IMAGE = "ghcr.io/khab40/lob-arena-jobs@sha256:" + "0" * 64
 DEVELOPMENT_BUCKET = "aimada-wave1-dev-e00g6zvxpr00"
 RESULTS_BUCKET = "aimada-wave1-results-e00g6zvxpr00"
+DEFAULT_EXPERIMENT_CONFIG = ROOT / "configs" / "experiments" / "lightgbm-wave1" / "development-fixture.json"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -50,10 +53,20 @@ def main(argv: list[str] | None = None) -> int:
     stage.add_argument("--run-id", required=True)
     stage.add_argument("--image", required=True)
     stage.add_argument("--endpoint-url", default="https://storage.eu-north1.nebius.cloud")
+    stage.add_argument("--experiment-config", type=Path, default=DEFAULT_EXPERIMENT_CONFIG)
+    stage.add_argument("--mlflow-tracking-uri", required=True)
     stage.add_argument("--output", type=Path, required=True)
     collect = subparsers.add_parser("collect", help="Verify and inventory a completed result")
     collect.add_argument("--result", type=Path, required=True)
     collect.add_argument("--output", type=Path, required=True)
+    collect.add_argument("--nebius-job-id")
+    collect.add_argument("--actual-project-id")
+    collect.add_argument("--actual-image")
+    collect.add_argument("--actual-platform")
+    collect.add_argument("--actual-preset")
+    collect.add_argument("--actual-disk-size-gib", type=int)
+    collect.add_argument("--actual-timeout-seconds", type=int)
+    collect.add_argument("--estimated-cost-usd", type=float)
     compare = subparsers.add_parser("compare", help="Compare deterministic evidence from development repeats")
     compare.add_argument("results", type=Path, nargs="+")
     compare.add_argument("--output", type=Path, required=True)
@@ -65,9 +78,28 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "local-e2e":
         local_e2e(args.output)
     elif args.command == "stage-fixture":
-        stage_fixture(args.release_id, args.run_id, args.image, args.endpoint_url, args.output)
+        stage_fixture(
+            args.release_id,
+            args.run_id,
+            args.image,
+            args.endpoint_url,
+            args.output,
+            experiment_config=args.experiment_config,
+            mlflow_tracking_uri=args.mlflow_tracking_uri,
+        )
     elif args.command == "collect":
-        collect_result(args.result, args.output)
+        collect_result(
+            args.result,
+            args.output,
+            nebius_job_id=args.nebius_job_id,
+            actual_project_id=args.actual_project_id,
+            actual_image=args.actual_image,
+            actual_platform=args.actual_platform,
+            actual_preset=args.actual_preset,
+            actual_disk_size_gib=args.actual_disk_size_gib,
+            actual_timeout_seconds=args.actual_timeout_seconds,
+            estimated_cost_usd=args.estimated_cost_usd,
+        )
     elif args.command == "compare":
         compare_results(args.results, args.output)
     else:
@@ -75,7 +107,16 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
-def stage_fixture(release_id: str, run_id: str, image: str, endpoint_url: str, output: Path) -> None:
+def stage_fixture(
+    release_id: str,
+    run_id: str,
+    image: str,
+    endpoint_url: str,
+    output: Path,
+    *,
+    experiment_config: Path = DEFAULT_EXPERIMENT_CONFIG,
+    mlflow_tracking_uri: str,
+) -> None:
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]{2,62}", release_id):
         raise ValueError("release ID must be a lowercase immutable identifier")
     if any(
@@ -87,6 +128,9 @@ def stage_fixture(release_id: str, run_id: str, image: str, endpoint_url: str, o
     ):
         raise ValueError("inline Nebius credential variables are forbidden")
     created_at = datetime.now(UTC)
+    experiment = Wave1ExperimentSpec.model_validate_json(
+        experiment_config.read_text(encoding="utf-8")
+    )
     destination = f"s3://{DEVELOPMENT_BUCKET}/releases/{release_id}/staging"
     request = LightGbmCloudJobRequest(
         campaign_id="wave1-research-20260816",
@@ -96,11 +140,13 @@ def stage_fixture(release_id: str, run_id: str, image: str, endpoint_url: str, o
         image=image,
         created_at=created_at,
         git_commit=_git_commit(),
+        experiment=experiment,
         input=Wave1FixtureInput(feature_release_sha256=fixture_hash("wave1-fixture-feature-release")),
         result_uri=(
             f"s3://{RESULTS_BUCKET}/campaigns/"
             f"wave1-research-20260816/development/{run_id}"
         ),
+        mlflow_tracking_uri=mlflow_tracking_uri,
     )
     with tempfile.TemporaryDirectory(prefix="wave1-fixture-stage-") as directory:
         package = Path(directory)
@@ -136,6 +182,10 @@ def stage_fixture(release_id: str, run_id: str, image: str, endpoint_url: str, o
             "run_id": run_id,
             "destination": destination,
             "request_sha256": request.canonical_hash(),
+            "request": request.model_dump(mode="json"),
+            "project_id": request.project_id,
+            "image": request.image,
+            "resource": request.resource.model_dump(mode="json"),
             "inventory_sha256": hashlib.sha256(
                 (package / "input-inventory.json").read_bytes()
             ).hexdigest(),
@@ -203,15 +253,64 @@ def local_e2e(output: Path) -> None:
     )
     final_request_path = inputs / "final-request.json"
     final_request_path.write_bytes(final_request.canonical_bytes())
-    execute_wave1_request(final_request_path, input_root=final_inputs)
+    execute_wave1_request(
+        final_request_path,
+        input_root=final_inputs,
+        trusted_authorization_public_key_sha256=sha256_file(public_key_path),
+    )
     verify_wave1_result(final)
     collect_result(final, output / "collection.json")
     create_exit_record(development, final, output / "exit-record.json")
     (output / "LOCAL-G2-SUCCESS").write_text("verified\n", encoding="utf-8")
 
 
-def collect_result(result: Path, output: Path) -> None:
+def collect_result(
+    result: Path,
+    output: Path,
+    *,
+    nebius_job_id: str | None = None,
+    actual_project_id: str | None = None,
+    actual_image: str | None = None,
+    actual_platform: str | None = None,
+    actual_preset: str | None = None,
+    actual_disk_size_gib: int | None = None,
+    actual_timeout_seconds: int | None = None,
+    estimated_cost_usd: float | None = None,
+) -> None:
     run = verify_wave1_result(result)
+    request = LightGbmCloudJobRequest.model_validate_json(
+        (result / "request.json").read_text(encoding="utf-8")
+    )
+    cloud_execution = request.result_uri.startswith("s3://")
+    actual_context = {
+        "project_id": actual_project_id,
+        "image": actual_image,
+        "platform": actual_platform,
+        "preset": actual_preset,
+        "disk_size_gib": actual_disk_size_gib,
+        "timeout_seconds": actual_timeout_seconds,
+    }
+    if cloud_execution:
+        if not nebius_job_id or any(value is None for value in actual_context.values()):
+            raise ValueError("cloud collection requires the Nebius Job ID and actual Job context")
+        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", nebius_job_id) is None:
+            raise ValueError("cloud collection requires a canonical Nebius Job ID")
+        expected_context = {
+            "project_id": request.project_id,
+            "image": request.image,
+            "platform": request.resource.platform,
+            "preset": request.resource.preset,
+            "disk_size_gib": request.resource.disk_size_gib,
+            "timeout_seconds": request.resource.timeout_seconds,
+        }
+        if actual_context != expected_context:
+            raise ValueError("collected Nebius Job context does not match the governed request")
+        if (
+            estimated_cost_usd is None
+            or not math.isfinite(estimated_cost_usd)
+            or estimated_cost_usd < 0
+        ):
+            raise ValueError("cloud collection requires a nonnegative Job cost estimate")
     inventory = inventory_directory(result)
     payload = {
         "schema_version": "lightgbm_wave1_collection_v1",
@@ -220,6 +319,9 @@ def collect_result(result: Path, output: Path) -> None:
         "result_sha256": _inventory_hash(inventory.model_dump(mode="json")),
         "file_count": len(inventory.files),
         "size_bytes": sum(item.size_bytes for item in inventory.files),
+        "nebius_job_id": nebius_job_id,
+        "actual_job_context": actual_context if cloud_execution else None,
+        "estimated_cost_usd": estimated_cost_usd,
         "verified": True,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -235,12 +337,17 @@ def compare_results(results: list[Path], output: Path) -> None:
         metrics = json.loads((result / "metrics.json").read_text(encoding="utf-8"))
         records.append(
             {
-                "candidate_hash": run.candidate_hash,
+                "candidate_package_hash": run.candidate_hash,
+                "reproducibility_hash": run.reproducibility_hash,
                 "best_iteration": metrics.get("best_iteration"),
                 "validation_binary_logloss": metrics.get("validation_binary_logloss"),
             }
         )
-    reproducible = all(record == records[0] for record in records[1:])
+    deterministic_records = [
+        {key: value for key, value in record.items() if key != "candidate_package_hash"}
+        for record in records
+    ]
+    reproducible = all(record == deterministic_records[0] for record in deterministic_records[1:])
     output.write_text(
         json.dumps(
             {"schema_version": "lightgbm_wave1_repeat_comparison_v1", "reproducible": reproducible, "runs": records},
@@ -280,6 +387,7 @@ def _request(
     mode: str,
     created_at: datetime,
     result: Path,
+    experiment: Wave1ExperimentSpec | None = None,
     candidate: CloudArtifact | None = None,
     authorization: CloudArtifact | None = None,
     authorization_signature: CloudArtifact | None = None,
@@ -293,6 +401,7 @@ def _request(
         image=LOCAL_IMAGE,
         created_at=created_at,
         git_commit=_git_commit(),
+        experiment=experiment or Wave1ExperimentSpec(),
         input=Wave1FixtureInput(feature_release_sha256=fixture_hash("wave1-fixture-feature-release")),
         result_uri=result.resolve().as_uri(),
         candidate=candidate,

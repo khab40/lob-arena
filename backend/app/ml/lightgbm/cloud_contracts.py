@@ -8,7 +8,13 @@ from typing import Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from app.ml.lightgbm.contracts import GIT_COMMIT_PATTERN, IDENTIFIER_PATTERN, SHA256_PATTERN
+from app.ml.lightgbm.contracts import (
+    GIT_COMMIT_PATTERN,
+    IDENTIFIER_PATTERN,
+    SHA256_PATTERN,
+    LightGbmV1Hyperparameters,
+    OperatingMode,
+)
 
 
 IMMUTABLE_IMAGE_PATTERN = r"^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$"
@@ -17,6 +23,9 @@ SENSITIVE_NAME = re.compile(
 )
 Wave1Mode = Literal["preflight", "development", "final-evaluation", "verify"]
 RunStatus = Literal["succeeded", "failed", "verified"]
+APPROVED_FIXTURE_FEATURE_RELEASE_SHA256 = hashlib.sha256(
+    b"wave1-fixture-feature-release"
+).hexdigest()
 
 
 class _StrictCanonicalModel(BaseModel):
@@ -64,14 +73,57 @@ class Wave1ResourceRequest(_StrictCanonicalModel):
     preset: Literal["4vcpu-16gb"] = "4vcpu-16gb"
     cpu_count: Literal[4] = 4
     memory_gib: Literal[16] = 16
+    disk_size_gib: Literal[100] = 100
     timeout_seconds: int = Field(default=3600, ge=60, le=3600)
     gpu_count: Literal[0] = 0
+
+
+class Wave1ExecutionContext(_StrictCanonicalModel):
+    project_id: Literal["project-e00g6zvxpr00waz8t3y51k"]
+    image: str = Field(pattern=IMMUTABLE_IMAGE_PATTERN)
+    platform: Literal["cpu-d3"] = "cpu-d3"
+    preset: Literal["4vcpu-16gb"] = "4vcpu-16gb"
+    disk_size_gib: Literal[100] = 100
+    timeout_seconds: Literal[3600] = 3600
+    nebius_job_id: str | None = Field(default=None, pattern=IDENTIFIER_PATTERN)
+    estimated_cost_usd: float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
 
 class Wave1FixtureInput(_StrictCanonicalModel):
     kind: Literal["approved-research-fixture"] = "approved-research-fixture"
     fixture_version: Literal["lightgbm-wave1-fixture-v1"] = "lightgbm-wave1-fixture-v1"
     feature_release_sha256: str = Field(pattern=SHA256_PATTERN)
+
+
+def _wave1_default_hyperparameters() -> LightGbmV1Hyperparameters:
+    return LightGbmV1Hyperparameters(
+        num_boost_round=60,
+        learning_rate=0.1,
+        num_leaves=8,
+        min_data_in_leaf=2,
+    )
+
+
+class Wave1ExperimentSpec(_StrictCanonicalModel):
+    schema_version: Literal["lightgbm_wave1_experiment_spec_v1"] = (
+        "lightgbm_wave1_experiment_spec_v1"
+    )
+    hyperparameters: LightGbmV1Hyperparameters = Field(default_factory=_wave1_default_hyperparameters)
+    early_stopping_rounds: int = Field(default=10, ge=1, le=500)
+    calibration_method: Literal["raw", "platt", "isotonic"] = "platt"
+    precision_floor: float = Field(default=0.90, ge=0, le=1, allow_inf_nan=False)
+    recall_floor: float = Field(default=0.90, ge=0, le=1, allow_inf_nan=False)
+    operating_mode: OperatingMode = "balanced"
+    excluded_features: tuple[str, ...] = ()
+
+    @model_validator(mode="after")
+    def validate_exclusions(self) -> "Wave1ExperimentSpec":
+        if len(self.excluded_features) != len(set(self.excluded_features)):
+            raise ValueError("excluded features must be unique")
+        for feature in self.excluded_features:
+            if re.fullmatch(IDENTIFIER_PATTERN, feature) is None:
+                raise ValueError("excluded feature names must be canonical identifiers")
+        return self
 
 
 class Wave1GovernedInput(_StrictCanonicalModel):
@@ -121,6 +173,7 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
     created_at: AwareDatetime
     git_commit: str = Field(pattern=GIT_COMMIT_PATTERN)
     random_seed: int = Field(default=42, ge=0)
+    experiment: Wave1ExperimentSpec = Field(default_factory=Wave1ExperimentSpec)
     input: Wave1FixtureInput | Wave1GovernedInput = Field(discriminator="kind")
     resource: Wave1ResourceRequest = Field(default_factory=Wave1ResourceRequest)
     result_uri: str = Field(min_length=1)
@@ -132,6 +185,11 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
 
     @model_validator(mode="after")
     def validate_governance(self) -> "LightGbmCloudJobRequest":
+        if (
+            self.input.kind == "approved-research-fixture"
+            and self.input.feature_release_sha256 != APPROVED_FIXTURE_FEATURE_RELEASE_SHA256
+        ):
+            raise ValueError("fixture request does not bind the approved feature release")
         if self.result_uri.startswith("s3://"):
             lane = "final" if self.mode == "final-evaluation" else "development"
             expected = (
@@ -181,6 +239,7 @@ class Wave1ResourceEvidence(_StrictCanonicalModel):
     preset: Literal["4vcpu-16gb"] = "4vcpu-16gb"
     cpu_count: Literal[4] = 4
     memory_gib: Literal[16] = 16
+    disk_size_gib: Literal[100] = 100
     gpu_count: Literal[0] = 0
     wall_seconds: float = Field(ge=0, allow_inf_nan=False)
     cpu_seconds: float = Field(ge=0, allow_inf_nan=False)
@@ -202,7 +261,10 @@ class LightGbmCloudRun(_StrictCanonicalModel):
     resource: Wave1ResourceEvidence
     outputs: tuple[CloudArtifact, ...]
     candidate_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
+    reproducibility_hash: str | None = Field(default=None, pattern=SHA256_PATTERN)
     mlflow_run_id: str | None = Field(default=None, pattern=IDENTIFIER_PATTERN)
+    nebius_job_id: str | None = Field(default=None, pattern=IDENTIFIER_PATTERN)
+    estimated_cost_usd: float | None = Field(default=None, ge=0, allow_inf_nan=False)
     error_type: str | None = Field(default=None, pattern=IDENTIFIER_PATTERN)
 
     @model_validator(mode="after")

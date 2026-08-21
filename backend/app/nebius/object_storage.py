@@ -163,7 +163,7 @@ def sync_s3(
     if endpoint_url:
         command.extend(["--endpoint-url", endpoint_url])
     command.extend(["s3", "sync", source, destination, "--only-show-errors", "--no-follow-symlinks"])
-    completed = subprocess.run(command, check=False, text=True, capture_output=True)
+    completed = subprocess.run(command, check=False, text=True, capture_output=True, timeout=300)
     if completed.returncode:
         raise RuntimeError(f"Object Storage synchronization failed with exit code {completed.returncode}")
 
@@ -388,20 +388,31 @@ def _list_s3_keys(bucket: str, prefix: str, *, endpoint_url: str, limit: int) ->
 
 
 def _list_s3_objects(bucket: str, prefix: str, *, endpoint_url: str) -> tuple[tuple[str, int], ...]:
-    payload = _aws_json(
-        endpoint_url,
-        "s3api",
-        "list-objects-v2",
-        "--bucket",
-        bucket,
-        "--prefix",
-        f"{prefix}/",
-    )
-    return tuple(
-        (str(item["Key"]), int(item["Size"]))
-        for item in payload.get("Contents", ())
-        if isinstance(item, dict) and "Key" in item and "Size" in item
-    )
+    objects: list[tuple[str, int]] = []
+    continuation_token: str | None = None
+    while True:
+        args = [
+            "s3api",
+            "list-objects-v2",
+            "--bucket",
+            bucket,
+            "--prefix",
+            f"{prefix}/",
+        ]
+        if continuation_token is not None:
+            args.extend(["--continuation-token", continuation_token])
+        payload = _aws_json(endpoint_url, *args)
+        objects.extend(
+            (str(item["Key"]), int(item["Size"]))
+            for item in payload.get("Contents", ())
+            if isinstance(item, dict) and "Key" in item and "Size" in item
+        )
+        if not payload.get("IsTruncated"):
+            return tuple(objects)
+        next_token = payload.get("NextContinuationToken")
+        if not isinstance(next_token, str) or not next_token:
+            raise ValueError("truncated S3 listing omitted the continuation token")
+        continuation_token = next_token
 
 
 def _relative_s3_key(key: str, prefix: str) -> PurePosixPath:
@@ -430,6 +441,7 @@ def _aws_json(endpoint_url: str, *args: str) -> dict[str, object]:
         check=False,
         text=True,
         capture_output=True,
+        timeout=300,
     )
     if completed.returncode:
         raise RuntimeError(f"Object Storage command failed with exit code {completed.returncode}")

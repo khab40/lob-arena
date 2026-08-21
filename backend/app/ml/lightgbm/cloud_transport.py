@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
 
-from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest
+from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest, Wave1ExecutionContext
 from app.ml.lightgbm.cloud_runner import execute_wave1_request
 from app.nebius.object_storage import (
     TransferLimits,
@@ -50,12 +50,20 @@ def execute_wave1_s3(
             raise ValueError("Wave 1 request is missing or outside the staged input prefix")
         request = LightGbmCloudJobRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
         _validate_s3_boundaries(input_uri, request)
+        if request.mode in {"development", "final-evaluation"} and request.mlflow_tracking_uri is None:
+            raise ValueError("cloud training and evaluation require a governed MLflow tracking URI")
+        execution_context = _execution_context_from_environment()
+        trusted_public_key_sha256 = os.environ.get(
+            "WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256"
+        )
         local_result = stage / "result"
         try:
             completed = execute_wave1_request(
                 request_path,
                 input_root=input_root,
                 local_result_root=local_result,
+                execution_context=execution_context,
+                trusted_authorization_public_key_sha256=trusted_public_key_sha256,
             )
             publish_s3_result(completed, request.result_uri, endpoint_url=endpoint_url)
         except Exception:
@@ -126,3 +134,29 @@ def _require_s3_environment() -> None:
         raise RuntimeError("Wave 1 AWS_DEFAULT_REGION must be eu-north1")
     if os.environ.get("AWS_EC2_METADATA_DISABLED", "").lower() != "true":
         raise RuntimeError("Wave 1 requires AWS_EC2_METADATA_DISABLED=true")
+
+
+def _execution_context_from_environment() -> Wave1ExecutionContext:
+    required = {
+        "project_id": "WAVE1_ACTUAL_PROJECT_ID",
+        "image": "WAVE1_ACTUAL_IMAGE",
+        "platform": "WAVE1_ACTUAL_PLATFORM",
+        "preset": "WAVE1_ACTUAL_PRESET",
+        "disk_size_gib": "WAVE1_ACTUAL_DISK_SIZE_GIB",
+        "timeout_seconds": "WAVE1_ACTUAL_TIMEOUT_SECONDS",
+    }
+    missing = [environment for environment in required.values() if not os.environ.get(environment, "").strip()]
+    if missing:
+        raise RuntimeError("Wave 1 Job context environment is incomplete")
+    payload: dict[str, object] = {
+        field: os.environ[environment].strip() for field, environment in required.items()
+    }
+    payload["disk_size_gib"] = int(str(payload["disk_size_gib"]))
+    payload["timeout_seconds"] = int(str(payload["timeout_seconds"]))
+    job_id = os.environ.get("NEBIUS_JOB_ID", "").strip()
+    if job_id:
+        payload["nebius_job_id"] = job_id
+    estimated_cost = os.environ.get("WAVE1_ESTIMATED_COST_USD", "").strip()
+    if estimated_cost:
+        payload["estimated_cost_usd"] = float(estimated_cost)
+    return Wave1ExecutionContext.model_validate(payload)

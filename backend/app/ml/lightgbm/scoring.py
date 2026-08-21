@@ -263,7 +263,6 @@ def calibrate_validation_predictions(
         )
         calibration_id = _calibration_id(
             training.binding,
-            created_at=created_at,
             input_predictions=validation_predictions_artifact,
             parameters=parameters,
             operating_points=operating_points,
@@ -527,7 +526,6 @@ def predict_governed_fold(
             operating_mode=operating_mode,
             threshold=point.threshold,
             predictions=predictions_artifact,
-            created_at=created_at,
         )
         manifest = DetectorPredictionsManifest(
             prediction_run_id=prediction_run_id,
@@ -943,6 +941,8 @@ def _validate_scoring_request(
     ):
         raise ValueError(f"scoring requires isolated {expected_fold} governed access")
     _require_dataset_binding(dataset, training.binding)
+    if dataset.ordered_feature_columns != training.ordered_feature_columns:
+        raise ValueError("scoring feature selection does not match the trained model")
     if created_at.tzinfo is None or created_at.utcoffset() is None:
         raise ValueError("scoring created_at must be timezone-aware")
     if batch_size < 1:
@@ -977,7 +977,8 @@ def _require_dataset_binding(dataset: GovernedFeatureDataset, binding: GovernedM
         dataset.feature_schema_version,
         dataset.feature_config_hash,
     )
-    if observed != expected or dataset.ordered_feature_columns != tuple(FEATURE_COLUMNS):
+    governed_order = tuple(name for name in FEATURE_COLUMNS if name in set(dataset.ordered_feature_columns))
+    if observed != expected or not governed_order or dataset.ordered_feature_columns != governed_order:
         raise ValueError("governed feature dataset does not match the trained model binding")
 
 
@@ -1018,8 +1019,9 @@ def _iter_scored_batches(
     batch_size: int,
 ) -> Iterator[_ScoredBatch]:
     for shard in fold.shards:
-        if shard.feature_columns != ordered_feature_columns:
-            raise ValueError("feature shard order changed after governed loading")
+        retained_order = tuple(name for name in shard.feature_columns if name in set(ordered_feature_columns))
+        if retained_order != ordered_feature_columns:
+            raise ValueError("selected feature order changed after governed loading")
         for batch in shard.iter_supervised_batches(batch_size=batch_size):
             features = np.empty((batch.num_rows, len(ordered_feature_columns)), dtype=np.float32)
             for index, name in enumerate(ordered_feature_columns):
@@ -1175,14 +1177,12 @@ def _sigmoid(values: np.ndarray) -> np.ndarray:
 def _calibration_id(
     binding: GovernedModelBinding,
     *,
-    created_at: datetime,
     input_predictions: ArtifactDigest,
     parameters: CalibrationParameters,
     operating_points: tuple[OperatingPoint, ...],
 ) -> str:
     payload = {
         "binding": binding.model_dump(mode="json"),
-        "created_at": created_at.isoformat(),
         "input_predictions": input_predictions.model_dump(mode="json"),
         "parameters": parameters.model_dump(mode="json"),
         "operating_points": [point.model_dump(mode="json") for point in operating_points],
@@ -1201,7 +1201,6 @@ def _prediction_run_id(
     operating_mode: str,
     threshold: float,
     predictions: ArtifactDigest,
-    created_at: datetime,
 ) -> str:
     payload = {
         "binding": binding.model_dump(mode="json"),
@@ -1210,7 +1209,6 @@ def _prediction_run_id(
         "operating_mode": operating_mode,
         "threshold": threshold,
         "predictions": predictions.model_dump(mode="json"),
-        "created_at": created_at.isoformat(),
     }
     digest = hashlib.sha256(
         json.dumps(payload, allow_nan=False, sort_keys=True, separators=(",", ":")).encode("utf-8")

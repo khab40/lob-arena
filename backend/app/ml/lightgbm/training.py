@@ -217,7 +217,6 @@ def train_binary_attack_model(
             dataset=dataset,
             model_id=model_id,
             git_commit=git_commit,
-            created_at=created_at,
             training_seed=training_seed,
             hyperparameters=parameters,
             early_stopping_rounds=early_stopping_rounds,
@@ -402,9 +401,11 @@ def _materialize_fold(
         session_id: code for code, session_id in enumerate(sorted({shard.base_session_id for shard in fold.shards}))
     }
     offset = 0
+    selected_features = set(ordered_feature_columns)
     for shard in fold.shards:
-        if shard.feature_columns != ordered_feature_columns:
-            raise ValueError("feature shard columns do not match the governed order")
+        retained_order = tuple(name for name in shard.feature_columns if name in selected_features)
+        if retained_order != ordered_feature_columns:
+            raise ValueError("selected feature columns do not preserve the governed shard order")
         for batch in shard.iter_supervised_batches(batch_size=batch_size):
             end = offset + batch.num_rows
             for column_index, name in enumerate(ordered_feature_columns):
@@ -583,7 +584,6 @@ def _training_run_id(
     dataset: GovernedFeatureDataset,
     model_id: str,
     git_commit: str,
-    created_at: datetime,
     training_seed: int,
     hyperparameters: LightGbmV1Hyperparameters,
     early_stopping_rounds: int,
@@ -594,7 +594,6 @@ def _training_run_id(
     payload = {
         "model_id": model_id,
         "git_commit": git_commit,
-        "created_at": created_at.isoformat(),
         "training_seed": training_seed,
         "protocol_hash": dataset.protocol_hash,
         "corpus_hash": dataset.corpus_hash,

@@ -33,6 +33,182 @@
       "title": "CloudArtifact",
       "type": "object"
     },
+    "LightGbmV1Hyperparameters": {
+      "additionalProperties": false,
+      "properties": {
+        "bagging_fraction": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Bagging Fraction",
+          "type": "number"
+        },
+        "bagging_freq": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Bagging Freq",
+          "type": "integer"
+        },
+        "boosting_type": {
+          "const": "gbdt"
+        },
+        "deterministic": {
+          "const": true
+        },
+        "feature_fraction": {
+          "default": 1.0,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Feature Fraction",
+          "type": "number"
+        },
+        "lambda_l1": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Lambda L1",
+          "type": "number"
+        },
+        "lambda_l2": {
+          "default": 0.0,
+          "minimum": 0,
+          "title": "Lambda L2",
+          "type": "number"
+        },
+        "learning_rate": {
+          "default": 0.03,
+          "exclusiveMinimum": 0,
+          "maximum": 1,
+          "title": "Learning Rate",
+          "type": "number"
+        },
+        "max_depth": {
+          "default": -1,
+          "title": "Max Depth",
+          "type": "integer"
+        },
+        "metric": {
+          "const": "binary_logloss"
+        },
+        "min_data_in_leaf": {
+          "default": 20,
+          "minimum": 1,
+          "title": "Min Data In Leaf",
+          "type": "integer"
+        },
+        "num_boost_round": {
+          "default": 500,
+          "minimum": 1,
+          "title": "Num Boost Round",
+          "type": "integer"
+        },
+        "num_leaves": {
+          "default": 31,
+          "minimum": 2,
+          "title": "Num Leaves",
+          "type": "integer"
+        },
+        "num_threads": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Num Threads",
+          "type": "integer"
+        },
+        "objective": {
+          "const": "binary"
+        }
+      },
+      "required": [
+        "objective",
+        "metric",
+        "boosting_type",
+        "deterministic",
+        "num_boost_round",
+        "learning_rate",
+        "num_leaves",
+        "max_depth",
+        "min_data_in_leaf",
+        "feature_fraction",
+        "bagging_fraction",
+        "bagging_freq",
+        "lambda_l1",
+        "lambda_l2",
+        "num_threads"
+      ],
+      "title": "LightGbmV1Hyperparameters",
+      "type": "object"
+    },
+    "Wave1ExperimentSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration_method": {
+          "default": "platt",
+          "enum": [
+            "raw",
+            "platt",
+            "isotonic"
+          ],
+          "title": "Calibration Method",
+          "type": "string"
+        },
+        "early_stopping_rounds": {
+          "default": 10,
+          "maximum": 500,
+          "minimum": 1,
+          "title": "Early Stopping Rounds",
+          "type": "integer"
+        },
+        "excluded_features": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Excluded Features",
+          "type": "array"
+        },
+        "hyperparameters": {
+          "$ref": "#/$defs/LightGbmV1Hyperparameters"
+        },
+        "operating_mode": {
+          "default": "balanced",
+          "enum": [
+            "high_precision",
+            "balanced",
+            "high_recall"
+          ],
+          "title": "Operating Mode",
+          "type": "string"
+        },
+        "precision_floor": {
+          "default": 0.9,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Precision Floor",
+          "type": "number"
+        },
+        "recall_floor": {
+          "default": 0.9,
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Recall Floor",
+          "type": "number"
+        },
+        "schema_version": {
+          "const": "lightgbm_wave1_experiment_spec_v1"
+        }
+      },
+      "required": [
+        "schema_version",
+        "hyperparameters",
+        "early_stopping_rounds",
+        "calibration_method",
+        "precision_floor",
+        "recall_floor",
+        "operating_mode",
+        "excluded_features"
+      ],
+      "title": "Wave1ExperimentSpec",
+      "type": "object"
+    },
     "Wave1FixtureInput": {
       "additionalProperties": false,
       "properties": {
@@ -109,6 +285,9 @@
         "cpu_count": {
           "const": 4
         },
+        "disk_size_gib": {
+          "const": 100
+        },
         "gpu_count": {
           "const": 0
         },
@@ -134,6 +313,7 @@
         "preset",
         "cpu_count",
         "memory_gib",
+        "disk_size_gib",
         "timeout_seconds",
         "gpu_count"
       ],
@@ -198,6 +378,9 @@
       "format": "date-time",
       "title": "Created At",
       "type": "string"
+    },
+    "experiment": {
+      "$ref": "#/$defs/Wave1ExperimentSpec"
     },
     "git_commit": {
       "pattern": "^[0-9a-f]{40}$",
@@ -289,6 +472,7 @@
     "created_at",
     "git_commit",
     "random_seed",
+    "experiment",
     "input",
     "resource",
     "result_uri",

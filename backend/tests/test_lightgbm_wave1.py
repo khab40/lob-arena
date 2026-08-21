@@ -14,11 +14,15 @@ from pydantic import ValidationError
 pytest.importorskip("lightgbm", reason="Wave 1 tests require the ml extra")
 
 from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
+    APPROVED_FIXTURE_FEATURE_RELEASE_SHA256,
     CloudArtifact,
     LightGbmCloudJobRequest,
+    Wave1ExecutionContext,
+    Wave1ExperimentSpec,
     Wave1FixtureInput,
 )
-from app.ml.lightgbm import cloud_transport  # noqa: E402
+from app.ml.lightgbm.cloud_runner import execute_wave1_request  # noqa: E402
+from app.ml.lightgbm import cloud_runner, cloud_transport  # noqa: E402
 from app.nebius import object_storage  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     S3ObjectEvidence,
@@ -43,7 +47,9 @@ def _request(**updates: object) -> dict[str, object]:
         "image": LOCAL_IMAGE,
         "created_at": datetime(2026, 8, 16, tzinfo=UTC).isoformat(),
         "git_commit": "0" * 40,
-        "input": Wave1FixtureInput(feature_release_sha256=SHA).model_dump(mode="json"),
+        "input": Wave1FixtureInput(
+            feature_release_sha256=APPROVED_FIXTURE_FEATURE_RELEASE_SHA256
+        ).model_dump(mode="json"),
         "result_uri": Path("/tmp/wave1-test-result").as_uri(),
     }
     payload.update(updates)
@@ -133,12 +139,21 @@ def test_s3_download_lists_only_requested_prefix_and_verifies_package(
         calls.append(args)
         if args[:2] == ("s3api", "list-objects-v2"):
             prefix = args[args.index("--prefix") + 1]
+            files = [path for path in sorted(package.rglob("*")) if path.is_file()]
+            if "--continuation-token" not in args:
+                selected = files[:1]
+                truncated = len(files) > 1
+            else:
+                assert args[args.index("--continuation-token") + 1] == "page-2"
+                selected = files[1:]
+                truncated = False
             return {
                 "Contents": [
                     {"Key": prefix + path.relative_to(package).as_posix(), "Size": path.stat().st_size}
-                    for path in sorted(package.rglob("*"))
-                    if path.is_file()
-                ]
+                    for path in selected
+                ],
+                "IsTruncated": truncated,
+                **({"NextContinuationToken": "page-2"} if truncated else {}),
             }
         if args[:2] == ("s3api", "get-object"):
             key = args[args.index("--key") + 1]
@@ -155,10 +170,181 @@ def test_s3_download_lists_only_requested_prefix_and_verifies_package(
         endpoint_url="https://storage.eu-north1.nebius.cloud",
     )
 
-    list_call = calls[0]
+    list_calls = [call for call in calls if call[:2] == ("s3api", "list-objects-v2")]
+    assert len(list_calls) == 2
+    list_call = list_calls[0]
     assert list_call[list_call.index("--prefix") + 1] == "releases/rel1/staging/"
     assert not any("head-bucket" in call for call in calls)
     verify_complete_result(downloaded)
+
+
+def test_repeat_comparison_uses_stable_reproducibility_hash(tmp_path: Path) -> None:
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    local_e2e(first)
+    local_e2e(second)
+
+    comparison = tmp_path / "comparison.json"
+    wave1_script.compare_results(
+        [first / "development", second / "development"], comparison
+    )
+    payload = json.loads(comparison.read_text(encoding="utf-8"))
+
+    assert payload["reproducible"] is True
+    assert payload["runs"][0]["reproducibility_hash"] == payload["runs"][1][
+        "reproducibility_hash"
+    ]
+
+
+def test_final_rejects_untrusted_key_and_tampered_candidate_artifact(tmp_path: Path) -> None:
+    output = tmp_path / "wave1"
+    local_e2e(output)
+    request_path = output / "inputs" / "final-request.json"
+    final_inputs = output / "final-inputs"
+
+    with pytest.raises(ValueError, match="trusted hash"):
+        execute_wave1_request(
+            request_path,
+            input_root=final_inputs,
+            trusted_authorization_public_key_sha256="0" * 64,
+        )
+
+    training_manifest = final_inputs / "candidate" / "artifacts" / "training" / "training-run.json"
+    training_manifest.write_text("{}\n", encoding="utf-8")
+    public_key = final_inputs / "authorization" / "authorization-public.pem"
+    with pytest.raises(ValueError, match="integrity failed"):
+        execute_wave1_request(
+            request_path,
+            input_root=final_inputs,
+            trusted_authorization_public_key_sha256=wave1_script.sha256_file(public_key),
+        )
+
+
+def test_experiment_config_controls_training_and_calibration(tmp_path: Path) -> None:
+    inputs = tmp_path / "inputs"
+    inputs.mkdir()
+    result = tmp_path / "result"
+    experiment = Wave1ExperimentSpec(
+        hyperparameters={
+            "num_boost_round": 7,
+            "learning_rate": 0.05,
+            "num_leaves": 4,
+            "min_data_in_leaf": 2,
+        },
+        early_stopping_rounds=3,
+        calibration_method="raw",
+        excluded_features=("spread",),
+    )
+    request = wave1_script._request(
+        campaign_id="wave1-experiment-test",
+        run_id="wave1-experiment-development",
+        mode="development",
+        created_at=datetime.now(UTC),
+        result=result,
+        experiment=experiment,
+    )
+    request_path = inputs / "request.json"
+    request_path.write_bytes(request.canonical_bytes())
+
+    execute_wave1_request(request_path, input_root=inputs)
+
+    training = json.loads(
+        (result / "artifacts" / "training" / "training-run.json").read_text(encoding="utf-8")
+    )
+    calibration = json.loads(
+        (result / "artifacts" / "calibration" / "calibration-manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert training["hyperparameters"]["num_boost_round"] == 7
+    assert training["early_stopping"]["stopping_rounds"] == 3
+    assert "spread" not in training["ordered_feature_columns"]
+    assert calibration["parameters"]["method"] == "raw"
+
+
+def test_development_run_binds_mlflow_run_id(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    inputs = tmp_path / "inputs"
+    inputs.mkdir()
+    result = tmp_path / "result"
+    request = wave1_script._request(
+        campaign_id="wave1-mlflow-test",
+        run_id="wave1-mlflow-development",
+        mode="development",
+        created_at=datetime.now(UTC),
+        result=result,
+    ).model_copy(update={"mlflow_tracking_uri": "http://10.4.0.54:5500"})
+    request_path = inputs / "request.json"
+    request_path.write_bytes(request.canonical_bytes())
+    monkeypatch.setattr(cloud_runner, "log_development_run", lambda **_kwargs: "mlflow-run-1")
+
+    execute_wave1_request(request_path, input_root=inputs)
+    run = json.loads((result / "cloud-run.json").read_text(encoding="utf-8"))
+
+    assert run["mlflow_run_id"] == "mlflow-run-1"
+
+
+def test_cloud_collection_requires_job_identity_context_and_cost(tmp_path: Path) -> None:
+    inputs = tmp_path / "inputs"
+    inputs.mkdir()
+    result = tmp_path / "result"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/wave1-test-development"
+            )
+        )
+    )
+    request_path = inputs / "request.json"
+    request_path.write_bytes(request.canonical_bytes())
+    context = Wave1ExecutionContext(
+        project_id=PROJECT_ID,
+        image=LOCAL_IMAGE,
+        platform="cpu-d3",
+        preset="4vcpu-16gb",
+        disk_size_gib=100,
+        timeout_seconds=3600,
+    )
+    execute_wave1_request(
+        request_path,
+        input_root=inputs,
+        local_result_root=result,
+        execution_context=context,
+    )
+
+    with pytest.raises(ValueError, match="Job ID and actual Job context"):
+        wave1_script.collect_result(result, tmp_path / "missing.json")
+    with pytest.raises(ValueError, match="does not match"):
+        wave1_script.collect_result(
+            result,
+            tmp_path / "wrong.json",
+            nebius_job_id="job-test",
+            actual_project_id=PROJECT_ID,
+            actual_image=LOCAL_IMAGE,
+            actual_platform="cpu-d3",
+            actual_preset="wrong-preset",
+            actual_disk_size_gib=100,
+            actual_timeout_seconds=3600,
+            estimated_cost_usd=0.01,
+        )
+    collection = tmp_path / "collection.json"
+    wave1_script.collect_result(
+        result,
+        collection,
+        nebius_job_id="job-test",
+        actual_project_id=PROJECT_ID,
+        actual_image=LOCAL_IMAGE,
+        actual_platform="cpu-d3",
+        actual_preset="4vcpu-16gb",
+        actual_disk_size_gib=100,
+        actual_timeout_seconds=3600,
+        estimated_cost_usd=0.01,
+    )
+    payload = json.loads(collection.read_text(encoding="utf-8"))
+    assert payload["nebius_job_id"] == "job-test"
+    assert payload["estimated_cost_usd"] == 0.01
 
 
 def test_s3_result_publication_writes_success_last(
@@ -201,12 +387,19 @@ def test_cloud_transport_stages_executes_and_publishes_without_mounts(
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "mysterybox-injected-secret-key")
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-north1")
     monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
+    monkeypatch.setenv("WAVE1_ACTUAL_PROJECT_ID", PROJECT_ID)
+    monkeypatch.setenv("WAVE1_ACTUAL_IMAGE", LOCAL_IMAGE)
+    monkeypatch.setenv("WAVE1_ACTUAL_PLATFORM", "cpu-d3")
+    monkeypatch.setenv("WAVE1_ACTUAL_PRESET", "4vcpu-16gb")
+    monkeypatch.setenv("WAVE1_ACTUAL_DISK_SIZE_GIB", "100")
+    monkeypatch.setenv("WAVE1_ACTUAL_TIMEOUT_SECONDS", "3600")
     request = LightGbmCloudJobRequest.model_validate(
         _request(
             result_uri=(
                 "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
                 "wave1-test/development/wave1-test-development"
-            )
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
         )
     )
     input_staging = tmp_path / "input-staging"
@@ -220,7 +413,11 @@ def test_cloud_transport_stages_executes_and_publishes_without_mounts(
         return verify_complete_result(destination)
 
     def fake_execute(
-        request_path: Path, *, input_root: Path, local_result_root: Path | None = None
+        request_path: Path,
+        *,
+        input_root: Path,
+        local_result_root: Path | None = None,
+        **kwargs: object,
     ) -> Path:
         assert local_result_root is not None
         assert LightGbmCloudJobRequest.model_validate_json(
@@ -297,6 +494,7 @@ def test_fixture_staging_emits_cloud_result_contract(
         LOCAL_IMAGE,
         "https://storage.eu-north1.nebius.cloud",
         tmp_path / "evidence.json",
+        mlflow_tracking_uri="http://10.4.0.54:5500",
     )
 
     assert captured == {
@@ -308,16 +506,38 @@ def test_fixture_staging_emits_cloud_result_contract(
     }
 
 
-def test_submitter_dry_run_uses_secret_references_only() -> None:
+def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
+    input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/release-test/staging"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/wave1-test-development"
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
+        )
+    )
+    evidence_path = tmp_path / "request-evidence.json"
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "destination": input_uri,
+                "request_sha256": request.canonical_hash(),
+                "request": request.model_dump(mode="json"),
+            }
+        ),
+        encoding="utf-8",
+    )
     environment = {
         **os.environ,
         "NEBIUS_SUBNET_ID": "subnet-test",
         "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID": "mysterybox-access-ref",
         "NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID": "mysterybox-secret-ref",
+        "NEBIUS_MLFLOW_USERNAME_SECRET_ID": "mysterybox-mlflow-user-ref",
+        "NEBIUS_MLFLOW_PASSWORD_SECRET_ID": "mysterybox-mlflow-password-ref",
         "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
-        "NEBIUS_WAVE1_INPUT_URI": (
-            "s3://aimada-wave1-dev-e00g6zvxpr00/releases/release-test/staging"
-        ),
+        "NEBIUS_WAVE1_INPUT_URI": input_uri,
+        "NEBIUS_WAVE1_REQUEST_EVIDENCE": str(evidence_path),
     }
     for name in (
         "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID",
@@ -345,20 +565,72 @@ def test_submitter_dry_run_uses_secret_references_only() -> None:
     assert "--env-secret" in command
     assert "AWS_ACCESS_KEY_ID=mysterybox-access-ref" in command
     assert "AWS_SECRET_ACCESS_KEY=mysterybox-secret-ref" in command
+    assert "MLFLOW_TRACKING_USERNAME=mysterybox-mlflow-user-ref" in command
+    assert "MLFLOW_TRACKING_PASSWORD=mysterybox-mlflow-password-ref" in command
     assert "run-s3" in joined
     assert "--input-uri" in joined
     assert "--volume" not in command
+    assert command[command.index("--platform") + 1] == "cpu-d3"
+    assert command[command.index("--preset") + 1] == "4vcpu-16gb"
+    assert command[command.index("--disk-size") + 1] == "100Gi"
+    assert command[command.index("--timeout") + 1] == "1h"
+    assert command[command.index("--parent-id") + 1] == PROJECT_ID
     assert not any(value.startswith("AWS_ACCESS_KEY_ID=AKIA") for value in command)
 
+    script = str(Path(__file__).resolve().parents[2] / "scripts" / "submit_nebius_job.py")
+    for override in (("--platform", "gpu-h100"), ("--timeout", "168h")):
+        rejected = subprocess.run(
+            [
+                sys.executable,
+                script,
+                "--workload",
+                "lightgbm-wave1",
+                "--image",
+                LOCAL_IMAGE,
+                *override,
+                "--dry-run",
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+            env=environment,
+        )
+        assert rejected.returncode != 0
+        assert "requires cpu-d3" in rejected.stderr
 
-def test_wave1_submitter_rejects_filesystem_mounts() -> None:
+
+def test_wave1_submitter_rejects_filesystem_mounts(tmp_path: Path) -> None:
+    input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/wave1-test-development"
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
+        )
+    )
+    evidence_path = tmp_path / "request-evidence.json"
+    evidence_path.write_text(
+        json.dumps(
+            {
+                "destination": input_uri,
+                "request_sha256": request.canonical_hash(),
+                "request": request.model_dump(mode="json"),
+            }
+        ),
+        encoding="utf-8",
+    )
     environment = {
         **os.environ,
         "NEBIUS_SUBNET_ID": "subnet-test",
         "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID": "mysterybox-access-ref",
         "NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID": "mysterybox-secret-ref",
+        "NEBIUS_MLFLOW_USERNAME_SECRET_ID": "mysterybox-mlflow-user-ref",
+        "NEBIUS_MLFLOW_PASSWORD_SECRET_ID": "mysterybox-mlflow-password-ref",
         "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
-        "NEBIUS_WAVE1_INPUT_URI": "s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging",
+        "NEBIUS_WAVE1_INPUT_URI": input_uri,
+        "NEBIUS_WAVE1_REQUEST_EVIDENCE": str(evidence_path),
         "NEBIUS_VOLUME": "s3://forbidden:/job/inputs:ro:secret",
     }
     completed = subprocess.run(

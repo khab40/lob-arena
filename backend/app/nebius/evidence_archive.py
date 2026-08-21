@@ -333,8 +333,28 @@ class NebiusEvidenceArchive:
         return bool(
             self.settings.nebius_evidence_archive_enabled
             and self._base_uri()
-            and self.settings.nebius_object_storage_access_key_id
+            and shutil.which("aws")
+            and self._aws_credentials_configured()
+        )
+
+    def _aws_credentials_configured(self) -> bool:
+        if (
+            self.settings.nebius_object_storage_access_key_id
             and self.settings.nebius_object_storage_secret_access_key
+        ):
+            return True
+        if os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get("AWS_SECRET_ACCESS_KEY"):
+            return True
+        return any(
+            os.environ.get(name)
+            for name in (
+                "AWS_PROFILE",
+                "AWS_CONFIG_FILE",
+                "AWS_SHARED_CREDENTIALS_FILE",
+                "AWS_WEB_IDENTITY_TOKEN_FILE",
+                "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
+                "AWS_CONTAINER_CREDENTIALS_FULL_URI",
+            )
         )
 
     def _base_uri(self) -> str:
@@ -354,8 +374,10 @@ class NebiusEvidenceArchive:
         source, destination = (str(local_dir), source_uri) if upload else (source_uri, str(local_dir))
         command.extend(["s3", "sync", source, destination, "--only-show-errors"])
         env = os.environ.copy()
-        env["AWS_ACCESS_KEY_ID"] = str(self.settings.nebius_object_storage_access_key_id or "")
-        env["AWS_SECRET_ACCESS_KEY"] = str(self.settings.nebius_object_storage_secret_access_key or "")
+        if self.settings.nebius_object_storage_access_key_id:
+            env["AWS_ACCESS_KEY_ID"] = self.settings.nebius_object_storage_access_key_id
+        if self.settings.nebius_object_storage_secret_access_key:
+            env["AWS_SECRET_ACCESS_KEY"] = self.settings.nebius_object_storage_secret_access_key
         if self.settings.nebius_object_storage_session_token:
             env["AWS_SESSION_TOKEN"] = self.settings.nebius_object_storage_session_token
         env["AWS_DEFAULT_REGION"] = self.settings.nebius_object_storage_region

@@ -118,6 +118,43 @@ def test_job_evidence_uploads_and_syncs_with_object_storage(monkeypatch: Any, tm
     assert any("s3://lob-arena-artifacts/lob-arena/evidence" in " ".join(command) for command in commands)
 
 
+def test_evidence_archive_uses_ambient_aws_credential_chain(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    environments: list[dict[str, str]] = []
+
+    def fake_run(argv: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        environments.append(kwargs["env"])
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+
+    settings = Settings(
+        _env_file=None,
+        NEBIUS_EVIDENCE_ARCHIVE_ENABLED=True,
+        NEBIUS_JOB_OUTPUT_URI="s3://lob-arena-artifacts/lob-arena",
+        NEBIUS_OBJECT_STORAGE_ENDPOINT_URL="https://storage.example",
+    )
+    monkeypatch.delenv("AWS_ACCESS_KEY_ID", raising=False)
+    monkeypatch.delenv("AWS_SECRET_ACCESS_KEY", raising=False)
+    monkeypatch.setenv("AWS_PROFILE", "nebius-evidence")
+    monkeypatch.setattr("app.nebius.evidence_archive.shutil.which", lambda _name: "/usr/bin/aws")
+    monkeypatch.setattr("app.nebius.evidence_archive.subprocess.run", fake_run)
+    archive = NebiusEvidenceArchive(LocalStore(tmp_path), settings)
+
+    record = archive.record_job(
+        operation="test_job_completed",
+        run_id="job-ambient",
+        status="completed",
+        payload={"job_id": "job-ambient", "status": "completed"},
+        artifact_paths={},
+    )
+
+    assert record.s3_status == "uploaded"
+    assert environments
+    assert environments[0]["AWS_PROFILE"] == "nebius-evidence"
+    assert "AWS_ACCESS_KEY_ID" not in environments[0]
+    assert "AWS_SECRET_ACCESS_KEY" not in environments[0]
+
+
 def test_endpoint_usage_tracks_tokens_bytes_and_configured_cost(tmp_path: Path) -> None:
     settings = Settings(
         _env_file=None,
