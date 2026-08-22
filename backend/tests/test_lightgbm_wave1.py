@@ -5,7 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -32,6 +32,7 @@ from app.nebius.object_storage import (  # noqa: E402
     verify_complete_result,
 )
 from scripts import lightgbm_wave1 as wave1_script  # noqa: E402
+from scripts import submit_nebius_job as submit_script  # noqa: E402
 from scripts.lightgbm_wave1 import LOCAL_IMAGE, PROJECT_ID, local_e2e  # noqa: E402
 
 
@@ -285,7 +286,9 @@ def test_development_run_binds_mlflow_run_id(
     assert run["mlflow_run_id"] == "mlflow-run-1"
 
 
-def test_cloud_collection_requires_job_identity_context_and_cost(tmp_path: Path) -> None:
+def test_cloud_collection_requires_job_identity_context_and_cost(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     inputs = tmp_path / "inputs"
     inputs.mkdir()
     result = tmp_path / "result"
@@ -294,7 +297,8 @@ def test_cloud_collection_requires_job_identity_context_and_cost(tmp_path: Path)
             result_uri=(
                 "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
                 "wave1-test/development/wave1-test-development"
-            )
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
         )
     )
     request_path = inputs / "request.json"
@@ -307,6 +311,7 @@ def test_cloud_collection_requires_job_identity_context_and_cost(tmp_path: Path)
         disk_size_gib=100,
         timeout_seconds=3600,
     )
+    monkeypatch.setattr(cloud_runner, "log_development_run", lambda **_kwargs: "mlflow-run-1")
     execute_wave1_request(
         request_path,
         input_root=inputs,
@@ -328,6 +333,7 @@ def test_cloud_collection_requires_job_identity_context_and_cost(tmp_path: Path)
             actual_disk_size_gib=100,
             actual_timeout_seconds=3600,
             estimated_cost_usd=0.01,
+            campaign_spend_to_date_usd=8.04,
         )
     collection = tmp_path / "collection.json"
     wave1_script.collect_result(
@@ -341,10 +347,12 @@ def test_cloud_collection_requires_job_identity_context_and_cost(tmp_path: Path)
         actual_disk_size_gib=100,
         actual_timeout_seconds=3600,
         estimated_cost_usd=0.01,
+        campaign_spend_to_date_usd=8.04,
     )
     payload = json.loads(collection.read_text(encoding="utf-8"))
     assert payload["nebius_job_id"] == "job-test"
     assert payload["estimated_cost_usd"] == 0.01
+    assert payload["campaign_spend_to_date_usd"] == 8.04
 
 
 def test_s3_result_publication_writes_success_last(
@@ -538,6 +546,8 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
         "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
         "NEBIUS_WAVE1_INPUT_URI": input_uri,
         "NEBIUS_WAVE1_REQUEST_EVIDENCE": str(evidence_path),
+        "WAVE1_SPEND_TO_DATE_USD": "8.03",
+        "WAVE1_DEVELOPMENT_JOBS_CONSUMED": "5",
     }
     for name in (
         "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID",
@@ -553,6 +563,8 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
             "lightgbm-wave1",
             "--image",
             LOCAL_IMAGE,
+            "--evidence-output",
+            str(tmp_path / "dry-run.json"),
             "--dry-run",
         ],
         check=True,
@@ -561,12 +573,16 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
         env=environment,
     )
     command = json.loads(completed.stdout)["command"]
+    assert json.loads((tmp_path / "dry-run.json").read_text(encoding="utf-8")) == json.loads(
+        completed.stdout
+    )
+    assert "mysterybox-access-ref" not in completed.stdout
     joined = " ".join(command)
     assert "--env-secret" in command
-    assert "AWS_ACCESS_KEY_ID=mysterybox-access-ref" in command
-    assert "AWS_SECRET_ACCESS_KEY=mysterybox-secret-ref" in command
-    assert "MLFLOW_TRACKING_USERNAME=mysterybox-mlflow-user-ref" in command
-    assert "MLFLOW_TRACKING_PASSWORD=mysterybox-mlflow-password-ref" in command
+    assert "AWS_ACCESS_KEY_ID=[MYSTERYBOX_SELECTOR]" in command
+    assert "AWS_SECRET_ACCESS_KEY=[MYSTERYBOX_SELECTOR]" in command
+    assert "MLFLOW_TRACKING_USERNAME=[MYSTERYBOX_SELECTOR]" in command
+    assert "MLFLOW_TRACKING_PASSWORD=[MYSTERYBOX_SELECTOR]" in command
     assert "run-s3" in joined
     assert "--input-uri" in joined
     assert "--volume" not in command
@@ -597,6 +613,326 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
         )
         assert rejected.returncode != 0
         assert "requires cpu-d3" in rejected.stderr
+
+    over_budget = subprocess.run(
+        [
+            sys.executable,
+            script,
+            "--workload",
+            "lightgbm-wave1",
+            "--image",
+            LOCAL_IMAGE,
+            "--dry-run",
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+        env={**environment, "WAVE1_SPEND_TO_DATE_USD": "40"},
+    )
+    assert over_budget.returncode != 0
+    assert "spend below USD 40" in over_budget.stderr
+
+
+def test_wave1_submission_requires_and_binds_reviewed_dry_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/release-submit/staging"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/wave1-test-development"
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
+        )
+    )
+    request_evidence = tmp_path / "request.json"
+    request_evidence.write_text(
+        json.dumps(
+            {
+                "destination": input_uri,
+                "request_sha256": request.canonical_hash(),
+                "request": request.model_dump(mode="json"),
+            }
+        ),
+        encoding="utf-8",
+    )
+    environment = {
+        "NEBIUS_SUBNET_ID": "subnet-test",
+        "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID": "access-selector",
+        "NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID": "secret-selector",
+        "NEBIUS_MLFLOW_USERNAME_SECRET_ID": "mlflow-user-selector",
+        "NEBIUS_MLFLOW_PASSWORD_SECRET_ID": "mlflow-password-selector",
+        "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
+        "NEBIUS_WAVE1_INPUT_URI": input_uri,
+        "NEBIUS_WAVE1_REQUEST_EVIDENCE": str(request_evidence),
+        "WAVE1_SPEND_TO_DATE_USD": "8.03",
+        "WAVE1_DEVELOPMENT_JOBS_CONSUMED": "5",
+    }
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+    for name in (
+        "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID",
+        "NEBIUS_OBJECT_STORAGE_SECRET_ACCESS_KEY",
+        "NEBIUS_OBJECT_STORAGE_SESSION_TOKEN",
+        "NEBIUS_PARENT_ID",
+        "NEBIUS_VOLUME",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    dry_run = tmp_path / "dry-run.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "submit_nebius_job.py",
+            "--workload",
+            "lightgbm-wave1",
+            "--image",
+            LOCAL_IMAGE,
+            "--evidence-output",
+            str(dry_run),
+            "--dry-run",
+        ],
+    )
+    submit_script.main()
+    capsys.readouterr()
+
+    monkeypatch.setattr(
+        submit_script.subprocess,
+        "run",
+        lambda *_args, **_kwargs: subprocess.CompletedProcess(
+            _args[0], 0, stdout='{"id":"aijob-submit123"}', stderr=""
+        ),
+    )
+    submission = tmp_path / "submission.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "submit_nebius_job.py",
+            "--workload",
+            "lightgbm-wave1",
+            "--image",
+            LOCAL_IMAGE,
+            "--reviewed-dry-run",
+            str(dry_run),
+            "--reviewed-dry-run-sha256",
+            wave1_script.sha256_file(dry_run),
+            "--evidence-output",
+            str(submission),
+        ],
+    )
+    submit_script.main()
+    payload = json.loads(submission.read_text(encoding="utf-8"))
+
+    assert payload["job_id"] == "aijob-submit123"
+    assert payload["reviewed_dry_run_sha256"] == wave1_script.sha256_file(dry_run)
+    assert payload["development_jobs_consumed_after_submit"] == 6
+    assert payload["watchdog_seconds"] == 900
+
+
+def test_g4_monitor_collect_and_exit_evidence_chain(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    input_root = tmp_path / "inputs"
+    input_root.mkdir()
+    source_result = tmp_path / "source-result"
+    result_uri = (
+        "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+        "wave1-test/development/wave1-test-development"
+    )
+    input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/release-g4/staging"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(result_uri=result_uri, mlflow_tracking_uri="http://10.4.0.54:5500")
+    )
+    request_path = input_root / "request.json"
+    request_path.write_bytes(request.canonical_bytes())
+    context = Wave1ExecutionContext(
+        project_id=PROJECT_ID,
+        image=LOCAL_IMAGE,
+        platform="cpu-d3",
+        preset="4vcpu-16gb",
+        disk_size_gib=100,
+        timeout_seconds=3600,
+    )
+    monkeypatch.setattr(cloud_runner, "log_development_run", lambda **_kwargs: "mlflow-g4-1")
+    execute_wave1_request(
+        request_path,
+        input_root=input_root,
+        local_result_root=source_result,
+        execution_context=context,
+    )
+
+    dry_run_path = tmp_path / "dry-run.json"
+    dry_run_payload = {
+        "schema_version": "lightgbm_wave1_g4_dry_run_v1",
+        "request_sha256": request.canonical_hash(),
+        "input_uri": input_uri,
+        "result_uri": result_uri,
+        "command_sha256": "1" * 64,
+        "campaign_spend_usd": 8.03,
+        "development_jobs_consumed": 5,
+        "manual_review_required": True,
+    }
+    dry_run_path.write_text(json.dumps(dry_run_payload), encoding="utf-8")
+    submission_path = tmp_path / "submission.json"
+    submitted_at = datetime(2026, 8, 22, tzinfo=UTC)
+    submission_payload = {
+        "schema_version": "lightgbm_wave1_g4_submission_v1",
+        "status": "SUBMITTED",
+        "submitted_at": submitted_at.isoformat(),
+        "watchdog_deadline": (submitted_at + timedelta(seconds=900)).isoformat(),
+        "watchdog_seconds": 900,
+        "job_id": "aijob-g4test",
+        "request_sha256": request.canonical_hash(),
+        "input_uri": input_uri,
+        "result_uri": result_uri,
+        "project_id": PROJECT_ID,
+        "image": LOCAL_IMAGE,
+        "resource": request.resource.model_dump(mode="json"),
+        "command_sha256": "1" * 64,
+        "reviewed_dry_run_sha256": wave1_script.sha256_file(dry_run_path),
+        "campaign_spend_usd": 8.03,
+        "development_jobs_consumed_before_submit": 5,
+        "development_jobs_consumed_after_submit": 6,
+    }
+    submission_path.write_text(json.dumps(submission_payload), encoding="utf-8")
+
+    observed_job = {
+        "parent_id": PROJECT_ID,
+        "image": LOCAL_IMAGE,
+        "platform": "cpu-d3",
+        "preset": "4vcpu-16gb",
+        "disk_size": "100Gi",
+        "timeout": "1h",
+    }
+    responses = iter(
+        (
+            subprocess.CompletedProcess(
+                [], 0, stdout=json.dumps({**observed_job, "status": "RUNNING"}), stderr=""
+            ),
+            subprocess.CompletedProcess(
+                [], 0, stdout=json.dumps({**observed_job, "status": "COMPLETED"}), stderr=""
+            ),
+            subprocess.CompletedProcess([], 0, stdout="training complete\n", stderr=""),
+        )
+    )
+    clock = iter((0.0, 10.0, 20.0, 21.0))
+    monitor_path = tmp_path / "monitor.json"
+    wave1_script.monitor_g4_job(
+        submission_path,
+        monitor_path,
+        poll_seconds=1,
+        command_runner=lambda *_args, **_kwargs: next(responses),
+        monotonic=lambda: next(clock),
+        sleeper=lambda _seconds: None,
+        wall_clock=lambda: submitted_at + timedelta(seconds=5),
+    )
+    monitor = json.loads(monitor_path.read_text(encoding="utf-8"))
+    assert monitor["status"] == "COMPLETED"
+    assert monitor["status_history"][-1]["status"] == "COMPLETED"
+
+    monkeypatch.setattr(
+        wave1_script,
+        "download_s3_release",
+        lambda _uri, destination, **_kwargs: shutil.copytree(source_result, destination),
+    )
+    downloaded = tmp_path / "downloaded"
+    collection_path = tmp_path / "collection.json"
+    wave1_script.collect_s3_result(
+        result_uri,
+        downloaded,
+        collection_path,
+        submission_path=submission_path,
+        monitor_path=monitor_path,
+        estimated_cost_usd=0.02,
+        campaign_spend_to_date_usd=8.05,
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+    )
+
+    stage_path = tmp_path / "stage.json"
+    stage_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "lightgbm_wave1_g3_input_evidence_v1",
+                "request_sha256": request.canonical_hash(),
+                "destination": input_uri,
+                "read_back_verified": True,
+                "success_published_last": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    exit_path = tmp_path / "g4-exit.json"
+    wave1_script.create_g4_exit_record(
+        stage_evidence_path=stage_path,
+        dry_run_evidence_path=dry_run_path,
+        submission_path=submission_path,
+        monitor_path=monitor_path,
+        collection_path=collection_path,
+        result=downloaded,
+        output=exit_path,
+    )
+    exit_record = json.loads(exit_path.read_text(encoding="utf-8"))
+
+    assert exit_record["status"] == "passed"
+    assert exit_record["job_id"] == "aijob-g4test"
+    assert all(exit_record["gates"].values())
+
+
+def test_g4_monitor_cancels_at_fixed_watchdog(tmp_path: Path) -> None:
+    submission = tmp_path / "submission.json"
+    submitted_at = datetime(2026, 8, 22, tzinfo=UTC)
+    submission.write_text(
+        json.dumps(
+            {
+                "schema_version": "lightgbm_wave1_g4_submission_v1",
+                "status": "SUBMITTED",
+                "submitted_at": submitted_at.isoformat(),
+                "watchdog_deadline": (submitted_at + timedelta(seconds=900)).isoformat(),
+                "watchdog_seconds": 900,
+                "job_id": "aijob-watchdog",
+                "request_sha256": "0" * 64,
+                "project_id": PROJECT_ID,
+                "image": LOCAL_IMAGE,
+                "resource": {
+                    "platform": "cpu-d3",
+                    "preset": "4vcpu-16gb",
+                    "disk_size_gib": 100,
+                    "timeout_seconds": 3600,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    commands: list[list[str]] = []
+
+    def fake_runner(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        commands.append(argv)
+        if "get" in argv:
+            return subprocess.CompletedProcess(argv, 0, stdout='{"status":"RUNNING"}', stderr="")
+        if "cancel" in argv:
+            return subprocess.CompletedProcess(argv, 0, stdout="{}", stderr="")
+        return subprocess.CompletedProcess(argv, 0, stdout="watchdog logs\n", stderr="")
+
+    clock = iter((0.0, 0.0, 0.0))
+    output = tmp_path / "monitor.json"
+    with pytest.raises(RuntimeError, match="WATCHDOG_CANCELLED"):
+        wave1_script.monitor_g4_job(
+            submission,
+            output,
+            poll_seconds=30,
+            command_runner=fake_runner,
+            monotonic=lambda: next(clock),
+            sleeper=lambda _seconds: None,
+            wall_clock=lambda: submitted_at + timedelta(seconds=901),
+        )
+    evidence = json.loads(output.read_text(encoding="utf-8"))
+    assert evidence["status"] == "WATCHDOG_CANCELLED"
+    assert evidence["cancellation_requested"] is True
+    assert any("cancel" in command for command in commands)
 
 
 def test_wave1_submitter_rejects_filesystem_mounts(tmp_path: Path) -> None:
@@ -631,6 +967,8 @@ def test_wave1_submitter_rejects_filesystem_mounts(tmp_path: Path) -> None:
         "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
         "NEBIUS_WAVE1_INPUT_URI": input_uri,
         "NEBIUS_WAVE1_REQUEST_EVIDENCE": str(evidence_path),
+        "WAVE1_SPEND_TO_DATE_USD": "8.03",
+        "WAVE1_DEVELOPMENT_JOBS_CONSUMED": "5",
         "NEBIUS_VOLUME": "s3://forbidden:/job/inputs:ro:secret",
     }
     completed = subprocess.run(

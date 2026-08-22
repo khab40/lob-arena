@@ -160,7 +160,11 @@ runner, verifies the result, uploads objects through the S3 API, and publishes
 
 The submission helpers accept only MysteryBox-backed IDs through
 `NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID`,
-`NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID`, and the optional session-token
-secret ID. Inline access-key values cause submission to fail before invoking
-the Nebius CLI. Both access-key ID and secret-key selectors are required for a
-Wave 1 Job.
+`NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID`, `NEBIUS_MLFLOW_USERNAME_SECRET_ID`,
+`NEBIUS_MLFLOW_PASSWORD_SECRET_ID`, and the optional session-token secret ID.
+Inline access-key values cause submission to fail before invoking the Nebius
+CLI. A Wave 1 submission also requires the staged request evidence, reconciled
+spend and Job count, plus the SHA-256 of the Operator-reviewed dry run. The G4
+monitor verifies the actual Job resources and cancels at 15 minutes. See the
+[LightGBM runbook](../../docs/lightgbm-v1-runbook.md) for the complete staged
+submission, monitoring, S3 collection, and exit-gate commands.

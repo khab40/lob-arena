@@ -1,8 +1,8 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; G4 blocked after five bounded failed attempts; S3 API runner is implemented locally but has not completed in Nebius
+Status: G0-G3 complete; G4 code/evidence workflow complete locally; one fresh-image cloud smoke remains pending after five bounded failed attempts
 
-Date: 2026-08-21
+Date: 2026-08-22
 
 ## Outcome
 
@@ -84,7 +84,7 @@ logs, choose retry validity or change model settings after final authorization.
 | Image | Existing `lob-arena-jobs`, extended for ML and pinned by digest; no `latest` |
 | Development ceiling | 20 Jobs total, including smoke and repeats |
 | Final evaluation | One Job, no automatic retry |
-| Timeouts | Smoke 15m; development 60m; final 120m |
+| Timeouts | Smoke uses the 1h platform minimum with a 15m cancellation watchdog; development 60m; final 120m |
 | Approved all-in spend ceiling | USD 50, including Jobs, the new MLflow VM, Object Storage and other Wave 1 resources |
 | Storage | Standard class, same region |
 | Test isolation | Development identity cannot read final-test objects |
@@ -506,6 +506,17 @@ automatic retry.
 
 **Gate:** `SUCCESS`, checksums, MLflow development record, Job identity, runtime
 and resource evidence verify; no secret appears in config/logs/artifacts.
+
+**Implementation status (2026-08-22): complete locally.** The G4 chain now
+binds an immutable staged request to a selector-redacted dry run, requires the
+Operator-confirmed dry-run SHA-256 before submission, records the returned Job
+ID, enforces the USD 40 pre-submit and 20-Job campaign stops, monitors actual
+Job status/resources with a 15-minute cancellation watchdog, collects redacted
+logs, downloads and checksum-verifies the result prefix, requires a bound
+MLflow run and post-Job cost reconciliation, and emits one fail-closed G4 exit
+record. `make lightgbm-wave1-g4-check` exercises this flow without cloud access.
+The VM remains stopped and no sixth Job has been submitted by this implementation
+step; runtime completion still requires the separately authorized cloud action.
 
 **Attempt status (2026-08-16 through 2026-08-17): failed.** Job
 `aijob-e00zg7n8dsb66xef1c` remained `STARTING` for the entire 15-minute policy

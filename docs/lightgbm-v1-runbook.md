@@ -138,18 +138,70 @@ python scripts/lightgbm_wave1.py stage-fixture \
   --mlflow-tracking-uri http://PRIVATE_MLFLOW_HOST:5500 \
   --output outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json
 
-NEBIUS_WAVE1_INPUT_URI=s3://aimada-wave1-dev-e00g6zvxpr00/releases/RELEASE_ID/staging \
-NEBIUS_WAVE1_REQUEST_EVIDENCE=outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json \
-NEBIUS_OBJECT_STORAGE_ENDPOINT_URL=https://storage.eu-north1.nebius.cloud \
-NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID=ACCESS_ID_SECRET_SELECTOR \
-NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID=SECRET_KEY_SELECTOR \
-NEBIUS_MLFLOW_USERNAME_SECRET_ID=MLFLOW_USERNAME_SECRET_SELECTOR \
-NEBIUS_MLFLOW_PASSWORD_SECRET_ID=MLFLOW_PASSWORD_SECRET_SELECTOR \
+export NEBIUS_WAVE1_INPUT_URI=s3://aimada-wave1-dev-e00g6zvxpr00/releases/RELEASE_ID/staging
+export NEBIUS_WAVE1_REQUEST_EVIDENCE=outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json
+export NEBIUS_OBJECT_STORAGE_ENDPOINT_URL=https://storage.eu-north1.nebius.cloud
+export NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID=ACCESS_ID_SECRET_SELECTOR
+export NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID=SECRET_KEY_SELECTOR
+export NEBIUS_MLFLOW_USERNAME_SECRET_ID=MLFLOW_USERNAME_SECRET_SELECTOR
+export NEBIUS_MLFLOW_PASSWORD_SECRET_ID=MLFLOW_PASSWORD_SECRET_SELECTOR
+export WAVE1_SPEND_TO_DATE_USD=RECONCILED_SPEND_BELOW_40
+export WAVE1_DEVELOPMENT_JOBS_CONSUMED=5
+
 python scripts/submit_nebius_job.py \
   --workload lightgbm-wave1 \
   --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
+  --evidence-output outputs/lightgbm-wave1/g4-dry-run.json \
   --dry-run
 ```
+
+Do not submit until the Operator has reviewed `g4-dry-run.json`. Confirm that
+review by passing its SHA-256; the submitter refuses a different request,
+command, spend baseline, Job count, or dry-run hash:
+
+```bash
+DRY_RUN_SHA256=$(shasum -a 256 outputs/lightgbm-wave1/g4-dry-run.json | awk '{print $1}')
+
+python scripts/submit_nebius_job.py \
+  --workload lightgbm-wave1 \
+  --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
+  --reviewed-dry-run outputs/lightgbm-wave1/g4-dry-run.json \
+  --reviewed-dry-run-sha256 "${DRY_RUN_SHA256}" \
+  --evidence-output outputs/lightgbm-wave1/g4-submission.json
+
+python scripts/lightgbm_wave1.py monitor-g4 \
+  --submission outputs/lightgbm-wave1/g4-submission.json \
+  --output outputs/lightgbm-wave1/g4-monitor.json
+```
+
+The monitor queries `nebius ai job get`, verifies the actual project, image,
+platform, preset, disk and timeout, collects redacted logs, and cancels a Job
+that has not completed within 15 minutes. After a completed Job, download and
+verify the immutable S3 result and assemble the exit gate:
+
+```bash
+python scripts/lightgbm_wave1.py collect-s3 \
+  --result-uri s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-research-20260816/development/RUN_ID \
+  --result outputs/lightgbm-wave1/g4-result \
+  --submission outputs/lightgbm-wave1/g4-submission.json \
+  --monitor outputs/lightgbm-wave1/g4-monitor.json \
+  --estimated-cost-usd JOB_COST_ESTIMATE \
+  --campaign-spend-to-date-usd RECONCILED_POST_JOB_SPEND \
+  --output outputs/lightgbm-wave1/g4-collection.json
+
+python scripts/lightgbm_wave1.py g4-exit \
+  --stage-evidence outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json \
+  --dry-run-evidence outputs/lightgbm-wave1/g4-dry-run.json \
+  --submission outputs/lightgbm-wave1/g4-submission.json \
+  --monitor outputs/lightgbm-wave1/g4-monitor.json \
+  --collection outputs/lightgbm-wave1/g4-collection.json \
+  --result outputs/lightgbm-wave1/g4-result \
+  --output outputs/lightgbm-wave1/g4-exit.json
+```
+
+Run `make lightgbm-wave1-g4-check` before building the immutable cloud image.
+The shared MLflow VM remains stopped until immediately before an explicitly
+authorized submission and should be stopped again after evidence collection.
 
 All five failed attempts count against the fixed 20-Job development ceiling;
 15 slots remain. The next cloud action remains one explicitly authorized,

@@ -196,6 +196,7 @@ def test_detector_tournament_collects_completed_s3_artifacts(tmp_path: Path, mon
     monkeypatch.setenv("NEBIUS_OBJECT_STORAGE_ENDPOINT_URL", "https://storage.example")
     monkeypatch.setenv("NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID", "test-access")
     monkeypatch.setenv("NEBIUS_OBJECT_STORAGE_SECRET_ACCESS_KEY", "test-secret")
+    monkeypatch.setenv("NEBIUS_EVIDENCE_ARCHIVE_ENABLED", "false")
     monkeypatch.setattr("app.nebius.detector_tournament.shutil.which", lambda _name: "/usr/bin/aws")
     monkeypatch.setattr("app.nebius.detector_tournament.subprocess.run", fake_run)
     get_settings.cache_clear()

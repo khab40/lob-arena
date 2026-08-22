@@ -1,7 +1,7 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-g4-check lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
-	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
+	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-g4-check lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
 
 grader-smoke:
 	./scripts/grader-smoke.sh
@@ -115,6 +115,13 @@ lightgbm-wave1-test:
 		tests/test_lightgbm_wave1.py \
 		tests/test_nebius_job_config_rendering.py \
 		tests/test_nebius_job_submit_adapter.py
+
+lightgbm-wave1-g4-check:
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
+		tests/test_lightgbm_wave1.py \
+		-k "g4 or submitter or cloud_collection or fixture_staging"
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run \
+		python ../scripts/lightgbm_wave1.py --help >/dev/null
 
 lightgbm-wave1-local-e2e:
 	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \

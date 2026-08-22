@@ -1,9 +1,12 @@
 import argparse
+import hashlib
 import json
+import math
 import os
-import subprocess
 import re
+import subprocess
 import sys
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 
@@ -41,6 +44,30 @@ def main() -> None:
     parser.add_argument("--s3-output-uri", default=os.environ.get("NEBIUS_JOB_OUTPUT_URI", ""))
     parser.add_argument("--s3-endpoint-url", default=os.environ.get("NEBIUS_OBJECT_STORAGE_ENDPOINT_URL", ""))
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--evidence-output",
+        type=Path,
+        default=(Path(value) if (value := os.environ.get("NEBIUS_WAVE1_EVIDENCE_OUTPUT")) else None),
+    )
+    parser.add_argument(
+        "--reviewed-dry-run",
+        type=Path,
+        default=(Path(value) if (value := os.environ.get("NEBIUS_WAVE1_REVIEWED_DRY_RUN")) else None),
+    )
+    parser.add_argument(
+        "--reviewed-dry-run-sha256",
+        default=os.environ.get("NEBIUS_WAVE1_REVIEWED_DRY_RUN_SHA256"),
+    )
+    parser.add_argument(
+        "--campaign-spend-usd",
+        type=float,
+        default=(float(value) if (value := os.environ.get("WAVE1_SPEND_TO_DATE_USD")) else None),
+    )
+    parser.add_argument(
+        "--development-jobs-consumed",
+        type=int,
+        default=(int(value) if (value := os.environ.get("WAVE1_DEVELOPMENT_JOBS_CONSUMED")) else None),
+    )
     parser.add_argument("--workload", choices=("synthetic", "lightgbm-wave1"), default="synthetic")
     parser.add_argument("--input-uri", default=os.environ.get("NEBIUS_WAVE1_INPUT_URI", ""))
     parser.add_argument(
@@ -86,6 +113,17 @@ def main() -> None:
         request = _load_wave1_request(args.request_evidence, args.input_uri)
         if request.mode in {"development", "final-evaluation"} and request.mlflow_tracking_uri is None:
             raise SystemExit("LightGBM Wave 1 cloud request requires an MLflow tracking URI")
+        if (
+            args.campaign_spend_usd is None
+            or not math.isfinite(args.campaign_spend_usd)
+            or not 0 <= args.campaign_spend_usd < 40
+        ):
+            raise SystemExit("LightGBM Wave 1 submission requires reconciled campaign spend below USD 40")
+        if (
+            args.development_jobs_consumed is None
+            or not 0 <= args.development_jobs_consumed < 20
+        ):
+            raise SystemExit("LightGBM Wave 1 requires a reconciled development Job count below 20")
         if re.fullmatch(r".+@sha256:[0-9a-f]{64}", args.image) is None:
             raise SystemExit("LightGBM Wave 1 requires an immutable image digest")
         if request.image != args.image:
@@ -199,13 +237,93 @@ def main() -> None:
                 ]
             )
 
+    command_sha256 = _canonical_hash(command)
     if args.dry_run:
-        print(json.dumps({"command": command}, indent=2))
+        payload = {
+            "schema_version": "lightgbm_wave1_g4_dry_run_v1",
+            "created_at": datetime.now(UTC).isoformat(),
+            "request_sha256": request.canonical_hash() if args.workload == "lightgbm-wave1" else None,
+            "input_uri": args.input_uri if args.workload == "lightgbm-wave1" else None,
+            "result_uri": request.result_uri if args.workload == "lightgbm-wave1" else None,
+            "project_id": WAVE1_PROJECT_ID if args.workload == "lightgbm-wave1" else args.parent_id,
+            "image": args.image,
+            "resource": request.resource.model_dump(mode="json") if args.workload == "lightgbm-wave1" else None,
+            "command": _redacted_command(command),
+            "command_sha256": command_sha256,
+            "campaign_spend_usd": args.campaign_spend_usd,
+            "development_jobs_consumed": args.development_jobs_consumed,
+            "manual_review_required": args.workload == "lightgbm-wave1",
+            "cloud_resources_created": False,
+        }
+        if args.evidence_output is not None:
+            _write_evidence(args.evidence_output, payload)
+        print(json.dumps(payload, indent=2, sort_keys=True))
         return
+
+    reviewed_sha256 = None
+    if args.workload == "lightgbm-wave1":
+        if args.evidence_output is None:
+            raise SystemExit("LightGBM Wave 1 submission requires --evidence-output")
+        if args.evidence_output.exists():
+            raise SystemExit(f"Wave 1 evidence output already exists: {args.evidence_output}")
+        reviewed = _load_reviewed_dry_run(args.reviewed_dry_run)
+        reviewed_sha256 = hashlib.sha256(args.reviewed_dry_run.read_bytes()).hexdigest()
+        if args.reviewed_dry_run_sha256 != reviewed_sha256:
+            raise SystemExit("reviewed Wave 1 dry-run SHA-256 confirmation is missing or incorrect")
+        if reviewed.get("request_sha256") != request.canonical_hash():
+            raise SystemExit("reviewed Wave 1 dry run does not match the staged request")
+        if reviewed.get("command_sha256") != command_sha256:
+            raise SystemExit("reviewed Wave 1 dry run does not match the submission command")
+        if reviewed.get("campaign_spend_usd") != args.campaign_spend_usd:
+            raise SystemExit("reviewed Wave 1 dry run does not match reconciled campaign spend")
+        if reviewed.get("development_jobs_consumed") != args.development_jobs_consumed:
+            raise SystemExit("reviewed Wave 1 dry run does not match the development Job count")
 
     completed = subprocess.run(command, check=False, text=True, capture_output=True)
     if completed.returncode != 0:
+        if args.workload == "lightgbm-wave1" and args.evidence_output is not None:
+            _write_evidence(
+                args.evidence_output,
+                {
+                    "schema_version": "lightgbm_wave1_g4_submission_v1",
+                    "submitted_at": datetime.now(UTC).isoformat(),
+                    "request_sha256": request.canonical_hash(),
+                    "command_sha256": command_sha256,
+                    "reviewed_dry_run_sha256": reviewed_sha256,
+                    "status": "SUBMISSION_FAILED",
+                    "return_code": completed.returncode,
+                    "stderr_sha256": hashlib.sha256(completed.stderr.encode()).hexdigest(),
+                },
+            )
         raise SystemExit(completed.stderr)
+    if args.workload == "lightgbm-wave1":
+        job_id = _parse_job_id(completed.stdout)
+        if job_id is None:
+            raise SystemExit("Nebius Job creation response did not contain a canonical Job ID")
+        submitted_at = datetime.now(UTC)
+        payload = {
+            "schema_version": "lightgbm_wave1_g4_submission_v1",
+            "submitted_at": submitted_at.isoformat(),
+            "watchdog_deadline": (submitted_at + timedelta(minutes=15)).isoformat(),
+            "watchdog_seconds": 900,
+            "request_sha256": request.canonical_hash(),
+            "input_uri": args.input_uri,
+            "result_uri": request.result_uri,
+            "project_id": request.project_id,
+            "image": request.image,
+            "resource": request.resource.model_dump(mode="json"),
+            "job_id": job_id,
+            "status": "SUBMITTED",
+            "command_sha256": command_sha256,
+            "reviewed_dry_run_sha256": reviewed_sha256,
+            "response_sha256": hashlib.sha256(completed.stdout.encode()).hexdigest(),
+            "campaign_spend_usd": args.campaign_spend_usd,
+            "development_jobs_consumed_before_submit": args.development_jobs_consumed,
+            "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
+        }
+        _write_evidence(args.evidence_output, payload)
+        print(json.dumps(payload, indent=2, sort_keys=True))
+        return
     Path("outputs/nebius").mkdir(parents=True, exist_ok=True)
     Path("outputs/nebius/latest_job_create.json").write_text(completed.stdout, encoding="utf-8")
     print(completed.stdout)
@@ -226,6 +344,70 @@ def _load_wave1_request(evidence_path: Path | None, input_uri: str) -> LightGbmC
     if request.project_id != WAVE1_PROJECT_ID:
         raise SystemExit("LightGBM Wave 1 request does not target the approved project")
     return request
+
+
+def _load_reviewed_dry_run(path: Path | None) -> dict[str, object]:
+    if path is None or not path.is_file():
+        raise SystemExit("LightGBM Wave 1 submission requires --reviewed-dry-run")
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SystemExit("reviewed Wave 1 dry-run evidence is invalid") from exc
+    if payload.get("schema_version") != "lightgbm_wave1_g4_dry_run_v1":
+        raise SystemExit("reviewed Wave 1 dry-run evidence has the wrong schema")
+    if payload.get("manual_review_required") is not True:
+        raise SystemExit("reviewed Wave 1 dry-run evidence is not reviewable")
+    return payload
+
+
+def _parse_job_id(raw: str) -> str | None:
+    try:
+        payload = json.loads(raw)
+    except ValueError:
+        payload = None
+
+    def visit(value: object) -> str | None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if str(key).lower() in {"id", "job_id", "jobid"} and isinstance(item, str):
+                    if re.fullmatch(r"aijob-[A-Za-z0-9]+", item):
+                        return item
+                found = visit(item)
+                if found is not None:
+                    return found
+        elif isinstance(value, list):
+            for item in value:
+                found = visit(item)
+                if found is not None:
+                    return found
+        return None
+
+    found = visit(payload)
+    if found is not None:
+        return found
+    match = re.search(r"\baijob-[A-Za-z0-9]+\b", raw)
+    return match.group(0) if match else None
+
+
+def _redacted_command(command: list[str]) -> list[str]:
+    redacted = list(command)
+    for index, value in enumerate(redacted[:-1]):
+        if value == "--env-secret":
+            name = redacted[index + 1].partition("=")[0]
+            redacted[index + 1] = f"{name}=[MYSTERYBOX_SELECTOR]"
+    return redacted
+
+
+def _canonical_hash(value: object) -> str:
+    encoded = json.dumps(value, allow_nan=False, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _write_evidence(path: Path, payload: dict[str, object]) -> None:
+    if path.exists():
+        raise SystemExit(f"Wave 1 evidence output already exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
