@@ -63,6 +63,31 @@ class S3ObjectEvidence:
     etag: str
 
 
+def _aws_environment() -> dict[str, str]:
+    """Disable AWS CLI paging without relying on version-specific command flags."""
+
+    return {**os.environ, "AWS_PAGER": ""}
+
+
+def _aws_failure_kind(stderr: str) -> str:
+    """Classify aws-cli failures without propagating potentially sensitive output."""
+
+    normalized = stderr.lower()
+    classifications = (
+        (("unknown option", "unknown options", "unrecognized arguments"), "unsupported_option"),
+        (("invalidaccesskeyid", "invalid access key"), "invalid_access_key"),
+        (("signaturedoesnotmatch", "signature mismatch"), "signature_mismatch"),
+        (("accessdenied", "access denied"), "access_denied"),
+        (("could not connect to the endpoint", "endpoint connection error"), "endpoint_connection"),
+        (("ssl validation failed", "certificate verify failed"), "ssl_validation"),
+        (("timed out", "timeout"), "timeout"),
+    )
+    for needles, classification in classifications:
+        if any(needle in normalized for needle in needles):
+            return classification
+    return "unclassified"
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -163,9 +188,20 @@ def sync_s3(
     if endpoint_url:
         command.extend(["--endpoint-url", endpoint_url])
     command.extend(["s3", "sync", source, destination, "--only-show-errors", "--no-follow-symlinks"])
-    completed = subprocess.run(command, check=False, text=True, capture_output=True, timeout=300)
+    completed = subprocess.run(
+        command,
+        check=False,
+        text=True,
+        capture_output=True,
+        timeout=300,
+        env=_aws_environment(),
+    )
     if completed.returncode:
-        raise RuntimeError(f"Object Storage synchronization failed with exit code {completed.returncode}")
+        failure_kind = _aws_failure_kind(completed.stderr or "")
+        raise RuntimeError(
+            "Object Storage synchronization failed with "
+            f"exit code {completed.returncode} ({failure_kind})"
+        )
 
 
 def publish_s3_input_release(
@@ -437,14 +473,18 @@ def _aws_json(endpoint_url: str, *args: str) -> dict[str, object]:
     if aws is None:
         raise RuntimeError("aws CLI is required for Object Storage publication")
     completed = subprocess.run(
-        [aws, "--endpoint-url", endpoint_url, *args, "--output", "json", "--no-cli-pager"],
+        [aws, "--endpoint-url", endpoint_url, *args, "--output", "json"],
         check=False,
         text=True,
         capture_output=True,
         timeout=300,
+        env=_aws_environment(),
     )
     if completed.returncode:
-        raise RuntimeError(f"Object Storage command failed with exit code {completed.returncode}")
+        failure_kind = _aws_failure_kind(completed.stderr or "")
+        raise RuntimeError(
+            f"Object Storage command failed with exit code {completed.returncode} ({failure_kind})"
+        )
     return json.loads(completed.stdout or "{}")
 
 

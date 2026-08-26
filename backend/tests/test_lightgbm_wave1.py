@@ -179,6 +179,73 @@ def test_s3_download_lists_only_requested_prefix_and_verifies_package(
     verify_complete_result(downloaded)
 
 
+def test_aws_json_uses_cli_v1_compatible_pager_control(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured["command"] = command
+        captured["env"] = kwargs["env"]
+        return subprocess.CompletedProcess(command, 0, stdout='{"Contents": []}', stderr="")
+
+    monkeypatch.setattr(object_storage.shutil, "which", lambda _: "/usr/bin/aws")
+    monkeypatch.setattr(object_storage.subprocess, "run", fake_run)
+
+    payload = object_storage._aws_json(
+        "https://storage.eu-north1.nebius.cloud",
+        "s3api",
+        "list-objects-v2",
+        "--bucket",
+        "fixture",
+    )
+
+    assert payload == {"Contents": []}
+    assert "--no-cli-pager" not in captured["command"]
+    assert captured["env"]["AWS_PAGER"] == ""  # type: ignore[index]
+
+
+def test_aws_json_classifies_failure_without_exposing_stderr(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stderr = "Unknown options: --no-cli-pager SECRET-MUST-NOT-LEAK"
+
+    def fake_run(command: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(command, 255, stdout="", stderr=stderr)
+
+    monkeypatch.setattr(object_storage.shutil, "which", lambda _: "/usr/bin/aws")
+    monkeypatch.setattr(object_storage.subprocess, "run", fake_run)
+
+    with pytest.raises(RuntimeError) as error:
+        object_storage._aws_json(
+            "https://storage.eu-north1.nebius.cloud",
+            "s3api",
+            "list-objects-v2",
+        )
+
+    assert str(error.value) == "Object Storage command failed with exit code 255 (unsupported_option)"
+    assert "SECRET-MUST-NOT-LEAK" not in str(error.value)
+
+
+def test_s3_sync_disables_cli_pager(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured["env"] = kwargs["env"]
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(object_storage.shutil, "which", lambda _: "/usr/bin/aws")
+    monkeypatch.setattr(object_storage.subprocess, "run", fake_run)
+
+    object_storage.sync_s3(
+        "s3://fixture/releases/input",
+        "s3://fixture/releases/output",
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+    )
+
+    assert captured["env"]["AWS_PAGER"] == ""  # type: ignore[index]
+
+
 def test_repeat_comparison_uses_stable_reproducibility_hash(tmp_path: Path) -> None:
     first = tmp_path / "first"
     second = tmp_path / "second"

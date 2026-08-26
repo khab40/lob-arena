@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; short-tag deployment path verified in cloud; G4 attempt 6 failed before training on an AWS CLI v1 incompatibility
+Status: G0-G3 complete; G4 AWS CLI v1 fix validated locally; fresh immutable image and attempt 7 preflight pending
 
 Date: 2026-08-26
 
@@ -196,11 +196,26 @@ still required before generating and authorizing the replacement dry run; USD
   the project Job inventory is 63. MLflow was stopped immediately after the
   terminal failure and independently verified `STOPPED`.
 
-Before any attempt 7, remove the incompatible pager flag (or use a version-safe
-empty `AWS_PAGER` environment), add an AWS CLI v1 regression test, build and
-smoke a fresh immutable image, restage the request against that digest, obtain
-a fresh spend observation, produce a new reviewed dry run and receive explicit
-authorization. Automatic retry is forbidden.
+### 2026-08-26 Attempt 7 Fix Preparation
+
+- The v2-only `--no-cli-pager` argument has been removed from the shared JSON
+  Object Storage path. Both AWS CLI subprocess paths now set `AWS_PAGER` to an
+  empty value, which disables paging on AWS CLI v1 and v2 without a
+  version-specific option.
+- Object Storage subprocess failures retain only exit code and a bounded
+  classification; raw stderr is not propagated because it may contain request
+  or credential context.
+- Regression coverage proves that the JSON command excludes the v2-only flag,
+  both S3 paths disable paging through the environment, and unsupported-option
+  stderr is classified without being exposed. The focused Wave 1 suite passes
+  39 tests, including all 12 submission/render tests, and Ruff passes.
+- The Jobs Docker build and runtime smoke now verify that the packaged AWS CLI
+  is executable. A fresh immutable image must still be built, pushed, resolved
+  to a digest, and used to restage the governed fixture.
+
+Before any attempt 7, complete that image and fixture preparation, obtain a
+fresh post-attempt-6 spend observation, produce a new reviewed dry run and
+receive explicit authorization. Automatic retry is forbidden.
 
 ## Prior Decisions Preserved
 

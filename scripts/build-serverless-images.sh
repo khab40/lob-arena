@@ -57,6 +57,7 @@ if [[ "${SMOKE}" == "true" ]]; then
   if [[ "${TARGET}" != "endpoint" ]]; then
     printf "%s\n" "Smoke checking jobs image metadata"
     docker image inspect "${JOBS_IMAGE}" >/dev/null
+    docker run --rm --entrypoint aws "${JOBS_IMAGE}" --version
     docker run --rm --entrypoint python "${JOBS_IMAGE}" -c \
       "import lightgbm, mlflow, pyarrow; from app.ml.lightgbm.cloud_runner import execute_wave1_request; print('wave1-ok')"
   fi
