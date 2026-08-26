@@ -743,6 +743,141 @@ def test_wave1_submission_requires_and_binds_reviewed_dry_run(
     assert payload["watchdog_seconds"] == 900
 
 
+def test_short_tag_workaround_verifies_registry_before_and_after_creation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/release-tag/staging"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/wave1-test-development"
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
+        )
+    )
+    request_evidence = tmp_path / "request.json"
+    request_evidence.write_text(
+        json.dumps(
+            {
+                "destination": input_uri,
+                "request_sha256": request.canonical_hash(),
+                "request": request.model_dump(mode="json"),
+            }
+        ),
+        encoding="utf-8",
+    )
+    governed_repository, digest_hex = LOCAL_IMAGE.rsplit("@sha256:", maxsplit=1)
+    deployment_image = f"{governed_repository.rsplit('/', maxsplit=1)[0]}/g:{digest_hex[:16]}"
+    environment = {
+        "NEBIUS_SUBNET_ID": "subnet-test",
+        "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID": "access-selector",
+        "NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID": "secret-selector",
+        "NEBIUS_MLFLOW_USERNAME_SECRET_ID": "mlflow-user-selector",
+        "NEBIUS_MLFLOW_PASSWORD_SECRET_ID": "mlflow-password-selector",
+        "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
+        "NEBIUS_WAVE1_INPUT_URI": input_uri,
+        "NEBIUS_WAVE1_REQUEST_EVIDENCE": str(request_evidence),
+        "WAVE1_SPEND_TO_DATE_USD": "8.12",
+        "WAVE1_DEVELOPMENT_JOBS_CONSUMED": "5",
+    }
+    for name, value in environment.items():
+        monkeypatch.setenv(name, value)
+
+    calls: list[list[str]] = []
+
+    def run(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        if command[:4] == ["docker", "buildx", "imagetools", "inspect"]:
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout=json.dumps({"digest": f"sha256:{digest_hex}"}),
+                stderr="",
+            )
+        if command[:4] == ["nebius", "ai", "job", "create"]:
+            return subprocess.CompletedProcess(
+                command, 0, stdout='{"id":"aijob-tag123"}', stderr=""
+            )
+        if command[:4] == ["nebius", "ai", "job", "get"]:
+            return subprocess.CompletedProcess(
+                command, 0, stdout=json.dumps({"spec": {"image": deployment_image}}), stderr=""
+            )
+        raise AssertionError(command)
+
+    monkeypatch.setattr(submit_script.subprocess, "run", run)
+    dry_run = tmp_path / "dry-run.json"
+    common_args = [
+        "--workload",
+        "lightgbm-wave1",
+        "--image",
+        LOCAL_IMAGE,
+        "--deployment-image",
+        deployment_image,
+        "--allow-short-tag-workaround",
+    ]
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["submit_nebius_job.py", *common_args, "--evidence-output", str(dry_run), "--dry-run"],
+    )
+    submit_script.main()
+    capsys.readouterr()
+    dry_run_payload = json.loads(dry_run.read_text(encoding="utf-8"))
+    assert dry_run_payload["image"] == LOCAL_IMAGE
+    assert dry_run_payload["deployment_image"] == deployment_image
+    assert dry_run_payload["registry_verification"]["resolved_digest"] == f"sha256:{digest_hex}"
+    assert dry_run_payload["command"][dry_run_payload["command"].index("--image") + 1] == deployment_image
+
+    submission = tmp_path / "submission.json"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "submit_nebius_job.py",
+            *common_args,
+            "--reviewed-dry-run",
+            str(dry_run),
+            "--reviewed-dry-run-sha256",
+            wave1_script.sha256_file(dry_run),
+            "--evidence-output",
+            str(submission),
+        ],
+    )
+    submit_script.main()
+    payload = json.loads(submission.read_text(encoding="utf-8"))
+    assert payload["status"] == "SUBMITTED"
+    assert payload["image"] == LOCAL_IMAGE
+    assert payload["deployment_image"] == deployment_image
+    assert payload["observed_job_image"] == deployment_image
+    assert payload["pre_submission_registry_verification"]["resolved_digest"] == (
+        f"sha256:{digest_hex}"
+    )
+    assert payload["post_submission_registry_verification"]["resolved_digest"] == (
+        f"sha256:{digest_hex}"
+    )
+    assert sum(command[:4] == ["docker", "buildx", "imagetools", "inspect"] for command in calls) == 3
+
+
+def test_short_tag_workaround_rejects_digest_drift(monkeypatch: pytest.MonkeyPatch) -> None:
+    governed_repository, digest_hex = LOCAL_IMAGE.rsplit("@sha256:", maxsplit=1)
+    deployment_image = f"{governed_repository.rsplit('/', maxsplit=1)[0]}/g:{digest_hex[:16]}"
+    monkeypatch.setattr(
+        submit_script.subprocess,
+        "run",
+        lambda command, **_kwargs: subprocess.CompletedProcess(
+            command,
+            0,
+            stdout=json.dumps({"digest": f"sha256:{'f' * 64}"}),
+            stderr="",
+        ),
+    )
+    with pytest.raises(SystemExit, match="does not resolve"):
+        submit_script._verify_short_tag(deployment_image, LOCAL_IMAGE)
+
+
 def test_g4_monitor_collect_and_exit_evidence_chain(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

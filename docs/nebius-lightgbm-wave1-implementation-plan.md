@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; fresh G4 image, immutable fixture staging and reviewed dry run complete; G4 Job creation blocked by a Nebius digest-reference validation defect
+Status: G0-G3 complete; approved digest-verified short-tag workaround implemented; refreshed G4 dry run awaits current spend reconciliation
 
 Date: 2026-08-26
 
@@ -151,15 +151,23 @@ evidence appropriate to that use.
   `STOPPED` after the rejection. No monitoring or result collection applies
   because no Job ID exists.
 
-The next submission is blocked pending one explicit decision. The preferred
-path is a Nebius service fix or support-confirmed digest-safe API route, which
-preserves the immutable-reference control. The bounded workaround is a short,
-unique release tag whose full reference is at most 64 characters, with the tag
-resolved to and compared against the reviewed registry digest immediately
-before submission and again from Job evidence. That workaround weakens the
-control because registry tags are mutable and requires an Operator-approved
-plan amendment before code or cloud execution. It must not be selected
-implicitly.
+The Operator explicitly approved the bounded short-tag exception on 2026-08-26.
+The governed request and runtime contract continue to bind the complete image
+digest. Deployment uses the 63-character, digest-derived reference
+`cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:97a6f9a40ab2286e`, which resolves
+to the reviewed `sha256:97a6f9a40ab2286eae5f82cd4f61fa478a4e0d050fc71070c8a1468ae9bf601b`.
+The submitter now requires the explicit exception flag, verifies this mapping
+when producing the dry run and immediately before submission, reads back the
+created Job image, verifies the mapping again, and requests cancellation if the
+post-creation check fails. The monitor compares the Job against the reviewed
+deployment reference while collection retains the full governed digest.
+
+The permanent Nebius correction is tracked by GitHub issue
+[#84](https://github.com/khab40/lob-arena/issues/84), under cloud-platform
+Feature #14 and blocking LightGBM Story #23. The exception must be retired when
+Nebius accepts the documented digest-form image. A fresh spend observation is
+still required before generating and authorizing the replacement dry run; USD
+8.12 is the pre-attempt baseline, not a fabricated post-attempt observation.
 
 ## Prior Decisions Preserved
 

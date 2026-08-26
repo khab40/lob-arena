@@ -425,7 +425,7 @@ def monitor_g4_job(
         raise ValueError("G4 monitor requires submitted resource evidence")
     expected_context = {
         "project_id": submission.get("project_id"),
-        "image": submission.get("image"),
+        "image": submission.get("deployment_image") or submission.get("image"),
         "platform": submission_resource.get("platform"),
         "preset": submission_resource.get("preset"),
         "disk_size_gib": submission_resource.get("disk_size_gib"),

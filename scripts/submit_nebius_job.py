@@ -32,6 +32,12 @@ WAVE1_WORK_ROOT_PATTERN = re.compile(r"/job/[A-Za-z0-9._/-]+")
 def main() -> None:
     parser = argparse.ArgumentParser(description="Submit the smart attack/detect batch as a Nebius Serverless AI Job.")
     parser.add_argument("--image", default=os.environ.get("NEBIUS_JOB_IMAGE", "ghcr.io/khab40/lob-arena-jobs:latest"))
+    parser.add_argument("--deployment-image", default=os.environ.get("NEBIUS_DEPLOYMENT_IMAGE"))
+    parser.add_argument(
+        "--allow-short-tag-workaround",
+        action="store_true",
+        help="Explicitly allow a <=64-character digest-derived tag after registry verification.",
+    )
     parser.add_argument("--name", default=os.environ.get("NEBIUS_JOB_NAME", "market-abuse-smart-batch"))
     parser.add_argument("--runs", type=int, default=int(os.environ.get("NEBIUS_JOB_RUNS", "1000")))
     parser.add_argument("--batch-size", type=int, default=int(os.environ.get("NEBIUS_JOB_BATCH_SIZE", "100")))
@@ -128,6 +134,19 @@ def main() -> None:
             raise SystemExit("LightGBM Wave 1 requires an immutable image digest")
         if request.image != args.image:
             raise SystemExit("LightGBM Wave 1 image must match the staged request evidence")
+        deployment_image = args.deployment_image or args.image
+        short_tag_workaround = deployment_image != args.image
+        registry_verification = None
+        if short_tag_workaround:
+            if not args.allow_short_tag_workaround:
+                raise SystemExit(
+                    "short-tag deployment requires --allow-short-tag-workaround"
+                )
+            registry_verification = _verify_short_tag(deployment_image, args.image)
+        elif args.allow_short_tag_workaround:
+            raise SystemExit(
+                "--allow-short-tag-workaround requires a distinct --deployment-image"
+            )
         if args.parent_id not in {None, WAVE1_PROJECT_ID}:
             raise SystemExit("LightGBM Wave 1 requires the approved project parent")
         if (
@@ -164,6 +183,9 @@ def main() -> None:
         )
         args.parent_id = WAVE1_PROJECT_ID
     else:
+        deployment_image = args.image
+        short_tag_workaround = False
+        registry_verification = None
         job_args = f"/job/serverless/jobs/run_batch_experiments.py --runs {args.runs} --batch-size {args.batch_size} --output /job/outputs/serverless-batch"
     if args.s3_output_uri and args.workload != "lightgbm-wave1":
         job_args += f" --s3-output-uri {args.s3_output_uri.rstrip('/')}/serverless-batch"
@@ -178,7 +200,7 @@ def main() -> None:
         "--name",
         args.name,
         "--image",
-        args.image,
+        deployment_image,
         "--container-command",
         "python",
         "--args",
@@ -253,6 +275,9 @@ def main() -> None:
             "result_uri": request.result_uri if args.workload == "lightgbm-wave1" else None,
             "project_id": WAVE1_PROJECT_ID if args.workload == "lightgbm-wave1" else args.parent_id,
             "image": args.image,
+            "deployment_image": deployment_image,
+            "short_tag_workaround": short_tag_workaround,
+            "registry_verification": registry_verification,
             "resource": request.resource.model_dump(mode="json") if args.workload == "lightgbm-wave1" else None,
             "command": _redacted_command(command),
             "command_sha256": command_sha256,
@@ -284,6 +309,11 @@ def main() -> None:
             raise SystemExit("reviewed Wave 1 dry run does not match reconciled campaign spend")
         if reviewed.get("development_jobs_consumed") != args.development_jobs_consumed:
             raise SystemExit("reviewed Wave 1 dry run does not match the development Job count")
+        if reviewed.get("deployment_image") != deployment_image:
+            raise SystemExit("reviewed Wave 1 dry run does not match the deployment image")
+        if reviewed.get("short_tag_workaround") is not short_tag_workaround:
+            raise SystemExit("reviewed Wave 1 dry run does not match the tag workaround mode")
+        _verify_reviewed_registry_evidence(reviewed, registry_verification)
 
     completed = subprocess.run(command, check=False, text=True, capture_output=True)
     if completed.returncode != 0:
@@ -296,6 +326,10 @@ def main() -> None:
                     "request_sha256": request.canonical_hash(),
                     "command_sha256": command_sha256,
                     "reviewed_dry_run_sha256": reviewed_sha256,
+                    "image": args.image,
+                    "deployment_image": deployment_image,
+                    "short_tag_workaround": short_tag_workaround,
+                    "pre_submission_registry_verification": registry_verification,
                     "status": "SUBMISSION_FAILED",
                     "return_code": completed.returncode,
                     "stderr_sha256": hashlib.sha256(completed.stderr.encode()).hexdigest(),
@@ -307,6 +341,41 @@ def main() -> None:
         if job_id is None:
             raise SystemExit("Nebius Job creation response did not contain a canonical Job ID")
         submitted_at = datetime.now(UTC)
+        observed_job_image = None
+        post_submission_registry_verification = None
+        if short_tag_workaround:
+            try:
+                observed_job_image, post_submission_registry_verification = (
+                    _verify_created_short_tag_job(job_id, deployment_image, args.image)
+                )
+            except RuntimeError as exc:
+                cancelled = subprocess.run(
+                    ["nebius", "ai", "job", "cancel", job_id, "--format", "json"],
+                    check=False,
+                    text=True,
+                    capture_output=True,
+                )
+                _write_evidence(
+                    args.evidence_output,
+                    {
+                        "schema_version": "lightgbm_wave1_g4_submission_v1",
+                        "submitted_at": submitted_at.isoformat(),
+                        "request_sha256": request.canonical_hash(),
+                        "command_sha256": command_sha256,
+                        "reviewed_dry_run_sha256": reviewed_sha256,
+                        "image": args.image,
+                        "deployment_image": deployment_image,
+                        "short_tag_workaround": True,
+                        "pre_submission_registry_verification": registry_verification,
+                        "job_id": job_id,
+                        "status": "POST_SUBMISSION_VERIFICATION_FAILED",
+                        "cancellation_requested": cancelled.returncode == 0,
+                        "failure_sha256": hashlib.sha256(str(exc).encode()).hexdigest(),
+                    },
+                )
+                raise SystemExit(
+                    "post-submission image verification failed; cancellation requested"
+                ) from exc
         payload = {
             "schema_version": "lightgbm_wave1_g4_submission_v1",
             "submitted_at": submitted_at.isoformat(),
@@ -317,6 +386,11 @@ def main() -> None:
             "result_uri": request.result_uri,
             "project_id": request.project_id,
             "image": request.image,
+            "deployment_image": deployment_image,
+            "short_tag_workaround": short_tag_workaround,
+            "pre_submission_registry_verification": registry_verification,
+            "post_submission_registry_verification": post_submission_registry_verification,
+            "observed_job_image": observed_job_image,
             "resource": request.resource.model_dump(mode="json"),
             "job_id": job_id,
             "status": "SUBMITTED",
@@ -364,6 +438,113 @@ def _load_reviewed_dry_run(path: Path | None) -> dict[str, object]:
     if payload.get("manual_review_required") is not True:
         raise SystemExit("reviewed Wave 1 dry-run evidence is not reviewable")
     return payload
+
+
+def _verify_short_tag(deployment_image: str, governed_image: str) -> dict[str, object]:
+    governed_repository, expected_hex = governed_image.rsplit("@sha256:", maxsplit=1)
+    registry_scope = governed_repository.rsplit("/", maxsplit=1)[0]
+    expected_tag = expected_hex[:16]
+    if (
+        len(deployment_image) > 64
+        or re.fullmatch(
+            rf"{re.escape(registry_scope)}/[a-z0-9][a-z0-9._-]*:{expected_tag}",
+            deployment_image,
+        )
+        is None
+    ):
+        raise SystemExit(
+            "short-tag deployment must stay in the governed registry namespace, be at most "
+            "64 characters, and use the first 16 digest hex characters as its tag"
+        )
+    completed = subprocess.run(
+        [
+            "docker",
+            "buildx",
+            "imagetools",
+            "inspect",
+            "--format",
+            "{{json .Manifest}}",
+            deployment_image,
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        raise SystemExit("unable to resolve the short-tag deployment image")
+    try:
+        manifest = json.loads(completed.stdout)
+    except ValueError as exc:
+        raise SystemExit("short-tag registry response is not valid JSON") from exc
+    resolved_digest = manifest.get("digest") if isinstance(manifest, dict) else None
+    expected_digest = f"sha256:{expected_hex}"
+    if resolved_digest != expected_digest:
+        raise SystemExit("short-tag deployment image does not resolve to the governed digest")
+    return {
+        "deployment_image": deployment_image,
+        "expected_digest": expected_digest,
+        "resolved_digest": resolved_digest,
+        "manifest_sha256": hashlib.sha256(completed.stdout.encode()).hexdigest(),
+        "verified_at": datetime.now(UTC).isoformat(),
+    }
+
+
+def _verify_reviewed_registry_evidence(
+    reviewed: dict[str, object], current: dict[str, object] | None
+) -> None:
+    reviewed_verification = reviewed.get("registry_verification")
+    if current is None:
+        if reviewed_verification is not None:
+            raise SystemExit("reviewed Wave 1 dry run has unexpected registry evidence")
+        return
+    if not isinstance(reviewed_verification, dict):
+        raise SystemExit("reviewed Wave 1 dry run lacks short-tag registry evidence")
+    for field in ("deployment_image", "expected_digest", "resolved_digest"):
+        if reviewed_verification.get(field) != current.get(field):
+            raise SystemExit("reviewed Wave 1 dry run registry evidence no longer matches")
+
+
+def _verify_created_short_tag_job(
+    job_id: str, deployment_image: str, governed_image: str
+) -> tuple[str, dict[str, object]]:
+    completed = subprocess.run(
+        ["nebius", "ai", "job", "get", job_id, "--format", "json"],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError("created Job could not be read back")
+    try:
+        payload = json.loads(completed.stdout)
+    except ValueError as exc:
+        raise RuntimeError("created Job read-back was not valid JSON") from exc
+    observed_image = _extract_job_image(payload)
+    if observed_image != deployment_image:
+        raise RuntimeError("created Job image does not match the reviewed deployment image")
+    try:
+        verification = _verify_short_tag(deployment_image, governed_image)
+    except SystemExit as exc:
+        raise RuntimeError("short-tag digest changed after Job creation") from exc
+    return observed_image, verification
+
+
+def _extract_job_image(payload: object) -> str | None:
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            if str(key).lower() in {"image", "image_path", "container_image"} and isinstance(
+                value, str
+            ):
+                return value
+            found = _extract_job_image(value)
+            if found is not None:
+                return found
+    elif isinstance(payload, list):
+        for value in payload:
+            found = _extract_job_image(value)
+            if found is not None:
+                return found
+    return None
 
 
 def _parse_job_id(raw: str) -> str | None:

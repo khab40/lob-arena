@@ -155,6 +155,23 @@ python scripts/submit_nebius_job.py \
   --dry-run
 ```
 
+While Nebius issue #84 remains open, the Operator-approved workaround may be
+used by adding both of the following arguments to the dry-run and submission
+commands:
+
+```bash
+  --deployment-image cr.eu-north1.nebius.cloud/REGISTRY/g:FIRST_16_DIGEST_HEX \
+  --allow-short-tag-workaround
+```
+
+The complete deployment reference must be at most 64 characters and remain in
+the same registry namespace. The submitter resolves it to the governed digest
+during dry-run creation and immediately before submission. After creation it
+reads back the Job image, resolves the tag again, and requests cancellation on
+any mismatch. The full immutable digest remains in the staged request and
+runtime equality contract. This exception is temporary because tags remain
+mutable; remove it when Nebius accepts the documented digest image reference.
+
 Do not submit until the Operator has reviewed `g4-dry-run.json`. Confirm that
 review by passing its SHA-256; the submitter refuses a different request,
 command, spend baseline, Job count, or dry-run hash:
