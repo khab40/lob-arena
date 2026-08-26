@@ -1,8 +1,8 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; fresh G4 image, immutable fixture staging and reviewed dry run complete; explicit G4 cloud-smoke submission pending
+Status: G0-G3 complete; fresh G4 image, immutable fixture staging and reviewed dry run complete; G4 Job creation blocked by a Nebius digest-reference validation defect
 
-Date: 2026-08-22
+Date: 2026-08-26
 
 ## Outcome
 
@@ -108,6 +108,58 @@ evidence appropriate to that use.
   immutable image, fixed resources, private subnet and all four redacted
   MysteryBox injections. It declares `cloud_resources_created: false`; no Job
   was submitted.
+
+### 2026-08-26 G4 Submission Reconciliation
+
+- Two submissions of the original reviewed command were rejected before Job
+  creation with `Labels: label value length (131) exceeds maximum value (64)`.
+  Updating the Nebius CLI from `0.12.245` to `0.12.265` did not change the
+  server response. Neither call consumed a development Job.
+- Commit `725279d` split the runtime image evidence into label-safe repository
+  and SHA-256 environment fields, while reconstructing and enforcing the exact
+  immutable image reference inside the workload. The focused Wave 1 suite
+  passed 22 tests, `make check-submit` passed 12 tests, and Ruff passed. The
+  commit is on `main` and `origin/main`.
+- A replacement `linux/amd64` image passed its import and exact `run-s3` CLI
+  smoke checks and was pushed as
+  `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:97a6f9a40ab2286eae5f82cd4f61fa478a4e0d050fc71070c8a1468ae9bf601b`.
+- The replacement fixture is staged at
+  `s3://aimada-wave1-dev-e00g6zvxpr00/releases/wave1-g4-725279d-20260826/staging`.
+  Its five objects passed read-back verification, request SHA-256 is
+  `0ab054c163e1c1cd11cff3b76f061868bd3493e65329b35b54c06507590ba82b`,
+  inventory SHA-256 is
+  `569ee6f7b531283eff5ff85d266029bb1594e0332c46d031e0c862ec41071d9e`,
+  and `SUCCESS` was published last. The temporary publisher key was deleted and
+  the development bucket policy was independently verified back at its single
+  read-only `releases/*` rule.
+- The replacement dry run is
+  `outputs/lightgbm-wave1/g4-dry-run-725279d-20260826.json`, with SHA-256
+  `cb1a6c0422aa3e48187f1463fd0499076a2c178e4c1b91c98e0613fad0006aaf`.
+  It preserves the immutable image, fixed project/resources, spend USD 8.12,
+  development count 5, exact staged request and four redacted MysteryBox
+  selectors. It contains no volume or legacy full-image environment value; the
+  longest plain environment value is exactly 64 characters.
+- The authorized replacement submission was nevertheless rejected with the
+  same 131-character label error before Job creation. This rules out the
+  environment variable as the source: 131 is the length of the full immutable
+  `--image` reference, which the AI Job service is passing through a Compute
+  label limited to 64 characters. The current CLI and official command
+  reference advertise `registry/path@digest`, but the live service cannot
+  create this Job with that documented form.
+- The governed development count therefore remains 5/20. MLflow was started
+  only for the authorized submission window and is independently verified
+  `STOPPED` after the rejection. No monitoring or result collection applies
+  because no Job ID exists.
+
+The next submission is blocked pending one explicit decision. The preferred
+path is a Nebius service fix or support-confirmed digest-safe API route, which
+preserves the immutable-reference control. The bounded workaround is a short,
+unique release tag whose full reference is at most 64 characters, with the tag
+resolved to and compared against the reviewed registry digest immediately
+before submission and again from Job evidence. That workaround weakens the
+control because registry tags are mutable and requires an Operator-approved
+plan amendment before code or cloud execution. It must not be selected
+implicitly.
 
 ## Prior Decisions Preserved
 
