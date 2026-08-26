@@ -400,8 +400,11 @@ Main flow:
 
 ## Governed LightGBM v1
 
-Status: planned next major detector feature; Phase 0 contracts, causal features,
-governed benchmark, and shared MLflow are implemented prerequisites.
+Status: implemented and verified locally through the complete governed v1
+software boundary. Nebius Wave 1 cloud qualification is in progress at G4;
+G5-G9 performance, reproducibility and release gates remain pending. The
+market-sequence Transformer and Transformer-to-LightGBM cascade are separate
+Todo waves after the LightGBM go/no-go decision.
 
 Purpose: deliver an interpretable binary `attack_active` challenger and compare
 it with deterministic rules on identical governed observations.

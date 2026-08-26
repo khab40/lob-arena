@@ -3,6 +3,15 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Reconciled repository and GitHub Project roadmap status through G4 attempt 7:
+  the first six Jobs failed before training; attempt 7 completed and published
+  25 result objects plus `SUCCESS`; seven development slots are consumed and
+  13 remain. Governed collection and the final G4 exit record await fresh
+  post-run spend. LightGBM is complete locally, while the standalone
+  market-sequence Transformer and Transformer-to-LightGBM cascade remain gated
+  Todo work. The public Nasdaq/LOBSTER research-qualification lane is separated
+  explicitly from licensed production/client acceptance.
+
 - Added deterministic `market_profile_v1` extraction from normalized ITCH,
   canonical profile/report checksums, distinct held-out realism evaluation,
   pre-registered core distances and attack-response windows. Java validates and

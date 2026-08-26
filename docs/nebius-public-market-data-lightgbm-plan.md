@@ -1,6 +1,7 @@
 # Nebius Public Market Data Plan for LightGBM Wave 1
 
-Status: Proposed plan amendment; no market-data transfer authorized or started
+Status: Approved research-plan amendment; D0-D2 implementation not started;
+no market-data transfer authorized or started
 
 Date: 2026-08-16
 
@@ -204,11 +205,15 @@ campaign identity and labels are unavailable to feature formulas.
 
 ### C0 - Recover the existing cloud smoke
 
-Five G4 attempts have failed. The first two mount-based Jobs remained
+The first six G4 attempts failed. The first two mount-based Jobs remained
 `STARTING` without container logs; two no-volume Jobs used an older image
 without the `run-s3` command; the fifth used a reversed entrypoint and Python
-tried to open `/job/serverless/jobs/run`. Do not submit a large transfer or
-preparation Job until one minimal Job reaches the intended runner and proves:
+tried to open `/job/serverless/jobs/run`; attempt 6 reached the runner but AWS
+CLI v1 rejected the v2-only pager option on the first Object Storage list.
+Attempt 7 completed the corrected governed workload and published a verified
+`SUCCESS` result prefix. G4 collection and exit remain pending fresh post-run
+spend. Do not submit a large transfer or preparation Job until the dedicated
+public-data preflight also proves:
 
 - default internet egress can reach `emi.nasdaq.com`;
 - the prefix-scoped S3 API read/write path works without a filesystem mount;
@@ -241,8 +246,9 @@ template. One successful source prefix is never overwritten or retried.
 The public-data campaign has a separate cap of 15 Jobs: one preflight, seven
 acquisition Jobs, and seven preparation Jobs. Failed attempts consume that cap
 and stop the campaign for reconciliation; they do not expand it. The original
-model-development ceiling remains 20 Jobs, of which five G4 failures have
-already consumed five slots.
+model-development ceiling remains 20 Jobs. The six failed attempts plus the
+completed attempt 7 have consumed seven slots; 13 model-development slots
+remain.
 
 ### C3 - Preparation and replay
 

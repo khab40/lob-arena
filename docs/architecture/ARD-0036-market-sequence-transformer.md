@@ -6,9 +6,11 @@ Date: 2026-08-16
 
 ## Implementation Status
 
-Status: `[planned after ARD-0035 exit gates]`
+Status: `[todo; GitHub Story #24; gated by ARD-0035 exit disposition]`
 
-No Transformer detector implementation is claimed by this record.
+No Transformer detector implementation is claimed by this record. The
+sequence contract, materialization code, classifier package and GPU campaign
+have not started.
 
 ## Context
 

@@ -4,9 +4,11 @@ Status: Accepted
 
 Date: 2026-08-16
 
+Status reconciled: 2026-08-26
+
 ## Implementation Status
 
-Status: `[local-g1-g2-complete; cloud-g3-complete; g4-blocked-after-five-failed-attempts; g5-g9-pending]`
+Status: `[local-g1-g2-complete; cloud-g3-complete; g4-attempt-7-completed; collection-and-exit-pending; g5-g9-pending]`
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -35,7 +37,22 @@ Three later no-volume Jobs did reach the container, but did not reach the
 runner: `aijob-e00yhjdjttz772e843` and `aijob-e00a7m37mg0yt5gsgp` used an older
 image without the `run-s3` command, and `aijob-e00e0cn0ttvf29g99r` reversed the
 command/argument layout so Python tried to open `/job/serverless/jobs/run`.
-All five attempts count against the fixed 20-Job development ceiling.
+All five of those attempts count against the fixed 20-Job development ceiling.
+
+Attempt 6, `aijob-e00sa1ejk3qsa13ymw`, proved the bounded short-tag image
+workaround and reached the intended runner, but failed before training on the
+first Object Storage list call. The packaged AWS CLI is v1.46.0 and the shared
+helper still passed the AWS CLI v2-only `--no-cli-pager` option. Attempt 6 is
+the sixth consumed development slot.
+
+Attempt 7, `aijob-e00k3nj3402wrdvbnz`, used the AWS CLI v1-compatible image and
+completed the governed workload in 38 seconds. Live evidence matched the
+reviewed `cpu-d3`, `4vcpu-16gb`, 100 GiB, 3,600-second resource contract and
+the governed image digest. Its result prefix contains 25 objects and
+`SUCCESS`. The initial monitor correctly failed closed when its local parser
+did not recognize Nebius `spec.disk.size_bytes`; the reconciled monitor now
+records `COMPLETED`, matched resources, collected logs and no cancellation.
+Attempt 7 consumed the seventh slot; 13 of 20 slots remain.
 
 The comparison with successful July Jobs establishes the actionable
 root cause: those Jobs passed AWS credentials to the container and used S3 API
@@ -43,17 +60,27 @@ staging, with zero volumes. The August Jobs instead mounted whole bucket roots,
 while the Wave 1 identity was intentionally allowed to list/read/write only
 specific prefixes. Mount startup requires bucket-namespace operations outside
 that least-privilege contract, so startup stopped before the container command.
-The local correction removes every Wave 1 volume, injects both credential
+The no-volume correction removes every Wave 1 volume, injects both credential
 values from MysteryBox, downloads only the approved release prefix to
 ephemeral disk, and uploads the verified result with the terminal marker last.
-The no-volume design has not yet executed successfully in Nebius. G4 awaits a
-verified image/entrypoint/input package, reviewed dry run, and explicit
-authorization; G5-G9 remain locked.
+The attempt-7 correction also removes the v2-only pager flag and disables
+paging through `AWS_PAGER`, which is compatible with AWS CLI v1 and v2.
+Commit `690a9e9` passed 39 focused Wave 1 tests, all submission/render tests,
+Ruff, the `linux/amd64` image/runtime smokes and a container-level integration
+list of the exact Nebius prefix with the packaged AWS CLI v1. The corrected
+image is pinned to digest
+`sha256:3e54fbe1c1ba7e5955a13565dc623cce4542b0df038c5f0b78b0f107e79c95e5`,
+and its matching fixture was uploaded and read-back verified. Attempt 7 then
+completed successfully at the Nebius Job boundary. Governed result collection
+and the final G4 exit record await only a fresh post-run spend observation;
+G5-G9 remain locked and no G4 rerun is authorized or needed.
 
 The 2026-08-21 reconciliation verified project usage at USD 8.03 total and a
-USD 1,265.66 credit balance. The legacy inline AWS access-key identifier from
-an old Job no longer resolves in Nebius IAM (`NotFound`), and the Operator has
-stopped the shared MLflow VM. No previous evidence was recopied or archived.
+USD 1,265.66 credit balance. The latest authoritative pre-attempt-7 observation
+was USD 8.55 including VAT; a fresh post-run value is required before G4
+collection and exit. The legacy inline AWS access-key identifier from an old
+Job no longer resolves in Nebius IAM (`NotFound`), and the Operator has stopped
+the shared MLflow VM. No previous evidence was recopied or archived.
 
 ## Context
 
@@ -115,8 +142,11 @@ Transformer work may start only after:
 5. a go/no-go record freezes the LightGBM baseline and the remaining GPU budget.
 
 Passing the software and reproducibility gates does not automatically promote
-LightGBM to production champion. Performance acceptance still depends on an
-appropriately governed corpus and predeclared evaluation policy.
+LightGBM to production champion. A governed official-public-sample evaluation
+may produce the research-only `research_baseline_qualified` disposition and
+unlock Wave 2 engineering. Production/client acceptance still requires data
+rights, independent clean-window review and evaluation evidence appropriate to
+that claim.
 
 ## Cost And Operations
 

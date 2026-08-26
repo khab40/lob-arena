@@ -394,8 +394,22 @@ Platt/isotonic calibration, frozen high-precision/balanced/high-recall modes,
 schema-locked test predictions, per-alert tree contributions, a fail-closed
 detector adapter, explicit MLflow development/evaluation logging, and a
 checksummed model bundle. Software completion is not a performance claim: the
-final governed evaluation remains blocked until the licensed real corpus is
-reviewed, split and signed.
+Nebius Wave 1 cloud qualification remains at G4. The first six attempts failed
+before training; attempt 7 completed the governed workload in 38 seconds and
+published 25 result objects plus `SUCCESS`. Seven of the fixed 20 development
+slots are consumed. Governed collection and the final G4 exit record remain
+locked pending a fresh post-run spend observation. Official Nasdaq ITCH
+samples plus the repository LOBSTER sample may support a research-only
+qualification and unlock Wave 2 engineering. Production/client performance
+claims still require appropriately licensed data, independent clean-window
+review and a signed governed test release suitable for that claim.
+
+The learned-detector roadmap is sequential: qualify tabular LightGBM first,
+then train a standalone causal market-sequence Transformer, then evaluate a
+separate Transformer-to-LightGBM cascade using versioned scores/embeddings.
+The Transformer and cascade are specified but not implemented. The verified
+tabular LightGBM bundle remains the required rollback and missing-feature
+fallback.
 
 Generate the checked-in reproducible fixture:
 
@@ -635,6 +649,8 @@ make secrets-check
 | Architecture decisions | [docs/architecture/README.md](docs/architecture/README.md) |
 | Functional capability map | [docs/FUNCTIONAL_OVERVIEW.md](docs/FUNCTIONAL_OVERVIEW.md) |
 | Use cases | [docs/USE_CASES.md](docs/USE_CASES.md) |
+| Current phases and learned-detector roadmap | [docs/PHASES.md](docs/PHASES.md) |
+| Nebius LightGBM Wave 1 execution gates | [docs/nebius-lightgbm-wave1-implementation-plan.md](docs/nebius-lightgbm-wave1-implementation-plan.md) |
 | Runtime model | [docs/runtime-model.md](docs/runtime-model.md) |
 | Prometheus and Grafana observability | [docs/kernel-observability.md](docs/kernel-observability.md) |
 | Benchmark methodology | [docs/benchmark-methodology.md](docs/benchmark-methodology.md) |

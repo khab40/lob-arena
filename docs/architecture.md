@@ -388,7 +388,7 @@ Phase 4.5 adds a Managed Experiment manifest control plane before execution. The
 | `historical-replay/<run>/comparison.json` | Detector TP/FN/FP/TN, precision, recall, F1, alert timing, and final-book realism deltas. |
 | `historical-replay/<run>/validation-report.json` / `.sig` | Causal-neighbourhood equivalence, lifecycle, provenance, determinism, and detached Ed25519 attestation. |
 | `historical-replay/<run>/manifest.json` / `checksums.sha256` | Replay comparison inventory and full-bundle integrity checks. |
-| `features/<run>/features.parquet` | Stable typed causal feature rows for a future LightGBM detector. |
+| `features/<run>/features.parquet` | Stable typed causal feature rows consumed by the governed LightGBM v1 loader and trainer. |
 | `features/<run>/run-metadata.json` / `feature-quality.json` | Feature/config/input hashes, source/session metadata, split policy, missing/distribution/class-balance summaries, and invalid rows. |
 | LightGBM Phase 0 manifests | Strict training, calibration, model-bundle, and prediction contracts binding governed inputs, frozen operating points, checksums, and release identity. |
 | `experiments/<experiment_id>/experiment.json` | Phase 4.5 experiment manifest with requested scenarios, execution mode, status, artifact paths, optional smart-batch link, and metrics. |
@@ -497,4 +497,4 @@ Detailed architecture decisions are recorded in [Architecture Records (ARDs)](ar
 - [ARD-0036: Governed Market-Sequence Transformer Challenger](architecture/ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training and standalone evaluation
 - [ARD-0037: Transformer-Derived Features Into LightGBM](architecture/ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned temporal features, exact joins, CPU decision layer, fallback and promotion gates
 - [Hybrid Dataset Validation](hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
-- [Causal Feature Engineering for a Future LightGBM Detector](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and trainer consumption contract
+- [Causal Feature Engineering for LightGBM](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and governed trainer consumption contract
