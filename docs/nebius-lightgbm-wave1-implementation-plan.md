@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; G4 AWS CLI v1 fix validated locally; fresh immutable image and attempt 7 preflight pending
+Status: G0-G3 complete; G4 AWS CLI v1 fix/image/fixture verified; fresh spend, dry run and attempt 7 authorization pending
 
 Date: 2026-08-26
 
@@ -209,13 +209,31 @@ still required before generating and authorizing the replacement dry run; USD
   both S3 paths disable paging through the environment, and unsupported-option
   stderr is classified without being exposed. The focused Wave 1 suite passes
   39 tests, including all 12 submission/render tests, and Ruff passes.
-- The Jobs Docker build and runtime smoke now verify that the packaged AWS CLI
-  is executable. A fresh immutable image must still be built, pushed, resolved
-  to a digest, and used to restage the governed fixture.
+- Commit `690a9e9` is on `main` and `origin/main`. Its `linux/amd64` Jobs image
+  built with AWS CLI `1.46.0`, passed the import, packaged-CLI and runtime
+  smokes, and was pushed as
+  `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:3e54fbe1c1ba7e5955a13565dc623cce4542b0df038c5f0b78b0f107e79c95e5`.
+- The approved 63-character deployment alias
+  `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:3e54fbe1c1ba7e59`
+  independently resolves to that exact governed digest.
+- The replacement fixture is staged at
+  `s3://aimada-wave1-dev-e00g6zvxpr00/releases/wave1-g4-690a9e9-20260826/staging`.
+  All five objects passed read-back verification; request SHA-256 is
+  `374629014cb8869fdb6ca730b924db868b86c6d6eca166bea09f22777194e9b4`,
+  inventory SHA-256 is
+  `06afe4cc0ab6466f2b9cb6419df618b868141f308c590880b6003dacb87880a8`,
+  and stage-evidence SHA-256 is
+  `8b55dc3d6388217cbb252d26094c91bbe3f160ca499077d8d157808e7a77e0c2`.
+  The exact-prefix write rule was removed and the bucket was independently
+  verified back at its single read-only `releases/*` policy.
+- A container-level integration smoke used this exact digest, its packaged AWS
+  CLI v1 and the fixed Python transport to list the new Nebius prefix. It
+  succeeded without printing credential or response payloads. No AI Job was
+  created and the governed development count remains 6/20.
 
-Before any attempt 7, complete that image and fixture preparation, obtain a
-fresh post-attempt-6 spend observation, produce a new reviewed dry run and
-receive explicit authorization. Automatic retry is forbidden.
+Before any attempt 7, obtain a fresh post-attempt-6 spend observation, produce
+a new reviewed dry run and receive explicit authorization. Automatic retry is
+forbidden.
 
 ## Prior Decisions Preserved
 
