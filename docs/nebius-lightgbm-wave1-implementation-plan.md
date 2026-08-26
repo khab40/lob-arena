@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; approved digest-verified short-tag workaround implemented; refreshed G4 dry run awaits current spend reconciliation
+Status: G0-G3 complete; short-tag deployment path verified in cloud; G4 attempt 6 failed before training on an AWS CLI v1 incompatibility
 
 Date: 2026-08-26
 
@@ -168,6 +168,39 @@ Feature #14 and blocking LightGBM Story #23. The exception must be retired when
 Nebius accepts the documented digest-form image. A fresh spend observation is
 still required before generating and authorizing the replacement dry run; USD
 8.12 is the pre-attempt baseline, not a fabricated post-attempt observation.
+
+### 2026-08-26 G4 Attempt 6
+
+- The Operator reconciled project spend at USD 8.53 including VAT and
+  authorized the final reviewed run. Dry-run evidence is
+  `outputs/lightgbm-wave1/g4-dry-run-short-tag-20260826.json`, SHA-256
+  `39d3d619e96cf6baa7d572ef6277c230b5f53d18afaae1840165610e48c5f615`.
+- Job `aijob-e00sa1ejk3qsa13ymw` was created from the reviewed command. The
+  short tag resolved to the full governed digest before submission and after
+  creation, and the live Job image read-back matched. This proves that the
+  bounded workaround clears the Nebius 64-character image-label defect.
+- The Job became terminal `FAILED` before training. The fixed watchdog observed
+  the terminal state after 34.493 seconds and retained redacted logs with
+  SHA-256 `04fd75d10bed8025c19a065b08e653eebd8b18d54a60758bdcb79ae66057f6e3`.
+  No timeout cancellation or result collection applied.
+- Failure occurred on the first Object Storage list operation. The Jobs image
+  pins AWS CLI `1.46.0`, while the shared `_aws_json` helper appends the AWS CLI
+  v2-only `--no-cli-pager` option. An isolated reproduction with the exact
+  version and same non-printed MysteryBox values returns exit 255 and classifies
+  the option as unsupported; removing only that option returns success. The
+  underlying access key and both selectors are `ACTIVE`, the selector access ID
+  matches the active key, the development group still has its service-account
+  member, the bucket remains `ACTIVE` with the reviewed viewer policy, and the
+  same prefix lists successfully outside the Job.
+- Attempt 6 consumed one development slot; the governed count is now 6/20 and
+  the project Job inventory is 63. MLflow was stopped immediately after the
+  terminal failure and independently verified `STOPPED`.
+
+Before any attempt 7, remove the incompatible pager flag (or use a version-safe
+empty `AWS_PAGER` environment), add an AWS CLI v1 regression test, build and
+smoke a fresh immutable image, restage the request against that digest, obtain
+a fresh spend observation, produce a new reviewed dry run and receive explicit
+authorization. Automatic retry is forbidden.
 
 ## Prior Decisions Preserved
 
