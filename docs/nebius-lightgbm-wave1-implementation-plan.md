@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; G4 AWS CLI v1 fix/image/fixture verified; fresh spend, dry run and attempt 7 authorization pending
+Status: G0-G4 complete; attempt 7 passed every governed cloud-smoke exit gate; G5 is next
 
 Date: 2026-08-26
 
@@ -231,9 +231,42 @@ still required before generating and authorizing the replacement dry run; USD
   succeeded without printing credential or response payloads. No AI Job was
   created and the governed development count remains 6/20.
 
-Before any attempt 7, obtain a fresh post-attempt-6 spend observation, produce
-a new reviewed dry run and receive explicit authorization. Automatic retry is
-forbidden.
+### 2026-08-26 G4 Attempt 7 — Passed
+
+- The Operator reconciled spend at USD 8.55 including VAT and explicitly
+  authorized one attempt. The reviewed dry-run SHA-256 is
+  `b9a5586ad7ded3334f352d2fbba111f26f2d76b5457b818ea7dfee8d9f6e41aa`.
+- Job `aijob-e00k3nj3402wrdvbnz` was created once. Its pre-submit registry
+  resolution, live image read-back and post-submit resolution all matched the
+  governed digest. Nebius reports `COMPLETED`; the workload started at
+  17:01:05 UTC and finished at 17:01:43 UTC.
+- The first fail-closed monitor record was preserved after the local evidence
+  parser did not recognize Nebius `spec.disk.size_bytes`. Commit `6da2992`
+  added the live response shape and a regression test. The reconciled monitor
+  verifies `cpu-d3`, `4vcpu-16gb`, 100 GiB, 3,600 seconds, completion within
+  the fixed watchdog, collected logs and no cancellation. Its SHA-256 is
+  `bd7f84723c64ac33ec1212f5b8d74cee15bdbeb84c221df8529fa566b5de2502`.
+- The 22-line Job log has one non-fatal GitPython warning because the slim
+  container lacks the optional `git` executable. It has no training, S3,
+  MLflow HTTP, traceback or container error. Governed request/manifests and
+  explicit MLflow tags retain commit provenance. Log SHA-256 is
+  `1ff80e0493da705b6e41c7c8753aaf1fb297a214adc7bfb98589afb76fa7170d`.
+- Post-run spend is USD 8.57 including VAT, an observed USD 0.02 increment.
+  Collection verified 25 files and 334,182 bytes, bound MLflow run
+  `bedb75033e014cf09deabc7471adef1d`, and produced result SHA-256
+  `225fd2dd65e251ebac0804954507a6cb7ac20af5168e15b86cb818e49d33d82b`.
+  Collection-evidence SHA-256 is
+  `1689dbd79ef2520ab95d15667aecbc234143ded113f4afa5a8d1f2732b259222`.
+- Final exit evidence SHA-256 is
+  `8ac26e05e78596b325122681b45277dc9c061581bdf2e3eef532855de4daa192`.
+  Every gate passes, including immutable input/dry-run/Job/result bindings,
+  fixed resources, checksums, MLflow, development/test isolation, cost, Job
+  ceiling and secret-free logs/artifacts. Disposition is
+  `g4_cloud_smoke_passed` with reproducibility hash
+  `b6a4dcea3cf021c016c2aca6d626e5605faae847bbae01e9581eb89f6c353831`.
+- MLflow is independently verified `STOPPED`. Attempt 7 consumed the seventh
+  development slot, leaving 13/20; no retry is authorized or necessary. G4 is
+  complete and G5 is unlocked.
 
 ## Prior Decisions Preserved
 
@@ -695,7 +728,7 @@ automatic retry.
 **Gate:** `SUCCESS`, checksums, MLflow development record, Job identity, runtime
 and resource evidence verify; no secret appears in config/logs/artifacts.
 
-**Implementation status (2026-08-22): complete locally.** The G4 chain now
+**Implementation status (2026-08-26): complete in cloud.** The G4 chain
 binds an immutable staged request to a selector-redacted dry run, requires the
 Operator-confirmed dry-run SHA-256 before submission, records the returned Job
 ID, enforces the USD 40 pre-submit and 20-Job campaign stops, monitors actual
@@ -703,8 +736,7 @@ Job status/resources with a 15-minute cancellation watchdog, collects redacted
 logs, downloads and checksum-verifies the result prefix, requires a bound
 MLflow run and post-Job cost reconciliation, and emits one fail-closed G4 exit
 record. `make lightgbm-wave1-g4-check` exercises this flow without cloud access.
-The VM remains stopped and no sixth Job has been submitted by this implementation
-step; runtime completion still requires the separately authorized cloud action.
+Attempt 7 passed the complete chain, and the VM is stopped.
 
 **Attempt status (2026-08-16 through 2026-08-17): failed.** Job
 `aijob-e00zg7n8dsb66xef1c` remained `STARTING` for the entire 15-minute policy
@@ -734,6 +766,11 @@ Three explicitly authorized no-volume attempts followed on 2026-08-17:
 None reached LightGBM training or published a result. These three attempts and
 the two mount-startup attempts all count against the development ceiling.
 
+Attempt 6 reached the runner but failed before training on the AWS CLI v2-only
+pager flag. Attempt 7 used the corrected image and completed training,
+calibration, MLflow logging and verified result publication. The detailed
+evidence and hashes are recorded in the attempt-7 section above.
+
 The S3 API correction is implemented locally. Successful July Jobs used no
 volumes: the container received credentials and staged data with S3 APIs. Both
 August attempts mounted whole bucket roots, but Wave 1 IAM intentionally grants
@@ -742,13 +779,11 @@ before starting the container. The corrected runner lists only the exact input
 prefix, downloads and checksum-verifies it to ephemeral disk, executes the
 unchanged local-path model runner, verifies output, uploads non-terminal objects
 and publishes `SUCCESS` last. Submission now rejects `NEBIUS_VOLUME` and
-requires two MysteryBox credential selectors. The no-volume design has reached
-the container, but the deployed image/entrypoint has not yet executed the S3
-runner successfully. G4 remains locked until the image contents, command
-contract, input package, and dry run are verified together and the Operator
-explicitly authorizes one bounded attempt.
+requires two MysteryBox credential selectors. The no-volume design has now
+executed successfully with the corrected AWS CLI v1-compatible image. G4 is
+closed as passed.
 
-Corrected G4 sequence:
+Corrected G4 sequence, completed by attempt 7:
 
 1. Codex builds and locally smokes a new `linux/amd64` image containing the
    exact S3 API CLI entrypoint, then pushes it through the existing Nebius
@@ -768,9 +803,9 @@ Corrected G4 sequence:
    project/image/resources and nonnegative cost estimate, reconciles spend, and
    either closes G4 or stops with one bounded failure record.
 
-The stopped VM remains stopped during this baseline reconciliation. No prior
-evidence is re-archived; archive upload is opt-in and supports the standard AWS
-ambient credential chain when explicitly enabled.
+The VM was stopped after the terminal Job and remains stopped. No prior evidence
+was re-archived; archive upload is opt-in and supports the standard AWS ambient
+credential chain when explicitly enabled.
 
 ### G5 — Reproducibility
 
@@ -787,19 +822,21 @@ and Wave 2.
 
 ### G6 — Bounded Development Campaign
 
-The campaign remains capped at 20 total development Jobs. Five failed G4 Jobs
-have consumed five slots, so the remaining matrix is capped at 15 Jobs:
+The campaign remains capped at 20 total development Jobs. Seven G4 Jobs have
+consumed seven slots, so the remaining matrix is capped at 13 Jobs. To preserve
+reproducibility, seed-stability, ablation and calibration coverage, the fixed
+amendment removes one unstarted hyperparameter trial:
 
 | Group | Jobs |
 | --- | ---: |
-| Corrected smoke plus three repeats | 4 |
-| Predeclared hyperparameters | 4 |
+| G5 exact reproducibility repeats | 3 |
+| Predeclared hyperparameters | 3 |
 | Feature-family ablations | 2 |
 | Selected-candidate seed stability | 2 |
 | Raw/Platt/isotonic calibration | 3 |
 
 No exploratory replacement is permitted. Any additional failure consumes one
-of these 15 slots and requires the unstarted portion of the matrix to shrink;
+of these 13 slots and requires the unstarted portion of the matrix to shrink;
 raising the 20-Job ceiling requires a recorded amendment before submission.
 
 Operator runs only Codex-generated commands. Codex ranks candidates using
@@ -899,7 +936,7 @@ production/client performance claim.
 - [x] G1 reuse-first code and tests pass locally (2026-08-16).
 - [x] G2 local fixture package verifies (2026-08-16).
 - [x] G3 existing Nebius components, IAM boundaries, governed input and immutable image verify (2026-08-16).
-- [ ] G4 cloud smoke passes (two mounted-S3 attempts cancelled after 15 minutes in `STARTING`; S3 API correction is local-only and awaits an authorized attempt).
+- [x] G4 cloud smoke passes (attempt 7, 2026-08-26).
 - [ ] G5 three-run reproducibility passes.
 - [ ] G6 development campaign completes within ceilings.
 - [ ] G7 candidate and final authorization are signed.
@@ -909,17 +946,16 @@ production/client performance claim.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
 
-## Completed Implementation Through G3
+## Completed Implementation Through G4
 
-G1-G3 are complete. They extended the existing Jobs image, renderer, submitter,
+G1-G4 are complete. They extended the existing Jobs image, renderer, submitter,
 orchestrator, evidence archive, MLflow tracking and monitoring; added the
 LightGBM runner, contracts, shared storage hardening and tests; and passed
 without changing the LightGBM algorithm. G3 reused the existing Nebius
-Registry, four governed buckets, three identities and shared MLflow VM. The
-second mounted G4 Cloud Smoke also failed before container start. The July-style
-S3 API correction is implemented and locally tested. Work stops at G4 pending
-a new immutable image/input package, reviewed dry run, and explicit submission
-authorization; G5 is not unlocked.
+Registry, four governed buckets, three identities and shared MLflow VM. After
+six bounded failures, attempt 7 completed the AWS CLI v1-compatible no-volume
+path and passed every G4 exit gate. MLflow is stopped, 13 development slots
+remain under the unchanged ceiling, and G5 is unlocked.
 
 ## Related Documentation
 

@@ -564,6 +564,14 @@ def collect_s3_result(
     observed_context = monitor.get("observed_job_context")
     if not isinstance(observed_context, dict):
         raise ValueError("G4 monitor did not capture actual Job resource evidence")
+    governed_image = submission.get("image")
+    deployment_image = submission.get("deployment_image") or governed_image
+    if (
+        not isinstance(governed_image, str)
+        or not governed_image
+        or observed_context.get("image") != deployment_image
+    ):
+        raise ValueError("G4 observed deployment image is not bound to the governed image")
     download_s3_release(result_uri, result, endpoint_url=endpoint_url)
     request = LightGbmCloudJobRequest.model_validate_json(
         (result / "request.json").read_text(encoding="utf-8")
@@ -575,7 +583,7 @@ def collect_s3_result(
         output,
         nebius_job_id=job_id,
         actual_project_id=str(observed_context.get("project_id")),
-        actual_image=str(observed_context.get("image")),
+        actual_image=governed_image,
         actual_platform=str(observed_context.get("platform")),
         actual_preset=str(observed_context.get("preset")),
         actual_disk_size_gib=int(observed_context.get("disk_size_gib", -1)),
