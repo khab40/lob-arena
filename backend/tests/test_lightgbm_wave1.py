@@ -959,6 +959,7 @@ def test_g4_monitor_collect_and_exit_evidence_chain(
     request = LightGbmCloudJobRequest.model_validate(
         _request(result_uri=result_uri, mlflow_tracking_uri="http://10.4.0.54:5500")
     )
+    deployment_image = "ghcr.io/khab40/g:0000000000000000"
     request_path = input_root / "request.json"
     request_path.write_bytes(request.canonical_bytes())
     context = Wave1ExecutionContext(
@@ -1003,6 +1004,7 @@ def test_g4_monitor_collect_and_exit_evidence_chain(
         "result_uri": result_uri,
         "project_id": PROJECT_ID,
         "image": LOCAL_IMAGE,
+        "deployment_image": deployment_image,
         "resource": request.resource.model_dump(mode="json"),
         "command_sha256": "1" * 64,
         "reviewed_dry_run_sha256": wave1_script.sha256_file(dry_run_path),
@@ -1014,7 +1016,7 @@ def test_g4_monitor_collect_and_exit_evidence_chain(
 
     observed_job = {
         "parent_id": PROJECT_ID,
-        "image": LOCAL_IMAGE,
+        "image": deployment_image,
         "platform": "cpu-d3",
         "preset": "4vcpu-16gb",
         "disk_size": "100Gi",
