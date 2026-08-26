@@ -1147,6 +1147,66 @@ def test_g4_monitor_cancels_at_fixed_watchdog(tmp_path: Path) -> None:
     assert any("cancel" in command for command in commands)
 
 
+def test_g4_monitor_reads_live_nebius_disk_size_bytes(tmp_path: Path) -> None:
+    submission = tmp_path / "submission.json"
+    submitted_at = datetime(2026, 8, 26, tzinfo=UTC)
+    submission.write_text(
+        json.dumps(
+            {
+                "schema_version": "lightgbm_wave1_g4_submission_v1",
+                "status": "SUBMITTED",
+                "submitted_at": submitted_at.isoformat(),
+                "watchdog_deadline": (submitted_at + timedelta(seconds=900)).isoformat(),
+                "watchdog_seconds": 900,
+                "job_id": "aijob-nebiusresponse",
+                "request_sha256": "0" * 64,
+                "project_id": PROJECT_ID,
+                "image": LOCAL_IMAGE,
+                "resource": {
+                    "platform": "cpu-d3",
+                    "preset": "4vcpu-16gb",
+                    "disk_size_gib": 100,
+                    "timeout_seconds": 3600,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    live_job = {
+        "metadata": {"parent_id": PROJECT_ID},
+        "spec": {
+            "image": LOCAL_IMAGE,
+            "platform": "cpu-d3",
+            "preset": "4vcpu-16gb",
+            "disk": {"size_bytes": str(100 * 1024**3)},
+            "timeout": "3600s",
+        },
+        "status": {"state": "COMPLETED"},
+    }
+    responses = iter(
+        (
+            subprocess.CompletedProcess([], 0, stdout=json.dumps(live_job), stderr=""),
+            subprocess.CompletedProcess([], 0, stdout="training complete\n", stderr=""),
+        )
+    )
+    clock = iter((0.0, 1.0, 2.0))
+    output = tmp_path / "monitor.json"
+
+    wave1_script.monitor_g4_job(
+        submission,
+        output,
+        poll_seconds=1,
+        command_runner=lambda *_args, **_kwargs: next(responses),
+        monotonic=lambda: next(clock),
+        sleeper=lambda _seconds: None,
+        wall_clock=lambda: submitted_at + timedelta(seconds=30),
+    )
+
+    evidence = json.loads(output.read_text(encoding="utf-8"))
+    assert evidence["status"] == "COMPLETED"
+    assert evidence["observed_job_context"]["disk_size_gib"] == 100
+
+
 def test_wave1_submitter_rejects_filesystem_mounts(tmp_path: Path) -> None:
     input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging"
     request = LightGbmCloudJobRequest.model_validate(

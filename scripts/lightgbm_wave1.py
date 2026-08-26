@@ -951,7 +951,7 @@ def _extract_observed_job_context(payload: object) -> dict[str, object] | None:
     image = text_value("image", "imagepath", "containerimage")
     platform = text_value("platform", "platformid")
     preset = text_value("preset", "presetid")
-    disk_raw = text_value("disksize", "disksizegib")
+    disk_raw = text_value("disksize", "disksizegib", "sizebytes")
     timeout_raw = text_value("timeout", "timeoutseconds")
     disk_size_gib = _parse_gib(disk_raw)
     timeout_seconds = _parse_duration_seconds(timeout_raw)
