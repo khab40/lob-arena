@@ -219,9 +219,15 @@ def main() -> None:
     command.extend(["--env", f"AWS_DEFAULT_REGION={region}"])
     command.extend(["--env", "AWS_EC2_METADATA_DISABLED=true"])
     if args.workload == "lightgbm-wave1":
+        image_repository, image_sha256 = args.image.rsplit("@sha256:", maxsplit=1)
+        if len(image_repository) > 64 or len(image_sha256) != 64:
+            raise SystemExit(
+                "LightGBM Wave 1 image context must fit Nebius label-safe repository/digest fields"
+            )
         for name, value in (
             ("WAVE1_ACTUAL_PROJECT_ID", WAVE1_PROJECT_ID),
-            ("WAVE1_ACTUAL_IMAGE", args.image),
+            ("WAVE1_ACTUAL_IMAGE_REPOSITORY", image_repository),
+            ("WAVE1_ACTUAL_IMAGE_SHA256", image_sha256),
             ("WAVE1_ACTUAL_PLATFORM", WAVE1_PLATFORM),
             ("WAVE1_ACTUAL_PRESET", WAVE1_PRESET),
             ("WAVE1_ACTUAL_DISK_SIZE_GIB", "100"),

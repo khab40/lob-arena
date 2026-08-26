@@ -396,7 +396,9 @@ def test_cloud_transport_stages_executes_and_publishes_without_mounts(
     monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-north1")
     monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
     monkeypatch.setenv("WAVE1_ACTUAL_PROJECT_ID", PROJECT_ID)
-    monkeypatch.setenv("WAVE1_ACTUAL_IMAGE", LOCAL_IMAGE)
+    image_repository, image_sha256 = LOCAL_IMAGE.rsplit("@sha256:", maxsplit=1)
+    monkeypatch.setenv("WAVE1_ACTUAL_IMAGE_REPOSITORY", image_repository)
+    monkeypatch.setenv("WAVE1_ACTUAL_IMAGE_SHA256", image_sha256)
     monkeypatch.setenv("WAVE1_ACTUAL_PLATFORM", "cpu-d3")
     monkeypatch.setenv("WAVE1_ACTUAL_PRESET", "4vcpu-16gb")
     monkeypatch.setenv("WAVE1_ACTUAL_DISK_SIZE_GIB", "100")
@@ -592,6 +594,14 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
     assert command[command.index("--timeout") + 1] == "1h"
     assert command[command.index("--parent-id") + 1] == PROJECT_ID
     assert not any(value.startswith("AWS_ACCESS_KEY_ID=AKIA") for value in command)
+    assert f"WAVE1_ACTUAL_IMAGE_REPOSITORY={LOCAL_IMAGE.rsplit('@sha256:', 1)[0]}" in command
+    assert f"WAVE1_ACTUAL_IMAGE_SHA256={LOCAL_IMAGE.rsplit('@sha256:', 1)[1]}" in command
+    assert not any(value.startswith("WAVE1_ACTUAL_IMAGE=") for value in command)
+    assert all(
+        len(value.split("=", maxsplit=1)[1]) <= 64
+        for index, value in enumerate(command)
+        if index > 0 and command[index - 1] == "--env"
+    )
 
     script = str(Path(__file__).resolve().parents[2] / "scripts" / "submit_nebius_job.py")
     for override in (("--platform", "gpu-h100"), ("--timeout", "168h")):

@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G3 complete; G4 code/evidence workflow complete locally; one fresh-image cloud smoke remains pending after five bounded failed attempts
+Status: G0-G3 complete; fresh G4 image, immutable fixture staging and reviewed dry run complete; explicit G4 cloud-smoke submission pending
 
 Date: 2026-08-22
 
@@ -46,6 +46,68 @@ evidence appropriate to that use.
   ceiling. Fifteen development Jobs remain; the ceiling is not increased.
 - Prior Job specifications, logs, and results are not copied into a new archive
   during this reconciliation. Existing governed records remain in place.
+
+## 2026-08-22 G4 Preflight Reconciliation
+
+- Live Serverless AI Job inventory still contains exactly the five bounded G4
+  attempts recorded above; no sixth Job was submitted. All five are terminal:
+  four `CANCELLED` and one `FAILED`. The last three attempts used 250 GiB disks
+  rather than the reviewed 100 GiB G4 contract, so they cannot be reused as
+  evidence for the next submission.
+- The MLflow VM `computeinstance-e00xq8hqrzks2pf3gn` is live-verified as
+  `STOPPED`. Its private address remains `10.4.0.54`, and the Job subnet that
+  can reach it is `vpcsubnet-e00ppzc4353dxv210j`. It was not started during
+  this preflight.
+- A fresh `linux/amd64` Jobs image was built from commit `9b12be9`, passed the
+  import smoke plus the exact `run-s3 --input-uri` entry-point check, and was
+  pushed as the immutable reference
+  `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:760142ec89750025314d5376c2b2c8e8fe7827ab5d7c2dc7bc9a9065b7d0a7c3`.
+- The matching fixture request is staged at
+  `s3://aimada-wave1-dev-e00g6zvxpr00/releases/wave1-g4-9b12be9-20260822/staging`.
+  Five objects were read-back verified; request SHA-256 is
+  `66db37b624519ab89873fdc4636b1078ad0a73eb1d9e7fdf7eade698c198cc4d`,
+  inventory SHA-256 is
+  `994bd1a24f817cf52a51de18aa808425bd044502cc3f019fa955349683058733`,
+  and `SUCCESS` was published last. The temporary exact-prefix publisher key
+  was deleted and the bucket policy was independently verified back at its
+  read-only `releases/*` baseline.
+- The development Object Storage MysteryBox selectors are active. No
+  MysteryBox selectors currently exist for `MLFLOW_TRACKING_USERNAME` and
+  `MLFLOW_TRACKING_PASSWORD`; the submit adapter correctly refuses to render a
+  G4 dry run without both.
+- USD 8.03 remains the latest authoritative console billing observation, from
+  2026-08-21 11:57 UTC. The CLI profile exposes no billing contract ID and the
+  authenticated browser bridge is unavailable in this workspace, so current
+  spend has not been reconciled. The submit adapter correctly refuses to use
+  the stale value as current spend.
+- `make check-submit` passes all 12 submit/render adapter tests. No Job was
+  created, no prior evidence was re-archived, and the reviewed G4 dry-run
+  artifact remains intentionally ungenerated until both blockers above are
+  resolved.
+
+### 2026-08-26 Operator Update
+
+- Current project spend was reconciled by the Operator at USD 8.12 including
+  VAT. This remains below both the USD 25 reporting trigger and USD 40 stop-new-
+  submissions threshold.
+- The initial live MysteryBox metadata-only listing confirmed that no selectors
+  existed for `MLFLOW_TRACKING_USERNAME` or `MLFLOW_TRACKING_PASSWORD`; creating
+  those two value secrets from the existing private MLflow administrator
+  credentials was the final dry-run blocker.
+- The two tracking selectors were subsequently created from the existing
+  private deployment environment without printing either payload:
+  `mbsec-e00dmydkcge9t3b31v` for `MLFLOW_TRACKING_USERNAME` and
+  `mbsec-e00fjt8vg2q7n7t0fb` for `MLFLOW_TRACKING_PASSWORD`. Both are `ACTIVE`.
+  Access used a temporary port-22 rule restricted to the current operator
+  `/32`; that rule was deleted, the original `185.115.4.0/32` rule remains
+  unchanged, and the MLflow VM was verified `STOPPED` afterward.
+- The reviewed dry run is
+  `outputs/lightgbm-wave1/g4-dry-run-20260826.json`, with SHA-256
+  `35f4bd6de37eb3e6ef5303626388149b4f46a7bcd76328fc8cb02acdedba02de`.
+  It binds spend USD 8.12, development Job count 5, the staged request hash,
+  immutable image, fixed resources, private subnet and all four redacted
+  MysteryBox injections. It declares `cloud_resources_created: false`; no Job
+  was submitted.
 
 ## Prior Decisions Preserved
 

@@ -139,18 +139,30 @@ def _require_s3_environment() -> None:
 def _execution_context_from_environment() -> Wave1ExecutionContext:
     required = {
         "project_id": "WAVE1_ACTUAL_PROJECT_ID",
-        "image": "WAVE1_ACTUAL_IMAGE",
         "platform": "WAVE1_ACTUAL_PLATFORM",
         "preset": "WAVE1_ACTUAL_PRESET",
         "disk_size_gib": "WAVE1_ACTUAL_DISK_SIZE_GIB",
         "timeout_seconds": "WAVE1_ACTUAL_TIMEOUT_SECONDS",
     }
+    image_repository = os.environ.get("WAVE1_ACTUAL_IMAGE_REPOSITORY", "").strip()
+    image_sha256 = os.environ.get("WAVE1_ACTUAL_IMAGE_SHA256", "").strip()
     missing = [environment for environment in required.values() if not os.environ.get(environment, "").strip()]
+    if not image_repository:
+        missing.append("WAVE1_ACTUAL_IMAGE_REPOSITORY")
+    if not image_sha256:
+        missing.append("WAVE1_ACTUAL_IMAGE_SHA256")
     if missing:
         raise RuntimeError("Wave 1 Job context environment is incomplete")
+    if (
+        len(image_repository) > 64
+        or "@" in image_repository
+        or re.fullmatch(r"[0-9a-f]{64}", image_sha256) is None
+    ):
+        raise RuntimeError("Wave 1 Job image context is invalid")
     payload: dict[str, object] = {
         field: os.environ[environment].strip() for field, environment in required.items()
     }
+    payload["image"] = f"{image_repository}@sha256:{image_sha256}"
     payload["disk_size_gib"] = int(str(payload["disk_size_gib"]))
     payload["timeout_seconds"] = int(str(payload["timeout_seconds"]))
     job_id = os.environ.get("NEBIUS_JOB_ID", "").strip()
