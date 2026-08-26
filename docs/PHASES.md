@@ -38,6 +38,8 @@ Primary docs:
 
 - `[done]` Implemented and committed.
 - `[partial]` Implemented enough for the current MVP, with known follow-up gaps.
+- `[in progress]` Active roadmap work with implementation or governed execution underway.
+- `[blocked]` Work cannot advance until its stated gate or external prerequisite passes.
 - `[todo]` Not implemented yet.
 
 ## Phase 1: Core Live Arena
@@ -247,7 +249,9 @@ Deliverables:
 - `[done]` reproducibility scripts under `scripts/`
 - `[done]` `AI Command Center` UI destination with model selection, inference, batch execution, GPU utilization, datasets, Managed Experiment operations, and artifact access to benchmark outputs
 - `[done]` `docs/nebius-deployment.md`
-- `[todo]` screenshots under `assets/screenshots/` are still missing except for `.gitkeep`; real Nebius logs/metrics screenshots are still needed.
+- `[partial]` Four sanitized runtime/UI screenshots are committed under
+  `assets/screenshots/`; dedicated real Nebius console log/metric screenshots
+  are still needed for the remaining review-evidence gap.
 
 Benchmark outputs:
 
@@ -376,9 +380,18 @@ Exit criteria:
 
 ## Future Roadmap: Nebius Learned-Detector Program
 
-Status: `[todo]`
+Status: `[in progress]`
 
 Roadmap decision date: 2026-08-16
+
+Status reconciliation date: 2026-08-26
+
+GitHub Project #3 currently contains 67 items: 50 `Done`, 12 `In Progress`
+and 5 `Todo`. Those counts include epics, features and child stories, so they
+describe workflow state rather than additive engineering effort. The active
+detector sequence is GitHub Feature #16: Wave 1 / Story #23 is in progress;
+Wave 2 / Story #24 and Wave 3 / Story #25 remain Todo. No Transformer or
+Transformer-to-LightGBM implementation is claimed yet.
 
 The next learned-detector work is deliberately sequential. Governed LightGBM
 v1 is already implemented locally, so the first wave is not a second LightGBM
@@ -409,13 +422,18 @@ Planned work:
 - `[done]` Replace the failed S3 filesystem-mount design with the July-proven
   pattern: MysteryBox environment credentials plus prefix-scoped S3 API
   download/upload through ephemeral job disk.
-- `[blocked]` Complete G4. Two mount-based Jobs stalled before container start;
-  three no-volume Jobs then failed on an old image or incorrect entrypoint.
-  Five of the 20 development-job slots are consumed and no run reached
-  LightGBM training. The next attempt requires a verified image/command/input
-  dry run and explicit authorization.
-- `[in progress]` Freeze one governed corpus, split, feature release, model
-  configuration, image digest and Git SHA for the cloud campaign.
+- `[blocked]` Close G4. Two mount-based Jobs stalled before container start;
+  three no-volume Jobs failed on an old image or incorrect entrypoint; attempt
+  6 reached the runner but failed before training on an AWS CLI v1/v2 pager
+  incompatibility. Attempt 7 then completed the governed workload, matched the
+  reviewed resources and image identity, and published 25 result objects plus
+  `SUCCESS`. Seven of the 20 development-job slots are consumed and 13 remain.
+  Governed collection and the final G4 exit record await a fresh post-run spend
+  observation; no rerun is authorized or needed.
+- `[in progress]` The G4 fixture request, model configuration, image digest and
+  Git SHA are frozen for the next smoke. The official public-sample corpus,
+  split and fold-isolated feature releases required for G5-G8 remain to be
+  constructed and frozen after G4 passes.
 - `[todo]` Run smoke, deterministic-repeat, tuning, calibration and one
   governed evaluation workflow through CPU Serverless AI Jobs.
 - `[todo]` Store immutable inputs and outputs in Standard Object Storage and

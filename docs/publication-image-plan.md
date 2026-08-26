@@ -2,14 +2,18 @@
 
 ## Decision
 
-Do **not** create the GitHub social preview from fabricated UI content. The repository currently has a branded README hero, but no committed real application screenshots suitable for the requested product composite. Capture the application manually, then build the social preview from those real captures.
+Do **not** create the GitHub social preview from fabricated UI content. The
+repository has a branded README hero and four committed sanitized application
+screenshots. The current captures prove the product workflow, but dedicated
+Nebius console log/metric captures and canonical publication-sized exports are
+still needed before building the requested product composite.
 
 ## Verified publication assets
 
 | Asset | Current use | Status | Action |
 |---|---|---|---|
 | `assets/img/ai-mada.jpg` | README hero | Usable as the README banner only | Keep separate from the GitHub social preview. Re-export with metadata stripped and visually compare before replacing the current file. |
-| `assets/screenshots/.gitkeep` | Placeholder | No real screenshots committed | Replace with the named captures below. |
+| `assets/screenshots/Screenshot 2026-07-14 at 17.41.43.png` and three companion captures | README runtime, Investigation Team, detector tournament and execution-trace evidence | Four sanitized application screenshots committed | Preserve as evidence; create canonical named/cropped exports below and add dedicated Nebius console log/metric captures. |
 | README Mermaid architecture diagram | In-page architecture explanation | Technically useful but not a cover image | Export a clean 16:9 raster copy for the LinkedIn article. |
 | `assets/demo-video/` narration/caption files | Video planning | Not image material | Do not use as article or social artwork. |
 

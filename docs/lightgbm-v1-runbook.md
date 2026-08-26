@@ -88,9 +88,12 @@ does not receive raw LOBSTER records or become the approval authority.
 ## Current evidence boundary
 
 Fixture and synthetic runs prove determinism, compatibility and orchestration.
-They do not establish client performance. A performance release requires the
-licensed 30-session corpus, two-reviewer clean labels, frozen test split and
-signed governed evaluation.
+They do not establish client performance. Official public Nasdaq ITCH samples
+plus the repository LOBSTER sample may support the research-only
+`research_baseline_qualified` disposition and unlock Wave 2 engineering. A
+production/client performance release still requires appropriately licensed
+data, two-reviewer clean labels, a frozen test split and signed governed
+evaluation suitable for that claim.
 
 ## Wave 1 local gate
 
@@ -220,12 +223,15 @@ Run `make lightgbm-wave1-g4-check` before building the immutable cloud image.
 The shared MLflow VM remains stopped until immediately before an explicitly
 authorized submission and should be stopped again after evidence collection.
 
-All five failed attempts count against the fixed 20-Job development ceiling;
-15 slots remain. The next cloud action remains one explicitly authorized,
-15-minute G4 development smoke after the image contents, command contract,
-input package, and dry run verify together. The submitter verifies the canonical
-request-evidence hash and forces the approved project, `cpu-d3`, `4vcpu-16gb`,
-100 GiB disk and one-hour Nebius timeout. Mutable tags, inline credentials,
-filesystem mounts, broad bucket probes, unbounded prefixes, and request/runtime
-mismatches are rejected. Final evaluation also requires the trusted signing-key
-SHA-256 from outside the candidate package.
+The first six attempts failed before training. Attempt 7 completed the governed
+workload, matched `cpu-d3`, `4vcpu-16gb`, 100 GiB and the one-hour timeout, and
+published 25 result objects plus `SUCCESS`. Seven of the fixed 20 development
+slots are consumed and 13 remain. No rerun is authorized or needed. Governed
+collection and the final G4 exit record remain locked until a fresh post-run
+spend observation is supplied. The submitter verifies the canonical request
+evidence and rejects inline credentials, filesystem mounts, broad bucket
+probes, unbounded prefixes and request/runtime mismatches. The temporary
+digest-derived deployment alias is permitted only by the recorded bounded
+exception and must resolve to the full governed digest before and after Job
+creation. Final evaluation also requires the trusted signing-key SHA-256 from
+outside the candidate package.

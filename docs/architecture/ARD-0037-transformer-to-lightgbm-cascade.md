@@ -6,9 +6,11 @@ Date: 2026-08-16
 
 ## Implementation Status
 
-Status: `[planned after ARD-0036 exit gates]`
+Status: `[todo; GitHub Story #25; gated by ARD-0036 exit disposition]`
 
 No cascade implementation or performance benefit is claimed by this record.
+The `transformer_feature_release_v1` contract, exact join, cascade model family
+and ablation campaign have not started.
 
 ## Context
 

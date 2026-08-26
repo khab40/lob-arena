@@ -125,9 +125,13 @@ when it:
 - compares rules and LightGBM on identical governed observations; and
 - reports liquidity evaporation and subtle layering challenge performance.
 
-The implementation now satisfies this software boundary. Performance acceptance
-remains pending until the licensed 30-session corpus, independent clean-window
-reviews and signed chronological test release exist.
+The implementation now satisfies this software boundary. Official Nasdaq ITCH
+samples plus the repository LOBSTER sample may support a research-only
+qualification and unlock Wave 2 engineering after the public-sample quality,
+reproducibility, isolation, cost and operational gates pass. Production/client
+performance acceptance still requires appropriately licensed data, independent
+clean-window reviews and a signed chronological test release suitable for that
+claim.
 
 ## Track B: Corpus Operations Acceptance
 

@@ -268,6 +268,42 @@ still required before generating and authorizing the replacement dry run; USD
   development slot, leaving 13/20; no retry is authorized or necessary. G4 is
   complete and G5 is unlocked.
 
+### 2026-08-26 G4 Attempt 7
+
+- The Operator reconciled spend at USD 8.55 including VAT and explicitly
+  authorized attempt 7. Reviewed dry-run evidence SHA-256 is
+  `b9a5586ad7ded3334f352d2fbba111f26f2d76b5457b818ea7dfee8d9f6e41aa`.
+- Job `aijob-e00k3nj3402wrdvbnz` was created once. Pre-submit registry
+  resolution, live Job image read-back and post-submit registry resolution all
+  matched governed digest
+  `sha256:3e54fbe1c1ba7e5955a13565dc623cce4542b0df038c5f0b78b0f107e79c95e5`.
+  Submission-evidence SHA-256 is
+  `d1f84ffad8c8df74124a817427972b7ce21dc0a61a5eb6929380a61e240a1302`.
+- Nebius reports the Job `COMPLETED`; its live resource context matches
+  `cpu-d3`, `4vcpu-16gb`, 100 GiB and 3,600 seconds. It started at
+  17:01:05 UTC and finished at 17:01:43 UTC. MLflow was stopped after the
+  terminal state and independently verified `STOPPED`.
+- The first fail-closed monitor record was preserved after it classified the
+  terminal Job as `RESOURCE_EVIDENCE_MISSING`. The cause was local evidence
+  parsing: Nebius returns disk size as `spec.disk.size_bytes`, while the parser
+  accepted only display-form disk-size fields. The parser now accepts the live
+  response shape, has a regression test, and the 40-test Wave 1 suite passes.
+  Reconciled monitor-evidence SHA-256 is
+  `bd7f84723c64ac33ec1212f5b8d74cee15bdbeb84c221df8529fa566b5de2502`;
+  it records `COMPLETED`, matched resources, collected logs and no
+  cancellation inside the fixed 900-second watchdog.
+- The 22-line redacted Job log contains one non-fatal MLflow/GitPython warning
+  block because the slim runtime has no `git` executable. No training,
+  Object Storage, MLflow HTTP, traceback or container error is present. Source
+  provenance is not lost: the governed request, training manifest and explicit
+  MLflow binding tags carry commit `690a9e9f4767c7893bb56ed04be001d66cab773f`.
+  Log SHA-256 is
+  `1ff80e0493da705b6e41c7c8753aaf1fb297a214adc7bfb98589afb76fa7170d`.
+- The result prefix contains 25 objects and a `SUCCESS` marker. Governed result
+  collection and the final G4 exit record remain locked until the Operator
+  supplies a fresh post-run spend observation. Attempt 7 consumed one slot;
+  the development count is now 7/20. No rerun is authorized or needed.
+
 ## Prior Decisions Preserved
 
 The earlier Codex/OpenAI discussions established the architecture used here:
@@ -763,8 +799,15 @@ Three explicitly authorized no-volume attempts followed on 2026-08-17:
 - `aijob-e00e0cn0ttvf29g99r` used a reversed command/argument layout and failed
   because Python tried to open `/job/serverless/jobs/run` as a file.
 
-None reached LightGBM training or published a result. These three attempts and
-the two mount-startup attempts all count against the development ceiling.
+None of the first five attempts reached LightGBM training or published a
+result. Those three attempts and the two mount-startup attempts all count
+against the development ceiling.
+
+Attempt 6, `aijob-e00sa1ejk3qsa13ymw`, used the verified short-tag workaround,
+reached the intended runner and then failed on its first Object Storage list
+operation because AWS CLI v1.46.0 rejected the v2-only `--no-cli-pager` flag.
+It also failed before training or result publication and consumed the sixth
+development slot.
 
 Attempt 6 reached the runner but failed before training on the AWS CLI v2-only
 pager flag. Attempt 7 used the corrected image and completed training,
@@ -785,23 +828,25 @@ closed as passed.
 
 Corrected G4 sequence, completed by attempt 7:
 
-1. Codex builds and locally smokes a new `linux/amd64` image containing the
-   exact S3 API CLI entrypoint, then pushes it through the existing Nebius
-   Registry path and resolves the immutable digest.
-2. Codex stages a new immutable development release whose canonical request names
-   the exact S3 result prefix, experiment specification, approved project/image/
-   resource envelope, and private MLflow URI. The resulting request-evidence
-   file and its canonical hash are mandatory submitter inputs.
-3. Codex renders a dry run with no `--volume`, the fixed eu-north1 endpoint,
-   exact `cpu-d3` / `4vcpu-16gb` / 100 GiB / one-hour resources, separate
-   MysteryBox selectors for AWS and MLflow credentials, and the out-of-band
-   trusted public-key fingerprint for final evaluation; local policy tests pass.
-4. Operator reviews the redacted dry run and explicitly authorizes exactly one
-   15-minute G4 submission. No authorization means no Job.
-5. After submission, Codex collects Job/log/result evidence, verifies the
-   downloaded result and MLflow record, binds the returned Job ID, actual
-   project/image/resources and nonnegative cost estimate, reconciles spend, and
-   either closes G4 or stops with one bounded failure record.
+1. **Complete.** Codex built and locally smoked the corrected `linux/amd64`
+   image containing the exact S3 API CLI entrypoint, pushed it through the
+   existing Nebius Registry path and resolved its immutable digest.
+2. **Complete.** Codex staged the matching immutable development release whose
+   canonical request names the exact S3 result prefix, experiment
+   specification, approved project/image/resource envelope and private MLflow
+   URI. The request evidence and canonical hash are mandatory submitter inputs.
+3. **Complete.** Codex rendered a dry run with no `--volume`, the
+   fixed eu-north1 endpoint, exact `cpu-d3` / `4vcpu-16gb` / 100 GiB / one-hour
+   resources, separate MysteryBox selectors for AWS and MLflow credentials,
+   and the out-of-band trusted public-key fingerprint for final evaluation;
+   local policy tests pass.
+4. **Complete.** The Operator reviewed the redacted dry run and explicitly
+   authorized exactly one 15-minute G4 submission. Job
+   `aijob-e00k3nj3402wrdvbnz` completed.
+5. **In progress.** Codex has verified the Job/log/resource evidence and the
+   remote `SUCCESS` result inventory. Downloaded result verification, the
+   bound MLflow record, post-run spend reconciliation and the final G4 exit
+   record remain locked until the fresh spend observation is supplied.
 
 The VM was stopped after the terminal Job and remains stopped. No prior evidence
 was re-archived; archive upload is opt-in and supports the standard AWS ambient
