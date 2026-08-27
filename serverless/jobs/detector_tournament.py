@@ -38,11 +38,13 @@ from app.evaluation.run_planning import (  # noqa: E402
     exact_weighted_plan,
     parse_difficulty_mix,
 )
+from app.nebius.job_logging import JobLogger  # noqa: E402
 from app.scenarios.catalog import BENCHMARK_SCENARIOS  # noqa: E402
 
 
 DEFAULT_SCENARIOS = list(BENCHMARK_SCENARIOS)
 DEFAULT_DETECTORS = ["spoofing_like", "layering_like", "quote_stuffing", "liquidity_shock"]
+JOB_LOG = JobLogger("detector-tournament")
 
 
 @dataclass
@@ -91,23 +93,49 @@ def main() -> None:
     difficulty_mix = parse_difficulty_mix(args.difficulty_mix)
     scenario_plan = exact_balanced_plan(runs, scenarios, seed=args.random_seed)
     difficulty_plan = exact_weighted_plan(runs, difficulty_mix, seed=args.random_seed + 1)
+    JOB_LOG.info(
+        "tournament.planned",
+        "Build a deterministic scenario plan and compare every selected detector against governed labels.",
+        runs=runs,
+        scenario_count=len(scenarios),
+        detector_count=len(detectors),
+        random_seed=args.random_seed,
+    )
     run_results: list[RunResult] = []
-    for run_index, (scenario, difficulty) in enumerate(zip(scenario_plan, difficulty_plan)):
-        run_results.extend(
-            _run_one_simulation(
-                run_index,
-                scenario,
-                detectors,
-                random_seed=args.random_seed,
-                difficulty=difficulty,
+    with JOB_LOG.phase(
+        "tournament.execute",
+        "Run each market simulation and compute detector outcomes, timing, and evidence attribution.",
+        runs=runs,
+        detector_count=len(detectors),
+    ):
+        for run_index, (scenario, difficulty) in enumerate(zip(scenario_plan, difficulty_plan)):
+            run_results.extend(
+                _run_one_simulation(
+                    run_index,
+                    scenario,
+                    detectors,
+                    random_seed=args.random_seed,
+                    difficulty=difficulty,
+                )
             )
-        )
 
+    JOB_LOG.info(
+        "artifacts.started",
+        "Aggregate detector metrics and write the results, report, and chart artifacts.",
+        result_count=len(run_results),
+    )
     metrics = _compute_metrics(run_results, detectors)
     _write_metrics_csv(output_dir / "metrics.csv", metrics)
     _write_results_json(output_dir / "results.json", runs, scenarios, detectors, metrics, run_results)
     _write_report(output_dir / "benchmark_report.md", runs, scenarios, detectors, metrics)
     _write_charts(output_dir / "charts", metrics)
+    JOB_LOG.info(
+        "tournament.completed",
+        "The detector tournament completed and its comparison artifacts are ready.",
+        runs=runs,
+        result_count=len(run_results),
+        metric_count=len(metrics),
+    )
 
     print(
         json.dumps(

@@ -2,7 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /job
 
-ENV PYTHONPATH=/job/backend
+ENV PYTHONPATH=/job/backend \
+    PYTHONUNBUFFERED=1 \
+    GIT_PYTHON_REFRESH=quiet
 
 COPY serverless/jobs/requirements.txt /job/serverless/jobs/requirements.txt
 

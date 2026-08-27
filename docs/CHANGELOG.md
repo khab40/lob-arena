@@ -3,11 +3,20 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Added secret-safe JSON lifecycle logging across executable Jobs. Governed
+  LightGBM logs now explain input/checksum verification, fold isolation,
+  training, calibration, candidate freezing, MLflow publication, evidence and
+  Object Storage phases with timings and bounded failure types. Synthetic
+  batch, tournament and dataset Jobs describe their plan, execution, artifacts
+  and completion. Job output is unbuffered, and redundant GitPython discovery
+  noise is silenced because source provenance is explicitly governed.
+
 - Reconciled repository and GitHub Project roadmap status through G4 attempt 7:
   the first six Jobs failed before training; attempt 7 completed and published
   25 result objects plus `SUCCESS`; seven development slots are consumed and
-  13 remain. Governed collection and the final G4 exit record await fresh
-  post-run spend. LightGBM is complete locally, while the standalone
+  13 remain. Spend was reconciled at USD 8.57 including VAT, all 16 G4 exit
+  gates passed, and G5 is unlocked. LightGBM is complete locally and through
+  its governed cloud smoke, while the standalone
   market-sequence Transformer and Transformer-to-LightGBM cascade remain gated
   Todo work. The public Nasdaq/LOBSTER research-qualification lane is separated
   explicitly from licensed production/client acceptance.

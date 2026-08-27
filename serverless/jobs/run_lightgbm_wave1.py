@@ -6,6 +6,10 @@ from pathlib import Path
 
 from app.ml.lightgbm.cloud_runner import execute_wave1_request, verify_wave1_result
 from app.ml.lightgbm.cloud_transport import DEFAULT_ENDPOINT_URL, execute_wave1_s3
+from app.nebius.job_logging import JobLogger
+
+
+JOB_LOG = JobLogger("lightgbm-wave1")
 
 
 def main() -> int:
@@ -22,19 +26,28 @@ def main() -> int:
     verify = subparsers.add_parser("verify")
     verify.add_argument("--result", type=Path, required=True)
     args = parser.parse_args()
+    JOB_LOG.info(
+        "entrypoint.started",
+        "Dispatch the requested governed LightGBM operation and report its lifecycle as structured events.",
+        command=args.command,
+    )
     if args.command == "run":
-        print(execute_wave1_request(args.request, input_root=args.input_root))
+        result = execute_wave1_request(args.request, input_root=args.input_root)
     elif args.command == "run-s3":
-        print(
-            execute_wave1_s3(
-                args.input_uri,
-                work_root=args.work_root,
-                endpoint_url=args.endpoint_url,
-                request_relative_path=args.request_relative_path,
-            )
+        result = execute_wave1_s3(
+            args.input_uri,
+            work_root=args.work_root,
+            endpoint_url=args.endpoint_url,
+            request_relative_path=args.request_relative_path,
         )
     else:
-        print(verify_wave1_result(args.result).model_dump_json(indent=2))
+        result = verify_wave1_result(args.result).model_dump_json(indent=2)
+    JOB_LOG.info(
+        "entrypoint.completed",
+        "The requested governed LightGBM operation completed successfully.",
+        command=args.command,
+    )
+    print(result)
     return 0
 
 

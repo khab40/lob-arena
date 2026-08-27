@@ -21,9 +21,11 @@ def _add_backend_to_path() -> None:
 _add_backend_to_path()
 
 from app.arena.engine import SimulationEngine  # noqa: E402
+from app.nebius.job_logging import JobLogger  # noqa: E402
 
 
 SCENARIOS = ["spoofing-like", "layering-like", "quote-stuffing", "liquidity-evaporation"]
+JOB_LOG = JobLogger("synthetic-dataset")
 
 
 def main() -> None:
@@ -37,6 +39,12 @@ def main() -> None:
     incidents_path = args.output / "incidents.jsonl"
     labels_path = args.output / "labels.jsonl"
     snapshot_rows: list[dict[str, Any]] = []
+    JOB_LOG.info(
+        "dataset.started",
+        "Generate deterministic labeled synthetic market-abuse samples and order-book snapshots.",
+        sample_count=args.samples,
+        scenario_count=len(SCENARIOS),
+    )
 
     with (
         events_path.open("w", encoding="utf-8") as events_file,
@@ -53,6 +61,12 @@ def main() -> None:
             labels_file.write(json.dumps(sample["label"]) + "\n")
             snapshot_rows.extend(sample["snapshots"])
 
+    JOB_LOG.info(
+        "samples.completed",
+        "All synthetic scenarios completed; write snapshot and manifest artifacts next.",
+        sample_count=args.samples,
+        snapshot_count=len(snapshot_rows),
+    )
     snapshot_artifact = _write_snapshots(args.output, snapshot_rows)
     manifest = {
         "samples": args.samples,
@@ -63,6 +77,12 @@ def main() -> None:
         "format_note": "snapshots use parquet when pandas/pyarrow are available, otherwise JSONL.",
     }
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    JOB_LOG.info(
+        "dataset.completed",
+        "The labeled synthetic dataset and manifest are ready for downstream evaluation.",
+        sample_count=args.samples,
+        snapshot_format=snapshot_artifact.suffix.lstrip("."),
+    )
     print(json.dumps(manifest, indent=2))
 
 

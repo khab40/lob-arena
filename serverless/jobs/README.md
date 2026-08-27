@@ -6,6 +6,32 @@ These jobs are educational simulation utilities. They do not evaluate real
 market manipulation, do not provide trading signals, and should not be used for
 compliance decisions.
 
+## Structured lifecycle logs
+
+Executable Jobs emit one JSON object per lifecycle event. Each record includes
+UTC timestamp, level, job type, stable event name, and a plain-language
+description of the work. Timed phases produce `.started`, `.completed`, or
+`.failed` events and include `duration_ms`; failures include only the exception
+type, never the exception message.
+
+Example:
+
+```json
+{"description":"Train LightGBM with the frozen hyperparameters, seed, class weighting, and early-stopping policy.","event":"model.train.started","job_type":"lightgbm-wave1","level":"INFO","run_id":"wave1-development-001","timestamp":"2026-08-27T00:00:00+00:00"}
+```
+
+The LightGBM profile explains input download/checksum verification, request and
+resource binding, fold isolation, training, calibration, candidate freezing,
+MLflow publication, evidence finalization, and Object Storage publication. The
+synthetic batch, tournament, and dataset jobs log their deterministic plan,
+execution, artifact production, optional upload, and final outcome.
+
+Credential-, password-, secret-, and token-shaped field names are rejected by
+the logging helper. Logs never include raw environment values, input payloads,
+MLflow credentials, or exception messages. `PYTHONUNBUFFERED=1` makes events
+visible immediately in cloud logs; the optional GitPython discovery warning is
+silenced because governed source provenance is logged explicitly.
+
 ## Detector Tournament
 
 Runs synthetic simulations, launches labeled scenario families, evaluates

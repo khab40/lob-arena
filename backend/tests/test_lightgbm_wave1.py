@@ -288,7 +288,10 @@ def test_final_rejects_untrusted_key_and_tampered_candidate_artifact(tmp_path: P
         )
 
 
-def test_experiment_config_controls_training_and_calibration(tmp_path: Path) -> None:
+def test_experiment_config_controls_training_and_calibration(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     inputs = tmp_path / "inputs"
     inputs.mkdir()
     result = tmp_path / "result"
@@ -328,6 +331,24 @@ def test_experiment_config_controls_training_and_calibration(tmp_path: Path) -> 
     assert training["early_stopping"]["stopping_rounds"] == 3
     assert "spread" not in training["ordered_feature_columns"]
     assert calibration["parameters"]["method"] == "raw"
+    lifecycle = [
+        json.loads(line)
+        for line in capsys.readouterr().out.splitlines()
+        if '"job_type": "lightgbm-wave1"' in line
+    ]
+    events = {record["event"] for record in lifecycle}
+    assert {
+        "input.inventory.completed",
+        "dataset.ready",
+        "model.train.completed",
+        "model.calibrate.completed",
+        "candidate.frozen",
+        "evidence.finalize.completed",
+        "execution.completed",
+    } <= events
+    dataset_record = next(record for record in lifecycle if record["event"] == "dataset.ready")
+    assert dataset_record["test_fold_accessed"] is False
+    assert "test fold remains inaccessible" in dataset_record["description"]
 
 
 def test_development_run_binds_mlflow_run_id(

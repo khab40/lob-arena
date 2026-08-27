@@ -36,12 +36,14 @@ from app.evaluation.run_planning import (  # noqa: E402
     parse_difficulty_mix,
 )
 from app.scenarios.catalog import BENCHMARK_SCENARIOS  # noqa: E402
+from app.nebius.job_logging import JobLogger  # noqa: E402
 from app.nebius.object_storage import sync_s3  # noqa: E402
 
 
 SCENARIOS = list(BENCHMARK_SCENARIOS)
 SCENARIO_TO_ENGINE = {scenario: scenario for scenario in SCENARIOS if scenario != "normal_market"}
 SCENARIO_TO_ENGINE["normal_market"] = None
+JOB_LOG = JobLogger("synthetic-batch")
 
 
 @dataclass
@@ -82,23 +84,44 @@ def main() -> None:
     difficulty_mix = parse_difficulty_mix(args.difficulty_mix)
     scenario_plan = exact_balanced_plan(runs, scenarios, seed=args.random_seed)
     difficulty_plan = exact_weighted_plan(runs, difficulty_mix, seed=args.random_seed + 1)
+    JOB_LOG.info(
+        "batch.planned",
+        "Build deterministic scenario and difficulty plans, then execute independent attack/detect simulations.",
+        runs=runs,
+        scenario_count=len(scenarios),
+        batch_size=batch_size,
+        max_workers=max_workers,
+        random_seed=args.random_seed,
+        object_storage_enabled=bool(args.s3_output_uri),
+    )
 
     results: list[BatchResult] = []
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [
-            executor.submit(
-                _run_one,
-                index,
-                scenario_plan[index],
-                difficulty_plan[index],
-                args.random_seed,
-            )
-            for index in range(runs)
-        ]
-        for future in as_completed(futures):
-            results.append(future.result())
+    with JOB_LOG.phase(
+        "simulation.execute",
+        "Run the deterministic market simulations and evaluate detector evidence in parallel.",
+        runs=runs,
+        max_workers=max_workers,
+    ):
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(
+                    _run_one,
+                    index,
+                    scenario_plan[index],
+                    difficulty_plan[index],
+                    args.random_seed,
+                )
+                for index in range(runs)
+            ]
+            for future in as_completed(futures):
+                results.append(future.result())
 
     results.sort(key=lambda item: item.run_id)
+    JOB_LOG.info(
+        "artifacts.started",
+        "Write event, trade, label, alert, detector-metric, report, and manifest artifacts.",
+        run_count=len(results),
+    )
     _write_jsonl(output / "order_book_events.jsonl", (row for result in results for row in result.events))
     _write_jsonl(output / "trades.jsonl", (row for result in results for row in result.trades))
     _write_jsonl(output / "attack_labels.jsonl", (row for result in results for row in result.labels))
@@ -128,8 +151,24 @@ def main() -> None:
         },
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    JOB_LOG.info(
+        "artifacts.completed",
+        "The local synthetic batch artifact set is complete.",
+        run_count=len(results),
+        artifact_count=len(manifest["artifacts"]) + 1,
+    )
     if args.s3_output_uri:
-        _sync_to_s3(output, args.s3_output_uri, args.s3_endpoint_url)
+        with JOB_LOG.phase(
+            "result.publish",
+            "Synchronize the completed batch artifact directory to the bounded Object Storage prefix.",
+            run_count=len(results),
+        ):
+            _sync_to_s3(output, args.s3_output_uri, args.s3_endpoint_url)
+    JOB_LOG.info(
+        "batch.completed",
+        "The synthetic attack/detect batch completed successfully.",
+        run_count=len(results),
+    )
     print(json.dumps(manifest, indent=2))
 
 

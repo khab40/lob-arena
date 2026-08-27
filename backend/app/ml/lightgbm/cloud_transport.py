@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest, Wave1ExecutionContext
 from app.ml.lightgbm.cloud_runner import execute_wave1_request
+from app.nebius.job_logging import JobLogger
 from app.nebius.object_storage import (
     TransferLimits,
     download_s3_release,
@@ -20,6 +21,7 @@ DEVELOPMENT_BUCKET = "aimada-wave1-dev-e00g6zvxpr00"
 FINAL_BUCKET = "aimada-wave1-final-e00g6zvxpr00"
 RESULTS_BUCKET = "aimada-wave1-results-e00g6zvxpr00"
 DEFAULT_ENDPOINT_URL = "https://storage.eu-north1.nebius.cloud"
+JOB_LOG = JobLogger("lightgbm-wave1")
 
 
 def execute_wave1_s3(
@@ -40,11 +42,20 @@ def execute_wave1_s3(
     if str(work_root) in {"/", str(Path.home().resolve())}:
         raise ValueError("Wave 1 work root is too broad")
     work_root.mkdir(parents=True, exist_ok=True)
+    JOB_LOG.info(
+        "transport.started",
+        "Stage a governed Object Storage release, execute LightGBM, and publish a verified result.",
+        region="eu-north1",
+    )
 
     with tempfile.TemporaryDirectory(prefix="wave1-s3-", dir=work_root) as directory:
         stage = Path(directory)
         input_root = stage / "input"
-        download_s3_release(input_uri, input_root, endpoint_url=endpoint_url, limits=limits)
+        with JOB_LOG.phase(
+            "input.download",
+            "Download the immutable input release and verify its SUCCESS marker and checksums.",
+        ):
+            download_s3_release(input_uri, input_root, endpoint_url=endpoint_url, limits=limits)
         request_path = (input_root / request_relative_path).resolve()
         if input_root not in request_path.parents or not request_path.is_file():
             raise ValueError("Wave 1 request is missing or outside the staged input prefix")
@@ -53,23 +64,57 @@ def execute_wave1_s3(
         if request.mode in {"development", "final-evaluation"} and request.mlflow_tracking_uri is None:
             raise ValueError("cloud training and evaluation require a governed MLflow tracking URI")
         execution_context = _execution_context_from_environment()
+        JOB_LOG.info(
+            "request.verified",
+            "Validate the request schema, immutable storage boundaries, and actual Job resources.",
+            campaign_id=request.campaign_id,
+            run_id=request.run_id,
+            mode=request.mode,
+            request_sha256=request.canonical_hash(),
+            platform=execution_context.platform,
+            preset=execution_context.preset,
+            disk_size_gib=execution_context.disk_size_gib,
+            timeout_seconds=execution_context.timeout_seconds,
+        )
         trusted_public_key_sha256 = os.environ.get(
             "WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256"
         )
         local_result = stage / "result"
         try:
-            completed = execute_wave1_request(
-                request_path,
-                input_root=input_root,
-                local_result_root=local_result,
-                execution_context=execution_context,
-                trusted_authorization_public_key_sha256=trusted_public_key_sha256,
-            )
-            publish_s3_result(completed, request.result_uri, endpoint_url=endpoint_url)
+            with JOB_LOG.phase(
+                "workload.execute",
+                "Execute the governed request without accessing any unapproved data fold.",
+                run_id=request.run_id,
+                mode=request.mode,
+            ):
+                completed = execute_wave1_request(
+                    request_path,
+                    input_root=input_root,
+                    local_result_root=local_result,
+                    execution_context=execution_context,
+                    trusted_authorization_public_key_sha256=trusted_public_key_sha256,
+                )
+            with JOB_LOG.phase(
+                "result.publish",
+                "Upload verified result artifacts and publish SUCCESS only after every object is checked.",
+                run_id=request.run_id,
+            ):
+                publish_s3_result(completed, request.result_uri, endpoint_url=endpoint_url)
         except Exception:
             if (local_result / "FAILED").is_file():
-                publish_s3_failure(local_result, request.result_uri, endpoint_url=endpoint_url)
+                with JOB_LOG.phase(
+                    "failure.publish",
+                    "Publish the bounded FAILED record for diagnosis without marking the result successful.",
+                    run_id=request.run_id,
+                ):
+                    publish_s3_failure(local_result, request.result_uri, endpoint_url=endpoint_url)
             raise
+    JOB_LOG.info(
+        "transport.completed",
+        "The governed result prefix is complete and independently verifiable.",
+        run_id=request.run_id,
+        mode=request.mode,
+    )
     return request.result_uri
 
 

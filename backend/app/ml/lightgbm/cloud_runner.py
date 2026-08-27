@@ -36,6 +36,7 @@ from app.ml.lightgbm.release import build_model_bundle, verify_complete_lightgbm
 from app.ml.lightgbm.scoring import calibrate_validation_predictions, predict_governed_fold
 from app.ml.lightgbm.training import train_binary_attack_model
 from app.ml.lightgbm.tracking import log_development_run, log_governed_evaluation_run
+from app.nebius.job_logging import JobLogger
 from app.nebius.object_storage import (
     ChecksumInventory,
     InventoryEntry,
@@ -43,6 +44,9 @@ from app.nebius.object_storage import (
     temporary_staging,
     verify_complete_result,
 )
+
+
+JOB_LOG = JobLogger("lightgbm-wave1")
 
 
 class _StrictModel(BaseModel):
@@ -79,6 +83,14 @@ def execute_wave1_request(
 ) -> Path:
     request = LightGbmCloudJobRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
     _validate_execution_context(request, execution_context)
+    JOB_LOG.info(
+        "execution.started",
+        "Execute one immutable governed LightGBM request and produce a checksum-bound result.",
+        campaign_id=request.campaign_id,
+        run_id=request.run_id,
+        mode=request.mode,
+        request_sha256=request.canonical_hash(),
+    )
     destination = _execution_destination(request, local_result_root)
     input_root = input_root.resolve()
     started_at = datetime.now(UTC)
@@ -88,10 +100,20 @@ def execute_wave1_request(
     try:
         (staging / "artifacts").mkdir()
         (staging / "request.json").write_bytes(request.canonical_bytes())
-        input_inventory = _request_inventory(input_root, request)
+        with JOB_LOG.phase(
+            "input.inventory",
+            "Inventory the approved input files and verify their declared checksums and size limits.",
+            run_id=request.run_id,
+        ):
+            input_inventory = _request_inventory(input_root, request)
         (staging / "input-inventory.json").write_text(input_inventory.model_dump_json(indent=2), encoding="utf-8")
         _write_environment(staging, request, execution_context)
         if request.mode == "preflight":
+            JOB_LOG.info(
+                "preflight.completed",
+                "Validate schemas, bindings, and isolation controls without training a model.",
+                run_id=request.run_id,
+            )
             processed_rows = 0
             candidate_hash = None
             reproducibility_hash = None
@@ -106,39 +128,66 @@ def execute_wave1_request(
                 metrics,
             ) = _run_development(staging, input_root, request, execution_context)
         elif request.mode == "final-evaluation":
-            (
-                processed_rows,
-                candidate_hash,
-                reproducibility_hash,
-                mlflow_run_id,
-                metrics,
-            ) = _run_final(
-                staging,
-                input_root,
-                request,
-                execution_context,
-                trusted_authorization_public_key_sha256,
-            )
+            with JOB_LOG.phase(
+                "evaluation.execute",
+                "Verify the signed candidate authorization, score the sealed test fold, and build the release bundle.",
+                run_id=request.run_id,
+            ):
+                (
+                    processed_rows,
+                    candidate_hash,
+                    reproducibility_hash,
+                    mlflow_run_id,
+                    metrics,
+                ) = _run_final(
+                    staging,
+                    input_root,
+                    request,
+                    execution_context,
+                    trusted_authorization_public_key_sha256,
+                )
         else:
             raise ValueError("verify mode uses verify_wave1_result() and does not execute a new run")
         (staging / "metrics.json").write_text(
             json.dumps(metrics, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8"
         )
-        _write_cloud_run(
-            staging,
-            request=request,
-            started_at=started_at,
-            wall_start=wall_start,
-            cpu_start=cpu_start,
+        with JOB_LOG.phase(
+            "evidence.finalize",
+            "Write runtime metrics, bind provenance, and verify the local result inventory.",
+            run_id=request.run_id,
             processed_rows=processed_rows,
-            candidate_hash=candidate_hash,
-            reproducibility_hash=reproducibility_hash,
+        ):
+            _write_cloud_run(
+                staging,
+                request=request,
+                started_at=started_at,
+                wall_start=wall_start,
+                cpu_start=cpu_start,
+                processed_rows=processed_rows,
+                candidate_hash=candidate_hash,
+                reproducibility_hash=reproducibility_hash,
+                mlflow_run_id=mlflow_run_id,
+                execution_context=execution_context,
+            )
+            published = publish_local_result(staging, destination.as_uri())
+        JOB_LOG.info(
+            "execution.completed",
+            "The governed LightGBM request completed and its local result contract passed verification.",
+            run_id=request.run_id,
+            mode=request.mode,
+            processed_rows=processed_rows,
             mlflow_run_id=mlflow_run_id,
-            execution_context=execution_context,
         )
-        return publish_local_result(staging, destination.as_uri())
+        return published
     except Exception as exc:
         _publish_failure(staging, destination, exc)
+        JOB_LOG.error(
+            "execution.failed",
+            "The request failed closed; inspect the bounded FAILED record and error type.",
+            run_id=request.run_id,
+            mode=request.mode,
+            error_type=type(exc).__name__,
+        )
         raise
 
 
@@ -180,28 +229,65 @@ def _run_development(
     execution_context: Wave1ExecutionContext | None,
 ) -> tuple[int, str, str, str | None, dict[str, Any]]:
     artifact_root = staging / "artifacts"
-    dataset = _load_dataset(request, input_root=input_root, artifact_root=artifact_root, access_mode="development")
-    dataset = _apply_experiment(dataset, request.experiment)
-    training = train_binary_attack_model(
-        dataset,
-        artifact_root=artifact_root,
-        output_dir=artifact_root / "training",
-        created_at=request.created_at,
-        git_commit=request.git_commit,
-        training_seed=request.random_seed,
-        hyperparameters=request.experiment.hyperparameters,
-        early_stopping_rounds=request.experiment.early_stopping_rounds,
+    with JOB_LOG.phase(
+        "dataset.prepare",
+        "Load the approved development folds and apply the predeclared feature exclusions.",
+        run_id=request.run_id,
+    ):
+        dataset = _load_dataset(
+            request,
+            input_root=input_root,
+            artifact_root=artifact_root,
+            access_mode="development",
+        )
+        dataset = _apply_experiment(dataset, request.experiment)
+    rows = sum(fold.row_count for fold in dataset.folds)
+    JOB_LOG.info(
+        "dataset.ready",
+        "The governed training and validation folds are ready; the test fold remains inaccessible.",
+        run_id=request.run_id,
+        fold_count=len(dataset.folds),
+        row_count=rows,
+        test_fold_accessed=False,
     )
-    calibration = calibrate_validation_predictions(
-        dataset,
-        training=training.training_manifest,
-        artifact_root=artifact_root,
-        output_dir=artifact_root / "calibration",
-        created_at=request.created_at,
-        method=request.experiment.calibration_method,
-        precision_floor=request.experiment.precision_floor,
-        recall_floor=request.experiment.recall_floor,
+    with JOB_LOG.phase(
+        "model.train",
+        "Train LightGBM with the frozen hyperparameters, seed, class weighting, and early-stopping policy.",
+        run_id=request.run_id,
+    ):
+        training = train_binary_attack_model(
+            dataset,
+            artifact_root=artifact_root,
+            output_dir=artifact_root / "training",
+            created_at=request.created_at,
+            git_commit=request.git_commit,
+            training_seed=request.random_seed,
+            hyperparameters=request.experiment.hyperparameters,
+            early_stopping_rounds=request.experiment.early_stopping_rounds,
+        )
+    JOB_LOG.info(
+        "model.trained",
+        "Training completed with the validation-selected best iteration.",
+        run_id=request.run_id,
+        best_iteration=training.training_manifest.early_stopping.best_iteration,
+        validation_binary_logloss=training.training_manifest.early_stopping.best_score,
     )
+    with JOB_LOG.phase(
+        "model.calibrate",
+        "Calibrate validation predictions and derive predeclared operating thresholds and reliability evidence.",
+        run_id=request.run_id,
+        calibration_method=request.experiment.calibration_method,
+    ):
+        calibration = calibrate_validation_predictions(
+            dataset,
+            training=training.training_manifest,
+            artifact_root=artifact_root,
+            output_dir=artifact_root / "calibration",
+            created_at=request.created_at,
+            method=request.experiment.calibration_method,
+            precision_floor=request.experiment.precision_floor,
+            recall_floor=request.experiment.recall_floor,
+        )
     reproducibility_hash = _reproducibility_hash(
         request.experiment,
         training.training_manifest,
@@ -228,23 +314,34 @@ def _run_development(
     candidate_path = staging / "candidate.json"
     candidate_path.write_bytes(candidate.canonical_bytes())
     candidate_hash = sha256_file(candidate_path)
+    JOB_LOG.info(
+        "candidate.frozen",
+        "Freeze the candidate and bind training, calibration, feature, and reproducibility evidence.",
+        run_id=request.run_id,
+        candidate_sha256=candidate_hash,
+        reproducibility_sha256=reproducibility_hash,
+    )
     mlflow_run_id = None
     if request.mlflow_tracking_uri is not None:
-        mlflow_run_id = log_development_run(
-            artifact_root=artifact_root,
-            training=training.training_manifest,
-            calibration=calibration.manifest,
-            training_manifest_path=training.training_manifest_path,
-            calibration_manifest_path=calibration.manifest_path,
-            validation_metrics_path=calibration.validation_metrics_path,
-            feature_importance_path=calibration.feature_importance_path,
-            reliability_bins_path=calibration.reliability_bins_path,
-            reliability_diagram_path=calibration.reliability_diagram_path,
-            model_path=training.model_path,
-            tracking_uri=request.mlflow_tracking_uri,
-            cloud_metadata=_cloud_metadata(execution_context),
-        )
-    rows = sum(fold.row_count for fold in dataset.folds)
+        with JOB_LOG.phase(
+            "mlflow.publish",
+            "Log governed parameters, metrics, artifacts, source provenance, and cloud resource bindings to MLflow.",
+            run_id=request.run_id,
+        ):
+            mlflow_run_id = log_development_run(
+                artifact_root=artifact_root,
+                training=training.training_manifest,
+                calibration=calibration.manifest,
+                training_manifest_path=training.training_manifest_path,
+                calibration_manifest_path=calibration.manifest_path,
+                validation_metrics_path=calibration.validation_metrics_path,
+                feature_importance_path=calibration.feature_importance_path,
+                reliability_bins_path=calibration.reliability_bins_path,
+                reliability_diagram_path=calibration.reliability_diagram_path,
+                model_path=training.model_path,
+                tracking_uri=request.mlflow_tracking_uri,
+                cloud_metadata=_cloud_metadata(execution_context),
+            )
     metrics = {
         "best_iteration": training.training_manifest.early_stopping.best_iteration,
         "validation_binary_logloss": training.training_manifest.early_stopping.best_score,
