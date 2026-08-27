@@ -1,15 +1,23 @@
-# Nebius Public Market Data Plan for LightGBM Wave 1
+# Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: Approved research-plan amendment; D0-D2 implementation not started;
+Status: Approved research-plan amendment; D0-D3 implementation not started;
 no market-data transfer authorized or started
 
-Date: 2026-08-16
+Date: 2026-08-27
 
 ## Decision
 
-Continue the existing G4 fixture smoke unchanged. For G5 onward, replace the
-fixture-only performance track with a research benchmark built from official
-public Nasdaq TotalView-ITCH samples and the repository's LOBSTER SPY sample.
+Preserve the completed G4 fixture smoke as cloud-pipeline evidence. For G5
+onward, replace the fixture-only performance track with a research benchmark
+built from official public Nasdaq TotalView-ITCH samples and the repository's
+LOBSTER SPY sample.
+
+Build this once as the shared governed data foundation for all three detector
+waves. The same immutable corpus and split identities must produce a tabular
+projection for LightGBM, a causal ordered-sequence projection for the
+Transformer, and the row identities needed to join later Transformer outputs
+into the separate Transformer-to-LightGBM cascade. No model may silently
+create its own dates, labels, folds, replay domains or final-test rows.
 
 The raw and derived data will be prepared in Nebius, not on the workstation.
 The workstation has about 46 GiB free and the importer intentionally reserves
@@ -20,6 +28,16 @@ claim unrestricted redistribution rights, a licensed production corpus, or
 verified absence of abuse in historical control windows. Raw source objects
 remain private and are never included in the repository, MLflow, result
 bundles, or model releases.
+
+This plan authorizes neither a Nasdaq website crawl nor a mirror. Acquisition
+is allowlist-only: exactly the declared files, dates, symbols, time windows and
+depth below. Because each approved ITCH gzip is a sequential full-market
+stream, a Job may need to download the complete approved compressed file to
+ephemeral scratch before it can select symbols and windows. That technical
+requirement does not authorize retention of unrelated records. A private raw
+quarantine object may exist only under a declared short lifecycle while its
+derived release is verified; persistent S3 releases retain the selected
+AAPL/MSFT/NVDA windows, manifests and hashes, not a general Nasdaq archive.
 
 ## Selected Inputs
 
@@ -60,17 +78,22 @@ Excluded from this release:
 flowchart LR
     Nasdaq["Nasdaq public HTTPS samples"] --> Acquire["Nebius acquisition Job"]
     Lobster["Repository LOBSTER sample"] --> Acquire
-    Acquire --> Raw["Development bucket<br/>data/public-sample-v1/sources"]
-    Raw --> Prepare["Nebius preparation Job<br/>normalize + Java control/hybrid replay"]
+    Acquire --> Raw["Private short-lived quarantine<br/>exact allowlisted packages only"]
+    Raw --> Prepare["Nebius preparation Job<br/>select + normalize + Java control/hybrid replay"]
     Prepare --> Features["Causal v2 features<br/>controls + injected attacks"]
-    Features --> Freeze["Hash and freeze one corpus/split/release"]
-    Freeze --> Dev["Development bucket<br/>train + validation projection"]
-    Freeze --> Final["Final bucket<br/>test projection"]
-    Dev --> Train["G5/G6 LightGBM Jobs"]
+    Features --> Freeze["Hash and freeze one corpus/split root"]
+    Freeze --> Tabular["lob_features_v2<br/>LightGBM projection"]
+    Freeze --> Sequence["causal sequence projection<br/>Transformer"]
+    Tabular --> Dev["Development bucket<br/>train + validation projections"]
+    Sequence --> Dev
+    Tabular --> Final["Final bucket<br/>test projections"]
+    Sequence --> Final
+    Dev --> Train["G5/G6 LightGBM, then Wave 2 Jobs"]
     Train --> Candidate["Frozen candidate in results bucket"]
     Candidate --> FinalRun["One authorized G8 Job"]
     Final --> FinalRun
-    FinalRun --> Results["Verified release + MLflow pointer"]
+    FinalRun --> Results["Verified releases + MLflow pointers"]
+    Results --> Cascade["Wave 3 Transformer feature release<br/>exact identity join + LightGBM"]
 ```
 
 Nebius Serverless AI Jobs support Object Storage mounts and timeouts up to 168
@@ -86,19 +109,20 @@ Reuse the four existing Wave 1 buckets. Do not create a fifth bucket.
 ```text
 s3://aimada-wave1-dev-e00g6zvxpr00/
   data/public-sample-v1/
-    sources/nasdaq/<date>/staging/{source.gz,source.json,input-inventory.json,SUCCESS}
+    quarantine/nasdaq/<date>/{source.gz,source.json,input-inventory.json,SUCCESS}
     sources/lobster/spy-2012-06-21/staging/{source files,source.json,input-inventory.json,SUCCESS}
     normalized/<venue>/<date>/<instrument>/{events.parquet,book_snapshots.parquet,manifest.json}
     replays/<base_session>/<control-or-campaign>/...
     features/<base_session>/<control-or-campaign>/...
-    release-staging/{development,final}/...
-  releases/public-sample-v1-<release-hash>/...
+    release-staging/{development,final}/{tabular,sequence}/...
+  releases/public-sample-v1-<release-hash>/development/{tabular,sequence}/...
 
 s3://aimada-wave1-final-e00g6zvxpr00/
-  releases/public-sample-v1-<release-hash>/...
+  releases/public-sample-v1-<release-hash>/final/{tabular,sequence}/...
 
 s3://aimada-wave1-results-e00g6zvxpr00/
   campaigns/wave1-research-20260816/{development,final}/...
+  transformer-features/<transformer-feature-release-hash>/...
 ```
 
 Every source and release uses a unique immutable prefix. Objects are uploaded
@@ -106,10 +130,15 @@ under `staging/`; a canonical inventory and checksums are verified by read-back;
 `SUCCESS` is written last. Partial prefixes are ignored and the existing
 one-day incomplete-multipart cleanup remains enabled. No object is overwritten.
 
-At current published pricing, 28.9 GiB of Nasdaq raw data plus roughly 0.9 GiB
-of LOBSTER raw data costs about USD 0.44 per month in Standard storage before
-derived artifacts and versions. Cap the complete data prefix at 120 GiB
-(about USD 1.76 per month) and stop before exceeding it.
+The quarantine prefix has an explicit lifecycle measured in days, is private,
+and is deleted after normalized output and provenance read-back pass unless a
+separate retention decision is recorded. Lifecycle deletion must not remove
+the selected normalized corpus, its source manifest, HTTP metadata, complete
+source SHA-256 or immutable consumer releases. At current published pricing,
+retaining all 28.9 GiB of Nasdaq compressed sources plus roughly 0.9 GiB of
+LOBSTER data would cost about USD 0.44 per month before derived artifacts, but
+that is a cost bound rather than authorization for permanent raw retention.
+Cap quarantine plus derived data at 120 GiB and stop before exceeding it.
 
 ## IAM Amendment
 
@@ -162,6 +191,12 @@ enabled. The final key remains inactive until signed candidate authorization.
 5. Add a governed-public-sample staging command. The existing CLI only stages
    `approved-research-fixture` requests even though the cloud runner already
    accepts `governed-feature-release` inputs.
+6. Enforce the allowlist before the first HTTP request and again before S3
+   publication. Reject undeclared filenames, dates, symbols, windows, hosts,
+   redirects and byte counts; never enumerate or copy the rest of the site.
+7. Publish only the selected normalized rows and required provenance as the
+   durable dataset. Put any complete approved gzip in private quarantine with
+   a declared lifecycle and prove its expiry/deletion after preparation.
 
 ### D2 - Fold-isolated release loading
 
@@ -177,6 +212,36 @@ This is required because the current governed loader revalidates the complete
 corpus artifact tree even in development mode. Merely omitting test Parquet
 files from the development bucket would currently make the load fail; copying
 them there would violate the test isolation control.
+
+### D3 - Cross-model consumer contracts and programs
+
+Build model-specific projections from one frozen root rather than copying or
+resplitting source data for each model:
+
+1. `tabular_projection_v1` contains `lob_features_v2`, supervised row
+   identities and fold-bound manifests for the existing LightGBM trainer and
+   detector runner.
+2. `sequence_projection_v1` contains ordered causal event/feature sequences,
+   cutoff timestamps, masks, sequence-to-row identities and the same fold
+   binding for the Wave 2 Transformer materializer, trainer and batch scorer.
+3. Wave 3 produces `transformer_feature_release_v1` from the frozen sequence
+   projection. Its scores/embeddings join the tabular projection only by exact
+   corpus, split, replay and row identities; nearest-time or positional joins
+   are forbidden.
+4. Training and scoring programs reject incompatible corpus, split, schema,
+   sequence or model hashes. If Transformer features are missing, stale or
+   invalid, serving records the condition and uses the verified tabular
+   LightGBM fallback rather than imputing temporal features.
+5. Rules, LightGBM, standalone Transformer and the cascade use identical
+   immutable evaluation rows. Validation may select features, sequence shape,
+   checkpoints and hyperparameters; final-test results may not feed back into
+   preparation or tuning.
+
+This shared foundation is intended to improve prediction quality by adding
+representative historical microstructure and causal temporal context. An
+improvement is not assumed: it must be demonstrated through the predeclared
+paired metrics and ablations, and a negative Transformer or cascade result is
+a valid roadmap outcome.
 
 ## Label and Replay Policy
 
@@ -203,17 +268,14 @@ campaign identity and labels are unavailable to feature formulas.
 
 ## Execution Gates
 
-### C0 - Recover the existing cloud smoke
+### C0 - Prove the dedicated data preflight
 
-The first six G4 attempts failed. The first two mount-based Jobs remained
-`STARTING` without container logs; two no-volume Jobs used an older image
-without the `run-s3` command; the fifth used a reversed entrypoint and Python
-tried to open `/job/serverless/jobs/run`; attempt 6 reached the runner but AWS
-CLI v1 rejected the v2-only pager option on the first Object Storage list.
-Attempt 7 completed the corrected governed workload and published a verified
-`SUCCESS` result prefix. G4 collection and exit remain pending fresh post-run
-spend. Do not submit a large transfer or preparation Job until the dedicated
-public-data preflight also proves:
+G4 is complete: after six bounded failures, attempt 7 completed the corrected
+governed workload, published a verified `SUCCESS` result prefix, passed all 16
+exit gates and reconciled spend at USD 8.57 including VAT. G5 is unlocked and
+13 of 20 development-job slots remain. That model smoke does not prove or
+authorize public-data acquisition. Do not submit a transfer or preparation Job
+until the dedicated public-data preflight proves:
 
 - default internet egress can reach `emi.nasdaq.com`;
 - the prefix-scoped S3 API read/write path works without a filesystem mount;
@@ -231,18 +293,23 @@ Run exactly one acquisition Job for `01302019.NASDAQ_ITCH50.gz`:
 
 - `cpu-d3`, `4vcpu-16gb`, 100 GiB disk, four-hour timeout;
 - no automatic retry and no parallelism;
-- download to Job scratch, never directly to a final object key;
-- verify size, gzip and SHA-256 before multipart upload;
-- attach SHA-256 as object metadata and verify a read-back range/object hash;
-- publish its inventory and `SUCCESS` last; and
+- download to Job scratch, never directly to a durable release key;
+- verify size, gzip and SHA-256 before uploading an optional private
+  quarantine object;
+- attach SHA-256 and expiry metadata, verify a read-back range/object hash,
+  and prove the quarantine lifecycle is active;
+- publish the quarantine inventory and `SUCCESS` last; the separate preparation
+  Job publishes selected normalized outputs; and
 - record Job ID, image digest, runtime, peak RSS, bytes/second and cost.
 
 If the pilot fails, stop and fix locally. Do not start the other six downloads.
 
 ### C2 - Remaining acquisition
 
-Acquire the remaining six files sequentially using the identical request
-template. One successful source prefix is never overwritten or retried.
+Acquire the remaining six files sequentially using the identical allowlisted
+request template. One successful acquisition/quarantine prefix is never
+overwritten or retried. Complete source packages may exist only in private,
+lifecycle-bound quarantine and are not copied into a durable model release.
 The public-data campaign has a separate cap of 15 Jobs: one preflight, seven
 acquisition Jobs, and seven preparation Jobs. Failed attempts consume that cap
 and stop the campaign for reconciliation; they do not expand it. The original
@@ -267,11 +334,12 @@ parallelism may increase to two Jobs. Never process two jobs for the same date.
 
 ### C4 - Corpus freeze and projection publication
 
-Build and verify the complete research corpus, chronological split and feature
-release under the preparation identity. Freeze the root hashes. Generate the
-development and final projections, prove that the development identity cannot
-read the final projection, publish each to its existing bucket, then deactivate
-the preparation key.
+Build and verify the complete research corpus and chronological split under the
+preparation identity. Freeze the root hashes. Generate development and final
+`tabular_projection_v1` and `sequence_projection_v1` artifacts, prove that the
+development identity cannot read either final projection, publish each to its
+existing bucket, then deactivate the preparation key. Verify or remove every
+expired raw quarantine object without deleting its provenance record.
 
 ### C5 - LightGBM experiments
 
@@ -288,6 +356,25 @@ The final disposition is `research_baseline_qualified`,
 `cloud_pipeline_qualified_performance_pending`, or `not_qualified`. A research
 qualification may unlock Wave 2 engineering, but never a production or client
 surveillance claim.
+
+### C6 - Transformer and hybrid continuation
+
+After the Wave 1 disposition unlocks Wave 2:
+
+1. materialize `sequence_projection_v1` with CPU Jobs and verify causal prefix,
+   grouping, fold and row-identity invariants;
+2. train and calibrate the bounded standalone Transformer with time-boxed GPU
+   Jobs using validation only;
+3. score the immutable comparison rows and freeze the selected Transformer
+   checkpoint or record a negative result;
+4. if its feature-producer gate passes, materialize
+   `transformer_feature_release_v1`, exact-join it to
+   `tabular_projection_v1`, and train the separate cascade LightGBM family;
+5. compare rules, tabular LightGBM, standalone Transformer and hybrid cascade
+   on the same final rows and publish quality, delay, throughput, GPU/CPU cost,
+   staleness and fallback evidence; and
+6. keep the tabular LightGBM model as the verified rollback and missing-feature
+   runtime path regardless of the cascade result.
 
 ## Budget and Stop Rules
 
@@ -308,16 +395,26 @@ surveillance claim.
 The plan is complete only when the repository contains:
 
 - a signed source-release inventory for all seven Nasdaq files and LOBSTER;
+- proof that acquisition was allowlist-only and that unrelated Nasdaq records
+  were not retained in durable S3 releases;
+- raw-quarantine lifecycle/deletion evidence and retained source hashes;
 - Job and resource evidence for acquisition and preparation;
 - normalized/replay/feature hashes for every declared domain;
 - a frozen root corpus/split/feature-release identity;
-- independently verifiable development and final projections;
+- independently verifiable development and final tabular/sequence projections;
+- model-consumer manifests binding LightGBM, Transformer and cascade inputs to
+  the same root split and evaluation-row identities;
 - development-to-final access-denial evidence;
 - exact G5 repeat comparison;
 - the complete G6 candidate report;
 - one authorized G8 result;
 - the separate Nasdaq-to-LOBSTER robustness report; and
 - cost reconciliation and the final claim boundary.
+
+Wave 2 and Wave 3 completion additionally require the verified standalone
+Transformer bundle, `transformer_feature_release_v1`, exact-join evidence,
+paired ablations and the documented tabular fallback. Those later artifacts
+are not prerequisites for closing the Wave 1 data-foundation build itself.
 
 ## References
 

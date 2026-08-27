@@ -384,10 +384,10 @@ Status: `[in progress]`
 
 Roadmap decision date: 2026-08-16
 
-Status reconciliation date: 2026-08-26
+Status reconciliation date: 2026-08-27
 
-GitHub Project #3 currently contains 67 items: 50 `Done`, 12 `In Progress`
-and 5 `Todo`. Those counts include epics, features and child stories, so they
+GitHub Project #3 currently contains 69 items: 50 `Done`, 12 `In Progress`
+and 7 `Todo`. Those counts include epics, features and child stories, so they
 describe workflow state rather than additive engineering effort. The active
 detector sequence is GitHub Feature #16: Wave 1 / Story #23 is in progress;
 Wave 2 / Story #24 and Wave 3 / Story #25 remain Todo. No Transformer or
@@ -400,6 +400,46 @@ existing release boundary. Transformer work starts only after that baseline is
 measured and frozen. The combined design then uses causal Transformer outputs
 as additional LightGBM inputs so GPU-heavy sequence learning can improve a
 CPU-efficient serving path.
+
+### Shared Data Foundation: Selective Nasdaq To Nebius S3
+
+Status: `[in progress; 4/12 scoped capabilities complete, approximately 33%]`
+
+This percentage describes this data-foundation feature only, not total project
+completion or model quality. The repository already has four required building
+blocks: a bounded streaming Nasdaq ITCH 5.x parser; checksummed normalized
+Parquet; deterministic historical/hybrid replay with causal feature generation;
+and governed corpus/split plus LightGBM loading contracts. The remaining eight
+capabilities are roadmap work:
+
+- `[todo]` Freeze an exact source allowlist for the seven approved public
+  Nasdaq sample files, AAPL/MSFT/NVDA, the 10:00-10:30 ET windows, depth 10 and
+  chronological fold assignments.
+- `[todo]` Add a Nebius acquisition/preparation runner that never crawls or
+  mirrors Nasdaq and rejects undeclared hosts, redirects, files and byte counts.
+- `[todo]` Download each approved full-market gzip only when sequential ITCH
+  extraction requires it; use ephemeral Job scratch or private lifecycle-bound
+  quarantine and retain only selected rows in durable S3 releases.
+- `[todo]` Normalize all three selected instruments in one pass per source and
+  publish immutable provenance, quality, replay and feature inventories.
+- `[todo]` Freeze one root corpus/split identity and publish development/test
+  `tabular_projection_v1` artifacts for governed LightGBM training and scoring.
+- `[todo]` Publish fold-isolated `sequence_projection_v1` artifacts with causal
+  cutoffs, masks and deterministic row-to-sequence identities for Wave 2.
+- `[todo]` Adapt the Transformer training/scoring programs to consume that
+  sequence projection, then materialize `transformer_feature_release_v1` only
+  from a verified standalone checkpoint.
+- `[todo]` Exact-join Transformer scores/embeddings to the tabular rows for the
+  Wave 3 cascade; reject stale/incompatible features and fall back visibly to
+  the verified tabular LightGBM model.
+
+All four candidates—rules, tabular LightGBM, standalone Transformer and the
+Transformer-to-LightGBM cascade—must use identical immutable evaluation rows.
+The purpose is to test whether relevant historical microstructure and causal
+temporal context improve predictions; improvement is an acceptance result to
+measure, not a roadmap claim. The detailed transfer, retention, split and
+consumer contracts are in the
+[public market-data plan](nebius-public-market-data-lightgbm-plan.md).
 
 ### Execution Order And Gates
 
@@ -422,20 +462,19 @@ Planned work:
 - `[done]` Replace the failed S3 filesystem-mount design with the July-proven
   pattern: MysteryBox environment credentials plus prefix-scoped S3 API
   download/upload through ephemeral job disk.
-- `[blocked]` Close G4. Two mount-based Jobs stalled before container start;
+- `[done]` Close G4. Two mount-based Jobs stalled before container start;
   three no-volume Jobs failed on an old image or incorrect entrypoint; attempt
   6 reached the runner but failed before training on an AWS CLI v1/v2 pager
   incompatibility. Attempt 7 then completed the governed workload, matched the
   reviewed resources and image identity, and published 25 result objects plus
   `SUCCESS`. Seven of the 20 development-job slots are consumed and 13 remain.
-  Governed collection and the final G4 exit record await a fresh post-run spend
-  observation; no rerun is authorized or needed.
-- `[in progress]` The G4 fixture request, model configuration, image digest and
-  Git SHA are frozen for the next smoke. The official public-sample corpus,
-  split and fold-isolated feature releases required for G5-G8 remain to be
-  constructed and frozen after G4 passes.
-- `[todo]` Run smoke, deterministic-repeat, tuning, calibration and one
-  governed evaluation workflow through CPU Serverless AI Jobs.
+  Spend was reconciled at USD 8.57 including VAT; all 16 gates passed, MLflow
+  is stopped and G5 is unlocked. No rerun is authorized or needed.
+- `[in progress]` Build the selective official-public-sample data foundation,
+  root corpus/split and fold-isolated tabular/sequence projections required for
+  G5-G8 and the later Transformer/cascade waves.
+- `[todo]` Run deterministic-repeat, tuning, calibration and one governed
+  evaluation workflow through CPU Serverless AI Jobs.
 - `[todo]` Store immutable inputs and outputs in Standard Object Storage and
   index hashes, parameters, metrics and artifact pointers in shared MLflow.
 - `[todo]` Compare rules and LightGBM on identical rows, including per-family
@@ -523,6 +562,99 @@ Wave 3 exit criteria:
   when Transformer features are absent, stale or incompatible.
 - The promotion record identifies every model, feature, split and evaluation
   hash and documents whether the cascade was accepted or rejected.
+
+### Feature: Extensible Inbound Data Adapter Framework
+
+Status: `[todo; GitHub Feature #87; partial source-adapter foundation exists]`
+
+Goal: make future batch or streaming market-data sources—including vendors and
+formats not known today—addable through a versioned adapter package instead of
+source-specific changes across ingestion, replay, feature and model code. This
+does not imply automatic understanding of an unknown format; each source still
+requires an explicitly reviewed adapter implementation and mapping.
+
+Current foundation:
+
+- `IngestionSourceAdapter` already defines candidate discovery and bounded
+  import, and LOBSTER/Nasdaq ITCH implement peer adapters.
+- Normalized Parquet, source-neutral manifests, canonical Java replay and
+  causal features provide a usable downstream target.
+- Registration and source types are still hard-coded, capability discovery is
+  absent, and there is no third-party adapter conformance kit.
+
+Planned work:
+
+- `[todo]` Version an `inbound_data_adapter_v1` descriptor and protocol for
+  discovery, authorization, acquisition/streaming, validation, normalization,
+  provenance, retention and capability reporting.
+- `[todo]` Add an explicit registry/factory so an approved adapter can be added
+  without editing the core ingestion service or downstream model programs.
+- `[todo]` Keep vendor fields inside versioned provenance/extensions while
+  requiring canonical events, snapshots, timestamps, lifecycle semantics and
+  immutable checksummed manifests at the adapter output.
+- `[todo]` Support declared batch, object-storage and bounded streaming modes
+  with allowlists, secret isolation, byte/time/resource quotas and fail-closed
+  schema/version negotiation.
+- `[todo]` Publish a conformance kit with golden fixtures for deterministic
+  repeat import, causal-prefix invariance, lifecycle integrity, malformed-input
+  rejection, resource bounds and Java replay equivalence.
+- `[todo]` Require licence/terms and redistribution metadata, retention policy,
+  source hash, adapter/config hash and a review record before a new adapter can
+  feed a governed corpus.
+
+Exit gate: a fixture third adapter can be registered through configuration,
+passes the conformance kit, produces the canonical immutable dataset contract
+and runs through replay/features without source-specific downstream branches.
+
+### Feature: Pluggable Detector Adapter And Test Harness
+
+Status: `[todo; GitHub Feature #88; model-specific adapter and external-alert evaluation foundations exist]`
+
+Goal: let LOB Arena test LightGBM, Transformer, the hybrid cascade, approved
+third-party detectors and future detector extensions through one versioned
+adapter contract and the same governed scenarios, rows, metrics and evidence
+pipeline. An adapter may be in-process, a remote API, a container or a batch
+scorer, but it never receives exchange-write, label or future-data access.
+
+Current foundation:
+
+- The governed benchmark already accepts a fully verified LightGBM release as
+  an external alert source, and detector tournaments produce normalized metrics
+  and artifacts.
+- The existing runtime detector adapter is deliberately LightGBM-specific;
+  Transformer and cascade implementations do not yet exist, and there is no
+  common detector contract, registry or black-box conformance suite.
+
+Planned work:
+
+- `[todo]` Version a `detector_adapter_v1` capability, request, response,
+  health and error contract for in-process, synchronous API, asynchronous and
+  batch scorers.
+- `[todo]` Send only the approved causal event/feature prefix plus governed row,
+  replay and cutoff identities; never send labels, future events, reviewer
+  decisions or unopened final-fold metadata.
+- `[todo]` Normalize probabilities, scores, alerts, evidence pointers, model
+  version, timing and failure state into the canonical detector observation
+  schema used by evaluation and reports.
+- `[todo]` Implement contract wrappers for rules, governed LightGBM,
+  standalone Transformer and Transformer-to-LightGBM cascade, plus a reference
+  external detector adapter and extension template.
+- `[todo]` Add an approved adapter registry with endpoint/image allowlists,
+  scoped secrets, TLS/auth policy, timeouts, retry/idempotency rules, rate and
+  payload limits, backpressure, circuit breaking and complete audit metadata.
+- `[todo]` Add a conformance harness for contract compatibility, deterministic
+  replay where declared, causal isolation, row coverage, malformed output,
+  timeout/partial failure, calibration, latency, throughput and data-minimizing
+  logs/artifacts.
+- `[todo]` Run every registered detector type through the existing tournament
+  and governed paired metrics on identical immutable rows, reporting
+  unavailable or incomparable outputs explicitly rather than imputing success.
+
+Exit gate: the LightGBM wrapper, a Transformer-compatible fixture, a hybrid
+wrapper fixture and one out-of-process detector all pass the same conformance
+suite and produce comparable signed evidence. Java remains the only exchange
+writer, and failure of one adapter does not disable the other verified detector
+paths.
 
 ### Cost And Operations Guardrails
 

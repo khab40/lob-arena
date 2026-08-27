@@ -393,16 +393,25 @@ LightGBM v1 now provides deterministic CPU training, validation-only
 Platt/isotonic calibration, frozen high-precision/balanced/high-recall modes,
 schema-locked test predictions, per-alert tree contributions, a fail-closed
 detector adapter, explicit MLflow development/evaluation logging, and a
-checksummed model bundle. Software completion is not a performance claim: the
-Nebius Wave 1 cloud qualification remains at G4. The first six attempts failed
-before training; attempt 7 completed the governed workload in 38 seconds and
-published 25 result objects plus `SUCCESS`. Seven of the fixed 20 development
-slots are consumed. Governed collection and the final G4 exit record remain
-locked pending a fresh post-run spend observation. Official Nasdaq ITCH
-samples plus the repository LOBSTER sample may support a research-only
-qualification and unlock Wave 2 engineering. Production/client performance
-claims still require appropriately licensed data, independent clean-window
-review and a signed governed test release suitable for that claim.
+checksummed model bundle. Software completion is not a performance claim. The
+Nebius Wave 1 G4 cloud smoke is complete: after six bounded failures, attempt 7
+completed the governed workload in 38 seconds, published 25 result objects plus
+`SUCCESS`, passed all 16 gates and reconciled spend at USD 8.57 including VAT.
+Seven of the fixed 20 development slots are consumed, 13 remain, MLflow is
+stopped and G5 is unlocked.
+
+The next data step is one selective governed foundation for every learned
+detector. Only the exact approved Nasdaq sample files are fetched; no website
+crawl or mirror is permitted. Full-market gzip packages may be transiently
+staged because ITCH extraction is sequential, but durable Nebius S3 releases
+retain the selected AAPL/MSFT/NVDA windows, provenance and immutable
+development/test projections. The same root corpus and split feed tabular
+LightGBM, the causal Transformer sequence projection and the later exact-joined
+Transformer-to-LightGBM cascade. See the
+[public market-data plan](docs/nebius-public-market-data-lightgbm-plan.md).
+This research-only qualification does not replace appropriately licensed data,
+independent clean-window review or a signed governed test release for
+production/client performance claims.
 
 The learned-detector roadmap is sequential: qualify tabular LightGBM first,
 then train a standalone causal market-sequence Transformer, then evaluate a
@@ -410,6 +419,17 @@ separate Transformer-to-LightGBM cascade using versioned scores/embeddings.
 The Transformer and cascade are specified but not implemented. The verified
 tabular LightGBM bundle remains the required rollback and missing-feature
 fallback.
+
+Two separate extensibility features are also planned. A versioned inbound data
+adapter registry will let explicitly reviewed future batch or streaming sources
+map into the canonical immutable dataset contract; the existing hard-registered
+LOBSTER and Nasdaq ITCH adapters are its partial foundation. A distinct
+pluggable detector adapter and conformance harness will run LightGBM,
+Transformer, the hybrid cascade, approved third-party detectors and future
+extensions on the same causal governed inputs and comparable tournament
+evidence. Neither adapter may bypass provenance, fold/label isolation or the
+Java single-writer boundary. See the
+[future roadmap](docs/PHASES.md#feature-extensible-inbound-data-adapter-framework).
 
 Generate the checked-in reproducible fixture:
 

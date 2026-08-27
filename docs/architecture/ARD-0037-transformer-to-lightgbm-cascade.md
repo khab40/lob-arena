@@ -37,6 +37,11 @@ cascade. Each release binds:
 - row count, row identity and content checksum; and
 - feature-generation Job ID, image digest, runtime and cost evidence.
 
+The release is derived from `sequence_projection_v1` in the selective shared
+Nasdaq-to-Nebius data foundation and joins `tabular_projection_v1` from that
+same frozen root. The cascade does not acquire, copy, relabel or resplit source
+market data.
+
 Join Transformer-derived features to `lob_features_v2` only by governed row,
 session and replay identities. Positional or timestamp-nearest joins are not
 allowed. Labels, post-cutoff events and final-test feedback cannot enter the

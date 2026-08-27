@@ -3,6 +3,22 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Reconciled the learned-detector roadmap with code and live GitHub Story #22.
+  The public Nasdaq plan is now one selective, allowlist-only Nebius S3 data
+  foundation: transient full-file quarantine only when sequential ITCH parsing
+  requires it, durable retention of selected AAPL/MSFT/NVDA windows, one frozen
+  chronological split, and compatible tabular, sequence and
+  Transformer-feature projections for LightGBM, the standalone Transformer and
+  the exact-joined hybrid cascade. Recorded the feature at 4/12 scoped
+  capabilities (approximately 33%) and corrected stale overview text now that
+  G4 is complete and G5 is unlocked. Added two separate planned extensibility
+  features: a versioned inbound data adapter registry/conformance kit for future
+  unknown source types, and a pluggable detector adapter plus isolated governed
+  test harness shared by LightGBM, Transformer, hybrid, third-party and future
+  detectors. Created GitHub Features #87 and #88 as
+  separate Project #3 Todo items and reconciled the board to 69 items: 50 Done,
+  12 In Progress and 7 Todo.
+
 - Added secret-safe JSON lifecycle logging across executable Jobs. Governed
   LightGBM logs now explain input/checksum verification, fold isolation,
   training, calibration, candidate freezing, MLflow publication, evidence and

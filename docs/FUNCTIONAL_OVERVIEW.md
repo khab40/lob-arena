@@ -29,10 +29,12 @@ generate trading signals, or make compliance decisions.
 | Capability | Status | Functional result |
 | --- | --- | --- |
 | Paired LOBSTER ingestion | Implemented | Validated immutable Parquet and checksummed source manifest |
+| Extensible inbound data adapter framework | Planned; partial foundation | Versioned adapter registry and conformance kit for future batch/streaming sources mapped to the canonical immutable dataset contract |
 | Historical control replay | Implemented | Unlabeled canonical Java stream over a selected source window |
 | Hybrid replay | Implemented | The same historical window plus a deterministic namespaced synthetic overlay |
 | Hybrid realism/equivalence validation | Implemented | Before/during/after locality evidence and signed validation bundle |
 | Governed corpus and split | Implemented as contracts/CLI | Reviewed negatives, family/seed coverage, chronological grouping and signed release |
+| Selective Nasdaq to Nebius data foundation | In progress, approximately 33% (4/12 scoped capabilities) | Allowlisted acquisition, bounded raw quarantine, selected normalized S3 data and one fold-isolated root for all learned detectors |
 | Multi-reviewer corpus API/UI | Planned Track B | Blind decisions, conflict resolution, freeze and signed corpus release workflow |
 | Causal feature pipeline | Implemented | Default `lob_features_v2` float32 Parquet, v1 compatibility, quality metadata and leakage checks |
 | LightGBM Phase 0 boundary | Implemented | Hash-bound training, calibration, prediction and model-bundle contracts |
@@ -42,6 +44,7 @@ generate trading signals, or make compliance decisions.
 | LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
 | Market-sequence Transformer challenger | Planned Wave 2 | Causal sequence-aware attack state/phase model after the Nebius LightGBM baseline is frozen |
 | Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
+| Pluggable detector adapter and test harness | Planned; partial evaluation foundation | One causal request/alert contract and comparable governed tournament evidence for LightGBM, Transformer, hybrid, third-party and future detectors |
 | RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
 
 ## End-to-End Functional Flow
@@ -100,6 +103,24 @@ flowchart TD
 8. **LLM output is explanatory.** Rules or learned detectors produce structured
    evidence before an AI narrative is requested.
 
+## Shared Learned-Detector Data Contract
+
+The public-sample research lane creates one immutable corpus/split root, not a
+separate dataset per model. It selectively acquires only declared Nasdaq files,
+symbols and windows; a complete approved gzip may exist temporarily because
+ITCH is sequential, but durable S3 model releases contain only relevant
+normalized rows plus provenance and hashes.
+
+The root publishes `tabular_projection_v1` for LightGBM and
+`sequence_projection_v1` for the standalone Transformer. If the Transformer
+passes its feature-producer gate, Wave 3 emits
+`transformer_feature_release_v1` and exact-joins it to tabular rows by corpus,
+split, replay and row identities. Training and scoring programs reject
+incompatible hashes. Missing or stale Transformer features produce an explicit
+fallback to verified tabular LightGBM. Every model comparison uses identical
+test rows; any prediction improvement must be demonstrated on the frozen
+metrics rather than presumed from the architecture.
+
 ## Operating Modes
 
 | Mode | Inputs | Labels | Main output |
@@ -127,11 +148,13 @@ when it:
 
 The implementation now satisfies this software boundary. Official Nasdaq ITCH
 samples plus the repository LOBSTER sample may support a research-only
-qualification and unlock Wave 2 engineering after the public-sample quality,
-reproducibility, isolation, cost and operational gates pass. Production/client
-performance acceptance still requires appropriately licensed data, independent
-clean-window reviews and a signed chronological test release suitable for that
-claim.
+qualification and unlock Wave 2 engineering after the selective acquisition,
+public-sample quality, reproducibility, isolation, cost and operational gates
+pass. The governed cloud smoke G4 is complete and G5 is unlocked; the shared
+public-sample projections are the next data dependency. Production/client
+performance acceptance still requires appropriately licensed data,
+independent clean-window reviews and a signed chronological test release
+suitable for that claim.
 
 ## Track B: Corpus Operations Acceptance
 
