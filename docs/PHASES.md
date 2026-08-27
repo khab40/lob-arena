@@ -40,6 +40,7 @@ Primary docs:
 - `[partial]` Implemented enough for the current MVP, with known follow-up gaps.
 - `[in progress]` Active roadmap work with implementation or governed execution underway.
 - `[blocked]` Work cannot advance until its stated gate or external prerequisite passes.
+- `[parked]` First-class roadmap work intentionally deferred until the named active milestone exits.
 - `[todo]` Not implemented yet.
 
 ## Phase 1: Core Live Arena
@@ -378,7 +379,7 @@ Exit criteria:
 - `[partial]` The project includes research notes, a blog draft, GitHub banner, UI controls, demo narration, sanitized screenshots, and committed benchmark evidence; the rendered video and published article URL remain publication work.
 - `[done]` The submission avoids claims about real market manipulation detection, trading signals, or compliance use.
 
-## Future Roadmap: Nebius Learned-Detector Program
+## Active Roadmap: Full Learned-Detector E2E Demonstration
 
 Status: `[in progress]`
 
@@ -386,20 +387,68 @@ Roadmap decision date: 2026-08-16
 
 Status reconciliation date: 2026-08-27
 
-GitHub Project #3 currently contains 69 items: 50 `Done`, 12 `In Progress`
-and 7 `Todo`. Those counts include epics, features and child stories, so they
+### Commercial North Star And Deliberate Parking Decision
+
+The commercial product thesis is **BYO data + BYO detector adapter**:
+
+1. a customer brings historical or live market data;
+2. an inbound adapter maps it into the canonical governed dataset contract;
+3. LOB Arena trains its LightGBM, Transformer and hybrid reference detectors
+   offline;
+4. the customer brings a detector adapter as the system under test;
+5. the platform first certifies it on immutable replay and hybrid ground truth;
+6. a later real-time shadow mode compares it with the frozen reference
+   detectors without allowing any detector to mutate the exchange; and
+7. LOB Arena publishes comparable quality, false-alert, delay, latency,
+   availability, drift, disagreement and evidence reports.
+
+This is the intended commercial direction, but Features #87 and #88 are
+deliberately `[parked]` for the current milestone. Nasdaq ITCH and LOBSTER are
+the first-party reference data adapters, LightGBM is the first reference
+comparator, and the planned Transformer/hybrid paths must remain compatible
+with the future adapter contract. The customer's detector will be the system
+under test when this commercial track resumes.
+
+### Current Milestone
+
+Deliver **one complete, reproducible and CEO-demoable E2E flow** before
+commercial adapter productization:
+
+```text
+approved Nasdaq samples + repository LOBSTER sample
+  -> selective acquisition / validation / normalization
+  -> control + deterministic hybrid replay
+  -> one governed corpus, split and model projections
+  -> LightGBM baseline
+  -> standalone market-sequence Transformer
+  -> Transformer-to-LightGBM hybrid
+  -> identical-row comparison + LOBSTER robustness challenge
+  -> one verified evidence package
+  -> simple CEO-facing UI and narrative (after the backend flow works)
+```
+
+Nasdaq is the primary train/validation/final-test research benchmark. LOBSTER
+is a separately reported cross-source robustness challenge after candidate
+selection; it is not silently pooled into training or used for retuning. A
+single campaign/release identity must connect source manifests, replay domains,
+model inputs, model bundles, comparison rows, metrics, cost and the final demo
+report.
+
+GitHub Project #3 currently contains 70 items: 50 `Done`, 12 `In Progress`
+and 8 `Todo`. Those counts include epics, features and child stories, so they
 describe workflow state rather than additive engineering effort. The active
 detector sequence is GitHub Feature #16: Wave 1 / Story #23 is in progress;
-Wave 2 / Story #24 and Wave 3 / Story #25 remain Todo. No Transformer or
-Transformer-to-LightGBM implementation is claimed yet.
+Wave 2 / Story #24, Wave 3 / Story #25 and integrated demo / Story #90 remain
+Todo. No Transformer or Transformer-to-LightGBM implementation is claimed yet.
 
-The next learned-detector work is deliberately sequential. Governed LightGBM
+The active learned-detector work is deliberately sequential. Governed LightGBM
 v1 is already implemented locally, so the first wave is not a second LightGBM
 implementation. It is the production-shaped Nebius qualification of the
 existing release boundary. Transformer work starts only after that baseline is
 measured and frozen. The combined design then uses causal Transformer outputs
 as additional LightGBM inputs so GPU-heavy sequence learning can improve a
-CPU-efficient serving path.
+CPU-efficient serving path. UI simplification begins only after the complete
+model/data/evidence path can be run without manual artifact repair.
 
 ### Shared Data Foundation: Selective Nasdaq To Nebius S3
 
@@ -448,6 +497,8 @@ consumer contracts are in the
 | 1. Nebius LightGBM baseline | `[in progress]` | CPU Serverless AI Jobs, Standard Object Storage, shared MLflow | Train, calibrate, evaluate and package governed LightGBM v1 on immutable cloud inputs; publish runtime, throughput and cost evidence | Reproducible bundle verifies; declared quality/latency gates pass; cost per million scored rows is measured; no frozen-test reruns for tuning |
 | 2. Market-sequence Transformer | `[todo]` | Time-boxed GPU Serverless AI Jobs with CPU preprocessing/evaluation | Train and calibrate a causal sequence challenger on the same split and label contracts | Standalone Transformer bundle verifies; GPU hours/cost and inference latency are recorded; comparison with Wave 1 uses identical evaluation rows |
 | 3. Transformer to LightGBM cascade | `[todo]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize versioned causal Transformer embeddings/scores and train LightGBM with those features plus the existing tabular set | Ablation proves or rejects incremental value; serving-cost and failure-mode gates pass; champion/rollback decision is signed |
+| 4. Integrated E2E evidence flow | `[todo; GitHub Story #90]` | Existing CPU/GPU Jobs, Object Storage and MLflow | Run one campaign from Nasdaq/LOBSTER source manifests through all three detector paths and one comparison/evidence package | One command or bounded orchestration path verifies every identity, metric, artifact and cost record without manual repair |
+| 5. Simple CEO demo UI | `[todo after Wave 4; part of Story #90]` | Existing React/FastAPI/Java surfaces | Present data, three detector paths, comparison and evidence in a short understandable guided flow | A non-technical reviewer can run or replay the demo and explain the outcome, limitations and next commercial step |
 
 ### Wave 1: Qualify LightGBM On Nebius First
 
@@ -563,9 +614,47 @@ Wave 3 exit criteria:
 - The promotion record identifies every model, feature, split and evaluation
   hash and documents whether the cascade was accepted or rejected.
 
+### Wave 4: Integrate And Package The CEO-Demoable E2E Flow
+
+Goal: prove the complete product-shaped technical story before optimizing its
+presentation.
+
+Planned work:
+
+- `[todo]` Add one bounded orchestration entrypoint and campaign manifest that
+  links selective Nasdaq preparation, the repository LOBSTER challenge,
+  replay/features, LightGBM, Transformer, hybrid and final comparison.
+- `[todo]` Run rules, LightGBM, standalone Transformer and hybrid on identical
+  immutable Nasdaq evaluation rows; report LOBSTER robustness separately with
+  no retuning.
+- `[todo]` Produce one verified demo package containing source/release hashes,
+  model identities, metrics, latency/throughput, CPU/GPU cost, limitations and
+  the accepted or rejected incremental value of each model.
+- `[todo]` Provide a deterministic small rehearsal mode that uses already
+  verified artifacts and a full evidence mode that references the governed
+  Nebius runs.
+- `[todo]` Freeze a short CEO narrative: problem, trusted data, three detector
+  approaches, fair comparison, result, operational cost and commercial BYO
+  next step.
+
+Exit gate: a clean environment can execute or replay the documented flow from
+one campaign identity, every artifact verifies, and the demo does not imply
+production surveillance qualification.
+
+### Wave 5: Simplify The UI For The CEO Demo
+
+Status: `[todo after Wave 4; presentation work intentionally later]`
+
+The UI should expose a short guided story rather than the internal research
+workflow: **Data → Replay → Models → Compare → Evidence**. It must show Nasdaq
+and LOBSTER roles clearly, distinguish LightGBM/Transformer/hybrid, summarize
+quality and cost, and retain a visible research-only claim boundary. Existing
+advanced controls remain available outside the guided view. UI work must not
+invent status or bypass the verified campaign artifacts.
+
 ### Feature: Extensible Inbound Data Adapter Framework
 
-Status: `[todo; GitHub Feature #87; partial source-adapter foundation exists]`
+Status: `[parked; GitHub Feature #87; commercial Tier-1 after the E2E demo; partial source-adapter foundation exists]`
 
 Goal: make future batch or streaming market-data sources—including vendors and
 formats not known today—addable through a versioned adapter package instead of
@@ -606,9 +695,14 @@ Exit gate: a fixture third adapter can be registered through configuration,
 passes the conformance kit, produces the canonical immutable dataset contract
 and runs through replay/features without source-specific downstream branches.
 
+Parking rule: do not generalize the registry during Waves 1-5 unless a narrow
+compatibility seam is required to keep Nasdaq/LOBSTER from blocking the later
+contract. When resumed, this becomes a commercial Tier-1 feature rather than a
+research convenience.
+
 ### Feature: Pluggable Detector Adapter And Test Harness
 
-Status: `[todo; GitHub Feature #88; model-specific adapter and external-alert evaluation foundations exist]`
+Status: `[parked; GitHub Feature #88; commercial Tier-1 after the E2E demo; model-specific adapter and external-alert evaluation foundations exist]`
 
 Goal: let LOB Arena test LightGBM, Transformer, the hybrid cascade, approved
 third-party detectors and future detector extensions through one versioned
@@ -656,6 +750,11 @@ suite and produce comparable signed evidence. Java remains the only exchange
 writer, and failure of one adapter does not disable the other verified detector
 paths.
 
+Parking rule: Waves 1-5 may use internal model-specific wrappers, but their
+causal input and canonical observation identities must not prevent a later
+customer adapter. When resumed, the customer detector is the system under test;
+rules, LightGBM, Transformer and hybrid are reference comparators.
+
 ### Cost And Operations Guardrails
 
 - Use Serverless AI Jobs for bounded training, batch inference and evaluation;
@@ -674,6 +773,11 @@ paths.
   envelope. Record actual billed usage before increasing scale.
 - No Transformer or cascade work begins until the preceding wave has a verified
   evidence bundle and recorded go/no-go decision.
+- No CEO UI redesign begins until the integrated E2E campaign can be verified
+  from backend artifacts; presentation must follow evidence, not substitute for
+  it.
+- No broad BYO adapter framework implementation begins until the E2E demo exits,
+  except for compatibility seams needed to avoid a later dead end.
 
 Primary architecture records:
 

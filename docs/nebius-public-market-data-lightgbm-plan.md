@@ -19,6 +19,14 @@ Transformer, and the row identities needed to join later Transformer outputs
 into the separate Transformer-to-LightGBM cascade. No model may silently
 create its own dates, labels, folds, replay domains or final-test rows.
 
+The active delivery target is GitHub Story #90: one campaign-bound E2E
+demonstration covering the Nasdaq benchmark, all three learned-detector paths,
+a separate no-retuning LOBSTER robustness challenge and one verified evidence
+package. The simple CEO-facing UI is downstream of this technical flow. BYO
+data and BYO detector-adapter productization are commercial Tier-1 features but
+remain parked until the E2E milestone exits; this plan's Nasdaq/LOBSTER paths
+serve as their first-party reference implementations.
+
 The raw and derived data will be prepared in Nebius, not on the workstation.
 The workstation has about 46 GiB free and the importer intentionally reserves
 20 GiB, while the selected Nasdaq sources total about 28.9 GiB compressed.
@@ -376,6 +384,27 @@ After the Wave 1 disposition unlocks Wave 2:
 6. keep the tabular LightGBM model as the verified rollback and missing-feature
    runtime path regardless of the cascade result.
 
+### C7 - Integrated E2E demo package
+
+After C6 produces comparable outputs, execute or replay one bounded campaign
+that:
+
+1. binds the Nasdaq and LOBSTER source manifests, root corpus/split, tabular and
+   sequence projections, all three model bundles, identical-row comparison and
+   cost records to one campaign identity;
+2. reports Nasdaq final-test results for rules, LightGBM, Transformer and hybrid
+   together, accepting a negative incremental-value result;
+3. scores the frozen candidates on the LOBSTER challenge without pooling or
+   retuning and labels that result as cross-source robustness;
+4. verifies every referenced artifact and publishes one compact evidence
+   package plus a deterministic rehearsal mode; and
+5. exposes only verified package state to the later CEO UI flow:
+   **Data → Replay → Models → Compare → Evidence**.
+
+No general adapter framework or presentation redesign is a prerequisite for
+C7. Narrow seams should preserve future adapter compatibility without expanding
+the current milestone.
+
 ## Budget and Stop Rules
 
 - Reserve no more than USD 10 of the Wave 1 USD 50 ceiling for acquisition and
@@ -408,7 +437,9 @@ The plan is complete only when the repository contains:
 - exact G5 repeat comparison;
 - the complete G6 candidate report;
 - one authorized G8 result;
-- the separate Nasdaq-to-LOBSTER robustness report; and
+- the separate Nasdaq-to-LOBSTER robustness report;
+- one Story #90 campaign manifest and verified E2E evidence package binding
+  LightGBM, Transformer, hybrid, comparison rows, resources and cost; and
 - cost reconciliation and the final claim boundary.
 
 Wave 2 and Wave 3 completion additionally require the verified standalone

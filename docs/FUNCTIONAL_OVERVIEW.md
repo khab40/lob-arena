@@ -12,6 +12,13 @@ platform. It can replay licensed historical order-book data and add controlled
 synthetic scenarios, but it does not label historical activity automatically,
 generate trading signals, or make compliance decisions.
 
+The commercial north star is BYO data plus BYO detector adapter: govern customer
+data, train LOB Arena reference detectors offline, certify a customer detector
+on replay, and later compare it in real-time shadow mode. That productization is
+parked for the active milestone: one verified Nasdaq/LOBSTER E2E demonstration
+covering LightGBM, standalone Transformer and hybrid, followed by a simplified
+CEO-facing UI.
+
 ## Actors
 
 | Actor | Responsibilities |
@@ -29,7 +36,7 @@ generate trading signals, or make compliance decisions.
 | Capability | Status | Functional result |
 | --- | --- | --- |
 | Paired LOBSTER ingestion | Implemented | Validated immutable Parquet and checksummed source manifest |
-| Extensible inbound data adapter framework | Planned; partial foundation | Versioned adapter registry and conformance kit for future batch/streaming sources mapped to the canonical immutable dataset contract |
+| Extensible inbound data adapter framework | Parked commercial Tier-1; partial foundation | Versioned adapter registry and conformance kit for future batch/streaming sources mapped to the canonical immutable dataset contract |
 | Historical control replay | Implemented | Unlabeled canonical Java stream over a selected source window |
 | Hybrid replay | Implemented | The same historical window plus a deterministic namespaced synthetic overlay |
 | Hybrid realism/equivalence validation | Implemented | Before/during/after locality evidence and signed validation bundle |
@@ -44,7 +51,9 @@ generate trading signals, or make compliance decisions.
 | LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
 | Market-sequence Transformer challenger | Planned Wave 2 | Causal sequence-aware attack state/phase model after the Nebius LightGBM baseline is frozen |
 | Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
-| Pluggable detector adapter and test harness | Planned; partial evaluation foundation | One causal request/alert contract and comparable governed tournament evidence for LightGBM, Transformer, hybrid, third-party and future detectors |
+| Pluggable detector adapter and test harness | Parked commercial Tier-1; partial evaluation foundation | Customer detector as system under test; one causal contract and comparable evidence against LightGBM, Transformer, hybrid and future references |
+| Nasdaq/LOBSTER three-model E2E demonstration | Active milestone | One campaign identity from governed data through LightGBM, Transformer, hybrid, LOBSTER robustness and verified CEO-demo evidence |
+| Simplified CEO guided UI | Planned after E2E backend | Data → Replay → Models → Compare → Evidence without hiding claim boundaries or artifact status |
 | RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
 
 ## End-to-End Functional Flow
@@ -59,9 +68,13 @@ flowchart TD
     Review["5. Independent clean-window review"]
     Freeze["6. Freeze signed corpus and split"]
     Features["7. Generate causal features"]
-    Train["8. Train and calibrate on train/validation"]
-    Test["9. One final governed test"]
-    Release["10. Verify checksums and release"]
+    LightGBM["8a. LightGBM baseline"]
+    Transformer["8b. Standalone Transformer"]
+    Cascade["8c. Transformer → LightGBM"]
+    Test["9. Compare identical Nasdaq test rows"]
+    Lobster["10. LOBSTER robustness<br/>without retuning"]
+    Release["11. Verify one E2E evidence package"]
+    Demo["12. Simple CEO guided demo"]
     Track["MLflow index"]
     Client["Client report / replay"]
 
@@ -73,13 +86,25 @@ flowchart TD
     Compare --> Review
     Review --> Freeze
     Freeze --> Features
-    Features --> Train
-    Train --> Test
+    Features --> LightGBM
+    Features --> Transformer
+    Transformer --> Cascade
+    Features --> Cascade
+    LightGBM --> Test
+    Transformer --> Test
+    Cascade --> Test
     Test --> Release
+    LightGBM --> Lobster
+    Transformer --> Lobster
+    Cascade --> Lobster
+    Lobster --> Release
+    Release --> Demo
     Freeze -. "release metadata" .-> Track
-    Train -. "development run" .-> Track
+    LightGBM -. "development run" .-> Track
+    Transformer -. "development run" .-> Track
+    Cascade -. "development run" .-> Track
     Test -. "governed metrics" .-> Track
-    Release --> Client
+    Demo --> Client
 ```
 
 ## Functional Invariants

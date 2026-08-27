@@ -3,6 +3,17 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Reframed the roadmap into two explicit horizons. The commercial north star is
+  BYO data plus BYO detector adapter, with the customer detector as the system
+  under test and LOB Arena models as offline-trained reference comparators; both
+  adapter features are deliberately parked. The active milestone is one
+  campaign-bound Nasdaq/LOBSTER E2E flow covering LightGBM, standalone
+  Transformer, Transformer-to-LightGBM hybrid, identical-row comparison,
+  separate no-retuning LOBSTER robustness and one verified evidence package.
+  Added GitHub Story #90 for the integrated flow and the later simple
+  Data → Replay → Models → Compare → Evidence CEO UI. Project #3 now has 70
+  items: 50 Done, 12 In Progress and 8 Todo.
+
 - Reconciled the learned-detector roadmap with code and live GitHub Story #22.
   The public Nasdaq plan is now one selective, allowlist-only Nebius S3 data
   foundation: transient full-file quarantine only when sequential ITCH parsing

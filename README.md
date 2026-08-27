@@ -30,6 +30,15 @@ A research and validation platform that replays licensed historical order-book
 data, injects controlled synthetic attacks, and benchmarks surveillance
 detectors against reproducible ground truth.
 
+**Commercial north star:** customers bring their market data and detector
+adapter; LOB Arena governs the data, trains reference detectors offline, then
+certifies and later shadow-tests the customer detector against those references.
+That BYO data/BYO detector-adapter productization is intentionally parked while
+the project completes one full Nasdaq + LOBSTER E2E demonstration across
+LightGBM, standalone Transformer and Transformer-to-LightGBM hybrid. A simple
+CEO-facing guided UI follows only after that backend flow and its evidence
+package work end to end.
+
 ## Problem
 
 Market-surveillance systems need realistic, labeled abuse scenarios to measure
@@ -78,6 +87,7 @@ tournaments.
 | Shared experiment tracking | MLflow + PostgreSQL + S3-compatible artifacts | Corpus, model-development and governed-evaluation history |
 | Endpoint investigation | Nebius Serverless Endpoint | Structured JSON investigation reports |
 | Detector tournament | Local fallback or Nebius Serverless Job | Metrics, leaderboard, benchmark report |
+| Learned-detector E2E demo | Nebius Jobs + governed Object Storage/MLflow | Nasdaq comparison across LightGBM, Transformer and hybrid, plus separate LOBSTER robustness evidence |
 | Evidence sync | Local store + Object Storage | Reviewable artifacts and integrity metadata |
 
 ## Architecture
@@ -413,23 +423,28 @@ This research-only qualification does not replace appropriately licensed data,
 independent clean-window review or a signed governed test release for
 production/client performance claims.
 
-The learned-detector roadmap is sequential: qualify tabular LightGBM first,
-then train a standalone causal market-sequence Transformer, then evaluate a
-separate Transformer-to-LightGBM cascade using versioned scores/embeddings.
-The Transformer and cascade are specified but not implemented. The verified
+The active learned-detector milestone is one sequential, demoable E2E flow:
+qualify tabular LightGBM first, train a standalone causal market-sequence
+Transformer, evaluate a separate Transformer-to-LightGBM cascade using
+versioned scores/embeddings, and package one identical-row comparison. Nasdaq
+is the primary governed benchmark; the frozen candidates then run against the
+repository LOBSTER sample as a separate no-retuning robustness challenge. The
+Transformer and cascade are specified but not implemented. The verified
 tabular LightGBM bundle remains the required rollback and missing-feature
-fallback.
+fallback. UI simplification comes after this technical flow verifies.
 
-Two separate extensibility features are also planned. A versioned inbound data
+Two commercial Tier-1 extensibility features are defined and deliberately
+parked until that E2E demo exits. A versioned inbound data
 adapter registry will let explicitly reviewed future batch or streaming sources
 map into the canonical immutable dataset contract; the existing hard-registered
 LOBSTER and Nasdaq ITCH adapters are its partial foundation. A distinct
 pluggable detector adapter and conformance harness will run LightGBM,
 Transformer, the hybrid cascade, approved third-party detectors and future
 extensions on the same causal governed inputs and comparable tournament
-evidence. Neither adapter may bypass provenance, fold/label isolation or the
-Java single-writer boundary. See the
-[future roadmap](docs/PHASES.md#feature-extensible-inbound-data-adapter-framework).
+evidence. When resumed, the customer detector is the system under test and our
+models are reference comparators. Neither adapter may bypass provenance,
+fold/label isolation or the Java single-writer boundary. See the
+[active roadmap](docs/PHASES.md#feature-extensible-inbound-data-adapter-framework).
 
 Generate the checked-in reproducible fixture:
 
