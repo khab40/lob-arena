@@ -3,6 +3,16 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Expanded the later CEO/customer UI into GitHub Story #91 and added it to
+  Project #3 as Todo. The secure guided path is now Sign in → Data → Replay →
+  Experiments → Management Summary, with selective restoration of the archived
+  Google Auth implementation, backend authorization before sensitive shared
+  data exposure, Nasdaq/LOBSTER ingestion and replay changes, campaign-wide
+  LightGBM/Transformer/hybrid results and reports, and a one-page management
+  summary. Presentation remains gated on Story #90 evidence; authentication is
+  an earlier security exception. The board now has 71 items: 50 Done, 12 In
+  Progress and 9 Todo.
+
 - Reframed the roadmap into two explicit horizons. The commercial north star is
   BYO data plus BYO detector adapter, with the customer detector as the system
   under test and LOB Arena models as offline-trained reference comparators; both

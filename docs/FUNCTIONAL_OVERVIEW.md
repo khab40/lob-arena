@@ -53,7 +53,10 @@ CEO-facing UI.
 | Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
 | Pluggable detector adapter and test harness | Parked commercial Tier-1; partial evaluation foundation | Customer detector as system under test; one causal contract and comparable evidence against LightGBM, Transformer, hybrid and future references |
 | Nasdaq/LOBSTER three-model E2E demonstration | Active milestone | One campaign identity from governed data through LightGBM, Transformer, hybrid, LOBSTER robustness and verified CEO-demo evidence |
-| Simplified CEO guided UI | Planned after E2E backend | Data → Replay → Models → Compare → Evidence without hiding claim boundaries or artifact status |
+| Google Auth and secure workspace gate | Archived implementation available; planned Story #91 | Selectively restore Google sign-in/app sessions and add backend authorization before sensitive shared data is exposed |
+| Nasdaq/LOBSTER ingestion and replay UI | Planned Story #91 after backend contracts stabilize | Guided source/session/window selection, provenance/progress and historical-control versus synthetic-overlay replay |
+| Experiment results and report UI | Planned Story #91 after E2E backend | One verified campaign view for rules, LightGBM, Transformer and hybrid with MLflow identities, quality, calibration, latency and cost |
+| CEO/customer management summary | Planned Story #91 after E2E backend | One-page result, trade-offs, champion/rollback, limitations and parked BYO commercial next step |
 | RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
 
 ## End-to-End Functional Flow
@@ -74,7 +77,8 @@ flowchart TD
     Test["9. Compare identical Nasdaq test rows"]
     Lobster["10. LOBSTER robustness<br/>without retuning"]
     Release["11. Verify one E2E evidence package"]
-    Demo["12. Simple CEO guided demo"]
+    Auth["12. Secure workspace entry"]
+    Demo["13. Data → Replay → Experiments<br/>→ Management Summary"]
     Track["MLflow index"]
     Client["Client report / replay"]
 
@@ -98,7 +102,8 @@ flowchart TD
     Transformer --> Lobster
     Cascade --> Lobster
     Lobster --> Release
-    Release --> Demo
+    Release --> Auth
+    Auth --> Demo
     Freeze -. "release metadata" .-> Track
     LightGBM -. "development run" .-> Track
     Transformer -. "development run" .-> Track

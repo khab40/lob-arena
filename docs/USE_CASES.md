@@ -38,8 +38,11 @@ The commercial north star is BYO data/BYO detector adapter: onboard customer
 data, train LOB Arena reference detectors offline, certify the customer detector
 on replay, and later shadow-test it in real time. Those adapter products are
 parked while the active milestone proves one full Nasdaq + LOBSTER E2E flow for
-LightGBM, standalone Transformer and hybrid. The presentation layer is
-simplified for a CEO demo only after the governed backend flow is complete.
+LightGBM, standalone Transformer and hybrid. Story #91 then delivers a secure
+CEO/customer path: Sign in → Data → Replay → Experiments → Management Summary.
+Presentation panels wait for verified backend evidence; authentication and
+backend authorization must arrive sooner if a shared deployment exposes
+sensitive data.
 
 ## How We Use Nebius Serverless
 
@@ -139,7 +142,7 @@ flowchart LR
 | Incident Investigation | Demo Operator / Reviewer | Use AI Investigator to turn detector evidence into a clear explanation. |
 | Red-Team Scenario Generation | Demo Operator | Use Scenario Generator to create a launchable synthetic scenario configuration. |
 | Detector Tournament Benchmark | Research / Benchmark User | Use Managed Experiment jobs to compare detector precision, recall, F1, and latency. |
-| Nasdaq/LOBSTER Learned-Detector E2E Demo | CEO / Product Sponsor / Technical Reviewer | Follow one verified flow from governed data through LightGBM, Transformer, hybrid, fair comparison, robustness, cost and evidence. |
+| Secure CEO/Customer Demo UI | CEO / Product Sponsor / Technical Reviewer | Sign in, inspect governed Nasdaq/LOBSTER ingestion, replay a frozen campaign, compare rules/LightGBM/Transformer/hybrid, inspect MLflow-linked results and read/export a one-page management summary. |
 | BYO Data + BYO Detector Adapter | Future Client / Data Steward / Detector Team | Commercial north star, parked until the E2E demo exits: onboard client data and validate the client detector offline, then in real-time shadow mode. |
 | Synthetic Dataset Generation | Research / Benchmark User | Use Managed Experiment jobs to produce labeled synthetic event/snapshot/incident artifacts. |
 | Challenge Submission Evidence | Technical Reviewer | Review architecture, metrics, screenshots, and safety framing. |

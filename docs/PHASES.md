@@ -424,7 +424,7 @@ approved Nasdaq samples + repository LOBSTER sample
   -> Transformer-to-LightGBM hybrid
   -> identical-row comparison + LOBSTER robustness challenge
   -> one verified evidence package
-  -> simple CEO-facing UI and narrative (after the backend flow works)
+  -> secure CEO-facing UI and narrative (after the backend flow works)
 ```
 
 Nasdaq is the primary train/validation/final-test research benchmark. LOBSTER
@@ -434,12 +434,13 @@ single campaign/release identity must connect source manifests, replay domains,
 model inputs, model bundles, comparison rows, metrics, cost and the final demo
 report.
 
-GitHub Project #3 currently contains 70 items: 50 `Done`, 12 `In Progress`
-and 8 `Todo`. Those counts include epics, features and child stories, so they
+GitHub Project #3 currently contains 71 items: 50 `Done`, 12 `In Progress`
+and 9 `Todo`. Those counts include epics, features and child stories, so they
 describe workflow state rather than additive engineering effort. The active
 detector sequence is GitHub Feature #16: Wave 1 / Story #23 is in progress;
-Wave 2 / Story #24, Wave 3 / Story #25 and integrated demo / Story #90 remain
-Todo. No Transformer or Transformer-to-LightGBM implementation is claimed yet.
+Wave 2 / Story #24, Wave 3 / Story #25, integrated evidence / Story #90 and
+secure demo UI / Story #91 remain Todo. No Transformer or
+Transformer-to-LightGBM implementation is claimed yet.
 
 The active learned-detector work is deliberately sequential. Governed LightGBM
 v1 is already implemented locally, so the first wave is not a second LightGBM
@@ -498,7 +499,7 @@ consumer contracts are in the
 | 2. Market-sequence Transformer | `[todo]` | Time-boxed GPU Serverless AI Jobs with CPU preprocessing/evaluation | Train and calibrate a causal sequence challenger on the same split and label contracts | Standalone Transformer bundle verifies; GPU hours/cost and inference latency are recorded; comparison with Wave 1 uses identical evaluation rows |
 | 3. Transformer to LightGBM cascade | `[todo]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize versioned causal Transformer embeddings/scores and train LightGBM with those features plus the existing tabular set | Ablation proves or rejects incremental value; serving-cost and failure-mode gates pass; champion/rollback decision is signed |
 | 4. Integrated E2E evidence flow | `[todo; GitHub Story #90]` | Existing CPU/GPU Jobs, Object Storage and MLflow | Run one campaign from Nasdaq/LOBSTER source manifests through all three detector paths and one comparison/evidence package | One command or bounded orchestration path verifies every identity, metric, artifact and cost record without manual repair |
-| 5. Simple CEO demo UI | `[todo after Wave 4; part of Story #90]` | Existing React/FastAPI/Java surfaces | Present data, three detector paths, comparison and evidence in a short understandable guided flow | A non-technical reviewer can run or replay the demo and explain the outcome, limitations and next commercial step |
+| 5. Secure CEO demo UI | `[todo after Wave 4; GitHub Story #91]` | Existing React/FastAPI/Java surfaces plus selectively restored Google Auth | Deliver Sign in → Data → Replay → Experiments → Management Summary from verified campaign artifacts | A non-technical reviewer can run or replay the demo, explain the outcome and limitations, and cannot access sensitive shared data without backend authorization |
 
 ### Wave 1: Qualify LightGBM On Nebius First
 
@@ -641,16 +642,64 @@ Exit gate: a clean environment can execute or replay the documented flow from
 one campaign identity, every artifact verifies, and the demo does not imply
 production surveillance qualification.
 
-### Wave 5: Simplify The UI For The CEO Demo
+### Wave 5: Deliver The Secure CEO Demo UI
 
-Status: `[todo after Wave 4; presentation work intentionally later]`
+Status: `[todo after Wave 4; GitHub Story #91]`
 
-The UI should expose a short guided story rather than the internal research
-workflow: **Data → Replay → Models → Compare → Evidence**. It must show Nasdaq
-and LOBSTER roles clearly, distinguish LightGBM/Transformer/hybrid, summarize
-quality and cost, and retain a visible research-only claim boundary. Existing
-advanced controls remain available outside the guided view. UI work must not
-invent status or bypass the verified campaign artifacts.
+Goal: expose a short guided story rather than the internal research workflow:
+**Sign in → Data → Replay → Experiments → Management Summary**. Most UI work
+starts only after Story #90 verifies the backend campaign. Authentication and
+backend authorization are the exception: that security gate may start earlier
+and must exit before a shared deployment exposes sensitive Nasdaq or future
+customer/BYO data.
+
+Planned work:
+
+- `[todo]` **Google authentication and secure workspace entry.** Selectively
+  restore and adapt the archived implementation from commits `a55d8c3`,
+  `22ffa3a` and `d27b52b`, now preserved under `archived/google-auth` after
+  `68fb0c3`. Keep Google verification and app-session completion behind the
+  backend boundary; add deployed-secret handling, expiry/logout/revocation,
+  backend workspace authorization and auditable user attribution. Keep local
+  demo mode clearly separate and never let it grant fallback access to a
+  sensitive shared deployment.
+- `[todo]` **Data ingestion panel.** Select Nasdaq ITCH or LOBSTER and show the
+  approved session/file, symbol, bounded window, provenance, license/use role,
+  acquisition/quarantine, normalization, Nebius S3 publication, manifest/hash,
+  split/fold and model-projection state. Surface actionable progress,
+  validation failure and safe bounded retry without creating an arbitrary URL
+  crawler.
+- `[todo]` **Nasdaq-aware replay.** Select dataset/session, symbol, window and
+  historical-control or hybrid-plus-attack mode. Show source, timestamp/timezone
+  convention, sequence coverage, split/fold and immutable artifact identity;
+  load large inputs asynchronously and keep historical activity visibly
+  separate from synthetic labels/overlays.
+- `[todo]` **Experiments, results and reports.** Present rules, LightGBM,
+  standalone Transformer and hybrid under one campaign with truthful job state,
+  MLflow identities, verified artifacts, calibration/quality, latency,
+  throughput, alert load and CPU/GPU cost. Compare identical Nasdaq final-test
+  rows, show the LOBSTER no-retuning challenge separately, distinguish
+  development/calibration/final evaluation and expose negative or rollback
+  decisions.
+- `[todo]` **Management summary.** Build a one-page, exportable CEO/customer
+  view of objective, trusted data, three detector approaches, fair comparison,
+  false-alert/delay trade-off, result, cost, limitations and champion/rollback
+  decision. Keep the research-only claim boundary visible and end with the
+  parked BYO data/BYO detector-adapter commercial next step.
+- `[todo]` Preserve the existing advanced controls outside the guided path and
+  add UI/API tests proving that displayed status, metrics and reports trace to
+  verified campaign artifacts rather than browser-local or mock state.
+
+Exit gate: a non-technical reviewer can complete the five-step flow and explain
+the result and limitations; Nasdaq versus LOBSTER and the three learned models
+cannot be confused; authentication tests cover allowed, expired, revoked and
+denied access before sensitive data is exposed. A deterministic rehearsal uses
+frozen verified artifacts and cannot trigger unbounded cloud spend.
+
+Planning estimate with limited Codex availability: approximately 8-12 focused
+working days, or 1.5-2.5 calendar weeks after backend contracts stabilize.
+Google OAuth/deployment configuration and Story #90 API/artifact stability are
+the principal schedule risks.
 
 ### Feature: Extensible Inbound Data Adapter Framework
 
@@ -773,9 +822,10 @@ rules, LightGBM, Transformer and hybrid are reference comparators.
   envelope. Record actual billed usage before increasing scale.
 - No Transformer or cascade work begins until the preceding wave has a verified
   evidence bundle and recorded go/no-go decision.
-- No CEO UI redesign begins until the integrated E2E campaign can be verified
-  from backend artifacts; presentation must follow evidence, not substitute for
-  it.
+- No CEO presentation-panel redesign begins until the integrated E2E campaign
+  can be verified from backend artifacts; presentation must follow evidence,
+  not substitute for it. Google authentication and backend authorization may
+  begin earlier and must gate any shared sensitive-data deployment.
 - No broad BYO adapter framework implementation begins until the E2E demo exits,
   except for compatibility seams needed to avoid a later dead end.
 

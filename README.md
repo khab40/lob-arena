@@ -35,9 +35,10 @@ adapter; LOB Arena governs the data, trains reference detectors offline, then
 certifies and later shadow-tests the customer detector against those references.
 That BYO data/BYO detector-adapter productization is intentionally parked while
 the project completes one full Nasdaq + LOBSTER E2E demonstration across
-LightGBM, standalone Transformer and Transformer-to-LightGBM hybrid. A simple
+LightGBM, standalone Transformer and Transformer-to-LightGBM hybrid. A secure
 CEO-facing guided UI follows only after that backend flow and its evidence
-package work end to end.
+package work end to end, except that authentication must gate any shared
+deployment that exposes sensitive data.
 
 ## Problem
 
@@ -88,6 +89,7 @@ tournaments.
 | Endpoint investigation | Nebius Serverless Endpoint | Structured JSON investigation reports |
 | Detector tournament | Local fallback or Nebius Serverless Job | Metrics, leaderboard, benchmark report |
 | Learned-detector E2E demo | Nebius Jobs + governed Object Storage/MLflow | Nasdaq comparison across LightGBM, Transformer and hybrid, plus separate LOBSTER robustness evidence |
+| Secure CEO demo UI | React + FastAPI/Java APIs + selectively restored Google Auth | Sign in → Data → Replay → Experiments → Management Summary, backed only by verified campaign artifacts |
 | Evidence sync | Local store + Object Storage | Reviewable artifacts and integrity metadata |
 
 ## Architecture
@@ -431,7 +433,12 @@ is the primary governed benchmark; the frozen candidates then run against the
 repository LOBSTER sample as a separate no-retuning robustness challenge. The
 Transformer and cascade are specified but not implemented. The verified
 tabular LightGBM bundle remains the required rollback and missing-feature
-fallback. UI simplification comes after this technical flow verifies.
+fallback. The later secure demo UI is tracked by Story #91: selectively restore
+the archived Google Auth foundation, update ingestion and Nasdaq replay, add a
+campaign-wide experiment/results/report view, and provide a one-page management
+summary. Presentation work follows the verified technical flow; authentication
+and backend authorization must land earlier if sensitive data is exposed in a
+shared deployment.
 
 Two commercial Tier-1 extensibility features are defined and deliberately
 parked until that E2E demo exits. A versioned inbound data
