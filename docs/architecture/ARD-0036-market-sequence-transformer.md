@@ -36,6 +36,12 @@ versioned sequence contract containing:
 - normalization or tokenization fitted on training only; and
 - deterministic row-to-sequence identity.
 
+The sequence contract consumes `sequence_projection_v1` from the selective
+Nasdaq-to-Nebius shared data foundation. It must bind the same root corpus,
+chronological split, replay domains and evaluation-row identities used by the
+Wave 1 `tabular_projection_v1`; the Transformer may not reacquire, resplit or
+relabel Nasdaq data independently.
+
 Use CPU Jobs for sequence materialization and evaluation. Use time-boxed GPU
 Serverless AI Jobs for training and batch inference. Do not serve or train this
 classifier through vLLM unless a later ARD intentionally changes it into a

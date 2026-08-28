@@ -19,10 +19,9 @@ permitted data and predeclared business gates.
 ## 2026-08-16 Public-Sample Amendment
 
 Waiting for a separately licensed corpus is no longer a Wave 1 or Wave 2
-engineering prerequisite. G4 remains a fixture-only cloud smoke. After an
-explicitly authorized G4 runtime-recovery attempt passes, G5-G8 will use the
-official public Nasdaq ITCH samples and the repository's LOBSTER sample
-according to the
+engineering prerequisite. G4 was intentionally a fixture-only cloud smoke and
+is now complete. G5-G8 will use the official public Nasdaq ITCH samples and the
+repository's LOBSTER sample according to the
 [Nebius public market data plan](nebius-public-market-data-lightgbm-plan.md).
 
 The new `research_baseline_qualified` disposition may unlock Wave 2 engineering
@@ -299,10 +298,10 @@ still required before generating and authorizing the replacement dry run; USD
   MLflow binding tags carry commit `690a9e9f4767c7893bb56ed04be001d66cab773f`.
   Log SHA-256 is
   `1ff80e0493da705b6e41c7c8753aaf1fb297a214adc7bfb98589afb76fa7170d`.
-- The result prefix contains 25 objects and a `SUCCESS` marker. Governed result
-  collection and the final G4 exit record remain locked until the Operator
-  supplies a fresh post-run spend observation. Attempt 7 consumed one slot;
-  the development count is now 7/20. No rerun is authorized or needed.
+- The result prefix contains 25 objects and a `SUCCESS` marker. A later fresh
+  post-run observation reconciled spend at USD 8.57 including VAT; governed
+  collection completed and all 16 final G4 gates passed. Attempt 7 consumed one
+  slot; the development count is 7/20. No rerun is authorized or needed.
 
 ## Prior Decisions Preserved
 

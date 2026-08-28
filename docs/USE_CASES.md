@@ -34,6 +34,16 @@ The core business value is detector testing and model-development evidence:
 register, validate, replay, inject, label, review, feature, train, compare,
 explain, and release.
 
+The commercial north star is BYO data/BYO detector adapter: onboard customer
+data, train LOB Arena reference detectors offline, certify the customer detector
+on replay, and later shadow-test it in real time. Those adapter products are
+parked while the active milestone proves one full Nasdaq + LOBSTER E2E flow for
+LightGBM, standalone Transformer and hybrid. Story #91 then delivers a secure
+CEO/customer path: Sign in → Data → Replay → Experiments → Management Summary.
+Presentation panels wait for verified backend evidence; authentication and
+backend authorization must arrive sooner if a shared deployment exposes
+sensitive data.
+
 ## How We Use Nebius Serverless
 
 Nebius is used for two distinct serverless surfaces:
@@ -86,10 +96,13 @@ flowchart LR
     Review["Blind clean-window<br/>review / adjudication"]
     Freeze["Frozen corpus +<br/>chronological split"]
     Features["Causal features"]
-    Train["LightGBM v1<br/>Phase 2 trainer implemented"]
-    Compare["Rules vs model<br/>governed evaluation"]
+    LightGBM["LightGBM<br/>reference baseline"]
+    Transformer["Standalone<br/>Transformer"]
+    Hybrid["Transformer → LightGBM<br/>hybrid"]
+    Compare["Identical-row comparison<br/>+ LOBSTER robustness"]
     Track["MLflow experiments<br/>and approved artifacts"]
-    Client["Client coverage report<br/>and investigation"]
+    Package["Verified E2E<br/>evidence package"]
+    Client["Simple CEO demo<br/>then commercial BYO step"]
 
     Register --> Replay
     Register --> Inject
@@ -98,11 +111,19 @@ flowchart LR
     Evidence --> Review
     Review --> Freeze
     Freeze --> Features
-    Features --> Train
-    Train --> Compare
-    Compare --> Client
+    Features --> LightGBM
+    Features --> Transformer
+    Transformer --> Hybrid
+    Features --> Hybrid
+    LightGBM --> Compare
+    Transformer --> Compare
+    Hybrid --> Compare
+    Compare --> Package
+    Package --> Client
     Freeze -. "release hash" .-> Track
-    Train -. "development run" .-> Track
+    LightGBM -. "development run" .-> Track
+    Transformer -. "development run" .-> Track
+    Hybrid -. "development run" .-> Track
     Compare -. "metrics + manifest" .-> Track
 ```
 
@@ -121,6 +142,8 @@ flowchart LR
 | Incident Investigation | Demo Operator / Reviewer | Use AI Investigator to turn detector evidence into a clear explanation. |
 | Red-Team Scenario Generation | Demo Operator | Use Scenario Generator to create a launchable synthetic scenario configuration. |
 | Detector Tournament Benchmark | Research / Benchmark User | Use Managed Experiment jobs to compare detector precision, recall, F1, and latency. |
+| Secure CEO/Customer Demo UI | CEO / Product Sponsor / Technical Reviewer | Sign in, inspect governed Nasdaq/LOBSTER ingestion, replay a frozen campaign, compare rules/LightGBM/Transformer/hybrid, inspect MLflow-linked results and read/export a one-page management summary. |
+| BYO Data + BYO Detector Adapter | Future Client / Data Steward / Detector Team | Commercial north star, parked until the E2E demo exits: onboard client data and validate the client detector offline, then in real-time shadow mode. |
 | Synthetic Dataset Generation | Research / Benchmark User | Use Managed Experiment jobs to produce labeled synthetic event/snapshot/incident artifacts. |
 | Challenge Submission Evidence | Technical Reviewer | Review architecture, metrics, screenshots, and safety framing. |
 | UI Shell Personalization | Demo Operator / Reviewer | Use compact navigation and switch day/night/system display without changing backend state. |

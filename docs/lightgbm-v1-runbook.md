@@ -227,8 +227,8 @@ The first six attempts failed before training. Attempt 7 completed the governed
 workload, matched `cpu-d3`, `4vcpu-16gb`, 100 GiB and the one-hour timeout, and
 published 25 result objects plus `SUCCESS`. Seven of the fixed 20 development
 slots are consumed and 13 remain. No rerun is authorized or needed. Governed
-collection and the final G4 exit record remain locked until a fresh post-run
-spend observation is supplied. The submitter verifies the canonical request
+collection completed, spend reconciled at USD 8.57 including VAT, all 16 G4
+gates passed and G5 is unlocked. The submitter verifies the canonical request
 evidence and rejects inline credentials, filesystem mounts, broad bucket
 probes, unbounded prefixes and request/runtime mismatches. The temporary
 digest-derived deployment alias is permitted only by the recorded bounded

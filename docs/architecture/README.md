@@ -42,7 +42,7 @@ Status as of 2026-08-16:
 | [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
 | [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
 | [ARD-0034](ARD-0034-itch-market-profile-calibration.md) | `[phase-3 done]` | Versioned ITCH distributions, deterministic parameter compilation, profile-bound Java simulation, dynamic reference path, and held-out realism reports |
-| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G4 attempt 7 completed]` | The Job published 25 objects plus `SUCCESS`; governed collection and the final G4 exit record await fresh post-run spend |
+| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G0-G4 complete; G5 unlocked]` | Attempt 7 published 25 objects plus `SUCCESS`, spend reconciled at USD 8.57 including VAT, all 16 G4 gates passed, and 13 development slots remain |
 | [ARD-0036](ARD-0036-market-sequence-transformer.md) | `[todo after ARD-0035 disposition]` | No Transformer implementation yet; train a causal challenger through bounded GPU Jobs only after the LightGBM baseline is frozen |
 | [ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) | `[todo after ARD-0036 disposition]` | No cascade implementation yet; feed versioned causal Transformer features into a new LightGBM family with ablation, fallback and promotion gates |
 

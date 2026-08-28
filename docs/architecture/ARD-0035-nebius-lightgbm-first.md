@@ -4,11 +4,11 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-08-26
+Status reconciled: 2026-08-27
 
 ## Implementation Status
 
-Status: `[local-g1-g2-complete; cloud-g3-complete; g4-attempt-7-completed; collection-and-exit-pending; g5-g9-pending]`
+Status: `[g0-g4-complete; g5-unlocked; g5-g9-pending]`
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -72,15 +72,16 @@ image is pinned to digest
 `sha256:3e54fbe1c1ba7e5955a13565dc623cce4542b0df038c5f0b78b0f107e79c95e5`,
 and its matching fixture was uploaded and read-back verified. Attempt 7 then
 completed successfully at the Nebius Job boundary. Governed result collection
-and the final G4 exit record await only a fresh post-run spend observation;
-G5-G9 remain locked and no G4 rerun is authorized or needed.
+and the final G4 exit record were then verified against a fresh post-run spend
+observation. Spend reconciled at USD 8.57 including VAT, all 16 gates passed,
+G5 is unlocked and no G4 rerun is authorized or needed.
 
 The 2026-08-21 reconciliation verified project usage at USD 8.03 total and a
 USD 1,265.66 credit balance. The latest authoritative pre-attempt-7 observation
-was USD 8.55 including VAT; a fresh post-run value is required before G4
-collection and exit. The legacy inline AWS access-key identifier from an old
-Job no longer resolves in Nebius IAM (`NotFound`), and the Operator has stopped
-the shared MLflow VM. No previous evidence was recopied or archived.
+was USD 8.55 including VAT; the authoritative post-run value is USD 8.57. The
+legacy inline AWS access-key identifier from an old Job no longer resolves in
+Nebius IAM (`NotFound`), and the Operator has stopped the shared MLflow VM. No
+previous evidence was recopied or archived.
 
 ## Context
 

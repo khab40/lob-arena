@@ -3,6 +3,43 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Expanded the later CEO/customer UI into GitHub Story #91 and added it to
+  Project #3 as Todo. The secure guided path is now Sign in → Data → Replay →
+  Experiments → Management Summary, with selective restoration of the archived
+  Google Auth implementation, backend authorization before sensitive shared
+  data exposure, Nasdaq/LOBSTER ingestion and replay changes, campaign-wide
+  LightGBM/Transformer/hybrid results and reports, and a one-page management
+  summary. Presentation remains gated on Story #90 evidence; authentication is
+  an earlier security exception. The board now has 71 items: 50 Done, 12 In
+  Progress and 9 Todo.
+
+- Reframed the roadmap into two explicit horizons. The commercial north star is
+  BYO data plus BYO detector adapter, with the customer detector as the system
+  under test and LOB Arena models as offline-trained reference comparators; both
+  adapter features are deliberately parked. The active milestone is one
+  campaign-bound Nasdaq/LOBSTER E2E flow covering LightGBM, standalone
+  Transformer, Transformer-to-LightGBM hybrid, identical-row comparison,
+  separate no-retuning LOBSTER robustness and one verified evidence package.
+  Added GitHub Story #90 for the integrated flow and the later simple
+  Data → Replay → Models → Compare → Evidence CEO UI. Project #3 now has 70
+  items: 50 Done, 12 In Progress and 8 Todo.
+
+- Reconciled the learned-detector roadmap with code and live GitHub Story #22.
+  The public Nasdaq plan is now one selective, allowlist-only Nebius S3 data
+  foundation: transient full-file quarantine only when sequential ITCH parsing
+  requires it, durable retention of selected AAPL/MSFT/NVDA windows, one frozen
+  chronological split, and compatible tabular, sequence and
+  Transformer-feature projections for LightGBM, the standalone Transformer and
+  the exact-joined hybrid cascade. Recorded the feature at 4/12 scoped
+  capabilities (approximately 33%) and corrected stale overview text now that
+  G4 is complete and G5 is unlocked. Added two separate planned extensibility
+  features: a versioned inbound data adapter registry/conformance kit for future
+  unknown source types, and a pluggable detector adapter plus isolated governed
+  test harness shared by LightGBM, Transformer, hybrid, third-party and future
+  detectors. Created GitHub Features #87 and #88 as
+  separate Project #3 Todo items and reconciled the board to 69 items: 50 Done,
+  12 In Progress and 7 Todo.
+
 - Added secret-safe JSON lifecycle logging across executable Jobs. Governed
   LightGBM logs now explain input/checksum verification, fold isolation,
   training, calibration, candidate freezing, MLflow publication, evidence and

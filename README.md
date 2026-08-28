@@ -30,6 +30,16 @@ A research and validation platform that replays licensed historical order-book
 data, injects controlled synthetic attacks, and benchmarks surveillance
 detectors against reproducible ground truth.
 
+**Commercial north star:** customers bring their market data and detector
+adapter; LOB Arena governs the data, trains reference detectors offline, then
+certifies and later shadow-tests the customer detector against those references.
+That BYO data/BYO detector-adapter productization is intentionally parked while
+the project completes one full Nasdaq + LOBSTER E2E demonstration across
+LightGBM, standalone Transformer and Transformer-to-LightGBM hybrid. A secure
+CEO-facing guided UI follows only after that backend flow and its evidence
+package work end to end, except that authentication must gate any shared
+deployment that exposes sensitive data.
+
 ## Problem
 
 Market-surveillance systems need realistic, labeled abuse scenarios to measure
@@ -78,6 +88,8 @@ tournaments.
 | Shared experiment tracking | MLflow + PostgreSQL + S3-compatible artifacts | Corpus, model-development and governed-evaluation history |
 | Endpoint investigation | Nebius Serverless Endpoint | Structured JSON investigation reports |
 | Detector tournament | Local fallback or Nebius Serverless Job | Metrics, leaderboard, benchmark report |
+| Learned-detector E2E demo | Nebius Jobs + governed Object Storage/MLflow | Nasdaq comparison across LightGBM, Transformer and hybrid, plus separate LOBSTER robustness evidence |
+| Secure CEO demo UI | React + FastAPI/Java APIs + selectively restored Google Auth | Sign in → Data → Replay → Experiments → Management Summary, backed only by verified campaign artifacts |
 | Evidence sync | Local store + Object Storage | Reviewable artifacts and integrity metadata |
 
 ## Architecture
@@ -393,23 +405,53 @@ LightGBM v1 now provides deterministic CPU training, validation-only
 Platt/isotonic calibration, frozen high-precision/balanced/high-recall modes,
 schema-locked test predictions, per-alert tree contributions, a fail-closed
 detector adapter, explicit MLflow development/evaluation logging, and a
-checksummed model bundle. Software completion is not a performance claim: the
-Nebius Wave 1 cloud qualification remains at G4. The first six attempts failed
-before training; attempt 7 completed the governed workload in 38 seconds and
-published 25 result objects plus `SUCCESS`. Seven of the fixed 20 development
-slots are consumed. Governed collection and the final G4 exit record remain
-locked pending a fresh post-run spend observation. Official Nasdaq ITCH
-samples plus the repository LOBSTER sample may support a research-only
-qualification and unlock Wave 2 engineering. Production/client performance
-claims still require appropriately licensed data, independent clean-window
-review and a signed governed test release suitable for that claim.
+checksummed model bundle. Software completion is not a performance claim. The
+Nebius Wave 1 G4 cloud smoke is complete: after six bounded failures, attempt 7
+completed the governed workload in 38 seconds, published 25 result objects plus
+`SUCCESS`, passed all 16 gates and reconciled spend at USD 8.57 including VAT.
+Seven of the fixed 20 development slots are consumed, 13 remain, MLflow is
+stopped and G5 is unlocked.
 
-The learned-detector roadmap is sequential: qualify tabular LightGBM first,
-then train a standalone causal market-sequence Transformer, then evaluate a
-separate Transformer-to-LightGBM cascade using versioned scores/embeddings.
-The Transformer and cascade are specified but not implemented. The verified
+The next data step is one selective governed foundation for every learned
+detector. Only the exact approved Nasdaq sample files are fetched; no website
+crawl or mirror is permitted. Full-market gzip packages may be transiently
+staged because ITCH extraction is sequential, but durable Nebius S3 releases
+retain the selected AAPL/MSFT/NVDA windows, provenance and immutable
+development/test projections. The same root corpus and split feed tabular
+LightGBM, the causal Transformer sequence projection and the later exact-joined
+Transformer-to-LightGBM cascade. See the
+[public market-data plan](docs/nebius-public-market-data-lightgbm-plan.md).
+This research-only qualification does not replace appropriately licensed data,
+independent clean-window review or a signed governed test release for
+production/client performance claims.
+
+The active learned-detector milestone is one sequential, demoable E2E flow:
+qualify tabular LightGBM first, train a standalone causal market-sequence
+Transformer, evaluate a separate Transformer-to-LightGBM cascade using
+versioned scores/embeddings, and package one identical-row comparison. Nasdaq
+is the primary governed benchmark; the frozen candidates then run against the
+repository LOBSTER sample as a separate no-retuning robustness challenge. The
+Transformer and cascade are specified but not implemented. The verified
 tabular LightGBM bundle remains the required rollback and missing-feature
-fallback.
+fallback. The later secure demo UI is tracked by Story #91: selectively restore
+the archived Google Auth foundation, update ingestion and Nasdaq replay, add a
+campaign-wide experiment/results/report view, and provide a one-page management
+summary. Presentation work follows the verified technical flow; authentication
+and backend authorization must land earlier if sensitive data is exposed in a
+shared deployment.
+
+Two commercial Tier-1 extensibility features are defined and deliberately
+parked until that E2E demo exits. A versioned inbound data
+adapter registry will let explicitly reviewed future batch or streaming sources
+map into the canonical immutable dataset contract; the existing hard-registered
+LOBSTER and Nasdaq ITCH adapters are its partial foundation. A distinct
+pluggable detector adapter and conformance harness will run LightGBM,
+Transformer, the hybrid cascade, approved third-party detectors and future
+extensions on the same causal governed inputs and comparable tournament
+evidence. When resumed, the customer detector is the system under test and our
+models are reference comparators. Neither adapter may bypass provenance,
+fold/label isolation or the Java single-writer boundary. See the
+[active roadmap](docs/PHASES.md#feature-extensible-inbound-data-adapter-framework).
 
 Generate the checked-in reproducible fixture:
 
