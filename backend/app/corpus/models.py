@@ -35,6 +35,9 @@ class CorpusMinimums(_StrictModel):
 
 
 class CleanLabelPolicy(_StrictModel):
+    negative_label_source: Literal[
+        "independently_verified_clean", "research_control_assumption"
+    ] = "independently_verified_clean"
     independent_reviewers: int = Field(default=2, ge=2)
     blind_to_model_outputs: Literal[True] = True
     conflicts_require_adjudicator: Literal[True] = True

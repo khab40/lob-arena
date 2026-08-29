@@ -853,6 +853,13 @@ credential chain when explicitly enabled.
 
 ### G5 — Reproducibility
 
+Implementation status: the strict three-run comparator, verified collection-
+receipt binding, CLI, local fixture preflight and fold-isolated Nasdaq tabular
+projection loader are complete. The G5 gate is not yet passed: C0-C4 cloud
+execution must first publish the frozen Nasdaq development projection, and the
+three sequential cloud Jobs still require an explicitly reviewed Operator
+authorization.
+
 Operator submits the same development request three times sequentially. Codex
 compares them.
 

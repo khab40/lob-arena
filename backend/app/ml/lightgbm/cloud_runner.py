@@ -32,6 +32,10 @@ from app.ml.lightgbm.contracts import (
     ModelBundleManifest,
 )
 from app.ml.lightgbm.data import GovernedFeatureDataset, load_governed_feature_dataset
+from app.market_data.projections import (
+    FrozenPublicSampleRoot,
+    load_tabular_projection_dataset,
+)
 from app.ml.lightgbm.release import build_model_bundle, verify_complete_lightgbm_v1_release
 from app.ml.lightgbm.scoring import calibrate_validation_predictions, predict_governed_fold
 from app.ml.lightgbm.training import train_binary_attack_model
@@ -483,6 +487,8 @@ def _request_inventory(input_root: Path, request: LightGbmCloudJobRequest) -> Ch
                 request.input.feature_release,
             )
         )
+    elif request.input.kind == "tabular-projection":
+        references.extend((request.input.frozen_root, request.input.projection))
     for reference in references:
         _verify_cloud_artifact(input_root, reference)
     return ChecksumInventory(
@@ -593,6 +599,21 @@ def _load_dataset(
 ):
     if request.input.kind == "approved-research-fixture":
         return build_wave1_fixture_dataset(artifact_root, access_mode=access_mode)
+    if request.input.kind == "tabular-projection":
+        projected = request.input
+        projection_source = (input_root / projected.projection_artifact_root).resolve()
+        if input_root not in projection_source.parents or not projection_source.is_dir():
+            raise ValueError("projection artifact root is missing or outside the staged input root")
+        shutil.copytree(projection_source, artifact_root, dirs_exist_ok=True)
+        root_path = _verify_cloud_artifact(input_root, projected.frozen_root)
+        root = FrozenPublicSampleRoot.model_validate_json(root_path.read_text(encoding="utf-8"))
+        return load_tabular_projection_dataset(
+            _verify_cloud_artifact(input_root, projected.projection),
+            expected_sha256=projected.projection.sha256,
+            root=root,
+            artifact_root=artifact_root,
+            access_mode=access_mode,
+        )
     governed = request.input
     feature_source = (input_root / governed.feature_artifact_root).resolve()
     corpus_source = (input_root / governed.corpus_artifact_root).resolve()

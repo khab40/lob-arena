@@ -1,9 +1,11 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: Approved research-plan amendment; D0-D3 implementation not started;
-no market-data transfer authorized or started
+Status: C0-C4 repository implementation is locally reviewed; cloud foundation,
+C0 execution, every source transfer/preparation Job, projection publication,
+access-denial proof and key deactivation remain separately approval-gated. No
+Nasdaq response body or multi-gigabyte source transfer is authorized or started.
 
-Date: 2026-08-27
+Date: 2026-08-28
 
 ## Decision
 
@@ -281,9 +283,14 @@ campaign identity and labels are unavailable to feature formulas.
 G4 is complete: after six bounded failures, attempt 7 completed the corrected
 governed workload, published a verified `SUCCESS` result prefix, passed all 16
 exit gates and reconciled spend at USD 8.57 including VAT. G5 is unlocked and
-13 of 20 development-job slots remain. That model smoke does not prove or
-authorize public-data acquisition. Do not submit a transfer or preparation Job
-until the dedicated public-data preflight proves:
+13 of 20 development-job slots remain. The Operator re-reconciled total Nebius
+project spend at USD 11.62 including VAT on 2026-08-29. Live Job inventory
+contains 65 terminal Jobs and no C0, Nasdaq or public-data Job, so the separately
+bounded public-data campaign starts at 0 of 15 Jobs and USD 0 incremental
+data-preparation spend. The whole-project spend and the public-data subcampaign
+stop gate are recorded separately. That model smoke does not prove or authorize
+public-data acquisition. Do not submit a transfer or preparation Job until the
+dedicated public-data preflight proves:
 
 - default internet egress can reach `emi.nasdaq.com`;
 - the prefix-scoped S3 API read/write path works without a filesystem mount;
@@ -294,6 +301,64 @@ until the dedicated public-data preflight proves:
 The preflight is not authorization to download a multi-gigabyte source.
 The current Wave 1 record authorizes no further Job submission, so this
 preflight also requires a new explicit Operator authorization.
+
+The implemented C0 path is deliberately narrower than acquisition:
+
+- `configs/data/nasdaq-public-sample-v1.json` is a strict seven-file allowlist
+  with an exact declared total of 31,006,450,613 bytes;
+- the Job may issue exactly seven HTTPS `HEAD` requests and records zero Nasdaq
+  response-body bytes;
+- S3 access uses API calls only, with no mount, against one immutable input
+  prefix, one immutable result prefix and one disposable probe key of at most
+  256 bytes;
+- the probe is uploaded, metadata-checked, downloaded, SHA-256 checked,
+  deleted and deletion-checked;
+- resources are fixed at `cpu-d3`, `4vcpu-16gb`, 100 GiB and one hour, with
+  `restart-policy=never`;
+- the input publisher requires an explicit approval reference, and submission
+  additionally requires publication evidence plus the SHA-256 of the reviewed
+  dry run; and
+- actual Job context, immutable image digest, project, region, resources and
+  run-specific S3 prefixes are revalidated inside the container.
+
+Local evidence as of 2026-08-28: eight focused tests pass, Ruff passes, the
+Job image builds, and the container entrypoint smoke passes. This is readiness
+evidence only: no cloud resource was created and no Nasdaq endpoint was called.
+After a successful C0 result is collected and reconciled, obtain a separate
+explicit authorization for the one-file C1 acquisition pilot. C4 key
+deactivation and any manual quarantine deletion require their own explicit
+authorization at the time of action.
+
+### 2026-08-28 C1-C4 implementation review
+
+The repository now contains the bounded acquisition/resume implementation,
+strict sequential seven-source campaign state, lifecycle-bound request
+staging, MysteryBox-only Job submission dry runs, runtime/throughput/RSS
+evidence, version-ID-aware quarantine publication and separate acquisition and
+preparation entrypoints. Preparation performs one ITCH source scan for all
+three instruments, binds a pinned Java control plane to the Job-local normalized
+registry, requires repeat replay determinism, produces 3 control plus 27 hybrid
+feature domains per date and labels public-sample negatives explicitly as
+`research_control_assumption`.
+
+The C4 contracts freeze all seven sources plus protocol/corpus/split/feature
+identities, materialize supervised tabular row IDs and causal sequence IDs,
+enforce exact development `(train, validation)` versus final `(test)` fold
+inventories and verify projections without opening absent folds. The LightGBM
+cloud request and G5 comparator accept the hash-bound development tabular
+projection. Local projection preparation copies only manifest-inventoried
+development objects; publication requires a distinct approval reference.
+
+Focused review evidence as of 2026-08-29: 90 affected Python tests pass, Ruff
+passes, and the focused Java replay test passes. After one transient Docker
+Desktop BuildKit `ListWorkers: EOF`, the dedicated Python+Java image builds and
+its preparation entry point and Temurin 25 runtime pass local smoke checks. The
+reviewed local `linux/arm64` image ID is
+`sha256:976a9b6e090572844d6c9780eb689f052af4de601a919fa584dda9c3ae0e7d4d`.
+This local tag is not the required fresh `linux/amd64` Registry artifact: that
+build, push, read-back and immutable Registry-digest verification remain behind
+explicit approval. No cloud mutation or Nasdaq request occurred during this
+implementation work.
 
 ### C1 - Acquisition pilot
 

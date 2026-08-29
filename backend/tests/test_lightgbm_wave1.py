@@ -20,6 +20,7 @@ from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
     Wave1ExecutionContext,
     Wave1ExperimentSpec,
     Wave1FixtureInput,
+    Wave1TabularProjectionInput,
 )
 from app.ml.lightgbm.cloud_runner import execute_wave1_request  # noqa: E402
 from app.ml.lightgbm import cloud_runner, cloud_transport  # noqa: E402
@@ -95,6 +96,40 @@ def test_final_request_requires_all_authorization_artifacts() -> None:
 def test_artifact_paths_reject_escape() -> None:
     with pytest.raises(ValidationError, match="normalized relative"):
         CloudArtifact(logical_name="candidate", uri="../candidate.json", sha256=SHA, size_bytes=1)
+
+
+def test_development_request_accepts_only_a_hash_bound_tabular_projection() -> None:
+    root = CloudArtifact(
+        logical_name="frozen_root", uri="manifests/frozen-root.json", sha256="1" * 64, size_bytes=1
+    )
+    projection = CloudArtifact(
+        logical_name="development_projection",
+        uri="manifests/development-projection.json",
+        sha256="2" * 64,
+        size_bytes=1,
+    )
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            input=Wave1TabularProjectionInput(
+                frozen_root=root,
+                projection=projection,
+                projection_artifact_root="projection-artifacts",
+            ).model_dump(mode="json")
+        )
+    )
+    assert request.input.kind == "tabular-projection"
+    with pytest.raises(ValidationError, match="final/test"):
+        LightGbmCloudJobRequest.model_validate(
+            _request(
+                input=Wave1TabularProjectionInput(
+                    frozen_root=root,
+                    projection=projection.model_copy(
+                        update={"uri": "manifests/test/projection.json"}
+                    ),
+                    projection_artifact_root="projection-artifacts",
+                ).model_dump(mode="json")
+            )
+        )
 
 
 def test_publish_is_atomic_rejects_partial_and_duplicate_run(tmp_path: Path) -> None:

@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-SourceType = Literal["lobster", "synthetic", "hybrid"]
+SourceType = Literal["lobster", "nasdaq_itch", "synthetic", "hybrid"]
 LABEL_SCHEMA_VERSION = "feature_labels_v2"
 
 
@@ -49,6 +49,7 @@ class FeatureRunMetadata(BaseModel):
     run_id: str = Field(min_length=1)
     dataset_id: str | None = None
     source_type: SourceType
+    historical_source_type: Literal["lobster", "nasdaq_itch"] | None = None
     instrument: str = Field(min_length=1)
     venue: str = Field(min_length=1)
     session_id: str = Field(min_length=1)
@@ -57,6 +58,18 @@ class FeatureRunMetadata(BaseModel):
     price_tick_size: float = Field(gt=0, allow_inf_nan=False)
     quantity_lot_size: float = Field(gt=0, allow_inf_nan=False)
     tick_interval_ns: int = Field(default=500_000_000, gt=0)
+
+    @model_validator(mode="after")
+    def validate_source_provenance(self) -> "FeatureRunMetadata":
+        if self.source_type in {"lobster", "nasdaq_itch"}:
+            expected = self.source_type
+            if self.historical_source_type not in {None, expected}:
+                raise ValueError("historical feature source provenance is inconsistent")
+            if self.historical_source_type is None:
+                self.historical_source_type = expected
+        if self.source_type == "synthetic" and self.historical_source_type is not None:
+            raise ValueError("synthetic feature rows cannot claim a historical source")
+        return self
 
 
 class LabelWindow(BaseModel):

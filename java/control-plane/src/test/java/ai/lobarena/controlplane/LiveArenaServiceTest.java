@@ -218,6 +218,10 @@ class LiveArenaServiceTest {
 
         assertThat(comparison.path("control").path("source_row_count").longValue()).isEqualTo(12);
         assertThat(comparison.path("hybrid").path("source_row_count").longValue()).isEqualTo(12);
+        assertThat(comparison.path("control").path("stream_id").textValue()).isNotBlank();
+        assertThat(comparison.path("hybrid").path("stream_id").textValue())
+                .isNotBlank()
+                .isNotEqualTo(comparison.path("control").path("stream_id").textValue());
         assertThat(comparison.path("control").path("ground_truth").isNull()).isTrue();
         assertThat(comparison.path("hybrid").path("ground_truth").path("has_attack").booleanValue())
                 .isTrue();

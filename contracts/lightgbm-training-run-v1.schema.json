@@ -389,7 +389,13 @@
           "const": "lightgbm_native"
         },
         "negative_label_source": {
-          "const": "independently_verified_clean"
+          "default": "independently_verified_clean",
+          "enum": [
+            "independently_verified_clean",
+            "research_control_assumption"
+          ],
+          "title": "Negative Label Source",
+          "type": "string"
         },
         "numeric_storage_dtype": {
           "const": "float32"

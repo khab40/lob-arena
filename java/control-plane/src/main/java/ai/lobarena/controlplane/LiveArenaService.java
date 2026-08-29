@@ -1564,6 +1564,7 @@ final class LiveArenaService {
     private ObjectNode replaySummary(String sourceType) {
         ObjectNode summary = mapper.createObjectNode()
                 .put("mode", sourceType)
+                .put("stream_id", streamId)
                 .put("dataset_id", replayDatasetId())
                 .put("master_seed", replayMasterSeed)
                 .put("source_row_count", replayRowCount())

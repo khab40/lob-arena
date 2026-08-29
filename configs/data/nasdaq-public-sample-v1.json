@@ -1,0 +1,65 @@
+{
+  "base_url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/",
+  "depth_levels": 10,
+  "instruments": [
+    "AAPL",
+    "MSFT",
+    "NVDA"
+  ],
+  "schema_version": "nasdaq_public_sample_source_config_v1",
+  "source_host": "emi.nasdaq.com",
+  "sources": [
+    {
+      "date": "2019-01-30",
+      "expected_content_length": 4764426091,
+      "filename": "01302019.NASDAQ_ITCH50.gz",
+      "fold": "train",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/01302019.NASDAQ_ITCH50.gz"
+    },
+    {
+      "date": "2019-03-27",
+      "expected_content_length": 5510131732,
+      "filename": "03272019.NASDAQ_ITCH50.gz",
+      "fold": "train",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/03272019.NASDAQ_ITCH50.gz"
+    },
+    {
+      "date": "2019-07-30",
+      "expected_content_length": 3662140094,
+      "filename": "07302019.NASDAQ_ITCH50.gz",
+      "fold": "train",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/07302019.NASDAQ_ITCH50.gz"
+    },
+    {
+      "date": "2019-08-30",
+      "expected_content_length": 4075649457,
+      "filename": "08302019.NASDAQ_ITCH50.gz",
+      "fold": "train",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/08302019.NASDAQ_ITCH50.gz"
+    },
+    {
+      "date": "2019-10-30",
+      "expected_content_length": 3872931242,
+      "filename": "10302019.NASDAQ_ITCH50.gz",
+      "fold": "validation",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/10302019.NASDAQ_ITCH50.gz"
+    },
+    {
+      "date": "2019-12-30",
+      "expected_content_length": 3524013057,
+      "filename": "12302019.NASDAQ_ITCH50.gz",
+      "fold": "test",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/12302019.NASDAQ_ITCH50.gz"
+    },
+    {
+      "date": "2020-01-30",
+      "expected_content_length": 5597158940,
+      "filename": "01302020.NASDAQ_ITCH50.gz",
+      "fold": "test",
+      "url": "https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/01302020.NASDAQ_ITCH50.gz"
+    }
+  ],
+  "total_expected_bytes": 31006450613,
+  "window_end_et": "10:30:00",
+  "window_start_et": "10:00:00"
+}

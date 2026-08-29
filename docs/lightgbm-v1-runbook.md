@@ -235,3 +235,35 @@ digest-derived deployment alias is permitted only by the recorded bounded
 exception and must resolve to the full governed digest before and after Job
 creation. Final evaluation also requires the trusted signing-key SHA-256 from
 outside the candidate package.
+
+## G5 reproducibility comparison
+
+After C4 publishes the frozen Nasdaq development projection, submit exactly
+three separately identified development Jobs using equivalent requests. After
+each result is downloaded and collected, enforce G5 with:
+
+```bash
+python scripts/lightgbm_wave1.py g5-compare \
+  outputs/lightgbm-wave1/g5-repeat-1/result \
+  outputs/lightgbm-wave1/g5-repeat-2/result \
+  outputs/lightgbm-wave1/g5-repeat-3/result \
+  --collections \
+  outputs/lightgbm-wave1/g5-repeat-1/collection.json \
+  outputs/lightgbm-wave1/g5-repeat-2/collection.json \
+  outputs/lightgbm-wave1/g5-repeat-3/collection.json \
+  --output outputs/lightgbm-wave1/g5-repeat-comparison.json
+```
+
+The command requires exactly three governed development projections, three
+distinct run, Nebius Job and MLflow identities, verified collection receipts,
+test-fold isolation and exact agreement across request inputs, model and
+validation-prediction hashes, best iteration, metrics, calibration parameters,
+operating points, feature order/importance, schemas, reliability artifacts and
+governed identities. Only timestamps, external execution IDs, runtime, peak
+memory, cost, request hash and timestamp-bearing candidate-package hash may
+differ.
+
+`--allow-fixture-preflight` is available only to test the comparison mechanism.
+It emits `local_fixture_comparator_preflight_only` and cannot produce a G5 pass.
+The real three-Job G5 sequence remains cost-bearing and requires the C0-C4
+Nasdaq foundation plus explicit Operator authorization.

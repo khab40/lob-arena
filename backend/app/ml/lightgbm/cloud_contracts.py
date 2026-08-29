@@ -144,6 +144,18 @@ class Wave1GovernedInput(_StrictCanonicalModel):
         return self
 
 
+class Wave1TabularProjectionInput(_StrictCanonicalModel):
+    kind: Literal["tabular-projection"] = "tabular-projection"
+    frozen_root: CloudArtifact
+    projection: CloudArtifact
+    projection_artifact_root: str
+
+    @model_validator(mode="after")
+    def validate_root(self) -> "Wave1TabularProjectionInput":
+        _relative_path(self.projection_artifact_root, label="projection artifact root")
+        return self
+
+
 class Wave1FinalAuthorization(_StrictCanonicalModel):
     schema_version: Literal["lightgbm_wave1_final_authorization_v1"] = (
         "lightgbm_wave1_final_authorization_v1"
@@ -174,7 +186,9 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
     git_commit: str = Field(pattern=GIT_COMMIT_PATTERN)
     random_seed: int = Field(default=42, ge=0)
     experiment: Wave1ExperimentSpec = Field(default_factory=Wave1ExperimentSpec)
-    input: Wave1FixtureInput | Wave1GovernedInput = Field(discriminator="kind")
+    input: Wave1FixtureInput | Wave1GovernedInput | Wave1TabularProjectionInput = Field(
+        discriminator="kind"
+    )
     resource: Wave1ResourceRequest = Field(default_factory=Wave1ResourceRequest)
     result_uri: str = Field(min_length=1)
     candidate: CloudArtifact | None = None
