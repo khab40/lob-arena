@@ -1,11 +1,10 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
 Status: C0-C4 repository implementation, the dedicated cloud foundation, fresh
-`linux/amd64` Registry image and reviewed C0 dry run are complete. C0 request
-publication and execution, every source transfer/preparation Job, projection
-publication, access-denial proof and key deactivation remain separately
-approval-gated. No Nasdaq response body or multi-gigabyte source transfer is
-authorized or started.
+`linux/amd64` Registry image and C0 cloud preflight are complete. Every Nasdaq
+source transfer/preparation Job, projection publication, access-denial proof and
+key deactivation remain separately approval-gated. No Nasdaq response body or
+multi-gigabyte source transfer is authorized or started.
 
 Date: 2026-08-29
 
@@ -330,6 +329,17 @@ After a successful C0 result is collected and reconciled, obtain a separate
 explicit authorization for the one-file C1 acquisition pilot. C4 key
 deactivation and any manual quarantine deletion require their own explicit
 authorization at the time of action.
+
+Cloud exit evidence as of 2026-08-29: Job
+`aijob-e00q7wmjsr9d8hmgqk` completed in the fixed resource envelope. All seven
+allowlisted Nasdaq objects returned HTTP 200 without a redirect; their declared
+lengths matched the frozen total of 31,006,450,613 bytes. The Job issued exactly
+seven `HEAD` requests and downloaded zero Nasdaq response-body bytes. Its
+40-byte S3 probe was uploaded, read back, SHA-256 verified, deleted and confirmed
+absent. Pre-submit and post-submit deployment-tag resolution matched immutable
+image digest
+`sha256:ef3bb77d0e76309e3042fad65818c753e91ab3e9e549c0f8583c63145a8bc120`.
+Disposition is `c0_preflight_passed`; C1 remains unauthorized.
 
 ### 2026-08-28 C1-C4 implementation review
 
