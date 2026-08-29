@@ -152,8 +152,11 @@ deactivated earlier after C4.
 - S3 probe: 40 bytes, read-back and checksum verified, deleted and confirmed
   absent.
 - Public-data Jobs consumed: 1 of 15.
-- Project spend before C0: USD 11.62 including VAT; post-C0 spend must be
-  reconciled before C1 authorization.
+- Project spend before C0: USD 11.62 including VAT.
+- Project spend after C0: USD 12.22 including VAT; measured public-data
+  campaign increment: USD 0.60.
+- C1 remains unauthorized until its reviewed dry-run SHA-256 and maximum
+  4,764,426,091-byte transfer are explicitly approved.
 
 Local C0 evidence is under
 `outputs/market-data/nasdaq-c0-6b00d8c-20260829/`. These evidence files are

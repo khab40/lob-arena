@@ -288,14 +288,13 @@ campaign identity and labels are unavailable to feature formulas.
 G4 is complete: after six bounded failures, attempt 7 completed the corrected
 governed workload, published a verified `SUCCESS` result prefix, passed all 16
 exit gates and reconciled spend at USD 8.57 including VAT. G5 is unlocked and
-13 of 20 development-job slots remain. The Operator re-reconciled total Nebius
-project spend at USD 11.62 including VAT on 2026-08-29. Live Job inventory
-contains 65 terminal Jobs and no C0, Nasdaq or public-data Job, so the separately
-bounded public-data campaign starts at 0 of 15 Jobs and USD 0 incremental
-data-preparation spend. The whole-project spend and the public-data subcampaign
-stop gate are recorded separately. That model smoke does not prove or authorize
-public-data acquisition. Do not submit a transfer or preparation Job until the
-dedicated public-data preflight proves:
+13 of 20 development-job slots remain. Immediately before C0, the Operator
+reconciled total Nebius project spend at USD 11.62 including VAT on 2026-08-29.
+C0 consumed 1 of the separately bounded 15 public-data Jobs. The post-C0 total
+is USD 12.22 including VAT, so the measured data-preparation campaign increment
+is USD 0.60. The whole-project spend and the public-data subcampaign stop gate
+are recorded separately. That model smoke did not prove or authorize
+public-data acquisition. C0 subsequently proved:
 
 - default internet egress can reach `emi.nasdaq.com`;
 - the prefix-scoped S3 API read/write path works without a filesystem mount;
@@ -343,7 +342,9 @@ seven `HEAD` requests and downloaded zero Nasdaq response-body bytes. Its
 absent. Pre-submit and post-submit deployment-tag resolution matched immutable
 image digest
 `sha256:ef3bb77d0e76309e3042fad65818c753e91ab3e9e549c0f8583c63145a8bc120`.
-Disposition is `c0_preflight_passed`; C1 remains unauthorized.
+Disposition is `c0_preflight_passed`. Post-C0 spend is USD 12.22 including VAT,
+a measured USD 0.60 increment from the USD 11.62 pre-C0 baseline. C1 remains
+unauthorized pending review and exact-hash approval of its dry run.
 
 ### 2026-08-28 C1-C4 implementation review
 
