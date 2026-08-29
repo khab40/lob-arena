@@ -1,11 +1,13 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: C0-C4 repository implementation is locally reviewed; cloud foundation,
-C0 execution, every source transfer/preparation Job, projection publication,
-access-denial proof and key deactivation remain separately approval-gated. No
-Nasdaq response body or multi-gigabyte source transfer is authorized or started.
+Status: C0-C4 repository implementation, the dedicated cloud foundation, fresh
+`linux/amd64` Registry image and reviewed C0 dry run are complete. C0 request
+publication and execution, every source transfer/preparation Job, projection
+publication, access-denial proof and key deactivation remain separately
+approval-gated. No Nasdaq response body or multi-gigabyte source transfer is
+authorized or started.
 
-Date: 2026-08-28
+Date: 2026-08-29
 
 ## Decision
 
@@ -350,15 +352,18 @@ projection. Local projection preparation copies only manifest-inventoried
 development objects; publication requires a distinct approval reference.
 
 Focused review evidence as of 2026-08-29: 90 affected Python tests pass, Ruff
-passes, and the focused Java replay test passes. After one transient Docker
-Desktop BuildKit `ListWorkers: EOF`, the dedicated Python+Java image builds and
-its preparation entry point and Temurin 25 runtime pass local smoke checks. The
-reviewed local `linux/arm64` image ID is
-`sha256:976a9b6e090572844d6c9780eb689f052af4de601a919fa584dda9c3ae0e7d4d`.
-This local tag is not the required fresh `linux/amd64` Registry artifact: that
-build, push, read-back and immutable Registry-digest verification remain behind
-explicit approval. No cloud mutation or Nasdaq request occurred during this
-implementation work.
+passes, and the focused Java replay test passes. A no-cache `linux/amd64`
+Python+Java image built from commit `6b00d8c25e5cf4949015a4573f7a718e48c5027e`,
+passed the C0 entry-point and Temurin 25 runtime smokes, and was pushed and
+independently read back at
+`cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/md@sha256:ef3bb77d0e76309e3042fad65818c753e91ab3e9e549c0f8583c63145a8bc120`.
+The digest-derived deployment tag resolves to the same digest. The dedicated
+preparation identity is confined to `data/public-sample-v1/*`; the bucket keeps
+versioning, mutate-only audit logs and one-day incomplete-upload cleanup and now
+expires current and noncurrent quarantine objects after three days. The C0 dry
+run SHA-256 is
+`ec98f9cc869890c062f5648b42f55194eb379012f30b77a2012877f992308ea6`.
+No Job or Nasdaq request occurred during this foundation work.
 
 ### C1 - Acquisition pilot
 
