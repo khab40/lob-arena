@@ -15,6 +15,10 @@ onward, replace the fixture-only performance track with a research benchmark
 built from official public Nasdaq TotalView-ITCH samples and the repository's
 LOBSTER SPY sample.
 
+The exact Nasdaq source volumes, historical selection, replay expansion,
+labeling and stage-by-stage processing flow are summarized in
+[Nasdaq Public Sample v1: Dataset and Processing Flow](nasdaq-public-sample-v1-data-flow.md).
+
 Build this once as the shared governed data foundation for all three detector
 waves. The same immutable corpus and split identities must produce a tabular
 projection for LightGBM, a causal ordered-sequence projection for the

@@ -1,0 +1,160 @@
+# Nasdaq Public Sample v1: Dataset and Processing Flow
+
+Status: C0 connectivity and storage preflight passed on 2026-08-29. No Nasdaq
+ITCH response body has been downloaded. C1 acquisition remains separately
+approval-gated.
+
+## Purpose
+
+`nasdaq-public-sample-v1` is the frozen historical foundation for offline
+LightGBM training and calibration, chronological real-time-mode detector
+replays, the later Transformer benchmark, and exact-row comparison between
+detectors. It is a research corpus, not a live production feed.
+
+The source contract is
+[`configs/data/nasdaq-public-sample-v1.json`](../configs/data/nasdaq-public-sample-v1.json).
+The benchmark contract is
+[`configs/benchmark/nasdaq-public-sample-v1.json`](../configs/benchmark/nasdaq-public-sample-v1.json).
+
+## Exact Source Dataset
+
+The source is seven public Nasdaq TotalView-ITCH 5.0 gzip files served over
+HTTPS from `https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/`. Each file contains a
+complete Nasdaq trading day across many instruments. The complete files must be
+downloaded because the ITCH stream multiplexes instruments; symbol and time
+filtering happens during governed parsing.
+
+| Fold | Session date | File | Compressed bytes | Decimal GB |
+| --- | --- | --- | ---: | ---: |
+| Train | 2019-01-30 | `01302019.NASDAQ_ITCH50.gz` | 4,764,426,091 | 4.764 |
+| Train | 2019-03-27 | `03272019.NASDAQ_ITCH50.gz` | 5,510,131,732 | 5.510 |
+| Train | 2019-07-30 | `07302019.NASDAQ_ITCH50.gz` | 3,662,140,094 | 3.662 |
+| Train | 2019-08-30 | `08302019.NASDAQ_ITCH50.gz` | 4,075,649,457 | 4.076 |
+| Validation | 2019-10-30 | `10302019.NASDAQ_ITCH50.gz` | 3,872,931,242 | 3.873 |
+| Test | 2019-12-30 | `12302019.NASDAQ_ITCH50.gz` | 3,524,013,057 | 3.524 |
+| Test | 2020-01-30 | `01302020.NASDAQ_ITCH50.gz` | 5,597,158,940 | 5.597 |
+
+The complete compressed transfer is 31,006,450,613 bytes: 31.006 decimal GB or
+28.877 GiB. The four training files contribute 18,012,347,374 bytes, validation
+contributes 3,872,931,242 bytes, and final test contributes 9,121,171,997 bytes.
+
+## Governed Historical Selection
+
+Each parsed day retains only:
+
+- instruments `AAPL`, `MSFT`, and `NVDA`;
+- the half-hour interval from 10:00:00 through 10:30:00 Eastern Time;
+- normalized order events and reconstructed visible book snapshots to 10
+  levels; and
+- stable source, session, sequence, timestamp, replay, campaign, and row
+  identities.
+
+LightGBM v2 features use the top five reconstructed levels with causal 2-second
+and 10-second windows. The 10-level normalized book remains available for
+replay and later consumers; the five-level setting is a feature choice, not a
+loss of source provenance.
+
+The seven dates and three symbols form 21 base symbol-date sessions and 10.5
+symbol-hours of historical coverage:
+
+| Fold | Dates | Base sessions | Historical symbol-hours |
+| --- | ---: | ---: | ---: |
+| Train | 4 | 12 | 6.0 |
+| Validation | 1 | 3 | 1.5 |
+| Test | 2 | 6 | 3.0 |
+
+Exact ITCH message counts, accepted order events, executions, traded-share
+volume, per-symbol book updates, Parquet bytes, and supervised feature-row
+counts are intentionally not estimated. C1-C3 must measure and bind them after
+the real bodies are downloaded and parsed.
+
+## Replay Corpus
+
+For each base symbol-date session, preparation produces one unchanged control
+stream and nine deterministic hybrid streams:
+
+- `spoofing_like_wall`, seeds 41, 42, and 43;
+- `layering_like`, seeds 41, 42, and 43; and
+- `quote_stuffing`, seeds 41, 42, and 43.
+
+This yields three controls plus 27 hybrid streams per date, or 21 controls plus
+189 hybrids across all dates. The complete benchmark therefore contains 210
+replay streams, representing approximately 105 logical replay-hours. A base
+session and all of its scenario variants remain in the same fold.
+
+Historical control rows use the explicit research label source
+`research_control_assumption`. Synthetic scenarios use `synthetic_scenario`.
+The controls must not be described as independently verified clean production
+data.
+
+## End-to-End Data Flow
+
+```mermaid
+flowchart LR
+    Nasdaq["Seven full-day Nasdaq ITCH gzip files"]
+    Quarantine["Versioned 3-day quarantine"]
+    Normalize["ITCH validation and one-pass 3-symbol normalization"]
+    Book["10-level events and book snapshots<br/>10:00-10:30 ET"]
+    Replay["Java chronological control and hybrid replays"]
+    Features["Causal top-5-level features"]
+    Dev["Development projection<br/>train + validation"]
+    Final["Final projection<br/>test only"]
+    G5["Three LightGBM G5 jobs"]
+    Live["Later live feed mapped to the same contracts"]
+
+    Nasdaq --> Quarantine --> Normalize --> Book --> Replay --> Features
+    Features --> Dev --> G5
+    Features --> Final
+    Live --> Replay
+```
+
+The model never trains directly from a gzip file. It trains from an immutable
+tabular projection whose inventory binds the source, normalized corpus, replay,
+feature, split, and label-provenance hashes. Transformer sequence projections
+are derived from the same frozen rows and split identities. The final-test
+projection is stored separately and cannot be opened by a development Job.
+
+Offline real-time-mode evaluation delivers historical canonical events in
+chronological order through the Java control plane. A future production
+detector will consume a new live feed mapped to the same canonical contracts;
+it will not treat the 2019-2020 files as live input.
+
+## Bounded Cloud Stages
+
+1. **C0 — complete.** Read a tiny governed request, issue exactly seven HTTPS
+   `HEAD` requests, download zero Nasdaq body bytes, and verify a disposable S3
+   probe. Job `aijob-e00q7wmjsr9d8hmgqk` passed.
+2. **C1 — separately gated.** Download only
+   `01302019.NASDAQ_ITCH50.gz` (4,764,426,091 bytes), verify HTTP metadata,
+   gzip integrity, full SHA-256, resource evidence, and versioned quarantine
+   publication.
+3. **C2 — separately gated.** Acquire the other six allowlisted files strictly
+   in sequence, stopping on the first failure.
+4. **C3 — separately gated.** Normalize, reconstruct books, run deterministic
+   replays, generate features, and record actual event/row/byte volumes.
+5. **C4 — separately gated.** Freeze development and final projections, prove
+   development-to-final access denial, publish both folds through the operator
+   boundary, and deactivate the temporary preparation key.
+6. **G5.** Submit three reproducibility jobs only from the verified development
+   tabular projection.
+
+The preparation identity can access only
+`dev/data/public-sample-v1/*`. Current and noncurrent objects under the raw
+quarantine prefix expire after three days. The identity cannot access model
+releases, the final bucket, results, or MLflow and expires on 2026-09-30 unless
+deactivated earlier after C4.
+
+## Current Evidence
+
+- C0 disposition: `c0_preflight_passed`.
+- Seven source responses: HTTP 200, no redirect, exact declared lengths.
+- Nasdaq response-body bytes: zero.
+- S3 probe: 40 bytes, read-back and checksum verified, deleted and confirmed
+  absent.
+- Public-data Jobs consumed: 1 of 15.
+- Project spend before C0: USD 11.62 including VAT; post-C0 spend must be
+  reconciled before C1 authorization.
+
+Local C0 evidence is under
+`outputs/market-data/nasdaq-c0-6b00d8c-20260829/`. These evidence files are
+local operational artifacts and are not model inputs.
