@@ -425,6 +425,19 @@ model-development ceiling remains 20 Jobs. The six failed attempts plus the
 completed attempt 7 have consumed seven slots; 13 model-development slots
 remain.
 
+Sequence-2 attempt evidence as of 2026-08-30: Job
+`aijob-e00xh0ph0ayshen6ps` downloaded and verified the exact 5,510,131,732-byte
+`03272019.NASDAQ_ITCH50.gz` source, including gzip integrity and SHA-256
+`7997025b9e09dd6c2ecb0bfa48a856197e6e800711ab67367ee0f2ab724b9ba8`,
+then failed before quarantine publication. The publisher used S3 `PutObject`
+for an object 141,422,612 bytes above the 5 GiB single-upload boundary. Cleanup
+left no current object and one delete marker; `SUCCESS` was never written. The
+local fix selects an AWS CLI managed multipart transfer above 5 GiB, retains
+the existing metadata/head/full-read-back verification, and classifies an
+`EntityTooLarge` response without exposing stderr. Forty focused tests and
+Ruff pass. Public-data consumption is 3 of 15 Jobs. A fresh immutable image and
+an exact-hash retry authorization are required before another sequence-2 Job.
+
 ### C3 - Preparation and replay
 
 Process one trading date per Job, initially sequentially. Each Job:

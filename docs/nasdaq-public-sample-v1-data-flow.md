@@ -1,8 +1,10 @@
 # Nasdaq Public Sample v1: Dataset and Processing Flow
 
 Status: C0 connectivity/storage preflight passed on 2026-08-29. C1 acquired
-and verified the first Nasdaq ITCH source on 2026-08-30. C2 remains separately
-approval-gated.
+and verified the first Nasdaq ITCH source on 2026-08-30. The first C2 attempt
+verified the second source but failed before quarantine publication because the
+source exceeds the S3 single-`PutObject` limit. A multipart fix is locally
+reviewed; a fresh image and any retry remain separately approval-gated.
 
 ## Purpose
 
@@ -129,7 +131,9 @@ it will not treat the 2019-2020 files as live input.
    gzip integrity and full SHA-256, then published six versioned quarantine
    objects with `SUCCESS` last.
 3. **C2 — separately gated.** Acquire the other six allowlisted files strictly
-   in sequence, stopping on the first failure.
+   in sequence, stopping on the first failure. The sequence-2 attempt stopped
+   after successful source verification when single-request S3 publication
+   rejected the 5,510,131,732-byte object.
 4. **C3 — separately gated.** Normalize, reconstruct books, run deterministic
    replays, generate features, and record actual event/row/byte volumes.
 5. **C4 — separately gated.** Freeze development and final projections, prove
@@ -159,7 +163,14 @@ deactivated earlier after C4.
   110,940,160 bytes.
 - C1 quarantine: six versioned objects, source version `1`, `SUCCESS` last,
   lifecycle response expiry 2026-09-03.
-- Public-data Jobs consumed: 2 of 15.
+- C2 sequence-2 attempt: source length, gzip and SHA-256 passed; source SHA-256
+  `7997025b9e09dd6c2ecb0bfa48a856197e6e800711ab67367ee0f2ab724b9ba8`.
+- C2 publication failed before `SUCCESS`: there are no current objects under
+  the failed quarantine prefix and one cleanup delete marker remains.
+- Root cause: `PutObject` was used for a 5,510,131,732-byte source, which is
+  141,422,612 bytes above the 5 GiB single-upload limit. The reviewed local fix
+  selects the AWS CLI managed multipart path above that boundary.
+- Public-data Jobs consumed: 3 of 15.
 - Project spend before C0: USD 11.62 including VAT.
 - Project spend after C0: USD 12.22 including VAT; measured public-data
   campaign increment: USD 0.60.

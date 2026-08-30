@@ -15,6 +15,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from app.ml.lightgbm.contracts import IDENTIFIER_PATTERN, SHA256_PATTERN
 
 
+S3_SINGLE_PUT_MAX_BYTES = 5 * 1024**3
+
+
 class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -82,6 +85,10 @@ def _aws_failure_kind(stderr: str) -> str:
         (("could not connect to the endpoint", "endpoint connection error"), "endpoint_connection"),
         (("ssl validation failed", "certificate verify failed"), "ssl_validation"),
         (("timed out", "timeout"), "timeout"),
+        (
+            ("entitytoolarge", "proposed upload exceeds the maximum allowed object size"),
+            "single_put_too_large",
+        ),
     )
     for needles, classification in classifications:
         if any(needle in normalized for needle in needles):
@@ -372,20 +379,30 @@ def _put_and_verify_s3_object(
     endpoint_url: str,
 ) -> S3ObjectEvidence:
     transfer_timeout = max(300, int(source.stat().st_size / (5 * 1024 * 1024)) + 120)
-    _aws_json(
-        endpoint_url,
-        "s3api",
-        "put-object",
-        "--bucket",
-        bucket,
-        "--key",
-        key,
-        "--body",
-        str(source),
-        "--metadata",
-        f"sha256={expected_sha256}",
-        timeout_seconds=transfer_timeout,
-    )
+    if source.stat().st_size > S3_SINGLE_PUT_MAX_BYTES:
+        _aws_copy_file(
+            endpoint_url,
+            source,
+            bucket=bucket,
+            key=key,
+            expected_sha256=expected_sha256,
+            timeout_seconds=transfer_timeout,
+        )
+    else:
+        _aws_json(
+            endpoint_url,
+            "s3api",
+            "put-object",
+            "--bucket",
+            bucket,
+            "--key",
+            key,
+            "--body",
+            str(source),
+            "--metadata",
+            f"sha256={expected_sha256}",
+            timeout_seconds=transfer_timeout,
+        )
     head = _aws_json(
         endpoint_url,
         "s3api",
@@ -422,6 +439,48 @@ def _put_and_verify_s3_object(
         etag=str(head.get("ETag", "")).strip('"'),
         version_id=(str(head["VersionId"]) if head.get("VersionId") else None),
     )
+
+
+def _aws_copy_file(
+    endpoint_url: str,
+    source: Path,
+    *,
+    bucket: str,
+    key: str,
+    expected_sha256: str,
+    timeout_seconds: int,
+) -> None:
+    """Upload a large file with the AWS CLI managed multipart transfer."""
+
+    aws = shutil.which("aws")
+    if aws is None:
+        raise RuntimeError("aws CLI is required for Object Storage publication")
+    completed = subprocess.run(
+        [
+            aws,
+            "--endpoint-url",
+            endpoint_url,
+            "s3",
+            "cp",
+            str(source),
+            f"s3://{bucket}/{key}",
+            "--metadata",
+            f"sha256={expected_sha256}",
+            "--only-show-errors",
+            "--no-progress",
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+        timeout=timeout_seconds,
+        env=_aws_environment(),
+    )
+    if completed.returncode:
+        failure_kind = _aws_failure_kind(completed.stderr or "")
+        raise RuntimeError(
+            "Object Storage multipart upload failed with "
+            f"exit code {completed.returncode} ({failure_kind})"
+        )
 
 
 def _list_s3_keys(bucket: str, prefix: str, *, endpoint_url: str, limit: int) -> tuple[str, ...]:

@@ -262,6 +262,74 @@ def test_aws_json_classifies_failure_without_exposing_stderr(
     assert "SECRET-MUST-NOT-LEAK" not in str(error.value)
 
 
+def test_aws_failure_classifies_single_put_size_limit() -> None:
+    assert (
+        object_storage._aws_failure_kind(
+            "An error occurred (EntityTooLarge) when calling the PutObject operation"
+        )
+        == "single_put_too_large"
+    )
+
+
+def test_large_s3_object_uses_managed_multipart_upload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "large-source.gz"
+    with source.open("wb") as handle:
+        handle.truncate(object_storage.S3_SINGLE_PUT_MAX_BYTES + 1)
+    copied: list[tuple[str, str, int]] = []
+    operations: list[str] = []
+
+    def fake_copy(
+        _endpoint_url: str,
+        path: Path,
+        *,
+        bucket: str,
+        key: str,
+        expected_sha256: str,
+        timeout_seconds: int,
+    ) -> None:
+        assert path == source
+        assert expected_sha256 == SHA
+        assert timeout_seconds > 300
+        copied.append((bucket, key, path.stat().st_size))
+
+    def fake_aws_json(_endpoint_url: str, *args: str, **_: object) -> dict[str, object]:
+        operation = args[1]
+        operations.append(operation)
+        if operation == "put-object":
+            raise AssertionError("large objects must not use single PutObject")
+        if operation == "head-object":
+            return {
+                "ContentLength": source.stat().st_size,
+                "Metadata": {"sha256": SHA},
+                "ETag": '"multipart-etag"',
+                "VersionId": "version-1",
+            }
+        if operation == "get-object":
+            Path(args[-1]).write_bytes(b"read-back-stub")
+            return {}
+        raise AssertionError(args)
+
+    monkeypatch.setattr(object_storage, "_aws_copy_file", fake_copy)
+    monkeypatch.setattr(object_storage, "_aws_json", fake_aws_json)
+    monkeypatch.setattr(object_storage, "sha256_file", lambda _: SHA)
+
+    evidence = object_storage._put_and_verify_s3_object(
+        source,
+        bucket="bucket-test",
+        key="prefix/large-source.gz",
+        expected_sha256=SHA,
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+    )
+
+    assert copied == [
+        ("bucket-test", "prefix/large-source.gz", object_storage.S3_SINGLE_PUT_MAX_BYTES + 1)
+    ]
+    assert operations == ["head-object", "get-object"]
+    assert evidence.version_id == "version-1"
+
+
 def test_s3_sync_disables_cli_pager(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, object] = {}
 
