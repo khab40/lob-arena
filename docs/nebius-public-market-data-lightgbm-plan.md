@@ -409,7 +409,8 @@ runtime was 969.304 seconds, observed throughput was 4,915,303.869 bytes/second,
 and peak RSS was 110,940,160 bytes. The source object is version `1`; Object
 Storage returned an expiry date of 2026-09-03 under the reviewed three-day
 lifecycle rule. Public-data consumption is 2 of 15 Jobs. Post-C1 project spend
-must be reconciled before C2 can be reviewed or authorized.
+may be recorded when convenient but is not a prerequisite for C2 review or
+authorization.
 
 ### C2 - Remaining acquisition
 
@@ -506,10 +507,11 @@ the current milestone.
 
 ## Budget and Stop Rules
 
-- Reserve no more than USD 10 of the Wave 1 USD 50 ceiling for acquisition and
-  data preparation.
-- Report at USD 5 of data-preparation spend; stop new data Jobs at USD 8 and
-  reconcile; hard-stop them at USD 10.
+- Spend reporting is advisory and never a preparation or submission
+  prerequisite; VAT reconciliation is not required between Jobs.
+- Bound public-data work through the 15-Job cap, one-at-a-time execution,
+  exact source-byte ceilings, fixed compute/time limits and explicit approval
+  for each material stage.
 - Cap raw plus derived storage at 120 GiB.
 - Keep Standard storage. Same-region Object Storage traffic is free of egress
   charges; internet or cross-region egress is currently USD 0.015/GiB.

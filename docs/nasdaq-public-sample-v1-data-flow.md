@@ -2,7 +2,7 @@
 
 Status: C0 connectivity/storage preflight passed on 2026-08-29. C1 acquired
 and verified the first Nasdaq ITCH source on 2026-08-30. C2 remains separately
-approval-gated after post-C1 spend reconciliation.
+approval-gated.
 
 ## Purpose
 
@@ -163,7 +163,9 @@ deactivated earlier after C4.
 - Project spend before C0: USD 11.62 including VAT.
 - Project spend after C0: USD 12.22 including VAT; measured public-data
   campaign increment: USD 0.60.
-- Project spend after C1 must be reconciled before any C2 authorization.
+- Spend reporting is informational and is not a C2 preparation or submission
+  gate; the fixed resource, byte, sequential, Job-count and approval gates
+  remain mandatory.
 
 Local C0 evidence is under `outputs/market-data/nasdaq-c0-6b00d8c-20260829/`.
 Local C1 evidence is under

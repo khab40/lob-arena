@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import struct
+from argparse import Namespace
 from datetime import UTC, date, datetime
 from pathlib import Path
 
@@ -34,6 +35,7 @@ from app.market_data.projections import (
 from app.ml.lightgbm.contracts import ArtifactDigest
 from app.features.io import feature_arrow_schema
 from scripts.market_data_wave1 import prepare_acquisition
+from scripts.submit_market_data_stage_job import _validate_arguments
 
 
 def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> None:
@@ -87,6 +89,29 @@ def test_acquisition_request_staging_binds_lifecycle_and_first_source(
     assert request.source.filename == "01302019.NASDAQ_ITCH50.gz"
     assert request.lifecycle == lifecycle
     assert request.max_download_bytes == 4_764_426_091
+
+
+def test_stage_submission_does_not_require_spend_reconciliation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for name in (
+        "NEBIUS_VOLUME",
+        "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID",
+        "NEBIUS_OBJECT_STORAGE_SECRET_ACCESS_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    args = Namespace(
+        subnet_id="subnet-test",
+        name="nasdaq-c2-test",
+        data_prep_spend_usd=None,
+        data_prep_jobs_consumed=2,
+    )
+
+    _validate_arguments(args)
+
+    args.data_prep_spend_usd = -1
+    with pytest.raises(SystemExit, match="finite and non-negative"):
+        _validate_arguments(args)
 
 
 def test_one_pass_normalizer_extracts_three_symbols_with_one_stream_scan(

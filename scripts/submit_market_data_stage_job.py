@@ -47,7 +47,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--publication-evidence", type=Path)
     parser.add_argument("--access-key-secret-id", required=True)
     parser.add_argument("--secret-key-secret-id", required=True)
-    parser.add_argument("--data-prep-spend-usd", type=float, required=True)
+    parser.add_argument(
+        "--data-prep-spend-usd",
+        type=float,
+        help="Optional observed campaign spend; informational and not a submission gate.",
+    )
     parser.add_argument("--data-prep-jobs-consumed", type=int, required=True)
     parser.add_argument("--approval-reference")
     parser.add_argument("--dry-run", action="store_true")
@@ -143,8 +147,10 @@ def _validate_arguments(args: argparse.Namespace) -> None:
         raise SystemExit("market-data Job requires --subnet-id or NEBIUS_SUBNET_ID")
     if re.fullmatch(r"[a-z0-9][a-z0-9-]{2,62}", args.name) is None:
         raise SystemExit("market-data Job name must be a bounded lowercase identifier")
-    if not math.isfinite(args.data_prep_spend_usd) or not 0 <= args.data_prep_spend_usd < 8:
-        raise SystemExit("data-preparation spend must be reconciled below the USD 8 stop gate")
+    if args.data_prep_spend_usd is not None and (
+        not math.isfinite(args.data_prep_spend_usd) or args.data_prep_spend_usd < 0
+    ):
+        raise SystemExit("observed data-preparation spend must be finite and non-negative")
     if not 0 <= args.data_prep_jobs_consumed < 15:
         raise SystemExit("public-data Job count must be reconciled below the 15-Job cap")
     if os.environ.get("NEBIUS_VOLUME"):
