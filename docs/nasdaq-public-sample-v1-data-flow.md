@@ -1,8 +1,8 @@
 # Nasdaq Public Sample v1: Dataset and Processing Flow
 
-Status: C0 connectivity and storage preflight passed on 2026-08-29. No Nasdaq
-ITCH response body has been downloaded. C1 acquisition remains separately
-approval-gated.
+Status: C0 connectivity/storage preflight passed on 2026-08-29. C1 acquired
+and verified the first Nasdaq ITCH source on 2026-08-30. C2 remains separately
+approval-gated after post-C1 spend reconciliation.
 
 ## Purpose
 
@@ -124,10 +124,10 @@ it will not treat the 2019-2020 files as live input.
 1. **C0 — complete.** Read a tiny governed request, issue exactly seven HTTPS
    `HEAD` requests, download zero Nasdaq body bytes, and verify a disposable S3
    probe. Job `aijob-e00q7wmjsr9d8hmgqk` passed.
-2. **C1 — separately gated.** Download only
-   `01302019.NASDAQ_ITCH50.gz` (4,764,426,091 bytes), verify HTTP metadata,
-   gzip integrity, full SHA-256, resource evidence, and versioned quarantine
-   publication.
+2. **C1 — complete.** Job `aijob-e00f2zk6kmsxtphrmm` downloaded only
+   `01302019.NASDAQ_ITCH50.gz` (4,764,426,091 bytes), verified HTTP metadata,
+   gzip integrity and full SHA-256, then published six versioned quarantine
+   objects with `SUCCESS` last.
 3. **C2 — separately gated.** Acquire the other six allowlisted files strictly
    in sequence, stopping on the first failure.
 4. **C3 — separately gated.** Normalize, reconstruct books, run deterministic
@@ -148,16 +148,24 @@ deactivated earlier after C4.
 
 - C0 disposition: `c0_preflight_passed`.
 - Seven source responses: HTTP 200, no redirect, exact declared lengths.
-- Nasdaq response-body bytes: zero.
+- Nasdaq response-body bytes through C0: zero.
 - S3 probe: 40 bytes, read-back and checksum verified, deleted and confirmed
   absent.
-- Public-data Jobs consumed: 1 of 15.
+- C1 disposition: `c1_acquisition_passed`.
+- C1 source: `01302019.NASDAQ_ITCH50.gz`, 4,764,426,091 bytes, one HTTP request,
+  no resume, gzip verified, SHA-256
+  `8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be`.
+- C1 runtime: 969.304 seconds at 4,915,303.869 bytes/second; peak RSS
+  110,940,160 bytes.
+- C1 quarantine: six versioned objects, source version `1`, `SUCCESS` last,
+  lifecycle response expiry 2026-09-03.
+- Public-data Jobs consumed: 2 of 15.
 - Project spend before C0: USD 11.62 including VAT.
 - Project spend after C0: USD 12.22 including VAT; measured public-data
   campaign increment: USD 0.60.
-- C1 remains unauthorized until its reviewed dry-run SHA-256 and maximum
-  4,764,426,091-byte transfer are explicitly approved.
+- Project spend after C1 must be reconciled before any C2 authorization.
 
-Local C0 evidence is under
-`outputs/market-data/nasdaq-c0-6b00d8c-20260829/`. These evidence files are
-local operational artifacts and are not model inputs.
+Local C0 evidence is under `outputs/market-data/nasdaq-c0-6b00d8c-20260829/`.
+Local C1 evidence is under
+`outputs/market-data/nasdaq-c1-01302019-c4d6bb9-20260829/`. These evidence
+files are local operational artifacts and are not model inputs.

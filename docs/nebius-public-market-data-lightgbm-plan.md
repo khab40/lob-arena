@@ -343,8 +343,10 @@ absent. Pre-submit and post-submit deployment-tag resolution matched immutable
 image digest
 `sha256:ef3bb77d0e76309e3042fad65818c753e91ab3e9e549c0f8583c63145a8bc120`.
 Disposition is `c0_preflight_passed`. Post-C0 spend is USD 12.22 including VAT,
-a measured USD 0.60 increment from the USD 11.62 pre-C0 baseline. C1 remains
-unauthorized pending review and exact-hash approval of its dry run.
+a measured USD 0.60 increment from the USD 11.62 pre-C0 baseline. C1 was later
+authorized against exact dry-run SHA-256
+`df0aa1398329db99b23775de37435bea0000b15eaa26da6a36ab1f910640d960`
+and completed successfully on 2026-08-30. C2 remains unauthorized.
 
 ### 2026-08-28 C1-C4 implementation review
 
@@ -396,6 +398,18 @@ Run exactly one acquisition Job for `01302019.NASDAQ_ITCH50.gz`:
 - record Job ID, image digest, runtime, peak RSS, bytes/second and cost.
 
 If the pilot fails, stop and fix locally. Do not start the other six downloads.
+
+Cloud exit evidence as of 2026-08-30: Job `aijob-e00f2zk6kmsxtphrmm`
+completed in the fixed four-hour resource envelope. It downloaded exactly
+4,764,426,091 bytes in one HTTP request without resume, verified gzip integrity
+and source SHA-256
+`8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be`,
+and published six versioned quarantine objects with `SUCCESS` last. Download
+runtime was 969.304 seconds, observed throughput was 4,915,303.869 bytes/second,
+and peak RSS was 110,940,160 bytes. The source object is version `1`; Object
+Storage returned an expiry date of 2026-09-03 under the reviewed three-day
+lifecycle rule. Public-data consumption is 2 of 15 Jobs. Post-C1 project spend
+must be reconciled before C2 can be reviewed or authorized.
 
 ### C2 - Remaining acquisition
 
