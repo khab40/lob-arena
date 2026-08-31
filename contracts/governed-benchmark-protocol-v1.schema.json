@@ -59,6 +59,15 @@
           "title": "Independent Reviewers",
           "type": "integer"
         },
+        "negative_label_source": {
+          "default": "independently_verified_clean",
+          "enum": [
+            "independently_verified_clean",
+            "research_control_assumption"
+          ],
+          "title": "Negative Label Source",
+          "type": "string"
+        },
         "statuses": {
           "default": [
             "unreviewed",
@@ -79,6 +88,7 @@
         }
       },
       "required": [
+        "negative_label_source",
         "independent_reviewers",
         "blind_to_model_outputs",
         "conflicts_require_adjudicator",

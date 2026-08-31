@@ -1,0 +1,12 @@
+**
+
+!backend/
+backend/**
+!backend/app/
+!backend/app/**
+
+!serverless/
+serverless/**
+!serverless/jobs/
+!serverless/jobs/requirements.market-data-acquisition.txt
+!serverless/jobs/run_market_data_acquisition.py

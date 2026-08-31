@@ -30,6 +30,7 @@ from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
 )
 from app.ml.lightgbm.cloud_fixture import fixture_hash  # noqa: E402
 from app.ml.lightgbm.cloud_runner import execute_wave1_request, verify_wave1_result  # noqa: E402
+from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     download_s3_release,
     inventory_directory,
@@ -98,6 +99,17 @@ def main(argv: list[str] | None = None) -> int:
     compare = subparsers.add_parser("compare", help="Compare deterministic evidence from development repeats")
     compare.add_argument("results", type=Path, nargs="+")
     compare.add_argument("--output", type=Path, required=True)
+    g5_compare = subparsers.add_parser(
+        "g5-compare", help="Enforce the exact three-run G5 reproducibility gate"
+    )
+    g5_compare.add_argument("results", type=Path, nargs=3)
+    g5_compare.add_argument("--collections", type=Path, nargs=3)
+    g5_compare.add_argument("--output", type=Path, required=True)
+    g5_compare.add_argument(
+        "--allow-fixture-preflight",
+        action="store_true",
+        help="Exercise comparison logic locally without claiming the cloud G5 gate",
+    )
     exit_record = subparsers.add_parser("exit-record", help="Assemble a local Wave 1 exit record")
     exit_record.add_argument("--development", type=Path, required=True)
     exit_record.add_argument("--final", type=Path, required=True)
@@ -158,6 +170,13 @@ def main(argv: list[str] | None = None) -> int:
         )
     elif args.command == "compare":
         compare_results(args.results, args.output)
+    elif args.command == "g5-compare":
+        compare_g5_results(
+            args.results,
+            args.output,
+            collections=args.collections,
+            allow_fixture_preflight=args.allow_fixture_preflight,
+        )
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0

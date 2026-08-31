@@ -1,9 +1,15 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: Approved research-plan amendment; D0-D3 implementation not started;
-no market-data transfer authorized or started
+Status: C0, C1 and the corrected C2 sequence-2 acquisition passed. The remaining
+C2 sources are still sequentially approval-gated. The former combined runtime
+is now split into a published Python-only C0-C2 image and a published C3-C4
+image that consumes a prebuilt Java control-plane JAR. The initial sequence-1
+C3 Job exposed a Java priority-preservation contract defect and published no
+prepared objects. The correction and phase-level logging now ship in a fresh
+verified immutable image. The reviewed retry package is local only; its S3
+publication and one retry Job remain separately exact-hash approval-gated.
 
-Date: 2026-08-27
+Date: 2026-08-31
 
 ## Decision
 
@@ -11,6 +17,10 @@ Preserve the completed G4 fixture smoke as cloud-pipeline evidence. For G5
 onward, replace the fixture-only performance track with a research benchmark
 built from official public Nasdaq TotalView-ITCH samples and the repository's
 LOBSTER SPY sample.
+
+The exact Nasdaq source volumes, historical selection, replay expansion,
+labeling and stage-by-stage processing flow are summarized in
+[Nasdaq Public Sample v1: Dataset and Processing Flow](nasdaq-public-sample-v1-data-flow.md).
 
 Build this once as the shared governed data foundation for all three detector
 waves. The same immutable corpus and split identities must produce a tabular
@@ -281,9 +291,13 @@ campaign identity and labels are unavailable to feature formulas.
 G4 is complete: after six bounded failures, attempt 7 completed the corrected
 governed workload, published a verified `SUCCESS` result prefix, passed all 16
 exit gates and reconciled spend at USD 8.57 including VAT. G5 is unlocked and
-13 of 20 development-job slots remain. That model smoke does not prove or
-authorize public-data acquisition. Do not submit a transfer or preparation Job
-until the dedicated public-data preflight proves:
+13 of 20 development-job slots remain. Immediately before C0, the Operator
+reconciled total Nebius project spend at USD 11.62 including VAT on 2026-08-29.
+C0 consumed 1 of the separately bounded 15 public-data Jobs. The post-C0 total
+is USD 12.22 including VAT, so the measured data-preparation campaign increment
+is USD 0.60. The whole-project spend and the public-data subcampaign stop gate
+are recorded separately. That model smoke did not prove or authorize
+public-data acquisition. C0 subsequently proved:
 
 - default internet egress can reach `emi.nasdaq.com`;
 - the prefix-scoped S3 API read/write path works without a filesystem mount;
@@ -294,6 +308,101 @@ until the dedicated public-data preflight proves:
 The preflight is not authorization to download a multi-gigabyte source.
 The current Wave 1 record authorizes no further Job submission, so this
 preflight also requires a new explicit Operator authorization.
+
+The implemented C0 path is deliberately narrower than acquisition:
+
+- `configs/data/nasdaq-public-sample-v1.json` is a strict seven-file allowlist
+  with an exact declared total of 31,006,450,613 bytes;
+- the Job may issue exactly seven HTTPS `HEAD` requests and records zero Nasdaq
+  response-body bytes;
+- S3 access uses API calls only, with no mount, against one immutable input
+  prefix, one immutable result prefix and one disposable probe key of at most
+  256 bytes;
+- the probe is uploaded, metadata-checked, downloaded, SHA-256 checked,
+  deleted and deletion-checked;
+- resources are fixed at `cpu-d3`, `4vcpu-16gb`, 100 GiB and one hour, with
+  `restart-policy=never`;
+- the input publisher requires an explicit approval reference, and submission
+  additionally requires publication evidence plus the SHA-256 of the reviewed
+  dry run; and
+- actual Job context, immutable image digest, project, region, resources and
+  run-specific S3 prefixes are revalidated inside the container.
+
+Local evidence as of 2026-08-28: eight focused tests pass, Ruff passes, the
+Job image builds, and the container entrypoint smoke passes. This is readiness
+evidence only: no cloud resource was created and no Nasdaq endpoint was called.
+After a successful C0 result is collected and reconciled, obtain a separate
+explicit authorization for the one-file C1 acquisition pilot. C4 key
+deactivation and any manual quarantine deletion require their own explicit
+authorization at the time of action.
+
+Cloud exit evidence as of 2026-08-29: Job
+`aijob-e00q7wmjsr9d8hmgqk` completed in the fixed resource envelope. All seven
+allowlisted Nasdaq objects returned HTTP 200 without a redirect; their declared
+lengths matched the frozen total of 31,006,450,613 bytes. The Job issued exactly
+seven `HEAD` requests and downloaded zero Nasdaq response-body bytes. Its
+40-byte S3 probe was uploaded, read back, SHA-256 verified, deleted and confirmed
+absent. Pre-submit and post-submit deployment-tag resolution matched immutable
+image digest
+`sha256:ef3bb77d0e76309e3042fad65818c753e91ab3e9e549c0f8583c63145a8bc120`.
+Disposition is `c0_preflight_passed`. Post-C0 spend is USD 12.22 including VAT,
+a measured USD 0.60 increment from the USD 11.62 pre-C0 baseline. C1 was later
+authorized against exact dry-run SHA-256
+`df0aa1398329db99b23775de37435bea0000b15eaa26da6a36ab1f910640d960`
+and completed successfully on 2026-08-30. The failed C2 attempt consumed the
+third public-data Job. The exact-hash retry was subsequently authorized and
+completed successfully as the fourth public-data Job on 2026-08-31.
+
+### Split C0-C4 runtime contract
+
+The runtime is split at the source-to-derived-data boundary:
+
+- C0-C2 use `Dockerfile.market-data-acquisition`, a Python-only image containing
+  AWS CLI and Pydantic. It contains neither Java nor PyArrow and exposes only
+  preflight, acquisition, and local verification commands.
+- C3-C4 use `Dockerfile.market-data-preparation`, containing Python, PyArrow,
+  protobuf bindings, a Temurin 25 JRE, and a checksum-bound control-plane JAR.
+  `scripts/prepare-market-data-control-plane.sh` builds the platform-independent
+  JAR once; Gradle never runs inside the `linux/amd64` Docker build.
+
+The submitters select the entrypoint from the immutable request type. C0 and
+acquisition requests invoke `run_market_data_acquisition.py`; preparation
+requests invoke `run_market_data_preparation.py`. The combined image is not
+part of the forward C-step path.
+
+### 2026-08-28 C1-C4 implementation review
+
+The repository now contains the bounded acquisition/resume implementation,
+strict sequential seven-source campaign state, lifecycle-bound request
+staging, MysteryBox-only Job submission dry runs, runtime/throughput/RSS
+evidence, version-ID-aware quarantine publication and separate acquisition and
+preparation entrypoints. Preparation performs one ITCH source scan for all
+three instruments, binds a pinned Java control plane to the Job-local normalized
+registry, requires repeat replay determinism, produces 3 control plus 27 hybrid
+feature domains per date and labels public-sample negatives explicitly as
+`research_control_assumption`.
+
+The C4 contracts freeze all seven sources plus protocol/corpus/split/feature
+identities, materialize supervised tabular row IDs and causal sequence IDs,
+enforce exact development `(train, validation)` versus final `(test)` fold
+inventories and verify projections without opening absent folds. The LightGBM
+cloud request and G5 comparator accept the hash-bound development tabular
+projection. Local projection preparation copies only manifest-inventoried
+development objects; publication requires a distinct approval reference.
+
+Focused review evidence as of 2026-08-29: 90 affected Python tests pass, Ruff
+passes, and the focused Java replay test passes. A no-cache `linux/amd64`
+Python+Java image built from commit `6b00d8c25e5cf4949015a4573f7a718e48c5027e`,
+passed the C0 entry-point and Temurin 25 runtime smokes, and was pushed and
+independently read back at
+`cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/md@sha256:ef3bb77d0e76309e3042fad65818c753e91ab3e9e549c0f8583c63145a8bc120`.
+The digest-derived deployment tag resolves to the same digest. The dedicated
+preparation identity is confined to `data/public-sample-v1/*`; the bucket keeps
+versioning, mutate-only audit logs and one-day incomplete-upload cleanup and now
+expires current and noncurrent quarantine objects after three days. The C0 dry
+run SHA-256 is
+`ec98f9cc869890c062f5648b42f55194eb379012f30b77a2012877f992308ea6`.
+No Job or Nasdaq request occurred during this foundation work.
 
 ### C1 - Acquisition pilot
 
@@ -310,7 +419,28 @@ Run exactly one acquisition Job for `01302019.NASDAQ_ITCH50.gz`:
   Job publishes selected normalized outputs; and
 - record Job ID, image digest, runtime, peak RSS, bytes/second and cost.
 
+Acquisition keeps this bounded resource contract. Preparation uses its own
+contract: `cpu-d3`, `8vcpu-32gb`, 250 GiB scratch and a 16-hour timeout. The
+larger envelope is based on the observed C3 runtime and OOM evidence, while
+the exporter and validator remain page-bounded and completed Java replay
+archives are released after each comparison. Duplicate control bundles are
+discarded only after their canonical hashes match the retained per-symbol
+control.
+
 If the pilot fails, stop and fix locally. Do not start the other six downloads.
+
+Cloud exit evidence as of 2026-08-30: Job `aijob-e00f2zk6kmsxtphrmm`
+completed in the fixed four-hour resource envelope. It downloaded exactly
+4,764,426,091 bytes in one HTTP request without resume, verified gzip integrity
+and source SHA-256
+`8c97b5b13bc451c012c2466fb7e258da134dab29aa47b67fe7b0088c78e870be`,
+and published six versioned quarantine objects with `SUCCESS` last. Download
+runtime was 969.304 seconds, observed throughput was 4,915,303.869 bytes/second,
+and peak RSS was 110,940,160 bytes. The source object is version `1`; Object
+Storage returned an expiry date of 2026-09-03 under the reviewed three-day
+lifecycle rule. Public-data consumption is 2 of 15 Jobs. Post-C1 project spend
+may be recorded when convenient but is not a prerequisite for C2 review or
+authorization.
 
 ### C2 - Remaining acquisition
 
@@ -324,6 +454,47 @@ and stop the campaign for reconciliation; they do not expand it. The original
 model-development ceiling remains 20 Jobs. The six failed attempts plus the
 completed attempt 7 have consumed seven slots; 13 model-development slots
 remain.
+
+Sequence-2 attempt evidence as of 2026-08-30: Job
+`aijob-e00xh0ph0ayshen6ps` downloaded and verified the exact 5,510,131,732-byte
+`03272019.NASDAQ_ITCH50.gz` source, including gzip integrity and SHA-256
+`7997025b9e09dd6c2ecb0bfa48a856197e6e800711ab67367ee0f2ab724b9ba8`,
+then failed before quarantine publication. The publisher used S3 `PutObject`
+for an object 141,422,612 bytes above the 5 GiB single-upload boundary. Cleanup
+left no current object and one delete marker; `SUCCESS` was never written. The
+local fix selects an AWS CLI managed multipart transfer above 5 GiB, retains
+the existing metadata/head/full-read-back verification, and classifies an
+`EntityTooLarge` response without exposing stderr. Forty focused tests and
+Ruff pass. At that stop point, public-data consumption was 3 of 15 Jobs; the
+retry required a fresh immutable image and exact-hash authorization.
+
+Corrected sequence-2 exit evidence as of 2026-08-31: Job
+`aijob-e00xj11g1v148xksq3`, bound to reviewed dry-run SHA-256
+`5cf39bfd6d4f3cb576e31a144d30fdd444491834c8559421ad4e3442bf6b3816`,
+completed in 781.692 seconds. It downloaded exactly 5,510,131,732 bytes in one
+HTTP request, verified gzip integrity and SHA-256
+`7997025b9e09dd6c2ecb0bfa48a856197e6e800711ab67367ee0f2ab724b9ba8`,
+then used managed multipart upload to publish six versioned quarantine objects
+with `SUCCESS` last. Independent S3 readback confirmed the source length,
+version `1`, multipart ETag, SHA-256 object metadata and five small evidence
+objects. Public-data consumption is now 4 of 15 Jobs.
+
+The corrected combined image was published at
+`sha256:25390eb07a306243a9ec85a6202c50bb3c511b700a20e1e2ea0f0279e1ee3429`
+without a Job submission, then superseded before use by the runtime split. The
+local split images pass `linux/amd64` smokes: the C0-C2 image is 76,499,199
+bytes and proves Java and PyArrow absent; the C3-C4 image is 316,640,186 bytes
+and contains Temurin 25.0.4, PyArrow 25.0.1, and control-plane JAR SHA-256
+`85d6abf93629fa4c25953cde6f213a1da0d9ff05f7d68b10a6b52fe168bf6774`.
+Fifty-seven focused tests and Ruff pass. Commit
+`f5fc53887807f55b51fdde853c90f42c8afdb210` was built and published as exact
+`linux/amd64` manifests. The acquisition image digest is
+`sha256:ae9556d6cce3c8d54f012048535ccae29bcf5966f62616dda69dfb3f0820d97d`;
+the preparation image digest is
+`sha256:4d7580c4a3c610229d941166f5c63104b13e42ea9f00e32386264035f5edc83e`.
+Their Nebius-compatible 64-character deployment references are respectively
+`ma:ae9556d6cce3c8d5` and `mp:4d7580c4a3c61022`, and post-publication readback
+matches the immutable source manifests exactly.
 
 ### C3 - Preparation and replay
 
@@ -339,6 +510,49 @@ Process one trading date per Job, initially sequentially. Each Job:
 
 After two dates show deterministic output and acceptable memory/runtime,
 parallelism may increase to two Jobs. Never process two jobs for the same date.
+
+Retry readiness as of 2026-08-31: corrected commit
+`046b54c7cc454527f6b0094cfba03bd060d89bcf` produced control-plane JAR
+SHA-256 `ca6a2d47e8a51b78e846f9a628c6b6b4cf324bdb85976edb5f99edc16df12ff6`
+and fresh `linux/amd64` image
+`cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/mdp@sha256:19b2c17d94f9908c65699c5283e54cee23964969344f7a8a107f92db02517cfa`.
+Both the source tag and 64-character deployment alias resolve to that single
+OCI manifest through Docker and the Nebius registry API. The local retry
+package remains bound to the same immutable 4,764,426,091-byte C1 source and
+manifest SHA-256
+`3911cafe29820140be906ba0251bef8dfbab3832a3bcf138b0ff1ade53e05c54`.
+Its reviewed dry-run SHA-256 is
+`a0578a9335e6170b9a5455d91286648388edd39adfa0c093891307379c87b7ea`;
+it declares no cloud mutation or market-data transfer. Package publication and
+one retry Job require a separate exact-hash authorization.
+
+Initial C3 exit evidence as of 2026-08-31: Job
+`aijob-e00assx3d8vx375778` was bound to dry-run SHA-256
+`f964f35c8dad7ab73e9542df25f459d114573e4257ef0b3d64de6bf25f1b8481`
+and failed during the first AAPL `spoofing_like_wall`, seed-41 hybrid replay.
+The Java order book moved a stable scenario order to a different price level
+but emitted `priority_preserved=true`; Python correctly rejected the canonical
+event at JSONL line 10,329. The result publisher was never reached, and an
+independent S3 check returned `Contents=null` for the prepared prefix. Public-
+data consumption is now 5 of 15 Jobs. The local correction derives the flag
+from unchanged side and integer price ticks, adds the exact price-move
+regression assertion, preserves frozen golden traces, and adds bounded logs for
+request/source download, validation, normalization, each of 27 replay
+comparisons, materialization and publication. Focused Python tests and the full
+simulation-kernel/control-plane Java suites pass. The fresh image and reviewed
+retry dry run above superseded the failed request.
+
+The authorized retry Job `aijob-e00hr7zq7pjmem4v72` then completed source
+verification, one-pass normalization, and the first two AAPL comparisons. It
+failed during comparison 3 when the host OOM killer terminated Python at
+13,612,868 KiB anonymous RSS on the 16 GiB preset; no prepared objects or
+`SUCCESS` marker were published. That run confirms the priority-preservation
+fix and isolates a separate exporter scaling defect. The correction streams
+1,000-event pages directly to JSONL and Parquet, hashes and validates files
+incrementally, releases all four Java archives after each comparison, and
+retains only one hash-verified control bundle per symbol. A fresh C3 request
+must use the preparation-only `8vcpu-32gb`, 250 GiB, 16-hour contract described
+above; the failed image and request must not be reused.
 
 ### C4 - Corpus freeze and projection publication
 
@@ -407,10 +621,11 @@ the current milestone.
 
 ## Budget and Stop Rules
 
-- Reserve no more than USD 10 of the Wave 1 USD 50 ceiling for acquisition and
-  data preparation.
-- Report at USD 5 of data-preparation spend; stop new data Jobs at USD 8 and
-  reconcile; hard-stop them at USD 10.
+- Spend reporting is advisory and never a preparation or submission
+  prerequisite; VAT reconciliation is not required between Jobs.
+- Bound public-data work through the 15-Job cap, one-at-a-time execution,
+  exact source-byte ceilings, fixed compute/time limits and explicit approval
+  for each material stage.
 - Cap raw plus derived storage at 120 GiB.
 - Keep Standard storage. Same-region Object Storage traffic is free of egress
   charges; internet or cross-region egress is currently USD 0.015/GiB.

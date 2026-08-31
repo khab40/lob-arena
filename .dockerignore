@@ -66,3 +66,18 @@ agent-runner/**
 serverless/**
 !serverless/jobs/
 !serverless/jobs/**
+
+# Dedicated public-market-data Job image: only the causal feature entrypoint
+# and immutable data/feature/benchmark configs are admitted to the context.
+!scripts/
+scripts/**
+!scripts/generate_features.py
+
+!configs/
+configs/**
+!configs/features/
+!configs/features/**
+!configs/data/
+!configs/data/**
+!configs/benchmark/
+!configs/benchmark/**

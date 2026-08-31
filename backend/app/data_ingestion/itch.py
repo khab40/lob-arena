@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import resource
 import shutil
 import struct
@@ -70,6 +71,22 @@ class NormalizationResult:
     message_counts: dict[str, int]
     first_timestamp_ns: int
     last_timestamp_ns: int
+
+
+@dataclass
+class _SymbolNormalizationState:
+    symbol: str
+    directory: Path
+    active: dict[int, Order]
+    seen_references: set[int]
+    book: dict[str, dict[int, int]]
+    event_counts: Counter[str]
+    event_rows: list[dict[str, object]]
+    book_rows: list[dict[str, object]]
+    event_writer: object | None = None
+    book_writer: object | None = None
+    first_timestamp_ns: int = -1
+    last_timestamp_ns: int = -1
 
 
 def discover_candidates(raw_dir: Path, processed_dir: Path) -> list[IngestionCandidate]:
@@ -269,6 +286,287 @@ def convert_itch(
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
+
+
+def convert_itch_symbols(
+    source_path: Path,
+    destination: Path,
+    *,
+    symbols: tuple[str, ...],
+    trade_date: str,
+    start_time_ms: int,
+    end_time_ms: int,
+    depth: int = DEFAULT_DEPTH,
+    source_name: str | None = None,
+    min_free_bytes: int = DEFAULT_MIN_FREE_BYTES,
+    max_working_bytes: int = DEFAULT_MAX_WORKING_BYTES,
+) -> dict[str, DatasetManifest]:
+    """Normalize several symbols in one sequential pass over an ITCH stream."""
+
+    import pyarrow.parquet as pq
+
+    ordered_symbols = tuple(symbols)
+    if not ordered_symbols or len(ordered_symbols) != len(set(ordered_symbols)):
+        raise ValueError("one-pass ITCH symbols must be a non-empty unique ordered set")
+    if any(not re.fullmatch(r"[A-Z][A-Z0-9.]{0,7}", symbol) for symbol in ordered_symbols):
+        raise ValueError("one-pass ITCH symbols must use canonical uppercase identifiers")
+    try:
+        datetime.strptime(trade_date, "%Y-%m-%d")
+    except ValueError as exc:
+        raise ValueError("one-pass ITCH trade date must be YYYY-MM-DD") from exc
+    if not 0 <= start_time_ms < end_time_ms <= 86_400_000:
+        raise ValueError("one-pass ITCH window must be within one trading day")
+    if not 1 <= depth <= 100:
+        raise ValueError("one-pass ITCH depth must be between 1 and 100")
+    source_path = source_path.resolve()
+    if not source_path.is_file():
+        raise ValueError("one-pass ITCH source is missing")
+    destination = destination.resolve()
+    destination.mkdir(parents=True, exist_ok=True)
+    _check_disk_quota(destination, min_free_bytes=min_free_bytes)
+    _check_source_quota(source_path, max_working_bytes=max_working_bytes)
+    source_file = _file_metadata(source_path, source_name or source_path.name)
+    shared_config = {
+        "depth": depth,
+        "end_time_ms": end_time_ms,
+        "format": FORMAT_VERSION,
+        "max_working_bytes": max_working_bytes,
+        "min_free_bytes": min_free_bytes,
+        "parser_version": PARSER_VERSION,
+        "start_time_ms": start_time_ms,
+        "symbols": list(ordered_symbols),
+        "trade_date": trade_date,
+    }
+    config_sha256 = hashlib.sha256(
+        json.dumps(shared_config, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    identities = {
+        symbol: hashlib.sha256(
+            f"{source_file.sha256}:{config_sha256}:{symbol}".encode()
+        ).hexdigest()[:12]
+        for symbol in ordered_symbols
+    }
+    dataset_ids = {
+        symbol: (
+            f"itch-{symbol.lower()}-{trade_date}-{start_time_ms}-"
+            f"{end_time_ms}-d{depth}-{identities[symbol]}"
+        )
+        for symbol in ordered_symbols
+    }
+    final_directories = {symbol: destination / dataset_ids[symbol] for symbol in ordered_symbols}
+    if any(path.exists() for path in final_directories.values()):
+        if all((path / "manifest.json").is_file() for path in final_directories.values()):
+            return {
+                symbol: DatasetManifest.model_validate_json(
+                    (final_directories[symbol] / "manifest.json").read_text(encoding="utf-8")
+                )
+                for symbol in ordered_symbols
+            }
+        raise FileExistsError("one-pass ITCH output collides with an incomplete dataset")
+    temporary_root = destination / f".itch-one-pass-{uuid4().hex}"
+    temporary_root.mkdir()
+    moved: list[Path] = []
+    try:
+        results = _normalize_symbols_one_pass(
+            source_path,
+            temporary_root,
+            symbols=ordered_symbols,
+            trade_date=trade_date,
+            start_ns=start_time_ms * 1_000_000,
+            end_ns=end_time_ms * 1_000_000,
+            depth=depth,
+            min_free_bytes=min_free_bytes,
+            max_working_bytes=max_working_bytes,
+        )
+        manifests: dict[str, DatasetManifest] = {}
+        for symbol in ordered_symbols:
+            directory = temporary_root / symbol
+            events_path = directory / "events.parquet"
+            books_path = directory / "book_snapshots.parquet"
+            pq.read_metadata(events_path)
+            pq.read_metadata(books_path)
+            result = results[symbol]
+            manifest = DatasetManifest(
+                dataset_schema_version=1,
+                dataset_id=dataset_ids[symbol],
+                source_type="nasdaq_itch",
+                format=FORMAT_VERSION,
+                venue=VENUE,
+                parser_version=PARSER_VERSION,
+                ingestion_mode="streaming",
+                symbol=symbol,
+                trade_date=trade_date,
+                start_time_ms=start_time_ms,
+                end_time_ms=end_time_ms,
+                depth=depth,
+                row_count=result.row_count,
+                event_counts=result.event_counts,
+                imported_at=datetime.strptime(trade_date, "%Y-%m-%d").replace(
+                    tzinfo=timezone.utc
+                ),
+                source_files=[source_file],
+                output_files=[_file_metadata(events_path), _file_metadata(books_path)],
+                source_name=source_file.name,
+                source_stream_sha256=source_file.sha256,
+                parser_config_sha256=config_sha256,
+                filters={
+                    "symbol": symbol,
+                    "symbols_normalized_in_one_pass": list(ordered_symbols),
+                    "start_time_ms": start_time_ms,
+                    "end_time_ms": end_time_ms,
+                    "depth": depth,
+                },
+                message_counts=result.message_counts,
+                truncation_limits={
+                    "max_working_bytes": max_working_bytes,
+                    "min_free_bytes": min_free_bytes,
+                },
+            )
+            (directory / "manifest.json").write_text(
+                manifest.model_dump_json(indent=2), encoding="utf-8"
+            )
+            manifests[symbol] = manifest
+        for symbol in ordered_symbols:
+            final = final_directories[symbol]
+            (temporary_root / symbol).rename(final)
+            moved.append(final)
+        temporary_root.rmdir()
+        return manifests
+    except Exception:
+        shutil.rmtree(temporary_root, ignore_errors=True)
+        for path in moved:
+            shutil.rmtree(path, ignore_errors=True)
+        raise
+
+
+def _normalize_symbols_one_pass(
+    source_path: Path,
+    directory: Path,
+    *,
+    symbols: tuple[str, ...],
+    trade_date: str,
+    start_ns: int,
+    end_ns: int,
+    depth: int,
+    min_free_bytes: int,
+    max_working_bytes: int,
+) -> dict[str, NormalizationResult]:
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    states: dict[str, _SymbolNormalizationState] = {}
+    for symbol in symbols:
+        symbol_directory = directory / symbol
+        symbol_directory.mkdir()
+        states[symbol] = _SymbolNormalizationState(
+            symbol=symbol,
+            directory=symbol_directory,
+            active={},
+            seen_references=set(),
+            book={"BUY": {}, "SELL": {}},
+            event_counts=Counter(),
+            event_rows=[],
+            book_rows=[],
+        )
+    symbol_by_locate: dict[int, str] = {}
+    locate_by_symbol: dict[str, int] = {}
+    message_counts: Counter[str] = Counter()
+    try:
+        for record in iter_records(source_path):
+            message_counts[record.message_type] += 1
+            if record.source_sequence % RESOURCE_CHECK_RECORDS == 0:
+                _check_multi_working_set(
+                    directory,
+                    source_path=source_path,
+                    min_free_bytes=min_free_bytes,
+                    max_working_bytes=max_working_bytes,
+                )
+            if record.message_type == "R":
+                directory_symbol = _alpha(record.payload[11:19])
+                previous_symbol = symbol_by_locate.setdefault(
+                    record.stock_locate, directory_symbol
+                )
+                previous_locate = locate_by_symbol.setdefault(
+                    directory_symbol, record.stock_locate
+                )
+                if previous_symbol != directory_symbol or previous_locate != record.stock_locate:
+                    raise ValueError("ITCH Stock Directory mappings are not one-to-one")
+                continue
+            if record.message_type not in BOOK_MESSAGE_TYPES:
+                continue
+            symbol = symbol_by_locate.get(record.stock_locate)
+            if symbol not in states:
+                continue
+            state = states[symbol]
+            event = _apply_book_message(
+                record,
+                symbol,
+                trade_date,
+                state.active,
+                state.seen_references,
+                state.book,
+            )
+            _validate_book(state.book, record.source_sequence)
+            if not start_ns <= record.timestamp_ns < end_ns:
+                continue
+            if state.first_timestamp_ns < 0:
+                state.first_timestamp_ns = record.timestamp_ns
+            state.last_timestamp_ns = record.timestamp_ns
+            state.event_counts[str(event["event_kind"])] += 1
+            state.event_rows.append(event)
+            state.book_rows.append(
+                {
+                    "source_sequence": record.source_sequence,
+                    "timestamp_ns_since_midnight": record.timestamp_ns,
+                    "depth": depth,
+                    "asks": _levels(state.book["SELL"], side="SELL", depth=depth),
+                    "bids": _levels(state.book["BUY"], side="BUY", depth=depth),
+                }
+            )
+            if len(state.event_rows) >= CHUNK_ROWS:
+                state.event_writer, state.book_writer = _write_chunks(
+                    pa,
+                    pq,
+                    state.directory,
+                    state.event_rows,
+                    state.book_rows,
+                    state.event_writer,
+                    state.book_writer,
+                )
+                state.event_rows.clear()
+                state.book_rows.clear()
+        missing = [symbol for symbol in symbols if symbol not in locate_by_symbol]
+        if missing:
+            raise ValueError(f"symbols absent from ITCH Stock Directory: {','.join(missing)}")
+        for state in states.values():
+            if state.event_rows:
+                state.event_writer, state.book_writer = _write_chunks(
+                    pa,
+                    pq,
+                    state.directory,
+                    state.event_rows,
+                    state.book_rows,
+                    state.event_writer,
+                    state.book_writer,
+                )
+            if state.event_writer is None or state.book_writer is None:
+                raise ValueError(f"selected ITCH window contains no events for {state.symbol}")
+    finally:
+        for state in states.values():
+            if state.event_writer is not None:
+                state.event_writer.close()
+            if state.book_writer is not None:
+                state.book_writer.close()
+    return {
+        symbol: NormalizationResult(
+            row_count=sum(state.event_counts.values()),
+            event_counts=dict(sorted(state.event_counts.items())),
+            message_counts=dict(sorted(message_counts.items())),
+            first_timestamp_ns=state.first_timestamp_ns,
+            last_timestamp_ns=state.last_timestamp_ns,
+        )
+        for symbol, state in states.items()
+    }
 
 
 def iter_records(path: Path) -> Iterator[ParsedRecord]:
@@ -635,6 +933,20 @@ def _check_working_set(
     _check_disk_quota(directory, min_free_bytes=min_free_bytes)
 
 
+def _check_multi_working_set(
+    directory: Path,
+    *,
+    source_path: Path,
+    min_free_bytes: int,
+    max_working_bytes: int,
+) -> None:
+    output_bytes = sum(path.stat().st_size for path in directory.rglob("*") if path.is_file())
+    working_bytes = source_path.stat().st_size + output_bytes + _process_resident_bytes()
+    if working_bytes > max_working_bytes:
+        raise ValueError("one-pass ITCH normalization exceeded its maximum working set")
+    _check_disk_quota(directory, min_free_bytes=min_free_bytes)
+
+
 def _process_resident_bytes() -> int:
     statm = Path("/proc/self/statm")
     if statm.is_file():
@@ -679,8 +991,6 @@ def _is_itch_file(path: Path) -> bool:
 
 
 def _trade_date_from_name(name: str) -> str | None:
-    import re
-
     for pattern, positions in DATE_PATTERNS:
         match = re.search(pattern, name)
         if match:

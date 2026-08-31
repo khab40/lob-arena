@@ -38,6 +38,7 @@ class CanonicalJavaReplayManifest(BaseModel):
     base_session_id: str = Field(min_length=1)
     dataset_id: str = Field(min_length=1)
     mode: Literal["historical_control", "synthetic", "hybrid"]
+    historical_source_type: Literal["lobster", "nasdaq_itch"] | None = None
     campaign_id: str | None = None
     attack_family: str | None = None
     instrument: str = Field(min_length=1)
@@ -80,6 +81,8 @@ class CanonicalJavaReplayManifest(BaseModel):
                 or self.label_count != 0
             ):
                 raise ValueError("historical control bundles cannot contain synthetic campaign ground truth")
+            if self.historical_source_type is None:
+                self.historical_source_type = "lobster"
         elif (
             not self.campaign_id
             or not self.attack_family
@@ -88,6 +91,10 @@ class CanonicalJavaReplayManifest(BaseModel):
             or self.label_count != 1
         ):
             raise ValueError("synthetic and hybrid bundles require campaign ground truth")
+        if self.mode == "hybrid" and self.historical_source_type is None:
+            self.historical_source_type = "lobster"
+        if self.mode == "synthetic" and self.historical_source_type is not None:
+            raise ValueError("synthetic replay bundles cannot claim a historical source")
         return self
 
 
@@ -101,7 +108,7 @@ class CanonicalEvaluationInput:
 
     def feature_metadata(self) -> FeatureRunMetadata:
         source_type = {
-            "historical_control": "lobster",
+            "historical_control": self.manifest.historical_source_type or "lobster",
             "synthetic": "synthetic",
             "hybrid": "hybrid",
         }[self.manifest.mode]
@@ -109,6 +116,7 @@ class CanonicalEvaluationInput:
             run_id=self.manifest.run_id,
             dataset_id=self.manifest.dataset_id,
             source_type=source_type,
+            historical_source_type=self.manifest.historical_source_type,
             instrument=self.manifest.instrument,
             venue=self.manifest.venue,
             session_id=self.manifest.session_id,
@@ -132,7 +140,7 @@ class CanonicalEvaluationStream:
 
     def feature_metadata(self) -> FeatureRunMetadata:
         source_type = {
-            "historical_control": "lobster",
+            "historical_control": self.manifest.historical_source_type or "lobster",
             "synthetic": "synthetic",
             "hybrid": "hybrid",
         }[self.manifest.mode]
@@ -140,6 +148,7 @@ class CanonicalEvaluationStream:
             run_id=self.manifest.run_id,
             dataset_id=self.manifest.dataset_id,
             source_type=source_type,
+            historical_source_type=self.manifest.historical_source_type,
             instrument=self.manifest.instrument,
             venue=self.manifest.venue,
             session_id=self.manifest.session_id,

@@ -103,7 +103,9 @@ class TrainingDataPolicy(_StrictModel):
     target: Literal["attack_active"] = "attack_active"
     training_fold: Literal["train"] = "train"
     early_stopping_fold: Literal["validation"] = "validation"
-    negative_label_source: Literal["independently_verified_clean"] = "independently_verified_clean"
+    negative_label_source: Literal[
+        "independently_verified_clean", "research_control_assumption"
+    ] = "independently_verified_clean"
     positive_label_source: Literal["synthetic_scenario"] = "synthetic_scenario"
     invalid_row_policy: Literal["reject"] = "reject"
     missing_value_policy: Literal["lightgbm_native"] = "lightgbm_native"

@@ -25,6 +25,7 @@ from app.ml.lightgbm.contracts import (
     LightGbmTrainingRun,
     LightGbmV1Hyperparameters,
     PreprocessingEvidence,
+    TrainingDataPolicy,
 )
 from app.ml.lightgbm.data import (
     GovernedFeatureDataset,
@@ -244,6 +245,9 @@ def train_binary_attack_model(
             git_commit=git_commit,
             created_at=created_at,
             training_seed=training_seed,
+            data_policy=TrainingDataPolicy(
+                negative_label_source=dataset.negative_label_source
+            ),
             ordered_feature_columns=dataset.ordered_feature_columns,
             input_features=_fold_inputs(dataset),
             hyperparameters=parameters,

@@ -194,6 +194,9 @@ class GovernedFeatureDataset:
     feature_release_sha256: str
     ordered_feature_columns: tuple[str, ...]
     folds: tuple[GovernedFeatureFold, ...]
+    negative_label_source: Literal[
+        "independently_verified_clean", "research_control_assumption"
+    ] = "independently_verified_clean"
 
     def fold(self, name: FoldName) -> GovernedFeatureFold:
         matches = [fold for fold in self.folds if fold.fold == name]

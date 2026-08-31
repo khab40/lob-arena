@@ -319,6 +319,32 @@
       ],
       "title": "Wave1ResourceRequest",
       "type": "object"
+    },
+    "Wave1TabularProjectionInput": {
+      "additionalProperties": false,
+      "properties": {
+        "frozen_root": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "kind": {
+          "const": "tabular-projection"
+        },
+        "projection": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
+        "projection_artifact_root": {
+          "title": "Projection Artifact Root",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "frozen_root",
+        "projection",
+        "projection_artifact_root"
+      ],
+      "title": "Wave1TabularProjectionInput",
+      "type": "object"
     }
   },
   "$id": "https://lob-arena.local/contracts/lightgbm-cloud-job-v1.schema.json",
@@ -396,7 +422,8 @@
       "discriminator": {
         "mapping": {
           "approved-research-fixture": "#/$defs/Wave1FixtureInput",
-          "governed-feature-release": "#/$defs/Wave1GovernedInput"
+          "governed-feature-release": "#/$defs/Wave1GovernedInput",
+          "tabular-projection": "#/$defs/Wave1TabularProjectionInput"
         },
         "propertyName": "kind"
       },
@@ -406,6 +433,9 @@
         },
         {
           "$ref": "#/$defs/Wave1GovernedInput"
+        },
+        {
+          "$ref": "#/$defs/Wave1TabularProjectionInput"
         }
       ],
       "title": "Input"

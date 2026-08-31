@@ -19,6 +19,7 @@ from app.features.io import (  # noqa: E402
     write_feature_run,
 )
 from app.features.pipeline import FeaturePipeline  # noqa: E402
+from app.features.models import LabelSpec  # noqa: E402
 from app.features.streaming import write_streaming_feature_run  # noqa: E402
 from app.corpus.governance import (  # noqa: E402
     GovernedCorpusManifest,
@@ -94,6 +95,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--streaming",
         action="store_true",
         help="Write bounded-memory Parquet row groups instead of retaining feature rows",
+    )
+    parser.add_argument(
+        "--research-control-assumption",
+        action="store_true",
+        help=(
+            "Explicitly label otherwise-unlabelled Nasdaq historical rows as negative "
+            "for the public-sample research benchmark; never claims independent review"
+        ),
     )
     parser.add_argument("--row-group-size", type=int, default=25_000)
     parser.add_argument("--quantile-sample-size", type=int, default=2_048)
@@ -219,6 +228,34 @@ def main(argv: list[str] | None = None) -> int:
         expected_event_count = replay_stream.manifest.event_count
     elif expected_event_count is None and args.events is not None:
         expected_event_count = _nonempty_line_count(args.events)
+    replay_manifest = (
+        replay.manifest
+        if replay is not None
+        else replay_stream.manifest
+        if replay_stream is not None
+        else None
+    )
+    if args.research_control_assumption:
+        if governed_requested or replay_manifest is None:
+            raise ValueError(
+                "research control assumption requires an unadjudicated replay manifest"
+            )
+        if replay_manifest.historical_source_type != "nasdaq_itch":
+            raise ValueError("research control assumption is restricted to Nasdaq ITCH")
+        if any(window.label == 0 for window in labels.labels):
+            raise ValueError("research control assumption cannot replace negative provenance")
+        labels = LabelSpec(
+            labels=labels.labels,
+            default_label=0,
+            default_label_source="research_control_assumption",
+        )
+        governed_label_provenance.update(
+            {
+                "negative_label_source": "research_control_assumption",
+                "negative_label_scope": "public_sample_research_only",
+                "independently_verified_clean": False,
+            }
+        )
     pipeline = FeaturePipeline(
         config,
         metadata,
@@ -226,13 +263,7 @@ def main(argv: list[str] | None = None) -> int:
         expected_event_count=expected_event_count,
     )
     if args.streaming:
-        governed_manifest = (
-            replay.manifest
-            if replay is not None
-            else replay_stream.manifest
-            if replay_stream is not None
-            else None
-        )
+        governed_manifest = replay_manifest
         replay_provenance = (
             {
                 "canonical_java_replay_bundle": governed_manifest.schema_version,

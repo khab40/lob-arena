@@ -1,7 +1,7 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-g4-check lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-g4-check lightgbm-wave1-g5-check lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke market-data-wave1-c0-check market-data-wave1-test market-data-wave1-container check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
-	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-g4-check lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
+	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-g4-check lightgbm-wave1-g5-check lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
 
 grader-smoke:
 	./scripts/grader-smoke.sh
@@ -112,6 +112,7 @@ lightgbm-v1-test:
 
 lightgbm-wave1-test:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest \
+		tests/test_lightgbm_g5.py \
 		tests/test_lightgbm_wave1.py \
 		tests/test_nebius_job_config_rendering.py \
 		tests/test_nebius_job_submit_adapter.py
@@ -122,6 +123,12 @@ lightgbm-wave1-g4-check:
 		-k "g4 or submitter or cloud_collection or fixture_staging"
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run \
 		python ../scripts/lightgbm_wave1.py --help >/dev/null
+
+lightgbm-wave1-g5-check:
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
+		tests/test_lightgbm_g5.py
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
+		python ../scripts/lightgbm_wave1.py g5-compare --help >/dev/null
 
 lightgbm-wave1-local-e2e:
 	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \
@@ -134,6 +141,43 @@ lightgbm-wave1-container-smoke:
 		"import lightgbm, mlflow, pyarrow; from app.ml.lightgbm.cloud_transport import execute_wave1_s3; print('wave1-s3-api-ok')"
 	docker run --rm --entrypoint python lob-arena-wave1-smoke:local \
 		/job/serverless/jobs/run_lightgbm_wave1.py run-s3 --help
+
+market-data-wave1-c0-check:
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev pytest -q \
+		tests/test_market_data_c0.py
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
+		app/market_data/public_sample.py \
+		tests/test_market_data_c0.py \
+		../scripts/market_data_wave1.py \
+		../scripts/submit_market_data_job.py \
+		../serverless/jobs/run_market_data_wave1.py
+
+market-data-wave1-test:
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
+		tests/test_market_data_c0.py \
+		tests/test_market_data_c1_c4.py \
+		tests/test_market_data_images.py \
+		tests/test_lightgbm_g5.py \
+		tests/test_lightgbm_wave1.py
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
+		app/market_data \
+		../scripts/market_data_wave1.py \
+		../scripts/submit_market_data_job.py \
+		../scripts/submit_market_data_stage_job.py \
+		../scripts/stage_lightgbm_projection.py \
+		../serverless/jobs/run_market_data_wave1.py \
+		../serverless/jobs/run_market_data_acquisition.py \
+		../serverless/jobs/run_market_data_preparation.py \
+		tests/test_market_data_images.py
+
+market-data-wave1-container:
+	docker build -f serverless/jobs/Dockerfile.market-data-acquisition \
+		-t lob-arena-market-data-acquisition:local .
+	docker run --rm lob-arena-market-data-acquisition:local acquire-s3 --help
+	./scripts/prepare-market-data-control-plane.sh
+	docker build -f serverless/jobs/Dockerfile.market-data-preparation \
+		-t lob-arena-market-data-preparation:local .
+	docker run --rm lob-arena-market-data-preparation:local prepare-s3 --help
 
 check-submit:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run pytest \

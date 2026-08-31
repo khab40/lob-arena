@@ -3,6 +3,7 @@ package ai.lobarena.controlplane;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,6 +56,17 @@ final class ArenaController {
 
     JsonNode exchangeEvents(long afterSequence, int limit) {
         return exchangeEvents(afterSequence, limit, null);
+    }
+
+    @DeleteMapping("/internal/arena/exchange-events/{streamId}")
+    JsonNode releaseExchangeEventStream(@PathVariable String streamId) {
+        try {
+            return arena.releaseExchangeEventStream(streamId);
+        } catch (IllegalArgumentException exception) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
+        } catch (IllegalStateException exception) {
+            throw new ResponseStatusException(HttpStatus.GONE, exception.getMessage(), exception);
+        }
     }
 
     @PostMapping("/api/simulation/start")

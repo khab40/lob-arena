@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /job
+
+ENV PYTHONPATH=/job/backend \
+    PYTHONUNBUFFERED=1 \
+    GIT_PYTHON_REFRESH=quiet
+
+COPY serverless/jobs/requirements.market-data-acquisition.txt \
+    /job/serverless/jobs/requirements.market-data-acquisition.txt
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir \
+        -r /job/serverless/jobs/requirements.market-data-acquisition.txt
+
+COPY backend/app /job/backend/app
+COPY serverless/jobs/run_market_data_acquisition.py \
+    /job/serverless/jobs/run_market_data_acquisition.py
+
+RUN python -c "from app.market_data.acquisition import execute_acquisition_s3; from app.market_data.public_sample import execute_c0_s3" \
+    && python /job/serverless/jobs/run_market_data_acquisition.py c0-s3 --help >/dev/null \
+    && python /job/serverless/jobs/run_market_data_acquisition.py acquire-s3 --help >/dev/null \
+    && aws --version
+
+ENTRYPOINT ["python", "/job/serverless/jobs/run_market_data_acquisition.py"]
+CMD ["--help"]

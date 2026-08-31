@@ -205,6 +205,7 @@ def _feature_row(
         "run_id": metadata.run_id,
         "dataset_id": metadata.dataset_id,
         "source_type": metadata.source_type,
+        "historical_source_type": metadata.historical_source_type,
         "instrument": metadata.instrument,
         "venue": metadata.venue,
         "session_id": metadata.session_id,
