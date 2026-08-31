@@ -184,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
             "market_data_transferred": False,
         }
         _write_new_json(args.evidence_output, payload)
-        print(json.dumps(payload, indent=2, sort_keys=True))
+        print("C0 dry-run evidence written; review the evidence file before submission.")
         return 0
 
     if not args.approval_reference or re.fullmatch(

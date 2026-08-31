@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import struct
 from argparse import Namespace
 from datetime import UTC, date, datetime
@@ -36,7 +37,11 @@ from app.market_data.projections import (
 from app.ml.lightgbm.contracts import ArtifactDigest
 from app.features.io import feature_arrow_schema
 from scripts.market_data_wave1 import prepare_acquisition
-from scripts.submit_market_data_stage_job import _job_command, _validate_arguments
+from scripts.submit_market_data_stage_job import (
+    _job_command,
+    _validate_arguments,
+    main as submit_stage_job,
+)
 
 
 def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> None:
@@ -113,6 +118,80 @@ def test_stage_submission_does_not_require_spend_reconciliation(
     args.data_prep_spend_usd = -1
     with pytest.raises(SystemExit, match="finite and non-negative"):
         _validate_arguments(args)
+
+
+def test_stage_dry_run_stdout_does_not_include_secret_selectors(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    for name in (
+        "NEBIUS_VOLUME",
+        "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID",
+        "NEBIUS_OBJECT_STORAGE_SECRET_ACCESS_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    lifecycle = QuarantineLifecycleEvidence(
+        bucket_id="storagebucket-e001935725601413893009",
+        bucket_resource_version="19",
+        prefix="data/public-sample-v1/quarantine/nasdaq/",
+        observed_at=datetime.now(UTC),
+        policy_sha256="a" * 64,
+    )
+    lifecycle_path = tmp_path / "lifecycle.json"
+    lifecycle_path.write_text(lifecycle.model_dump_json(), encoding="utf-8")
+    package_evidence = tmp_path / "package-evidence.json"
+    image = f"cr.eu-north1.nebius.cloud/example/market-data@sha256:{'b' * 64}"
+    prepare_acquisition(
+        run_id="nasdaq-stage-dry-run",
+        image=image,
+        filename="01302019.NASDAQ_ITCH50.gz",
+        sequence_number=1,
+        lifecycle_evidence=lifecycle_path,
+        source_config=Path(__file__).resolve().parents[2]
+        / "configs/data/nasdaq-public-sample-v1.json",
+        package=tmp_path / "package",
+        evidence_output=package_evidence,
+    )
+    package = json.loads(package_evidence.read_text(encoding="utf-8"))
+    dry_run = tmp_path / "dry-run.json"
+
+    assert (
+        submit_stage_job(
+            [
+                "--image",
+                image,
+                "--name",
+                "nasdaq-stage-dry-run",
+                "--subnet-id",
+                "subnet-test",
+                "--input-uri",
+                package["destination"],
+                "--request-evidence",
+                str(package_evidence),
+                "--access-key-secret-id",
+                "access-selector-must-not-leak",
+                "--secret-key-secret-id",
+                "secret-selector-must-not-leak",
+                "--data-prep-jobs-consumed",
+                "0",
+                "--evidence-output",
+                str(dry_run),
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr().out
+    payload = json.loads(dry_run.read_text(encoding="utf-8"))
+
+    assert output == (
+        "Market-data stage dry-run evidence written; review the evidence file before submission.\n"
+    )
+    assert "access-selector-must-not-leak" not in output
+    assert "secret-selector-must-not-leak" not in output
+    assert "AWS_ACCESS_KEY_ID=[MYSTERYBOX_SELECTOR]" in payload["command"]
+    assert "AWS_SECRET_ACCESS_KEY=[MYSTERYBOX_SELECTOR]" in payload["command"]
 
 
 def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:

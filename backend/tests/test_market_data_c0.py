@@ -258,6 +258,7 @@ def test_prepare_and_submit_dry_run_are_bounded_and_redacted(
     payload = json.loads(dry_run.read_text(encoding="utf-8"))
     command = payload["command"]
 
+    assert output == "C0 dry-run evidence written; review the evidence file before submission.\n"
     assert "access-selector-must-not-leak" not in output
     assert "secret-selector-must-not-leak" not in output
     assert "AWS_ACCESS_KEY_ID=[MYSTERYBOX_SELECTOR]" in command

@@ -96,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
             "market_data_transferred": False,
         }
         _write_once(args.evidence_output, payload)
-        print(json.dumps(payload, indent=2, sort_keys=True))
+        print("Market-data stage dry-run evidence written; review the evidence file before submission.")
         return 0
     reviewed_sha = _verify_submission_gate(args, request, package, common)
     completed = subprocess.run(command, check=False, text=True, capture_output=True)
