@@ -5,8 +5,9 @@ C2 sources are still sequentially approval-gated. The former combined runtime
 is now split into a published Python-only C0-C2 image and a published C3-C4
 image that consumes a prebuilt Java control-plane JAR. The initial sequence-1
 C3 Job exposed a Java priority-preservation contract defect and published no
-prepared objects. The local correction and phase-level logging pass review;
-fresh image publication and any retry remain separately approval-gated.
+prepared objects. The correction and phase-level logging now ship in a fresh
+verified immutable image. The reviewed retry package is local only; its S3
+publication and one retry Job remain separately exact-hash approval-gated.
 
 Date: 2026-08-31
 
@@ -502,12 +503,20 @@ Process one trading date per Job, initially sequentially. Each Job:
 After two dates show deterministic output and acceptable memory/runtime,
 parallelism may increase to two Jobs. Never process two jobs for the same date.
 
-Local readiness as of 2026-08-31: the sequence-1 preparation request for the
-completed `01302019.NASDAQ_ITCH50.gz` release is bound to source-manifest
-SHA-256 `3911cafe29820140be906ba0251bef8dfbab3832a3bcf138b0ff1ade53e05c54`
-and the immutable preparation image above. Its reviewed dry run declares no
-cloud mutation or market-data transfer. Package publication and the first C3
-Job require a separate exact-hash authorization.
+Retry readiness as of 2026-08-31: corrected commit
+`046b54c7cc454527f6b0094cfba03bd060d89bcf` produced control-plane JAR
+SHA-256 `ca6a2d47e8a51b78e846f9a628c6b6b4cf324bdb85976edb5f99edc16df12ff6`
+and fresh `linux/amd64` image
+`cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/mdp@sha256:19b2c17d94f9908c65699c5283e54cee23964969344f7a8a107f92db02517cfa`.
+Both the source tag and 64-character deployment alias resolve to that single
+OCI manifest through Docker and the Nebius registry API. The local retry
+package remains bound to the same immutable 4,764,426,091-byte C1 source and
+manifest SHA-256
+`3911cafe29820140be906ba0251bef8dfbab3832a3bcf138b0ff1ade53e05c54`.
+Its reviewed dry-run SHA-256 is
+`a0578a9335e6170b9a5455d91286648388edd39adfa0c093891307379c87b7ea`;
+it declares no cloud mutation or market-data transfer. Package publication and
+one retry Job require a separate exact-hash authorization.
 
 Initial C3 exit evidence as of 2026-08-31: Job
 `aijob-e00assx3d8vx375778` was bound to dry-run SHA-256
@@ -522,8 +531,9 @@ from unchanged side and integer price ticks, adds the exact price-move
 regression assertion, preserves frozen golden traces, and adds bounded logs for
 request/source download, validation, normalization, each of 27 replay
 comparisons, materialization and publication. Focused Python tests and the full
-simulation-kernel/control-plane Java suites pass. A fresh immutable preparation
-image and exact-hash retry review are required before another C3 Job.
+simulation-kernel/control-plane Java suites pass. The fresh image and reviewed
+retry dry run above supersede the failed request; no retry has yet been
+submitted.
 
 ### C4 - Corpus freeze and projection publication
 
