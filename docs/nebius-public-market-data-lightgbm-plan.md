@@ -419,6 +419,14 @@ Run exactly one acquisition Job for `01302019.NASDAQ_ITCH50.gz`:
   Job publishes selected normalized outputs; and
 - record Job ID, image digest, runtime, peak RSS, bytes/second and cost.
 
+Acquisition keeps this bounded resource contract. Preparation uses its own
+contract: `cpu-d3`, `8vcpu-32gb`, 250 GiB scratch and a 16-hour timeout. The
+larger envelope is based on the observed C3 runtime and OOM evidence, while
+the exporter and validator remain page-bounded and completed Java replay
+archives are released after each comparison. Duplicate control bundles are
+discarded only after their canonical hashes match the retained per-symbol
+control.
+
 If the pilot fails, stop and fix locally. Do not start the other six downloads.
 
 Cloud exit evidence as of 2026-08-30: Job `aijob-e00f2zk6kmsxtphrmm`
@@ -532,8 +540,19 @@ regression assertion, preserves frozen golden traces, and adds bounded logs for
 request/source download, validation, normalization, each of 27 replay
 comparisons, materialization and publication. Focused Python tests and the full
 simulation-kernel/control-plane Java suites pass. The fresh image and reviewed
-retry dry run above supersede the failed request; no retry has yet been
-submitted.
+retry dry run above superseded the failed request.
+
+The authorized retry Job `aijob-e00hr7zq7pjmem4v72` then completed source
+verification, one-pass normalization, and the first two AAPL comparisons. It
+failed during comparison 3 when the host OOM killer terminated Python at
+13,612,868 KiB anonymous RSS on the 16 GiB preset; no prepared objects or
+`SUCCESS` marker were published. That run confirms the priority-preservation
+fix and isolates a separate exporter scaling defect. The correction streams
+1,000-event pages directly to JSONL and Parquet, hashes and validates files
+incrementally, releases all four Java archives after each comparison, and
+retains only one hash-verified control bundle per symbol. A fresh C3 request
+must use the preparation-only `8vcpu-32gb`, 250 GiB, 16-hour contract described
+above; the failed image and request must not be reused.
 
 ### C4 - Corpus freeze and projection publication
 

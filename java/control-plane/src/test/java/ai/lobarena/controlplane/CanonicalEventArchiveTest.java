@@ -54,6 +54,32 @@ class CanonicalEventArchiveTest {
                 .hasMessageContaining("stream quota");
     }
 
+    @Test
+    void deletesACompletedStreamWithoutAffectingAnother(@TempDir Path output) {
+        CanonicalEventArchive archive =
+                new CanonicalEventArchive(output, mapper, 2, 1_000_000, this::json);
+        String first = archive.beginStream();
+        archive.append(event(1));
+        archive.flushCompletedTick();
+        String second = archive.beginStream();
+        archive.append(event(1));
+        archive.flushCompletedTick();
+
+        archive.deleteStream(first);
+
+        assertThat(output.resolve("history/exchange-events").resolve(first)).doesNotExist();
+        assertThat(archive.readAfter(second, 0, 10)).hasSize(1);
+        assertThatThrownBy(() -> archive.readAfter(first, 0, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("unknown canonical stream id");
+
+        archive.deleteStream(second);
+        String replacement = archive.beginStream();
+        archive.append(event(1));
+        archive.flushCompletedTick();
+        assertThat(archive.readAfter(replacement, 0, 10)).hasSize(1);
+    }
+
     private ObjectNode json(ExchangeEvent event) {
         return mapper.createObjectNode()
                 .put("sequence", event.getMetadata().getSequence())

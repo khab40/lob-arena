@@ -4,6 +4,7 @@ import hashlib
 import json
 import urllib.parse
 import urllib.request
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal
 
@@ -83,6 +84,7 @@ def export_replay_comparison(
     (output_root / "comparison.json").write_text(
         json.dumps(comparison, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
+    _release_comparison_streams(base_url, comparison, timeout_seconds)
     return control, hybrid, comparison
 
 
@@ -109,39 +111,12 @@ def _export_stream(
     alerts_path = output / "alerts.jsonl"
     ground_truth_path = output / "ground-truth.jsonl"
     validation_path = output / "validation.json"
-    events = _fetch_stream(base_url, stream_id, timeout_seconds=timeout_seconds)
-    if not events:
-        raise ValueError("Java canonical replay stream is empty")
-    events_path.write_text(
-        "".join(json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n" for event in events),
-        encoding="utf-8",
-    )
-    snapshots = [
-        {
-            "sequence": event["sequence"],
-            "exchange_timestamp_ns": event.get("exchange_timestamp_ns"),
-            "depth": event["depth"],
-            "book_json": json.dumps(event["book"], sort_keys=True, separators=(",", ":")),
-        }
-        for event in events
-        if event.get("event_type") == "snapshot"
-    ]
-    if not snapshots:
-        raise ValueError("Java canonical replay stream contains no snapshots")
-    pq.write_table(
-        pa.Table.from_pylist(
-            snapshots,
-            schema=pa.schema(
-                [
-                    ("sequence", pa.int64()),
-                    ("exchange_timestamp_ns", pa.int64()),
-                    ("depth", pa.int32()),
-                    ("book_json", pa.string()),
-                ]
-            ),
-        ),
-        snapshots_path,
-        compression="zstd",
+    event_count, snapshot_count, first_timestamp, last_timestamp = _write_stream_artifacts(
+        base_url=base_url,
+        stream_id=stream_id,
+        events_path=events_path,
+        snapshots_path=snapshots_path,
+        timeout_seconds=timeout_seconds,
     )
     alert_rows = []
     for detector, ticks in sorted(_object(summary, "detector_alert_ticks").items()):
@@ -169,11 +144,7 @@ def _export_stream(
         ground_truth = {**ground_truth, "run_id": run_id, "campaign_id": campaign_id}
         ground_truth_path.write_text(json.dumps(ground_truth, sort_keys=True) + "\n", encoding="utf-8")
         label_count = 1
-        ground_truth_reference = _artifact(
-            ground_truth_path, output, "ground_truth", "scenario_ground_truth_jsonl_v1"
-        )
-    first_timestamp = _timestamp(events[0])
-    last_timestamp = _timestamp(events[-1])
+        ground_truth_reference = _artifact(ground_truth_path, output, "ground_truth", "scenario_ground_truth_jsonl_v1")
     validation = {
         "schema_version": "canonical_java_replay_validation_v1",
         "verdict": "pass",
@@ -203,20 +174,18 @@ def _export_stream(
         tick_interval_ns=500_000_000,
         java_engine_version="lob-arena-control-plane-0.1.0",
         canonical_event_stream_hash=str(summary.get("stream_hash")),
-        event_count=len(events),
-        snapshot_count=len(snapshots),
+        event_count=event_count,
+        snapshot_count=snapshot_count,
         alert_count=len(alert_rows),
         label_count=label_count,
-        last_sequence=len(events),
+        last_sequence=event_count,
         first_timestamp_ns=first_timestamp,
         last_timestamp_ns=last_timestamp,
         events=_artifact(events_path, output, "canonical_events", "canonical_exchange_events_v1"),
         snapshots=_artifact(snapshots_path, output, "snapshots", "canonical_lob_snapshots_v1"),
         alerts=_artifact(alerts_path, output, "alerts", "detector_alerts_jsonl_v1"),
         ground_truth=ground_truth_reference,
-        validation=_artifact(
-            validation_path, output, "replay_validation", "canonical_java_replay_validation_v1"
-        ),
+        validation=_artifact(validation_path, output, "replay_validation", "canonical_java_replay_validation_v1"),
     )
     if int(summary.get("canonical_event_count", -1)) != manifest.event_count:
         raise ValueError("Java replay summary count does not match its exported stream")
@@ -225,17 +194,76 @@ def _export_stream(
         json.dumps(manifest.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-    list(open_canonical_evaluation_stream(manifest_path, artifact_root=output).iter_events())
+    validated_count = sum(
+        1 for _ in open_canonical_evaluation_stream(manifest_path, artifact_root=output).iter_events()
+    )
+    if validated_count != event_count:
+        raise ValueError("canonical replay validation count does not match the exported stream")
     return manifest_path
 
 
-def _fetch_stream(base_url: str, stream_id: str, *, timeout_seconds: float) -> list[dict[str, Any]]:
-    events: list[dict[str, Any]] = []
+_SNAPSHOT_SCHEMA = pa.schema(
+    [
+        ("sequence", pa.int64()),
+        ("exchange_timestamp_ns", pa.int64()),
+        ("depth", pa.int32()),
+        ("book_json", pa.string()),
+    ]
+)
+
+
+def _write_stream_artifacts(
+    *,
+    base_url: str,
+    stream_id: str,
+    events_path: Path,
+    snapshots_path: Path,
+    timeout_seconds: float,
+) -> tuple[int, int, int, int]:
+    event_count = 0
+    snapshot_count = 0
+    first_timestamp: int | None = None
+    last_timestamp: int | None = None
+    snapshot_writer: pq.ParquetWriter | None = None
+    try:
+        with events_path.open("w", encoding="utf-8") as event_file:
+            for page in _iter_stream_pages(base_url, stream_id, timeout_seconds=timeout_seconds):
+                snapshots: list[dict[str, Any]] = []
+                for event in page:
+                    timestamp = _timestamp(event)
+                    if first_timestamp is None:
+                        first_timestamp = timestamp
+                    last_timestamp = timestamp
+                    event_file.write(json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n")
+                    event_count += 1
+                    if event.get("event_type") == "snapshot":
+                        snapshots.append(
+                            {
+                                "sequence": event["sequence"],
+                                "exchange_timestamp_ns": event.get("exchange_timestamp_ns"),
+                                "depth": event["depth"],
+                                "book_json": json.dumps(event["book"], sort_keys=True, separators=(",", ":")),
+                            }
+                        )
+                if snapshots:
+                    if snapshot_writer is None:
+                        snapshot_writer = pq.ParquetWriter(snapshots_path, _SNAPSHOT_SCHEMA, compression="zstd")
+                    snapshot_writer.write_table(pa.Table.from_pylist(snapshots, schema=_SNAPSHOT_SCHEMA))
+                    snapshot_count += len(snapshots)
+    finally:
+        if snapshot_writer is not None:
+            snapshot_writer.close()
+    if event_count == 0 or first_timestamp is None or last_timestamp is None:
+        raise ValueError("Java canonical replay stream is empty")
+    if snapshot_count == 0:
+        raise ValueError("Java canonical replay stream contains no snapshots")
+    return event_count, snapshot_count, first_timestamp, last_timestamp
+
+
+def _iter_stream_pages(base_url: str, stream_id: str, *, timeout_seconds: float) -> Iterator[list[dict[str, Any]]]:
     after = 0
     while True:
-        query = urllib.parse.urlencode(
-            {"streamId": stream_id, "afterSequence": after, "limit": 1000}
-        )
+        query = urllib.parse.urlencode({"streamId": stream_id, "afterSequence": after, "limit": 1000})
         payload = _json_request(
             f"{base_url.rstrip('/')}/api/arena/exchange-events?{query}",
             method="GET",
@@ -244,12 +272,18 @@ def _fetch_stream(base_url: str, stream_id: str, *, timeout_seconds: float) -> l
         page = payload.get("events")
         if not isinstance(page, list) or any(not isinstance(item, dict) for item in page):
             raise ValueError("Java canonical event page is invalid")
-        events.extend(page)
         next_after = payload.get("next_after_sequence")
-        if not isinstance(next_after, int) or next_after < after:
+        if isinstance(next_after, bool) or not isinstance(next_after, int) or next_after < after:
             raise ValueError("Java canonical event cursor regressed")
-        if payload.get("has_more") is not True:
-            return events
+        has_more = payload.get("has_more")
+        if not isinstance(has_more, bool):
+            raise ValueError("Java canonical event page omitted its continuation state")
+        if page:
+            yield page
+        if not has_more:
+            return
+        if not page:
+            raise ValueError("Java canonical event page is empty before the end of the stream")
         if next_after == after:
             raise ValueError("Java canonical event cursor did not advance")
         after = next_after
@@ -258,7 +292,7 @@ def _fetch_stream(base_url: str, stream_id: str, *, timeout_seconds: float) -> l
 def _json_request(
     url: str,
     *,
-    method: Literal["GET", "POST"],
+    method: Literal["DELETE", "GET", "POST"],
     payload: dict[str, Any] | None = None,
     timeout: float,
 ) -> dict[str, Any]:
@@ -275,16 +309,43 @@ def _json_request(
     return result
 
 
-def _artifact(
-    path: Path, root: Path, name: str, schema_version: str
-) -> ArtifactReference:
+def _release_comparison_streams(base_url: str, comparison: dict[str, Any], timeout_seconds: float) -> None:
+    determinism = _object(comparison, "determinism")
+    stream_ids = (
+        _object(comparison, "control").get("stream_id"),
+        _object(comparison, "hybrid").get("stream_id"),
+        determinism.get("control_repeat_stream_id"),
+        determinism.get("hybrid_repeat_stream_id"),
+    )
+    if any(not isinstance(stream_id, str) or not stream_id for stream_id in stream_ids):
+        raise ValueError("Java replay comparison omitted a canonical stream ID")
+    for stream_id in dict.fromkeys(stream_ids):
+        response = _json_request(
+            f"{base_url.rstrip('/')}/internal/arena/exchange-events/"
+            f"{urllib.parse.quote(stream_id, safe='')}",
+            method="DELETE",
+            timeout=timeout_seconds,
+        )
+        if response.get("stream_id") != stream_id or response.get("released") is not True:
+            raise ValueError("Java control plane did not confirm canonical stream release")
+
+
+def _artifact(path: Path, root: Path, name: str, schema_version: str) -> ArtifactReference:
     return ArtifactReference(
         name=name,
         uri=path.relative_to(root).as_posix(),
-        sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+        sha256=_sha256_file(path),
         size_bytes=path.stat().st_size,
         schema_version=schema_version,
     )
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _object(payload: dict[str, Any], name: str) -> dict[str, Any]:

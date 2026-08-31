@@ -174,6 +174,12 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
     assert "/job/serverless/jobs/run_market_data_preparation.py prepare-s3" in preparation_args
     assert "run_market_data_wave1.py" not in acquisition_args
     assert "run_market_data_wave1.py" not in preparation_args
+    assert acquisition_command[acquisition_command.index("--preset") + 1] == "4vcpu-16gb"
+    assert acquisition_command[acquisition_command.index("--disk-size") + 1] == "100Gi"
+    assert acquisition_command[acquisition_command.index("--timeout") + 1] == "4h"
+    assert preparation_command[preparation_command.index("--preset") + 1] == "8vcpu-32gb"
+    assert preparation_command[preparation_command.index("--disk-size") + 1] == "250Gi"
+    assert preparation_command[preparation_command.index("--timeout") + 1] == "16h"
 
 
 def test_one_pass_normalizer_extracts_three_symbols_with_one_stream_scan(

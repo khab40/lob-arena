@@ -126,7 +126,9 @@ def main(argv: list[str] | None = None) -> int:
     payload = {
         "schema_version": "market_data_wave1_stage_submission_v1",
         "submitted_at": submitted_at.isoformat(),
-        "watchdog_deadline": (submitted_at + timedelta(hours=4)).isoformat(),
+        "watchdog_deadline": (
+            submitted_at + timedelta(seconds=request.resource.timeout_seconds)
+        ).isoformat(),
         "approval_reference": args.approval_reference,
         **common,
         "reviewed_dry_run_sha256": reviewed_sha,
@@ -217,7 +219,8 @@ def _job_command(
         "--parent-id", PROJECT_ID, "--image", deployment_image,
         "--container-command", "python", "--args", job_args,
         "--platform", request.resource.platform, "--preset", request.resource.preset,
-        "--disk-size", f"{request.resource.disk_size_gib}Gi", "--timeout", "4h",
+        "--disk-size", f"{request.resource.disk_size_gib}Gi",
+        "--timeout", _format_timeout(request.resource.timeout_seconds),
         "--subnet-id", args.subnet_id, "--restart-policy", "never",
         "--env-secret", f"AWS_ACCESS_KEY_ID={args.access_key_secret_id}",
         "--env-secret", f"AWS_SECRET_ACCESS_KEY={args.secret_key_secret_id}",
@@ -281,6 +284,12 @@ def _output_uri(request: Request) -> str:
         if isinstance(request, NasdaqAcquisitionRequest)
         else request.result_uri
     )
+
+
+def _format_timeout(timeout_seconds: int) -> str:
+    if timeout_seconds % 3600 == 0:
+        return f"{timeout_seconds // 3600}h"
+    return f"{timeout_seconds}s"
 
 
 def _write_once(path: Path, payload: object) -> None:

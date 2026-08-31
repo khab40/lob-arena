@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -210,6 +211,30 @@ final class CanonicalEventArchive implements AutoCloseable {
         return pending.size();
     }
 
+    synchronized void deleteStream(String requestedStreamId) {
+        Path requestedRoot = resolveStream(requestedStreamId);
+        try (var paths = Files.walk(requestedRoot)) {
+            paths.sorted(Comparator.reverseOrder()).forEach(path -> {
+                try {
+                    Files.delete(path);
+                } catch (IOException exception) {
+                    throw new StreamDeletionException(exception);
+                }
+            });
+        } catch (IOException | StreamDeletionException exception) {
+            throw new IllegalStateException(
+                    "failed to delete canonical stream " + requestedStreamId,
+                    exception instanceof StreamDeletionException ? exception.getCause() : exception);
+        }
+        if (requestedStreamId.equals(streamId)) {
+            streamId = null;
+            streamRoot = null;
+            latestPersistedSequence = 0;
+            archiveBytes = 0;
+            pending.clear();
+        }
+    }
+
     @Override
     public synchronized void close() {
         flushCompletedTick();
@@ -282,6 +307,12 @@ final class CanonicalEventArchive implements AutoCloseable {
     private record ArchivedEvent(long sequence, ObjectNode row) {}
 
     private record SegmentBatch(long segmentIndex, byte[] encoded, long lastSequence) {}
+
+    private static final class StreamDeletionException extends RuntimeException {
+        StreamDeletionException(IOException cause) {
+            super(cause);
+        }
+    }
 
     static final class ArchiveCapacityExceededException extends IllegalStateException {
         ArchiveCapacityExceededException(String message) {

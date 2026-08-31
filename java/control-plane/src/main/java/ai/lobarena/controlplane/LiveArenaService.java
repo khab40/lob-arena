@@ -432,6 +432,17 @@ final class LiveArenaService {
                 .put("has_more", next < latest);
     }
 
+    synchronized JsonNode releaseExchangeEventStream(String requestedStreamId) {
+        eventArchive.deleteStream(requestedStreamId);
+        if (requestedStreamId.equals(streamId)) {
+            streamId = null;
+            metricsArchiveBytes = 0;
+        }
+        return mapper.createObjectNode()
+                .put("stream_id", requestedStreamId)
+                .put("released", true);
+    }
+
     @Scheduled(fixedDelayString = "${lob.arena.tick-interval-ms:500}")
     synchronized void scheduledTick() {
         if (historical.loaded() && !normalizedHistoricalKernelReplay) {
@@ -627,6 +638,8 @@ final class LiveArenaService {
                                 .equals(repeatedHybrid.path("historical_snapshot_stream_hash")));
         determinism.put("control_repeat_stream_hash", repeatedControl.path("stream_hash").asText());
         determinism.put("hybrid_repeat_stream_hash", repeatedHybrid.path("stream_hash").asText());
+        determinism.put("control_repeat_stream_id", repeatedControl.path("stream_id").textValue());
+        determinism.put("hybrid_repeat_stream_id", repeatedHybrid.path("stream_id").textValue());
         ObjectNode impact = result.putObject("realism_impact");
         impact.put(
                 "canonical_event_count_delta",

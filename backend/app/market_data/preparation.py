@@ -23,7 +23,6 @@ from app.data_ingestion.itch import convert_itch_symbols
 from app.data_ingestion.models import DatasetManifest
 from app.evaluation.canonical_bundle import CanonicalJavaReplayManifest
 from app.market_data.acquisition import (
-    AcquisitionResourceRequest,
     NasdaqSourceReleaseManifest,
     _require_environment,
     _verify_gzip,
@@ -68,6 +67,16 @@ class _StrictModel(BaseModel):
         return hashlib.sha256(self.canonical_bytes()).hexdigest()
 
 
+class PreparationResourceRequest(_StrictModel):
+    platform: Literal["cpu-d3"] = "cpu-d3"
+    preset: Literal["8vcpu-32gb"] = "8vcpu-32gb"
+    cpu_count: Literal[8] = 8
+    memory_gib: Literal[32] = 32
+    disk_size_gib: Literal[250] = 250
+    timeout_seconds: Literal[57_600] = 57_600
+    gpu_count: Literal[0] = 0
+
+
 class NasdaqPreparationRequest(_StrictModel):
     schema_version: Literal["market_data_wave1_preparation_request_v1"] = "market_data_wave1_preparation_request_v1"
     run_id: str = Field(pattern=IDENTIFIER_PATTERN)
@@ -81,7 +90,7 @@ class NasdaqPreparationRequest(_StrictModel):
     source_release_uri: str
     source_release_manifest_sha256: str = Field(pattern=SHA256_PATTERN)
     result_uri: str
-    resource: AcquisitionResourceRequest = Field(default_factory=AcquisitionResourceRequest)
+    resource: PreparationResourceRequest = Field(default_factory=PreparationResourceRequest)
     symbols: tuple[Literal["AAPL", "MSFT", "NVDA"], ...] = SYMBOLS
     window_start_ms: Literal[36_000_000] = WINDOW_START_MS
     window_end_ms: Literal[37_800_000] = WINDOW_END_MS
@@ -383,6 +392,12 @@ def _run_replay_campaign(
                     if symbol not in control_runs:
                         control_runs[symbol] = control.run_id
                         feature_generator(control_manifest, staging / "features" / control.run_id)
+                    else:
+                        duplicate_control = control_manifest.parent.resolve()
+                        expected_control = (comparison_root / "control").resolve()
+                        if duplicate_control != expected_control:
+                            raise ValueError("control replay output escaped its comparison directory")
+                        shutil.rmtree(duplicate_control)
                     campaign_runs.append(hybrid.run_id)
                     feature_generator(hybrid_manifest, staging / "features" / hybrid.run_id)
     return control_runs, campaign_runs
