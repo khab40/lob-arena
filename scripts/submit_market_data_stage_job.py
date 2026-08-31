@@ -199,10 +199,16 @@ def _job_command(
     args: argparse.Namespace, request: Request, deployment_image: str
 ) -> list[str]:
     repository, digest = args.image.rsplit("@sha256:", maxsplit=1)
-    operation = "acquire-s3" if isinstance(request, NasdaqAcquisitionRequest) else "prepare-s3"
-    work_root = "/job/market-data-acquire" if operation == "acquire-s3" else "/job/market-data-prepare"
+    if isinstance(request, NasdaqAcquisitionRequest):
+        runner = "/job/serverless/jobs/run_market_data_acquisition.py"
+        operation = "acquire-s3"
+        work_root = "/job/market-data-acquire"
+    else:
+        runner = "/job/serverless/jobs/run_market_data_preparation.py"
+        operation = "prepare-s3"
+        work_root = "/job/market-data-prepare"
     job_args = (
-        f"/job/serverless/jobs/run_market_data_wave1.py {operation} "
+        f"{runner} {operation} "
         f"--input-uri {args.input_uri.rstrip('/')} --work-root {work_root} "
         f"--endpoint-url {OBJECT_STORAGE_ENDPOINT}"
     )

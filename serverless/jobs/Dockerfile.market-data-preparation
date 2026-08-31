@@ -1,0 +1,39 @@
+FROM eclipse-temurin:25-jre AS java-runtime
+
+FROM python:3.11-slim
+
+WORKDIR /job
+
+ENV PYTHONPATH=/job/backend \
+    PYTHONUNBUFFERED=1 \
+    GIT_PYTHON_REFRESH=quiet \
+    JAVA_HOME=/opt/java/openjdk \
+    PATH=/opt/java/openjdk/bin:${PATH}
+
+COPY --from=java-runtime /opt/java/openjdk /opt/java/openjdk
+COPY build/market-data/control-plane.jar /job/java/control-plane.jar
+COPY serverless/jobs/requirements.market-data-preparation.txt \
+    /job/serverless/jobs/requirements.market-data-preparation.txt
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir \
+        -r /job/serverless/jobs/requirements.market-data-preparation.txt
+
+COPY backend/app /job/backend/app
+COPY scripts/generate_features.py /job/scripts/generate_features.py
+COPY configs/features /job/configs/features
+COPY configs/data /job/configs/data
+COPY configs/benchmark /job/configs/benchmark
+COPY serverless/jobs/run_market_data_preparation.py \
+    /job/serverless/jobs/run_market_data_preparation.py
+
+RUN test -s /job/java/control-plane.jar \
+    && java -version \
+    && python -c "from app.market_data.preparation import execute_preparation_s3" \
+    && python /job/serverless/jobs/run_market_data_preparation.py prepare-s3 --help >/dev/null \
+    && aws --version
+
+ENTRYPOINT ["python", "/job/serverless/jobs/run_market_data_preparation.py"]
+CMD ["--help"]

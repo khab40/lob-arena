@@ -16,7 +16,8 @@ from app.market_data.acquisition import (
     NasdaqAcquisitionRequest,
     QuarantineLifecycleEvidence,
 )
-from app.market_data.public_sample import EXPECTED_SOURCES
+from app.market_data.preparation import NasdaqPreparationRequest
+from app.market_data.public_sample import EXPECTED_SOURCES, load_source_config
 from app.market_data.projections import (
     EXPECTED_SOURCE_DATES,
     FrozenPublicSampleRoot,
@@ -35,7 +36,7 @@ from app.market_data.projections import (
 from app.ml.lightgbm.contracts import ArtifactDigest
 from app.features.io import feature_arrow_schema
 from scripts.market_data_wave1 import prepare_acquisition
-from scripts.submit_market_data_stage_job import _validate_arguments
+from scripts.submit_market_data_stage_job import _job_command, _validate_arguments
 
 
 def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> None:
@@ -112,6 +113,67 @@ def test_stage_submission_does_not_require_spend_reconciliation(
     args.data_prep_spend_usd = -1
     with pytest.raises(SystemExit, match="finite and non-negative"):
         _validate_arguments(args)
+
+
+def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
+    source = load_source_config(
+        Path(__file__).resolve().parents[2] / "configs/data/nasdaq-public-sample-v1.json"
+    ).sources[0]
+    image = f"cr.eu-north1.nebius.cloud/example/mda@sha256:{'b' * 64}"
+    run_id = "nasdaq-split-entrypoint"
+    common = {
+        "run_id": run_id,
+        "sequence_number": 1,
+        "image": image,
+        "git_commit": "a" * 40,
+        "created_at": datetime.now(UTC),
+        "source": source,
+    }
+    acquisition = NasdaqAcquisitionRequest(
+        **common,
+        lifecycle=QuarantineLifecycleEvidence(
+            bucket_id="storagebucket-e001935725601413893009",
+            bucket_resource_version="20",
+            prefix="data/public-sample-v1/quarantine/nasdaq/",
+            observed_at=datetime.now(UTC),
+            policy_sha256="c" * 64,
+        ),
+        quarantine_uri=(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+            f"quarantine/nasdaq/{source.date.isoformat()}/{run_id}"
+        ),
+        max_download_bytes=source.expected_content_length,
+    )
+    preparation = NasdaqPreparationRequest(
+        **common,
+        source_release_uri=(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+            f"quarantine/nasdaq/{source.date.isoformat()}/nasdaq-source-release"
+        ),
+        source_release_manifest_sha256="d" * 64,
+        result_uri=(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+            f"prepared/{source.date.isoformat()}/{run_id}"
+        ),
+    )
+    args = Namespace(
+        image=image,
+        input_uri="s3://example/input",
+        name="nasdaq-split-entrypoint",
+        subnet_id="vpcsubnet-example",
+        access_key_secret_id="mbsec-access",
+        secret_key_secret_id="mbsec-secret",
+    )
+
+    acquisition_command = _job_command(args, acquisition, "registry/mda:short")
+    preparation_command = _job_command(args, preparation, "registry/mdp:short")
+    acquisition_args = acquisition_command[acquisition_command.index("--args") + 1]
+    preparation_args = preparation_command[preparation_command.index("--args") + 1]
+
+    assert "/job/serverless/jobs/run_market_data_acquisition.py acquire-s3" in acquisition_args
+    assert "/job/serverless/jobs/run_market_data_preparation.py prepare-s3" in preparation_args
+    assert "run_market_data_wave1.py" not in acquisition_args
+    assert "run_market_data_wave1.py" not in preparation_args
 
 
 def test_one_pass_normalizer_extracts_three_symbols_with_one_stream_scan(

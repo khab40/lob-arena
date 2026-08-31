@@ -109,6 +109,32 @@ docker run --rm -v "$PWD/outputs:/job/outputs" nebius-market-abuse-jobs \
   python synthetic_dataset_factory.py --samples 100 --output /job/outputs/synthetic-dataset
 ```
 
+### Governed public-market-data images
+
+C0-C2 use a Python-only acquisition image:
+
+```bash
+docker build --platform linux/amd64 \
+  -f serverless/jobs/Dockerfile.market-data-acquisition \
+  -t lob-arena-market-data-acquisition:local .
+docker run --rm lob-arena-market-data-acquisition:local acquire-s3 --help
+```
+
+C3-C4 use a distinct preparation image. Build the platform-independent Java
+control-plane JAR once on the host, then copy it into the image with a JRE:
+
+```bash
+./scripts/prepare-market-data-control-plane.sh
+docker build --platform linux/amd64 \
+  -f serverless/jobs/Dockerfile.market-data-preparation \
+  -t lob-arena-market-data-preparation:local .
+docker run --rm lob-arena-market-data-preparation:local prepare-s3 --help
+```
+
+The acquisition image contains neither Java nor PyArrow. The preparation
+Dockerfile never runs Gradle; `build/market-data/control-plane.jar` is ignored
+by Git and admitted to the Docker context only for this build.
+
 ## Notes
 
 - Keep run counts small while testing on Nebius to control time and cost.

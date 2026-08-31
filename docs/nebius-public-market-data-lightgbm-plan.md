@@ -1,12 +1,12 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: C0-C4 repository implementation, the dedicated cloud foundation, fresh
-`linux/amd64` Registry image and C0 cloud preflight are complete. Every Nasdaq
-source transfer/preparation Job, projection publication, access-denial proof and
-key deactivation remain separately approval-gated. No Nasdaq response body or
-multi-gigabyte source transfer is authorized or started.
+Status: C0 and C1 passed. The first C2 sequence-2 attempt verified the source
+but failed before quarantine publication; its multipart correction is complete.
+The former combined runtime is now split into a Python-only C0-C2 image and a
+C3-C4 image that consumes a prebuilt Java control-plane JAR. Fresh split-image
+Registry publication and every subsequent Job remain separately approval-gated.
 
-Date: 2026-08-29
+Date: 2026-08-31
 
 ## Decision
 
@@ -346,7 +346,25 @@ Disposition is `c0_preflight_passed`. Post-C0 spend is USD 12.22 including VAT,
 a measured USD 0.60 increment from the USD 11.62 pre-C0 baseline. C1 was later
 authorized against exact dry-run SHA-256
 `df0aa1398329db99b23775de37435bea0000b15eaa26da6a36ab1f910640d960`
-and completed successfully on 2026-08-30. C2 remains unauthorized.
+and completed successfully on 2026-08-30. The failed C2 attempt consumed the
+third public-data Job; no retry is authorized yet.
+
+### Split C0-C4 runtime contract
+
+The runtime is split at the source-to-derived-data boundary:
+
+- C0-C2 use `Dockerfile.market-data-acquisition`, a Python-only image containing
+  AWS CLI and Pydantic. It contains neither Java nor PyArrow and exposes only
+  preflight, acquisition, and local verification commands.
+- C3-C4 use `Dockerfile.market-data-preparation`, containing Python, PyArrow,
+  protobuf bindings, a Temurin 25 JRE, and a checksum-bound control-plane JAR.
+  `scripts/prepare-market-data-control-plane.sh` builds the platform-independent
+  JAR once; Gradle never runs inside the `linux/amd64` Docker build.
+
+The submitters select the entrypoint from the immutable request type. C0 and
+acquisition requests invoke `run_market_data_acquisition.py`; preparation
+requests invoke `run_market_data_preparation.py`. The combined image is not
+part of the forward C-step path.
 
 ### 2026-08-28 C1-C4 implementation review
 
@@ -437,6 +455,16 @@ the existing metadata/head/full-read-back verification, and classifies an
 `EntityTooLarge` response without exposing stderr. Forty focused tests and
 Ruff pass. Public-data consumption is 3 of 15 Jobs. A fresh immutable image and
 an exact-hash retry authorization are required before another sequence-2 Job.
+
+The corrected combined image was published at
+`sha256:25390eb07a306243a9ec85a6202c50bb3c511b700a20e1e2ea0f0279e1ee3429`
+without a Job submission, then superseded before use by the runtime split. The
+local split images pass `linux/amd64` smokes: the C0-C2 image is 76,499,199
+bytes and proves Java and PyArrow absent; the C3-C4 image is 316,640,186 bytes
+and contains Temurin 25.0.4, PyArrow 25.0.1, and control-plane JAR SHA-256
+`85d6abf93629fa4c25953cde6f213a1da0d9ff05f7d68b10a6b52fe168bf6774`.
+Fifty-seven focused tests and Ruff pass. These are local artifacts only until
+the split is committed and fresh immutable Registry publication is approved.
 
 ### C3 - Preparation and replay
 

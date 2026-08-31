@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     if len(repository) > 64:
         raise SystemExit("C0 image repository is too long for the verified Job context")
     job_args = (
-        "/job/serverless/jobs/run_market_data_wave1.py c0-s3 "
+        "/job/serverless/jobs/run_market_data_acquisition.py c0-s3 "
         f"--input-uri {args.input_uri} --work-root /job/market-data-c0 "
         f"--endpoint-url {OBJECT_STORAGE_ENDPOINT}"
     )

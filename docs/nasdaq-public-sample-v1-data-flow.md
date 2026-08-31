@@ -4,7 +4,8 @@ Status: C0 connectivity/storage preflight passed on 2026-08-29. C1 acquired
 and verified the first Nasdaq ITCH source on 2026-08-30. The first C2 attempt
 verified the second source but failed before quarantine publication because the
 source exceeds the S3 single-`PutObject` limit. A multipart fix is locally
-reviewed; a fresh image and any retry remain separately approval-gated.
+reviewed. The split C0-C2/C3-C4 runtimes pass locally; fresh split-image
+publication and any retry remain separately approval-gated.
 
 ## Purpose
 
@@ -94,7 +95,9 @@ data.
 ```mermaid
 flowchart LR
     Nasdaq["Seven full-day Nasdaq ITCH gzip files"]
+    Acquire["Python-only C0-C2 image"]
     Quarantine["Versioned 3-day quarantine"]
+    Prepare["Python + prebuilt Java C3-C4 image"]
     Normalize["ITCH validation and one-pass 3-symbol normalization"]
     Book["10-level events and book snapshots<br/>10:00-10:30 ET"]
     Replay["Java chronological control and hybrid replays"]
@@ -104,7 +107,7 @@ flowchart LR
     G5["Three LightGBM G5 jobs"]
     Live["Later live feed mapped to the same contracts"]
 
-    Nasdaq --> Quarantine --> Normalize --> Book --> Replay --> Features
+    Nasdaq --> Acquire --> Quarantine --> Prepare --> Normalize --> Book --> Replay --> Features
     Features --> Dev --> G5
     Features --> Final
     Live --> Replay
@@ -120,6 +123,12 @@ Offline real-time-mode evaluation delivers historical canonical events in
 chronological order through the Java control plane. A future production
 detector will consume a new live feed mapped to the same canonical contracts;
 it will not treat the 2019-2020 files as live input.
+
+The acquisition runtime intentionally has no Java or PyArrow. Java begins only
+after a source has passed C2 and entered lifecycle-bound quarantine. C3/C4 use
+a separate preparation runtime with a prebuilt, checksum-bound control-plane
+JAR; the `linux/amd64` image build copies that JAR and never compiles Java under
+emulation.
 
 ## Bounded Cloud Stages
 

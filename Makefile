@@ -156,6 +156,7 @@ market-data-wave1-test:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
 		tests/test_market_data_c0.py \
 		tests/test_market_data_c1_c4.py \
+		tests/test_market_data_images.py \
 		tests/test_lightgbm_g5.py \
 		tests/test_lightgbm_wave1.py
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
@@ -164,11 +165,19 @@ market-data-wave1-test:
 		../scripts/submit_market_data_job.py \
 		../scripts/submit_market_data_stage_job.py \
 		../scripts/stage_lightgbm_projection.py \
-		../serverless/jobs/run_market_data_wave1.py
+		../serverless/jobs/run_market_data_wave1.py \
+		../serverless/jobs/run_market_data_acquisition.py \
+		../serverless/jobs/run_market_data_preparation.py \
+		tests/test_market_data_images.py
 
 market-data-wave1-container:
-	docker build -f serverless/jobs/Dockerfile.market-data -t lob-arena-market-data:local .
-	docker run --rm lob-arena-market-data:local prepare-s3 --help
+	docker build -f serverless/jobs/Dockerfile.market-data-acquisition \
+		-t lob-arena-market-data-acquisition:local .
+	docker run --rm lob-arena-market-data-acquisition:local acquire-s3 --help
+	./scripts/prepare-market-data-control-plane.sh
+	docker build -f serverless/jobs/Dockerfile.market-data-preparation \
+		-t lob-arena-market-data-preparation:local .
+	docker run --rm lob-arena-market-data-preparation:local prepare-s3 --help
 
 check-submit:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run pytest \
