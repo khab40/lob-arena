@@ -1,10 +1,11 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: C0 and C1 passed. The first C2 sequence-2 attempt verified the source
-but failed before quarantine publication; its multipart correction is complete.
-The former combined runtime is now split into a Python-only C0-C2 image and a
-C3-C4 image that consumes a prebuilt Java control-plane JAR. Fresh split-image
-Registry publication and every subsequent Job remain separately approval-gated.
+Status: C0, C1 and the corrected C2 sequence-2 acquisition passed. The remaining
+C2 sources are still sequentially approval-gated. The former combined runtime
+is now split into a published Python-only C0-C2 image and a published C3-C4
+image that consumes a prebuilt Java control-plane JAR. The local sequence-1 C3
+package and reviewed dry run are ready; publication and Job submission remain
+separately approval-gated.
 
 Date: 2026-08-31
 
@@ -347,7 +348,8 @@ a measured USD 0.60 increment from the USD 11.62 pre-C0 baseline. C1 was later
 authorized against exact dry-run SHA-256
 `df0aa1398329db99b23775de37435bea0000b15eaa26da6a36ab1f910640d960`
 and completed successfully on 2026-08-30. The failed C2 attempt consumed the
-third public-data Job; no retry is authorized yet.
+third public-data Job. The exact-hash retry was subsequently authorized and
+completed successfully as the fourth public-data Job on 2026-08-31.
 
 ### Split C0-C4 runtime contract
 
@@ -453,8 +455,19 @@ left no current object and one delete marker; `SUCCESS` was never written. The
 local fix selects an AWS CLI managed multipart transfer above 5 GiB, retains
 the existing metadata/head/full-read-back verification, and classifies an
 `EntityTooLarge` response without exposing stderr. Forty focused tests and
-Ruff pass. Public-data consumption is 3 of 15 Jobs. A fresh immutable image and
-an exact-hash retry authorization are required before another sequence-2 Job.
+Ruff pass. At that stop point, public-data consumption was 3 of 15 Jobs; the
+retry required a fresh immutable image and exact-hash authorization.
+
+Corrected sequence-2 exit evidence as of 2026-08-31: Job
+`aijob-e00xj11g1v148xksq3`, bound to reviewed dry-run SHA-256
+`5cf39bfd6d4f3cb576e31a144d30fdd444491834c8559421ad4e3442bf6b3816`,
+completed in 781.692 seconds. It downloaded exactly 5,510,131,732 bytes in one
+HTTP request, verified gzip integrity and SHA-256
+`7997025b9e09dd6c2ecb0bfa48a856197e6e800711ab67367ee0f2ab724b9ba8`,
+then used managed multipart upload to publish six versioned quarantine objects
+with `SUCCESS` last. Independent S3 readback confirmed the source length,
+version `1`, multipart ETag, SHA-256 object metadata and five small evidence
+objects. Public-data consumption is now 4 of 15 Jobs.
 
 The corrected combined image was published at
 `sha256:25390eb07a306243a9ec85a6202c50bb3c511b700a20e1e2ea0f0279e1ee3429`
@@ -463,8 +476,15 @@ local split images pass `linux/amd64` smokes: the C0-C2 image is 76,499,199
 bytes and proves Java and PyArrow absent; the C3-C4 image is 316,640,186 bytes
 and contains Temurin 25.0.4, PyArrow 25.0.1, and control-plane JAR SHA-256
 `85d6abf93629fa4c25953cde6f213a1da0d9ff05f7d68b10a6b52fe168bf6774`.
-Fifty-seven focused tests and Ruff pass. These are local artifacts only until
-the split is committed and fresh immutable Registry publication is approved.
+Fifty-seven focused tests and Ruff pass. Commit
+`f5fc53887807f55b51fdde853c90f42c8afdb210` was built and published as exact
+`linux/amd64` manifests. The acquisition image digest is
+`sha256:ae9556d6cce3c8d54f012048535ccae29bcf5966f62616dda69dfb3f0820d97d`;
+the preparation image digest is
+`sha256:4d7580c4a3c610229d941166f5c63104b13e42ea9f00e32386264035f5edc83e`.
+Their Nebius-compatible 64-character deployment references are respectively
+`ma:ae9556d6cce3c8d5` and `mp:4d7580c4a3c61022`, and post-publication readback
+matches the immutable source manifests exactly.
 
 ### C3 - Preparation and replay
 
@@ -480,6 +500,13 @@ Process one trading date per Job, initially sequentially. Each Job:
 
 After two dates show deterministic output and acceptable memory/runtime,
 parallelism may increase to two Jobs. Never process two jobs for the same date.
+
+Local readiness as of 2026-08-31: the sequence-1 preparation request for the
+completed `01302019.NASDAQ_ITCH50.gz` release is bound to source-manifest
+SHA-256 `3911cafe29820140be906ba0251bef8dfbab3832a3bcf138b0ff1ade53e05c54`
+and the immutable preparation image above. Its reviewed dry run declares no
+cloud mutation or market-data transfer. Package publication and the first C3
+Job require a separate exact-hash authorization.
 
 ### C4 - Corpus freeze and projection publication
 
