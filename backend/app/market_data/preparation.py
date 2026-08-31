@@ -62,18 +62,14 @@ class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     def canonical_bytes(self) -> bytes:
-        return json.dumps(
-            self.model_dump(mode="json"), allow_nan=False, sort_keys=True, separators=(",", ":")
-        ).encode()
+        return json.dumps(self.model_dump(mode="json"), allow_nan=False, sort_keys=True, separators=(",", ":")).encode()
 
     def canonical_hash(self) -> str:
         return hashlib.sha256(self.canonical_bytes()).hexdigest()
 
 
 class NasdaqPreparationRequest(_StrictModel):
-    schema_version: Literal["market_data_wave1_preparation_request_v1"] = (
-        "market_data_wave1_preparation_request_v1"
-    )
+    schema_version: Literal["market_data_wave1_preparation_request_v1"] = "market_data_wave1_preparation_request_v1"
     run_id: str = Field(pattern=IDENTIFIER_PATTERN)
     sequence_number: int = Field(ge=1, le=7)
     project_id: Literal["project-e00g6zvxpr00waz8t3y51k"] = PROJECT_ID
@@ -90,9 +86,7 @@ class NasdaqPreparationRequest(_StrictModel):
     window_start_ms: Literal[36_000_000] = WINDOW_START_MS
     window_end_ms: Literal[37_800_000] = WINDOW_END_MS
     depth: Literal[10] = 10
-    attack_families: tuple[
-        Literal["spoofing_like_wall", "layering_like", "quote_stuffing"], ...
-    ] = ATTACK_FAMILIES
+    attack_families: tuple[Literal["spoofing_like_wall", "layering_like", "quote_stuffing"], ...] = ATTACK_FAMILIES
     seeds: tuple[Literal[41, 42, 43], ...] = SEEDS
     restart_policy: Literal["never"] = "never"
 
@@ -107,19 +101,14 @@ class NasdaqPreparationRequest(_StrictModel):
         )
         if re.fullmatch(source_pattern, self.source_release_uri.rstrip("/")) is None:
             raise ValueError("preparation source URI escaped the exact quarantine date")
-        expected_result = (
-            f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/"
-            f"prepared/{date_path}/{self.run_id}"
-        )
+        expected_result = f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/prepared/{date_path}/{self.run_id}"
         if self.result_uri != expected_result:
             raise ValueError("preparation result URI escaped the exact date/run prefix")
         return self
 
 
 class PreparationManifest(_StrictModel):
-    schema_version: Literal["market_data_wave1_preparation_result_v1"] = (
-        "market_data_wave1_preparation_result_v1"
-    )
+    schema_version: Literal["market_data_wave1_preparation_result_v1"] = "market_data_wave1_preparation_result_v1"
     run_id: str
     source_filename: str
     source_sha256: str = Field(pattern=SHA256_PATTERN)
@@ -156,88 +145,110 @@ def execute_preparation(
     replay_exporter: ReplayExporter | None = None,
     feature_generator: FeatureGenerator | None = None,
 ) -> Path:
-    request = NasdaqPreparationRequest.model_validate_json(
-        request_path.read_text(encoding="utf-8")
-    )
-    verify_complete_result(source_root)
-    source_manifest_path = source_root / "source.json"
-    if sha256_file(source_manifest_path) != request.source_release_manifest_sha256:
-        raise ValueError("preparation source manifest hash does not match its request")
-    source_manifest = NasdaqSourceReleaseManifest.model_validate_json(
-        source_manifest_path.read_text(encoding="utf-8")
-    )
-    source_path = source_root / request.source.filename
-    if (
-        source_manifest.source_filename != request.source.filename
-        or source_manifest.trade_date != request.source.date.isoformat()
-        or source_manifest.sha256 != sha256_file(source_path)
-        or source_manifest.observed_size_bytes != source_path.stat().st_size
+    request = NasdaqPreparationRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
+    with JOB_LOG.phase(
+        "source-validation",
+        "Verify the downloaded source release inventory, identity, length, SHA-256, and gzip integrity.",
+        run_id=request.run_id,
+        source_filename=request.source.filename,
+        expected_bytes=request.source.expected_content_length,
     ):
-        raise ValueError("preparation source release is not bound to the request")
-    _verify_gzip(source_path)
+        verify_complete_result(source_root)
+        source_manifest_path = source_root / "source.json"
+        if sha256_file(source_manifest_path) != request.source_release_manifest_sha256:
+            raise ValueError("preparation source manifest hash does not match its request")
+        source_manifest = NasdaqSourceReleaseManifest.model_validate_json(
+            source_manifest_path.read_text(encoding="utf-8")
+        )
+        source_path = source_root / request.source.filename
+        if (
+            source_manifest.source_filename != request.source.filename
+            or source_manifest.trade_date != request.source.date.isoformat()
+            or source_manifest.sha256 != sha256_file(source_path)
+            or source_manifest.observed_size_bytes != source_path.stat().st_size
+        ):
+            raise ValueError("preparation source release is not bound to the request")
+        _verify_gzip(source_path)
     result_root.parent.mkdir(parents=True, exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=f".{request.run_id}.", dir=result_root.parent))
     try:
         normalized_root = staging / "normalized"
-        manifests = convert_itch_symbols(
-            source_path,
-            normalized_root,
-            symbols=SYMBOLS,
-            trade_date=request.source.date.isoformat(),
-            start_time_ms=request.window_start_ms,
-            end_time_ms=request.window_end_ms,
-            depth=request.depth,
-            source_name=request.source.filename,
-            min_free_bytes=10 * 1024**3,
-            max_working_bytes=20 * 1024**3,
-        )
+        with JOB_LOG.phase(
+            "normalization",
+            "Normalize all three allowlisted symbols from one bounded ITCH source pass.",
+            run_id=request.run_id,
+            symbol_count=len(SYMBOLS),
+            window_start_ms=request.window_start_ms,
+            window_end_ms=request.window_end_ms,
+        ):
+            manifests = convert_itch_symbols(
+                source_path,
+                normalized_root,
+                symbols=SYMBOLS,
+                trade_date=request.source.date.isoformat(),
+                start_time_ms=request.window_start_ms,
+                end_time_ms=request.window_end_ms,
+                depth=request.depth,
+                source_name=request.source.filename,
+                min_free_bytes=10 * 1024**3,
+                max_working_bytes=20 * 1024**3,
+            )
         java_context = (
             _local_java_control_plane(java_jar, normalized_root, staging / "java")
             if java_jar is not None
             else nullcontext(java_base_url)
         )
-        with java_context as active_java_url:
-            control_runs, campaign_runs = _run_replay_campaign(
-                java_base_url=active_java_url,
-                staging=staging,
-                manifests=manifests,
-                replay_exporter=replay_exporter or export_replay_comparison,
-                feature_generator=feature_generator or _generate_features,
-            )
-        (staging / "request.json").write_bytes(request.canonical_bytes())
-        inventory = inventory_directory(staging)
-        inventory_hash = hashlib.sha256(
-            json.dumps(
-                inventory.model_dump(mode="json"), sort_keys=True, separators=(",", ":")
-            ).encode()
-        ).hexdigest()
-        shared_config_hashes = {item.parser_config_sha256 for item in manifests.values()}
-        if len(shared_config_hashes) != 1:
-            raise ValueError("one-pass normalization emitted divergent parser configs")
-        message_counts = {json.dumps(item.message_counts, sort_keys=True) for item in manifests.values()}
-        if len(message_counts) != 1:
-            raise ValueError("one-pass normalization emitted divergent ITCH message coverage")
-        shared_message_counts = next(iter(manifests.values())).message_counts
-        if shared_message_counts.get("S", 0) < 1:
-            raise ValueError("Nasdaq source omitted required ITCH system-event coverage")
-        preparation = PreparationManifest(
+        with JOB_LOG.phase(
+            "replay-campaign",
+            "Run the pinned Java control plane, repeat-determinism gates, and causal feature generation.",
             run_id=request.run_id,
-            source_filename=request.source.filename,
-            source_sha256=source_manifest.sha256,
-            source_manifest_sha256=request.source_release_manifest_sha256,
-            parser_version=next(iter(manifests.values())).parser_version or "",
-            parser_config_sha256=next(iter(shared_config_hashes)),
-            itch_message_counts=shared_message_counts,
-            system_event_count=shared_message_counts["S"],
-            symbols=SYMBOLS,
-            dataset_ids={symbol: manifests[symbol].dataset_id for symbol in SYMBOLS},
-            control_run_ids=control_runs,
-            campaign_run_ids=tuple(campaign_runs),
-            payload_inventory_sha256=inventory_hash,
-            created_at=datetime.now(UTC),
-        )
-        (staging / "preparation.json").write_bytes(preparation.canonical_bytes())
-        return publish_local_result(staging, result_root.resolve().as_uri())
+            comparison_count=len(SYMBOLS) * len(ATTACK_FAMILIES) * len(SEEDS),
+        ):
+            with java_context as active_java_url:
+                control_runs, campaign_runs = _run_replay_campaign(
+                    java_base_url=active_java_url,
+                    staging=staging,
+                    manifests=manifests,
+                    replay_exporter=replay_exporter or export_replay_comparison,
+                    feature_generator=feature_generator or _generate_features,
+                )
+        with JOB_LOG.phase(
+            "result-materialization",
+            "Freeze the preparation manifest and checksummed local result inventory.",
+            run_id=request.run_id,
+        ):
+            (staging / "request.json").write_bytes(request.canonical_bytes())
+            inventory = inventory_directory(staging)
+            inventory_hash = hashlib.sha256(
+                json.dumps(inventory.model_dump(mode="json"), sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            shared_config_hashes = {item.parser_config_sha256 for item in manifests.values()}
+            if len(shared_config_hashes) != 1:
+                raise ValueError("one-pass normalization emitted divergent parser configs")
+            message_counts = {json.dumps(item.message_counts, sort_keys=True) for item in manifests.values()}
+            if len(message_counts) != 1:
+                raise ValueError("one-pass normalization emitted divergent ITCH message coverage")
+            shared_message_counts = next(iter(manifests.values())).message_counts
+            if shared_message_counts.get("S", 0) < 1:
+                raise ValueError("Nasdaq source omitted required ITCH system-event coverage")
+            preparation = PreparationManifest(
+                run_id=request.run_id,
+                source_filename=request.source.filename,
+                source_sha256=source_manifest.sha256,
+                source_manifest_sha256=request.source_release_manifest_sha256,
+                parser_version=next(iter(manifests.values())).parser_version or "",
+                parser_config_sha256=next(iter(shared_config_hashes)),
+                itch_message_counts=shared_message_counts,
+                system_event_count=shared_message_counts["S"],
+                symbols=SYMBOLS,
+                dataset_ids={symbol: manifests[symbol].dataset_id for symbol in SYMBOLS},
+                control_run_ids=control_runs,
+                campaign_run_ids=tuple(campaign_runs),
+                payload_inventory_sha256=inventory_hash,
+                created_at=datetime.now(UTC),
+            )
+            (staging / "preparation.json").write_bytes(preparation.canonical_bytes())
+            return publish_local_result(staging, result_root.resolve().as_uri())
     except Exception:
         shutil.rmtree(staging, ignore_errors=True)
         raise
@@ -267,27 +278,44 @@ def execute_preparation_s3(
     with tempfile.TemporaryDirectory(prefix="market-data-prepare-", dir=work_root) as value:
         stage = Path(value)
         request_root = stage / "request"
-        download_s3_release(
-            input_uri,
-            request_root,
-            endpoint_url=endpoint_url,
-            limits=TransferLimits(max_files=8, max_bytes=1024 * 1024),
-        )
+        with JOB_LOG.phase(
+            "request-download",
+            "Download and verify the exact reviewed preparation request package.",
+            input_uri=input_uri.rstrip("/"),
+        ):
+            download_s3_release(
+                input_uri,
+                request_root,
+                endpoint_url=endpoint_url,
+                limits=TransferLimits(max_files=8, max_bytes=1024 * 1024),
+            )
         request_path = request_root / "request.json"
-        request = NasdaqPreparationRequest.model_validate_json(
-            request_path.read_text(encoding="utf-8")
-        )
+        request = NasdaqPreparationRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
         _verify_job_context(request)
-        source_root = stage / "source"
-        download_s3_release(
-            request.source_release_uri,
-            source_root,
-            endpoint_url=endpoint_url,
-            limits=TransferLimits(
-                max_files=8,
-                max_bytes=request.source.expected_content_length + 1024 * 1024,
-            ),
+        JOB_LOG.info(
+            "request-verified",
+            "The preparation request matches the reviewed Job resource and immutable image context.",
+            run_id=request.run_id,
+            sequence_number=request.sequence_number,
+            source_filename=request.source.filename,
         )
+        source_root = stage / "source"
+        with JOB_LOG.phase(
+            "source-download",
+            "Download and inventory the immutable private Nasdaq source release.",
+            run_id=request.run_id,
+            source_filename=request.source.filename,
+            expected_bytes=request.source.expected_content_length,
+        ):
+            download_s3_release(
+                request.source_release_uri,
+                source_root,
+                endpoint_url=endpoint_url,
+                limits=TransferLimits(
+                    max_files=8,
+                    max_bytes=request.source.expected_content_length + 1024 * 1024,
+                ),
+            )
         result = stage / "result"
         execute_preparation(
             request_path,
@@ -296,7 +324,13 @@ def execute_preparation_s3(
             java_base_url=java_base_url,
             java_jar=java_jar,
         )
-        publish_s3_result(result, request.result_uri, endpoint_url=endpoint_url)
+        with JOB_LOG.phase(
+            "result-publication",
+            "Publish the verified prepared release with checksums and SUCCESS last.",
+            run_id=request.run_id,
+            result_uri=request.result_uri,
+        ):
+            publish_s3_result(result, request.result_uri, endpoint_url=endpoint_url)
         return request.result_uri
 
 
@@ -311,47 +345,51 @@ def _run_replay_campaign(
     control_hashes: dict[str, str] = {}
     control_runs: dict[str, str] = {}
     campaign_runs: list[str] = []
+    comparison_number = 0
+    comparison_total = len(SYMBOLS) * len(ATTACK_FAMILIES) * len(SEEDS)
     for symbol in SYMBOLS:
         dataset = manifests[symbol]
         base = staging / "replays" / f"xnas-{dataset.trade_date}-{symbol.lower()}"
         for family in ATTACK_FAMILIES:
             for seed in SEEDS:
+                comparison_number += 1
                 comparison_root = base / "comparisons" / f"{family}-s{seed}"
-                control_manifest, hybrid_manifest, comparison = replay_exporter(
-                    base_url=java_base_url,
-                    dataset=dataset,
+                with JOB_LOG.phase(
+                    "replay-comparison",
+                    "Export and validate one deterministic control/hybrid replay and its causal features.",
+                    symbol=symbol,
                     attack_family=family,
                     seed=seed,
-                    output_root=comparison_root,
-                )
-                _verify_comparison_determinism(comparison)
-                control = CanonicalJavaReplayManifest.model_validate_json(
-                    control_manifest.read_text(encoding="utf-8")
-                )
-                hybrid = CanonicalJavaReplayManifest.model_validate_json(
-                    hybrid_manifest.read_text(encoding="utf-8")
-                )
-                previous = control_hashes.setdefault(
-                    symbol, control.canonical_event_stream_hash
-                )
-                if previous != control.canonical_event_stream_hash:
-                    raise ValueError("control replay changed across campaign comparisons")
-                if symbol not in control_runs:
-                    control_runs[symbol] = control.run_id
-                    feature_generator(
-                        control_manifest, staging / "features" / control.run_id
+                    comparison_number=comparison_number,
+                    comparison_total=comparison_total,
+                ):
+                    control_manifest, hybrid_manifest, comparison = replay_exporter(
+                        base_url=java_base_url,
+                        dataset=dataset,
+                        attack_family=family,
+                        seed=seed,
+                        output_root=comparison_root,
                     )
-                campaign_runs.append(hybrid.run_id)
-                feature_generator(
-                    hybrid_manifest, staging / "features" / hybrid.run_id
-                )
+                    _verify_comparison_determinism(comparison)
+                    control = CanonicalJavaReplayManifest.model_validate_json(
+                        control_manifest.read_text(encoding="utf-8")
+                    )
+                    hybrid = CanonicalJavaReplayManifest.model_validate_json(
+                        hybrid_manifest.read_text(encoding="utf-8")
+                    )
+                    previous = control_hashes.setdefault(symbol, control.canonical_event_stream_hash)
+                    if previous != control.canonical_event_stream_hash:
+                        raise ValueError("control replay changed across campaign comparisons")
+                    if symbol not in control_runs:
+                        control_runs[symbol] = control.run_id
+                        feature_generator(control_manifest, staging / "features" / control.run_id)
+                    campaign_runs.append(hybrid.run_id)
+                    feature_generator(hybrid_manifest, staging / "features" / hybrid.run_id)
     return control_runs, campaign_runs
 
 
 @contextmanager
-def _local_java_control_plane(
-    jar: Path, registry_root: Path, runtime_root: Path
-) -> Iterator[str]:
+def _local_java_control_plane(jar: Path, registry_root: Path, runtime_root: Path) -> Iterator[str]:
     if not jar.is_file():
         raise FileNotFoundError(f"pinned Java control-plane JAR is missing: {jar}")
     runtime_root.mkdir(parents=True, exist_ok=False)
@@ -380,9 +418,7 @@ def _local_java_control_plane(
             if process.poll() is not None:
                 raise RuntimeError("Java control plane exited before becoming healthy")
             try:
-                with urllib.request.urlopen(
-                    f"{base_url}/actuator/health", timeout=2
-                ) as response:
+                with urllib.request.urlopen(f"{base_url}/actuator/health", timeout=2) as response:
                     if response.status == 200:
                         break
             except OSError:
@@ -424,8 +460,10 @@ def _generate_features(replay_manifest: Path, output: Path) -> None:
 
 def _verify_comparison_determinism(comparison: dict[str, object]) -> None:
     determinism = comparison.get("determinism")
-    if not isinstance(determinism, dict) or not determinism or not all(
-        value is True for key, value in determinism.items() if key.endswith("_match")
+    if (
+        not isinstance(determinism, dict)
+        or not determinism
+        or not all(value is True for key, value in determinism.items() if key.endswith("_match"))
     ):
         raise ValueError("Java comparison did not pass all repeat determinism gates")
 

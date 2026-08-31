@@ -236,10 +236,12 @@ public final class IntegerOrderBook {
             return;
         }
         KernelOrder replaced = orders.get(resolvedOrderId);
+        boolean priorityPreserved = false;
         if (replaced != null) {
             NavigableMap<Long, List<KernelOrder>> priorSide = levels(replaced.side());
             List<KernelOrder> priorQueue =
                     new ArrayList<>(priorSide.getOrDefault(replaced.priceTicks(), List.of()));
+            priorityPreserved = replaced.side() == side && replaced.priceTicks() == priceTicks;
             priorQueue.removeIf(item -> item.orderId().equals(resolvedOrderId));
             if (priorQueue.isEmpty()) {
                 priorSide.remove(replaced.priceTicks());
@@ -260,7 +262,7 @@ public final class IntegerOrderBook {
         if (replaced == null) {
             mutationListener.accept(BookMutation.add(updated));
         } else if (!replaced.equals(updated)) {
-            mutationListener.accept(BookMutation.modify(replaced, updated, true));
+            mutationListener.accept(BookMutation.modify(replaced, updated, priorityPreserved));
         }
     }
 

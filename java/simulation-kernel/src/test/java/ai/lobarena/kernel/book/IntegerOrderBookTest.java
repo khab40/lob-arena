@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ai.lobarena.exchange.v1.BookSnapshot;
 import ai.lobarena.exchange.v1.Side;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -95,14 +96,22 @@ final class IntegerOrderBookTest {
     @Test
     void movingAgentOrderByStableIdRemovesOldQueueEntryAndCancelsCleanly() {
         IntegerOrderBook book = book();
+        List<BookMutation> mutations = new ArrayList<>();
+        book.setMutationListener(mutations::add);
         book.updateAgentLevel(
                 Side.SIDE_SELL, 103, 48, "ABUSER", "abuser", "attack-wall", 1,
                 "scenario-1", "spoofing_like_wall", "spoofing_like_wall");
+        mutations.clear();
 
         book.updateAgentLevel(
                 Side.SIDE_SELL, 104, 48, "ABUSER", "abuser", "attack-wall", 2,
                 "scenario-1", "spoofing_like_wall", "spoofing_like_wall");
 
+        assertEquals(1, mutations.size());
+        assertEquals(BookMutation.Type.MODIFY, mutations.getFirst().type());
+        assertEquals(103, mutations.getFirst().before().priceTicks());
+        assertEquals(104, mutations.getFirst().after().priceTicks());
+        assertFalse(mutations.getFirst().priorityPreserved());
         assertEquals(List.of(), book.orderIdsAt(Side.SIDE_SELL, 103));
         assertEquals(List.of("attack-wall"), book.orderIdsAt(Side.SIDE_SELL, 104));
         assertEquals(1, book.orders().size());

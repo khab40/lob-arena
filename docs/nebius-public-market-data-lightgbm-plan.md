@@ -3,9 +3,10 @@
 Status: C0, C1 and the corrected C2 sequence-2 acquisition passed. The remaining
 C2 sources are still sequentially approval-gated. The former combined runtime
 is now split into a published Python-only C0-C2 image and a published C3-C4
-image that consumes a prebuilt Java control-plane JAR. The local sequence-1 C3
-package and reviewed dry run are ready; publication and Job submission remain
-separately approval-gated.
+image that consumes a prebuilt Java control-plane JAR. The initial sequence-1
+C3 Job exposed a Java priority-preservation contract defect and published no
+prepared objects. The local correction and phase-level logging pass review;
+fresh image publication and any retry remain separately approval-gated.
 
 Date: 2026-08-31
 
@@ -507,6 +508,22 @@ SHA-256 `3911cafe29820140be906ba0251bef8dfbab3832a3bcf138b0ff1ade53e05c54`
 and the immutable preparation image above. Its reviewed dry run declares no
 cloud mutation or market-data transfer. Package publication and the first C3
 Job require a separate exact-hash authorization.
+
+Initial C3 exit evidence as of 2026-08-31: Job
+`aijob-e00assx3d8vx375778` was bound to dry-run SHA-256
+`f964f35c8dad7ab73e9542df25f459d114573e4257ef0b3d64de6bf25f1b8481`
+and failed during the first AAPL `spoofing_like_wall`, seed-41 hybrid replay.
+The Java order book moved a stable scenario order to a different price level
+but emitted `priority_preserved=true`; Python correctly rejected the canonical
+event at JSONL line 10,329. The result publisher was never reached, and an
+independent S3 check returned `Contents=null` for the prepared prefix. Public-
+data consumption is now 5 of 15 Jobs. The local correction derives the flag
+from unchanged side and integer price ticks, adds the exact price-move
+regression assertion, preserves frozen golden traces, and adds bounded logs for
+request/source download, validation, normalization, each of 27 replay
+comparisons, materialization and publication. Focused Python tests and the full
+simulation-kernel/control-plane Java suites pass. A fresh immutable preparation
+image and exact-hash retry review are required before another C3 Job.
 
 ### C4 - Corpus freeze and projection publication
 
