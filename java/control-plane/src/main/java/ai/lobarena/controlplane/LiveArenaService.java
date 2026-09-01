@@ -1498,23 +1498,28 @@ final class LiveArenaService {
                 .put("end_tick", endTick)
                 .put("scenario_family", scenario.family()));
         ObjectNode phases = result.putObject("phase_windows");
-        long cancellationStart = switch (scenario.family()) {
-            case "spoofing_like_wall", "layering_like" ->
-                    scenario.startTick() + scenarioParameter("duration_ticks");
-            case "quote_stuffing" -> scenario.startTick();
-            case "liquidity_evaporation" -> scenario.startTick();
+        switch (scenario.family()) {
+            case "quote_stuffing", "liquidity_evaporation" -> phases.set(
+                    "pressure_phase",
+                    mapper.createObjectNode()
+                            .put("start_tick", scenario.startTick())
+                            .put("end_tick", endTick));
+            case "spoofing_like_wall", "layering_like" -> {
+                long cancellationStart =
+                        scenario.startTick() + scenarioParameter("duration_ticks");
+                phases.set(
+                        "pressure_phase",
+                        mapper.createObjectNode()
+                                .put("start_tick", scenario.startTick())
+                                .put("end_tick", cancellationStart - 1));
+                phases.set(
+                        "cancellation_phase",
+                        mapper.createObjectNode()
+                                .put("start_tick", cancellationStart)
+                                .put("end_tick", endTick));
+            }
             default -> throw new IllegalStateException("unsupported scenario family");
-        };
-        phases.set(
-                "pressure_phase",
-                mapper.createObjectNode()
-                        .put("start_tick", scenario.startTick())
-                        .put("end_tick", Math.max(scenario.startTick(), cancellationStart - 1)));
-        phases.set(
-                "cancellation_phase",
-                mapper.createObjectNode()
-                        .put("start_tick", cancellationStart)
-                        .put("end_tick", endTick));
+        }
         return result;
     }
 

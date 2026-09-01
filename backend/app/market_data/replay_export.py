@@ -17,6 +17,7 @@ from app.evaluation.canonical_bundle import (
     CanonicalJavaReplayManifest,
     open_canonical_evaluation_stream,
 )
+from app.features.io import ground_truth_window, load_labels
 
 
 def export_replay_comparison(
@@ -41,51 +42,69 @@ def export_replay_comparison(
         payload=payload,
         timeout=timeout_seconds,
     )
-    if comparison.get("schema_version") != "historical_replay_comparison_v1":
-        raise ValueError("Java replay returned an incompatible comparison schema")
-    determinism = comparison.get("determinism")
-    required = {
-        "control_stream_match",
-        "hybrid_stream_match",
-        "control_trace_match",
-        "hybrid_trace_match",
-        "historical_snapshot_match",
-    }
-    if not isinstance(determinism, dict) or not all(determinism.get(name) is True for name in required):
-        raise ValueError("Java replay repeat determinism gate failed")
-    base_session_id = f"xnas-{dataset.trade_date}-{dataset.symbol.lower()}"
-    campaign_id = f"{base_session_id}-{attack_family}-s{seed}"
-    control = _export_stream(
-        base_url=base_url,
-        summary=_object(comparison, "control"),
-        dataset=dataset,
-        mode="historical_control",
-        run_id=f"{base_session_id}-control",
-        base_session_id=base_session_id,
-        campaign_id=None,
-        attack_family=None,
-        seed=None,
-        output=output_root / "control",
-        timeout_seconds=timeout_seconds,
-    )
-    hybrid = _export_stream(
-        base_url=base_url,
-        summary=_object(comparison, "hybrid"),
-        dataset=dataset,
-        mode="hybrid",
-        run_id=campaign_id,
-        base_session_id=base_session_id,
-        campaign_id=campaign_id,
-        attack_family=attack_family,
-        seed=seed,
-        output=output_root / "hybrid",
-        timeout_seconds=timeout_seconds,
-    )
-    (output_root / "comparison.json").write_text(
-        json.dumps(comparison, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    _release_comparison_streams(base_url, comparison, timeout_seconds)
-    return control, hybrid, comparison
+    primary_error: BaseException | None = None
+    try:
+        if comparison.get("schema_version") != "historical_replay_comparison_v1":
+            raise ValueError("Java replay returned an incompatible comparison schema")
+        determinism = comparison.get("determinism")
+        required = {
+            "control_stream_match",
+            "hybrid_stream_match",
+            "control_trace_match",
+            "hybrid_trace_match",
+            "historical_snapshot_match",
+        }
+        if not isinstance(determinism, dict) or not all(determinism.get(name) is True for name in required):
+            raise ValueError("Java replay repeat determinism gate failed")
+        hybrid_summary = _object(comparison, "hybrid")
+        hybrid_ground_truth = hybrid_summary.get("ground_truth")
+        if not isinstance(hybrid_ground_truth, dict):
+            raise ValueError("Java hybrid replay omitted ground truth")
+        ground_truth_window(hybrid_ground_truth)
+        base_session_id = f"xnas-{dataset.trade_date}-{dataset.symbol.lower()}"
+        campaign_id = f"{base_session_id}-{attack_family}-s{seed}"
+        control = _export_stream(
+            base_url=base_url,
+            summary=_object(comparison, "control"),
+            dataset=dataset,
+            mode="historical_control",
+            run_id=f"{base_session_id}-control",
+            base_session_id=base_session_id,
+            campaign_id=None,
+            attack_family=None,
+            seed=None,
+            output=output_root / "control",
+            timeout_seconds=timeout_seconds,
+        )
+        hybrid = _export_stream(
+            base_url=base_url,
+            summary=hybrid_summary,
+            dataset=dataset,
+            mode="hybrid",
+            run_id=campaign_id,
+            base_session_id=base_session_id,
+            campaign_id=campaign_id,
+            attack_family=attack_family,
+            seed=seed,
+            output=output_root / "hybrid",
+            timeout_seconds=timeout_seconds,
+        )
+        (output_root / "comparison.json").write_text(
+            json.dumps(comparison, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        return control, hybrid, comparison
+    except BaseException as error:
+        primary_error = error
+        raise
+    finally:
+        try:
+            _release_comparison_streams(base_url, comparison, timeout_seconds)
+        except Exception as cleanup_error:
+            if primary_error is None:
+                raise
+            primary_error.add_note(
+                f"Java canonical stream cleanup also failed: {type(cleanup_error).__name__}: {cleanup_error}"
+            )
 
 
 def _export_stream(
@@ -111,6 +130,17 @@ def _export_stream(
     alerts_path = output / "alerts.jsonl"
     ground_truth_path = output / "ground-truth.jsonl"
     validation_path = output / "validation.json"
+    label_count = 0
+    ground_truth_reference = None
+    if mode == "hybrid":
+        ground_truth = summary.get("ground_truth")
+        if not isinstance(ground_truth, dict):
+            raise ValueError("Java hybrid replay omitted ground truth")
+        ground_truth = {**ground_truth, "run_id": run_id, "campaign_id": campaign_id}
+        ground_truth_path.write_text(json.dumps(ground_truth, sort_keys=True) + "\n", encoding="utf-8")
+        label_count = len(load_labels(ground_truth_path).labels)
+        if label_count != 1:
+            raise ValueError("Java hybrid replay must provide exactly one attack label")
     event_count, snapshot_count, first_timestamp, last_timestamp = _write_stream_artifacts(
         base_url=base_url,
         stream_id=stream_id,
@@ -135,16 +165,13 @@ def _export_stream(
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in alert_rows),
         encoding="utf-8",
     )
-    label_count = 0
-    ground_truth_reference = None
     if mode == "hybrid":
-        ground_truth = summary.get("ground_truth")
-        if not isinstance(ground_truth, dict):
-            raise ValueError("Java hybrid replay omitted ground truth")
-        ground_truth = {**ground_truth, "run_id": run_id, "campaign_id": campaign_id}
-        ground_truth_path.write_text(json.dumps(ground_truth, sort_keys=True) + "\n", encoding="utf-8")
-        label_count = 1
-        ground_truth_reference = _artifact(ground_truth_path, output, "ground_truth", "scenario_ground_truth_jsonl_v1")
+        ground_truth_reference = _artifact(
+            ground_truth_path,
+            output,
+            "ground_truth",
+            "scenario_ground_truth_jsonl_v1",
+        )
     validation = {
         "schema_version": "canonical_java_replay_validation_v1",
         "verdict": "pass",
@@ -321,8 +348,7 @@ def _release_comparison_streams(base_url: str, comparison: dict[str, Any], timeo
         raise ValueError("Java replay comparison omitted a canonical stream ID")
     for stream_id in dict.fromkeys(stream_ids):
         response = _json_request(
-            f"{base_url.rstrip('/')}/internal/arena/exchange-events/"
-            f"{urllib.parse.quote(stream_id, safe='')}",
+            f"{base_url.rstrip('/')}/internal/arena/exchange-events/{urllib.parse.quote(stream_id, safe='')}",
             method="DELETE",
             timeout=timeout_seconds,
         )

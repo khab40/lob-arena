@@ -785,6 +785,40 @@ def test_native_scenario_jsonl_and_unlabeled_control_are_supported(tmp_path: Pat
     assert load_labels(control_path) == LabelSpec()
 
 
+def test_java_quote_stuffing_ground_truth_uses_single_nonoverlapping_phase(tmp_path: Path) -> None:
+    label_path = tmp_path / "java-quote-stuffing.jsonl"
+    label_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "scenario_ground_truth_v1",
+                "scenario_id": "quote-stuffing-regression",
+                "scenario_family": "quote_stuffing",
+                "source": "synthetic_scenario",
+                "has_attack": True,
+                "start_tick": 2,
+                "end_tick": 5,
+                "phase_windows": {
+                    "pressure_phase": {"start_tick": 2, "end_tick": 5},
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    labels = load_labels(label_path)
+
+    assert labels.labels == [
+        LabelWindow(
+            attack_family="quote_stuffing",
+            start_tick=2,
+            end_tick=5,
+            phases={"pressure_phase": (2, 5)},
+            label_source="synthetic_scenario",
+        )
+    ]
+
+
 def test_ground_truth_and_artifact_contracts_fail_closed(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="must not overlap"):
         LabelSpec(

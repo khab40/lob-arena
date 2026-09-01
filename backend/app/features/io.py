@@ -157,11 +157,11 @@ def load_labels(path: Path | None) -> LabelSpec:
             raise ValueError("ground truth has_attack must be a boolean when present")
         if has_attack is False:
             continue
-        windows.append(_ground_truth_window(ground_truth))
+        windows.append(ground_truth_window(ground_truth))
     return LabelSpec(labels=windows)
 
 
-def _ground_truth_window(ground_truth: dict[str, Any]) -> LabelWindow:
+def ground_truth_window(ground_truth: dict[str, Any]) -> LabelWindow:
     family = ground_truth.get("scenario_family")
     start_tick = ground_truth.get("start_tick")
     end_tick = ground_truth.get("end_tick")
