@@ -1,4 +1,4 @@
-awscli>=1.33.0,<2.0.0
+awscli>=1.46.1,<2.0.0
 databricks-sdk==0.67.0
 google-auth==2.56.2
 gitpython>=3.1.58,<4.0.0
