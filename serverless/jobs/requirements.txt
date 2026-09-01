@@ -7,6 +7,6 @@ mlflow-skinny==3.13.0
 pydantic>=2.7.0,<3.0.0
 pyarrow>=18.0.0
 protobuf>=7.35.1,<8.0.0
-pyyaml>=6.0.0
+pyyaml>=6.0.3
 scikit-learn>=1.7.2,<2.0.0
 sqlparse>=0.6.0,<1.0.0
