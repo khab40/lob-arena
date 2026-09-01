@@ -224,6 +224,7 @@ def main() -> None:
         command.extend(["--parent-id", args.parent_id])
     if os.environ.get("NEBIUS_VOLUME") and args.workload != "lightgbm-wave1":
         command.extend(["--volume", os.environ["NEBIUS_VOLUME"]])
+    review_command = list(command)
     for name, secret_id in (
         ("AWS_ACCESS_KEY_ID", args.access_key_secret_id),
         ("AWS_SECRET_ACCESS_KEY", args.secret_key_secret_id),
@@ -233,13 +234,20 @@ def main() -> None:
     ):
         if secret_id:
             command.extend(["--env-secret", f"{name}={secret_id}"])
+            review_command.extend(
+                ["--env-secret", f"{name}=[MYSTERYBOX_SELECTOR]"]
+            )
     region = (
         "eu-north1"
         if args.workload == "lightgbm-wave1"
         else os.environ.get("NEBIUS_OBJECT_STORAGE_REGION", "eu-north1")
     )
-    command.extend(["--env", f"AWS_DEFAULT_REGION={region}"])
-    command.extend(["--env", "AWS_EC2_METADATA_DISABLED=true"])
+    for value in (
+        f"AWS_DEFAULT_REGION={region}",
+        "AWS_EC2_METADATA_DISABLED=true",
+    ):
+        command.extend(["--env", value])
+        review_command.extend(["--env", value])
     if args.workload == "lightgbm-wave1":
         image_repository, image_sha256 = args.image.rsplit("@sha256:", maxsplit=1)
         if len(image_repository) > 64 or len(image_sha256) != 64:
@@ -256,15 +264,17 @@ def main() -> None:
             ("WAVE1_ACTUAL_TIMEOUT_SECONDS", "3600"),
         ):
             command.extend(["--env", f"{name}={value}"])
+            review_command.extend(["--env", f"{name}={value}"])
         if args.trusted_authorization_public_key_sha256:
-            command.extend(
-                [
-                    "--env",
-                    "WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256="
-                    f"{args.trusted_authorization_public_key_sha256}",
-                ]
+            trusted_key_hash = (
+                "WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256="
+                f"{args.trusted_authorization_public_key_sha256}"
             )
+            command.extend(["--env", trusted_key_hash])
+            review_command.extend(["--env", trusted_key_hash])
 
+    if review_command != _redacted_command(command):
+        raise RuntimeError("review command diverged from the redacted submission command")
     command_sha256 = _canonical_hash(command)
     if args.dry_run:
         payload = {
@@ -279,7 +289,7 @@ def main() -> None:
             "short_tag_workaround": short_tag_workaround,
             "registry_verification": registry_verification,
             "resource": request.resource.model_dump(mode="json") if args.workload == "lightgbm-wave1" else None,
-            "command": _redacted_command(command),
+            "command": review_command,
             "command_sha256": command_sha256,
             "campaign_spend_usd": args.campaign_spend_usd,
             "development_jobs_consumed": args.development_jobs_consumed,

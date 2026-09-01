@@ -734,6 +734,7 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
         "NEBIUS_SUBNET_ID": "subnet-test",
         "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID": "mysterybox-access-ref",
         "NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID": "mysterybox-secret-ref",
+        "NEBIUS_OBJECT_STORAGE_SESSION_TOKEN_SECRET_ID": "mysterybox-session-ref",
         "NEBIUS_MLFLOW_USERNAME_SECRET_ID": "mysterybox-mlflow-user-ref",
         "NEBIUS_MLFLOW_PASSWORD_SECRET_ID": "mysterybox-mlflow-password-ref",
         "NEBIUS_OBJECT_STORAGE_ENDPOINT_URL": "https://storage.eu-north1.nebius.cloud",
@@ -770,10 +771,15 @@ def test_submitter_dry_run_uses_secret_references_only(tmp_path: Path) -> None:
         completed.stdout
     )
     assert "mysterybox-access-ref" not in completed.stdout
+    assert "mysterybox-secret-ref" not in completed.stdout
+    assert "mysterybox-session-ref" not in completed.stdout
+    assert "mysterybox-mlflow-user-ref" not in completed.stdout
+    assert "mysterybox-mlflow-password-ref" not in completed.stdout
     joined = " ".join(command)
     assert "--env-secret" in command
     assert "AWS_ACCESS_KEY_ID=[MYSTERYBOX_SELECTOR]" in command
     assert "AWS_SECRET_ACCESS_KEY=[MYSTERYBOX_SELECTOR]" in command
+    assert "AWS_SESSION_TOKEN=[MYSTERYBOX_SELECTOR]" in command
     assert "MLFLOW_TRACKING_USERNAME=[MYSTERYBOX_SELECTOR]" in command
     assert "MLFLOW_TRACKING_PASSWORD=[MYSTERYBOX_SELECTOR]" in command
     assert "run-s3" in joined
@@ -1049,6 +1055,12 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
     assert payload["post_submission_registry_verification"]["resolved_digest"] == (
         f"sha256:{digest_hex}"
     )
+    create_command = next(
+        command
+        for command in calls
+        if command[:4] == ["nebius", "ai", "job", "create"]
+    )
+    assert submit_script._redacted_command(create_command) == dry_run_payload["command"]
     assert sum(command[:4] == ["docker", "buildx", "imagetools", "inspect"] for command in calls) == 3
 
 
