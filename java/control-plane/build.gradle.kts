@@ -18,7 +18,7 @@ sourceSets {
 }
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.1.0"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:4.1.1"))
     implementation(project(":simulation-kernel"))
     implementation(project(":kernel-grpc"))
     implementation("org.springframework.boot:spring-boot-starter-web")
