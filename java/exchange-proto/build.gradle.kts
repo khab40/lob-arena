@@ -27,7 +27,7 @@ dependencies {
     api("io.grpc:grpc-protobuf:1.81.0")
     api("io.grpc:grpc-stub:1.81.0")
     compileOnly("org.apache.tomcat:annotations-api:6.0.53")
-    testImplementation(platform("org.junit:junit-bom:6.0.3"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
