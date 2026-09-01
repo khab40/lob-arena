@@ -262,6 +262,40 @@ class LiveArenaServiceTest {
     }
 
     @Test
+    void comparisonGroundTruthUsesDisjointPhaseWindows(@TempDir Path output) {
+        for (String family : List.of("spoofing_like_wall", "layering_like", "quote_stuffing")) {
+            LiveArenaService arena = historicalArena(output.resolve(family), 4);
+
+            JsonNode groundTruth = arena.runReplayComparison(
+                            "sample-btcusdt-0945", family, 10)
+                    .path("hybrid")
+                    .path("ground_truth");
+            JsonNode pressure = groundTruth.path("phase_windows").path("pressure_phase");
+            JsonNode cancellation = groundTruth.path("phase_windows").path("cancellation_phase");
+
+            assertThat(pressure.path("start_tick").longValue())
+                    .as(family)
+                    .isEqualTo(groundTruth.path("start_tick").longValue());
+            assertThat(pressure.path("end_tick").longValue())
+                    .as(family)
+                    .isLessThanOrEqualTo(groundTruth.path("end_tick").longValue());
+            if (family.equals("quote_stuffing")) {
+                assertThat(cancellation.isMissingNode()).as(family).isTrue();
+                assertThat(pressure.path("end_tick").longValue())
+                        .as(family)
+                        .isEqualTo(groundTruth.path("end_tick").longValue());
+            } else {
+                assertThat(cancellation.path("start_tick").longValue())
+                        .as(family)
+                        .isEqualTo(pressure.path("end_tick").longValue() + 1);
+                assertThat(cancellation.path("end_tick").longValue())
+                        .as(family)
+                        .isEqualTo(groundTruth.path("end_tick").longValue());
+            }
+        }
+    }
+
+    @Test
     void lobsterHybridIsDeterministicSeededAndPreservesEveryHistoricalMessage(@TempDir Path root)
             throws Exception {
         Path registry = createLobsterDataset(root.resolve("lobster"));

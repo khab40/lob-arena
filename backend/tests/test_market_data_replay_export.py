@@ -5,6 +5,7 @@ from pathlib import Path
 import pyarrow.parquet as pq
 import pytest
 
+from app.data_ingestion.models import DatasetManifest
 from app.market_data import replay_export
 
 
@@ -145,5 +146,132 @@ def test_comparison_release_deletes_primary_and_repeat_streams(
         },
         1,
     )
+
+    assert deleted == ["control", "hybrid", "control-repeat", "hybrid-repeat"]
+
+
+def test_hybrid_ground_truth_is_validated_before_stream_download(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    ground_truth = {
+        "schema_version": "scenario_ground_truth_v1",
+        "scenario_family": "quote_stuffing",
+        "source": "synthetic_scenario",
+        "has_attack": True,
+        "start_tick": 2,
+        "end_tick": 5,
+        "phase_windows": {
+            "pressure_phase": {"start_tick": 2, "end_tick": 2},
+            "cancellation_phase": {"start_tick": 2, "end_tick": 5},
+        },
+    }
+    comparison = {
+        "schema_version": "historical_replay_comparison_v1",
+        "control": {"stream_id": "control"},
+        "hybrid": {"stream_id": "hybrid", "ground_truth": ground_truth},
+        "determinism": {
+            "control_stream_match": True,
+            "hybrid_stream_match": True,
+            "control_trace_match": True,
+            "hybrid_trace_match": True,
+            "historical_snapshot_match": True,
+            "control_repeat_stream_id": "control-repeat",
+            "hybrid_repeat_stream_id": "hybrid-repeat",
+        },
+    }
+
+    def request(url: str, **kwargs: object) -> dict[str, object]:
+        if kwargs["method"] == "POST":
+            return comparison
+        stream_id = urllib.parse.unquote(url.rsplit("/", maxsplit=1)[1])
+        return {"stream_id": stream_id, "released": True}
+
+    monkeypatch.setattr(replay_export, "_json_request", request)
+    monkeypatch.setattr(
+        replay_export,
+        "_export_stream",
+        lambda **kwargs: pytest.fail("canonical stream download started before label validation"),
+    )
+    dataset = DatasetManifest.model_construct(
+        dataset_id="xnas-20190102-aapl",
+        source_type="nasdaq_itch",
+        symbol="AAPL",
+        venue="XNAS",
+        trade_date="2019-01-02",
+    )
+
+    with pytest.raises(ValueError, match="must not overlap"):
+        replay_export.export_replay_comparison(
+            base_url="http://java",
+            dataset=dataset,
+            attack_family="quote_stuffing",
+            seed=41,
+            output_root=tmp_path,
+            timeout_seconds=1,
+        )
+
+
+def test_comparison_releases_streams_when_export_fails(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    deleted: list[str] = []
+    comparison = {
+        "schema_version": "historical_replay_comparison_v1",
+        "control": {"stream_id": "control"},
+        "hybrid": {
+            "stream_id": "hybrid",
+            "ground_truth": {
+                "scenario_family": "quote_stuffing",
+                "source": "synthetic_scenario",
+                "has_attack": True,
+                "start_tick": 2,
+                "end_tick": 5,
+                "phase_windows": {
+                    "pressure_phase": {"start_tick": 2, "end_tick": 5},
+                },
+            },
+        },
+        "determinism": {
+            "control_stream_match": True,
+            "hybrid_stream_match": True,
+            "control_trace_match": True,
+            "hybrid_trace_match": True,
+            "historical_snapshot_match": True,
+            "control_repeat_stream_id": "control-repeat",
+            "hybrid_repeat_stream_id": "hybrid-repeat",
+        },
+    }
+
+    def request(url: str, **kwargs: object) -> dict[str, object]:
+        if kwargs["method"] == "POST":
+            return comparison
+        stream_id = urllib.parse.unquote(url.rsplit("/", maxsplit=1)[1])
+        deleted.append(stream_id)
+        return {"stream_id": stream_id, "released": True}
+
+    monkeypatch.setattr(replay_export, "_json_request", request)
+    def fail_export(**_: object) -> Path:
+        raise ValueError("label validation failed")
+
+    monkeypatch.setattr(replay_export, "_export_stream", fail_export)
+    dataset = DatasetManifest.model_construct(
+        dataset_id="xnas-20190102-aapl",
+        source_type="nasdaq_itch",
+        symbol="AAPL",
+        venue="XNAS",
+        trade_date="2019-01-02",
+    )
+
+    with pytest.raises(ValueError, match="label validation failed"):
+        replay_export.export_replay_comparison(
+            base_url="http://java",
+            dataset=dataset,
+            attack_family="quote_stuffing",
+            seed=41,
+            output_root=tmp_path,
+            timeout_seconds=1,
+        )
 
     assert deleted == ["control", "hybrid", "control-repeat", "hybrid-repeat"]
