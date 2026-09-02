@@ -67,6 +67,12 @@ class S3ObjectEvidence:
     version_id: str | None = None
 
 
+@dataclass(frozen=True)
+class VerifiedS3ReleaseMember:
+    payload: bytes
+    inventory: ChecksumInventory
+
+
 def _aws_environment() -> dict[str, str]:
     """Disable AWS CLI paging without relying on version-specific command flags."""
 
@@ -121,10 +127,18 @@ def inventory_directory(root: Path, *, exclude_markers: bool = False) -> Checksu
 
 def verify_inventory(root: Path, inventory: ChecksumInventory, *, limits: TransferLimits = TransferLimits()) -> None:
     root = root.resolve()
-    if len(inventory.files) > limits.max_files:
-        raise ValueError("input inventory exceeds the file-count limit")
-    if sum(item.size_bytes for item in inventory.files) > limits.max_bytes:
-        raise ValueError("input inventory exceeds the byte limit")
+    observed_files = len(inventory.files)
+    observed_bytes = sum(item.size_bytes for item in inventory.files)
+    if observed_files > limits.max_files:
+        raise ValueError(
+            "input inventory exceeds the file-count limit: "
+            f"observed_files={observed_files}, max_files={limits.max_files}"
+        )
+    if observed_bytes > limits.max_bytes:
+        raise ValueError(
+            "input inventory exceeds the byte limit: "
+            f"observed_bytes={observed_bytes}, max_bytes={limits.max_bytes}"
+        )
     for item in inventory.files:
         path = (root / item.path).resolve()
         if root not in path.parents or not path.is_file():
@@ -142,7 +156,12 @@ def write_checksum_file(root: Path, inventory: ChecksumInventory) -> Path:
     return target
 
 
-def publish_local_result(staging: Path, result_uri: str) -> Path:
+def publish_local_result(
+    staging: Path,
+    result_uri: str,
+    *,
+    limits: TransferLimits = TransferLimits(),
+) -> Path:
     """Atomically publish a verified local result and create SUCCESS last."""
 
     destination = _file_uri_path(result_uri)
@@ -152,21 +171,26 @@ def publish_local_result(staging: Path, result_uri: str) -> Path:
     if not staging.is_dir() or (staging / "SUCCESS").exists() or (staging / "FAILED").exists():
         raise ValueError("result staging directory is invalid")
     inventory = inventory_directory(staging, exclude_markers=True)
+    verify_inventory(staging, inventory, limits=limits)
     write_checksum_file(staging, inventory)
     (staging / "SUCCESS").write_text(inventory.model_dump_json(indent=2), encoding="utf-8")
     destination.parent.mkdir(parents=True, exist_ok=True)
     os.replace(staging, destination)
-    verify_complete_result(destination)
+    verify_complete_result(destination, limits=limits)
     return destination
 
 
-def verify_complete_result(root: Path) -> ChecksumInventory:
+def verify_complete_result(
+    root: Path,
+    *,
+    limits: TransferLimits = TransferLimits(),
+) -> ChecksumInventory:
     root = root.resolve()
     success = root / "SUCCESS"
     if not success.is_file() or (root / "FAILED").exists():
         raise ValueError("result is partial or failed; SUCCESS is required and FAILED is forbidden")
     inventory = ChecksumInventory.model_validate_json(success.read_text(encoding="utf-8"))
-    verify_inventory(root, inventory)
+    verify_inventory(root, inventory, limits=limits)
     checksum_lines = (root / "checksums.sha256").read_text(encoding="utf-8")
     expected = "".join(f"{item.sha256}  {item.path}\n" for item in inventory.files)
     if checksum_lines != expected:
@@ -240,10 +264,18 @@ def download_s3_release(
     objects = _list_s3_objects(bucket, prefix, endpoint_url=endpoint_url)
     if not objects:
         raise ValueError(f"S3 release prefix is empty: {source}")
-    if len(objects) > limits.max_files:
-        raise ValueError("S3 release exceeds the file-count limit")
-    if sum(size for _, size in objects) > limits.max_bytes:
-        raise ValueError("S3 release exceeds the byte limit")
+    observed_files = len(objects)
+    observed_bytes = sum(size for _, size in objects)
+    if observed_files > limits.max_files:
+        raise ValueError(
+            "S3 release exceeds the file-count limit: "
+            f"observed_files={observed_files}, max_files={limits.max_files}"
+        )
+    if observed_bytes > limits.max_bytes:
+        raise ValueError(
+            "S3 release exceeds the byte limit: "
+            f"observed_bytes={observed_bytes}, max_bytes={limits.max_bytes}"
+        )
 
     destination.mkdir(parents=True)
     try:
@@ -263,10 +295,140 @@ def download_s3_release(
                 key,
                 str(target),
             )
-        return verify_complete_result(destination)
+        return verify_complete_result(destination, limits=limits)
     except Exception:
         shutil.rmtree(destination, ignore_errors=True)
         raise
+
+
+def read_verified_s3_release_member(
+    source: str,
+    member: str,
+    *,
+    endpoint_url: str,
+    limits: TransferLimits = TransferLimits(),
+) -> bytes | None:
+    inspected = inspect_verified_s3_release_member(
+        source,
+        member,
+        endpoint_url=endpoint_url,
+        limits=limits,
+    )
+    return inspected.payload if inspected is not None else None
+
+
+def inspect_verified_s3_release_member(
+    source: str,
+    member: str,
+    *,
+    endpoint_url: str,
+    limits: TransferLimits = TransferLimits(),
+) -> VerifiedS3ReleaseMember | None:
+    """Read one member only after verifying the immutable remote release envelope.
+
+    An empty prefix is an absent checkpoint. A non-empty prefix must be a complete,
+    canonical release; partial or modified checkpoints fail closed.
+    """
+
+    relative_member = _normalized_relative_path(member)
+    bucket, prefix = _s3_bucket_prefix(source)
+    objects = _list_s3_objects(bucket, prefix, endpoint_url=endpoint_url)
+    if not objects:
+        return None
+    observed_files = len(objects)
+    observed_bytes = sum(size for _, size in objects)
+    if observed_files > limits.max_files:
+        raise ValueError(
+            "S3 release exceeds the file-count limit: "
+            f"observed_files={observed_files}, max_files={limits.max_files}"
+        )
+    if observed_bytes > limits.max_bytes:
+        raise ValueError(
+            "S3 release exceeds the byte limit: "
+            f"observed_bytes={observed_bytes}, max_bytes={limits.max_bytes}"
+        )
+    remote_sizes = {
+        _relative_s3_key(key, prefix).as_posix(): size for key, size in objects
+    }
+    with tempfile.TemporaryDirectory(prefix="wave1-s3-envelope-") as directory:
+        temporary = Path(directory)
+        success_bytes = _download_s3_member(
+            bucket,
+            prefix,
+            "SUCCESS",
+            temporary / "SUCCESS",
+            endpoint_url=endpoint_url,
+        )
+        inventory = ChecksumInventory.model_validate_json(success_bytes)
+        inventory_bytes = sum(item.size_bytes for item in inventory.files)
+        verify_inventory_limits = TransferLimits(
+            max_files=max(0, limits.max_files - 2),
+            max_bytes=limits.max_bytes,
+        )
+        if len(inventory.files) > verify_inventory_limits.max_files:
+            raise ValueError(
+                "S3 release inventory exceeds the file-count limit: "
+                f"observed_files={len(inventory.files)}, "
+                f"max_files={verify_inventory_limits.max_files}"
+            )
+        if inventory_bytes > verify_inventory_limits.max_bytes:
+            raise ValueError(
+                "S3 release inventory exceeds the byte limit: "
+                f"observed_bytes={inventory_bytes}, "
+                f"max_bytes={verify_inventory_limits.max_bytes}"
+            )
+        expected_paths = {item.path for item in inventory.files} | {
+            "checksums.sha256",
+            "SUCCESS",
+        }
+        if set(remote_sizes) != expected_paths:
+            raise ValueError("remote S3 release objects do not match its SUCCESS inventory")
+        expected_checksum_text = "".join(
+            f"{item.sha256}  {item.path}\n" for item in inventory.files
+        ).encode()
+        checksums = _download_s3_member(
+            bucket,
+            prefix,
+            "checksums.sha256",
+            temporary / "checksums.sha256",
+            endpoint_url=endpoint_url,
+        )
+        if checksums != expected_checksum_text:
+            raise ValueError("remote S3 release checksum inventory is not canonical")
+        entries = {item.path: item for item in inventory.files}
+        selected = entries.get(relative_member.as_posix())
+        if selected is None:
+            raise ValueError(f"remote S3 release omits required member: {relative_member}")
+        if any(remote_sizes[item.path] != item.size_bytes for item in inventory.files):
+            raise ValueError("remote S3 release object size differs from its SUCCESS inventory")
+        for item in inventory.files:
+            head = _aws_json(
+                endpoint_url,
+                "s3api",
+                "head-object",
+                "--bucket",
+                bucket,
+                "--key",
+                f"{prefix}/{item.path}",
+            )
+            metadata = {
+                str(key).lower(): value for key, value in (head.get("Metadata") or {}).items()
+            }
+            if (
+                int(head.get("ContentLength", -1)) != item.size_bytes
+                or metadata.get("sha256") != item.sha256
+            ):
+                raise ValueError(f"remote S3 release metadata mismatch: {item.path}")
+        payload = _download_s3_member(
+            bucket,
+            prefix,
+            relative_member.as_posix(),
+            temporary / "member",
+            endpoint_url=endpoint_url,
+        )
+        if len(payload) != selected.size_bytes or hashlib.sha256(payload).hexdigest() != selected.sha256:
+            raise ValueError(f"remote S3 release member checksum mismatch: {relative_member}")
+        return VerifiedS3ReleaseMember(payload=payload, inventory=inventory)
 
 
 def publish_s3_result(
@@ -275,16 +437,18 @@ def publish_s3_result(
     *,
     endpoint_url: str,
     require_version_ids: bool = False,
+    limits: TransferLimits = TransferLimits(),
 ) -> tuple[S3ObjectEvidence, ...]:
     """Publish a verified successful result, making SUCCESS visible last."""
 
-    verify_complete_result(source)
+    verify_complete_result(source, limits=limits)
     return _publish_s3_directory(
         source,
         destination,
         endpoint_url=endpoint_url,
         marker="SUCCESS",
         require_version_ids=require_version_ids,
+        limits=limits,
     )
 
 
@@ -309,6 +473,7 @@ def _publish_s3_directory(
     endpoint_url: str,
     marker: str,
     require_version_ids: bool = False,
+    limits: TransferLimits = TransferLimits(),
 ) -> tuple[S3ObjectEvidence, ...]:
     """Publish one immutable directory and expose its terminal marker last."""
 
@@ -317,7 +482,7 @@ def _publish_s3_directory(
     inventory = ChecksumInventory(
         files=tuple(item for item in complete_inventory.files if item.path != marker)
     )
-    verify_inventory(source, inventory)
+    verify_inventory(source, inventory, limits=limits)
     bucket, prefix = _s3_bucket_prefix(destination)
     if _list_s3_keys(bucket, prefix, endpoint_url=endpoint_url, limit=1):
         raise FileExistsError(f"release prefix already exists: {destination}")
@@ -541,6 +706,41 @@ def _relative_s3_key(key: str, prefix: str) -> PurePosixPath:
     ):
         raise ValueError(f"S3 object key is not a normalized relative path: {key}")
     return relative
+
+
+def _normalized_relative_path(value: str) -> PurePosixPath:
+    path = PurePosixPath(value)
+    if (
+        not value
+        or path.is_absolute()
+        or "\\" in value
+        or any(part in {"", ".", ".."} for part in path.parts)
+        or path.as_posix() != value
+    ):
+        raise ValueError("S3 release member must be a normalized relative POSIX path")
+    return path
+
+
+def _download_s3_member(
+    bucket: str,
+    prefix: str,
+    member: str,
+    target: Path,
+    *,
+    endpoint_url: str,
+) -> bytes:
+    key = f"{prefix}/{member}"
+    _aws_json(
+        endpoint_url,
+        "s3api",
+        "get-object",
+        "--bucket",
+        bucket,
+        "--key",
+        key,
+        str(target),
+    )
+    return target.read_bytes()
 
 
 def _aws_json(

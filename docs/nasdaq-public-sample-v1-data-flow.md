@@ -144,7 +144,11 @@ emulation.
    after successful source verification when single-request S3 publication
    rejected the 5,510,131,732-byte object.
 4. **C3 — separately gated.** Normalize, reconstruct books, run deterministic
-   replays, generate features, and record actual event/row/byte volumes.
+   replays, generate features, and record actual event/row/byte volumes. Store
+   normalization plus each of 27 comparisons under immutable request-bound
+   checkpoint prefixes; publish `SUCCESS` last per shard and make the final
+   prepared release a small manifest of those verified shards. Exact retries
+   resume completed shards and reject partial or mismatched checkpoints.
 5. **C4 — separately gated.** Freeze development and final projections, prove
    development-to-final access denial, publish both folds through the operator
    boundary, and deactivate the temporary preparation key.

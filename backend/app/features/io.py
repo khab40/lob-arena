@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
@@ -39,7 +40,8 @@ def load_events_jsonl(path: Path) -> list[CanonicalExchangeEvent]:
 
 def iter_events_jsonl(path: Path) -> Iterator[CanonicalExchangeEvent]:
     event_count = 0
-    with path.open(encoding="utf-8") as handle:
+    opener = gzip.open if path.suffix == ".gz" else Path.open
+    with opener(path, mode="rt", encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, 1):
             if not line.strip():
                 continue

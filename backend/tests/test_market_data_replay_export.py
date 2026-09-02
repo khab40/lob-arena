@@ -6,6 +6,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from app.data_ingestion.models import DatasetManifest
+from app.features.io import load_events_jsonl
 from app.market_data import replay_export
 
 
@@ -89,6 +90,33 @@ def test_stream_export_writes_one_parquet_row_group_per_page(monkeypatch: pytest
     parquet = pq.ParquetFile(snapshots_path)
     assert parquet.metadata.num_rows == 2
     assert parquet.metadata.num_row_groups == 2
+
+
+def test_stream_export_writes_deterministic_readable_gzip(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    response = {
+        "events": [_event(1), _event(2, snapshot=True)],
+        "next_after_sequence": 2,
+        "has_more": False,
+    }
+    monkeypatch.setattr(replay_export, "_json_request", lambda *args, **kwargs: response)
+    outputs = []
+    for name in ("first", "second"):
+        events_path = tmp_path / name / "events.jsonl.gz"
+        events_path.parent.mkdir()
+        replay_export._write_stream_artifacts(
+            base_url="http://java",
+            stream_id="stream-1",
+            events_path=events_path,
+            snapshots_path=events_path.parent / "snapshots.parquet",
+            timeout_seconds=1,
+        )
+        outputs.append(events_path)
+
+    assert outputs[0].read_bytes() == outputs[1].read_bytes()
+    assert [event.sequence for event in load_events_jsonl(outputs[0])] == [1, 2]
 
 
 def test_stream_export_rejects_empty_nonterminal_page(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

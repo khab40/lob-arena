@@ -213,6 +213,13 @@ def prepare_preparation(
             f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/prepared/"
             f"{source.date.isoformat()}/{run_id}"
         ),
+        checkpoint_uri=(
+            f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/preparation-checkpoints/"
+            f"{source.date.isoformat()}/{run_id}"
+        ),
+        feature_config_sha256=hashlib.sha256(
+            (ROOT / "configs" / "features" / "lightgbm-v2.json").read_bytes()
+        ).hexdigest(),
     )
     _prepare_request_package(request, operation="preparation", package=package, evidence=evidence_output)
 
