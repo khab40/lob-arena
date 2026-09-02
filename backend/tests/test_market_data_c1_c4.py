@@ -39,6 +39,7 @@ from app.features.io import feature_arrow_schema
 from scripts.market_data_wave1 import prepare_acquisition
 from scripts.submit_market_data_stage_job import (
     _job_command,
+    _verify_submission_gate,
     _validate_arguments,
     main as submit_stage_job,
 )
@@ -192,6 +193,60 @@ def test_stage_dry_run_stdout_does_not_include_secret_selectors(
     assert "secret-selector-must-not-leak" not in output
     assert "AWS_ACCESS_KEY_ID=[MYSTERYBOX_SELECTOR]" in payload["command"]
     assert "AWS_SECRET_ACCESS_KEY=[MYSTERYBOX_SELECTOR]" in payload["command"]
+
+
+def test_resume_submission_keeps_publication_and_job_approvals_distinct(
+    tmp_path: Path,
+) -> None:
+    class RequestStub:
+        @staticmethod
+        def canonical_hash() -> str:
+            return "a" * 64
+
+    package = {"package_inventory_sha256": "b" * 64}
+    publication = tmp_path / "publication.json"
+    publication.write_text(
+        json.dumps(
+            {
+                "schema_version": "market_data_wave1_request_publication_v1",
+                "approval_reference": "canary-publication-approval",
+                "destination": "s3://example/request",
+                "request_sha256": "a" * 64,
+                "package_inventory_sha256": "b" * 64,
+            }
+        ),
+        encoding="utf-8",
+    )
+    common = {"operation": "preparation", "registry_verification": None}
+    reviewed = tmp_path / "reviewed.json"
+    reviewed.write_text(
+        json.dumps(
+            {
+                "schema_version": "market_data_wave1_stage_dry_run_v1",
+                **common,
+            }
+        ),
+        encoding="utf-8",
+    )
+    reviewed_sha = hashlib.sha256(reviewed.read_bytes()).hexdigest()
+    args = Namespace(
+        approval_reference="full-resume-approval",
+        publication_evidence=publication,
+        reviewed_dry_run=reviewed,
+        reviewed_dry_run_sha256=reviewed_sha,
+        input_uri="s3://example/request",
+    )
+
+    assert _verify_submission_gate(args, RequestStub(), package, common) == (
+        reviewed_sha,
+        "canary-publication-approval",
+    )
+
+    payload = json.loads(publication.read_text(encoding="utf-8"))
+    payload["approval_reference"] = "bad"
+    publication.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SystemExit, match="lacks a valid approval reference"):
+        _verify_submission_gate(args, RequestStub(), package, common)
 
 
 def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
