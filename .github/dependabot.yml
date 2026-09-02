@@ -5,6 +5,22 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      frontend-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+      frontend-minor-and-patch:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
 
   - package-ecosystem: "pip"
     directories:
@@ -14,6 +30,25 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      python-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+      python-minor-and-patch:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "pyarrow"
+        versions:
+          - ">=25.0.1"
 
   - package-ecosystem: "docker"
     directories:
@@ -27,9 +62,47 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      runtime-image-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+      runtime-image-minor-and-patch:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "python"
+        versions:
+          - ">= 3.12"
+      - dependency-name: "node"
+        versions:
+          - ">= 25"
+      - dependency-name: "vllm/vllm-openai"
+        versions:
+          - ">= 0.11"
 
   - package-ecosystem: "gradle"
     directory: "/java"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    groups:
+      java-security:
+        applies-to: "security-updates"
+        patterns:
+          - "*"
+      java-minor-and-patch:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"

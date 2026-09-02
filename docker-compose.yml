@@ -277,7 +277,7 @@ services:
     build:
       context: ./deployments/mlflow
       dockerfile: Dockerfile
-    image: lob-arena/mlflow:3.13.0
+    image: lob-arena/mlflow:3.15.2
     profiles: ["mlflow"]
     environment:
       MLFLOW_POSTGRES_HOST: mlflow-postgres
@@ -329,7 +329,7 @@ services:
       - mlflow-edge
 
   mlflow-exporter-init:
-    image: lob-arena/mlflow:3.13.0
+    image: lob-arena/mlflow:3.15.2
     profiles: ["mlflow"]
     entrypoint: ["python", "/opt/lob-arena/mlflow/exporter_bootstrap.py"]
     environment:
@@ -356,7 +356,7 @@ services:
       - mlflow-edge
 
   mlflow-exporter:
-    image: lob-arena/mlflow:3.13.0
+    image: lob-arena/mlflow:3.15.2
     profiles: ["mlflow"]
     entrypoint: ["python", "/opt/lob-arena/mlflow/exporter.py"]
     environment:

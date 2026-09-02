@@ -1,7 +1,7 @@
-FROM ghcr.io/mlflow/mlflow:v3.13.0
+FROM ghcr.io/mlflow/mlflow:v3.15.2
 
 RUN python -m pip install --no-cache-dir \
-    "mlflow[auth]==3.13.0" \
+    "mlflow[auth]==3.15.2" \
     "boto3==1.40.61" \
     "psycopg2-binary==2.9.11"
 

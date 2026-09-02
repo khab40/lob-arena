@@ -25,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.13.0-nebius}
+    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.15.2-nebius}
     environment:
       MLFLOW_POSTGRES_HOST: mlflow-postgres
       MLFLOW_POSTGRES_PORT: "5432"
@@ -74,7 +74,7 @@ services:
       - mlflow-edge
 
   mlflow-exporter-init:
-    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.13.0-nebius}
+    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.15.2-nebius}
     entrypoint: ["python", "/opt/lob-arena/mlflow/exporter_bootstrap.py"]
     environment: &exporter-auth
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -100,7 +100,7 @@ services:
       - mlflow-edge
 
   mlflow-exporter:
-    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.13.0-nebius}
+    image: ${MLFLOW_IMAGE:-lob-arena/mlflow:3.15.2-nebius}
     entrypoint: ["python", "/opt/lob-arena/mlflow/exporter.py"]
     environment:
       <<: *exporter-auth

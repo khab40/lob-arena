@@ -3,11 +3,11 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN pip install --no-cache-dir \
-  "fastapi>=0.111.0" \
-  pydantic \
-  "starlette>=1.3.1" \
+  "fastapi>=0.141.1" \
+  "pydantic>=2.13.5" \
+  "starlette>=1.6.0" \
   langgraph \
-  uvicorn \
+  "uvicorn>=0.52.4" \
   uvloop \
   httptools
 

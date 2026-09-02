@@ -49,6 +49,6 @@ def test_every_python_install_surface_enforces_security_floors() -> None:
     ]
 
     for path in starlette_surfaces:
-        assert "starlette>=1.3.1" in path.read_text(encoding="utf-8"), path
+        assert "starlette>=1.6.0" in path.read_text(encoding="utf-8"), path
     for path in pydantic_settings_surfaces:
         assert "pydantic-settings>=2.14.2" in path.read_text(encoding="utf-8"), path
