@@ -1,7 +1,7 @@
 # vLLM-only endpoint image for Nebius Serverless AI Endpoint on GPU.
 # Runs local vLLM on 127.0.0.1:8001 and exposes LOB Arena FastAPI on 0.0.0.0:9000.
 
-FROM vllm/vllm-openai:v0.10.1.1
+FROM vllm/vllm-openai:v0.10.2
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
