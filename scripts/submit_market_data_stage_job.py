@@ -109,7 +109,9 @@ def main(argv: list[str] | None = None) -> int:
         _write_once(args.evidence_output, payload)
         print("Market-data stage dry-run evidence written; review the evidence file before submission.")
         return 0
-    reviewed_sha = _verify_submission_gate(args, request, package, common)
+    reviewed_sha, publication_approval_reference = _verify_submission_gate(
+        args, request, package, common
+    )
     completed = subprocess.run(command, check=False, text=True, capture_output=True)
     if completed.returncode:
         raise SystemExit("market-data Nebius Job submission failed; inspect bounded CLI logs")
@@ -141,6 +143,7 @@ def main(argv: list[str] | None = None) -> int:
             submitted_at + timedelta(seconds=request.resource.timeout_seconds)
         ).isoformat(),
         "approval_reference": args.approval_reference,
+        "request_publication_approval_reference": publication_approval_reference,
         **common,
         "reviewed_dry_run_sha256": reviewed_sha,
         "job_id": job_id,
@@ -260,7 +263,7 @@ def _verify_submission_gate(
     request: Request,
     package: dict[str, object],
     common: dict[str, object],
-) -> str:
+) -> tuple[str, str]:
     if not args.approval_reference or re.fullmatch(
         r"[A-Za-z0-9][A-Za-z0-9._:-]{7,127}", args.approval_reference
     ) is None:
@@ -272,13 +275,17 @@ def _verify_submission_gate(
         publication.get(name) != value
         for name, value in (
             ("schema_version", "market_data_wave1_request_publication_v1"),
-            ("approval_reference", args.approval_reference),
             ("destination", args.input_uri.rstrip("/")),
             ("request_sha256", request.canonical_hash()),
             ("package_inventory_sha256", package["package_inventory_sha256"]),
         )
     ):
         raise SystemExit("market-data publication evidence is not bound to this request")
+    publication_approval_reference = publication.get("approval_reference")
+    if not isinstance(publication_approval_reference, str) or re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9._:-]{7,127}", publication_approval_reference
+    ) is None:
+        raise SystemExit("market-data publication evidence lacks a valid approval reference")
     reviewed_sha = hashlib.sha256(args.reviewed_dry_run.read_bytes()).hexdigest()
     if reviewed_sha != args.reviewed_dry_run_sha256:
         raise SystemExit("reviewed market-data dry-run SHA-256 is missing or incorrect")
@@ -289,7 +296,7 @@ def _verify_submission_gate(
         if name != "registry_verification" and reviewed.get(name) != value:
             raise SystemExit(f"reviewed market-data dry run no longer matches {name}")
     _verify_reviewed_registry_evidence(reviewed, common["registry_verification"])
-    return reviewed_sha
+    return reviewed_sha, publication_approval_reference
 
 
 def _output_uri(request: Request) -> str:
