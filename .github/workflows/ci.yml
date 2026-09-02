@@ -358,7 +358,7 @@ jobs:
 
       - name: Smoke test MLflow runtime dependencies
         if: ${{ matrix.name == 'mlflow' }}
-        run: docker run --rm --entrypoint python lob-arena-ci/mlflow:${{ github.sha }} -c 'import boto3, mlflow, psycopg2; assert mlflow.__version__ == "3.13.0"'
+        run: docker run --rm --entrypoint python lob-arena-ci/mlflow:${{ github.sha }} -c 'import boto3, mlflow, psycopg2; assert mlflow.__version__ == "3.15.2"'
 
   compose:
     name: Validate Compose configurations

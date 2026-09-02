@@ -958,10 +958,10 @@ def test_ml_dependency_group_is_declared_for_training_jobs() -> None:
     locked = {package["name"]: package["version"] for package in lock["package"]}
 
     assert any(item.startswith("lightgbm>=4.6.0") for item in dependencies)
-    assert "mlflow-skinny==3.13.0" in dependencies
+    assert "mlflow-skinny==3.15.2" in dependencies
     assert any(item.startswith("scikit-learn>=1.7.2") for item in dependencies)
     assert tuple(map(int, locked["lightgbm"].split("."))) >= (4, 6, 0)
-    assert locked["mlflow-skinny"] == "3.13.0"
+    assert locked["mlflow-skinny"] == "3.15.2"
     assert tuple(map(int, locked["scikit-learn"].split("."))) >= (1, 7, 2)
 
 

@@ -22,13 +22,13 @@ ENV PATH="/root/.nebius/bin:${PATH}"
 
 # Install dependencies with pip cache and timeout settings to avoid network issues
 RUN pip install --no-cache-dir --retries 5 \
-  "fastapi>=0.111.0" \
-  pydantic \
+  "fastapi>=0.141.1" \
+  "pydantic>=2.13.5" \
   "pydantic-settings>=2.14.2" \
-  "starlette>=1.3.1" \
-  pyyaml \
-  "pyarrow>=18.0.0" \
-  uvicorn \
+  "starlette>=1.6.0" \
+  "pyyaml>=6.0.3" \
+  "pyarrow==25.0.0" \
+  "uvicorn>=0.52.4" \
   uvloop \
   httptools \
   && if [ "${INSTALL_NEBIUS_CLI}" = "true" ]; then pip install --no-cache-dir --retries 5 awscli; fi

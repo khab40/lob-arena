@@ -15,7 +15,7 @@ output=""
 access_key_id=""
 bucket=""
 private_host=""
-image="lob-arena/mlflow:3.13.0-nebius"
+image="lob-arena/mlflow:3.15.2-nebius"
 
 while (($# > 0)); do
   case "$1" in

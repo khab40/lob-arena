@@ -85,8 +85,8 @@ def test_mlflow_metadata_artifacts_auth_and_hardening_are_explicit() -> None:
     )
 
     dockerfile = (DEPLOYMENT / "Dockerfile").read_text(encoding="utf-8")
-    assert dockerfile.startswith("FROM ghcr.io/mlflow/mlflow:v3.13.0\n")
-    assert '"mlflow[auth]==3.13.0"' in dockerfile
+    assert dockerfile.startswith("FROM ghcr.io/mlflow/mlflow:v3.15.2\n")
+    assert '"mlflow[auth]==3.15.2"' in dockerfile
     assert '"psycopg2-binary==2.9.11"' in dockerfile
     assert "USER 10001:10001" in dockerfile
 
