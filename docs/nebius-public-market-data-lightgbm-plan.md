@@ -571,6 +571,12 @@ checkpoints fail closed. The local 1-of-27 interruption/resume canary must pass
 before any separately authorized image build or cloud canary; it does not
 submit a Job or mutate Object Storage.
 
+The first cloud execution of v2 must pass `--max-new-comparisons 1`. It may
+publish the normalization checkpoint and exactly one comparison checkpoint,
+then exits successfully without publishing the final prepared prefix. A later
+full execution reuses the same request-bound checkpoints and processes only the
+remaining comparisons before creating the 27-shard final manifest.
+
 ### C4 - Corpus freeze and projection publication
 
 Build and verify the complete research corpus and chronological split under the

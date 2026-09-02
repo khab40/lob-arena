@@ -28,6 +28,12 @@ def main() -> int:
     cloud.add_argument("--work-root", type=Path, default=Path("/job/market-data-prepare"))
     cloud.add_argument("--endpoint-url", default=OBJECT_STORAGE_ENDPOINT)
     cloud.add_argument("--java-jar", type=Path, default=Path("/job/java/control-plane.jar"))
+    cloud.add_argument(
+        "--max-new-comparisons",
+        type=int,
+        choices=(1,),
+        help="Cost-bounded canary: checkpoint one new comparison and do not publish a final result.",
+    )
     verify = subparsers.add_parser("verify-local")
     verify.add_argument("--result", type=Path, required=True)
     args = parser.parse_args()
@@ -49,6 +55,7 @@ def main() -> int:
             work_root=args.work_root,
             java_jar=args.java_jar,
             endpoint_url=args.endpoint_url,
+            max_new_comparisons=args.max_new_comparisons,
         )
     else:
         result = verify_complete_result(args.result).model_dump(mode="json")

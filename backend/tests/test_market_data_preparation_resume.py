@@ -63,7 +63,6 @@ def test_one_of_27_local_canary_publishes_then_resumes_without_recompute(
         output.mkdir(parents=True)
         (output / "features.parquet").write_bytes(b"fixture-feature")
 
-    plan = ((1, "AAPL", "spoofing_like_wall", 41),)
     first = _run_replay_campaign(
         java_base_url="http://unused",
         staging=_new_directory(tmp_path / "first-attempt"),
@@ -73,7 +72,7 @@ def test_one_of_27_local_canary_publishes_then_resumes_without_recompute(
         repository=repository,
         binding=binding,
         request=request,
-        comparison_plan=plan,
+        max_new_comparisons=1,
     )
     assert export_calls == 1
     assert len(first[2]) == 1
@@ -88,7 +87,7 @@ def test_one_of_27_local_canary_publishes_then_resumes_without_recompute(
         repository=repository,
         binding=binding,
         request=request,
-        comparison_plan=plan,
+        comparison_plan=((1, "AAPL", "spoofing_like_wall", 41),),
     )
 
     assert export_calls == 1

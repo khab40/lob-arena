@@ -197,7 +197,10 @@ def execute_preparation(
     replay_exporter: ReplayExporter | None = None,
     feature_generator: FeatureGenerator | None = None,
     checkpoint_repository: CheckpointRepository | None = None,
-) -> Path:
+    max_new_comparisons: Literal[1] | None = None,
+) -> Path | None:
+    if max_new_comparisons not in {None, 1}:
+        raise ValueError("preparation canary must allow exactly one new comparison")
     request = NasdaqPreparationRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
     with JOB_LOG.phase(
         "source-validation",
@@ -341,7 +344,22 @@ def execute_preparation(
                     repository=repository,
                     binding=binding,
                     request=request,
+                    max_new_comparisons=max_new_comparisons,
                 )
+        if len(comparison_references) != 27:
+            JOB_LOG.info(
+                "preparation-canary.completed",
+                "Stopped successfully after the reviewed number of new comparison checkpoints.",
+                run_id=request.run_id,
+                max_new_comparisons=max_new_comparisons,
+                completed_comparison_checkpoints=len(comparison_references),
+                expected_comparison_checkpoints=27,
+                final_result_published=False,
+                checkpoint_uri=request.checkpoint_uri,
+                **_disk_evidence(staging),
+            )
+            shutil.rmtree(staging)
+            return None
         with JOB_LOG.phase(
             "result-materialization",
             "Freeze the small manifest-of-shards; all heavy payloads are already checkpointed.",
@@ -398,6 +416,7 @@ def execute_preparation_s3(
     java_base_url: str = "http://127.0.0.1:8080",
     java_jar: Path | None = None,
     endpoint_url: str = OBJECT_STORAGE_ENDPOINT,
+    max_new_comparisons: Literal[1] | None = None,
 ) -> str:
     if endpoint_url.rstrip("/") != OBJECT_STORAGE_ENDPOINT:
         raise ValueError("preparation requires the approved eu-north1 endpoint")
@@ -460,14 +479,17 @@ def execute_preparation_s3(
             endpoint_url=endpoint_url,
             limits=_comparison_limits(request),
         )
-        execute_preparation(
+        result_path = execute_preparation(
             request_path,
             source_root=source_root,
             result_root=result,
             java_base_url=java_base_url,
             java_jar=java_jar,
             checkpoint_repository=repository,
+            max_new_comparisons=max_new_comparisons,
         )
+        if result_path is None:
+            return request.checkpoint_uri
         with JOB_LOG.phase(
             "result-publication",
             "Publish the verified prepared release with checksums and SUCCESS last.",
@@ -494,12 +516,14 @@ def _run_replay_campaign(
     binding: PreparationCheckpointBinding,
     request: NasdaqPreparationRequest,
     comparison_plan: tuple[tuple[int, str, str, int], ...] | None = None,
+    max_new_comparisons: Literal[1] | None = None,
 ) -> tuple[dict[str, str], list[str], list[CheckpointReference]]:
     control_hashes: dict[str, str] = {}
     control_runs: dict[str, str] = {}
     campaign_runs: list[str] = []
     references: list[CheckpointReference] = []
     cumulative_bytes = 0
+    new_comparisons = 0
     plan = comparison_plan or tuple(
         (number, symbol, family, seed)
         for number, (symbol, family, seed) in enumerate(
@@ -560,6 +584,8 @@ def _run_replay_campaign(
                 **_disk_evidence(staging),
             )
             continue
+        if max_new_comparisons is not None and new_comparisons >= max_new_comparisons:
+            break
         comparison_stage = Path(
             tempfile.mkdtemp(prefix=f"comparison-{comparison_number:03d}-", dir=staging)
         )
@@ -638,6 +664,7 @@ def _run_replay_campaign(
                 reference = repository.publish(shard_id, comparison_stage, record)
                 campaign_runs.append(hybrid.run_id)
                 references.append(reference)
+                new_comparisons += 1
                 cumulative_bytes += reference.payload_size_bytes
                 _require_campaign_bytes(cumulative_bytes, request)
                 JOB_LOG.info(

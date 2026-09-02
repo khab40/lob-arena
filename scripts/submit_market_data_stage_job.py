@@ -58,9 +58,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--evidence-output", type=Path, required=True)
     parser.add_argument("--reviewed-dry-run", type=Path)
     parser.add_argument("--reviewed-dry-run-sha256")
+    parser.add_argument(
+        "--max-new-comparisons",
+        type=int,
+        choices=(1,),
+        help="Preparation-only canary limit; the final prepared result remains unpublished.",
+    )
     args = parser.parse_args(argv)
     _validate_arguments(args)
     request, package = _load_request(args.request_evidence, args.input_uri)
+    if args.max_new_comparisons is not None and not isinstance(
+        request, NasdaqPreparationRequest
+    ):
+        raise SystemExit("comparison canary limit is valid only for C3 preparation")
     if request.image != args.image:
         raise SystemExit("market-data image does not match the packaged immutable request")
     deployment_image = args.deployment_image or args.image
@@ -84,6 +94,7 @@ def main(argv: list[str] | None = None) -> int:
         "data_prep_jobs_consumed": args.data_prep_jobs_consumed,
         "sequence_number": request.sequence_number,
         "restart_policy": "never",
+        "max_new_comparisons": args.max_new_comparisons,
     }
     if args.dry_run:
         payload = {
@@ -214,6 +225,9 @@ def _job_command(
         f"--input-uri {args.input_uri.rstrip('/')} --work-root {work_root} "
         f"--endpoint-url {OBJECT_STORAGE_ENDPOINT}"
     )
+    max_new_comparisons = getattr(args, "max_new_comparisons", None)
+    if isinstance(request, NasdaqPreparationRequest) and max_new_comparisons is not None:
+        job_args += f" --max-new-comparisons {max_new_comparisons}"
     command = [
         "nebius", "ai", "job", "create", "--name", args.name,
         "--parent-id", PROJECT_ID, "--image", deployment_image,
