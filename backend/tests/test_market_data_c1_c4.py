@@ -247,6 +247,7 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
         subnet_id="vpcsubnet-example",
         access_key_secret_id="mbsec-access",
         secret_key_secret_id="mbsec-secret",
+        max_new_comparisons=1,
     )
 
     acquisition_command = _job_command(args, acquisition, "registry/mda:short")
@@ -256,6 +257,8 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
 
     assert "/job/serverless/jobs/run_market_data_acquisition.py acquire-s3" in acquisition_args
     assert "/job/serverless/jobs/run_market_data_preparation.py prepare-s3" in preparation_args
+    assert "--max-new-comparisons 1" in preparation_args
+    assert "--max-new-comparisons" not in acquisition_args
     assert "run_market_data_wave1.py" not in acquisition_args
     assert "run_market_data_wave1.py" not in preparation_args
     assert acquisition_command[acquisition_command.index("--preset") + 1] == "4vcpu-16gb"
