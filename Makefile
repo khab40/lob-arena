@@ -156,6 +156,8 @@ market-data-wave1-test:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
 		tests/test_market_data_c0.py \
 		tests/test_market_data_c1_c4.py \
+		tests/test_market_data_preparation_resume.py \
+		tests/test_market_data_replay_export.py \
 		tests/test_market_data_images.py \
 		tests/test_lightgbm_g5.py \
 		tests/test_lightgbm_wave1.py

@@ -505,8 +505,11 @@ Process one trading date per Job, initially sequentially. Each Job:
 3. starts the pinned Java control plane locally;
 4. runs control and hybrid comparisons twice and rejects nondeterminism;
 5. generates causal features and quality reports;
-6. writes only bounded non-secret logs; and
-7. publishes checksummed outputs with `SUCCESS` last.
+6. publishes normalization and every completed comparison as a separate,
+   request-bound immutable checkpoint with `SUCCESS` last;
+7. resumes only checkpoints whose request, source, image, Git commit and feature
+   configuration binding matches exactly; and
+8. publishes a small final manifest-of-shards after all 27 checkpoints pass.
 
 After two dates show deterministic output and acceptable memory/runtime,
 parallelism may increase to two Jobs. Never process two jobs for the same date.
@@ -553,6 +556,20 @@ incrementally, releases all four Java archives after each comparison, and
 retains only one hash-verified control bundle per symbol. A fresh C3 request
 must use the preparation-only `8vcpu-32gb`, 250 GiB, 16-hour contract described
 above; the failed image and request must not be reused.
+
+A later 32 GiB Job, `aijob-e00t59masnf1n45fh9`, completed all 27 replay
+comparisons but failed during final materialization after repeatedly hashing a
+single result tree larger than the generic 20 GiB transfer ceiling. No result
+publication began, so the ephemeral output was lost. Preparation request/result
+schema v2 removes that terminal failure mode: canonical event JSONL is written
+as deterministic gzip, normalization and comparison payloads have explicit
+reviewed file/byte ceilings, comparison checkpoints are published immediately,
+remote retries verify `SUCCESS`, canonical checksums, object sizes and SHA-256
+metadata before skipping work, and the final prepared prefix contains only the
+reviewed request plus the 27-shard manifest. Partial or differently bound
+checkpoints fail closed. The local 1-of-27 interruption/resume canary must pass
+before any separately authorized image build or cloud canary; it does not
+submit a Job or mutate Object Storage.
 
 ### C4 - Corpus freeze and projection publication
 

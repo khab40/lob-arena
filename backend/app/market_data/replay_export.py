@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import gzip
 import hashlib
+import io
 import json
 import urllib.parse
 import urllib.request
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TextIO
 
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -28,6 +31,7 @@ def export_replay_comparison(
     seed: int,
     output_root: Path,
     timeout_seconds: float = 3600,
+    compress_events: bool = False,
 ) -> tuple[Path, Path, dict[str, Any]]:
     payload = {
         "dataset_id": dataset.dataset_id,
@@ -75,6 +79,7 @@ def export_replay_comparison(
             seed=None,
             output=output_root / "control",
             timeout_seconds=timeout_seconds,
+            compress_events=compress_events,
         )
         hybrid = _export_stream(
             base_url=base_url,
@@ -88,6 +93,7 @@ def export_replay_comparison(
             seed=seed,
             output=output_root / "hybrid",
             timeout_seconds=timeout_seconds,
+            compress_events=compress_events,
         )
         (output_root / "comparison.json").write_text(
             json.dumps(comparison, indent=2, sort_keys=True) + "\n", encoding="utf-8"
@@ -120,12 +126,13 @@ def _export_stream(
     seed: int | None,
     output: Path,
     timeout_seconds: float,
+    compress_events: bool = False,
 ) -> Path:
     stream_id = summary.get("stream_id")
     if not isinstance(stream_id, str) or not stream_id:
         raise ValueError("Java replay summary omitted its canonical stream ID")
     output.mkdir(parents=True, exist_ok=False)
-    events_path = output / "events.jsonl"
+    events_path = output / ("events.jsonl.gz" if compress_events else "events.jsonl")
     snapshots_path = output / "snapshots.parquet"
     alerts_path = output / "alerts.jsonl"
     ground_truth_path = output / "ground-truth.jsonl"
@@ -253,7 +260,7 @@ def _write_stream_artifacts(
     last_timestamp: int | None = None
     snapshot_writer: pq.ParquetWriter | None = None
     try:
-        with events_path.open("w", encoding="utf-8") as event_file:
+        with _open_event_writer(events_path) as event_file:
             for page in _iter_stream_pages(base_url, stream_id, timeout_seconds=timeout_seconds):
                 snapshots: list[dict[str, Any]] = []
                 for event in page:
@@ -285,6 +292,24 @@ def _write_stream_artifacts(
     if snapshot_count == 0:
         raise ValueError("Java canonical replay stream contains no snapshots")
     return event_count, snapshot_count, first_timestamp, last_timestamp
+
+
+@contextmanager
+def _open_event_writer(path: Path) -> Iterator[TextIO]:
+    if path.suffix != ".gz":
+        with path.open("w", encoding="utf-8", newline="") as text:
+            yield text
+        return
+    with path.open("wb") as raw:
+        with gzip.GzipFile(
+            filename="",
+            mode="wb",
+            fileobj=raw,
+            compresslevel=1,
+            mtime=0,
+        ) as compressed:
+            with io.TextIOWrapper(compressed, encoding="utf-8", newline="") as text:
+                yield text
 
 
 def _iter_stream_pages(base_url: str, stream_id: str, *, timeout_seconds: float) -> Iterator[list[dict[str, Any]]]:

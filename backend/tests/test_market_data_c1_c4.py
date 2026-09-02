@@ -234,6 +234,11 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
             "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
             f"prepared/{source.date.isoformat()}/{run_id}"
         ),
+        checkpoint_uri=(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+            f"preparation-checkpoints/{source.date.isoformat()}/{run_id}"
+        ),
+        feature_config_sha256="e" * 64,
     )
     args = Namespace(
         image=image,
