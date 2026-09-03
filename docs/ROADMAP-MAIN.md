@@ -1,6 +1,6 @@
 # Main Roadmap
 
-Status date: 2026-09-01
+Status date: 2026-09-03
 
 Target completion for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -14,9 +14,14 @@ Critical path:
 
 ## Current Position
 
-- C3 Job `aijob-e00t59masnf1n45fh9` is running comparison 10 of 27.
-- Comparisons 1-9 passed, including the previous quote-stuffing failure
-  boundary.
+- C3 preparation is complete for both train dates. Jobs
+  `aijob-e00gt2haxazrywans5` (`2019-01-30`) and
+  `aijob-e00dv0n0dd8fs3y5tk` (`2019-03-27`) each published 27/27 immutable
+  comparison checkpoints and a checksum-verified final manifest.
+- The public-data campaign has consumed 11 of the approved 18 Jobs.
+- The next execution is sequence 3: acquire and prepare the `2019-10-30`
+  validation date after the four-date contract PR is merged and a fresh
+  immutable acquisition image is published.
 - G4 is complete. G5 is implemented but waits for the frozen Nasdaq projection
   from C4.
 - GitHub Project #3 contains 74 items. Seven dated repository milestones now
@@ -29,7 +34,7 @@ Critical path:
 
 | Target | Milestone | Expected result |
 | --- | --- | --- |
-| **2026-09-02** | Current C3 date complete | 27/27 comparisons, immutable output manifest, `SUCCESS`, runtime/RSS and checksum evidence |
+| **2026-09-03** | Train-date C3 complete | Both train dates have 27/27 comparisons, immutable output manifests, `SUCCESS`, runtime and checksum evidence |
 | **2026-09-03** | Roadmap correction PR | Replace the stale seven-date/15-Job design with the approved four-date corpus and minimum 18 public-data Jobs |
 | **2026-09-11** | C4 corpus freeze | Two train dates, one validation date, one test date; tabular and sequence projections; leakage and access-denial proof |
 | **2026-09-14** | G5 complete | Three sequential identical LightGBM Jobs with matching governed hashes |
@@ -57,16 +62,17 @@ Use the reduced chronological corpus:
 
 Execution:
 
-1. Finish and reconcile the current `2019-01-30` preparation.
-2. Prepare the already-acquired `2019-03-27` source.
+1. ~~Finish and reconcile the `2019-01-30` preparation.~~ Complete.
+2. ~~Prepare the already-acquired `2019-03-27` source.~~ Complete.
 3. Acquire and prepare `2019-10-30`.
 4. Acquire and prepare `2019-12-30`.
 5. Run C4 to freeze the corpus, split, `tabular_projection_v1`, and
    `sequence_projection_v1`.
 6. Prove that development credentials cannot read final projections.
 
-Amend the public-data plan to an **18-Job cap**. The reduced design should
-finish C4 around public-data Job 14, leaving four recovery slots.
+The public-data plan has an **18-Job cap**. Given the eleven Jobs already
+consumed, the reduced design should finish C4 around public-data Job 16,
+leaving two recovery slots.
 
 ## Phase 2 - G5 Through LightGBM Completion
 

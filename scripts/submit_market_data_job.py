@@ -80,8 +80,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("C0 forbids inline Object Storage credentials")
     if not math.isfinite(args.data_prep_spend_usd) or not 0 <= args.data_prep_spend_usd < 8:
         raise SystemExit("C0 requires reconciled data-preparation spend below the USD 8 stop gate")
-    if not 0 <= args.data_prep_jobs_consumed < 15:
-        raise SystemExit("C0 requires a reconciled public-data Job count below 15")
+    if not 0 <= args.data_prep_jobs_consumed < 18:
+        raise SystemExit("C0 requires a reconciled public-data Job count below 18")
     if INPUT_PATTERN.fullmatch(args.input_uri) is None:
         raise SystemExit("C0 input URI is outside the exact preflight-request prefix")
     request, package_evidence = _load_request_evidence(args.request_evidence, args.input_uri)

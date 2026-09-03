@@ -9,9 +9,11 @@ from pydantic import ValidationError
 
 from app.market_data import public_sample
 from app.market_data.public_sample import (
+    C0_PREFLIGHTED_SOURCES,
     C0PreflightRequest,
     EXPECTED_SOURCES,
     EXPECTED_TOTAL_BYTES,
+    LEGACY_PREFLIGHT_TOTAL_BYTES,
     HttpHeadEvidence,
     S3ProbeEvidence,
     config_artifact,
@@ -50,6 +52,25 @@ def test_source_config_rejects_url_or_length_drift() -> None:
         public_sample.NasdaqPublicSampleConfig.model_validate(payload)
 
 
+def test_legacy_seven_file_c0_config_remains_verifiable() -> None:
+    payload = json.loads(CONFIG.read_text(encoding="utf-8"))
+    payload["sources"] = [
+        {
+            "filename": filename,
+            "date": trade_date.isoformat(),
+            "fold": fold,
+            "expected_content_length": size,
+            "url": public_sample.BASE_URL + filename,
+        }
+        for filename, (trade_date, fold, size) in C0_PREFLIGHTED_SOURCES.items()
+    ]
+    payload["total_expected_bytes"] = LEGACY_PREFLIGHT_TOTAL_BYTES
+
+    config = public_sample.NasdaqPublicSampleConfig.model_validate(payload)
+
+    assert len(config.sources) == 7
+    assert config.total_expected_bytes == LEGACY_PREFLIGHT_TOTAL_BYTES
+
 def test_c0_local_execution_proves_zero_body_and_deleted_probe(tmp_path: Path) -> None:
     input_root, request = _input_package(tmp_path)
     config = load_source_config(CONFIG)
@@ -83,7 +104,7 @@ def test_c0_local_execution_proves_zero_body_and_deleted_probe(tmp_path: Path) -
     )
     evidence = verify_c0_result(result)
 
-    assert evidence.http_request_count == len(config.sources) == 7
+    assert evidence.http_request_count == len(config.sources) == 4
     assert evidence.http_body_bytes == 0
     assert all(item.response_body_bytes == 0 for item in evidence.sources)
     assert evidence.s3_probe.deleted is True
@@ -263,7 +284,7 @@ def test_prepare_and_submit_dry_run_are_bounded_and_redacted(
     assert "secret-selector-must-not-leak" not in output
     assert "AWS_ACCESS_KEY_ID=[MYSTERYBOX_SELECTOR]" in command
     assert "AWS_SECRET_ACCESS_KEY=[MYSTERYBOX_SELECTOR]" in command
-    assert payload["max_http_requests"] == 7
+    assert payload["max_http_requests"] == 4
     assert payload["max_http_body_bytes"] == 0
     assert payload["s3_probe_size_limit_bytes"] == 256
     assert payload["storage_mounts"] == []

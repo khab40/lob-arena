@@ -167,8 +167,8 @@ def _validate_arguments(args: argparse.Namespace) -> None:
         not math.isfinite(args.data_prep_spend_usd) or args.data_prep_spend_usd < 0
     ):
         raise SystemExit("observed data-preparation spend must be finite and non-negative")
-    if not 0 <= args.data_prep_jobs_consumed < 15:
-        raise SystemExit("public-data Job count must be reconciled below the 15-Job cap")
+    if not 0 <= args.data_prep_jobs_consumed < 18:
+        raise SystemExit("public-data Job count must be reconciled below the 18-Job cap")
     if os.environ.get("NEBIUS_VOLUME"):
         raise SystemExit("market-data Jobs forbid Object Storage mounts")
     if any(

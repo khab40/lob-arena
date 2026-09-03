@@ -36,7 +36,7 @@ from app.market_data.projections import (
 )
 from app.ml.lightgbm.contracts import ArtifactDigest
 from app.features.io import feature_arrow_schema
-from scripts.market_data_wave1 import prepare_acquisition
+from scripts.market_data_wave1 import _ordered_source, prepare_acquisition
 from scripts.submit_market_data_stage_job import (
     _job_command,
     _verify_submission_gate,
@@ -60,6 +60,20 @@ def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> N
     assert state.jobs_consumed == 2
     with pytest.raises(ValueError, match="no authorized next source"):
         state.next_filename()
+
+
+def test_active_sequence_three_is_the_validation_date() -> None:
+    sources = load_source_config(
+        Path(__file__).resolve().parents[2]
+        / "configs/data/nasdaq-public-sample-v1.json"
+    ).sources
+
+    source = _ordered_source(sources, "10302019.NASDAQ_ITCH50.gz", 3)
+
+    assert source.date == date(2019, 10, 30)
+    assert source.fold == "validation"
+    with pytest.raises(ValueError, match="frozen sequential source order"):
+        _ordered_source(sources, "07302019.NASDAQ_ITCH50.gz", 3)
 
 
 def test_acquisition_request_staging_binds_lifecycle_and_first_source(
@@ -116,7 +130,15 @@ def test_stage_submission_does_not_require_spend_reconciliation(
 
     _validate_arguments(args)
 
+    args.data_prep_jobs_consumed = 17
+    _validate_arguments(args)
+
+    args.data_prep_jobs_consumed = 18
+    with pytest.raises(SystemExit, match="18-Job cap"):
+        _validate_arguments(args)
+
     args.data_prep_spend_usd = -1
+    args.data_prep_jobs_consumed = 2
     with pytest.raises(SystemExit, match="finite and non-negative"):
         _validate_arguments(args)
 
@@ -613,7 +635,7 @@ def test_c4_materializers_emit_bound_tabular_and_causal_sequence_rows(
 
 
 def _frozen_root() -> FrozenPublicSampleRoot:
-    folds = ("train", "train", "train", "train", "validation", "test", "test")
+    folds = ("train", "train", "validation", "test")
     return FrozenPublicSampleRoot(
         release_id="nasdaq-public-sample-root-v1",
         protocol_sha256="1" * 64,
