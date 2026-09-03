@@ -149,12 +149,10 @@ The quarantine prefix has an explicit lifecycle measured in days, is private,
 and is deleted after normalized output and provenance read-back pass unless a
 separate retention decision is recorded. Lifecycle deletion must not remove
 the selected normalized corpus, its source manifest, HTTP metadata, complete
-source SHA-256 or immutable consumer releases. At current published pricing,
-retaining all 16.458 GiB of active Nasdaq compressed sources plus roughly 0.9
-GiB of LOBSTER data would cost about USD 0.25 per month before derived
-artifacts, but
-that is a cost bound rather than authorization for permanent raw retention.
-Cap quarantine plus derived data at 120 GiB and stop before exceeding it.
+source SHA-256 or immutable consumer releases. The active Nasdaq compressed
+sources total 16.458 GiB; storage cost follows the current Standard-tier rate
+and does not authorize permanent raw retention. Cap quarantine plus derived
+data at 120 GiB and stop before exceeding it.
 
 ## IAM Amendment
 
