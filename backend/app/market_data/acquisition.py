@@ -20,6 +20,7 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 
 from app.market_data.public_sample import (
     DEVELOPMENT_BUCKET,
+    EXPECTED_SOURCES,
     OBJECT_STORAGE_ENDPOINT,
     PROJECT_ID,
     PUBLIC_SAMPLE_PREFIX,
@@ -151,18 +152,21 @@ class AcquisitionCampaignState(_StrictModel):
     ordered_filenames: tuple[str, ...]
     successful_filenames: tuple[str, ...] = ()
     failed_filename: str | None = None
-    jobs_consumed: int = Field(default=0, ge=0, le=15)
+    jobs_consumed: int = Field(default=0, ge=0, le=18)
     stopped: bool = False
 
     @model_validator(mode="after")
     def validate_sequence(self) -> "AcquisitionCampaignState":
-        if len(self.ordered_filenames) != 7 or len(set(self.ordered_filenames)) != 7:
-            raise ValueError("acquisition campaign requires the exact seven-source order")
+        if self.ordered_filenames != tuple(EXPECTED_SOURCES):
+            raise ValueError("acquisition campaign requires the exact four-source order")
         if self.successful_filenames != self.ordered_filenames[: len(self.successful_filenames)]:
             raise ValueError("successful acquisition files must form an ordered prefix")
         if self.failed_filename is not None:
             next_index = len(self.successful_filenames)
-            if next_index >= 7 or self.failed_filename != self.ordered_filenames[next_index]:
+            if (
+                next_index >= len(self.ordered_filenames)
+                or self.failed_filename != self.ordered_filenames[next_index]
+            ):
                 raise ValueError("failed acquisition must be the next sequential source")
             if not self.stopped:
                 raise ValueError("an acquisition failure must stop the campaign")
@@ -171,9 +175,13 @@ class AcquisitionCampaignState(_StrictModel):
         return self
 
     def next_filename(self) -> str:
-        if self.stopped or self.failed_filename or len(self.successful_filenames) == 7:
+        if (
+            self.stopped
+            or self.failed_filename
+            or len(self.successful_filenames) == len(self.ordered_filenames)
+        ):
             raise ValueError("acquisition campaign has no authorized next source")
-        if self.jobs_consumed >= 15:
+        if self.jobs_consumed >= 18:
             raise ValueError("public-data Job cap is exhausted")
         return self.ordered_filenames[len(self.successful_filenames)]
 

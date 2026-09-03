@@ -27,29 +27,20 @@ AccessScope = Literal["development", "final_test"]
 EXPECTED_SOURCE_DATES = (
     date(2019, 1, 30),
     date(2019, 3, 27),
-    date(2019, 7, 30),
-    date(2019, 8, 30),
     date(2019, 10, 30),
     date(2019, 12, 30),
-    date(2020, 1, 30),
 )
 EXPECTED_SOURCE_FOLDS: tuple[FoldName, ...] = (
     "train",
     "train",
-    "train",
-    "train",
     "validation",
-    "test",
     "test",
 )
 EXPECTED_SOURCE_FILES = (
     "01302019.NASDAQ_ITCH50.gz",
     "03272019.NASDAQ_ITCH50.gz",
-    "07302019.NASDAQ_ITCH50.gz",
-    "08302019.NASDAQ_ITCH50.gz",
     "10302019.NASDAQ_ITCH50.gz",
     "12302019.NASDAQ_ITCH50.gz",
-    "01302020.NASDAQ_ITCH50.gz",
 )
 
 
@@ -101,14 +92,14 @@ class FrozenPublicSampleRoot(_StrictModel):
 
     @model_validator(mode="after")
     def validate_complete_root(self) -> "FrozenPublicSampleRoot":
-        if len(self.sources) != 7:
-            raise ValueError("frozen public-sample root requires exactly seven sources")
+        if len(self.sources) != 4:
+            raise ValueError("frozen public-sample root requires exactly four sources")
         if tuple(item.trade_date for item in self.sources) != EXPECTED_SOURCE_DATES:
             raise ValueError("frozen public-sample sources changed date or chronological order")
         if tuple(item.filename for item in self.sources) != EXPECTED_SOURCE_FILES:
             raise ValueError("frozen public-sample source filename inventory changed")
         if tuple(item.fold for item in self.sources) != EXPECTED_SOURCE_FOLDS:
-            raise ValueError("frozen public-sample root changed the exact 4/1/2 folds")
+            raise ValueError("frozen public-sample root changed the exact 2/1/1 folds")
         return self
 
 
