@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 from app.market_data.acquisition import NasdaqAcquisitionRequest  # noqa: E402
 from app.market_data.preparation import NasdaqPreparationRequest  # noqa: E402
+from app.market_data.projection_freeze import NasdaqProjectionFreezeRequest  # noqa: E402
 from app.market_data.public_sample import OBJECT_STORAGE_ENDPOINT, PROJECT_ID  # noqa: E402
 from scripts.submit_nebius_job import (  # noqa: E402
     _canonical_hash,
@@ -30,12 +31,12 @@ from scripts.submit_nebius_job import (  # noqa: E402
 )
 
 
-Request = NasdaqAcquisitionRequest | NasdaqPreparationRequest
+Request = NasdaqAcquisitionRequest | NasdaqPreparationRequest | NasdaqProjectionFreezeRequest
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Review or submit one sequential C1/C2 acquisition or C3 preparation Job."
+        description="Review or submit one sequential C1/C2 acquisition, C3 preparation, or C4 projection Job."
     )
     parser.add_argument("--image", required=True)
     parser.add_argument("--deployment-image")
@@ -187,6 +188,7 @@ def _load_request(path: Path, input_uri: str) -> tuple[Request, dict[str, object
     model = {
         "acquisition": NasdaqAcquisitionRequest,
         "preparation": NasdaqPreparationRequest,
+        "projection": NasdaqProjectionFreezeRequest,
     }.get(operation)
     if (
         payload.get("schema_version") != "market_data_wave1_request_package_v1"
@@ -219,10 +221,14 @@ def _job_command(
         runner = "/job/serverless/jobs/run_market_data_acquisition.py"
         operation = "acquire-s3"
         work_root = "/job/market-data-acquire"
-    else:
+    elif isinstance(request, NasdaqPreparationRequest):
         runner = "/job/serverless/jobs/run_market_data_preparation.py"
         operation = "prepare-s3"
         work_root = "/job/market-data-prepare"
+    else:
+        runner = "/job/serverless/jobs/run_market_data_preparation.py"
+        operation = "project-s3"
+        work_root = "/job/market-data-project"
     job_args = (
         f"{runner} {operation} "
         f"--input-uri {args.input_uri.rstrip('/')} --work-root {work_root} "

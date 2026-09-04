@@ -153,7 +153,14 @@ emulation.
    resume completed shards and reject partial or mismatched checkpoints.
 5. **C4 — separately gated.** Freeze development and final projections, prove
    development-to-final access denial, publish both folds through the operator
-   boundary, and deactivate the temporary preparation key.
+   boundary, and deactivate the temporary preparation key. One bounded C4 Job
+   verifies all four C3 manifest/checkpoint inventories but selectively reads
+   only their feature members. It writes a preparation-only candidate containing
+   two independently checksummed nested releases: development
+   `(train, validation)` and final `(test)`. Their publication to the existing
+   development and final release buckets remains two explicit operator actions.
+   Because C4 does not parse raw ITCH or run Java, its reviewed contract is
+   `cpu-d3`, `4vcpu-16gb`, 100 GiB scratch, and a four-hour timeout.
 6. **G5.** Submit three reproducibility jobs only from the verified development
    tabular projection.
 

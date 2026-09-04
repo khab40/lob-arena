@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, date, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -24,9 +25,11 @@ from app.market_data.preparation_checkpoints import (
 from app.nebius import object_storage
 from app.nebius.object_storage import (
     TransferLimits,
+    download_verified_s3_release_members,
     publish_local_result,
     read_verified_s3_release_member,
     sha256_file,
+    verify_s3_members_access_denied,
 )
 
 
@@ -232,6 +235,113 @@ def test_s3_resume_probe_verifies_release_metadata_without_payload_download(
 
     assert payload == b'{"binding":"fixture"}\n'
     assert downloaded == ["SUCCESS", "checksums.sha256", "checkpoint.json"]
+
+
+def test_selective_s3_download_verifies_envelope_without_replay_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stage = _new_directory(tmp_path / "remote-stage")
+    (stage / "checkpoint.json").write_text('{"binding":"fixture"}\n', encoding="utf-8")
+    (stage / "features/run").mkdir(parents=True)
+    (stage / "features/run/features.parquet").write_bytes(b"selected-feature")
+    (stage / "features/run/feature-quality.json").write_bytes(b"not-needed")
+    (stage / "replays/run").mkdir(parents=True)
+    (stage / "replays/run/events.jsonl.gz").write_bytes(b"large-replay-not-selected")
+    release = publish_local_result(stage, (tmp_path / "remote-release").as_uri())
+    downloaded: list[str] = []
+
+    def fake_aws_json(_: str, *args: str, **__: object) -> dict[str, object]:
+        operation = args[1]
+        prefix = "checkpoints/shard/"
+        if operation == "list-objects-v2":
+            return {
+                "Contents": [
+                    {
+                        "Key": prefix + path.relative_to(release).as_posix(),
+                        "Size": path.stat().st_size,
+                    }
+                    for path in sorted(release.rglob("*"))
+                    if path.is_file()
+                ],
+                "IsTruncated": False,
+            }
+        key = args[args.index("--key") + 1]
+        relative = key.removeprefix(prefix)
+        source = release / relative
+        if operation == "get-object":
+            downloaded.append(relative)
+            Path(args[-1]).write_bytes(source.read_bytes())
+            return {}
+        if operation == "head-object":
+            return {
+                "ContentLength": source.stat().st_size,
+                "Metadata": {"sha256": sha256_file(source)},
+            }
+        raise AssertionError(f"unexpected operation: {operation}")
+
+    monkeypatch.setattr(object_storage, "_aws_json", fake_aws_json)
+    destination = tmp_path / "selected"
+    selection = download_verified_s3_release_members(
+        "s3://fixture/checkpoints/shard",
+        destination,
+        endpoint_url="https://storage.example",
+        required_members=("checkpoint.json",),
+        include_suffixes=("features.parquet", "run-metadata.json"),
+        limits=TransferLimits(max_files=10, max_bytes=1024 * 1024),
+        selected_limits=TransferLimits(max_files=4, max_bytes=1024),
+    )
+
+    assert {item.path for item in selection.selected_inventory.files} == {
+        "checkpoint.json",
+        "features/run/features.parquet",
+    }
+    assert {item.path for item in selection.inventory.files} == {
+        "checkpoint.json",
+        "features/run/features.parquet",
+        "features/run/feature-quality.json",
+        "replays/run/events.jsonl.gz",
+    }
+    assert (destination / "features/run/features.parquet").read_bytes() == b"selected-feature"
+    assert not (destination / "replays").exists()
+    assert downloaded == [
+        "SUCCESS",
+        "checksums.sha256",
+        "checkpoint.json",
+        "features/run/features.parquet",
+    ]
+
+
+def test_final_projection_denial_requires_access_denied_for_each_exact_member(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    commands: list[list[str]] = []
+
+    def denied(command: list[str], **_: object) -> SimpleNamespace:
+        commands.append(command)
+        return SimpleNamespace(returncode=255, stderr="AccessDenied", stdout="")
+
+    monkeypatch.setattr(object_storage.shutil, "which", lambda _: "/usr/bin/aws")
+    monkeypatch.setattr(object_storage.subprocess, "run", denied)
+    verify_s3_members_access_denied(
+        "s3://final-bucket/releases/release/staging",
+        ("manifests/tabular-projection.json", "manifests/sequence-projection.json"),
+        endpoint_url="https://storage.example",
+    )
+
+    assert len(commands) == 2
+
+    monkeypatch.setattr(
+        object_storage.subprocess,
+        "run",
+        lambda *_, **__: SimpleNamespace(returncode=0, stderr="", stdout="{}"),
+    )
+    with pytest.raises(PermissionError, match="unexpectedly read final member"):
+        verify_s3_members_access_denied(
+            "s3://final-bucket/releases/release/staging",
+            ("manifests/tabular-projection.json",),
+            endpoint_url="https://storage.example",
+        )
 
 
 def _binding() -> PreparationCheckpointBinding:

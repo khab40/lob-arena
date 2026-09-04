@@ -31,8 +31,9 @@ COPY serverless/jobs/run_market_data_preparation.py \
 
 RUN test -s /job/java/control-plane.jar \
     && java -version \
-    && python -c "from app.market_data.preparation import execute_preparation_s3" \
+    && python -c "from app.market_data.preparation import execute_preparation_s3; from app.market_data.projection_freeze import execute_projection_freeze_s3" \
     && python /job/serverless/jobs/run_market_data_preparation.py prepare-s3 --help >/dev/null \
+    && python /job/serverless/jobs/run_market_data_preparation.py project-s3 --help >/dev/null \
     && aws --version
 
 ENTRYPOINT ["python", "/job/serverless/jobs/run_market_data_preparation.py"]
