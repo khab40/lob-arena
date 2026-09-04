@@ -18,6 +18,10 @@ from app.market_data.acquisition import (
     QuarantineLifecycleEvidence,
 )
 from app.market_data.preparation import NasdaqPreparationRequest
+from app.market_data.projection_freeze import (
+    NasdaqProjectionFreezeRequest,
+    PreparedReleaseBinding,
+)
 from app.market_data.public_sample import EXPECTED_SOURCES, load_source_config
 from app.market_data.projections import (
     EXPECTED_SOURCE_DATES,
@@ -36,6 +40,7 @@ from app.market_data.projections import (
 )
 from app.ml.lightgbm.contracts import ArtifactDigest
 from app.features.io import feature_arrow_schema
+from scripts import market_data_wave1
 from scripts.market_data_wave1 import _ordered_source, prepare_acquisition
 from scripts.submit_market_data_stage_job import (
     _job_command,
@@ -110,6 +115,70 @@ def test_acquisition_request_staging_binds_lifecycle_and_first_source(
     assert request.source.filename == "01302019.NASDAQ_ITCH50.gz"
     assert request.lifecycle == lifecycle
     assert request.max_download_bytes == 4_764_426_091
+
+
+def test_projection_request_staging_binds_exact_four_date_corpus(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(market_data_wave1, "_git_commit", lambda: "a" * 40)
+    prepared_releases = tmp_path / "prepared-releases.json"
+    prepared_releases.write_text(
+        json.dumps(
+            [
+                {
+                    "sequence_number": index,
+                    "trade_date": trade_date.isoformat(),
+                    "fold": fold,
+                    "filename": filename,
+                    "result_uri": (
+                        "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+                        f"prepared/{trade_date.isoformat()}/nasdaq-c3-sequence-{index}"
+                    ),
+                    "preparation_sha256": str(index) * 64,
+                }
+                for index, (trade_date, fold, filename) in enumerate(
+                    zip(
+                        EXPECTED_SOURCE_DATES,
+                        ("train", "train", "validation", "test"),
+                        EXPECTED_SOURCE_FILES,
+                        strict=True,
+                    ),
+                    1,
+                )
+            ]
+        ),
+        encoding="utf-8",
+    )
+    package = tmp_path / "projection-package"
+    evidence = tmp_path / "projection-evidence.json"
+    image = f"cr.eu-north1.nebius.cloud/example/mdp@sha256:{'b' * 64}"
+
+    market_data_wave1.prepare_projection(
+        run_id="nasdaq-c4-four-date",
+        release_id="nasdaq-four-date-v1",
+        image=image,
+        prepared_releases=prepared_releases,
+        source_config=Path(__file__).resolve().parents[2]
+        / "configs/data/nasdaq-public-sample-v1.json",
+        package=package,
+        evidence_output=evidence,
+    )
+
+    request = NasdaqProjectionFreezeRequest.model_validate_json(
+        (package / "request.json").read_text(encoding="utf-8")
+    )
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    assert tuple(item.fold for item in request.prepared_releases) == (
+        "train",
+        "train",
+        "validation",
+        "test",
+    )
+    assert payload["operation"] == "projection"
+    assert payload["destination"].endswith(
+        "/projection-requests/nasdaq-c4-four-date/staging"
+    )
 
 
 def test_stage_submission_does_not_require_spend_reconciliation(
@@ -317,6 +386,40 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
         ),
         feature_config_sha256="e" * 64,
     )
+    projection = NasdaqProjectionFreezeRequest(
+        run_id="nasdaq-c4-projection",
+        release_id="nasdaq-public-sample-four-date-v1",
+        image=image,
+        git_commit="a" * 40,
+        created_at=datetime.now(UTC),
+        source_config_sha256="f" * 64,
+        prepared_releases=tuple(
+            PreparedReleaseBinding(
+                sequence_number=index,
+                trade_date=trade_date,
+                fold=fold,
+                filename=filename,
+                result_uri=(
+                    "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+                    f"prepared/{trade_date.isoformat()}/nasdaq-c3-sequence-{index}"
+                ),
+                preparation_sha256=str(index) * 64,
+            )
+            for index, (trade_date, fold, filename) in enumerate(
+                zip(
+                    EXPECTED_SOURCE_DATES,
+                    ("train", "train", "validation", "test"),
+                    EXPECTED_SOURCE_FILES,
+                    strict=True,
+                ),
+                1,
+            )
+        ),
+        result_uri=(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+            "projection-candidates/nasdaq-c4-projection"
+        ),
+    )
     args = Namespace(
         image=image,
         input_uri="s3://example/input",
@@ -329,13 +432,17 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
 
     acquisition_command = _job_command(args, acquisition, "registry/mda:short")
     preparation_command = _job_command(args, preparation, "registry/mdp:short")
+    projection_command = _job_command(args, projection, "registry/mdp:short")
     acquisition_args = acquisition_command[acquisition_command.index("--args") + 1]
     preparation_args = preparation_command[preparation_command.index("--args") + 1]
+    projection_args = projection_command[projection_command.index("--args") + 1]
 
     assert "/job/serverless/jobs/run_market_data_acquisition.py acquire-s3" in acquisition_args
     assert "/job/serverless/jobs/run_market_data_preparation.py prepare-s3" in preparation_args
+    assert "/job/serverless/jobs/run_market_data_preparation.py project-s3" in projection_args
     assert "--max-new-comparisons 1" in preparation_args
     assert "--max-new-comparisons" not in acquisition_args
+    assert "--max-new-comparisons" not in projection_args
     assert "run_market_data_wave1.py" not in acquisition_args
     assert "run_market_data_wave1.py" not in preparation_args
     assert acquisition_command[acquisition_command.index("--preset") + 1] == "4vcpu-16gb"
@@ -344,6 +451,9 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
     assert preparation_command[preparation_command.index("--preset") + 1] == "8vcpu-32gb"
     assert preparation_command[preparation_command.index("--disk-size") + 1] == "250Gi"
     assert preparation_command[preparation_command.index("--timeout") + 1] == "16h"
+    assert projection_command[projection_command.index("--preset") + 1] == "4vcpu-16gb"
+    assert projection_command[projection_command.index("--disk-size") + 1] == "100Gi"
+    assert projection_command[projection_command.index("--timeout") + 1] == "4h"
 
 
 def test_one_pass_normalizer_extracts_three_symbols_with_one_stream_scan(

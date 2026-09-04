@@ -129,11 +129,15 @@ docker build --platform linux/amd64 \
   -f serverless/jobs/Dockerfile.market-data-preparation \
   -t lob-arena-market-data-preparation:local .
 docker run --rm lob-arena-market-data-preparation:local prepare-s3 --help
+docker run --rm lob-arena-market-data-preparation:local project-s3 --help
 ```
 
 The acquisition image contains neither Java nor PyArrow. The preparation
 Dockerfile never runs Gradle; `build/market-data/control-plane.jar` is ignored
-by Git and admitted to the Docker context only for this build.
+by Git and admitted to the Docker context only for this build. C4 reuses this
+image but does not start Java: it verifies every C3 checkpoint envelope and
+downloads only `checkpoint.json` plus the small `features/` members, never the
+multi-gigabyte replay payloads.
 
 ## Notes
 

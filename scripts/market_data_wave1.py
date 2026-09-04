@@ -31,12 +31,20 @@ from app.market_data.acquisition import (  # noqa: E402
     QuarantineLifecycleEvidence,
 )
 from app.market_data.preparation import NasdaqPreparationRequest  # noqa: E402
+from app.market_data.projection_freeze import (  # noqa: E402
+    FINAL_BUCKET,
+    NasdaqProjectionFreezeRequest,
+    PreparedReleaseBinding,
+    verify_projection_candidate,
+)
+from app.market_data.projections import FinalAccessDenialEvidence  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     TransferLimits,
     download_s3_release,
     inventory_directory,
     publish_local_result,
     publish_s3_input_release,
+    verify_s3_members_access_denied,
     verify_complete_result,
 )
 
@@ -51,6 +59,37 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--run-id", required=True)
     prepare.add_argument("--image", required=True)
     prepare.add_argument("--source-config", type=Path, default=DEFAULT_SOURCE_CONFIG)
+    projection = subparsers.add_parser(
+        "prepare-projection", help="Build one immutable four-date C4 request package"
+    )
+    _request_arguments(projection)
+    projection.add_argument("--release-id", required=True)
+    projection.add_argument("--prepared-releases", type=Path, required=True)
+    projection.add_argument("--source-config", type=Path, default=DEFAULT_SOURCE_CONFIG)
+    collect_projection = subparsers.add_parser(
+        "collect-projection", help="Download and verify one C4 projection candidate"
+    )
+    collect_projection.add_argument("--result-uri", required=True)
+    collect_projection.add_argument("--result", type=Path, required=True)
+    collect_projection.add_argument("--endpoint-url", default=OBJECT_STORAGE_ENDPOINT)
+    collect_projection.add_argument("--evidence-output", type=Path, required=True)
+    publish_projection = subparsers.add_parser(
+        "publish-projection", help="Publish one approved isolated C4 projection scope"
+    )
+    publish_projection.add_argument("--candidate", type=Path, required=True)
+    publish_projection.add_argument("--scope", choices=("development", "final"), required=True)
+    publish_projection.add_argument("--release-id", required=True)
+    publish_projection.add_argument("--approval-reference", required=True)
+    publish_projection.add_argument("--endpoint-url", default=OBJECT_STORAGE_ENDPOINT)
+    publish_projection.add_argument("--evidence-output", type=Path, required=True)
+    denial = subparsers.add_parser(
+        "verify-final-denial",
+        help="Prove the active development identity cannot read final projections",
+    )
+    denial.add_argument("--release-id", required=True)
+    denial.add_argument("--development-identity-id", required=True)
+    denial.add_argument("--endpoint-url", default=OBJECT_STORAGE_ENDPOINT)
+    denial.add_argument("--evidence-output", type=Path, required=True)
     prepare.add_argument("--package", type=Path, required=True)
     prepare.add_argument("--evidence-output", type=Path, required=True)
     publish = subparsers.add_parser("publish-c0", help="Publish an approved C0 input package")
@@ -134,6 +173,39 @@ def main(argv: list[str] | None = None) -> int:
             source_release_manifest_sha256=args.source_release_manifest_sha256,
             source_config=args.source_config,
             package=args.package,
+            evidence_output=args.evidence_output,
+        )
+    elif args.command == "prepare-projection":
+        prepare_projection(
+            run_id=args.run_id,
+            release_id=args.release_id,
+            image=args.image,
+            prepared_releases=args.prepared_releases,
+            source_config=args.source_config,
+            package=args.package,
+            evidence_output=args.evidence_output,
+        )
+    elif args.command == "collect-projection":
+        collect_projection_candidate(
+            result_uri=args.result_uri,
+            result=args.result,
+            endpoint_url=args.endpoint_url,
+            evidence_output=args.evidence_output,
+        )
+    elif args.command == "publish-projection":
+        publish_projection_scope(
+            candidate=args.candidate,
+            scope=args.scope,
+            release_id=args.release_id,
+            approval_reference=args.approval_reference,
+            endpoint_url=args.endpoint_url,
+            evidence_output=args.evidence_output,
+        )
+    elif args.command == "verify-final-denial":
+        verify_final_projection_denial(
+            release_id=args.release_id,
+            development_identity_id=args.development_identity_id,
+            endpoint_url=args.endpoint_url,
             evidence_output=args.evidence_output,
         )
     else:
@@ -225,6 +297,159 @@ def prepare_preparation(
     _prepare_request_package(request, operation="preparation", package=package, evidence=evidence_output)
 
 
+def prepare_projection(
+    *,
+    run_id: str,
+    release_id: str,
+    image: str,
+    prepared_releases: Path,
+    source_config: Path,
+    package: Path,
+    evidence_output: Path,
+) -> None:
+    bindings_payload = json.loads(prepared_releases.read_text(encoding="utf-8"))
+    if not isinstance(bindings_payload, list):
+        raise ValueError("C4 prepared-release bindings must be a JSON array")
+    bindings = tuple(PreparedReleaseBinding.model_validate(item) for item in bindings_payload)
+    request = NasdaqProjectionFreezeRequest(
+        run_id=run_id,
+        release_id=release_id,
+        image=image,
+        git_commit=_git_commit(),
+        created_at=datetime.now(UTC),
+        source_config_sha256=hashlib.sha256(source_config.read_bytes()).hexdigest(),
+        prepared_releases=bindings,
+        result_uri=(
+            f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/"
+            f"projection-candidates/{run_id}"
+        ),
+    )
+    _prepare_request_package(
+        request,
+        operation="projection",
+        package=package,
+        evidence=evidence_output,
+    )
+
+
+def collect_projection_candidate(
+    *,
+    result_uri: str,
+    result: Path,
+    endpoint_url: str,
+    evidence_output: Path,
+) -> None:
+    if endpoint_url.rstrip("/") != OBJECT_STORAGE_ENDPOINT:
+        raise ValueError("C4 collection requires the approved eu-north1 endpoint")
+    expected = (
+        rf"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/"
+        r"projection-candidates/[a-z0-9][a-z0-9-]{2,62}"
+    )
+    if re.fullmatch(expected, result_uri.rstrip("/")) is None:
+        raise ValueError("C4 result URI is outside the exact projection-candidate prefix")
+    download_s3_release(
+        result_uri,
+        result,
+        endpoint_url=endpoint_url,
+        limits=TransferLimits(max_files=512, max_bytes=2_147_483_648),
+    )
+    freeze = verify_projection_candidate(result)
+    inventory = inventory_directory(result)
+    _write_new_json(
+        evidence_output,
+        {
+            "schema_version": "market_data_wave1_projection_collection_v1",
+            "collected_at": datetime.now(UTC).isoformat(),
+            "result_uri": result_uri.rstrip("/"),
+            "run_id": freeze.run_id,
+            "release_id": freeze.release_id,
+            "frozen_root_identity_sha256": freeze.frozen_root_identity_sha256,
+            "candidate_inventory_sha256": _canonical_hash(inventory.model_dump(mode="json")),
+            "gate_passed": True,
+        },
+    )
+
+
+def publish_projection_scope(
+    *,
+    candidate: Path,
+    scope: str,
+    release_id: str,
+    approval_reference: str,
+    endpoint_url: str,
+    evidence_output: Path,
+) -> None:
+    if endpoint_url.rstrip("/") != OBJECT_STORAGE_ENDPOINT:
+        raise ValueError("projection publication requires the approved eu-north1 endpoint")
+    if scope not in {"development", "final"}:
+        raise ValueError("projection publication scope must be development or final")
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{7,127}", approval_reference) is None:
+        raise ValueError("projection publication requires a bounded explicit approval reference")
+    freeze = verify_projection_candidate(candidate)
+    if freeze.release_id != release_id:
+        raise ValueError("projection publication release ID differs from the frozen candidate")
+    bucket = DEVELOPMENT_BUCKET if scope == "development" else FINAL_BUCKET
+    destination = f"s3://{bucket}/releases/{release_id}/staging"
+    objects = publish_s3_input_release(
+        candidate / scope,
+        destination,
+        endpoint_url=endpoint_url,
+    )
+    expected_sha = (
+        freeze.development_tabular_sha256
+        if scope == "development"
+        else freeze.final_tabular_sha256
+    )
+    sequence_sha = (
+        freeze.development_sequence_sha256
+        if scope == "development"
+        else freeze.final_sequence_sha256
+    )
+    _write_new_json(
+        evidence_output,
+        {
+            "schema_version": "market_data_wave1_projection_publication_v1",
+            "published_at": datetime.now(UTC).isoformat(),
+            "approval_reference": approval_reference,
+            "scope": scope,
+            "destination": destination,
+            "release_id": release_id,
+            "frozen_root_identity_sha256": freeze.frozen_root_identity_sha256,
+            "tabular_projection_sha256": expected_sha,
+            "sequence_projection_sha256": sequence_sha,
+            "objects": [item.__dict__ for item in objects],
+            "success_published_last": objects[-1].key.endswith("/SUCCESS"),
+        },
+    )
+
+
+def verify_final_projection_denial(
+    *,
+    release_id: str,
+    development_identity_id: str,
+    endpoint_url: str,
+    evidence_output: Path,
+) -> None:
+    if endpoint_url.rstrip("/") != OBJECT_STORAGE_ENDPOINT:
+        raise ValueError("final access-denial proof requires the approved eu-north1 endpoint")
+    if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{2,127}", release_id) is None:
+        raise ValueError("final access-denial proof requires a canonical release ID")
+    final_uri = f"s3://{FINAL_BUCKET}/releases/{release_id}/staging"
+    tabular_uri = f"{final_uri}/manifests/tabular-projection.json"
+    sequence_uri = f"{final_uri}/manifests/sequence-projection.json"
+    verify_s3_members_access_denied(
+        final_uri,
+        ("manifests/tabular-projection.json", "manifests/sequence-projection.json"),
+        endpoint_url=endpoint_url,
+    )
+    evidence = FinalAccessDenialEvidence(
+        development_identity_id=development_identity_id,
+        tabular_final_uri=tabular_uri,
+        sequence_final_uri=sequence_uri,
+    )
+    _write_new_json(evidence_output, evidence.model_dump(mode="json"))
+
+
 def _ordered_source(sources: tuple[object, ...], filename: str, sequence_number: int):
     expected_filenames = tuple(EXPECTED_SOURCES)
     observed_filenames = tuple(item.filename for item in sources)
@@ -239,7 +464,7 @@ def _ordered_source(sources: tuple[object, ...], filename: str, sequence_number:
 
 
 def _prepare_request_package(
-    request: NasdaqAcquisitionRequest | NasdaqPreparationRequest,
+    request: NasdaqAcquisitionRequest | NasdaqPreparationRequest | NasdaqProjectionFreezeRequest,
     *,
     operation: str,
     package: Path,
@@ -253,9 +478,10 @@ def _prepare_request_package(
         (staging / "request.json").write_bytes(request.canonical_bytes())
         publish_local_result(staging, package.resolve().as_uri())
     inventory = verify_complete_result(package)
+    request_prefix = "projection-requests" if operation == "projection" else f"{operation}-requests"
     destination = (
         f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/"
-        f"{operation}-requests/{request.run_id}/staging"
+        f"{request_prefix}/{request.run_id}/staging"
     )
     payload = {
         "schema_version": "market_data_wave1_request_package_v1",

@@ -73,6 +73,12 @@ class VerifiedS3ReleaseMember:
     inventory: ChecksumInventory
 
 
+@dataclass(frozen=True)
+class VerifiedS3ReleaseSelection:
+    inventory: ChecksumInventory
+    selected_inventory: ChecksumInventory
+
+
 def _aws_environment() -> dict[str, str]:
     """Disable AWS CLI paging without relying on version-specific command flags."""
 
@@ -184,7 +190,7 @@ def verify_complete_result(
     root: Path,
     *,
     limits: TransferLimits = TransferLimits(),
-) -> ChecksumInventory:
+) -> VerifiedS3ReleaseSelection:
     root = root.resolve()
     success = root / "SUCCESS"
     if not success.is_file() or (root / "FAILED").exists():
@@ -429,6 +435,179 @@ def inspect_verified_s3_release_member(
         if len(payload) != selected.size_bytes or hashlib.sha256(payload).hexdigest() != selected.sha256:
             raise ValueError(f"remote S3 release member checksum mismatch: {relative_member}")
         return VerifiedS3ReleaseMember(payload=payload, inventory=inventory)
+
+
+def download_verified_s3_release_members(
+    source: str,
+    destination: Path,
+    *,
+    endpoint_url: str,
+    required_members: tuple[str, ...] = (),
+    include_prefixes: tuple[str, ...] = (),
+    include_suffixes: tuple[str, ...] = (),
+    limits: TransferLimits = TransferLimits(),
+    selected_limits: TransferLimits = TransferLimits(),
+) -> ChecksumInventory:
+    """Verify a complete remote release while downloading only selected members.
+
+    This is intended for large immutable shard releases whose small derived
+    artifacts are sufficient for the next stage. The complete S3 key set,
+    canonical SUCCESS/checksum envelope, object sizes, and SHA-256 metadata are
+    still verified before any selected payload is accepted.
+    """
+
+    destination = destination.resolve()
+    if destination.exists():
+        raise FileExistsError(f"local staging destination already exists: {destination}")
+    normalized_required = tuple(
+        _normalized_relative_path(item).as_posix() for item in required_members
+    )
+    normalized_prefixes = tuple(
+        _normalized_relative_path(item.rstrip("/")).as_posix() + "/"
+        for item in include_prefixes
+    )
+    normalized_suffixes = tuple(
+        _normalized_relative_path(item.lstrip("/")).as_posix()
+        for item in include_suffixes
+    )
+    if not normalized_required and not normalized_prefixes and not normalized_suffixes:
+        raise ValueError("selective S3 download requires a member or prefix")
+
+    bucket, prefix = _s3_bucket_prefix(source)
+    objects = _list_s3_objects(bucket, prefix, endpoint_url=endpoint_url)
+    if not objects:
+        raise ValueError(f"S3 release prefix is empty: {source}")
+    if len(objects) > limits.max_files or sum(size for _, size in objects) > limits.max_bytes:
+        raise ValueError("S3 release exceeds the selective-download envelope limits")
+    remote_sizes = {
+        _relative_s3_key(key, prefix).as_posix(): size for key, size in objects
+    }
+
+    with tempfile.TemporaryDirectory(prefix="wave1-s3-selective-envelope-") as directory:
+        temporary = Path(directory)
+        success_bytes = _download_s3_member(
+            bucket, prefix, "SUCCESS", temporary / "SUCCESS", endpoint_url=endpoint_url
+        )
+        inventory = ChecksumInventory.model_validate_json(success_bytes)
+        expected_paths = {item.path for item in inventory.files} | {
+            "checksums.sha256",
+            "SUCCESS",
+        }
+        if set(remote_sizes) != expected_paths:
+            raise ValueError("remote S3 release objects do not match its SUCCESS inventory")
+        if any(remote_sizes[item.path] != item.size_bytes for item in inventory.files):
+            raise ValueError("remote S3 release object size differs from its SUCCESS inventory")
+        expected_checksum_text = "".join(
+            f"{item.sha256}  {item.path}\n" for item in inventory.files
+        ).encode()
+        checksums = _download_s3_member(
+            bucket,
+            prefix,
+            "checksums.sha256",
+            temporary / "checksums.sha256",
+            endpoint_url=endpoint_url,
+        )
+        if checksums != expected_checksum_text:
+            raise ValueError("remote S3 release checksum inventory is not canonical")
+
+        entries = {item.path: item for item in inventory.files}
+        missing = sorted(set(normalized_required) - set(entries))
+        if missing:
+            raise ValueError(f"remote S3 release omits required members: {', '.join(missing)}")
+        selected = tuple(
+            item
+            for item in inventory.files
+            if item.path in normalized_required
+            or any(item.path.startswith(value) for value in normalized_prefixes)
+            or any(item.path.endswith(value) for value in normalized_suffixes)
+        )
+        if len(selected) > selected_limits.max_files:
+            raise ValueError("selected S3 members exceed the file-count limit")
+        if sum(item.size_bytes for item in selected) > selected_limits.max_bytes:
+            raise ValueError("selected S3 members exceed the byte limit")
+
+        destination.mkdir(parents=True)
+        try:
+            for item in selected:
+                head = _aws_json(
+                    endpoint_url,
+                    "s3api",
+                    "head-object",
+                    "--bucket",
+                    bucket,
+                    "--key",
+                    f"{prefix}/{item.path}",
+                )
+                metadata = {
+                    str(key).lower(): value
+                    for key, value in (head.get("Metadata") or {}).items()
+                }
+                if (
+                    int(head.get("ContentLength", -1)) != item.size_bytes
+                    or metadata.get("sha256") != item.sha256
+                ):
+                    raise ValueError(f"remote S3 release metadata mismatch: {item.path}")
+                target = (destination / item.path).resolve()
+                if destination not in target.parents:
+                    raise ValueError(f"selected S3 member escapes destination: {item.path}")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                payload = _download_s3_member(
+                    bucket, prefix, item.path, target, endpoint_url=endpoint_url
+                )
+                if len(payload) != item.size_bytes or hashlib.sha256(payload).hexdigest() != item.sha256:
+                    raise ValueError(f"remote S3 release member checksum mismatch: {item.path}")
+            return VerifiedS3ReleaseSelection(
+                inventory=inventory,
+                selected_inventory=ChecksumInventory(
+                    schema_version=inventory.schema_version,
+                    files=selected,
+                ),
+            )
+        except Exception:
+            shutil.rmtree(destination, ignore_errors=True)
+            raise
+
+
+def verify_s3_members_access_denied(
+    source: str,
+    members: tuple[str, ...],
+    *,
+    endpoint_url: str,
+) -> None:
+    """Prove that the active AWS identity cannot read exact S3 members."""
+
+    if not members:
+        raise ValueError("access-denial verification requires exact members")
+    bucket, prefix = _s3_bucket_prefix(source)
+    aws = shutil.which("aws")
+    if aws is None:
+        raise RuntimeError("aws CLI is required for Object Storage access verification")
+    for member in members:
+        relative = _normalized_relative_path(member).as_posix()
+        completed = subprocess.run(
+            [
+                aws,
+                "--endpoint-url",
+                endpoint_url,
+                "s3api",
+                "head-object",
+                "--bucket",
+                bucket,
+                "--key",
+                f"{prefix}/{relative}",
+                "--output",
+                "json",
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=60,
+            env=_aws_environment(),
+        )
+        if completed.returncode == 0:
+            raise PermissionError(f"active identity unexpectedly read final member: {relative}")
+        if _aws_failure_kind(completed.stderr or "") != "access_denied":
+            raise RuntimeError(f"final member denial was not an AccessDenied response: {relative}")
 
 
 def publish_s3_result(
