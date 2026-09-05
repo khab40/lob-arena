@@ -286,6 +286,101 @@ def test_stage_dry_run_stdout_does_not_include_secret_selectors(
     assert "AWS_SECRET_ACCESS_KEY=[MYSTERYBOX_SELECTOR]" in payload["command"]
 
 
+def test_projection_stage_dry_run_has_no_acquisition_sequence_number(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    for name in (
+        "NEBIUS_VOLUME",
+        "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_ID",
+        "NEBIUS_OBJECT_STORAGE_SECRET_ACCESS_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(market_data_wave1, "_git_commit", lambda: "a" * 40)
+    prepared_releases = tmp_path / "prepared-releases.json"
+    prepared_releases.write_text(
+        json.dumps(
+            [
+                {
+                    "sequence_number": index,
+                    "trade_date": trade_date.isoformat(),
+                    "fold": fold,
+                    "filename": filename,
+                    "result_uri": (
+                        "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+                        f"prepared/{trade_date.isoformat()}/nasdaq-c3-sequence-{index}"
+                    ),
+                    "preparation_sha256": str(index) * 64,
+                }
+                for index, (trade_date, fold, filename) in enumerate(
+                    zip(
+                        EXPECTED_SOURCE_DATES,
+                        ("train", "train", "validation", "test"),
+                        EXPECTED_SOURCE_FILES,
+                        strict=True,
+                    ),
+                    1,
+                )
+            ]
+        ),
+        encoding="utf-8",
+    )
+    package_evidence = tmp_path / "package-evidence.json"
+    image = f"cr.eu-north1.nebius.cloud/example/market-data@sha256:{'b' * 64}"
+    market_data_wave1.prepare_projection(
+        run_id="nasdaq-c4-dry-run",
+        release_id="nasdaq-c4-release",
+        image=image,
+        prepared_releases=prepared_releases,
+        source_config=Path(__file__).resolve().parents[2]
+        / "configs/data/nasdaq-public-sample-v1.json",
+        package=tmp_path / "package",
+        evidence_output=package_evidence,
+    )
+    package = json.loads(package_evidence.read_text(encoding="utf-8"))
+    dry_run = tmp_path / "dry-run.json"
+
+    assert (
+        submit_stage_job(
+            [
+                "--image",
+                image,
+                "--name",
+                "nasdaq-c4-dry-run",
+                "--subnet-id",
+                "subnet-test",
+                "--input-uri",
+                package["destination"],
+                "--request-evidence",
+                str(package_evidence),
+                "--access-key-secret-id",
+                "access-selector",
+                "--secret-key-secret-id",
+                "secret-selector",
+                "--data-prep-jobs-consumed",
+                "15",
+                "--evidence-output",
+                str(dry_run),
+                "--dry-run",
+            ]
+        )
+        == 0
+    )
+
+    payload = json.loads(dry_run.read_text(encoding="utf-8"))
+    assert payload["operation"] == "projection"
+    assert payload["sequence_number"] is None
+    assert payload["resource"] == {
+        "cpu_count": 4,
+        "disk_size_gib": 100,
+        "gpu_count": 0,
+        "memory_gib": 16,
+        "platform": "cpu-d3",
+        "preset": "4vcpu-16gb",
+        "timeout_seconds": 14400,
+    }
+
+
 def test_resume_submission_keeps_publication_and_job_approvals_distinct(
     tmp_path: Path,
 ) -> None:

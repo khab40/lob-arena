@@ -93,7 +93,7 @@ def main(argv: list[str] | None = None) -> int:
         "command_sha256": command_sha256,
         "data_prep_spend_usd": args.data_prep_spend_usd,
         "data_prep_jobs_consumed": args.data_prep_jobs_consumed,
-        "sequence_number": request.sequence_number,
+        "sequence_number": getattr(request, "sequence_number", None),
         "restart_policy": "never",
         "max_new_comparisons": args.max_new_comparisons,
     }
