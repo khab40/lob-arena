@@ -36,7 +36,7 @@ OBJECT_STORAGE_ENDPOINT = "https://storage.eu-north1.nebius.cloud"
 PROJECT_ID = "project-e00g6zvxpr00waz8t3y51k"
 DEVELOPMENT_BUCKET = "aimada-wave1-dev-e00g6zvxpr00"
 PUBLIC_SAMPLE_PREFIX = "data/public-sample-v1"
-EXPECTED_SOURCES = {
+C0_PREFLIGHTED_SOURCES = {
     "01302019.NASDAQ_ITCH50.gz": (date(2019, 1, 30), "train", 4_764_426_091),
     "03272019.NASDAQ_ITCH50.gz": (date(2019, 3, 27), "train", 5_510_131_732),
     "07302019.NASDAQ_ITCH50.gz": (date(2019, 7, 30), "train", 3_662_140_094),
@@ -45,7 +45,17 @@ EXPECTED_SOURCES = {
     "12302019.NASDAQ_ITCH50.gz": (date(2019, 12, 30), "test", 3_524_013_057),
     "01302020.NASDAQ_ITCH50.gz": (date(2020, 1, 30), "test", 5_597_158_940),
 }
-EXPECTED_TOTAL_BYTES = 31_006_450_613
+EXPECTED_SOURCES = {
+    filename: C0_PREFLIGHTED_SOURCES[filename]
+    for filename in (
+        "01302019.NASDAQ_ITCH50.gz",
+        "03272019.NASDAQ_ITCH50.gz",
+        "10302019.NASDAQ_ITCH50.gz",
+        "12302019.NASDAQ_ITCH50.gz",
+    )
+}
+EXPECTED_TOTAL_BYTES = 17_671_502_122
+LEGACY_PREFLIGHT_TOTAL_BYTES = 31_006_450_613
 JOB_LOG = JobLogger("market-data-wave1")
 
 
@@ -70,7 +80,7 @@ class NasdaqPublicSource(_StrictModel):
 
     @model_validator(mode="after")
     def validate_allowlist_entry(self) -> "NasdaqPublicSource":
-        expected = EXPECTED_SOURCES.get(self.filename)
+        expected = C0_PREFLIGHTED_SOURCES.get(self.filename)
         if expected != (self.date, self.fold, self.expected_content_length):
             raise ValueError("source entry is not in the exact approved Nasdaq allowlist")
         if self.url != BASE_URL + self.filename:
@@ -86,22 +96,30 @@ class NasdaqPublicSampleConfig(_StrictModel):
     window_start_et: Literal["10:00:00"]
     window_end_et: Literal["10:30:00"]
     depth_levels: Literal[10]
-    total_expected_bytes: Literal[31_006_450_613]
+    total_expected_bytes: Literal[17_671_502_122, 31_006_450_613]
     sources: tuple[NasdaqPublicSource, ...]
 
     @model_validator(mode="after")
     def validate_complete_allowlist(self) -> "NasdaqPublicSampleConfig":
         if self.instruments != ("AAPL", "MSFT", "NVDA"):
             raise ValueError("instruments must be the approved ordered AAPL/MSFT/NVDA set")
-        if len(self.sources) != 7 or {item.filename for item in self.sources} != set(EXPECTED_SOURCES):
-            raise ValueError("source config must contain exactly the seven approved files")
-        if len({item.date for item in self.sources}) != 7:
+        filenames = tuple(item.filename for item in self.sources)
+        active = filenames == tuple(EXPECTED_SOURCES)
+        legacy_preflight = filenames == tuple(C0_PREFLIGHTED_SOURCES)
+        if not active and not legacy_preflight:
+            raise ValueError("source config must contain the active four-file corpus")
+        if len({item.date for item in self.sources}) != len(self.sources):
             raise ValueError("source dates must be unique")
-        if sum(item.expected_content_length for item in self.sources) != EXPECTED_TOTAL_BYTES:
+        expected_total = EXPECTED_TOTAL_BYTES if active else LEGACY_PREFLIGHT_TOTAL_BYTES
+        if (
+            self.total_expected_bytes != expected_total
+            or sum(item.expected_content_length for item in self.sources) != expected_total
+        ):
             raise ValueError("source content lengths do not match the approved total")
         folds = [item.fold for item in self.sources]
-        if folds.count("train") != 4 or folds.count("validation") != 1 or folds.count("test") != 2:
-            raise ValueError("source folds must preserve the approved 4/1/2 chronology")
+        expected_fold_counts = (2, 1, 1) if active else (4, 1, 2)
+        if tuple(folds.count(name) for name in ("train", "validation", "test")) != expected_fold_counts:
+            raise ValueError("source folds do not match the approved chronology")
         return self
 
 
@@ -128,7 +146,7 @@ class C0PreflightRequest(_StrictModel):
     s3_probe_uri: str
     result_uri: str
     resource: MarketDataResourceRequest = Field(default_factory=MarketDataResourceRequest)
-    max_http_requests: Literal[7] = 7
+    max_http_requests: Literal[4, 7] = 4
     max_http_body_bytes: Literal[0] = 0
     probe_size_limit_bytes: Literal[256] = 256
 
@@ -171,7 +189,7 @@ class C0PreflightEvidence(_StrictModel):
     request_sha256: str = Field(pattern=SHA256_PATTERN)
     source_config_sha256: str = Field(pattern=SHA256_PATTERN)
     source_host: Literal["emi.nasdaq.com"] = SOURCE_HOST
-    http_request_count: Literal[7]
+    http_request_count: Literal[4, 7]
     http_body_bytes: Literal[0]
     sources: tuple[HttpHeadEvidence, ...]
     s3_probe: S3ProbeEvidence
@@ -180,7 +198,11 @@ class C0PreflightEvidence(_StrictModel):
 
     @model_validator(mode="after")
     def validate_gates(self) -> "C0PreflightEvidence":
-        if len(self.sources) != 7 or not self.gates or not all(self.gates.values()):
+        if (
+            len(self.sources) != self.http_request_count
+            or not self.gates
+            or not all(self.gates.values())
+        ):
             raise ValueError("C0 evidence requires all bounded preflight gates")
         return self
 

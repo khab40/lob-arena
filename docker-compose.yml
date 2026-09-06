@@ -338,6 +338,8 @@ services:
       MLFLOW_ADMIN_PASSWORD: ${MLFLOW_ADMIN_PASSWORD:-local-compose-validation-only}
       MLFLOW_EXPORTER_USERNAME: ${MLFLOW_EXPORTER_USERNAME:-prometheus}
       MLFLOW_EXPORTER_PASSWORD: ${MLFLOW_EXPORTER_PASSWORD:-local-compose-validation-only}
+      MLFLOW_WRITER_USERNAME: ${MLFLOW_WRITER_USERNAME:-governed-writer}
+      MLFLOW_WRITER_PASSWORD: ${MLFLOW_WRITER_PASSWORD:-local-compose-validation-only}
       MLFLOW_EXPORTER_EXPERIMENTS: ${MLFLOW_EXPORTER_EXPERIMENTS:-lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation}
       MLFLOW_EXPORTER_MODEL_NAMES: ${MLFLOW_EXPORTER_MODEL_NAMES:-lob-arena-lightgbm-attack-active}
     depends_on:

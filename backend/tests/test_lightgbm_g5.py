@@ -12,11 +12,50 @@ from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest, Wave1Experi
 from app.ml.lightgbm.cloud_runner import execute_wave1_request, verify_wave1_result  # noqa: E402
 from app.ml.lightgbm.reproducibility import (  # noqa: E402
     _canonical_hash,
+    _request_equivalence_hash,
     _verified_collection_receipt,
     compare_g5_results,
 )
 from app.nebius.object_storage import inventory_directory  # noqa: E402
 from scripts import lightgbm_wave1 as wave1_script  # noqa: E402
+from scripts.stage_lightgbm_projection import _input_package_destination  # noqa: E402
+
+
+def test_g5_input_package_destination_is_unique_per_run() -> None:
+    first = _input_package_destination("nasdaq-g5-repeat-1-20260906")
+    second = _input_package_destination("nasdaq-g5-repeat-2-20260906")
+
+    assert first.endswith("/releases/nasdaq-g5-repeat-1-20260906/staging")
+    assert second.endswith("/releases/nasdaq-g5-repeat-2-20260906/staging")
+    assert first != second
+    with pytest.raises(ValueError, match="valid immutable"):
+        _input_package_destination("invalid/run")
+
+
+def test_g5_request_equivalence_ignores_only_per_run_transport_identity(
+    tmp_path: Path,
+) -> None:
+    first = wave1_script._request(
+        campaign_id="wave1-g5-test",
+        run_id="wave1-g5-repeat-1",
+        mode="development",
+        created_at=datetime(2026, 9, 6, 12, 0, tzinfo=UTC),
+        result=tmp_path / "result-1",
+    ).model_copy(
+        update={"input_release_uri": _input_package_destination("wave1-g5-repeat-1")}
+    )
+    second = wave1_script._request(
+        campaign_id="wave1-g5-test",
+        run_id="wave1-g5-repeat-2",
+        mode="development",
+        created_at=datetime(2026, 9, 6, 12, 1, tzinfo=UTC),
+        result=tmp_path / "result-2",
+    ).model_copy(
+        update={"input_release_uri": _input_package_destination("wave1-g5-repeat-2")}
+    )
+
+    assert first.input_release_uri != second.input_release_uri
+    assert _request_equivalence_hash(first) == _request_equivalence_hash(second)
 
 
 def test_g5_requires_governed_cloud_runs_but_supports_local_preflight(tmp_path: Path) -> None:

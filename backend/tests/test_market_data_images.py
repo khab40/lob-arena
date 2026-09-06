@@ -47,7 +47,7 @@ def test_preparation_image_consumes_prebuilt_control_plane() -> None:
     assert "pyarrow" in requirements
     assert "protobuf" in requirements
     assert "lightgbm" not in requirements
-    assert "mlflow" not in requirements
+    assert "mlflow-skinny==3.13.0" in requirements
     assert "!build/market-data/control-plane.jar" in dockerignore
     assert "!java" not in dockerignore
 

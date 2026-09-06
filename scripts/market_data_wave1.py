@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "backend"))
 from app.market_data.public_sample import (  # noqa: E402
     C0PreflightRequest,
     DEVELOPMENT_BUCKET,
+    EXPECTED_SOURCES,
     OBJECT_STORAGE_ENDPOINT,
     PUBLIC_SAMPLE_PREFIX,
     config_artifact,
@@ -79,6 +80,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--sequence-number", type=int, required=True)
     prepare.add_argument("--source-release-uri", required=True)
     prepare.add_argument("--source-release-manifest-sha256", required=True)
+    prepare.add_argument("--mlflow-tracking-uri", required=True)
     prepare.add_argument("--source-config", type=Path, default=DEFAULT_SOURCE_CONFIG)
     publish_request = subparsers.add_parser(
         "publish-request", help="Publish one reviewed C1/C2/C3 request package"
@@ -131,6 +133,7 @@ def main(argv: list[str] | None = None) -> int:
             sequence_number=args.sequence_number,
             source_release_uri=args.source_release_uri,
             source_release_manifest_sha256=args.source_release_manifest_sha256,
+            mlflow_tracking_uri=args.mlflow_tracking_uri,
             source_config=args.source_config,
             package=args.package,
             evidence_output=args.evidence_output,
@@ -194,6 +197,7 @@ def prepare_preparation(
     sequence_number: int,
     source_release_uri: str,
     source_release_manifest_sha256: str,
+    mlflow_tracking_uri: str,
     source_config: Path,
     package: Path,
     evidence_output: Path,
@@ -213,13 +217,18 @@ def prepare_preparation(
             f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/prepared/"
             f"{source.date.isoformat()}/{run_id}"
         ),
+        mlflow_tracking_uri=mlflow_tracking_uri,
     )
     _prepare_request_package(request, operation="preparation", package=package, evidence=evidence_output)
 
 
 def _ordered_source(sources: tuple[object, ...], filename: str, sequence_number: int):
+    expected_filenames = tuple(EXPECTED_SOURCES)
+    observed_filenames = tuple(item.filename for item in sources)
+    if observed_filenames != expected_filenames:
+        raise ValueError("market-data request requires the active four-file corpus")
     if not 1 <= sequence_number <= len(sources):
-        raise ValueError("market-data sequence number is outside the seven-file campaign")
+        raise ValueError("market-data sequence number is outside the four-file campaign")
     source = sources[sequence_number - 1]
     if source.filename != filename:
         raise ValueError("market-data request is out of the frozen sequential source order")
@@ -308,6 +317,7 @@ def prepare_c0(
         raise ValueError("C0 requires an immutable image digest")
     if package.exists() or evidence_output.exists():
         raise FileExistsError("C0 package and evidence paths must be new")
+    config = load_source_config(source_config)
     package.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="market-data-c0-package-", dir=package.parent) as value:
         staging = Path(value)
@@ -326,6 +336,7 @@ def prepare_c0(
             result_uri=(
                 f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/preflight/{run_id}/result"
             ),
+            max_http_requests=len(config.sources),
         )
         (staging / "request.json").write_bytes(request.canonical_bytes())
         publish_local_result(staging, package.resolve().as_uri())
@@ -348,7 +359,7 @@ def prepare_c0(
         "package_bytes": package_bytes,
         "request": request.model_dump(mode="json"),
         "http_method": "HEAD",
-        "max_http_requests": 7,
+        "max_http_requests": request.max_http_requests,
         "max_http_body_bytes": 0,
         "s3_probe_size_limit_bytes": 256,
         "cloud_resources_mutated": False,

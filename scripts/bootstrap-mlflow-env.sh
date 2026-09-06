@@ -49,10 +49,14 @@ if [[ "${upgrade_service_credentials}" == "true" ]]; then
   minio_secret_key=false
   exporter_username=false
   exporter_password=false
+  writer_username=false
+  writer_password=false
   grep -q '^MLFLOW_MINIO_ACCESS_KEY=' "${output}" && minio_access_key=true
   grep -q '^MLFLOW_MINIO_SECRET_KEY=' "${output}" && minio_secret_key=true
   grep -q '^MLFLOW_EXPORTER_USERNAME=' "${output}" && exporter_username=true
   grep -q '^MLFLOW_EXPORTER_PASSWORD=' "${output}" && exporter_password=true
+  grep -q '^MLFLOW_WRITER_USERNAME=' "${output}" && writer_username=true
+  grep -q '^MLFLOW_WRITER_PASSWORD=' "${output}" && writer_password=true
   if [[ "${minio_access_key}" != "${minio_secret_key}" ]]; then
     echo "refusing to repair a partial MLflow service-credential configuration" >&2
     exit 1
@@ -61,7 +65,11 @@ if [[ "${upgrade_service_credentials}" == "true" ]]; then
     echo "refusing to repair a partial MLflow exporter-credential configuration" >&2
     exit 1
   fi
-  if [[ "${minio_access_key}" == "true" && "${exporter_username}" == "true" ]]; then
+  if [[ "${writer_username}" != "${writer_password}" ]]; then
+    echo "refusing to repair a partial MLflow writer-credential configuration" >&2
+    exit 1
+  fi
+  if [[ "${minio_access_key}" == "true" && "${exporter_username}" == "true" && "${writer_username}" == "true" ]]; then
     echo "MLflow service credentials already exist in ${output}."
     exit 0
   fi
@@ -81,6 +89,13 @@ if [[ "${upgrade_service_credentials}" == "true" ]]; then
     {
       printf '\nMLFLOW_EXPORTER_USERNAME=prometheus\n'
       printf 'MLFLOW_EXPORTER_PASSWORD=%s\n' "${exporter_service_password}"
+    } >>"${temporary}"
+  fi
+  if [[ "${writer_username}" == "false" ]]; then
+    writer_service_password="$(openssl rand -hex 24)"
+    {
+      printf '\nMLFLOW_WRITER_USERNAME=governed-writer\n'
+      printf 'MLFLOW_WRITER_PASSWORD=%s\n' "${writer_service_password}"
     } >>"${temporary}"
   fi
   chmod 600 "${temporary}"
@@ -106,6 +121,7 @@ minio_password="$(openssl rand -hex 24)"
 minio_service_password="$(openssl rand -hex 24)"
 admin_password="$(openssl rand -hex 24)"
 exporter_password="$(openssl rand -hex 24)"
+writer_password="$(openssl rand -hex 24)"
 flask_secret="$(openssl rand -hex 32)"
 
 cat >"${temporary}" <<EOF
@@ -127,6 +143,8 @@ MLFLOW_FLASK_SERVER_SECRET_KEY=${flask_secret}
 
 MLFLOW_EXPORTER_USERNAME=prometheus
 MLFLOW_EXPORTER_PASSWORD=${exporter_password}
+MLFLOW_WRITER_USERNAME=governed-writer
+MLFLOW_WRITER_PASSWORD=${writer_password}
 MLFLOW_EXPORTER_EXPERIMENTS=lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation
 MLFLOW_EXPORTER_METRIC_KEYS=precision,recall,f1,false_alerts_per_million_events
 MLFLOW_EXPORTER_MODEL_NAMES=lob-arena-lightgbm-attack-active

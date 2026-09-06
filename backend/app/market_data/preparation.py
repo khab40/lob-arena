@@ -16,6 +16,7 @@ from contextlib import contextmanager, nullcontext
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
@@ -35,7 +36,10 @@ from app.market_data.public_sample import (
     NasdaqPublicSource,
 )
 from app.market_data.replay_export import export_replay_comparison
-from app.ml.lightgbm.cloud_contracts import IMMUTABLE_IMAGE_PATTERN
+from app.ml.lightgbm.cloud_contracts import (
+    APPROVED_MLFLOW_TRACKING_URI,
+    IMMUTABLE_IMAGE_PATTERN,
+)
 from app.ml.lightgbm.contracts import GIT_COMMIT_PATTERN, IDENTIFIER_PATTERN, SHA256_PATTERN
 from app.nebius.job_logging import JobLogger
 from app.nebius.object_storage import (
@@ -90,6 +94,7 @@ class NasdaqPreparationRequest(_StrictModel):
     source_release_uri: str
     source_release_manifest_sha256: str = Field(pattern=SHA256_PATTERN)
     result_uri: str
+    mlflow_tracking_uri: str | None = None
     resource: PreparationResourceRequest = Field(default_factory=PreparationResourceRequest)
     symbols: tuple[Literal["AAPL", "MSFT", "NVDA"], ...] = SYMBOLS
     window_start_ms: Literal[36_000_000] = WINDOW_START_MS
@@ -113,6 +118,19 @@ class NasdaqPreparationRequest(_StrictModel):
         expected_result = f"s3://{DEVELOPMENT_BUCKET}/{PUBLIC_SAMPLE_PREFIX}/prepared/{date_path}/{self.run_id}"
         if self.result_uri != expected_result:
             raise ValueError("preparation result URI escaped the exact date/run prefix")
+        if self.mlflow_tracking_uri is not None:
+            parsed = urlsplit(self.mlflow_tracking_uri)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.username
+                or parsed.password
+                or parsed.query
+                or parsed.fragment
+                or self.mlflow_tracking_uri.rstrip("/")
+                != APPROVED_MLFLOW_TRACKING_URI
+            ):
+                raise ValueError("MLflow tracking URI must use the approved private endpoint")
         return self
 
 
@@ -257,7 +275,29 @@ def execute_preparation(
                 created_at=datetime.now(UTC),
             )
             (staging / "preparation.json").write_bytes(preparation.canonical_bytes())
-            return publish_local_result(staging, result_root.resolve().as_uri())
+            published = publish_local_result(staging, result_root.resolve().as_uri())
+            if request.mlflow_tracking_uri is not None:
+                from app.market_data.tracking import log_preparation_run
+
+                with JOB_LOG.phase(
+                    "mlflow-publish",
+                    "Index verified preparation lineage without uploading raw market rows.",
+                    run_id=request.run_id,
+                ):
+                    mlflow_run_id = log_preparation_run(
+                        request=request,
+                        preparation=preparation,
+                        request_path=published / "request.json",
+                        preparation_path=published / "preparation.json",
+                        tracking_uri=request.mlflow_tracking_uri,
+                    )
+                    JOB_LOG.info(
+                        "mlflow-published",
+                        "The verified preparation lineage is indexed in MLflow.",
+                        run_id=request.run_id,
+                        mlflow_run_id=mlflow_run_id,
+                    )
+            return published
     except Exception:
         shutil.rmtree(staging, ignore_errors=True)
         raise
@@ -300,6 +340,8 @@ def execute_preparation_s3(
             )
         request_path = request_root / "request.json"
         request = NasdaqPreparationRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
+        if request.mlflow_tracking_uri is None:
+            raise ValueError("cloud market-data preparation requires governed MLflow tracking")
         _verify_job_context(request)
         JOB_LOG.info(
             "request-verified",

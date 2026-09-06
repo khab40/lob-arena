@@ -36,12 +36,13 @@ from app.market_data.projections import (
 )
 from app.ml.lightgbm.contracts import ArtifactDigest
 from app.features.io import feature_arrow_schema
-from scripts.market_data_wave1 import prepare_acquisition
+from scripts.market_data_wave1 import _ordered_source, prepare_acquisition
 from scripts.submit_market_data_stage_job import (
     _job_command,
     _validate_arguments,
     main as submit_stage_job,
 )
+from scripts.submit_nebius_job import _redacted_command
 
 
 def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> None:
@@ -59,6 +60,20 @@ def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> N
     assert state.jobs_consumed == 2
     with pytest.raises(ValueError, match="no authorized next source"):
         state.next_filename()
+
+
+def test_active_sequence_three_is_the_validation_date() -> None:
+    sources = load_source_config(
+        Path(__file__).resolve().parents[2]
+        / "configs/data/nasdaq-public-sample-v1.json"
+    ).sources
+
+    source = _ordered_source(sources, "10302019.NASDAQ_ITCH50.gz", 3)
+
+    assert source.date == date(2019, 10, 30)
+    assert source.fold == "validation"
+    with pytest.raises(ValueError, match="frozen sequential source order"):
+        _ordered_source(sources, "07302019.NASDAQ_ITCH50.gz", 3)
 
 
 def test_acquisition_request_staging_binds_lifecycle_and_first_source(
@@ -115,7 +130,15 @@ def test_stage_submission_does_not_require_spend_reconciliation(
 
     _validate_arguments(args)
 
+    args.data_prep_jobs_consumed = 17
+    _validate_arguments(args)
+
+    args.data_prep_jobs_consumed = 18
+    with pytest.raises(SystemExit, match="18-Job cap"):
+        _validate_arguments(args)
+
     args.data_prep_spend_usd = -1
+    args.data_prep_jobs_consumed = 2
     with pytest.raises(SystemExit, match="finite and non-negative"):
         _validate_arguments(args)
 
@@ -234,6 +257,7 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
             "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
             f"prepared/{source.date.isoformat()}/{run_id}"
         ),
+        mlflow_tracking_uri="http://10.4.0.54:5500",
     )
     args = Namespace(
         image=image,
@@ -242,6 +266,8 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
         subnet_id="vpcsubnet-example",
         access_key_secret_id="mbsec-access",
         secret_key_secret_id="mbsec-secret",
+        mlflow_username_secret_id="mbsec-mlflow-user",
+        mlflow_password_secret_id="mbsec-mlflow-password",
     )
 
     acquisition_command = _job_command(args, acquisition, "registry/mda:short")
@@ -259,6 +285,11 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
     assert preparation_command[preparation_command.index("--preset") + 1] == "8vcpu-32gb"
     assert preparation_command[preparation_command.index("--disk-size") + 1] == "250Gi"
     assert preparation_command[preparation_command.index("--timeout") + 1] == "16h"
+    assert "MLFLOW_TRACKING_USERNAME=mbsec-mlflow-user" in preparation_command
+    assert "MLFLOW_TRACKING_PASSWORD=mbsec-mlflow-password" in preparation_command
+    redacted = _redacted_command(preparation_command)
+    assert "mbsec-mlflow-user" not in redacted
+    assert "mbsec-mlflow-password" not in redacted
 
 
 def test_one_pass_normalizer_extracts_three_symbols_with_one_stream_scan(
@@ -550,7 +581,7 @@ def test_c4_materializers_emit_bound_tabular_and_causal_sequence_rows(
 
 
 def _frozen_root() -> FrozenPublicSampleRoot:
-    folds = ("train", "train", "train", "train", "validation", "test", "test")
+    folds = ("train", "train", "validation", "test")
     return FrozenPublicSampleRoot(
         release_id="nasdaq-public-sample-root-v1",
         protocol_sha256="1" * 64,

@@ -5,6 +5,7 @@ usage() {
   cat >&2 <<'EOF'
 Usage: bootstrap-nebius-mlflow-env.sh --output PATH --access-key-id ID \
   --bucket NAME --private-host HOST [--image IMAGE]
+       bootstrap-nebius-mlflow-env.sh --output PATH --upgrade-writer-credentials
 
 Reads the Object Storage secret access key as one line from standard input.
 Creates PATH with mode 0600 and never prints secret values.
@@ -16,6 +17,7 @@ access_key_id=""
 bucket=""
 private_host=""
 image="lob-arena/mlflow:3.13.0-nebius"
+upgrade_writer_credentials=false
 
 while (($# > 0)); do
   case "$1" in
@@ -24,9 +26,47 @@ while (($# > 0)); do
     --bucket) bucket="${2:-}"; shift 2 ;;
     --private-host) private_host="${2:-}"; shift 2 ;;
     --image) image="${2:-}"; shift 2 ;;
+    --upgrade-writer-credentials) upgrade_writer_credentials=true; shift ;;
     *) usage; exit 2 ;;
   esac
 done
+
+if [[ "${upgrade_writer_credentials}" == "true" ]]; then
+  if [[ -z "${output}" || ! -f "${output}" ]]; then
+    echo "writer upgrade requires an existing --output environment" >&2
+    exit 1
+  fi
+  writer_username=false
+  writer_password_present=false
+  grep -q '^MLFLOW_WRITER_USERNAME=' "${output}" && writer_username=true
+  grep -q '^MLFLOW_WRITER_PASSWORD=' "${output}" && writer_password_present=true
+  if [[ "${writer_username}" != "${writer_password_present}" ]]; then
+    echo "refusing to repair partial Nebius MLflow writer credentials" >&2
+    exit 1
+  fi
+  if [[ "${writer_username}" == "true" ]]; then
+    echo "Nebius MLflow writer credentials already exist in ${output}."
+    exit 0
+  fi
+  if ! command -v openssl >/dev/null 2>&1; then
+    echo "openssl is required" >&2
+    exit 1
+  fi
+  umask 077
+  temporary="$(mktemp "${output}.tmp.XXXXXX")"
+  trap 'rm -f "${temporary}"' EXIT
+  cp "${output}" "${temporary}"
+  writer_service_password="$(openssl rand -hex 32)"
+  {
+    printf '\nMLFLOW_WRITER_USERNAME=governed-writer\n'
+    printf 'MLFLOW_WRITER_PASSWORD=%s\n' "${writer_service_password}"
+  } >>"${temporary}"
+  chmod 600 "${temporary}"
+  mv "${temporary}" "${output}"
+  trap - EXIT
+  echo "Added private Nebius MLflow writer credentials to ${output}."
+  exit 0
+fi
 
 for value_name in output access_key_id bucket private_host image; do
   if [[ -z "${!value_name}" ]]; then
@@ -55,6 +95,7 @@ postgres_password="$(openssl rand -hex 32)"
 admin_password="$(openssl rand -hex 32)"
 flask_secret="$(openssl rand -hex 48)"
 exporter_password="$(openssl rand -hex 32)"
+writer_password="$(openssl rand -hex 32)"
 
 umask 077
 temporary="$(mktemp "${output}.tmp.XXXXXX")"
@@ -78,6 +119,8 @@ MLFLOW_ADMIN_PASSWORD=${admin_password}
 MLFLOW_FLASK_SERVER_SECRET_KEY=${flask_secret}
 MLFLOW_EXPORTER_USERNAME=prometheus
 MLFLOW_EXPORTER_PASSWORD=${exporter_password}
+MLFLOW_WRITER_USERNAME=governed-writer
+MLFLOW_WRITER_PASSWORD=${writer_password}
 MLFLOW_EXPORTER_EXPERIMENTS=lob-arena/corpus-releases,lob-arena/lightgbm-development,lob-arena/governed-evaluation
 MLFLOW_EXPORTER_METRIC_KEYS=precision,recall,f1,false_alerts_per_million_events,cloud_wall_seconds,cloud_cpu_seconds,cloud_peak_rss_bytes,cloud_rows_per_second,cloud_estimated_cost_usd
 MLFLOW_EXPORTER_MODEL_NAMES=lob-arena-lightgbm-attack-active

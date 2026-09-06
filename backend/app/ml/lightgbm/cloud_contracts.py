@@ -5,6 +5,7 @@ import json
 import re
 from pathlib import PurePosixPath
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
@@ -26,6 +27,7 @@ RunStatus = Literal["succeeded", "failed", "verified"]
 APPROVED_FIXTURE_FEATURE_RELEASE_SHA256 = hashlib.sha256(
     b"wave1-fixture-feature-release"
 ).hexdigest()
+APPROVED_MLFLOW_TRACKING_URI = "http://10.4.0.54:5500"
 
 
 class _StrictCanonicalModel(BaseModel):
@@ -148,6 +150,7 @@ class Wave1TabularProjectionInput(_StrictCanonicalModel):
     kind: Literal["tabular-projection"] = "tabular-projection"
     frozen_root: CloudArtifact
     projection: CloudArtifact
+    dataset_lineage_receipt: CloudArtifact
     projection_artifact_root: str
 
     @model_validator(mode="after")
@@ -191,6 +194,7 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
     )
     resource: Wave1ResourceRequest = Field(default_factory=Wave1ResourceRequest)
     result_uri: str = Field(min_length=1)
+    input_release_uri: str | None = Field(default=None, min_length=1)
     candidate: CloudArtifact | None = None
     authorization: CloudArtifact | None = None
     authorization_signature: CloudArtifact | None = None
@@ -199,6 +203,7 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
 
     @model_validator(mode="after")
     def validate_governance(self) -> "LightGbmCloudJobRequest":
+        _reject_secrets(self.model_dump(mode="json"))
         if (
             self.input.kind == "approved-research-fixture"
             and self.input.feature_release_sha256 != APPROVED_FIXTURE_FEATURE_RELEASE_SHA256
@@ -214,6 +219,23 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
                 raise ValueError("result URI must match the exact approved campaign/mode/run prefix")
         elif not self.result_uri.startswith("file://"):
             raise ValueError("result URI must use s3:// or file://")
+        if self.input_release_uri is not None:
+            parsed_input = urlsplit(self.input_release_uri)
+            if (
+                parsed_input.scheme not in {"s3", "file"}
+                or parsed_input.username
+                or parsed_input.password
+                or parsed_input.query
+                or parsed_input.fragment
+            ):
+                raise ValueError(
+                    "input release URI must use s3:// or file:// without credentials"
+                )
+        if (
+            self.mlflow_tracking_uri is not None
+            and self.mlflow_tracking_uri.rstrip("/") != APPROVED_MLFLOW_TRACKING_URI
+        ):
+            raise ValueError("MLflow URI contains secret-shaped credentials or is not approved")
         final_refs = (
             self.candidate,
             self.authorization,
@@ -228,7 +250,6 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
             serialized = self.canonical_json_values()
             if any(_is_final_test_reference(value) for value in serialized):
                 raise ValueError("development requests must not reference final/test inputs")
-        _reject_secrets(self.model_dump(mode="json"))
         return self
 
     def canonical_json_values(self) -> tuple[str, ...]:

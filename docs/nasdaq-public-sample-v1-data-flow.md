@@ -1,11 +1,10 @@
 # Nasdaq Public Sample v1: Dataset and Processing Flow
 
-Status: C0 connectivity/storage preflight passed on 2026-08-29. C1 acquired
-and verified the first Nasdaq ITCH source on 2026-08-30. The first C2 attempt
-verified the second source but failed before quarantine publication because the
-source exceeds the S3 single-`PutObject` limit. A multipart fix is locally
-reviewed. The split C0-C2/C3-C4 runtimes pass locally; fresh split-image
-publication and any retry remain separately approval-gated.
+Status: C0-C4 are complete for the approved four-date corpus. Development and
+final projections are separately published, development-to-final access denial
+is verified, and MLflow run `dc119d708cc4464e8fe1b82ba976bf3e` indexes the
+metadata-only release lineage. Three development-only G5 packages are staged
+locally; paid Job submission remains separately authorization-gated.
 
 ## Purpose
 
@@ -21,7 +20,7 @@ The benchmark contract is
 
 ## Exact Source Dataset
 
-The source is seven public Nasdaq TotalView-ITCH 5.0 gzip files served over
+The active source contract is four public Nasdaq TotalView-ITCH 5.0 gzip files served over
 HTTPS from `https://emi.nasdaq.com/ITCH/Nasdaq%20ITCH/`. Each file contains a
 complete Nasdaq trading day across many instruments. The complete files must be
 downloaded because the ITCH stream multiplexes instruments; symbol and time
@@ -31,15 +30,14 @@ filtering happens during governed parsing.
 | --- | --- | --- | ---: | ---: |
 | Train | 2019-01-30 | `01302019.NASDAQ_ITCH50.gz` | 4,764,426,091 | 4.764 |
 | Train | 2019-03-27 | `03272019.NASDAQ_ITCH50.gz` | 5,510,131,732 | 5.510 |
-| Train | 2019-07-30 | `07302019.NASDAQ_ITCH50.gz` | 3,662,140,094 | 3.662 |
-| Train | 2019-08-30 | `08302019.NASDAQ_ITCH50.gz` | 4,075,649,457 | 4.076 |
 | Validation | 2019-10-30 | `10302019.NASDAQ_ITCH50.gz` | 3,872,931,242 | 3.873 |
 | Test | 2019-12-30 | `12302019.NASDAQ_ITCH50.gz` | 3,524,013,057 | 3.524 |
-| Test | 2020-01-30 | `01302020.NASDAQ_ITCH50.gz` | 5,597,158,940 | 5.597 |
 
-The complete compressed transfer is 31,006,450,613 bytes: 31.006 decimal GB or
-28.877 GiB. The four training files contribute 18,012,347,374 bytes, validation
-contributes 3,872,931,242 bytes, and final test contributes 9,121,171,997 bytes.
+The active compressed transfer is 17,671,502,122 bytes: 17.672 decimal GB or
+about 16.458 GiB. The two training files contribute 10,274,557,823 bytes,
+validation contributes 3,872,931,242 bytes, and final test contributes
+3,524,013,057 bytes. The historical C0 preflight covered a seven-file candidate
+superset; its evidence remains verifiable without authorizing excluded bodies.
 
 ## Governed Historical Selection
 
@@ -57,14 +55,14 @@ and 10-second windows. The 10-level normalized book remains available for
 replay and later consumers; the five-level setting is a feature choice, not a
 loss of source provenance.
 
-The seven dates and three symbols form 21 base symbol-date sessions and 10.5
+The four dates and three symbols form 12 base symbol-date sessions and 6.0
 symbol-hours of historical coverage:
 
 | Fold | Dates | Base sessions | Historical symbol-hours |
 | --- | ---: | ---: | ---: |
-| Train | 4 | 12 | 6.0 |
+| Train | 2 | 6 | 3.0 |
 | Validation | 1 | 3 | 1.5 |
-| Test | 2 | 6 | 3.0 |
+| Test | 1 | 3 | 1.5 |
 
 Exact ITCH message counts, accepted order events, executions, traded-share
 volume, per-symbol book updates, Parquet bytes, and supervised feature-row
@@ -80,9 +78,9 @@ stream and nine deterministic hybrid streams:
 - `layering_like`, seeds 41, 42, and 43; and
 - `quote_stuffing`, seeds 41, 42, and 43.
 
-This yields three controls plus 27 hybrid streams per date, or 21 controls plus
-189 hybrids across all dates. The complete benchmark therefore contains 210
-replay streams, representing approximately 105 logical replay-hours. A base
+This yields three controls plus 27 hybrid streams per date, or 12 controls plus
+108 hybrids across all dates. The complete benchmark therefore contains 120
+replay streams, representing approximately 60 logical replay-hours. A base
 session and all of its scenario variants remain in the same fold.
 
 Historical control rows use the explicit research label source
@@ -94,7 +92,7 @@ data.
 
 ```mermaid
 flowchart LR
-    Nasdaq["Seven full-day Nasdaq ITCH gzip files"]
+    Nasdaq["Four full-day Nasdaq ITCH gzip files"]
     Acquire["Python-only C0-C2 image"]
     Quarantine["Versioned 3-day quarantine"]
     Prepare["Python + prebuilt Java C3-C4 image"]
@@ -132,29 +130,28 @@ emulation.
 
 ## Bounded Cloud Stages
 
-1. **C0 — complete.** Read a tiny governed request, issue exactly seven HTTPS
-   `HEAD` requests, download zero Nasdaq body bytes, and verify a disposable S3
-   probe. Job `aijob-e00q7wmjsr9d8hmgqk` passed.
+1. **C0 — complete.** The historical preflight issued seven HTTPS `HEAD`
+   requests over the candidate superset, downloaded zero Nasdaq body bytes,
+   and verified a disposable S3 probe. New requests are bounded to four files.
 2. **C1 — complete.** Job `aijob-e00f2zk6kmsxtphrmm` downloaded only
    `01302019.NASDAQ_ITCH50.gz` (4,764,426,091 bytes), verified HTTP metadata,
    gzip integrity and full SHA-256, then published six versioned quarantine
    objects with `SUCCESS` last.
-3. **C2 — separately gated.** Acquire the other six allowlisted files strictly
-   in sequence, stopping on the first failure. The sequence-2 attempt stopped
-   after successful source verification when single-request S3 publication
-   rejected the 5,510,131,732-byte object.
-4. **C3 — separately gated.** Normalize, reconstruct books, run deterministic
-   replays, generate features, and record actual event/row/byte volumes.
-5. **C4 — separately gated.** Freeze development and final projections, prove
-   development-to-final access denial, publish both folds through the operator
-   boundary, and deactivate the temporary preparation key.
+3. **C2 — complete.** The four active sources were acquired in their frozen
+   order with multipart publication where required.
+4. **C3 — complete.** Normalization, book reconstruction, deterministic replay,
+   and feature generation completed for all four active dates.
+5. **C4 — complete.** Development and final projections were frozen, physical
+   isolation and development-to-final access denial were verified, both lanes
+   were published, and metadata-only lineage was indexed in MLflow.
 6. **G5.** Submit three reproducibility jobs only from the verified development
    tabular projection.
 
-The preparation identity can access only
-`dev/data/public-sample-v1/*`. Current and noncurrent objects under the raw
+The preparation identity's Object Storage access is limited to
+`dev/data/public-sample-v1/*`; it uses a separate non-admin MLflow writer for
+metadata-only lineage. Current and noncurrent objects under the raw
 quarantine prefix expire after three days. The identity cannot access model
-releases, the final bucket, results, or MLflow and expires on 2026-09-30 unless
+releases, the final bucket, or results and expires on 2026-09-30 unless
 deactivated earlier after C4.
 
 ## Current Evidence
@@ -179,7 +176,7 @@ deactivated earlier after C4.
 - Root cause: `PutObject` was used for a 5,510,131,732-byte source, which is
   141,422,612 bytes above the 5 GiB single-upload limit. The reviewed local fix
   selects the AWS CLI managed multipart path above that boundary.
-- Public-data Jobs consumed: 3 of 15.
+- Public-data work remained within the amended 18-Job ceiling.
 - Project spend before C0: USD 11.62 including VAT.
 - Project spend after C0: USD 12.22 including VAT; measured public-data
   campaign increment: USD 0.60.

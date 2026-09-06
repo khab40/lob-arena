@@ -31,7 +31,7 @@ COPY serverless/jobs/run_market_data_preparation.py \
 
 RUN test -s /job/java/control-plane.jar \
     && java -version \
-    && python -c "from app.market_data.preparation import execute_preparation_s3" \
+    && python -c "import mlflow; from app.market_data.preparation import execute_preparation_s3" \
     && python /job/serverless/jobs/run_market_data_preparation.py prepare-s3 --help >/dev/null \
     && aws --version
 

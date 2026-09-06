@@ -1,15 +1,11 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: C0, C1 and the corrected C2 sequence-2 acquisition passed. The remaining
-C2 sources are still sequentially approval-gated. The former combined runtime
-is now split into a published Python-only C0-C2 image and a published C3-C4
-image that consumes a prebuilt Java control-plane JAR. The initial sequence-1
-C3 Job exposed a Java priority-preservation contract defect and published no
-prepared objects. The correction and phase-level logging now ship in a fresh
-verified immutable image. The reviewed retry package is local only; its S3
-publication and one retry Job remain separately exact-hash approval-gated.
+Status: C0-C4 are complete for the approved four-date corpus. Development and
+final projections are independently published and verified, the C4 release is
+indexed in MLflow, and three receipt-bound G5 development packages are staged
+locally. Paid G5 Job submission remains separately authorization-gated.
 
-Date: 2026-08-31
+Date: 2026-09-06
 
 ## Decision
 
@@ -39,7 +35,7 @@ serve as their first-party reference implementations.
 
 The raw and derived data will be prepared in Nebius, not on the workstation.
 The workstation has about 46 GiB free and the importer intentionally reserves
-20 GiB, while the selected Nasdaq sources total about 28.9 GiB compressed.
+20 GiB, while the active Nasdaq sources total about 16.458 GiB compressed.
 
 This track is an **official-public-sample research benchmark**. It does not
 claim unrestricted redistribution rights, a licensed production corpus, or
@@ -67,12 +63,12 @@ use the documented ITCH 5.0 BinaryFILE framing.
 
 | Fold | Source files | Instruments | Window |
 | --- | --- | --- | --- |
-| Train | `01302019`, `03272019`, `07302019`, `08302019` | AAPL, MSFT, NVDA | 10:00-10:30 ET, depth 10 |
+| Train | `01302019`, `03272019` | AAPL, MSFT, NVDA | 10:00-10:30 ET, depth 10 |
 | Validation | `10302019` | AAPL, MSFT, NVDA | 10:00-10:30 ET, depth 10 |
-| Test | `12302019`, `01302020` | AAPL, MSFT, NVDA | 10:00-10:30 ET, depth 10 |
+| Test | `12302019` | AAPL, MSFT, NVDA | 10:00-10:30 ET, depth 10 |
 
 The exact filenames are `<date>.NASDAQ_ITCH50.gz`. Their verified HTTP content
-lengths total 31,006,450,613 bytes (about 28.9 GiB). Every date is assigned to
+lengths total 17,671,502,122 bytes (about 16.458 GiB). Every date is assigned to
 one fold before replay generation. All instruments, controls, attack families,
 seeds and injection times derived from one date stay in that fold.
 
@@ -153,8 +149,9 @@ and is deleted after normalized output and provenance read-back pass unless a
 separate retention decision is recorded. Lifecycle deletion must not remove
 the selected normalized corpus, its source manifest, HTTP metadata, complete
 source SHA-256 or immutable consumer releases. At current published pricing,
-retaining all 28.9 GiB of Nasdaq compressed sources plus roughly 0.9 GiB of
-LOBSTER data would cost about USD 0.44 per month before derived artifacts, but
+retaining all 16.458 GiB of active Nasdaq compressed sources plus roughly 0.9
+GiB of LOBSTER data would cost about USD 0.25 per month before derived
+artifacts, but
 that is a cost bound rather than authorization for permanent raw retention.
 Cap quarantine plus derived data at 120 GiB and stop before exceeding it.
 
@@ -311,10 +308,11 @@ preflight also requires a new explicit Operator authorization.
 
 The implemented C0 path is deliberately narrower than acquisition:
 
-- `configs/data/nasdaq-public-sample-v1.json` is a strict seven-file allowlist
-  with an exact declared total of 31,006,450,613 bytes;
-- the Job may issue exactly seven HTTPS `HEAD` requests and records zero Nasdaq
-  response-body bytes;
+- `configs/data/nasdaq-public-sample-v1.json` is the strict active four-file
+  allowlist with an exact declared total of 17,671,502,122 bytes;
+- the completed historical C0 Job issued seven HTTPS `HEAD` requests over the
+  original candidate superset and recorded zero response-body bytes; new C0
+  requests are bounded to the active four-file set;
 - S3 access uses API calls only, with no mount, against one immutable input
   prefix, one immutable result prefix and one disposable probe key of at most
   256 bytes;
@@ -373,7 +371,7 @@ part of the forward C-step path.
 ### 2026-08-28 C1-C4 implementation review
 
 The repository now contains the bounded acquisition/resume implementation,
-strict sequential seven-source campaign state, lifecycle-bound request
+strict sequential four-source campaign state, lifecycle-bound request
 staging, MysteryBox-only Job submission dry runs, runtime/throughput/RSS
 evidence, version-ID-aware quarantine publication and separate acquisition and
 preparation entrypoints. Preparation performs one ITCH source scan for all
@@ -382,7 +380,7 @@ registry, requires repeat replay determinism, produces 3 control plus 27 hybrid
 feature domains per date and labels public-sample negatives explicitly as
 `research_control_assumption`.
 
-The C4 contracts freeze all seven sources plus protocol/corpus/split/feature
+The C4 contracts freeze all four sources plus protocol/corpus/split/feature
 identities, materialize supervised tabular row IDs and causal sequence IDs,
 enforce exact development `(train, validation)` versus final `(test)` fold
 inventories and verify projections without opening absent folds. The LightGBM
@@ -427,7 +425,7 @@ archives are released after each comparison. Duplicate control bundles are
 discarded only after their canonical hashes match the retained per-symbol
 control.
 
-If the pilot fails, stop and fix locally. Do not start the other six downloads.
+If the pilot fails, stop and fix locally. Do not start later downloads.
 
 Cloud exit evidence as of 2026-08-30: Job `aijob-e00f2zk6kmsxtphrmm`
 completed in the fixed four-hour resource envelope. It downloaded exactly
@@ -438,22 +436,21 @@ and published six versioned quarantine objects with `SUCCESS` last. Download
 runtime was 969.304 seconds, observed throughput was 4,915,303.869 bytes/second,
 and peak RSS was 110,940,160 bytes. The source object is version `1`; Object
 Storage returned an expiry date of 2026-09-03 under the reviewed three-day
-lifecycle rule. Public-data consumption is 2 of 15 Jobs. Post-C1 project spend
+lifecycle rule. Public-data consumption was 2 Jobs under the original 15-Job
+ceiling. Post-C1 project spend
 may be recorded when convenient but is not a prerequisite for C2 review or
 authorization.
 
 ### C2 - Remaining acquisition
 
-Acquire the remaining six files sequentially using the identical allowlisted
+Acquire the remaining active files sequentially using the identical allowlisted
 request template. One successful acquisition/quarantine prefix is never
 overwritten or retried. Complete source packages may exist only in private,
 lifecycle-bound quarantine and are not copied into a durable model release.
-The public-data campaign has a separate cap of 15 Jobs: one preflight, seven
-acquisition Jobs, and seven preparation Jobs. Failed attempts consume that cap
-and stop the campaign for reconciliation; they do not expand it. The original
-model-development ceiling remains 20 Jobs. The six failed attempts plus the
-completed attempt 7 have consumed seven slots; 13 model-development slots
-remain.
+The public-data campaign has a separate cap of 18 Jobs. Failed attempts consume
+that cap and stop the campaign for reconciliation; they do not expand it. The
+separate model-development ceiling remains 20 Jobs; completed G4 work consumed
+seven of those slots, leaving 13 for G5-G6.
 
 Sequence-2 attempt evidence as of 2026-08-30: Job
 `aijob-e00xh0ph0ayshen6ps` downloaded and verified the exact 5,510,131,732-byte
@@ -465,7 +462,7 @@ left no current object and one delete marker; `SUCCESS` was never written. The
 local fix selects an AWS CLI managed multipart transfer above 5 GiB, retains
 the existing metadata/head/full-read-back verification, and classifies an
 `EntityTooLarge` response without exposing stderr. Forty focused tests and
-Ruff pass. At that stop point, public-data consumption was 3 of 15 Jobs; the
+Ruff pass. At that stop point, public-data consumption was 3 Jobs; the
 retry required a fresh immutable image and exact-hash authorization.
 
 Corrected sequence-2 exit evidence as of 2026-08-31: Job
@@ -623,7 +620,7 @@ the current milestone.
 
 - Spend reporting is advisory and never a preparation or submission
   prerequisite; VAT reconciliation is not required between Jobs.
-- Bound public-data work through the 15-Job cap, one-at-a-time execution,
+- Bound public-data work through the amended 18-Job cap, one-at-a-time execution,
   exact source-byte ceilings, fixed compute/time limits and explicit approval
   for each material stage.
 - Cap raw plus derived storage at 120 GiB.
@@ -638,7 +635,7 @@ the current milestone.
 
 The plan is complete only when the repository contains:
 
-- a signed source-release inventory for all seven Nasdaq files and LOBSTER;
+- a signed source-release inventory for all four Nasdaq files and LOBSTER;
 - proof that acquisition was allowlist-only and that unrelated Nasdaq records
   were not retained in durable S3 releases;
 - raw-quarantine lifecycle/deletion evidence and retained source hashes;

@@ -165,9 +165,6 @@ def _g5_result_record(result: Path, collection_path: Path | None) -> dict[str, o
     mlflow_run_id = collection.get("mlflow_run_id") if collection else run.mlflow_run_id
     if run.nebius_job_id is not None and nebius_job_id != run.nebius_job_id:
         raise ValueError("G5 collection Job ID does not match the cloud result")
-    request_payload = request.model_dump(mode="json")
-    for volatile in ("run_id", "created_at", "result_uri"):
-        request_payload.pop(volatile, None)
     calibration_metrics = {
         "raw": calibration.raw_metrics.model_dump(mode="json"),
         "calibrated": calibration.calibrated_metrics.model_dump(mode="json"),
@@ -182,7 +179,7 @@ def _g5_result_record(result: Path, collection_path: Path | None) -> dict[str, o
         "mlflow_run_id": mlflow_run_id,
         "request_sha256": run.request_sha256,
         "candidate_package_hash": run.candidate_hash,
-        "request_equivalence_hash": _canonical_hash(request_payload),
+        "request_equivalence_hash": _request_equivalence_hash(request),
         "experiment_hash": request.experiment.canonical_hash(),
         "input_kind": request.input.kind,
         "input_identity_hash": request.input.canonical_hash(),
@@ -268,6 +265,13 @@ def _canonical_hash(payload: object) -> str:
     return hashlib.sha256(
         json.dumps(payload, allow_nan=False, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
+
+
+def _request_equivalence_hash(request: LightGbmCloudJobRequest) -> str:
+    payload = request.model_dump(mode="json")
+    for volatile in ("run_id", "created_at", "result_uri", "input_release_uri"):
+        payload.pop(volatile, None)
+    return _canonical_hash(payload)
 
 
 def _write_json_once(path: Path, payload: object) -> None:

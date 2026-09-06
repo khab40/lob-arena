@@ -158,6 +158,10 @@ python scripts/submit_nebius_job.py \
   --dry-run
 ```
 
+The two MLflow selectors must contain the `governed-writer` identity created by
+the MLflow initializer. They must not contain the bootstrap administrator or
+the read-only `prometheus` identity.
+
 While Nebius issue #84 remains open, the Operator-approved workaround may be
 used by adding both of the following arguments to the dry-run and submission
 commands:
@@ -239,8 +243,22 @@ outside the candidate package.
 ## G5 reproducibility comparison
 
 After C4 publishes the frozen Nasdaq development projection, submit exactly
-three separately identified development Jobs using equivalent requests. After
-each result is downloaded and collected, enforce G5 with:
+three separately identified development Jobs using equivalent requests.
+
+The C4 gate must include a successful `make mlflow-log-dataset-release`
+receipt. Pass it to projection staging as `--c4-mlflow-evidence`; the package
+and request hash-bind the receipt, and the runner rejects a release, frozen
+root, or development projection mismatch. Each prepared G5 request must bind
+`input_release_uri` to its unique, immutable
+`releases/<run_id>/staging` package URI. Reusing the C4 dataset release prefix
+would collide with the already-published corpus and is forbidden. The transport
+rejects missing or different lineage URIs, and each successful run must expose
+metadata-only MLflow Dataset inputs for train and validation with complete
+governed Parquet SHA-256 values in `artifact_sha256` tags (and MLflow-bounded
+digest prefixes). Do not start the three paid Jobs if any of those
+preconditions is absent.
+
+After each result is downloaded and collected, enforce G5 with:
 
 ```bash
 python scripts/lightgbm_wave1.py g5-compare \
