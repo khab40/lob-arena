@@ -1,4 +1,4 @@
-FROM ghcr.io/mlflow/mlflow:v3.15.2
+FROM ghcr.io/mlflow/mlflow:v3.16.0
 
 RUN python -m pip install --no-cache-dir \
     "mlflow[auth]==3.15.2" \
