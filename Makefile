@@ -1,7 +1,7 @@
-.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-g4-check lightgbm-wave1-g5-check lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke market-data-wave1-c0-check market-data-wave1-test market-data-wave1-container check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
+.PHONY: help grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-test lightgbm-wave1-g4-check lightgbm-wave1-g5-check lightgbm-wave1-local-e2e lightgbm-wave1-container-smoke market-data-wave1-c0-check market-data-wave1-test market-data-wave1-container check-submit lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-log-dataset-release mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down
 
 help:
-	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-g4-check lightgbm-wave1-g5-check lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
+	@printf "%s\n" "Targets: grader-smoke backend-test backend-dev frontend-dev java-control-plane generate-features generate-features-streaming generate-governed-features benchmark-feature-streaming governed-test lightgbm-phase0-test lightgbm-phase1-test lightgbm-phase2-test lightgbm-v1-test lightgbm-wave1-g4-check lightgbm-wave1-g5-check lightgbm-train-dev lightgbm-calibrate lightgbm-evaluate-test lightgbm-build-bundle lightgbm-verify-release build-governed-corpus generate-governed-split evaluate-governed-benchmark verify-governed-release mlflow-bootstrap mlflow-up mlflow-status mlflow-logs mlflow-verify mlflow-log-dataset-release mlflow-down serverless-benchmark serverless-build serverless-push serverless-smoke nebius-partial-plan nebius-partial-deploy nebius-vm-plan nebius-vm-deploy nebius-k8s-plan nebius-k8s-deploy secrets-plan secrets-rotate secrets-check secrets-test docker-up docker-up-serverless docker-up-prometheus docker-up-monitoring docker-up-all docker-down"
 
 grader-smoke:
 	./scripts/grader-smoke.sh
@@ -126,9 +126,12 @@ lightgbm-wave1-g4-check:
 
 lightgbm-wave1-g5-check:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
-		tests/test_lightgbm_g5.py
+		tests/test_lightgbm_g5.py \
+		tests/test_mlflow_dataset_lineage.py
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
 		python ../scripts/lightgbm_wave1.py g5-compare --help >/dev/null
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
+		python ../scripts/log_frozen_dataset_release.py --help >/dev/null
 
 lightgbm-wave1-local-e2e:
 	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \
@@ -159,14 +162,17 @@ market-data-wave1-test:
 		tests/test_market_data_preparation_resume.py \
 		tests/test_market_data_replay_export.py \
 		tests/test_market_data_images.py \
+		tests/test_mlflow_dataset_lineage.py \
 		tests/test_lightgbm_g5.py \
 		tests/test_lightgbm_wave1.py
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
 		app/market_data \
+		app/ml/dataset_lineage.py \
 		../scripts/market_data_wave1.py \
 		../scripts/submit_market_data_job.py \
 		../scripts/submit_market_data_stage_job.py \
 		../scripts/stage_lightgbm_projection.py \
+		../scripts/log_frozen_dataset_release.py \
 		../serverless/jobs/run_market_data_wave1.py \
 		../serverless/jobs/run_market_data_acquisition.py \
 		../serverless/jobs/run_market_data_preparation.py \
@@ -325,6 +331,25 @@ mlflow-verify:
 		python /opt/lob-arena/mlflow/smoke_test.py
 	docker compose --env-file deployments/mlflow/.env --profile mlflow exec -T mlflow-exporter \
 		python -c "import urllib.request; body = urllib.request.urlopen('http://127.0.0.1:9464/metrics', timeout=5).read().decode(); assert 'mlflow_exporter_up 1' in body"
+
+mlflow-log-dataset-release:
+	cd backend && uv run --extra ml python ../scripts/log_frozen_dataset_release.py \
+		--frozen-root "$${FROZEN_PUBLIC_SAMPLE_ROOT}" \
+		--tabular-development-manifest "$${TABULAR_DEVELOPMENT_MANIFEST}" \
+		--tabular-development-artifact-root "$${TABULAR_DEVELOPMENT_ARTIFACT_ROOT}" \
+		--tabular-development-source-uri "$${TABULAR_DEVELOPMENT_SOURCE_URI}" \
+		--tabular-final-manifest "$${TABULAR_FINAL_MANIFEST}" \
+		--tabular-final-artifact-root "$${TABULAR_FINAL_ARTIFACT_ROOT}" \
+		--tabular-final-source-uri "$${TABULAR_FINAL_SOURCE_URI}" \
+		--sequence-development-manifest "$${SEQUENCE_DEVELOPMENT_MANIFEST}" \
+		--sequence-development-artifact-root "$${SEQUENCE_DEVELOPMENT_ARTIFACT_ROOT}" \
+		--sequence-development-source-uri "$${SEQUENCE_DEVELOPMENT_SOURCE_URI}" \
+		--sequence-final-manifest "$${SEQUENCE_FINAL_MANIFEST}" \
+		--sequence-final-artifact-root "$${SEQUENCE_FINAL_ARTIFACT_ROOT}" \
+		--sequence-final-source-uri "$${SEQUENCE_FINAL_SOURCE_URI}" \
+		--access-denial "$${FINAL_ACCESS_DENIAL_EVIDENCE}" \
+		--mlflow-tracking-uri "$${MLFLOW_TRACKING_URI}" \
+		--evidence-output "$${C4_MLFLOW_EVIDENCE_OUTPUT}"
 
 mlflow-down:
 	@test -f deployments/mlflow/.env || { printf "%s\n" "Run 'make mlflow-bootstrap' first."; exit 1; }

@@ -1,11 +1,10 @@
 # Nasdaq Public Sample v1: Dataset and Processing Flow
 
-Status: C0 connectivity/storage preflight passed on 2026-08-29. C1/C2 acquired
-and verified both train sources. C3 completed the `2019-01-30` and
-`2019-03-27` train preparations on 2026-09-02 and 2026-09-03 respectively,
-with 27/27 immutable comparison checkpoints per date and verified final
-manifests. The next gated step is sequence-3 acquisition for the `2019-10-30`
-validation date.
+Status: C0-C4 and G5 are complete for the approved four-date corpus.
+Development and final projections are separately published,
+development-to-final access denial is verified, and MLflow run
+`dc119d708cc4464e8fe1b82ba976bf3e` indexes the metadata-only release lineage.
+Three receipt-bound G5 Jobs passed reproducibility on 2026-09-07.
 
 ## Purpose
 
@@ -141,33 +140,21 @@ emulation.
    `01302019.NASDAQ_ITCH50.gz` (4,764,426,091 bytes), verified HTTP metadata,
    gzip integrity and full SHA-256, then published six versioned quarantine
    objects with `SUCCESS` last.
-3. **C2 — separately gated.** The corrected multipart sequence-2 acquisition
-   published `03272019.NASDAQ_ITCH50.gz`. Acquire only the remaining active
-   sequence-3 validation and sequence-4 final-test sources, stopping on the
-   first failure.
-4. **C3 — separately gated.** Normalize, reconstruct books, run deterministic
-   replays, generate features, and record actual event/row/byte volumes. Store
-   normalization plus each of 27 comparisons under immutable request-bound
-   checkpoint prefixes; publish `SUCCESS` last per shard and make the final
-   prepared release a small manifest of those verified shards. Exact retries
-   resume completed shards and reject partial or mismatched checkpoints.
-5. **C4 — separately gated.** Freeze development and final projections, prove
-   development-to-final access denial, publish both folds through the operator
-   boundary, and deactivate the temporary preparation key. One bounded C4 Job
-   verifies all four C3 manifest/checkpoint inventories but selectively reads
-   only their feature members. It writes a preparation-only candidate containing
-   two independently checksummed nested releases: development
-   `(train, validation)` and final `(test)`. Their publication to the existing
-   development and final release buckets remains two explicit operator actions.
-   Because C4 does not parse raw ITCH or run Java, its reviewed contract is
-   `cpu-d3`, `4vcpu-16gb`, 100 GiB scratch, and a four-hour timeout.
-6. **G5.** Submit three reproducibility jobs only from the verified development
-   tabular projection.
+3. **C2 — complete.** The four active sources were acquired in their frozen
+   order with multipart publication where required.
+4. **C3 — complete.** Normalization, book reconstruction, deterministic replay,
+   and feature generation completed for all four active dates.
+5. **C4 — complete.** Development and final projections were frozen, physical
+   isolation and development-to-final access denial were verified, both lanes
+   were published, and metadata-only lineage was indexed in MLflow.
+6. **G5 — complete.** Three reproducibility Jobs used only the verified
+   development tabular projection and passed the strict comparator.
 
-The preparation identity can access only
-`dev/data/public-sample-v1/*`. Current and noncurrent objects under the raw
+The preparation identity's Object Storage access is limited to
+`dev/data/public-sample-v1/*`; it uses a separate non-admin MLflow writer for
+metadata-only lineage. Current and noncurrent objects under the raw
 quarantine prefix expire after three days. The identity cannot access model
-releases, the final bucket, results, or MLflow and expires on 2026-09-30 unless
+releases, the final bucket, or results and expires on 2026-09-30 unless
 deactivated earlier after C4.
 
 ## Current Evidence
@@ -192,7 +179,7 @@ deactivated earlier after C4.
 - Root cause: `PutObject` was used for a 5,510,131,732-byte source, which is
   141,422,612 bytes above the 5 GiB single-upload limit. The reviewed local fix
   selects the AWS CLI managed multipart path above that boundary.
-- Public-data Jobs consumed after both train preparations: 11 of 18.
+- Public-data work remained within the amended 18-Job ceiling.
 - Project spend before C0: USD 11.62 including VAT.
 - Project spend after C0: USD 12.22 including VAT; measured public-data
   campaign increment: USD 0.60.

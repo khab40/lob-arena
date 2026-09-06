@@ -33,8 +33,9 @@ The Compose deployment uses pinned images, basic authentication, fail-closed
 default permissions, an internal-only container network, health checks,
 persistent volumes, a read-only MLflow filesystem, dropped Linux capabilities,
 generated local secrets, a dedicated non-root MinIO service identity for
-artifact access, and a non-admin telemetry identity with read-only access to
-the allow-listed experiments and model. PostgreSQL, MinIO, and the exporter
+artifact access, a non-admin governed writer with edit access to the three
+allow-listed experiments/model, and a separate non-admin telemetry identity
+with read-only access. PostgreSQL, MinIO, and the exporter
 have no host port. Only the MLflow UI/API joins the edge network and binds to
 `127.0.0.1` by default.
 
@@ -67,6 +68,21 @@ make mlflow-verify
 
 The upgrade appends only missing service identities and secrets. It fails
 closed on a partial credential pair and does not print existing secrets.
+
+For an existing Nebius environment created before the governed writer was
+introduced, append only that identity without rotating PostgreSQL, Object
+Storage, administrator, or exporter credentials:
+
+```bash
+./scripts/bootstrap-nebius-mlflow-env.sh \
+  --output /tmp/aimada-nebius-mlflow.env \
+  --upgrade-writer-credentials
+```
+
+Restart the MLflow Compose profile so the initializer creates the non-admin
+writer and grants `EDIT` only on the three governed experiments and registered
+model. Store that username/password pair in the existing MysteryBox selectors
+used by Jobs; do not reuse the MLflow administrator credentials.
 
 The verification creates or confirms these roadmap resources:
 
@@ -172,6 +188,16 @@ required by Phase 0:
   subtle layering challenge cases; and
 - the checksum inventory and signed release-manifest references.
 
+Training and final-evaluation runs also log each verified feature shard as an
+MLflow metadata-only Dataset input. The Dataset source is the immutable
+Object Storage URI. MLflow's 36-character digest field contains a deterministic
+`sha256:<29-hex-prefix>` adapter value, while the complete governed artifact
+SHA-256 is retained in the `artifact_sha256` input tag and canonical receipt. Its
+context is `training`, `validation`, or `evaluation`. MLflow never receives the
+Parquet rows through this mechanism. Cloud requests bind the same input-release
+URI, and the S3 transport rejects a request whose lineage URI differs from the
+release it actually downloaded.
+
 Development runs belong in `lob-arena/lightgbm-development`; immutable final
 test results belong in `lob-arena/governed-evaluation`. Register a model version
 only after repository release verification succeeds. A registry alias is a
@@ -193,6 +219,29 @@ artifacts:
 Do not upload raw LOBSTER records unless the deployment, data licence, access
 controls, and client agreement explicitly permit it. Prefer hashes and
 encrypted, access-controlled object references.
+
+C3 preparation Jobs now write one `corpus-releases` run containing the source
+Dataset digest/reference, parser and window parameters, aggregate processing
+metrics, and the canonical request/preparation manifests. The preparation Job
+image includes `mlflow-skinny`; Job submissions inject the non-admin writer
+credentials through MysteryBox selectors named by
+`NEBIUS_MLFLOW_USERNAME_SECRET_ID` and
+`NEBIUS_MLFLOW_PASSWORD_SECRET_ID`.
+
+Before G5, index the complete verified C4 release:
+
+```bash
+make mlflow-log-dataset-release
+```
+
+The target requires the frozen root, development/final tabular and sequence
+manifests plus artifact roots and S3 source URIs, the final-access-denial
+evidence, `MLFLOW_TRACKING_URI`, and `C4_MLFLOW_EVIDENCE_OUTPUT`. It re-verifies
+all row/sequence identities and checks that development and final sources are
+in their separate approved buckets before writing MLflow metadata. The output
+receipt records the MLflow run ID and hashes of the frozen root, all four
+projection manifests, and access-denial evidence; it does not replace the C4
+manifests. G5 staging requires and embeds this receipt.
 
 ## Sharing beyond one workstation
 
@@ -241,3 +290,5 @@ PostgreSQL or MinIO volume.
   multi-tenant deployment.
 - Model and corpus approval remain external governed workflows. MLflow does not
   sign releases, adjudicate clean windows, or authorize test-fold access.
+- The writer identity is intentionally non-admin. Use it for C3/C4 and model
+  Jobs; reserve the bootstrap administrator for account and permission repair.

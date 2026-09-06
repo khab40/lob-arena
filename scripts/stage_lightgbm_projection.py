@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.market_data.projections import (  # noqa: E402
+    C4MlflowDatasetReleaseReceipt,
     FrozenPublicSampleRoot,
     verify_tabular_projection,
 )
@@ -51,6 +52,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--image", required=True)
     prepare.add_argument("--frozen-root", type=Path, required=True)
     prepare.add_argument("--projection", type=Path, required=True)
+    prepare.add_argument("--c4-mlflow-evidence", type=Path, required=True)
     prepare.add_argument("--projection-artifact-root", type=Path, required=True)
     prepare.add_argument("--experiment-config", type=Path, required=True)
     prepare.add_argument("--mlflow-tracking-uri", required=True)
@@ -71,6 +73,7 @@ def main(argv: list[str] | None = None) -> int:
             image=args.image,
             frozen_root=args.frozen_root,
             projection=args.projection,
+            c4_mlflow_evidence=args.c4_mlflow_evidence,
             projection_artifact_root=args.projection_artifact_root,
             experiment_config=args.experiment_config,
             mlflow_tracking_uri=args.mlflow_tracking_uri,
@@ -96,6 +99,7 @@ def prepare_projection_package(
     image: str,
     frozen_root: Path,
     projection: Path,
+    c4_mlflow_evidence: Path,
     projection_artifact_root: Path,
     experiment_config: Path,
     mlflow_tracking_uri: str,
@@ -112,6 +116,9 @@ def prepare_projection_package(
     root = FrozenPublicSampleRoot.model_validate_json(frozen_root.read_text(encoding="utf-8"))
     root_sha = sha256_file(frozen_root)
     projection_sha = sha256_file(projection)
+    lineage_receipt = C4MlflowDatasetReleaseReceipt.model_validate_json(
+        c4_mlflow_evidence.read_text(encoding="utf-8")
+    )
     manifest = verify_tabular_projection(
         projection,
         expected_sha256=projection_sha,
@@ -120,10 +127,20 @@ def prepare_projection_package(
     )
     if manifest.access_scope != "development":
         raise ValueError("G5 package preparation accepts development projection only")
+    if (
+        lineage_receipt.release_id != release_id
+        or lineage_receipt.release_id != root.release_id
+        or lineage_receipt.root_file_sha256 != root_sha
+        or lineage_receipt.root_identity_sha256 != root.canonical_hash()
+        or lineage_receipt.tabular_development_sha256 != projection_sha
+    ):
+        raise ValueError("G5 package is not bound to its C4 MLflow dataset release")
     experiment = Wave1ExperimentSpec.model_validate_json(
         experiment_config.read_text(encoding="utf-8")
     )
     package.parent.mkdir(parents=True, exist_ok=True)
+    input_package_release_id = run_id
+    destination = _input_package_destination(run_id)
     with tempfile.TemporaryDirectory(prefix="g5-projection-package-", dir=package.parent) as value:
         staging = Path(value)
         manifests = staging / "manifests"
@@ -132,13 +149,14 @@ def prepare_projection_package(
         artifacts.mkdir()
         shutil.copyfile(frozen_root, manifests / "frozen-root.json")
         shutil.copyfile(projection, manifests / "development-projection.json")
+        shutil.copyfile(c4_mlflow_evidence, manifests / "c4-mlflow-dataset-release.json")
         for shard in manifest.shards:
             source = (projection_artifact_root.resolve() / shard.rows.uri).resolve()
             if projection_artifact_root.resolve() not in source.parents:
                 raise ValueError("projection shard escaped its reviewed artifact root")
-            destination = artifacts / shard.rows.uri
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, destination)
+            artifact_destination = artifacts / shard.rows.uri
+            artifact_destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, artifact_destination)
         request = LightGbmCloudJobRequest(
             campaign_id=campaign_id,
             run_id=run_id,
@@ -153,30 +171,38 @@ def prepare_projection_package(
                 projection=_cloud_artifact(
                     manifests / "development-projection.json", staging, "development_projection"
                 ),
+                dataset_lineage_receipt=_cloud_artifact(
+                    manifests / "c4-mlflow-dataset-release.json",
+                    staging,
+                    "c4_mlflow_dataset_release",
+                ),
                 projection_artifact_root="projection-artifacts",
             ),
             result_uri=(
                 f"s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
                 f"{campaign_id}/development/{run_id}"
             ),
+            input_release_uri=destination,
             mlflow_tracking_uri=mlflow_tracking_uri,
         )
         (staging / "request.json").write_bytes(request.canonical_bytes())
         publish_local_result(staging, package.resolve().as_uri())
     inventory = verify_complete_result(package)
-    destination = f"s3://{DEV_BUCKET}/releases/{release_id}/staging"
     _write_once(
         evidence_output,
         {
             "schema_version": "lightgbm_tabular_projection_package_v1",
             "created_at": datetime.now(UTC).isoformat(),
             "release_id": release_id,
+            "input_package_release_id": input_package_release_id,
             "destination": destination,
             "request_sha256": request.canonical_hash(),
             "frozen_root_file_sha256": root_sha,
             "frozen_root_identity_sha256": root.canonical_hash(),
             "projection_sha256": projection_sha,
             "projection_id": manifest.projection_id,
+            "mlflow_dataset_release_run_id": lineage_receipt.mlflow_run_id,
+            "mlflow_dataset_release_receipt_sha256": sha256_file(c4_mlflow_evidence),
             "folds": list(manifest.folds),
             "package_inventory_sha256": _canonical_hash(inventory.model_dump(mode="json")),
             "cloud_resources_mutated": False,
@@ -231,6 +257,12 @@ def _cloud_artifact(path: Path, root: Path, logical_name: str) -> CloudArtifact:
         sha256=sha256_file(path),
         size_bytes=path.stat().st_size,
     )
+
+
+def _input_package_destination(run_id: str) -> str:
+    if re.fullmatch(r"[a-z0-9][a-z0-9-]{2,62}", run_id) is None:
+        raise ValueError("G5 run ID must be a valid immutable Object Storage release ID")
+    return f"s3://{DEV_BUCKET}/releases/{run_id}/staging"
 
 
 def _git_commit() -> str:

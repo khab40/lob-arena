@@ -48,6 +48,7 @@ from scripts.submit_market_data_stage_job import (
     _validate_arguments,
     main as submit_stage_job,
 )
+from scripts.submit_nebius_job import _redacted_command
 
 
 def test_acquisition_campaign_is_strictly_sequential_and_stops_on_failure() -> None:
@@ -480,6 +481,7 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
             f"preparation-checkpoints/{source.date.isoformat()}/{run_id}"
         ),
         feature_config_sha256="e" * 64,
+        mlflow_tracking_uri="http://10.4.0.54:5500",
     )
     projection = NasdaqProjectionFreezeRequest(
         run_id="nasdaq-c4-projection",
@@ -523,6 +525,8 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
         access_key_secret_id="mbsec-access",
         secret_key_secret_id="mbsec-secret",
         max_new_comparisons=1,
+        mlflow_username_secret_id="mbsec-mlflow-user",
+        mlflow_password_secret_id="mbsec-mlflow-password",
     )
 
     acquisition_command = _job_command(args, acquisition, "registry/mda:short")
@@ -549,6 +553,11 @@ def test_stage_submitter_selects_split_entrypoint_by_request_type() -> None:
     assert projection_command[projection_command.index("--preset") + 1] == "4vcpu-16gb"
     assert projection_command[projection_command.index("--disk-size") + 1] == "100Gi"
     assert projection_command[projection_command.index("--timeout") + 1] == "4h"
+    assert "MLFLOW_TRACKING_USERNAME=mbsec-mlflow-user" in preparation_command
+    assert "MLFLOW_TRACKING_PASSWORD=mbsec-mlflow-password" in preparation_command
+    redacted = _redacted_command(preparation_command)
+    assert "mbsec-mlflow-user" not in redacted
+    assert "mbsec-mlflow-password" not in redacted
 
 
 def test_one_pass_normalizer_extracts_three_symbols_with_one_stream_scan(

@@ -223,6 +223,7 @@ def stage_fixture(
             f"s3://{RESULTS_BUCKET}/campaigns/"
             f"wave1-research-20260816/development/{run_id}"
         ),
+        input_release_uri=destination,
         mlflow_tracking_uri=mlflow_tracking_uri,
     )
     with tempfile.TemporaryDirectory(prefix="wave1-fixture-stage-") as directory:

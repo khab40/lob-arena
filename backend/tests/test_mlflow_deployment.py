@@ -125,6 +125,8 @@ def test_mlflow_bootstrap_generates_private_untracked_secrets(tmp_path: Path) ->
     assert len(values["MLFLOW_MINIO_SECRET_KEY"]) >= 48
     assert len(values["MLFLOW_ADMIN_PASSWORD"]) >= 48
     assert len(values["MLFLOW_FLASK_SERVER_SECRET_KEY"]) >= 64
+    assert values["MLFLOW_WRITER_USERNAME"] == "governed-writer"
+    assert len(values["MLFLOW_WRITER_PASSWORD"]) >= 48
     assert all(
         secret not in first.stdout
         for key, secret in values.items()
@@ -180,6 +182,8 @@ def test_mlflow_bootstrap_can_add_service_credentials_without_rotating_state(
     assert original in updated
     assert "MLFLOW_MINIO_ACCESS_KEY=mlflow-artifacts" in updated
     assert "MLFLOW_MINIO_SECRET_KEY=" in updated
+    assert "MLFLOW_WRITER_USERNAME=governed-writer" in updated
+    assert "MLFLOW_WRITER_PASSWORD=" in updated
     assert "preserve-postgres" not in result.stdout
     assert "preserve-minio" not in result.stdout
     assert stat.S_IMODE(output.stat().st_mode) == 0o600
@@ -235,6 +239,9 @@ def test_nebius_mlflow_profile_uses_object_storage_without_minio() -> None:
     assert environment["MLFLOW_ARTIFACTS_DESTINATION"].startswith("s3://")
     assert environment["AWS_ACCESS_KEY_ID"] == "${AWS_ACCESS_KEY_ID:?required}"
     assert environment["AWS_SECRET_ACCESS_KEY"] == "${AWS_SECRET_ACCESS_KEY:?required}"
+    initializer = services["mlflow-exporter-init"]["environment"]
+    assert initializer["MLFLOW_WRITER_USERNAME"] == "${MLFLOW_WRITER_USERNAME:?required}"
+    assert initializer["MLFLOW_WRITER_PASSWORD"] == "${MLFLOW_WRITER_PASSWORD:?required}"
     assert services["mlflow-postgres"]["networks"] == ["mlflow-internal"]
     assert services["mlflow"]["ports"] == [
         "${MLFLOW_BIND_ADDRESS:-0.0.0.0}:${MLFLOW_PORT:-5500}:5000"
@@ -276,5 +283,34 @@ def test_nebius_mlflow_bootstrap_reads_s3_secret_from_stdin(tmp_path: Path) -> N
     )
     assert values["AWS_ACCESS_KEY_ID"] == "NAKIREDACTED"
     assert values["AWS_SECRET_ACCESS_KEY"] == secret
+    assert values["MLFLOW_WRITER_USERNAME"] == "governed-writer"
+    assert len(values["MLFLOW_WRITER_PASSWORD"]) >= 48
     assert "10.0.0.10:*" in values["MLFLOW_ALLOWED_HOSTS"]
     assert secret not in result.stdout
+
+
+def test_nebius_mlflow_bootstrap_upgrades_only_writer_credentials(tmp_path: Path) -> None:
+    output = tmp_path / "existing-nebius.env"
+    original = "MLFLOW_ADMIN_PASSWORD=preserve-admin\nAWS_SECRET_ACCESS_KEY=preserve-s3\n"
+    output.write_text(original, encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            str(NEBIUS_BOOTSTRAP),
+            "--output",
+            str(output),
+            "--upgrade-writer-credentials",
+        ],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    updated = output.read_text(encoding="utf-8")
+    assert result.returncode == 0, result.stderr
+    assert original in updated
+    assert "MLFLOW_WRITER_USERNAME=governed-writer" in updated
+    assert "MLFLOW_WRITER_PASSWORD=" in updated
+    assert "preserve-admin" not in result.stdout
+    assert "preserve-s3" not in result.stdout

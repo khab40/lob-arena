@@ -23,6 +23,7 @@ from app.ml.lightgbm.cloud_contracts import (
     Wave1ExperimentSpec,
     Wave1FinalAuthorization,
     Wave1ResourceEvidence,
+    Wave1TabularProjectionInput,
 )
 from app.ml.lightgbm.cloud_fixture import build_wave1_fixture_dataset
 from app.ml.lightgbm.contracts import (
@@ -33,6 +34,7 @@ from app.ml.lightgbm.contracts import (
 )
 from app.ml.lightgbm.data import GovernedFeatureDataset, load_governed_feature_dataset
 from app.market_data.projections import (
+    C4MlflowDatasetReleaseReceipt,
     FrozenPublicSampleRoot,
     load_tabular_projection_dataset,
 )
@@ -344,6 +346,7 @@ def _run_development(
                 reliability_diagram_path=calibration.reliability_diagram_path,
                 model_path=training.model_path,
                 tracking_uri=request.mlflow_tracking_uri,
+                dataset_source_uri=_dataset_source_root(request, input_root),
                 cloud_metadata=_cloud_metadata(execution_context),
             )
     metrics = {
@@ -452,6 +455,7 @@ def _run_final(
             checksum_path=bundle.checksum_path,
             prediction_manifest_path=prediction.manifest_path,
             tracking_uri=request.mlflow_tracking_uri,
+            dataset_source_uri=_dataset_source_root(request, input_root),
             cloud_metadata=_cloud_metadata(execution_context),
         )
     return dataset.fold("test").row_count, candidate_ref.sha256, candidate.reproducibility_hash, mlflow_run_id, {
@@ -488,7 +492,13 @@ def _request_inventory(input_root: Path, request: LightGbmCloudJobRequest) -> Ch
             )
         )
     elif request.input.kind == "tabular-projection":
-        references.extend((request.input.frozen_root, request.input.projection))
+        references.extend(
+            (
+                request.input.frozen_root,
+                request.input.projection,
+                request.input.dataset_lineage_receipt,
+            )
+        )
     for reference in references:
         _verify_cloud_artifact(input_root, reference)
     return ChecksumInventory(
@@ -607,6 +617,11 @@ def _load_dataset(
         shutil.copytree(projection_source, artifact_root, dirs_exist_ok=True)
         root_path = _verify_cloud_artifact(input_root, projected.frozen_root)
         root = FrozenPublicSampleRoot.model_validate_json(root_path.read_text(encoding="utf-8"))
+        receipt_path = _verify_cloud_artifact(input_root, projected.dataset_lineage_receipt)
+        receipt = C4MlflowDatasetReleaseReceipt.model_validate_json(
+            receipt_path.read_text(encoding="utf-8")
+        )
+        _validate_tabular_projection_lineage(projected, root, receipt)
         return load_tabular_projection_dataset(
             _verify_cloud_artifact(input_root, projected.projection),
             expected_sha256=projected.projection.sha256,
@@ -633,6 +648,31 @@ def _load_dataset(
         corpus_artifact_root=artifact_root,
         access_mode=access_mode,
     )
+
+
+def _validate_tabular_projection_lineage(
+    projected: Wave1TabularProjectionInput,
+    root: FrozenPublicSampleRoot,
+    receipt: C4MlflowDatasetReleaseReceipt,
+) -> None:
+    if (
+        receipt.release_id != root.release_id
+        or receipt.root_file_sha256 != projected.frozen_root.sha256
+        or receipt.root_identity_sha256 != root.canonical_hash()
+        or receipt.tabular_development_sha256 != projected.projection.sha256
+    ):
+        raise ValueError("tabular projection is not bound to its C4 MLflow dataset release")
+
+
+def _dataset_source_root(request: LightGbmCloudJobRequest, input_root: Path) -> str:
+    root = request.input_release_uri or input_root.resolve().as_uri()
+    if request.input.kind == "tabular-projection":
+        suffix = request.input.projection_artifact_root
+    elif request.input.kind == "governed-feature-release":
+        suffix = request.input.feature_artifact_root
+    else:
+        return root
+    return f"{root.rstrip('/')}/{suffix.strip('/')}"
 
 
 def _write_environment(

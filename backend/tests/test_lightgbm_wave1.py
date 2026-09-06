@@ -7,12 +7,14 @@ import subprocess
 import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from pydantic import ValidationError
 
 pytest.importorskip("lightgbm", reason="Wave 1 tests require the ml extra")
 
+from app.market_data.projections import C4MlflowDatasetReleaseReceipt  # noqa: E402
 from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
     APPROVED_FIXTURE_FEATURE_RELEASE_SHA256,
     CloudArtifact,
@@ -108,11 +110,18 @@ def test_development_request_accepts_only_a_hash_bound_tabular_projection() -> N
         sha256="2" * 64,
         size_bytes=1,
     )
+    lineage_receipt = CloudArtifact(
+        logical_name="c4_mlflow_dataset_release",
+        uri="manifests/c4-mlflow-dataset-release.json",
+        sha256="3" * 64,
+        size_bytes=1,
+    )
     request = LightGbmCloudJobRequest.model_validate(
         _request(
             input=Wave1TabularProjectionInput(
                 frozen_root=root,
                 projection=projection,
+                dataset_lineage_receipt=lineage_receipt,
                 projection_artifact_root="projection-artifacts",
             ).model_dump(mode="json")
         )
@@ -126,9 +135,38 @@ def test_development_request_accepts_only_a_hash_bound_tabular_projection() -> N
                     projection=projection.model_copy(
                         update={"uri": "manifests/test/projection.json"}
                     ),
+                    dataset_lineage_receipt=lineage_receipt,
                     projection_artifact_root="projection-artifacts",
                 ).model_dump(mode="json")
             )
+        )
+
+
+def test_tabular_projection_requires_matching_c4_mlflow_receipt() -> None:
+    root = SimpleNamespace(release_id="release-v1", canonical_hash=lambda: "2" * 64)
+    projected = SimpleNamespace(
+        frozen_root=SimpleNamespace(sha256="1" * 64),
+        projection=SimpleNamespace(sha256="3" * 64),
+    )
+    receipt = C4MlflowDatasetReleaseReceipt(
+        mlflow_run_id="a" * 32,
+        release_id="release-v1",
+        root_file_sha256="1" * 64,
+        root_identity_sha256="2" * 64,
+        tabular_development_sha256="3" * 64,
+        tabular_final_sha256="4" * 64,
+        sequence_development_sha256="5" * 64,
+        sequence_final_sha256="6" * 64,
+        access_denial_sha256="7" * 64,
+    )
+
+    cloud_runner._validate_tabular_projection_lineage(projected, root, receipt)
+
+    with pytest.raises(ValueError, match="not bound"):
+        cloud_runner._validate_tabular_projection_lineage(
+            projected,
+            root,
+            receipt.model_copy(update={"tabular_development_sha256": "8" * 64}),
         )
 
 
@@ -490,6 +528,9 @@ def test_cloud_collection_requires_job_identity_context_and_cost(
                 "wave1-test/development/wave1-test-development"
             ),
             mlflow_tracking_uri="http://10.4.0.54:5500",
+            input_release_uri=(
+                "s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging"
+            ),
         )
     )
     request_path = inputs / "request.json"
@@ -601,6 +642,9 @@ def test_cloud_transport_stages_executes_and_publishes_without_mounts(
                 "wave1-test/development/wave1-test-development"
             ),
             mlflow_tracking_uri="http://10.4.0.54:5500",
+            input_release_uri=(
+                "s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel1/staging"
+            ),
         )
     )
     input_staging = tmp_path / "input-staging"

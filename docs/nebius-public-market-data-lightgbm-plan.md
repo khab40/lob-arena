@@ -1,12 +1,11 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: C0 and the first two acquisitions passed. C3 preparation is complete
-for both active train dates: `2019-01-30` and `2019-03-27`. Each final manifest
-references 27 immutable, checksum-verified comparison checkpoints. The active
-corpus is reduced to four dates under an 18-Job public-data ceiling. Sequence 3
-is the separately approval-gated `2019-10-30` validation acquisition.
+Status: C0-C4 and G5 are complete for the approved four-date corpus.
+Development and final projections are independently published and verified,
+the C4 release is indexed in MLflow, and three receipt-bound G5 Jobs passed the
+strict reproducibility comparator.
 
-Date: 2026-09-03
+Date: 2026-09-07
 
 ## Decision
 
@@ -36,7 +35,7 @@ serve as their first-party reference implementations.
 
 The raw and derived data will be prepared in Nebius, not on the workstation.
 The workstation has about 46 GiB free and the importer intentionally reserves
-20 GiB, while the selected Nasdaq sources total about 16.458 GiB compressed.
+20 GiB, while the active Nasdaq sources total about 16.458 GiB compressed.
 
 This track is an **official-public-sample research benchmark**. It does not
 claim unrestricted redistribution rights, a licensed production corpus, or
@@ -437,24 +436,22 @@ and published six versioned quarantine objects with `SUCCESS` last. Download
 runtime was 969.304 seconds, observed throughput was 4,915,303.869 bytes/second,
 and peak RSS was 110,940,160 bytes. The source object is version `1`; Object
 Storage returned an expiry date of 2026-09-03 under the reviewed three-day
-lifecycle rule. Public-data consumption was 2 Jobs under the former 15-Job
+lifecycle rule. Public-data consumption was 2 Jobs under the original 15-Job
 ceiling. Post-C1 project spend
 may be recorded when convenient but is not a prerequisite for C2 review or
 authorization.
 
 ### C2 - Remaining acquisition
 
-Acquire only the remaining active validation and final-test files sequentially
-using the identical allowlisted request template. One successful
-acquisition/quarantine prefix is never
+Acquire the remaining active files sequentially using the identical allowlisted
+request template. One successful acquisition/quarantine prefix is never
 overwritten or retried. Complete source packages may exist only in private,
 lifecycle-bound quarantine and are not copied into a durable model release.
 The public-data campaign has a separate cap of 18 Jobs. Failed attempts consume
-that cap and stop the campaign for reconciliation; they do not expand it. After
-the two completed train preparations, 11 Jobs are consumed. Validation
-acquisition/preparation, final-test acquisition/preparation, and C4 are
-expected to finish at Job 16, leaving two recovery slots. The original
-model-development ceiling remains 20 Jobs.
+that cap and stop the campaign for reconciliation; they do not expand it. The
+separate model-development ceiling remains 20 Jobs. Completed G4 work consumed
+seven slots; one failed publication attempt and three successful G5 repeats
+consumed four more, leaving nine for G6.
 
 Sequence-2 attempt evidence as of 2026-08-30: Job
 `aijob-e00xh0ph0ayshen6ps` downloaded and verified the exact 5,510,131,732-byte
@@ -466,7 +463,7 @@ left no current object and one delete marker; `SUCCESS` was never written. The
 local fix selects an AWS CLI managed multipart transfer above 5 GiB, retains
 the existing metadata/head/full-read-back verification, and classifies an
 `EntityTooLarge` response without exposing stderr. Forty focused tests and
-Ruff pass. At that stop point, public-data consumption was 3 of 15 Jobs; the
+Ruff pass. At that stop point, public-data consumption was 3 Jobs; the
 retry required a fresh immutable image and exact-hash authorization.
 
 Corrected sequence-2 exit evidence as of 2026-08-31: Job
@@ -650,7 +647,7 @@ the current milestone.
 
 - Spend reporting is advisory and never a preparation or submission
   prerequisite; VAT reconciliation is not required between Jobs.
-- Bound public-data work through the 18-Job cap, one-at-a-time execution,
+- Bound public-data work through the amended 18-Job cap, one-at-a-time execution,
   exact source-byte ceilings, fixed compute/time limits and explicit approval
   for each material stage.
 - Cap raw plus derived storage at 120 GiB.

@@ -103,6 +103,25 @@ class FrozenPublicSampleRoot(_StrictModel):
         return self
 
 
+class C4MlflowDatasetReleaseReceipt(_StrictModel):
+    schema_version: Literal["c4_mlflow_dataset_release_v1"] = (
+        "c4_mlflow_dataset_release_v1"
+    )
+    mlflow_run_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+    release_id: str = Field(pattern=IDENTIFIER_PATTERN)
+    root_file_sha256: str = Field(pattern=SHA256_PATTERN)
+    root_identity_sha256: str = Field(pattern=SHA256_PATTERN)
+    tabular_development_sha256: str = Field(pattern=SHA256_PATTERN)
+    tabular_final_sha256: str = Field(pattern=SHA256_PATTERN)
+    sequence_development_sha256: str = Field(pattern=SHA256_PATTERN)
+    sequence_final_sha256: str = Field(pattern=SHA256_PATTERN)
+    access_denial_sha256: str = Field(pattern=SHA256_PATTERN)
+    raw_rows_uploaded_to_mlflow: Literal[False] = False
+    release_authority: Literal["governed_manifests_and_object_storage"] = (
+        "governed_manifests_and_object_storage"
+    )
+
+
 class TabularProjectionShard(_StrictModel):
     fold: FoldName
     base_session_id: str = Field(pattern=IDENTIFIER_PATTERN)

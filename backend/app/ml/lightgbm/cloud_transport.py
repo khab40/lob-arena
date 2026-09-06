@@ -131,6 +131,8 @@ def _validate_s3_boundaries(input_uri: str, request: LightGbmCloudJobRequest) ->
         or input_parts[2] != "staging"
     ):
         raise ValueError("input URI must identify an immutable releases/<id>/staging prefix")
+    if request.input_release_uri != input_uri.rstrip("/"):
+        raise ValueError("request dataset lineage URI does not match the staged input release")
 
     result_bucket, result_prefix = _bucket_prefix(request.result_uri)
     expected_lane = "final" if request.mode == "final-evaluation" else "development"
