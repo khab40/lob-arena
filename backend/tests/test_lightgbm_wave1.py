@@ -67,6 +67,50 @@ def test_request_forbids_unknown_fields_and_mutable_images() -> None:
         LightGbmCloudJobRequest.model_validate(_request(image="ghcr.io/acme/jobs:latest"))
 
 
+def test_submitter_accepts_hash_bound_g5_projection_package_evidence(tmp_path: Path) -> None:
+    input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/g5-repeat-1/staging"
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            run_id="g5-repeat-1",
+            input_release_uri=input_uri,
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/g5-repeat-1"
+            ),
+        )
+    )
+    source = tmp_path / "source"
+    source.mkdir()
+    (source / "request.json").write_bytes(request.canonical_bytes())
+    package = tmp_path / "package"
+    publish_local_result(source, package.as_uri())
+    inventory = verify_complete_result(package)
+    evidence = tmp_path / "package-evidence.json"
+    evidence.write_text(
+        json.dumps(
+            {
+                "schema_version": "lightgbm_tabular_projection_package_v1",
+                "destination": input_uri,
+                "request_sha256": request.canonical_hash(),
+                "package_inventory_sha256": submit_script._canonical_hash(
+                    inventory.model_dump(mode="json")
+                ),
+                "cloud_resources_mutated": False,
+                "test_artifacts_staged": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    assert submit_script._load_wave1_request(evidence, input_uri) == request
+
+    payload = json.loads(evidence.read_text(encoding="utf-8"))
+    payload["package_inventory_sha256"] = "f" * 64
+    evidence.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(SystemExit, match="request evidence is invalid"):
+        submit_script._load_wave1_request(evidence, input_uri)
+
+
 def test_request_rejects_secret_serialization_and_development_test_access() -> None:
     with pytest.raises(ValidationError, match="secret-shaped"):
         LightGbmCloudJobRequest.model_validate(
