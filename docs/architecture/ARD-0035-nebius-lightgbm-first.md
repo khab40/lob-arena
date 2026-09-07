@@ -4,11 +4,11 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-08-27
+Status reconciled: 2026-09-07
 
 ## Implementation Status
 
-Status: `[g0-g4-complete; g5-unlocked; g5-g9-pending]`
+Status: `[g0-g5-complete; g6-g9-pending]`
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -82,6 +82,48 @@ was USD 8.55 including VAT; the authoritative post-run value is USD 8.57. The
 legacy inline AWS access-key identifier from an old Job no longer resolves in
 Nebius IAM (`NotFound`), and the Operator has stopped the shared MLflow VM. No
 previous evidence was recopied or archived.
+
+### G5 closure — 2026-09-07
+
+G5 passed. Three sequential successful Jobs
+`aijob-e00qe81x3p8td0sgmj`, `aijob-e00nq0t5p6j8jk88z3`, and
+`aijob-e00aw1zyvs4nf931ef` are bound respectively to MLflow runs
+`e3dd3db46d9741d89b3ed230df109c09`,
+`36589c337eb343a6bfe826ac3fb347dd`, and
+`ce34abdaf5014224b636f9a83354e67a`. The strict comparator passed all nine
+gates and all 21 deterministic fields. The runs share reproducibility hash
+`cb76261299dd010d4d482d920e7cbece60140f6f5a24ffaefedcc9b57cadf9e2`,
+best iteration 22, validation binary log loss `0.42910155734851124`, and no
+test-fold access.
+
+The immutable comparison receipt is
+`outputs/lightgbm-wave1/nasdaq-g5-repro-20260906/g5-repeat-comparison.json`
+(SHA-256
+`d6209d45027f376ac67d55fd8f1cdf7428b0e635d6f5fc011e45600051aedcb1`).
+The execution receipt is
+`outputs/lightgbm-wave1/nasdaq-g5-repro-20260906/g5-execution-evidence.json`
+(SHA-256
+`ac51f8d3a40210e40ab66c0bb5b766c7807176a5a497b2f1992c4a27f5b0bd38`).
+The governed C4 evidence supplied through `--c4-mlflow-evidence` is
+`outputs/market-data/nasdaq-c4-four-date-5c85182-20260905/c4-mlflow-dataset-release.json`
+(SHA-256
+`c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b`),
+which binds the release hashes to MLflow run
+`dc119d708cc4464e8fe1b82ba976bf3e`. The G5 execution receipt verifies 240
+metadata-only dataset inputs and no raw-row upload.
+Formal closure review corrected its summary count from 22 to the 21 canonical
+comparison fields; no governed run or result bytes changed.
+
+One earlier G5 Job, `aijob-e00dwzjr9g2zck6me2`, trained and logged to MLflow
+run `94d5b9c9d22d44d6a6cb50d6e8390daf` but failed before result publication
+because the results-bucket policy omitted the new campaign prefix. It produced
+zero result objects and was excluded from the repeat comparison. Results access
+was corrected only for the exact development campaign prefix and remains in
+place. The temporary publisher permissions were removed, its key is inactive,
+and the development bucket policy was restored. The failed attempt consumed a
+development slot: 11 of 20 are now used, and the unstarted G6 matrix is reduced
+from ten to nine Jobs by removing one hyperparameter configuration. MLflow is
+again independently `STOPPED`.
 
 ## Context
 

@@ -42,6 +42,16 @@ def _configure_admin() -> tuple[Any, Any]:
 
 
 def _ensure_exporter_user(auth_client: Any, username: str, password: str) -> Any:
+    return _ensure_service_user(auth_client, username, password, label="exporter")
+
+
+def _ensure_service_user(
+    auth_client: Any,
+    username: str,
+    password: str,
+    *,
+    label: str,
+) -> Any:
     try:
         user = auth_client.get_user(username)
     except Exception as error:
@@ -49,13 +59,13 @@ def _ensure_exporter_user(auth_client: Any, username: str, password: str) -> Any
             raise
         user = auth_client.create_user(username, password)
         if user.is_admin:
-            raise RuntimeError("MLflow exporter user must not be an administrator")
-        print(f"Created non-admin MLflow exporter user {username}.")
+            raise RuntimeError(f"MLflow {label} user must not be an administrator")
+        print(f"Created non-admin MLflow {label} user {username}.")
     else:
         if user.is_admin:
-            raise RuntimeError("MLflow exporter user must not be an administrator")
+            raise RuntimeError(f"MLflow {label} user must not be an administrator")
         auth_client.update_user_password(username, password)
-        print(f"Updated MLflow exporter credentials for {username}.")
+        print(f"Updated MLflow {label} credentials for {username}.")
     return user
 
 
@@ -63,6 +73,7 @@ def _reconcile_permissions(
     auth_client: Any,
     user: Any,
     desired_permissions: set[tuple[str, str]],
+    desired_permission: str = "READ",
 ) -> None:
     personal_role_name = f"__user_{user.id}__"
     personal_role = next(
@@ -89,13 +100,13 @@ def _reconcile_permissions(
                 resource_id=permission.resource_pattern,
             )
             print(
-                "Revoked stale MLflow exporter permission "
+                "Revoked stale MLflow service-user permission "
                 f"{permission.resource_type}:{permission.resource_pattern}."
             )
 
     for resource_type, resource_id in sorted(desired_permissions):
         current_permission = current_by_resource.get((resource_type, resource_id))
-        if current_permission == "READ":
+        if current_permission == desired_permission:
             continue
         if current_permission is not None:
             auth_client.revoke_user_permission(
@@ -107,7 +118,7 @@ def _reconcile_permissions(
             user.username,
             resource_type=resource_type,
             resource_id=resource_id,
-            permission="READ",
+            permission=desired_permission,
         )
 
 def main() -> None:
@@ -123,6 +134,12 @@ def main() -> None:
         auth_client,
         required("MLFLOW_EXPORTER_USERNAME"),
         secret("MLFLOW_EXPORTER_PASSWORD"),
+    )
+    writer = _ensure_service_user(
+        auth_client,
+        required("MLFLOW_WRITER_USERNAME"),
+        secret("MLFLOW_WRITER_PASSWORD"),
+        label="writer",
     )
 
     experiments = _csv("MLFLOW_EXPORTER_EXPERIMENTS", EXPERIMENTS)
@@ -142,12 +159,19 @@ def main() -> None:
         *{("registered_model", model_name) for model_name in models},
     }
     _reconcile_permissions(auth_client, user, desired_permissions)
+    _reconcile_permissions(
+        auth_client,
+        writer,
+        desired_permissions,
+        desired_permission="EDIT",
+    )
 
     for experiment_name in experiments:
         print(f"Granted MLflow exporter READ access to experiment {experiment_name}.")
 
     for model_name in models:
         print(f"Granted MLflow exporter READ access to registered model {model_name}.")
+    print("Granted MLflow writer EDIT access to governed experiments and registered models.")
 
 
 if __name__ == "__main__":

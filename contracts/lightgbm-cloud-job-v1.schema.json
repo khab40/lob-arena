@@ -323,6 +323,9 @@
     "Wave1TabularProjectionInput": {
       "additionalProperties": false,
       "properties": {
+        "dataset_lineage_receipt": {
+          "$ref": "#/$defs/CloudArtifact"
+        },
         "frozen_root": {
           "$ref": "#/$defs/CloudArtifact"
         },
@@ -341,6 +344,7 @@
         "kind",
         "frozen_root",
         "projection",
+        "dataset_lineage_receipt",
         "projection_artifact_root"
       ],
       "title": "Wave1TabularProjectionInput",
@@ -440,6 +444,19 @@
       ],
       "title": "Input"
     },
+    "input_release_uri": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Input Release Uri"
+    },
     "mlflow_tracking_uri": {
       "anyOf": [
         {
@@ -506,6 +523,7 @@
     "input",
     "resource",
     "result_uri",
+    "input_release_uri",
     "candidate",
     "authorization",
     "authorization_signature",

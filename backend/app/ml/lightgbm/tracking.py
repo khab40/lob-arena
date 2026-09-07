@@ -13,6 +13,7 @@ from app.ml.lightgbm.contracts import (
 from app.ml.lightgbm.artifacts import resolve_verified_artifact
 from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release
 from app.ml.lightgbm.scoring import validate_prediction_parquet
+from app.ml.dataset_lineage import feature_dataset_inputs, log_dataset_inputs
 
 
 DEVELOPMENT_EXPERIMENT = "lob-arena/lightgbm-development"
@@ -32,6 +33,7 @@ def log_development_run(
     reliability_diagram_path: Path,
     model_path: Path,
     tracking_uri: str | None = None,
+    dataset_source_uri: str | None = None,
     cloud_metadata: dict[str, str | int | float] | None = None,
 ) -> str:
     """Log permitted development evidence without weakening local governance."""
@@ -67,6 +69,16 @@ def log_development_run(
             "calibration_method": calibration.parameters.method,
         }
         mlflow.log_params(parameters)
+        log_dataset_inputs(
+            mlflow,
+            feature_dataset_inputs(
+                training.input_features,
+                source_root_uri=dataset_source_uri or artifact_root.resolve().as_uri(),
+                feature_release_id=training.feature_release_id,
+                feature_release_sha256=training.feature_release_sha256,
+                expected_folds={"train", "validation"},
+            ),
+        )
         metrics: dict[str, float] = {
             "validation_binary_logloss": training.early_stopping.best_score,
             "best_iteration": float(training.early_stopping.best_iteration),
@@ -112,6 +124,7 @@ def log_governed_evaluation_run(
     prediction_manifest_path: Path,
     benchmark_results_path: Path | None = None,
     tracking_uri: str | None = None,
+    dataset_source_uri: str | None = None,
     cloud_metadata: dict[str, str | int | float] | None = None,
 ) -> str:
     """Index an already-verified frozen-test release in MLflow."""
@@ -144,6 +157,16 @@ def log_governed_evaluation_run(
         cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
         tags.update(cloud_tags)
         mlflow.set_tags(tags)
+        log_dataset_inputs(
+            mlflow,
+            feature_dataset_inputs(
+                predictions.input_features,
+                source_root_uri=dataset_source_uri or artifact_root.resolve().as_uri(),
+                feature_release_id=training.feature_release_id,
+                feature_release_sha256=training.feature_release_sha256,
+                expected_folds={"test"},
+            ),
+        )
         mlflow.log_metrics(
             {
                 "test_alert_count": float(predictions.alert_count),

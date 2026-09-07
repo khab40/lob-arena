@@ -49,6 +49,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--access-key-secret-id", required=True)
     parser.add_argument("--secret-key-secret-id", required=True)
     parser.add_argument(
+        "--mlflow-username-secret-id",
+        default=os.environ.get("NEBIUS_MLFLOW_USERNAME_SECRET_ID"),
+    )
+    parser.add_argument(
+        "--mlflow-password-secret-id",
+        default=os.environ.get("NEBIUS_MLFLOW_PASSWORD_SECRET_ID"),
+    )
+    parser.add_argument(
         "--data-prep-spend-usd",
         type=float,
         help="Optional observed campaign spend; informational and not a submission gate.",
@@ -250,6 +258,21 @@ def _job_command(
         "--env", "AWS_DEFAULT_REGION=eu-north1",
         "--env", "AWS_EC2_METADATA_DISABLED=true",
     ]
+    if isinstance(request, NasdaqPreparationRequest):
+        username_secret = getattr(args, "mlflow_username_secret_id", None)
+        password_secret = getattr(args, "mlflow_password_secret_id", None)
+        if not username_secret or not password_secret:
+            raise SystemExit(
+                "market-data preparation requires MLflow username and password secret selectors"
+            )
+        command.extend(
+            [
+                "--env-secret",
+                f"MLFLOW_TRACKING_USERNAME={username_secret}",
+                "--env-secret",
+                f"MLFLOW_TRACKING_PASSWORD={password_secret}",
+            ]
+        )
     for name, value in (
         ("MARKET_DATA_ACTUAL_PROJECT_ID", PROJECT_ID),
         ("MARKET_DATA_ACTUAL_IMAGE_REPOSITORY", repository),

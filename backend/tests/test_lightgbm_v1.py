@@ -64,6 +64,22 @@ class _FakeRun:
         return None
 
 
+class _FakeDatasetSource:
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    @staticmethod
+    def _get_source_type() -> str:
+        return "local"
+
+
+class _FakeMetaDataset:
+    def __init__(self, *, source: object, name: str, digest: str) -> None:
+        self.source = source
+        self.name = name
+        self.digest = digest
+
+
 class _FakeMlflow:
     def __init__(self) -> None:
         self.experiments: list[str] = []
@@ -71,7 +87,12 @@ class _FakeMlflow:
         self.parameters: list[dict[str, object]] = []
         self.metrics: list[dict[str, float]] = []
         self.artifacts: list[tuple[str, str]] = []
+        self.inputs: list[tuple[object, str, dict[str, str]]] = []
         self.run_names: list[str] = []
+        self.data = SimpleNamespace(
+            get_registered_sources=lambda: (_FakeDatasetSource,),
+            meta_dataset=SimpleNamespace(MetaDataset=_FakeMetaDataset),
+        )
 
     def set_experiment(self, name: str) -> None:
         self.experiments.append(name)
@@ -91,6 +112,15 @@ class _FakeMlflow:
 
     def log_artifact(self, path: str, *, artifact_path: str) -> None:
         self.artifacts.append((path, artifact_path))
+
+    def log_input(
+        self,
+        dataset: object,
+        *,
+        context: str,
+        tags: dict[str, str],
+    ) -> None:
+        self.inputs.append((dataset, context, tags))
 
 
 def _hyperparameters() -> LightGbmV1Hyperparameters:
@@ -407,6 +437,12 @@ def test_complete_lightgbm_v1_release_detector_and_mlflow(
     assert fake_mlflow.experiments == [DEVELOPMENT_EXPERIMENT, EVALUATION_EXPERIMENT]
     assert fake_mlflow.tags[0]["test_accessed"] == "false"
     assert fake_mlflow.tags[1]["test_accessed"] == "true"
+    assert {context for _, context, _ in fake_mlflow.inputs} == {
+        "training",
+        "validation",
+        "evaluation",
+    }
+    assert all(tags["raw_rows_uploaded_to_mlflow"] == "false" for _, _, tags in fake_mlflow.inputs)
 
     invalid_schema_path = artifact_root / "model" / "invalid-feature-schema.json"
     invalid_schema_path.write_text("{}", encoding="utf-8")

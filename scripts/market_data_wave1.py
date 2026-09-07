@@ -119,6 +119,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--sequence-number", type=int, required=True)
     prepare.add_argument("--source-release-uri", required=True)
     prepare.add_argument("--source-release-manifest-sha256", required=True)
+    prepare.add_argument("--mlflow-tracking-uri", required=True)
     prepare.add_argument("--source-config", type=Path, default=DEFAULT_SOURCE_CONFIG)
     publish_request = subparsers.add_parser(
         "publish-request", help="Publish one reviewed C1/C2/C3 request package"
@@ -171,6 +172,7 @@ def main(argv: list[str] | None = None) -> int:
             sequence_number=args.sequence_number,
             source_release_uri=args.source_release_uri,
             source_release_manifest_sha256=args.source_release_manifest_sha256,
+            mlflow_tracking_uri=args.mlflow_tracking_uri,
             source_config=args.source_config,
             package=args.package,
             evidence_output=args.evidence_output,
@@ -267,6 +269,7 @@ def prepare_preparation(
     sequence_number: int,
     source_release_uri: str,
     source_release_manifest_sha256: str,
+    mlflow_tracking_uri: str,
     source_config: Path,
     package: Path,
     evidence_output: Path,
@@ -293,6 +296,7 @@ def prepare_preparation(
         feature_config_sha256=hashlib.sha256(
             (ROOT / "configs" / "features" / "lightgbm-v2.json").read_bytes()
         ).hexdigest(),
+        mlflow_tracking_uri=mlflow_tracking_uri,
     )
     _prepare_request_package(request, operation="preparation", package=package, evidence=evidence_output)
 
