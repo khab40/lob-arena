@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest  # noqa: E402
+from app.nebius.object_storage import verify_complete_result  # noqa: E402
 
 
 WAVE1_ENDPOINT_URL = "https://storage.eu-north1.nebius.cloud"
@@ -424,7 +425,23 @@ def _load_wave1_request(evidence_path: Path | None, input_uri: str) -> LightGbmC
         raise SystemExit("LightGBM Wave 1 requires --request-evidence from stage-fixture")
     try:
         evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
-        request = LightGbmCloudJobRequest.model_validate(evidence["request"])
+        if evidence.get("schema_version") == "lightgbm_tabular_projection_package_v1":
+            if (
+                evidence.get("cloud_resources_mutated") is not False
+                or evidence.get("test_artifacts_staged") is not False
+            ):
+                raise ValueError("G5 package evidence is not governed")
+            package = evidence_path.parent / "package"
+            inventory = verify_complete_result(package)
+            if _canonical_hash(inventory.model_dump(mode="json")) != evidence.get(
+                "package_inventory_sha256"
+            ):
+                raise ValueError("G5 package inventory hash mismatch")
+            request = LightGbmCloudJobRequest.model_validate_json(
+                (package / "request.json").read_text(encoding="utf-8")
+            )
+        else:
+            request = LightGbmCloudJobRequest.model_validate(evidence["request"])
     except (OSError, ValueError, KeyError) as exc:
         raise SystemExit("LightGBM Wave 1 request evidence is invalid") from exc
     if evidence.get("destination") != input_uri:
