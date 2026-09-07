@@ -20,11 +20,11 @@ sourceSets {
 dependencies {
     implementation(project(":simulation-kernel"))
     implementation(project(":exchange-proto"))
-    implementation("io.grpc:grpc-services:1.83.1")
-    runtimeOnly("io.grpc:grpc-netty-shaded:1.83.1")
+    implementation("io.grpc:grpc-services:1.84.0")
+    runtimeOnly("io.grpc:grpc-netty-shaded:1.84.0")
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("io.grpc:grpc-inprocess:1.83.1")
+    testImplementation("io.grpc:grpc-inprocess:1.84.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
