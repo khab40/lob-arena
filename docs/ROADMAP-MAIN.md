@@ -1,6 +1,6 @@
 # Main Roadmap
 
-Status date: 2026-09-01
+Status date: 2026-09-07
 
 Target completion for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -10,15 +10,26 @@ deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
 
-`C3/C4 corpus -> G5 reproducibility -> G6-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
+`G6-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
 
-- C3 Job `aijob-e00t59masnf1n45fh9` is running comparison 10 of 27.
-- Comparisons 1-9 passed, including the previous quote-stuffing failure
-  boundary.
-- G4 is complete. G5 is implemented but waits for the frozen Nasdaq projection
-  from C4.
+- C0-C4 are complete. The C4 MLflow dataset-release receipt binds the release
+  hashes to run `dc119d708cc4464e8fe1b82ba976bf3e`
+  (`c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b`);
+  G5 execution evidence verifies 240 metadata-only inputs and no raw-row upload.
+- G5 passed on 2026-09-07. Three sequential successful Jobs produced the same
+  reproducibility hash, best iteration, validation loss, governed identities,
+  model outputs, predictions, calibration, thresholds, and feature evidence.
+  All nine comparison gates and all 21 deterministic fields passed.
+- The G5 execution and comparison receipts are recorded under
+  `outputs/lightgbm-wave1/nasdaq-g5-repro-20260906/` with SHA-256 digests
+  `ac51f8d3a40210e40ab66c0bb5b766c7807176a5a497b2f1992c4a27f5b0bd38`
+  and `d6209d45027f376ac67d55fd8f1cdf7428b0e635d6f5fc011e45600051aedcb1`.
+- One infrastructure-only G5 result-publication failure consumed a slot before
+  the three successful repeats. Eleven of 20 development slots are consumed;
+  the fixed G6 matrix is reduced to nine Jobs. MLflow is stopped between
+  authorized experiment windows.
 - GitHub Project #3 contains 74 items. Seven dated repository milestones now
   cover the active critical path from the corpus freeze through final CEO-demo
   acceptance.
@@ -32,8 +43,8 @@ Critical path:
 | **2026-09-02** | Current C3 date complete | 27/27 comparisons, immutable output manifest, `SUCCESS`, runtime/RSS and checksum evidence |
 | **2026-09-03** | Roadmap correction PR | Replace the stale seven-date/15-Job design with the approved four-date corpus and minimum 18 public-data Jobs |
 | **2026-09-11** | C4 corpus freeze | Two train dates, one validation date, one test date; tabular and sequence projections; leakage and access-denial proof |
-| **2026-09-14** | G5 complete | Three sequential identical LightGBM Jobs with matching governed hashes |
-| **2026-09-18** | G6 complete | Ten bounded development Jobs: tuning, ablations, seed stability, and calibration |
+| **2026-09-07** | G5 complete | Three sequential identical LightGBM Jobs passed all nine gates and 21 deterministic comparisons |
+| **2026-09-18** | G6 complete | Nine bounded development Jobs: tuning, ablations, seed stability, and calibration |
 | **2026-09-23** | G7-G9 complete | Candidate freeze, one authorized final evaluation, cost reconciliation, and signed Wave 1 decision |
 | **2026-10-09** | Transformer complete | Verified causal standalone Transformer bundle, calibration, GPU/runtime/cost evidence |
 | **2026-10-23** | Hybrid complete | `transformer_feature_release_v1`, exact join, cascade LightGBM, ablation, and champion/rollback decision |
@@ -87,18 +98,30 @@ The following must match exactly:
 
 Different Job IDs, timestamps, runtime, and cost are permitted.
 
+**Complete 2026-09-07.** Successful Jobs
+`aijob-e00qe81x3p8td0sgmj`, `aijob-e00nq0t5p6j8jk88z3`, and
+`aijob-e00aw1zyvs4nf931ef` map respectively to MLflow runs
+`e3dd3db46d9741d89b3ed230df109c09`,
+`36589c337eb343a6bfe826ac3fb347dd`, and
+`ce34abdaf5014224b636f9a83354e67a`. The strict comparison receipt has status
+`passed`, disposition `g5_reproducibility_passed`, nine passing gates, and 21
+matching deterministic fields.
+
 ### G6 - Bounded Development Campaign
 
-Run ten remaining experiments:
+Run the nine remaining experiments:
 
-- three hyperparameter configurations;
+- two hyperparameter configurations;
 - two feature-family ablations;
 - two candidate seed-stability runs; and
 - raw, Platt, and isotonic calibration comparisons.
 
-Together with G5, this consumes the 13 remaining slots under the separate
-20-Job LightGBM development ceiling. There is no failure reserve unless the
-matrix is reduced or the cap is formally amended.
+The initial infrastructure-only G5 failure and three successful repeats raised
+consumption from seven to 11 of the separate 20-Job LightGBM development
+ceiling. In accordance with the predeclared failure rule, the unstarted G6
+matrix drops one hyperparameter configuration and now consumes the nine
+remaining slots. There is no failure reserve unless the matrix is reduced
+again or the cap is formally amended before submission.
 
 ### G7-G9
 
@@ -199,14 +222,13 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Reconciled on **2026-09-01**:
+Reconciled on **2026-09-07**:
 
-- [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C2,
-  the live C3 preparation, the four-date forward corpus, the 18-Job ceiling,
-  and the remaining configuration/documentation PR gate.
-- [#23](https://github.com/khab40/lob-arena/issues/23) records the completed G4
-  evidence, the C4 dependency for G5 submission, and the remaining 13-Job
-  LightGBM development matrix.
+- [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
+  the frozen four-date forward corpus, and its governed release evidence.
+- [#23](https://github.com/khab40/lob-arena/issues/23) records the completed G5
+  comparison and execution receipts, the consumed-slot reconciliation, and the
+  amended nine-Job G6 matrix.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),
