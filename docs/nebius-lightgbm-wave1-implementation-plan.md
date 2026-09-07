@@ -1,8 +1,10 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G4 complete; attempt 7 passed every governed cloud-smoke exit gate; G5 is next
+Status: G0-G5 complete; G5 passed every governed reproducibility gate; G6 is next
 
 Date: 2026-08-26
+
+Status reconciled: 2026-09-07
 
 ## Outcome
 
@@ -853,12 +855,47 @@ credential chain when explicitly enabled.
 
 ### G5 — Reproducibility
 
-Implementation status: the strict three-run comparator, verified collection-
-receipt binding, CLI, local fixture preflight and fold-isolated Nasdaq tabular
-projection loader are complete. The G5 gate is not yet passed: C0-C4 cloud
-execution must first publish the frozen Nasdaq development projection, and the
-three sequential cloud Jobs still require an explicitly reviewed Operator
-authorization.
+Implementation status: **passed 2026-09-07**. The strict comparator accepted
+three sequential successful Jobs and their independently verified collection
+receipts. The comparison receipt is
+`outputs/lightgbm-wave1/nasdaq-g5-repro-20260906/g5-repeat-comparison.json`
+(SHA-256
+`d6209d45027f376ac67d55fd8f1cdf7428b0e635d6f5fc011e45600051aedcb1`);
+the execution receipt is
+`outputs/lightgbm-wave1/nasdaq-g5-repro-20260906/g5-execution-evidence.json`
+(SHA-256
+`ac51f8d3a40210e40ab66c0bb5b766c7807176a5a497b2f1992c4a27f5b0bd38`).
+
+All nine gates and all 21 deterministic comparison fields passed. The three
+Jobs and bound MLflow runs are:
+
+| Repeat | Nebius Job | MLflow run |
+| --- | --- | --- |
+| 1 | `aijob-e00qe81x3p8td0sgmj` | `e3dd3db46d9741d89b3ed230df109c09` |
+| 2 | `aijob-e00nq0t5p6j8jk88z3` | `36589c337eb343a6bfe826ac3fb347dd` |
+| 3 | `aijob-e00aw1zyvs4nf931ef` | `ce34abdaf5014224b636f9a83354e67a` |
+
+They share reproducibility hash
+`cb76261299dd010d4d482d920e7cbece60140f6f5a24ffaefedcc9b57cadf9e2`,
+best iteration 22, validation binary log loss `0.42910155734851124`, and
+`test_fold_accessed=false`. The C4 dataset-release receipt passed through
+`--c4-mlflow-evidence` and binds the release hashes to MLflow run
+`dc119d708cc4464e8fe1b82ba976bf3e`; its SHA-256 is
+`c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b`.
+The G5 execution receipt verifies `dataset_input_count=240` and
+`raw_rows_uploaded_to_mlflow=false`.
+Formal closure review corrected its summary count from 22 to the 21 fields
+enumerated by the canonical comparator; no governed run or result bytes changed.
+
+An initial Job, `aijob-e00dwzjr9g2zck6me2`, trained and logged to MLflow run
+`94d5b9c9d22d44d6a6cb50d6e8390daf` but failed before result publication
+because the results-bucket policy omitted the new campaign prefix. It produced
+zero result objects, did not participate in the comparison, and consumed one
+development slot. The policy was corrected only for
+`campaigns/nasdaq-g5-repro-20260906/development/*`; the three governed retries
+then passed. The required results-prefix scope remains, while the temporary
+publisher permissions were removed, its key was made inactive, the development
+bucket policy was restored, and MLflow was returned to `STOPPED`.
 
 Operator submits the same development request three times sequentially. Codex
 compares them.
@@ -873,21 +910,22 @@ and Wave 2.
 
 ### G6 — Bounded Development Campaign
 
-The campaign remains capped at 20 total development Jobs. Seven G4 Jobs have
-consumed seven slots, so the remaining matrix is capped at 13 Jobs. To preserve
-reproducibility, seed-stability, ablation and calibration coverage, the fixed
-amendment removes one unstarted hyperparameter trial:
+The campaign remains capped at 20 total development Jobs. Seven G4 attempts,
+one infrastructure-only G5 failure, and three successful G5 repeats consumed
+11 slots. Nine remain. To preserve seed-stability, ablation, and calibration
+coverage, the fixed amendment removes one additional unstarted hyperparameter
+trial from the prior ten-Job G6 matrix:
 
 | Group | Jobs |
 | --- | ---: |
-| G5 exact reproducibility repeats | 3 |
-| Predeclared hyperparameters | 3 |
+| Predeclared hyperparameters | 2 |
 | Feature-family ablations | 2 |
 | Selected-candidate seed stability | 2 |
 | Raw/Platt/isotonic calibration | 3 |
+| **G6 total** | **9** |
 
 No exploratory replacement is permitted. Any additional failure consumes one
-of these 13 slots and requires the unstarted portion of the matrix to shrink;
+of these nine slots and requires the unstarted portion of the matrix to shrink;
 raising the 20-Job ceiling requires a recorded amendment before submission.
 
 Operator runs only Codex-generated commands. Codex ranks candidates using
@@ -988,25 +1026,29 @@ production/client performance claim.
 - [x] G2 local fixture package verifies (2026-08-16).
 - [x] G3 existing Nebius components, IAM boundaries, governed input and immutable image verify (2026-08-16).
 - [x] G4 cloud smoke passes (attempt 7, 2026-08-26).
-- [ ] G5 three-run reproducibility passes.
+- [x] G5 three-run reproducibility passes (2026-09-07; nine gates and 21
+  deterministic fields passed).
 - [ ] G6 development campaign completes within ceilings.
 - [ ] G7 candidate and final authorization are signed.
 - [ ] G8 one final evaluation verifies.
 - [ ] G9 billing reconciliation and exit records are signed.
-- [ ] Issue #23 and ARD-0035 receive evidence links and final status.
+- [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
+  and the G5 status (2026-09-07).
+- [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
 
-## Completed Implementation Through G4
+## Completed Implementation Through G5
 
-G1-G4 are complete. They extended the existing Jobs image, renderer, submitter,
+G1-G5 are complete. They extended the existing Jobs image, renderer, submitter,
 orchestrator, evidence archive, MLflow tracking and monitoring; added the
 LightGBM runner, contracts, shared storage hardening and tests; and passed
 without changing the LightGBM algorithm. G3 reused the existing Nebius
 Registry, four governed buckets, three identities and shared MLflow VM. After
 six bounded failures, attempt 7 completed the AWS CLI v1-compatible no-volume
-path and passed every G4 exit gate. MLflow is stopped, 13 development slots
-remain under the unchanged ceiling, and G5 is unlocked.
+path and passed every G4 exit gate. G5 then passed three exact-repeat Jobs after
+one infrastructure-only result-publication failure. MLflow is stopped, nine
+development slots remain under the unchanged ceiling, and G6 is next.
 
 ## Related Documentation
 
