@@ -32,11 +32,31 @@ class _Run:
         return None
 
 
+class _FakeSource:
+    def __init__(self, uri: str) -> None:
+        self.uri = uri
+
+    @staticmethod
+    def _get_source_type() -> str:
+        return "s3"
+
+
+class _FakeMetaDataset:
+    def __init__(self, *, source: object, name: str, digest: str) -> None:
+        self.source = source
+        self.name = name
+        self.digest = digest
+
+
 class _FakeMlflow:
     def __init__(self) -> None:
         self.experiments: list[str] = []
         self.inputs: list[tuple[object, str, dict[str, str]]] = []
         self.artifacts: list[tuple[str, str]] = []
+        self.data = SimpleNamespace(
+            get_registered_sources=lambda: (_FakeSource,),
+            meta_dataset=SimpleNamespace(MetaDataset=_FakeMetaDataset),
+        )
 
     def set_experiment(self, name: str) -> None:
         self.experiments.append(name)

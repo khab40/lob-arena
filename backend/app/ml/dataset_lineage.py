@@ -83,22 +83,19 @@ def feature_dataset_inputs(
 def log_dataset_inputs(mlflow: Any, inputs: Iterable[GovernedDatasetInput]) -> None:
     """Log metadata-only MLflow Dataset inputs through stable public MLflow APIs."""
 
-    from mlflow.data import get_registered_sources
-    from mlflow.data.meta_dataset import MetaDataset
-
     for item in inputs:
         source_type = urlsplit(item.source_uri).scheme
         source_class = next(
             (
                 candidate
-                for candidate in get_registered_sources()
+                for candidate in mlflow.data.get_registered_sources()
                 if candidate._get_source_type() == ("local" if source_type == "file" else source_type)
             ),
             None,
         )
         if source_class is None:
             raise RuntimeError(f"MLflow has no registered dataset source for {source_type}://")
-        dataset = MetaDataset(
+        dataset = mlflow.data.meta_dataset.MetaDataset(
             source=source_class(item.source_uri),
             name=item.name,
             digest=mlflow_dataset_digest(item.digest),
