@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.market_data.preparation import NasdaqPreparationRequest, PreparationManifest
+from app.market_data.preparation_checkpoints import CheckpointReference
 from app.market_data.projections import FinalAccessDenialEvidence
 from app.market_data.public_sample import load_source_config
 from app.market_data import tracking as market_tracking
@@ -171,6 +172,11 @@ def test_preparation_run_logs_source_lineage_and_only_governance_artifacts(
             "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
             f"prepared/{source.date.isoformat()}/nasdaq-preparation-lineage"
         ),
+        checkpoint_uri=(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/"
+            f"preparation-checkpoints/{source.date.isoformat()}/nasdaq-preparation-lineage"
+        ),
+        feature_config_sha256="f" * 64,
         mlflow_tracking_uri="http://10.4.0.54:5500",
     )
     preparation = PreparationManifest(
@@ -186,7 +192,27 @@ def test_preparation_run_logs_source_lineage_and_only_governance_artifacts(
         dataset_ids={"AAPL": "a", "MSFT": "m", "NVDA": "n"},
         control_run_ids={"AAPL": "ca", "MSFT": "cm", "NVDA": "cn"},
         campaign_run_ids=tuple(f"campaign-{index}" for index in range(27)),
-        payload_inventory_sha256="f" * 64,
+        checkpoint_binding_sha256="1" * 64,
+        normalized_checkpoint=CheckpointReference(
+            kind="normalized",
+            uri="s3://example/normalized",
+            checkpoint_sha256="2" * 64,
+            payload_inventory_sha256="3" * 64,
+            payload_file_count=3,
+            payload_size_bytes=300,
+        ),
+        comparison_checkpoints=tuple(
+            CheckpointReference(
+                kind="comparison",
+                uri=f"s3://example/comparison-{index}",
+                checkpoint_sha256=f"{index + 4:064x}",
+                payload_inventory_sha256=f"{index + 31:064x}",
+                payload_file_count=2,
+                payload_size_bytes=100,
+            )
+            for index in range(27)
+        ),
+        checkpoint_payload_bytes=3_000,
         created_at=datetime.now(UTC),
     )
     request_path = tmp_path / "request.json"
