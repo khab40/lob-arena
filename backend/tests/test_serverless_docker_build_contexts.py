@@ -42,3 +42,12 @@ def test_runtime_images_exclude_development_dependencies() -> None:
     assert "COPY --from=build /app/dist /dist" in frontend_dockerfile
     assert 'CMD ["npm", "run", "dev"' not in frontend_dockerfile
     assert 'CMD ["pnpm", "run", "dev"' not in frontend_dockerfile
+
+
+def test_jobs_mlflow_dependencies_match_the_locked_compatible_pair() -> None:
+    jobs_requirements = (ROOT / "serverless" / "jobs" / "requirements.txt").read_text(
+        encoding="utf-8"
+    )
+
+    assert "databricks-sdk==0.67.0" in jobs_requirements
+    assert "protobuf>=7.36.1,<8.0.0" in jobs_requirements
