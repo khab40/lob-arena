@@ -34,7 +34,7 @@ from app.ml.lightgbm.g6_campaign import (  # noqa: E402
     complete_g6_campaign,
     derive_confirmation_plan,
     load_g6_plan,
-    plan_receipt,
+    verify_g6_plan,
     write_confirmation_plan,
 )
 from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
@@ -248,63 +248,6 @@ def main(argv: list[str] | None = None) -> int:
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0
-
-
-def verify_g6_plan(
-    *,
-    plan_path: Path,
-    g5_comparison_path: Path,
-    c4_mlflow_evidence_path: Path,
-    experiment_dir: Path,
-    output: Path,
-) -> None:
-    plan = load_g6_plan(plan_path)
-    if sha256_file(c4_mlflow_evidence_path) != plan.c4_mlflow_receipt_sha256:
-        raise ValueError("G6 plan does not match the governed C4 MLflow receipt")
-    g5 = json.loads(g5_comparison_path.read_text(encoding="utf-8"))
-    if sha256_file(g5_comparison_path) != plan.baseline_g5_comparison_sha256:
-        raise ValueError("G6 plan does not match the formal G5 comparison receipt")
-    comparisons = g5.get("comparisons", {})
-    reproducibility = comparisons.get("reproducibility_hash", {})
-    experiment = comparisons.get("experiment_hash", {})
-    if not (
-        g5.get("schema_version") == "lightgbm_wave1_g5_repeat_comparison_v1"
-        and g5.get("status") == "passed"
-        and g5.get("scope") == "governed-cloud-g5"
-        and reproducibility.get("matches") is True
-        and set(reproducibility.get("values", [])) == {plan.baseline_g5_reproducibility_hash}
-        and experiment.get("matches") is True
-        and set(experiment.get("values", [])) == {plan.baseline_g5_experiment_hash}
-    ):
-        raise ValueError("G6 plan requires the formally passed governed G5 comparison")
-    if experiment_dir.exists():
-        raise FileExistsError(f"G6 experiment directory already exists: {experiment_dir}")
-    experiment_dir.mkdir(parents=True)
-    search_configs = []
-    for trial in plan.search_trials():
-        assert trial.experiment is not None
-        path = experiment_dir / f"{trial.trial_id}.json"
-        path.write_bytes(trial.experiment.canonical_bytes())
-        search_configs.append(
-            {
-                "trial_id": trial.trial_id,
-                "run_id": trial.run_id,
-                "random_seed": trial.random_seed,
-                "experiment_path": path.name,
-                "experiment_sha256": sha256_file(path),
-                "experiment_hash": trial.experiment.canonical_hash(),
-            }
-        )
-    receipt = plan_receipt(plan)
-    receipt.update(
-        {
-            "plan_file_sha256": sha256_file(plan_path),
-            "g5_comparison_sha256": sha256_file(g5_comparison_path),
-            "c4_mlflow_receipt_sha256": sha256_file(c4_mlflow_evidence_path),
-            "search_configs": search_configs,
-        }
-    )
-    _write_json_once(output, receipt)
 
 
 def stage_fixture(

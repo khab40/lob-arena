@@ -18,9 +18,13 @@ from app.ml.lightgbm.g6_campaign import (
     seed_stability_gates,
     select_calibration,
     select_model,
+    verify_g6_plan,
 )
-from scripts.lightgbm_wave1 import verify_g6_plan
-from scripts import lightgbm_wave1 as wave1_script
+from app.ml.lightgbm.cloud_contracts import (
+    APPROVED_FIXTURE_FEATURE_RELEASE_SHA256,
+    LightGbmCloudJobRequest,
+    Wave1FixtureInput,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -257,14 +261,21 @@ def test_g6_completion_keeps_all_rejections_and_reaches_the_twenty_job_cap(
         result = tmp_path / trial.trial_id
         result.mkdir()
         experiment = trial.experiment or confirmation_experiments[trial.trial_id]
-        request = wave1_script._request(
+        request = LightGbmCloudJobRequest(
             campaign_id=plan.campaign_id,
             run_id=trial.run_id,
             mode="development",
+            project_id="project-e00g6zvxpr00waz8t3y51k",
+            image="ghcr.io/khab40/lob-arena-jobs@sha256:" + "0" * 64,
             created_at=datetime.now(UTC),
-            result=result / "unused",
+            git_commit="0" * 40,
             experiment=experiment,
-        ).model_copy(update={"random_seed": trial.random_seed})
+            random_seed=trial.random_seed,
+            input=Wave1FixtureInput(
+                feature_release_sha256=APPROVED_FIXTURE_FEATURE_RELEASE_SHA256
+            ),
+            result_uri=(result / "unused").resolve().as_uri(),
+        )
         (result / "request.json").write_bytes(request.canonical_bytes())
         results.append(result)
         collections.append(tmp_path / f"{trial.trial_id}-collection.json")

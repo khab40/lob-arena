@@ -6,16 +6,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Literal
 
-import numpy as np
-import pyarrow.parquet as pq
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import (
     IMMUTABLE_IMAGE_PATTERN,
     LightGbmCloudJobRequest,
     Wave1ExperimentSpec,
 )
-from app.ml.lightgbm.cloud_runner import FrozenCandidate, verify_wave1_result
 from app.ml.lightgbm.contracts import (
     IDENTIFIER_PATTERN,
     GIT_COMMIT_PATTERN,
@@ -23,8 +21,6 @@ from app.ml.lightgbm.contracts import (
     CalibrationManifest,
     LightGbmTrainingRun,
 )
-from app.ml.lightgbm.reproducibility import _canonical_hash, _verified_collection_receipt
-from app.ml.lightgbm.scoring import apply_calibration
 
 
 G6_GROUP_COUNTS = {
@@ -300,6 +296,11 @@ def collect_validation_record(
     expected_seed: int | None = None,
     expected_c4_receipt_sha256: str | None = None,
 ) -> tuple[G6ValidationRecord, Wave1ExperimentSpec]:
+    # The model stack is optional for plan-only governance checks. Import it only
+    # when a completed cloud result is actually being verified.
+    from app.ml.lightgbm.cloud_runner import FrozenCandidate, verify_wave1_result
+    from app.ml.lightgbm.reproducibility import _verified_collection_receipt
+
     run = verify_wave1_result(result)
     request = LightGbmCloudJobRequest.model_validate_json((result / "request.json").read_text(encoding="utf-8"))
     if run.status != "succeeded" or request.mode != "development":
@@ -464,6 +465,11 @@ def _all_family_recalls(
     prediction_path: Path,
     calibration: CalibrationManifest,
 ) -> dict[str, float]:
+    import numpy as np
+    import pyarrow.parquet as pq
+
+    from app.ml.lightgbm.scoring import apply_calibration
+
     table = pq.read_table(
         prediction_path,
         columns=["label", "attack_family", "raw_probability"],
@@ -512,6 +518,70 @@ def plan_receipt(plan: G6CampaignPlan) -> dict[str, object]:
         "search_run_ids": [trial.run_id for trial in plan.search_trials()],
         "confirmation_run_ids": [trial.run_id for trial in plan.confirmation_trials()],
     }
+
+
+def verify_g6_plan(
+    *,
+    plan_path: Path,
+    g5_comparison_path: Path,
+    c4_mlflow_evidence_path: Path,
+    experiment_dir: Path,
+    output: Path,
+) -> None:
+    plan = load_g6_plan(plan_path)
+    if sha256_file(c4_mlflow_evidence_path) != plan.c4_mlflow_receipt_sha256:
+        raise ValueError("G6 plan does not match the governed C4 MLflow receipt")
+    g5 = json.loads(g5_comparison_path.read_text(encoding="utf-8"))
+    if sha256_file(g5_comparison_path) != plan.baseline_g5_comparison_sha256:
+        raise ValueError("G6 plan does not match the formal G5 comparison receipt")
+    comparisons = g5.get("comparisons", {})
+    reproducibility = comparisons.get("reproducibility_hash", {})
+    experiment = comparisons.get("experiment_hash", {})
+    if not (
+        g5.get("schema_version") == "lightgbm_wave1_g5_repeat_comparison_v1"
+        and g5.get("status") == "passed"
+        and g5.get("scope") == "governed-cloud-g5"
+        and reproducibility.get("matches") is True
+        and set(reproducibility.get("values", []))
+        == {plan.baseline_g5_reproducibility_hash}
+        and experiment.get("matches") is True
+        and set(experiment.get("values", [])) == {plan.baseline_g5_experiment_hash}
+    ):
+        raise ValueError("G6 plan requires the formally passed governed G5 comparison")
+    if experiment_dir.exists():
+        raise FileExistsError(f"G6 experiment directory already exists: {experiment_dir}")
+    experiment_dir.mkdir(parents=True)
+    search_configs = []
+    for trial in plan.search_trials():
+        assert trial.experiment is not None
+        path = experiment_dir / f"{trial.trial_id}.json"
+        path.write_bytes(trial.experiment.canonical_bytes())
+        search_configs.append(
+            {
+                "trial_id": trial.trial_id,
+                "run_id": trial.run_id,
+                "random_seed": trial.random_seed,
+                "experiment_path": path.name,
+                "experiment_sha256": sha256_file(path),
+                "experiment_hash": trial.experiment.canonical_hash(),
+            }
+        )
+    receipt = plan_receipt(plan)
+    receipt.update(
+        {
+            "plan_file_sha256": sha256_file(plan_path),
+            "g5_comparison_sha256": sha256_file(g5_comparison_path),
+            "c4_mlflow_receipt_sha256": sha256_file(c4_mlflow_evidence_path),
+            "search_configs": search_configs,
+        }
+    )
+    if output.exists():
+        raise FileExistsError(f"G6 plan receipt already exists: {output}")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(
+        json.dumps(receipt, allow_nan=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def derive_confirmation_plan(
@@ -762,6 +832,3 @@ def complete_g6_campaign(
         "test_fold_accessed": False,
     }
 
-
-def canonical_payload_hash(payload: dict[str, object]) -> str:
-    return _canonical_hash(payload)
