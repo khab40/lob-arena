@@ -348,6 +348,9 @@ def _run_development(
                 tracking_uri=request.mlflow_tracking_uri,
                 dataset_source_uri=_dataset_source_root(request, input_root),
                 cloud_metadata=_cloud_metadata(execution_context),
+                experiment=request.experiment,
+                campaign_id=request.campaign_id,
+                request_run_id=request.run_id,
             )
     metrics = {
         "best_iteration": training.training_manifest.early_stopping.best_iteration,

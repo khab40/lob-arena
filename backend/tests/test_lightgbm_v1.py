@@ -22,6 +22,7 @@ from app.ml.lightgbm.data import (  # noqa: E402
     GovernedFeatureShard,
 )
 from app.ml.lightgbm.detector import LightGbmV1Detector  # noqa: E402
+from app.ml.lightgbm.cloud_contracts import Wave1ExperimentSpec  # noqa: E402
 from app.ml.lightgbm.contracts import (  # noqa: E402
     CalibrationParameters,
     LightGbmV1Hyperparameters,
@@ -51,6 +52,31 @@ from scripts.evaluate_governed_benchmark import (  # noqa: E402
 
 
 CREATED_AT = datetime(2026, 7, 31, 12, 0, tzinfo=UTC)
+
+
+def test_challenge_metrics_include_every_observed_positive_family() -> None:
+    labels = np.array([0, 1, 1, 1], dtype=np.int8)
+    probabilities = np.array([0.1, 0.8, 0.7, 0.6], dtype=np.float64)
+    points = select_operating_points(
+        labels,
+        probabilities,
+        precision_floor=0.5,
+        recall_floor=0.5,
+    )
+    family_masks = {
+        "layering_like": np.array([False, True, False, False]),
+        "quote_stuffing": np.array([False, False, True, False]),
+        "spoofing_like_wall": np.array([False, False, False, True]),
+    }
+
+    metrics = scoring_module._challenge_case_metrics(
+        probabilities,
+        family_masks,
+        points,
+    )
+
+    assert list(metrics) == ["layering_like", "quote_stuffing", "spoofing_like_wall"]
+    assert all(item["positive_rows"] == 1 for item in metrics.values())
 
 
 class _FakeRun:
@@ -423,6 +449,9 @@ def test_complete_lightgbm_v1_release_detector_and_mlflow(
         reliability_bins_path=calibration.reliability_bins_path,
         reliability_diagram_path=calibration.reliability_diagram_path,
         model_path=training.model_path,
+        experiment=Wave1ExperimentSpec(),
+        campaign_id="g6-test-campaign",
+        request_run_id="g6-test-run",
     ) == "run-1"
     assert log_governed_evaluation_run(
         artifact_root=artifact_root,
@@ -436,6 +465,13 @@ def test_complete_lightgbm_v1_release_detector_and_mlflow(
     ) == "run-2"
     assert fake_mlflow.experiments == [DEVELOPMENT_EXPERIMENT, EVALUATION_EXPERIMENT]
     assert fake_mlflow.tags[0]["test_accessed"] == "false"
+    assert fake_mlflow.tags[0]["raw_rows_uploaded_to_mlflow"] == "false"
+    assert fake_mlflow.tags[0]["experiment_hash"]
+    assert fake_mlflow.tags[0]["campaign_id"] == "g6-test-campaign"
+    assert fake_mlflow.tags[0]["request_run_id"] == "g6-test-run"
+    assert fake_mlflow.parameters[0]["operating_mode"] == "balanced"
+    assert fake_mlflow.metrics[0]["mlflow_dataset_input_count"] > 0
+    assert "balanced_family_recall.layering_like" in fake_mlflow.metrics[0]
     assert fake_mlflow.tags[1]["test_accessed"] == "true"
     assert {context for _, context, _ in fake_mlflow.inputs} == {
         "training",

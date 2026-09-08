@@ -924,6 +924,57 @@ trial from the prior ten-Job G6 matrix:
 | Raw/Platt/isotonic calibration | 3 |
 | **G6 total** | **9** |
 
+The canonical matrix is frozen in
+`configs/experiments/lightgbm-wave1/g6-campaign-20260907.json`. The first four
+Jobs are concrete seed-42 search requests:
+
+- `hp-slow`: 120 rounds, learning rate 0.05, eight leaves and 15-round early
+  stopping;
+- `hp-regularized`: 120 rounds, learning rate 0.05, 16 leaves,
+  `min_data_in_leaf=20`, `lambda_l2=1.0` and 15-round early stopping;
+- `ablate-behavior`: the G5 model settings without the predeclared rapid
+  cancel, large-order, wall/layering, replenishment, burst and quote-stuffing
+  feature family; and
+- `ablate-state`: the G5 model settings without the predeclared price, return,
+  book-depth, volatility, liquidity, change, z-score and regime feature family.
+
+The formally closed G5 candidate is retained as the zero-Job anchor in the
+search comparison. Selection uses validation only: an otherwise verified
+candidate is ineligible if calibration worsens both Brier score and expected
+calibration error versus its raw probabilities; eligible candidates are then
+ordered by balanced F1, the minimum recall across every observed positive
+attack family, calibrated Brier score,
+calibrated expected calibration error, validation binary log loss and finally
+the canonical experiment hash. The first two criteria are descending and the
+remaining metric criteria are ascending.
+
+The selected search experiment is mechanically reused for seed 7 and seed
+2027, then for seed-42 raw, Platt and isotonic calibration. These are fixed
+derivations, not new search choices. Seed stability permits maximum ranges of
+0.05 balanced F1, 0.10 minimum per-family recall and 0.05 validation binary
+log loss. Calibration is selected by calibrated Brier score, calibrated expected
+calibration error, balanced F1 and method name. The three calibration Jobs
+must reproduce the same model and raw validation predictions.
+
+Every G6 Job must log one distinct run to the existing private MLflow
+experiment `lob-arena/lightgbm-development`. Each run records the canonical
+hyperparameters, selected/excluded features, training seed, validation loss,
+balanced and constrained operating-point metrics, raw/calibrated Brier and
+expected calibration error, observed attack-family recalls, governed
+artifacts, dataset-input digests, and Nebius runtime/resource metadata. Dataset
+inputs remain metadata-only S3 references tagged
+`raw_rows_uploaded_to_mlflow=false`; repository manifests, hashes and
+collection receipts remain the release authority. The G6 comparator rejects a
+missing or reused MLflow run ID.
+
+`lightgbm_wave1.py g6-plan` binds the matrix to the passed G5 comparison and C4
+MLflow receipt and emits the four search configs. `g6-select-search` verifies
+their cloud collection receipts and emits the five fixed confirmation configs.
+`g6-complete` requires all nine planned run IDs, verifies identity and
+test-isolation gates, retains every rejection and emits the selected candidate
+receipt. `stage_lightgbm_projection.py prepare --random-seed` carries the two
+predeclared non-default seeds into their canonical requests.
+
 No exploratory replacement is permitted. Any additional failure consumes one
 of these nine slots and requires the unstarted portion of the matrix to shrink;
 raising the 20-Job ceiling requires a recorded amendment before submission.

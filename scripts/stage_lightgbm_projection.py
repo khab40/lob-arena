@@ -55,6 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--c4-mlflow-evidence", type=Path, required=True)
     prepare.add_argument("--projection-artifact-root", type=Path, required=True)
     prepare.add_argument("--experiment-config", type=Path, required=True)
+    prepare.add_argument("--random-seed", type=int, default=42)
     prepare.add_argument("--mlflow-tracking-uri", required=True)
     prepare.add_argument("--package", type=Path, required=True)
     prepare.add_argument("--evidence-output", type=Path, required=True)
@@ -76,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
             c4_mlflow_evidence=args.c4_mlflow_evidence,
             projection_artifact_root=args.projection_artifact_root,
             experiment_config=args.experiment_config,
+            random_seed=args.random_seed,
             mlflow_tracking_uri=args.mlflow_tracking_uri,
             package=args.package,
             evidence_output=args.evidence_output,
@@ -102,6 +104,7 @@ def prepare_projection_package(
     c4_mlflow_evidence: Path,
     projection_artifact_root: Path,
     experiment_config: Path,
+    random_seed: int = 42,
     mlflow_tracking_uri: str,
     package: Path,
     evidence_output: Path,
@@ -166,6 +169,7 @@ def prepare_projection_package(
             created_at=datetime.now(UTC),
             git_commit=_git_commit(),
             experiment=experiment,
+            random_seed=random_seed,
             input=Wave1TabularProjectionInput(
                 frozen_root=_cloud_artifact(manifests / "frozen-root.json", staging, "frozen_root"),
                 projection=_cloud_artifact(

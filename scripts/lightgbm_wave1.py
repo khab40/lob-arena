@@ -30,6 +30,13 @@ from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
 )
 from app.ml.lightgbm.cloud_fixture import fixture_hash  # noqa: E402
 from app.ml.lightgbm.cloud_runner import execute_wave1_request, verify_wave1_result  # noqa: E402
+from app.ml.lightgbm.g6_campaign import (  # noqa: E402
+    complete_g6_campaign,
+    derive_confirmation_plan,
+    load_g6_plan,
+    verify_g6_plan,
+    write_confirmation_plan,
+)
 from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     download_s3_release,
@@ -110,6 +117,33 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Exercise comparison logic locally without claiming the cloud G5 gate",
     )
+    g6_plan = subparsers.add_parser(
+        "g6-plan", help="Verify and materialize the fixed nine-Job G6 campaign plan"
+    )
+    g6_plan.add_argument("--plan", type=Path, required=True)
+    g6_plan.add_argument("--g5-comparison", type=Path, required=True)
+    g6_plan.add_argument("--c4-mlflow-evidence", type=Path, required=True)
+    g6_plan.add_argument("--experiment-dir", type=Path, required=True)
+    g6_plan.add_argument("--output", type=Path, required=True)
+    g6_select = subparsers.add_parser(
+        "g6-select-search",
+        help="Select the validation-only G6 search winner and derive fixed confirmation configs",
+    )
+    g6_select.add_argument("--plan", type=Path, required=True)
+    g6_select.add_argument("--baseline-result", type=Path, required=True)
+    g6_select.add_argument("--baseline-collection", type=Path, required=True)
+    g6_select.add_argument("--results", type=Path, nargs=4, required=True)
+    g6_select.add_argument("--collections", type=Path, nargs=4, required=True)
+    g6_select.add_argument("--output-dir", type=Path, required=True)
+    g6_complete = subparsers.add_parser(
+        "g6-complete", help="Verify all nine G6 Jobs and select one validation-only candidate"
+    )
+    g6_complete.add_argument("--plan", type=Path, required=True)
+    g6_complete.add_argument("--baseline-result", type=Path, required=True)
+    g6_complete.add_argument("--baseline-collection", type=Path, required=True)
+    g6_complete.add_argument("--results", type=Path, nargs=9, required=True)
+    g6_complete.add_argument("--collections", type=Path, nargs=9, required=True)
+    g6_complete.add_argument("--output", type=Path, required=True)
     exit_record = subparsers.add_parser("exit-record", help="Assemble a local Wave 1 exit record")
     exit_record.add_argument("--development", type=Path, required=True)
     exit_record.add_argument("--final", type=Path, required=True)
@@ -177,6 +211,40 @@ def main(argv: list[str] | None = None) -> int:
             collections=args.collections,
             allow_fixture_preflight=args.allow_fixture_preflight,
         )
+    elif args.command == "g6-plan":
+        verify_g6_plan(
+            plan_path=args.plan,
+            g5_comparison_path=args.g5_comparison,
+            c4_mlflow_evidence_path=args.c4_mlflow_evidence,
+            experiment_dir=args.experiment_dir,
+            output=args.output,
+        )
+    elif args.command == "g6-select-search":
+        plan = load_g6_plan(args.plan)
+        receipt, experiments = derive_confirmation_plan(
+            plan=plan,
+            baseline_result=args.baseline_result,
+            baseline_collection=args.baseline_collection,
+            search_results=args.results,
+            search_collections=args.collections,
+        )
+        write_confirmation_plan(
+            output_dir=args.output_dir,
+            receipt=receipt,
+            experiments=experiments,
+        )
+    elif args.command == "g6-complete":
+        report = complete_g6_campaign(
+            plan=load_g6_plan(args.plan),
+            baseline_result=args.baseline_result,
+            baseline_collection=args.baseline_collection,
+            results=args.results,
+            collections=args.collections,
+        )
+        _write_json_once(args.output, report)
+        if report["status"] != "passed":
+            failed = ", ".join(name for name, passed in report["gates"].items() if not passed)
+            raise ValueError(f"G6 campaign gates failed: {failed}")
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0

@@ -10,6 +10,7 @@ from app.ml.lightgbm.contracts import (
     LightGbmTrainingRun,
     ModelBundleManifest,
 )
+from app.ml.lightgbm.cloud_contracts import Wave1ExperimentSpec
 from app.ml.lightgbm.artifacts import resolve_verified_artifact
 from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release
 from app.ml.lightgbm.scoring import validate_prediction_parquet
@@ -35,6 +36,9 @@ def log_development_run(
     tracking_uri: str | None = None,
     dataset_source_uri: str | None = None,
     cloud_metadata: dict[str, str | int | float] | None = None,
+    experiment: Wave1ExperimentSpec | None = None,
+    campaign_id: str | None = None,
+    request_run_id: str | None = None,
 ) -> str:
     """Log permitted development evidence without weakening local governance."""
 
@@ -57,6 +61,13 @@ def log_development_run(
     mlflow.set_experiment(DEVELOPMENT_EXPERIMENT)
     with mlflow.start_run(run_name=training.binding.training_run_id) as run:
         tags = _binding_tags(training, governance_state="validation_frozen")
+        tags["raw_rows_uploaded_to_mlflow"] = "false"
+        if experiment is not None:
+            tags["experiment_hash"] = experiment.canonical_hash()
+        if campaign_id is not None:
+            tags["campaign_id"] = campaign_id
+        if request_run_id is not None:
+            tags["request_run_id"] = request_run_id
         cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
         tags.update(cloud_tags)
         mlflow.set_tags(tags)
@@ -67,7 +78,19 @@ def log_development_run(
             "class_weight_strategy": training.class_weights.strategy,
             "base_session_weighting": training.data_policy.base_session_weighting,
             "calibration_method": calibration.parameters.method,
+            "ordered_feature_count": len(training.ordered_feature_columns),
         }
+        if experiment is not None:
+            parameters.update(
+                {
+                    "excluded_features": json.dumps(
+                        list(experiment.excluded_features), separators=(",", ":")
+                    ),
+                    "operating_mode": experiment.operating_mode,
+                    "precision_floor": experiment.precision_floor,
+                    "recall_floor": experiment.recall_floor,
+                }
+            )
         mlflow.log_params(parameters)
         log_dataset_inputs(
             mlflow,
@@ -86,6 +109,7 @@ def log_development_run(
             "raw_expected_calibration_error": calibration.raw_metrics.expected_calibration_error,
             "calibrated_brier_score": calibration.calibrated_metrics.brier_score,
             "calibrated_expected_calibration_error": calibration.calibrated_metrics.expected_calibration_error,
+            "mlflow_dataset_input_count": float(len(training.input_features)),
         }
         for point in calibration.operating_points:
             prefix = point.mode
@@ -98,6 +122,11 @@ def log_development_run(
                 }
             )
         metrics.update(cloud_metrics)
+        validation_metrics = json.loads(validation_metrics_path.read_text(encoding="utf-8"))
+        for family, evidence in validation_metrics.get("challenge_cases", {}).items():
+            recall = evidence.get("recall_by_operating_mode", {}).get("balanced")
+            if isinstance(recall, (int, float)) and not isinstance(recall, bool):
+                metrics[f"balanced_family_recall.{family}"] = float(recall)
         mlflow.log_metrics(metrics)
         for path in (
             training_manifest_path,

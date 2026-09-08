@@ -1,0 +1,231 @@
+{
+  "baseline_g5_campaign_id": "nasdaq-g5-repro-20260906",
+  "baseline_g5_comparison_sha256": "d6209d45027f376ac67d55fd8f1cdf7428b0e635d6f5fc011e45600051aedcb1",
+  "baseline_g5_experiment_hash": "00031cc7852eea22ad3e1576fabb757824e5395b0de19fed0782e441d237b5db",
+  "baseline_g5_reproducibility_hash": "cb76261299dd010d4d482d920e7cbece60140f6f5a24ffaefedcc9b57cadf9e2",
+  "c4_mlflow_receipt_sha256": "c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b",
+  "campaign_id": "nasdaq-g6-development-20260907",
+  "development_job_ceiling": 20,
+  "development_jobs_consumed_before_g6": 11,
+  "failure_replacement_permitted": false,
+  "mlflow_experiment": "lob-arena/lightgbm-development",
+  "mlflow_required": true,
+  "mlflow_tracking_uri": "http://10.4.0.54:5500",
+  "planned_job_count": 9,
+  "raw_rows_uploaded_to_mlflow": false,
+  "schema_version": "lightgbm_wave1_g6_campaign_plan_v1",
+  "selection_policy": {
+    "calibration_order": [
+      "calibrated_brier_asc",
+      "calibrated_ece_asc",
+      "balanced_f1_desc",
+      "calibration_method_asc"
+    ],
+    "eligibility": [
+      "verified_successful_development_result",
+      "test_fold_not_accessed",
+      "calibration_not_worse_on_both_brier_and_ece"
+    ],
+    "input_scope": "validation_only",
+    "model_order": [
+      "balanced_f1_desc",
+      "minimum_family_recall_desc",
+      "calibrated_brier_asc",
+      "calibrated_ece_asc",
+      "validation_binary_logloss_asc",
+      "experiment_hash_asc"
+    ],
+    "schema_version": "lightgbm_wave1_g6_selection_policy_v1",
+    "seed_balanced_f1_max_range": 0.05,
+    "seed_minimum_family_recall_max_range": 0.1,
+    "seed_validation_logloss_max_range": 0.05
+  },
+  "spend_ceiling_usd": 50,
+  "stop_submission_spend_usd": 40,
+  "test_input_permitted": false,
+  "trials": [
+    {
+      "experiment": {
+        "calibration_method": "platt",
+        "early_stopping_rounds": 15,
+        "excluded_features": [],
+        "hyperparameters": {
+          "learning_rate": 0.05,
+          "min_data_in_leaf": 2,
+          "num_boost_round": 120,
+          "num_leaves": 8
+        },
+        "operating_mode": "balanced",
+        "precision_floor": 0.9,
+        "recall_floor": 0.9,
+        "schema_version": "lightgbm_wave1_experiment_spec_v1"
+      },
+      "group": "hyperparameter",
+      "mode": "development",
+      "phase": "search",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-hp-slow-20260907",
+      "trial_id": "hp-slow"
+    },
+    {
+      "experiment": {
+        "calibration_method": "platt",
+        "early_stopping_rounds": 15,
+        "excluded_features": [],
+        "hyperparameters": {
+          "lambda_l2": 1.0,
+          "learning_rate": 0.05,
+          "min_data_in_leaf": 20,
+          "num_boost_round": 120,
+          "num_leaves": 16
+        },
+        "operating_mode": "balanced",
+        "precision_floor": 0.9,
+        "recall_floor": 0.9,
+        "schema_version": "lightgbm_wave1_experiment_spec_v1"
+      },
+      "group": "hyperparameter",
+      "mode": "development",
+      "phase": "search",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-hp-regularized-20260907",
+      "trial_id": "hp-regularized"
+    },
+    {
+      "experiment": {
+        "calibration_method": "platt",
+        "early_stopping_rounds": 10,
+        "excluded_features": [
+          "rapid_cancel_share_short",
+          "large_order_rate_short",
+          "large_order_quantity_share_short",
+          "wall_level_count",
+          "largest_level_share",
+          "wall_side_imbalance",
+          "layering_score",
+          "replenishment_rate_short",
+          "burst_message_share_short",
+          "message_rate_ratio_short_long",
+          "quote_stuffing_score"
+        ],
+        "hyperparameters": {
+          "learning_rate": 0.1,
+          "min_data_in_leaf": 2,
+          "num_boost_round": 60,
+          "num_leaves": 8
+        },
+        "operating_mode": "balanced",
+        "precision_floor": 0.9,
+        "recall_floor": 0.9,
+        "schema_version": "lightgbm_wave1_experiment_spec_v1"
+      },
+      "group": "feature_ablation",
+      "mode": "development",
+      "phase": "search",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-ablate-behavior-20260907",
+      "trial_id": "ablate-behavior"
+    },
+    {
+      "experiment": {
+        "calibration_method": "platt",
+        "early_stopping_rounds": 10,
+        "excluded_features": [
+          "spread",
+          "spread_bps",
+          "mid_price",
+          "microprice",
+          "microprice_mid_delta_bps",
+          "log_return_1",
+          "mid_return_short",
+          "mid_return_long",
+          "bid_depth_top_n",
+          "ask_depth_top_n",
+          "total_depth_top_n",
+          "top_level_depth",
+          "level_count",
+          "depth_imbalance",
+          "queue_imbalance_l1",
+          "realized_volatility_short",
+          "realized_volatility_long",
+          "return_volatility_ratio",
+          "liquidity_score",
+          "amihud_illiquidity_short",
+          "spread_change_short_long",
+          "depth_change_short_long",
+          "imbalance_change_short_long",
+          "spread_zscore_long",
+          "depth_zscore_long",
+          "imbalance_zscore_long",
+          "return_zscore_long",
+          "volatility_regime",
+          "liquidity_regime"
+        ],
+        "hyperparameters": {
+          "learning_rate": 0.1,
+          "min_data_in_leaf": 2,
+          "num_boost_round": 60,
+          "num_leaves": 8
+        },
+        "operating_mode": "balanced",
+        "precision_floor": 0.9,
+        "recall_floor": 0.9,
+        "schema_version": "lightgbm_wave1_experiment_spec_v1"
+      },
+      "group": "feature_ablation",
+      "mode": "development",
+      "phase": "search",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-ablate-state-20260907",
+      "trial_id": "ablate-state"
+    },
+    {
+      "derive_experiment_from": "validation_selected_search_candidate",
+      "group": "seed_stability",
+      "mode": "development",
+      "phase": "confirmation",
+      "random_seed": 7,
+      "run_id": "nasdaq-g6-seed-7-20260907",
+      "trial_id": "seed-7"
+    },
+    {
+      "derive_experiment_from": "validation_selected_search_candidate",
+      "group": "seed_stability",
+      "mode": "development",
+      "phase": "confirmation",
+      "random_seed": 2027,
+      "run_id": "nasdaq-g6-seed-2027-20260907",
+      "trial_id": "seed-2027"
+    },
+    {
+      "calibration_method_override": "raw",
+      "derive_experiment_from": "validation_selected_search_candidate",
+      "group": "calibration",
+      "mode": "development",
+      "phase": "confirmation",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-calibration-raw-20260907",
+      "trial_id": "calibration-raw"
+    },
+    {
+      "calibration_method_override": "platt",
+      "derive_experiment_from": "validation_selected_search_candidate",
+      "group": "calibration",
+      "mode": "development",
+      "phase": "confirmation",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-calibration-platt-20260907",
+      "trial_id": "calibration-platt"
+    },
+    {
+      "calibration_method_override": "isotonic",
+      "derive_experiment_from": "validation_selected_search_candidate",
+      "group": "calibration",
+      "mode": "development",
+      "phase": "confirmation",
+      "random_seed": 42,
+      "run_id": "nasdaq-g6-calibration-isotonic-20260907",
+      "trial_id": "calibration-isotonic"
+    }
+  ]
+}
