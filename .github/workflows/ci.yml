@@ -330,6 +330,9 @@ jobs:
           - name: mlflow
             context: deployments/mlflow
             file: deployments/mlflow/Dockerfile
+          - name: jobs
+            context: .
+            file: serverless/jobs/Dockerfile
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
