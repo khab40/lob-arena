@@ -95,11 +95,29 @@ def _validate_validation_metrics(
     ):
         raise ValueError("LightGBM validation metrics class counts are invalid")
     challenge_cases = payload.get("challenge_cases")
-    if not isinstance(challenge_cases, dict) or set(challenge_cases) != {
-        "liquidity_evaporation",
-        "layering_like",
-    }:
-        raise ValueError("LightGBM validation metrics lack the required challenge cases")
+    if not isinstance(challenge_cases, dict) or not challenge_cases:
+        raise ValueError("LightGBM validation metrics lack observed positive challenge cases")
+    observed_positive_rows = 0
+    for family, metrics in challenge_cases.items():
+        recalls = metrics.get("recall_by_operating_mode", {}) if isinstance(metrics, dict) else {}
+        if (
+            not isinstance(family, str)
+            or not family
+            or not isinstance(metrics, dict)
+            or not isinstance(metrics.get("positive_rows"), int)
+            or metrics["positive_rows"] < 0
+            or set(recalls) != {"high_precision", "balanced", "high_recall"}
+            or any(
+                value is not None
+                and (not isinstance(value, (int, float)) or isinstance(value, bool) or not 0 <= value <= 1)
+                for value in recalls.values()
+            )
+            or (metrics["positive_rows"] > 0 and any(value is None for value in recalls.values()))
+        ):
+            raise ValueError("LightGBM validation challenge-case evidence is invalid")
+        observed_positive_rows += metrics["positive_rows"]
+    if observed_positive_rows < 1:
+        raise ValueError("LightGBM validation metrics lack observed positive challenge cases")
 
 
 def _validate_feature_importance(

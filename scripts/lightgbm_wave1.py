@@ -30,6 +30,13 @@ from app.ml.lightgbm.cloud_contracts import (  # noqa: E402
 )
 from app.ml.lightgbm.cloud_fixture import fixture_hash  # noqa: E402
 from app.ml.lightgbm.cloud_runner import execute_wave1_request, verify_wave1_result  # noqa: E402
+from app.ml.lightgbm.g6_campaign import (  # noqa: E402
+    complete_g6_campaign,
+    derive_confirmation_plan,
+    load_g6_plan,
+    plan_receipt,
+    write_confirmation_plan,
+)
 from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     download_s3_release,
@@ -110,6 +117,33 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Exercise comparison logic locally without claiming the cloud G5 gate",
     )
+    g6_plan = subparsers.add_parser(
+        "g6-plan", help="Verify and materialize the fixed nine-Job G6 campaign plan"
+    )
+    g6_plan.add_argument("--plan", type=Path, required=True)
+    g6_plan.add_argument("--g5-comparison", type=Path, required=True)
+    g6_plan.add_argument("--c4-mlflow-evidence", type=Path, required=True)
+    g6_plan.add_argument("--experiment-dir", type=Path, required=True)
+    g6_plan.add_argument("--output", type=Path, required=True)
+    g6_select = subparsers.add_parser(
+        "g6-select-search",
+        help="Select the validation-only G6 search winner and derive fixed confirmation configs",
+    )
+    g6_select.add_argument("--plan", type=Path, required=True)
+    g6_select.add_argument("--baseline-result", type=Path, required=True)
+    g6_select.add_argument("--baseline-collection", type=Path, required=True)
+    g6_select.add_argument("--results", type=Path, nargs=4, required=True)
+    g6_select.add_argument("--collections", type=Path, nargs=4, required=True)
+    g6_select.add_argument("--output-dir", type=Path, required=True)
+    g6_complete = subparsers.add_parser(
+        "g6-complete", help="Verify all nine G6 Jobs and select one validation-only candidate"
+    )
+    g6_complete.add_argument("--plan", type=Path, required=True)
+    g6_complete.add_argument("--baseline-result", type=Path, required=True)
+    g6_complete.add_argument("--baseline-collection", type=Path, required=True)
+    g6_complete.add_argument("--results", type=Path, nargs=9, required=True)
+    g6_complete.add_argument("--collections", type=Path, nargs=9, required=True)
+    g6_complete.add_argument("--output", type=Path, required=True)
     exit_record = subparsers.add_parser("exit-record", help="Assemble a local Wave 1 exit record")
     exit_record.add_argument("--development", type=Path, required=True)
     exit_record.add_argument("--final", type=Path, required=True)
@@ -177,9 +211,100 @@ def main(argv: list[str] | None = None) -> int:
             collections=args.collections,
             allow_fixture_preflight=args.allow_fixture_preflight,
         )
+    elif args.command == "g6-plan":
+        verify_g6_plan(
+            plan_path=args.plan,
+            g5_comparison_path=args.g5_comparison,
+            c4_mlflow_evidence_path=args.c4_mlflow_evidence,
+            experiment_dir=args.experiment_dir,
+            output=args.output,
+        )
+    elif args.command == "g6-select-search":
+        plan = load_g6_plan(args.plan)
+        receipt, experiments = derive_confirmation_plan(
+            plan=plan,
+            baseline_result=args.baseline_result,
+            baseline_collection=args.baseline_collection,
+            search_results=args.results,
+            search_collections=args.collections,
+        )
+        write_confirmation_plan(
+            output_dir=args.output_dir,
+            receipt=receipt,
+            experiments=experiments,
+        )
+    elif args.command == "g6-complete":
+        report = complete_g6_campaign(
+            plan=load_g6_plan(args.plan),
+            baseline_result=args.baseline_result,
+            baseline_collection=args.baseline_collection,
+            results=args.results,
+            collections=args.collections,
+        )
+        _write_json_once(args.output, report)
+        if report["status"] != "passed":
+            failed = ", ".join(name for name, passed in report["gates"].items() if not passed)
+            raise ValueError(f"G6 campaign gates failed: {failed}")
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0
+
+
+def verify_g6_plan(
+    *,
+    plan_path: Path,
+    g5_comparison_path: Path,
+    c4_mlflow_evidence_path: Path,
+    experiment_dir: Path,
+    output: Path,
+) -> None:
+    plan = load_g6_plan(plan_path)
+    if sha256_file(c4_mlflow_evidence_path) != plan.c4_mlflow_receipt_sha256:
+        raise ValueError("G6 plan does not match the governed C4 MLflow receipt")
+    g5 = json.loads(g5_comparison_path.read_text(encoding="utf-8"))
+    if sha256_file(g5_comparison_path) != plan.baseline_g5_comparison_sha256:
+        raise ValueError("G6 plan does not match the formal G5 comparison receipt")
+    comparisons = g5.get("comparisons", {})
+    reproducibility = comparisons.get("reproducibility_hash", {})
+    experiment = comparisons.get("experiment_hash", {})
+    if not (
+        g5.get("schema_version") == "lightgbm_wave1_g5_repeat_comparison_v1"
+        and g5.get("status") == "passed"
+        and g5.get("scope") == "governed-cloud-g5"
+        and reproducibility.get("matches") is True
+        and set(reproducibility.get("values", [])) == {plan.baseline_g5_reproducibility_hash}
+        and experiment.get("matches") is True
+        and set(experiment.get("values", [])) == {plan.baseline_g5_experiment_hash}
+    ):
+        raise ValueError("G6 plan requires the formally passed governed G5 comparison")
+    if experiment_dir.exists():
+        raise FileExistsError(f"G6 experiment directory already exists: {experiment_dir}")
+    experiment_dir.mkdir(parents=True)
+    search_configs = []
+    for trial in plan.search_trials():
+        assert trial.experiment is not None
+        path = experiment_dir / f"{trial.trial_id}.json"
+        path.write_bytes(trial.experiment.canonical_bytes())
+        search_configs.append(
+            {
+                "trial_id": trial.trial_id,
+                "run_id": trial.run_id,
+                "random_seed": trial.random_seed,
+                "experiment_path": path.name,
+                "experiment_sha256": sha256_file(path),
+                "experiment_hash": trial.experiment.canonical_hash(),
+            }
+        )
+    receipt = plan_receipt(plan)
+    receipt.update(
+        {
+            "plan_file_sha256": sha256_file(plan_path),
+            "g5_comparison_sha256": sha256_file(g5_comparison_path),
+            "c4_mlflow_receipt_sha256": sha256_file(c4_mlflow_evidence_path),
+            "search_configs": search_configs,
+        }
+    )
+    _write_json_once(output, receipt)
 
 
 def stage_fixture(

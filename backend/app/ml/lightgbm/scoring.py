@@ -62,9 +62,6 @@ FEATURE_SCHEMA_ARTIFACT_VERSION = "lightgbm_feature_schema_v1"
 RELIABILITY_BINS_SCHEMA_VERSION = "reliability_bins_v1"
 RELIABILITY_DIAGRAM_SCHEMA_VERSION = "reliability_diagram_svg_v1"
 CONTRIBUTIONS_SCHEMA_VERSION = "lightgbm_feature_contributions_v1"
-CHALLENGE_FAMILIES = ("liquidity_evaporation", "layering_like")
-
-
 PREDICTION_ARROW_SCHEMA = pa.schema(
     [
         pa.field("prediction_row_id", pa.string(), nullable=False),
@@ -187,9 +184,7 @@ def calibrate_validation_predictions(
         writer = pq.ParquetWriter(raw_path, PREDICTION_ARROW_SCHEMA, compression="zstd")
         probability_chunks: list[np.ndarray] = []
         label_chunks: list[np.ndarray] = []
-        family_mask_chunks: dict[str, list[np.ndarray]] = {
-            family: [] for family in CHALLENGE_FAMILIES
-        }
+        family_mask_chunks: dict[str, list[np.ndarray]] = {}
         contribution_totals = np.zeros(len(dataset.ordered_feature_columns), dtype=np.float64)
         observed_rows = 0
         try:
@@ -203,11 +198,24 @@ def calibrate_validation_predictions(
             ):
                 labels = _column_numpy(scored.batch, "label", dtype=np.int8)
                 probability_chunks.append(scored.raw_probabilities)
-                label_chunks.append(labels)
                 family_column = scored.batch.column(
                     scored.batch.schema.get_field_index("attack_family")
                 )
-                for family in CHALLENGE_FAMILIES:
+                family_values = family_column.to_pylist()
+                observed_families = sorted(
+                    {
+                        family
+                        for family, label in zip(family_values, labels, strict=True)
+                        if label == 1 and isinstance(family, str) and family
+                    }
+                )
+                for family in observed_families:
+                    if family not in family_mask_chunks:
+                        family_mask_chunks[family] = [
+                            np.zeros(previous.shape, dtype=np.bool_)
+                            for previous in label_chunks
+                        ]
+                for family in sorted(family_mask_chunks):
                     matches = pc.fill_null(pc.equal(family_column, family), False)
                     family_mask_chunks[family].append(
                         (labels == 1)
@@ -216,6 +224,7 @@ def calibrate_validation_predictions(
                             dtype=np.bool_,
                         )
                     )
+                label_chunks.append(labels)
                 contribution_totals += np.abs(scored.contributions[:, :-1]).sum(axis=0)
                 observed_rows += scored.batch.num_rows
                 writer.write_table(
@@ -1124,7 +1133,7 @@ def _challenge_case_metrics(
     points: tuple[OperatingPoint, ...],
 ) -> dict[str, object]:
     result: dict[str, object] = {}
-    for family in CHALLENGE_FAMILIES:
+    for family in sorted(family_masks):
         mask = family_masks[family]
         result[family] = {
             "positive_rows": int(np.count_nonzero(mask)),

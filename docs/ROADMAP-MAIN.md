@@ -117,6 +117,19 @@ Run the nine remaining experiments:
 - two candidate seed-stability runs; and
 - raw, Platt, and isotonic calibration comparisons.
 
+The fixed matrix, validation-only ordering, seed tolerances and calibration
+gate are now encoded in
+`configs/experiments/lightgbm-wave1/g6-campaign-20260907.json`. Four concrete
+search Jobs run first. Their selected experiment is then mechanically reused
+for the two seed and three calibration Jobs; no result-dependent trial is
+added. The completion comparator requires all nine planned run IDs, matching
+input/image/source identities, verified collection receipts, no test access,
+and retention of every rejected candidate.
+Each Job is also required to produce a distinct run in
+`lob-arena/lightgbm-development` with metadata-only governed dataset inputs,
+validation/detection/calibration metrics, artifacts and cloud resource
+evidence; raw rows are not uploaded to MLflow.
+
 The initial infrastructure-only G5 failure and three successful repeats raised
 consumption from seven to 11 of the separate 20-Job LightGBM development
 ceiling. In accordance with the predeclared failure rule, the unstarted G6
