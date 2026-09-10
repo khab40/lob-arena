@@ -1,11 +1,12 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
-Status: C0-C4 and G5 are complete for the approved four-date corpus.
+Status: C0-C4 and G5-G6 are complete for the approved four-date corpus.
 Development and final projections are independently published and verified,
 the C4 release is indexed in MLflow, and three receipt-bound G5 Jobs passed the
-strict reproducibility comparator.
+strict reproducibility comparator. The fixed nine-Job G6 campaign passed all
+completion gates and selected the validation-only isotonic candidate.
 
-Date: 2026-09-07
+Date: 2026-09-10
 
 ## Decision
 
@@ -593,6 +594,9 @@ expired raw quarantine object without deleting its provenance record.
   matching model, prediction, metric, feature-order and calibration hashes.
 - G6: run the predeclared hyperparameter, feature-ablation, seed-stability and
   calibration matrix on the same frozen train/validation projection.
+- G6 completed within the 20-Job development ceiling: nine distinct MLflow
+  runs passed all 12 gates and selected isotonic calibration without test
+  access.
 - Freeze the candidate using validation only.
 - G8: after signed authorization, evaluate once on the Nasdaq test projection.
 - After the Nasdaq result is frozen, score the LOBSTER challenge without

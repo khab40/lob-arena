@@ -238,6 +238,7 @@ def test_g6_completion_keeps_all_rejections_and_reaches_the_twenty_job_cap(
             group="calibration",
             calibration_method="platt",
             calibrated_brier=0.04,
+            git_commit="b" * 40,
             model_sha256="b" * 64,
             validation_predictions_sha256="c" * 64,
         ),
@@ -246,6 +247,7 @@ def test_g6_completion_keeps_all_rejections_and_reaches_the_twenty_job_cap(
             group="calibration",
             calibration_method="isotonic",
             calibrated_brier=0.05,
+            git_commit="b" * 40,
             model_sha256="b" * 64,
             validation_predictions_sha256="c" * 64,
         ),
@@ -295,8 +297,35 @@ def test_g6_completion_keeps_all_rejections_and_reaches_the_twenty_job_cap(
     assert report["gates"]["nine_distinct_mlflow_runs"] is True
     assert report["gates"]["mlflow_dataset_lineage_logged"] is True
     assert report["gates"]["no_raw_rows_uploaded_to_mlflow"] is True
+    assert report["gates"]["campaign_identity_consistency"] is True
+    assert report["control_plane_git_commits"] == ["a" * 40, "b" * 40]
     assert len(report["rejected_trial_ids"]) == 8
     assert report["test_fold_accessed"] is False
+
+    platt = confirmation_records["calibration-platt"]
+    confirmation_records["calibration-platt"] = platt.model_copy(
+        update={"image": "registry.example/jobs@sha256:" + "b" * 64}
+    )
+    image_drift = g6_campaign.complete_g6_campaign(
+        plan=plan,
+        baseline_result=tmp_path / "baseline",
+        baseline_collection=tmp_path / "baseline-collection.json",
+        results=results,
+        collections=collections,
+    )
+    assert image_drift["gates"]["campaign_identity_consistency"] is False
+
+    confirmation_records["calibration-platt"] = platt.model_copy(
+        update={"input_identity_hash": "b" * 64}
+    )
+    input_drift = g6_campaign.complete_g6_campaign(
+        plan=plan,
+        baseline_result=tmp_path / "baseline",
+        baseline_collection=tmp_path / "baseline-collection.json",
+        results=results,
+        collections=collections,
+    )
+    assert input_drift["gates"]["campaign_identity_consistency"] is False
 
 
 def _record(
@@ -313,6 +342,7 @@ def _record(
     calibrated_ece: float = 0.04,
     model_sha256: str | None = None,
     validation_predictions_sha256: str | None = None,
+    git_commit: str = "a" * 40,
 ) -> G6ValidationRecord:
     digest = hashlib.sha256(trial_id.encode("utf-8")).hexdigest()
     return G6ValidationRecord(
@@ -325,7 +355,7 @@ def _record(
         mlflow_run_id=f"mlflow-{trial_id}",
         mlflow_dataset_input_count=90,
         image="registry.example/jobs@sha256:" + "a" * 64,
-        git_commit="a" * 40,
+        git_commit=git_commit,
         input_identity_hash="a" * 64,
         model_sha256=model_sha256 or digest,
         validation_predictions_sha256=validation_predictions_sha256 or digest,

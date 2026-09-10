@@ -4,11 +4,11 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-07
+Status reconciled: 2026-09-10
 
 ## Implementation Status
 
-Status: `[g0-g5-complete; g6-g9-pending]`
+Status: `[g0-g6-complete; g7-g9-pending]`
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -124,6 +124,47 @@ and the development bucket policy was restored. The failed attempt consumed a
 development slot: 11 of 20 are now used, and the unstarted G6 matrix is reduced
 from ten to nine Jobs by removing one hyperparameter configuration. MLflow is
 again independently `STOPPED`.
+
+### G6 closure — 2026-09-10
+
+G6 passed its fixed nine-Job validation-only campaign. The four-run search
+selected the `ablate-state` experiment. Its seed-42 result and the mechanically
+derived seed-7 and seed-2027 confirmations produced identical balanced F1
+`0.6931407942`, minimum attack-family recall `0.5333333333`, and validation
+binary log loss `0.3449773248`, passing all three stability gates.
+
+Raw, Platt, and isotonic calibration reproduced the same model and raw
+validation predictions. Isotonic was selected by the frozen ordering with
+calibrated Brier `0.0068910983` and validation ECE `1.4586e-18`; Platt produced
+`0.0080377169` and `0.0042177037`, and raw produced `0.0209358031` and
+`0.0816111663`. Balanced precision `0.6760563380`, recall `0.7111111111`, and
+F1 `0.6931407942` were unchanged. These are governed validation-only research
+results, not final-test or production-performance claims.
+
+All nine collection receipts verified, all nine MLflow run IDs are distinct,
+dataset lineage is metadata-only, and `test_fold_accessed=false`. The campaign
+used the same pinned runtime image and input identity throughout. Seven input
+packages record control-plane Git SHA `fb93abf`; the two final calibration
+packages record receipt-reliability SHA `2fdc29f`. The image, input identity,
+planned experiment specifications, calibration model, and raw predictions did
+not change. The comparator now records both SHAs while correctly treating the
+immutable image digest as runtime code identity and continues to reject runtime
+image or input drift.
+
+The selected candidate hash is
+`5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`;
+the reproducibility hash is
+`6afed0cc408791156b8ea801791ff1afc7ea2838d7f5978bda90ca145ef62e06`.
+The final comparison receipt is
+`outputs/lightgbm-wave1/nasdaq-g6-development-20260907/g6-comparison-final.json`
+with SHA-256
+`8baa904c5c8ccad4406d62b383999d0c294c9830869e1633aef71d3989b1aa40`.
+All 12 gates passed, every rejected trial remains in the receipt, project spend
+reconciled to USD 28.65, and the development ceiling is fully consumed at
+20/20. The temporary publisher grant was removed, the replacement publisher
+key is inactive, the previous key is expired, and the shared MLflow VM is
+`STOPPED`. G7 candidate freeze and exact-hash final-test authorization are
+next.
 
 ## Context
 

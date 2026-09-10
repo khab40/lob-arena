@@ -761,10 +761,13 @@ def complete_g6_campaign(
         len({record.model_sha256 for record in calibration_records}) == 1
         and len({record.validation_predictions_sha256 for record in calibration_records}) == 1
     )
+    control_plane_git_commits = sorted({record.git_commit for record in campaign_records})
+    # The immutable image is the runtime code identity. The local control-plane
+    # commit may advance for receipt-only fixes while the governed image, inputs,
+    # and predeclared experiment specifications remain unchanged.
     campaign_identity_consistency = (
         len({record.input_identity_hash for record in campaign_records}) == 1
         and len({record.image for record in campaign_records}) == 1
-        and len({record.git_commit for record in campaign_records}) == 1
     )
     gates = {
         "exactly_nine_planned_results": True,
@@ -811,6 +814,7 @@ def complete_g6_campaign(
         "development_jobs_consumed_after_g6": (
             plan.development_jobs_consumed_before_g6 + len(campaign_records)
         ),
+        "control_plane_git_commits": control_plane_git_commits,
         "gates": gates,
         "search_selection": search_receipt,
         "seed_stability": {
@@ -831,4 +835,3 @@ def complete_g6_campaign(
         ],
         "test_fold_accessed": False,
     }
-

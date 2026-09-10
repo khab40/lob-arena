@@ -273,10 +273,9 @@ def test_s3_download_lists_only_requested_prefix_and_verifies_package(
                 "IsTruncated": truncated,
                 **({"NextContinuationToken": "page-2"} if truncated else {}),
             }
-        if args[:2] == ("s3api", "get-object"):
-            key = args[args.index("--key") + 1]
-            target = Path(args[-1])
-            target.write_bytes((package / key.removeprefix("releases/rel1/staging/")).read_bytes())
+        if args[:2] == ("s3", "sync"):
+            target = Path(args[3])
+            shutil.copytree(package, target, dirs_exist_ok=True)
             return {}
         raise AssertionError(f"unexpected S3 call: {args}")
 
@@ -293,6 +292,8 @@ def test_s3_download_lists_only_requested_prefix_and_verifies_package(
     list_call = list_calls[0]
     assert list_call[list_call.index("--prefix") + 1] == "releases/rel1/staging/"
     assert not any("head-bucket" in call for call in calls)
+    assert sum(call[:2] == ("s3", "sync") for call in calls) == 1
+    assert not any(call[:2] == ("s3api", "get-object") for call in calls)
     verify_complete_result(downloaded)
 
 
@@ -342,6 +343,50 @@ def test_aws_json_classifies_failure_without_exposing_stderr(
 
     assert str(error.value) == "Object Storage command failed with exit code 255 (unsupported_option)"
     assert "SECRET-MUST-NOT-LEAK" not in str(error.value)
+
+
+def test_aws_json_accepts_successful_non_json_sync_output(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(object_storage.shutil, "which", lambda _: "/usr/bin/aws")
+    monkeypatch.setattr(
+        object_storage.subprocess,
+        "run",
+        lambda command, **_kwargs: subprocess.CompletedProcess(
+            command, 0, stdout="download: object\n", stderr=""
+        ),
+    )
+    assert object_storage._aws_json(
+        "https://storage.eu-north1.nebius.cloud", "s3", "sync", "s3://bucket/prefix", "/tmp/x"
+    ) == {}
+    with pytest.raises(RuntimeError, match="invalid JSON"):
+        object_storage._aws_json(
+            "https://storage.eu-north1.nebius.cloud", "s3api", "list-objects-v2"
+        )
+
+
+def test_s3_download_cleans_destination_on_interrupt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    destination = tmp_path / "partial"
+
+    def fake_aws_json(_endpoint_url: str, *args: str) -> dict[str, object]:
+        if args[:2] == ("s3api", "list-objects-v2"):
+            return {
+                "Contents": [{"Key": "releases/rel/staging/SUCCESS", "Size": 1}],
+                "IsTruncated": False,
+            }
+        if args[:2] == ("s3", "sync"):
+            (destination / "partial").write_text("x", encoding="utf-8")
+            raise KeyboardInterrupt
+        raise AssertionError(args)
+
+    monkeypatch.setattr(object_storage, "_aws_json", fake_aws_json)
+    with pytest.raises(KeyboardInterrupt):
+        download_s3_release(
+            "s3://aimada-wave1-dev-e00g6zvxpr00/releases/rel/staging",
+            destination,
+            endpoint_url="https://storage.eu-north1.nebius.cloud",
+        )
+    assert not destination.exists()
 
 
 def test_aws_failure_classifies_single_put_size_limit() -> None:
@@ -1083,6 +1128,7 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
                 stderr="",
             )
         if command[:4] == ["nebius", "ai", "job", "create"]:
+            assert submission.with_name("submission.intent.json").is_file()
             return subprocess.CompletedProcess(
                 command, 0, stdout='{"id":"aijob-tag123"}', stderr=""
             )
@@ -1143,6 +1189,10 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
     assert payload["post_submission_registry_verification"]["resolved_digest"] == (
         f"sha256:{digest_hex}"
     )
+    created_path = submission.with_name("submission.created.json")
+    created = json.loads(created_path.read_text(encoding="utf-8"))
+    assert created["status"] == "CREATED_PENDING_VERIFICATION"
+    assert payload["created_evidence_sha256"] == wave1_script.sha256_file(created_path)
     create_command = next(
         command
         for command in calls
@@ -1150,6 +1200,71 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
     )
     assert submit_script._redacted_command(create_command) == dry_run_payload["command"]
     assert sum(command[:4] == ["docker", "buildx", "imagetools", "inspect"] for command in calls) == 3
+
+
+def test_recovered_job_readback_must_match_full_reviewed_context() -> None:
+    request = LightGbmCloudJobRequest.model_validate(
+        _request(
+            result_uri=(
+                "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
+                "wave1-test/development/wave1-test-development"
+            ),
+            mlflow_tracking_uri="http://10.4.0.54:5500",
+        )
+    )
+    job_id = "aijob-recovered123"
+    secret_selector = "mbsec-EXAMPLEONLY"
+    secret_version = "mbsecver-EXAMPLEONLY"
+    command = [
+        "nebius", "ai", "job", "create",
+        "--env", "AWS_DEFAULT_REGION=eu-north1",
+        "--env-secret", f"AWS_ACCESS_KEY_ID={secret_selector}",
+    ]
+    payload = {
+        "metadata": {
+            "id": job_id,
+            "name": "aimada-recovered",
+            "parent_id": PROJECT_ID,
+            "created_at": "2026-09-08T16:24:39.595820Z",
+        },
+        "spec": {
+            "image": "registry.example/g:abc123",
+            "container_command": "python",
+            "args": "run governed job",
+            "platform": "cpu-d3",
+            "preset": "4vcpu-16gb",
+            "subnet_id": "subnet-test",
+            "timeout": "3600s",
+            "disk": {"size_bytes": str(100 * 1024**3)},
+            "environment_variables": [
+                {"name": "AWS_DEFAULT_REGION", "value": "eu-north1"},
+                {
+                    "name": "AWS_ACCESS_KEY_ID",
+                    "mysterybox_secret": {
+                        "secret_id": secret_selector,
+                        "version_id": secret_version,
+                    },
+                },
+            ],
+        },
+    }
+    arguments = {
+        "job_id": job_id,
+        "job_name": "aimada-recovered",
+        "command": command,
+        "request": request,
+        "deployment_image": "registry.example/g:abc123",
+        "job_args": "run governed job",
+        "subnet_id": "subnet-test",
+    }
+    created_at, observed_image = submit_script._verify_recovered_job_readback(
+        payload, **arguments
+    )
+    assert created_at == datetime(2026, 9, 8, 16, 24, 39, 595820, tzinfo=UTC)
+    assert observed_image == "registry.example/g:abc123"
+    payload["spec"]["args"] = "run another job"  # type: ignore[index]
+    with pytest.raises(SystemExit, match="spec does not match"):
+        submit_script._verify_recovered_job_readback(payload, **arguments)
 
 
 def test_short_tag_workaround_rejects_digest_drift(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1431,6 +1546,77 @@ def test_g4_monitor_reads_live_nebius_disk_size_bytes(tmp_path: Path) -> None:
     evidence = json.loads(output.read_text(encoding="utf-8"))
     assert evidence["status"] == "COMPLETED"
     assert evidence["observed_job_context"]["disk_size_gib"] == 100
+
+
+def test_job_status_prefers_authoritative_top_level_state() -> None:
+    assert wave1_script._extract_job_status(
+        {
+            "status": {"state": "COMPLETED"},
+            "instances": [{"status": {"state": "RUNNING"}}],
+        }
+    ) == "COMPLETED"
+
+
+def test_g4_monitor_uses_server_finish_time_during_delayed_recovery(tmp_path: Path) -> None:
+    submission = tmp_path / "submission.json"
+    submitted_at = datetime(2026, 9, 8, 16, 24, 39, tzinfo=UTC)
+    submission.write_text(
+        json.dumps(
+            {
+                "schema_version": "lightgbm_wave1_g4_submission_v1",
+                "status": "SUBMITTED",
+                "submitted_at": submitted_at.isoformat(),
+                "watchdog_deadline": (submitted_at + timedelta(seconds=900)).isoformat(),
+                "watchdog_seconds": 900,
+                "job_id": "aijob-delayedrecovery",
+                "request_sha256": "0" * 64,
+                "project_id": PROJECT_ID,
+                "image": LOCAL_IMAGE,
+                "resource": {
+                    "platform": "cpu-d3",
+                    "preset": "4vcpu-16gb",
+                    "disk_size_gib": 100,
+                    "timeout_seconds": 3600,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    live_job = {
+        "metadata": {"parent_id": PROJECT_ID},
+        "spec": {
+            "image": LOCAL_IMAGE,
+            "platform": "cpu-d3",
+            "preset": "4vcpu-16gb",
+            "disk": {"size_bytes": str(100 * 1024**3)},
+            "timeout": "3600s",
+        },
+        "status": {
+            "state": "COMPLETED",
+            "finished_at": (submitted_at + timedelta(seconds=318)).isoformat(),
+        },
+        "instances": [{"status": {"state": "RUNNING"}}],
+    }
+    responses = iter(
+        (
+            subprocess.CompletedProcess([], 0, stdout=json.dumps(live_job), stderr=""),
+            subprocess.CompletedProcess([], 0, stdout="training complete\n", stderr=""),
+        )
+    )
+    output = tmp_path / "monitor.json"
+    clock = iter((0.0, 1.0))
+    wave1_script.monitor_g4_job(
+        submission,
+        output,
+        poll_seconds=1,
+        command_runner=lambda *_args, **_kwargs: next(responses),
+        monotonic=lambda: next(clock),
+        sleeper=lambda _seconds: None,
+        wall_clock=lambda: submitted_at + timedelta(hours=5),
+    )
+    evidence = json.loads(output.read_text(encoding="utf-8"))
+    assert evidence["status"] == "COMPLETED"
+    assert evidence["elapsed_seconds"] == 318.0
 
 
 def test_wave1_submitter_rejects_filesystem_mounts(tmp_path: Path) -> None:
