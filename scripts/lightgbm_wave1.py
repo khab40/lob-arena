@@ -537,6 +537,7 @@ def monitor_g4_job(
 
     history: list[dict[str, object]] = []
     terminal_status: str | None = None
+    terminal_elapsed_seconds: float | None = None
     cancellation_requested = False
     observed_context: dict[str, object] | None = None
     while terminal_status is None:
@@ -567,10 +568,22 @@ def monitor_g4_job(
         elif status == "UNKNOWN":
             terminal_status = "STATUS_QUERY_FAILED"
         elif status in {"COMPLETED", "SUCCEEDED"}:
+            finished_at = _extract_job_finished_at(job_payload)
+            if finished_at is not None:
+                terminal_elapsed_seconds = max(
+                    0.0, (finished_at - submitted_at).total_seconds()
+                )
             if observed_context is None:
                 terminal_status = "RESOURCE_EVIDENCE_MISSING"
             else:
-                terminal_status = "COMPLETED" if elapsed <= 900 else "WATCHDOG_BREACHED"
+                effective_elapsed = (
+                    terminal_elapsed_seconds
+                    if terminal_elapsed_seconds is not None
+                    else elapsed
+                )
+                terminal_status = (
+                    "COMPLETED" if effective_elapsed <= 900 else "WATCHDOG_BREACHED"
+                )
         elif status in {"FAILED", "CANCELLED", "CANCELED", "ERROR"}:
             terminal_status = status
         elif elapsed >= 900:
@@ -585,7 +598,11 @@ def monitor_g4_job(
         else:
             sleep(min(poll_seconds, 900 - elapsed))
 
-    elapsed_seconds = elapsed_since_submission()
+    elapsed_seconds = (
+        terminal_elapsed_seconds
+        if terminal_elapsed_seconds is not None
+        else elapsed_since_submission()
+    )
     logs = runner(
         ["nebius", "ai", "job", "logs", job_id, "--since", "1h", "--timestamps"],
         check=False,
@@ -990,6 +1007,12 @@ def _parse_utc_timestamp(value: object, field: str) -> datetime:
 
 
 def _extract_job_status(payload: object) -> str:
+    if isinstance(payload, dict):
+        status = payload.get("status")
+        if isinstance(status, dict):
+            state = status.get("state")
+            if isinstance(state, str):
+                return state.upper().replace("-", "_")
     candidates: list[str] = []
 
     def visit(value: object) -> None:
@@ -1017,6 +1040,21 @@ def _extract_job_status(payload: object) -> str:
         "ERROR",
     }
     return next((status for status in candidates if status in recognized), "UNKNOWN")
+
+
+def _extract_job_finished_at(payload: object) -> datetime | None:
+    if not isinstance(payload, dict):
+        return None
+    status = payload.get("status")
+    if not isinstance(status, dict):
+        return None
+    value = status.get("finished_at")
+    if not isinstance(value, str):
+        return None
+    try:
+        return _parse_utc_timestamp(value, "finished_at")
+    except ValueError:
+        return None
 
 
 def _extract_observed_job_context(payload: object) -> dict[str, object] | None:

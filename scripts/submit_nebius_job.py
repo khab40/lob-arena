@@ -66,6 +66,16 @@ def main() -> None:
         default=os.environ.get("NEBIUS_WAVE1_REVIEWED_DRY_RUN_SHA256"),
     )
     parser.add_argument(
+        "--recover-existing-job-id",
+        default=os.environ.get("NEBIUS_WAVE1_RECOVER_EXISTING_JOB_ID"),
+        help="Recover a governed receipt for an already-created Job after a client interruption.",
+    )
+    parser.add_argument(
+        "--recover-job-readback",
+        type=Path,
+        help="Exact JSON read-back captured out-of-band for --recover-existing-job-id.",
+    )
+    parser.add_argument(
         "--campaign-spend-usd",
         type=float,
         default=(float(value) if (value := os.environ.get("WAVE1_SPEND_TO_DATE_USD")) else None),
@@ -103,6 +113,11 @@ def main() -> None:
         default=os.environ.get("NEBIUS_WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256"),
     )
     args = parser.parse_args()
+
+    if args.recover_job_readback and not args.recover_existing_job_id:
+        raise SystemExit("--recover-job-readback requires --recover-existing-job-id")
+    if args.recover_job_readback and not args.recover_job_readback.is_file():
+        raise SystemExit("--recover-job-readback must be an existing JSON file")
 
     if not args.subnet_id:
         raise SystemExit("NEBIUS_SUBNET_ID or --subnet-id is required")
@@ -278,6 +293,8 @@ def main() -> None:
         raise RuntimeError("review command diverged from the redacted submission command")
     command_sha256 = _canonical_hash(command)
     if args.dry_run:
+        if args.recover_existing_job_id or args.recover_job_readback:
+            raise SystemExit("Job recovery options cannot be used with --dry-run")
         payload = {
             "schema_version": "lightgbm_wave1_g4_dry_run_v1",
             "created_at": datetime.now(UTC).isoformat(),
@@ -308,6 +325,16 @@ def main() -> None:
             raise SystemExit("LightGBM Wave 1 submission requires --evidence-output")
         if args.evidence_output.exists():
             raise SystemExit(f"Wave 1 evidence output already exists: {args.evidence_output}")
+        created_evidence_output = _created_evidence_path(args.evidence_output)
+        if created_evidence_output.exists():
+            raise SystemExit(
+                f"Wave 1 created-Job evidence already exists: {created_evidence_output}"
+            )
+        intent_evidence_output = _intent_evidence_path(args.evidence_output)
+        if intent_evidence_output.exists():
+            raise SystemExit(
+                f"Wave 1 create-intent evidence already exists: {intent_evidence_output}"
+            )
         reviewed = _load_reviewed_dry_run(args.reviewed_dry_run)
         reviewed_sha256 = hashlib.sha256(args.reviewed_dry_run.read_bytes()).hexdigest()
         if args.reviewed_dry_run_sha256 != reviewed_sha256:
@@ -326,7 +353,58 @@ def main() -> None:
             raise SystemExit("reviewed Wave 1 dry run does not match the tag workaround mode")
         _verify_reviewed_registry_evidence(reviewed, registry_verification)
 
-    completed = subprocess.run(command, check=False, text=True, capture_output=True)
+        intent_payload = {
+            "schema_version": "lightgbm_wave1_job_create_intent_v1",
+            "created_at": datetime.now(UTC).isoformat(),
+            "request_sha256": request.canonical_hash(),
+            "command_sha256": command_sha256,
+            "reviewed_dry_run_sha256": reviewed_sha256,
+            "name": args.name,
+            "project_id": request.project_id,
+            "image": request.image,
+            "deployment_image": deployment_image,
+            "short_tag_workaround": short_tag_workaround,
+            "reviewed_command": review_command,
+            "status": "CREATE_REQUESTED",
+            "recovery_job_id": args.recover_existing_job_id,
+            "campaign_spend_usd": args.campaign_spend_usd,
+            "development_jobs_consumed_before_submit": args.development_jobs_consumed,
+            "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
+        }
+        _write_evidence(intent_evidence_output, intent_payload)
+        intent_evidence_sha256 = hashlib.sha256(intent_evidence_output.read_bytes()).hexdigest()
+
+    response_kind = "create_response"
+    execution_command = command
+    completed = None
+    if args.workload == "lightgbm-wave1" and args.recover_job_readback:
+        response_kind = "job_readback_evidence"
+        completed = subprocess.CompletedProcess(
+            ["governed-job-readback"], 0,
+            stdout=args.recover_job_readback.read_text(encoding="utf-8"),
+            stderr="",
+        )
+    elif args.workload == "lightgbm-wave1" and args.recover_existing_job_id:
+        response_kind = "job_readback"
+        execution_command = [
+            "nebius", "ai", "job", "get", args.recover_existing_job_id, "--format", "json"
+        ]
+    if completed is None:
+        try:
+            completed = subprocess.run(
+                execution_command,
+                check=False,
+                text=True,
+                capture_output=True,
+                timeout=120,
+            )
+        except subprocess.TimeoutExpired as exc:
+            if args.workload == "lightgbm-wave1":
+                raise SystemExit(
+                    "Nebius CLI did not return within 120 seconds; preserve the create-intent "
+                    "receipt and recover by exact Job ID with --recover-existing-job-id"
+                ) from exc
+            raise
     if completed.returncode != 0:
         if args.workload == "lightgbm-wave1" and args.evidence_output is not None:
             _write_evidence(
@@ -351,14 +429,67 @@ def main() -> None:
         job_id = _parse_job_id(completed.stdout)
         if job_id is None:
             raise SystemExit("Nebius Job creation response did not contain a canonical Job ID")
-        submitted_at = datetime.now(UTC)
+        recovered_created_at = None
+        if args.recover_existing_job_id:
+            if job_id != args.recover_existing_job_id:
+                raise SystemExit("recovered Nebius Job ID does not match the requested Job ID")
+            try:
+                readback_payload = json.loads(completed.stdout)
+            except ValueError as exc:
+                raise SystemExit("recovered Nebius Job read-back is not valid JSON") from exc
+            recovered_created_at, _ = _verify_recovered_job_readback(
+                readback_payload,
+                job_id=job_id,
+                job_name=args.name,
+                command=command,
+                request=request,
+                deployment_image=deployment_image,
+                job_args=job_args,
+                subnet_id=args.subnet_id,
+            )
+        submitted_at = recovered_created_at or datetime.now(UTC)
+        created_payload = {
+            "schema_version": "lightgbm_wave1_job_created_v1",
+            "created_at": submitted_at.isoformat(),
+            "request_sha256": request.canonical_hash(),
+            "command_sha256": command_sha256,
+            "reviewed_dry_run_sha256": reviewed_sha256,
+            "image": request.image,
+            "deployment_image": deployment_image,
+            "short_tag_workaround": short_tag_workaround,
+            "pre_submission_registry_verification": registry_verification,
+            "job_id": job_id,
+            "status": "CREATED_PENDING_VERIFICATION",
+            "response_sha256": hashlib.sha256(completed.stdout.encode()).hexdigest(),
+            "response_kind": response_kind,
+            "readback_evidence_sha256": (
+                hashlib.sha256(args.recover_job_readback.read_bytes()).hexdigest()
+                if args.recover_job_readback else None
+            ),
+            "recovered": bool(args.recover_existing_job_id),
+            "intent_evidence": intent_evidence_output.name,
+            "intent_evidence_sha256": intent_evidence_sha256,
+            "campaign_spend_usd": args.campaign_spend_usd,
+            "development_jobs_consumed_before_submit": args.development_jobs_consumed,
+            "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
+        }
+        _write_evidence(created_evidence_output, created_payload)
+        created_evidence_sha256 = hashlib.sha256(
+            created_evidence_output.read_bytes()
+        ).hexdigest()
         observed_job_image = None
         post_submission_registry_verification = None
         if short_tag_workaround:
             try:
-                observed_job_image, post_submission_registry_verification = (
-                    _verify_created_short_tag_job(job_id, deployment_image, args.image)
-                )
+                if args.recover_existing_job_id:
+                    observed_job_image = deployment_image
+                    post_submission_registry_verification = _verify_short_tag(
+                        deployment_image, args.image
+                    )
+                else:
+                    observed_job_image, post_submission_registry_verification = (
+                        _verify_created_short_tag_job(job_id, deployment_image, args.image)
+                    )
             except RuntimeError as exc:
                 cancelled = subprocess.run(
                     ["nebius", "ai", "job", "cancel", job_id, "--format", "json"],
@@ -408,6 +539,16 @@ def main() -> None:
             "command_sha256": command_sha256,
             "reviewed_dry_run_sha256": reviewed_sha256,
             "response_sha256": hashlib.sha256(completed.stdout.encode()).hexdigest(),
+            "response_kind": response_kind,
+            "readback_evidence_sha256": (
+                hashlib.sha256(args.recover_job_readback.read_bytes()).hexdigest()
+                if args.recover_job_readback else None
+            ),
+            "recovered": bool(args.recover_existing_job_id),
+            "intent_evidence": intent_evidence_output.name,
+            "intent_evidence_sha256": intent_evidence_sha256,
+            "created_evidence": created_evidence_output.name,
+            "created_evidence_sha256": created_evidence_sha256,
             "campaign_spend_usd": args.campaign_spend_usd,
             "development_jobs_consumed_before_submit": args.development_jobs_consumed,
             "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
@@ -601,6 +742,108 @@ def _parse_job_id(raw: str) -> str | None:
         return found
     match = re.search(r"\baijob-[A-Za-z0-9]+\b", raw)
     return match.group(0) if match else None
+
+
+def _intent_evidence_path(path: Path) -> Path:
+    return path.with_name(f"{path.stem}.intent{path.suffix}")
+
+
+def _created_evidence_path(path: Path) -> Path:
+    return path.with_name(f"{path.stem}.created{path.suffix}")
+
+
+def _verify_recovered_job_readback(
+    payload: object,
+    *,
+    job_id: str,
+    job_name: str,
+    command: list[str],
+    request: LightGbmCloudJobRequest,
+    deployment_image: str,
+    job_args: str,
+    subnet_id: str,
+) -> tuple[datetime, str]:
+    if not isinstance(payload, dict):
+        raise SystemExit("recovered Job read-back must be a JSON object")
+    metadata, spec = payload.get("metadata"), payload.get("spec")
+    if not isinstance(metadata, dict) or not isinstance(spec, dict):
+        raise SystemExit("recovered Job read-back lacks metadata or spec")
+    if (
+        re.fullmatch(r"aijob-[A-Za-z0-9]+", job_id) is None
+        or metadata.get("id") != job_id
+        or metadata.get("name") != job_name
+        or metadata.get("parent_id") != request.project_id
+    ):
+        raise SystemExit("recovered Job metadata does not match the reviewed submission")
+    created_at_raw = metadata.get("created_at")
+    if not isinstance(created_at_raw, str):
+        raise SystemExit("recovered Job read-back lacks server creation time")
+    try:
+        created_at = datetime.fromisoformat(created_at_raw.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise SystemExit("recovered Job server creation time is invalid") from exc
+    if created_at.tzinfo is None or created_at.utcoffset() is None:
+        raise SystemExit("recovered Job server creation time must be timezone-aware")
+    disk = spec.get("disk")
+    if not isinstance(disk, dict):
+        raise SystemExit("recovered Job read-back lacks disk evidence")
+    try:
+        disk_bytes = int(disk.get("size_bytes", -1))
+    except (TypeError, ValueError) as exc:
+        raise SystemExit("recovered Job disk evidence is invalid") from exc
+    expected_spec = {
+        "image": deployment_image,
+        "container_command": "python",
+        "args": job_args,
+        "platform": request.resource.platform,
+        "preset": request.resource.preset,
+        "subnet_id": subnet_id,
+        "timeout": f"{request.resource.timeout_seconds}s",
+    }
+    if any(spec.get(key) != value for key, value in expected_spec.items()):
+        raise SystemExit("recovered Job spec does not match the reviewed submission")
+    if disk_bytes != request.resource.disk_size_gib * 1024**3:
+        raise SystemExit("recovered Job disk size does not match the reviewed submission")
+
+    expected_plain: dict[str, str] = {}
+    expected_secrets: dict[str, str] = {}
+    index = 0
+    while index < len(command) - 1:
+        option, value = command[index], command[index + 1]
+        if option in {"--env", "--env-secret"}:
+            name, separator, binding = value.partition("=")
+            if not separator or name in expected_plain or name in expected_secrets:
+                raise SystemExit("reviewed Job environment is invalid")
+            (expected_plain if option == "--env" else expected_secrets)[name] = binding
+            index += 2
+        else:
+            index += 1
+    observed_plain: dict[str, str] = {}
+    observed_secrets: dict[str, str] = {}
+    environments = spec.get("environment_variables")
+    if not isinstance(environments, list):
+        raise SystemExit("recovered Job read-back lacks environment evidence")
+    for item in environments:
+        if not isinstance(item, dict) or not isinstance(item.get("name"), str):
+            raise SystemExit("recovered Job environment evidence is invalid")
+        name = item["name"]
+        if name in observed_plain or name in observed_secrets:
+            raise SystemExit("recovered Job environment evidence contains duplicates")
+        if isinstance(item.get("value"), str):
+            observed_plain[name] = item["value"]
+            continue
+        secret = item.get("mysterybox_secret")
+        if not isinstance(secret, dict):
+            raise SystemExit("recovered Job secret environment is invalid")
+        secret_id, version_id = secret.get("secret_id"), secret.get("version_id")
+        if not isinstance(secret_id, str) or re.fullmatch(r"mbsec-[A-Za-z0-9]+", secret_id) is None:
+            raise SystemExit("recovered Job secret selector is invalid")
+        if not isinstance(version_id, str) or re.fullmatch(r"mbsecver-[A-Za-z0-9]+", version_id) is None:
+            raise SystemExit("recovered Job secret version is invalid")
+        observed_secrets[name] = secret_id
+    if observed_plain != expected_plain or observed_secrets != expected_secrets:
+        raise SystemExit("recovered Job environment does not match the reviewed submission")
+    return created_at.astimezone(UTC), deployment_image
 
 
 def _redacted_command(command: list[str]) -> list[str]:

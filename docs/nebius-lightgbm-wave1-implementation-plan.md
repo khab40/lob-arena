@@ -1,10 +1,10 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G5 complete; G5 passed every governed reproducibility gate; G6 is next
+Status: G0-G6 complete; G6 selected the validation-only isotonic candidate; G7 is next
 
 Date: 2026-08-26
 
-Status reconciled: 2026-09-07
+Status reconciled: 2026-09-10
 
 ## Outcome
 
@@ -987,6 +987,44 @@ reconcile before continuing.
 **Gate:** one candidate is selected by the predeclared validation policy; all
 rejected candidates remain in the report.
 
+**Complete 2026-09-10.** Nine of nine planned Jobs completed, every collection
+receipt verified, every Job logged a distinct run to
+`lob-arena/lightgbm-development`, and all 12 completion gates passed. The
+search selected `ablate-state`. Seeds 42, 7, and 2027 produced zero spread in
+balanced F1 (`0.6931407942`), minimum family recall (`0.5333333333`), and
+validation binary log loss (`0.3449773248`).
+
+The three calibration Jobs reproduced the same model and raw validation
+predictions. Isotonic won the fixed calibration ordering with calibrated Brier
+`0.0068910983` and validation ECE `1.4586e-18`; Platt produced
+`0.0080377169` and `0.0042177037`, while raw probabilities produced
+`0.0209358031` and `0.0816111663`. Detection was unchanged at balanced
+precision `0.6760563380`, recall `0.7111111111`, and F1 `0.6931407942`.
+These results remain validation-only and do not authorize a final-test or
+production claim.
+
+The selected candidate hash is
+`5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`
+and its reproducibility hash is
+`6afed0cc408791156b8ea801791ff1afc7ea2838d7f5978bda90ca145ef62e06`.
+The final receipt is
+`outputs/lightgbm-wave1/nasdaq-g6-development-20260907/g6-comparison-final.json`
+(SHA-256
+`8baa904c5c8ccad4406d62b383999d0c294c9830869e1633aef71d3989b1aa40`).
+It records `test_fold_accessed=false`, all eight rejected anchors/trials, nine
+distinct MLflow run IDs, and development consumption of 20/20. The temporary
+publisher grant was removed, its replacement key was deactivated, the previous
+key is expired, and the shared MLflow VM is `STOPPED` after evidence capture.
+
+The first completion attempt correctly retained a failed diagnostic because
+the comparator conflated the local package-preparation Git SHA with immutable
+runtime identity. Seven packages were prepared at `fb93abf`; the final two at
+receipt-reliability commit `2fdc29f`. The runtime image digest, dataset input
+identity, planned experiments, and calibration model/raw predictions remained
+identical. The corrected comparator keeps both control-plane SHAs in its
+receipt while using the immutable image plus input identity for the execution
+identity gate; tests still fail closed on runtime or data drift.
+
 ### G7 — Candidate Freeze And Manual Authorization
 
 Codex generates a verified frozen package with the selected hashes, operating
@@ -1079,27 +1117,33 @@ production/client performance claim.
 - [x] G4 cloud smoke passes (attempt 7, 2026-08-26).
 - [x] G5 three-run reproducibility passes (2026-09-07; nine gates and 21
   deterministic fields passed).
-- [ ] G6 development campaign completes within ceilings.
+- [x] G6 development campaign completes within ceilings (2026-09-10; nine
+  Jobs, 12 gates, 20/20 total development slots, isotonic selected).
 - [ ] G7 candidate and final authorization are signed.
 - [ ] G8 one final evaluation verifies.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
   and the G5 status (2026-09-07).
+- [x] Issue #23 and ARD-0035 receive the G6 comparison identity, MLflow-backed
+  result summary, selected candidate, and consumed-slot status (2026-09-10).
 - [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
 
-## Completed Implementation Through G5
+## Completed Implementation Through G6
 
-G1-G5 are complete. They extended the existing Jobs image, renderer, submitter,
+G1-G6 are complete. They extended the existing Jobs image, renderer, submitter,
 orchestrator, evidence archive, MLflow tracking and monitoring; added the
 LightGBM runner, contracts, shared storage hardening and tests; and passed
 without changing the LightGBM algorithm. G3 reused the existing Nebius
 Registry, four governed buckets, three identities and shared MLflow VM. After
 six bounded failures, attempt 7 completed the AWS CLI v1-compatible no-volume
 path and passed every G4 exit gate. G5 then passed three exact-repeat Jobs after
-one infrastructure-only result-publication failure. MLflow is stopped, nine
-development slots remain under the unchanged ceiling, and G6 is next.
+one infrastructure-only result-publication failure. G6 then completed the
+fixed nine-Job matrix, logged nine distinct MLflow runs, passed all completion
+gates, and selected isotonic calibration without accessing the test fold. All
+20 development slots are now consumed; G7 candidate freeze and exact-hash
+authorization are next.
 
 ## Related Documentation
 

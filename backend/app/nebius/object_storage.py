@@ -290,19 +290,17 @@ def download_s3_release(
             target = (destination / relative).resolve()
             if destination not in target.parents:
                 raise ValueError(f"S3 object escapes the staging directory: {key}")
-            target.parent.mkdir(parents=True, exist_ok=True)
-            _aws_json(
-                endpoint_url,
-                "s3api",
-                "get-object",
-                "--bucket",
-                bucket,
-                "--key",
-                key,
-                str(target),
-            )
+        _aws_json(
+            endpoint_url,
+            "s3",
+            "sync",
+            f"s3://{bucket}/{prefix}/",
+            str(destination),
+            "--only-show-errors",
+            "--no-follow-symlinks",
+        )
         return verify_complete_result(destination, limits=limits)
-    except Exception:
+    except BaseException:
         shutil.rmtree(destination, ignore_errors=True)
         raise
 
@@ -941,7 +939,15 @@ def _aws_json(
         raise RuntimeError(
             f"Object Storage command failed with exit code {completed.returncode} ({failure_kind})"
         )
-    return json.loads(completed.stdout or "{}")
+    stdout = completed.stdout.strip()
+    if not stdout:
+        return {}
+    try:
+        return json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        if args[:2] == ("s3", "sync"):
+            return {}
+        raise RuntimeError("Object Storage command returned invalid JSON") from exc
 
 
 def _s3_bucket_prefix(uri: str) -> tuple[str, str]:
