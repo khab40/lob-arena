@@ -1100,13 +1100,33 @@ preflight package. It does not download or stage final rows.
 
 The injected runner executes inside the authorized image and performs gates in
 this order: verify the signed authorization, confirm authenticated MLflow
-health, prove the final result prefix is empty, checksum-download the frozen
+health, atomically claim the exact run intent, checksum-download the frozen
 candidate, then make the first and only download of the sealed C4 final
 release. It joins those inputs only on ephemeral Job disk, runs the existing
 final-evaluation implementation, verifies the model release, records the
 governed-evaluation MLflow run, and publishes `SUCCESS` last. Any failure before
 the final download leaves the test fold untouched; any failure afterward is
 terminal and cannot be retried or tuned.
+
+The first G8 Job attempt, `aijob-e00bf6eaf8wa6eywqb`, failed closed on
+2026-09-12 before candidate or final-release download. Its exact-prefix
+duplicate guard used `ListObjectsV2`, but the governed final identity
+intentionally lacks bucket-list permission. Job logs show the resulting
+`AccessDenied` at that guard immediately after authorization and MLflow
+readiness; the final test fold was not accessed and no evaluation run was
+logged. The recovered submission receipt SHA-256 is
+`fd56f1fc1a4965e9367c04ec18eb7572fd8a72a0f32d3cf19a35bff3edd17bcd`;
+the terminal monitor receipt SHA-256 is
+`c228ae25bca4f2d38c4bb6617ecb3d0db92bfb9f60df2b006b06c5db6547bbef`;
+and the redacted log SHA-256 is
+`7331b30576231301cb60f7ed955b0ed3a6fd2ed5b630769d860dec3a23eb018c`.
+The key was returned to `INACTIVE` and MLflow to `STOPPED`. A follow-up changes
+the guard to one conditional `PutObject` (`If-None-Match: *`) at the
+run's separate `final/.intents/<run_id>.json` key. That requires only the
+already-approved object-editor grant, creates a durable duplicate barrier, and
+does not add an object beneath the checksum-bound result prefix. No further Job
+is authorized by this incident; G8 remains open pending a fresh signed
+authorization.
 
 ### G9 — Cost Reconciliation And Exit
 

@@ -215,6 +215,48 @@ def test_g8_runner_does_not_read_final_when_mlflow_is_unavailable(
     assert downloads == []
 
 
+def test_g8_result_guard_atomically_claims_exact_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    commands: list[list[str]] = []
+
+    def claimed(command: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        return subprocess.CompletedProcess(command, 0, "{}", "")
+
+    monkeypatch.setattr(runner.shutil, "which", lambda _name: "/usr/bin/aws")
+    monkeypatch.setattr(runner.subprocess, "run", claimed)
+    _package, request = _g8_package(tmp_path)
+
+    runner._require_empty_result(request, "https://storage.eu-north1.nebius.cloud")
+
+    assert len(commands) == 1
+    command = commands[0]
+    assert "put-object" in command
+    assert "list-objects-v2" not in command
+    assert "head-object" not in command
+    assert command[command.index("--key") + 1] == (
+        "campaigns/wave1-g8-test/final/.intents/wave1-g8-final.json"
+    )
+    assert command[command.index("--if-none-match") + 1] == "*"
+
+
+def test_g8_result_guard_fails_closed_on_denied_or_existing_intent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _package, request = _g8_package(tmp_path)
+    monkeypatch.setattr(runner.shutil, "which", lambda _name: "/usr/bin/aws")
+    denied = subprocess.CompletedProcess([], 255, "", "AccessDenied")
+    monkeypatch.setattr(runner.subprocess, "run", lambda *_args, **_kwargs: denied)
+    with pytest.raises(RuntimeError, match="could not acquire"):
+        runner._require_empty_result(request, "https://storage.eu-north1.nebius.cloud")
+
+    present = subprocess.CompletedProcess([], 255, "", "PreconditionFailed (412)")
+    monkeypatch.setattr(runner.subprocess, "run", lambda *_args, **_kwargs: present)
+    with pytest.raises(FileExistsError, match="intent already exists"):
+        runner._require_empty_result(request, "https://storage.eu-north1.nebius.cloud")
+
+
 def test_submitter_accepts_g8_only_at_consumed_development_ceiling(tmp_path: Path) -> None:
     package, _request = _g8_package(tmp_path)
     script = Path(__file__).resolve().parents[2] / "scripts" / "submit_nebius_job.py"
