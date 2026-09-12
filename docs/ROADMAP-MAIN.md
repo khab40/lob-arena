@@ -10,7 +10,7 @@ deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
 
-`G7-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
+`G8-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
 
@@ -39,6 +39,21 @@ Critical path:
   development consumption of 20/20. No additional development Job is allowed;
   the temporary publisher grant is removed and MLflow is `STOPPED` between
   experiment windows.
+- G7 passed on 2026-09-12. The validation-selected isotonic candidate
+  `5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`
+  was frozen without test access, and the operator supplied the exact-hash
+  final-test authorization. Verification reports `authorized`,
+  `signature_verified=true`, and `final_identity_available=true`.
+- The G7 freeze receipt SHA-256 is
+  `232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc`.
+  The outer authorization receipt SHA-256 is
+  `b0b6cee7fce8db3618cdaeb905ec7588d57a94985ef3823215664da4ce8ceed6`;
+  it binds signed-content SHA-256
+  `dcf056eba18cd95169f3caade2f7d1c2285e1b49b94e2a9ab353bb74f1233db0`,
+  signature SHA-256
+  `a012abb5948b3cf058c77fd9336f5a81eaaa0b2c2782aab653d9ba3dbf3005ea`,
+  and trusted public-key SHA-256
+  `a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
 - GitHub Project #3 contains 74 items. Seven dated repository milestones now
   cover the active critical path from the corpus freeze through final CEO-demo
   acceptance.
@@ -161,12 +176,13 @@ runtime image and dataset identity match across the campaign. Two recorded
 control-plane Git SHAs reflect the receipt-reliability fix applied before the
 last two packages; the runtime image, inputs, experiment specifications, model,
 and raw calibration predictions did not change. The original fail-closed
-diagnostic is retained separately from the passing final receipt. G7 is next.
+diagnostic is retained separately from the passing final receipt.
 
 ### G7-G9
 
-- G7: freeze the validation-selected candidate and obtain exact-hash final-test
-  authorization.
+- G7: complete. The validation-selected candidate is checksum-frozen, the
+  exact-hash operator statement is signed, and independent verification exposes
+  the final identity without reading the test fold.
 - G8: run the final test exactly once.
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
@@ -262,13 +278,13 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Reconciled on **2026-09-10**:
+Reconciled on **2026-09-12**:
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
   the frozen four-date forward corpus, and its governed release evidence.
-- [#23](https://github.com/khab40/lob-arena/issues/23) records the completed G5
-  and G6 comparisons, the 20/20 consumed-slot reconciliation, the selected
-  validation-only isotonic candidate, and the G7-G9 remainder.
+- [#23](https://github.com/khab40/lob-arena/issues/23) records the completed
+  G5-G7 evidence, the 20/20 consumed-slot reconciliation, the selected and
+  authorized validation-only isotonic candidate, and the G8-G9 remainder.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),

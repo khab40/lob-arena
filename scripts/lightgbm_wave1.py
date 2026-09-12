@@ -37,6 +37,12 @@ from app.ml.lightgbm.g6_campaign import (  # noqa: E402
     verify_g6_plan,
     write_confirmation_plan,
 )
+from app.ml.lightgbm.g7_candidate import (  # noqa: E402
+    authorize_g7_candidate,
+    create_g7_candidate_freeze,
+    load_g7_authorization,
+    load_g7_candidate_freeze,
+)
 from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     download_s3_release,
@@ -144,6 +150,27 @@ def main(argv: list[str] | None = None) -> int:
     g6_complete.add_argument("--results", type=Path, nargs=9, required=True)
     g6_complete.add_argument("--collections", type=Path, nargs=9, required=True)
     g6_complete.add_argument("--output", type=Path, required=True)
+    g7_freeze = subparsers.add_parser(
+        "g7-freeze", help="Freeze the validation-selected G6 candidate and emit its approval challenge"
+    )
+    g7_freeze.add_argument("--g6-comparison", type=Path, required=True)
+    g7_freeze.add_argument("--selected-result", type=Path, required=True)
+    g7_freeze.add_argument("--selected-collection", type=Path, required=True)
+    g7_freeze.add_argument("--selected-monitor", type=Path, required=True)
+    g7_freeze.add_argument("--predicted-final-runtime-seconds", type=float, required=True)
+    g7_freeze.add_argument("--predicted-final-cost-usd", type=float, required=True)
+    g7_freeze.add_argument("--output", type=Path, required=True)
+    g7_authorize = subparsers.add_parser(
+        "g7-authorize", help="Verify the exact operator statement and sign the G7 authorization"
+    )
+    g7_authorize.add_argument("--freeze", type=Path, required=True)
+    g7_authorize.add_argument("--approval-statement", required=True)
+    g7_authorize.add_argument("--output", type=Path, required=True)
+    g7_verify = subparsers.add_parser(
+        "g7-verify", help="Verify a frozen G7 candidate and optional signed authorization"
+    )
+    g7_verify.add_argument("--freeze", type=Path, required=True)
+    g7_verify.add_argument("--authorization", type=Path)
     exit_record = subparsers.add_parser("exit-record", help="Assemble a local Wave 1 exit record")
     exit_record.add_argument("--development", type=Path, required=True)
     exit_record.add_argument("--final", type=Path, required=True)
@@ -245,6 +272,49 @@ def main(argv: list[str] | None = None) -> int:
         if report["status"] != "passed":
             failed = ", ".join(name for name, passed in report["gates"].items() if not passed)
             raise ValueError(f"G6 campaign gates failed: {failed}")
+    elif args.command == "g7-freeze":
+        freeze = create_g7_candidate_freeze(
+            g6_comparison_path=args.g6_comparison,
+            selected_result=args.selected_result,
+            selected_collection_path=args.selected_collection,
+            selected_monitor_path=args.selected_monitor,
+            output=args.output,
+            tool_git_commit=_git_commit(),
+            created_at=datetime.now(UTC),
+            predicted_final_runtime_seconds=args.predicted_final_runtime_seconds,
+            predicted_final_cost_usd=args.predicted_final_cost_usd,
+        )
+        print(freeze.model_dump_json(indent=2))
+    elif args.command == "g7-authorize":
+        receipt = authorize_g7_candidate(
+            freeze_root=args.freeze,
+            approval_statement=args.approval_statement,
+            output=args.output,
+        )
+        print(receipt.model_dump_json(indent=2))
+    elif args.command == "g7-verify":
+        freeze = load_g7_candidate_freeze(args.freeze)
+        authorization = (
+            load_g7_authorization(args.authorization) if args.authorization else None
+        )
+        if authorization and (
+            authorization.candidate_hash != freeze.candidate_hash
+            or authorization.freeze_receipt_sha256
+            != sha256_file(args.freeze / "g7-candidate-freeze.json")
+        ):
+            raise ValueError("G7 authorization does not bind the verified candidate freeze")
+        print(
+            json.dumps(
+                {
+                    "status": "authorized" if authorization else freeze.status,
+                    "candidate_hash": freeze.candidate_hash,
+                    "signature_verified": bool(authorization),
+                    "final_identity_available": bool(authorization),
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0
