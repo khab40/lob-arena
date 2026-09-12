@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
@@ -16,16 +16,13 @@ from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import (
     CloudArtifact,
     LightGbmCloudJobRequest,
+    Wave1ExperimentSpec,
     Wave1TabularProjectionInput,
 )
-from app.ml.lightgbm.cloud_runner import FrozenCandidate
-from app.ml.lightgbm.g7_candidate import (
-    G7AuthorizationReceipt,
-    G7CandidateFreeze,
-    load_g7_authorization,
-    load_g7_candidate_freeze,
-)
 from app.nebius.object_storage import inventory_directory, verify_complete_result, write_checksum_file
+
+if TYPE_CHECKING:
+    from app.ml.lightgbm.g7_candidate import G7AuthorizationReceipt, G7CandidateFreeze
 
 
 PROJECT_ID = "project-e00g6zvxpr00waz8t3y51k"
@@ -44,6 +41,23 @@ DEVELOPMENT_RESULT_PATTERN = re.compile(
 
 class _StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class _FrozenCandidateMetadata(_StrictModel):
+    schema_version: Literal["lightgbm_wave1_candidate_v1"] = (
+        "lightgbm_wave1_candidate_v1"
+    )
+    campaign_id: str
+    experiment: Wave1ExperimentSpec
+    reproducibility_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
+    training_manifest: CloudArtifact
+    calibration_manifest: CloudArtifact
+    validation_metrics: CloudArtifact
+    feature_importance: CloudArtifact
+    feature_schema: CloudArtifact
+    reliability_bins: CloudArtifact
+    reliability_diagram: CloudArtifact
+    test_fold_accessed: bool = False
 
 
 class G8InjectedFile(_StrictModel):
@@ -119,6 +133,11 @@ def prepare_g8_preflight(
     tool_git_commit: str,
     created_at: datetime | None = None,
 ) -> G8PreflightReceipt:
+    from app.ml.lightgbm.g7_candidate import (
+        load_g7_authorization,
+        load_g7_candidate_freeze,
+    )
+
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", run_id) is None:
         raise ValueError("G8 run ID must be canonical")
     if output.exists():
@@ -155,7 +174,9 @@ def prepare_g8_preflight(
         raise ValueError("G8 final publication hashes do not match the C4 MLflow receipt")
 
     candidate_path = freeze_root / freeze.candidate.uri
-    candidate = FrozenCandidate.model_validate_json(candidate_path.read_text(encoding="utf-8"))
+    candidate = _FrozenCandidateMetadata.model_validate_json(
+        candidate_path.read_text(encoding="utf-8")
+    )
     candidate_request = LightGbmCloudJobRequest.model_validate_json(
         (freeze_root / "candidate" / "request.json").read_text(encoding="utf-8")
     )

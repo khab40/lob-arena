@@ -10,6 +10,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytest.importorskip("lightgbm", reason="Wave 1 G8 tests require the ml extra")
+
 from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import (
     CloudArtifact,
