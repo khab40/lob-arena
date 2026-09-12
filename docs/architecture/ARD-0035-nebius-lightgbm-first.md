@@ -214,6 +214,15 @@ bucket-root list operations. Job credentials are separate MysteryBox-injected
 environment values, and input/output bytes live only on ephemeral job disk
 during execution.
 
+For G8, the signed request, authorization, public key, metadata-only C4 lineage
+receipt, and a checksum-bound orchestration runner are injected as small
+read-only Job files. The authorized, unchanged image first verifies those
+files, MLflow health, and an empty result prefix; it then downloads the selected
+candidate from the development-results lane and reads the sealed C4 final
+release exactly once. The join exists only on ephemeral Job disk. This avoids a
+second mutable final-data package and does not rebuild the image authorized in
+G7.
+
 The first cloud wave freezes one corpus/split/feature identity before tuning.
 Development runs may use train and validation only. After thresholds and
 operating modes are frozen, one governed evaluation run may inspect the final

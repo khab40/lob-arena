@@ -43,6 +43,11 @@ from app.ml.lightgbm.g7_candidate import (  # noqa: E402
     load_g7_authorization,
     load_g7_candidate_freeze,
 )
+from app.ml.lightgbm.g8_evaluation import (  # noqa: E402
+    git_commit as g8_git_commit,
+    prepare_g8_preflight,
+    verify_g8_preflight,
+)
 from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     download_s3_release,
@@ -171,6 +176,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     g7_verify.add_argument("--freeze", type=Path, required=True)
     g7_verify.add_argument("--authorization", type=Path)
+    g8_prepare = subparsers.add_parser(
+        "g8-prepare", help="Prepare the sealed inputs for exactly one G8 final submission"
+    )
+    g8_prepare.add_argument("--freeze", type=Path, required=True)
+    g8_prepare.add_argument("--authorization", type=Path, required=True)
+    g8_prepare.add_argument("--final-publication-evidence", type=Path, required=True)
+    g8_prepare.add_argument("--c4-mlflow-evidence", type=Path, required=True)
+    g8_prepare.add_argument(
+        "--runner",
+        type=Path,
+        default=ROOT / "serverless" / "jobs" / "run_lightgbm_g8.py",
+    )
+    g8_prepare.add_argument("--run-id", required=True)
+    g8_prepare.add_argument("--output", type=Path, required=True)
+    g8_verify = subparsers.add_parser(
+        "g8-verify", help="Verify an immutable G8 preflight package without test access"
+    )
+    g8_verify.add_argument("--preflight", type=Path, required=True)
     exit_record = subparsers.add_parser("exit-record", help="Assemble a local Wave 1 exit record")
     exit_record.add_argument("--development", type=Path, required=True)
     exit_record.add_argument("--final", type=Path, required=True)
@@ -315,6 +338,20 @@ def main(argv: list[str] | None = None) -> int:
                 sort_keys=True,
             )
         )
+    elif args.command == "g8-prepare":
+        receipt = prepare_g8_preflight(
+            freeze_root=args.freeze,
+            authorization_root=args.authorization,
+            final_publication_evidence=args.final_publication_evidence,
+            c4_mlflow_evidence=args.c4_mlflow_evidence,
+            runner=args.runner,
+            run_id=args.run_id,
+            output=args.output,
+            tool_git_commit=g8_git_commit(ROOT),
+        )
+        print(receipt.model_dump_json(indent=2))
+    elif args.command == "g8-verify":
+        print(verify_g8_preflight(args.preflight).model_dump_json(indent=2))
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0
