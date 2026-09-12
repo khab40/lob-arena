@@ -1042,6 +1042,26 @@ informal approval is invalid.
 
 **Gate:** final identity remains unavailable until authorization verifies.
 
+The repository implements this transition as three fail-closed commands:
+
+- `lightgbm_wave1.py g7-freeze` re-verifies the passed G6 comparison, selected
+  result, collection and monitor receipts; copies the checksum-bound candidate;
+  records its image, model, experiment, calibration, operating threshold,
+  validation metrics, conservative final runtime/cost estimate and 20/20
+  development consumption; and emits the one exact approval challenge.
+- `lightgbm_wave1.py g7-authorize` accepts only that byte-for-byte statement,
+  exact candidate hash and canonical timezone-aware operator timestamp; creates
+  an Ed25519 authorization with an ephemeral private key; verifies the
+  signature; and records the trusted public-key hash. It cannot create an
+  output after silence, an informal statement or a different candidate hash.
+- `lightgbm_wave1.py g7-verify` replays candidate checksums and, when present,
+  authorization integrity and signature binding before exposing
+  `final_identity_available=true`.
+
+G7 is a governance transition, not a model experiment, so it does not start
+MLflow or create an experiment run. The verified G8 evaluation logs to MLflow
+only after the one authorized final release passes its local integrity gates.
+
 ### G8 — One Final Evaluation
 
 Operator uses the final identity to submit the digest-pinned command exactly
