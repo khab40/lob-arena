@@ -1,10 +1,10 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G6 complete; G6 selected the validation-only isotonic candidate; G7 is next
+Status: G0-G7 complete; the validation-only isotonic candidate is frozen and authorized; G8 is next
 
 Date: 2026-08-26
 
-Status reconciled: 2026-09-10
+Status reconciled: 2026-09-12
 
 ## Outcome
 
@@ -1062,6 +1062,22 @@ G7 is a governance transition, not a model experiment, so it does not start
 MLflow or create an experiment run. The verified G8 evaluation logs to MLflow
 only after the one authorized final release passes its local integrity gates.
 
+G7 completed on 2026-09-12 for candidate
+`5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`.
+The freeze receipt SHA-256 is
+`232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc`.
+The exact operator statement produced outer authorization receipt SHA-256
+`b0b6cee7fce8db3618cdaeb905ec7588d57a94985ef3823215664da4ce8ceed6`,
+which binds signed-content SHA-256
+`dcf056eba18cd95169f3caade2f7d1c2285e1b49b94e2a9ab353bb74f1233db0`,
+signature SHA-256
+`a012abb5948b3cf058c77fd9336f5a81eaaa0b2c2782aab653d9ba3dbf3005ea`,
+and trusted public-key SHA-256
+`a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
+Independent replay returned `authorized`, `signature_verified=true`, and
+`final_identity_available=true`; the freeze still records
+`test_fold_accessed=false`. G8 has not started.
+
 ### G8 — One Final Evaluation
 
 Operator uses the final identity to submit the digest-pinned command exactly
@@ -1139,20 +1155,23 @@ production/client performance claim.
   deterministic fields passed).
 - [x] G6 development campaign completes within ceilings (2026-09-10; nine
   Jobs, 12 gates, 20/20 total development slots, isotonic selected).
-- [ ] G7 candidate and final authorization are signed.
+- [x] G7 candidate and final authorization are signed (2026-09-12; exact-hash
+  authorization verified, final identity available, no test access).
 - [ ] G8 one final evaluation verifies.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
   and the G5 status (2026-09-07).
 - [x] Issue #23 and ARD-0035 receive the G6 comparison identity, MLflow-backed
   result summary, selected candidate, and consumed-slot status (2026-09-10).
+- [x] Issue #23 and ARD-0035 receive the G7 freeze and signed-authorization
+  receipt identities (2026-09-12).
 - [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
 
-## Completed Implementation Through G6
+## Completed Implementation Through G7
 
-G1-G6 are complete. They extended the existing Jobs image, renderer, submitter,
+G1-G7 are complete. They extended the existing Jobs image, renderer, submitter,
 orchestrator, evidence archive, MLflow tracking and monitoring; added the
 LightGBM runner, contracts, shared storage hardening and tests; and passed
 without changing the LightGBM algorithm. G3 reused the existing Nebius
@@ -1162,8 +1181,9 @@ path and passed every G4 exit gate. G5 then passed three exact-repeat Jobs after
 one infrastructure-only result-publication failure. G6 then completed the
 fixed nine-Job matrix, logged nine distinct MLflow runs, passed all completion
 gates, and selected isotonic calibration without accessing the test fold. All
-20 development slots are now consumed; G7 candidate freeze and exact-hash
-authorization are next.
+20 development slots are now consumed. G7 then checksum-froze that exact
+candidate and verified the signed, exact-hash authorization without starting
+MLflow or exposing the test fold. G8's one final evaluation is next.
 
 ## Related Documentation
 

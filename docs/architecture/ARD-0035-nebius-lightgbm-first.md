@@ -163,8 +163,24 @@ All 12 gates passed, every rejected trial remains in the receipt, project spend
 reconciled to USD 28.65, and the development ceiling is fully consumed at
 20/20. The temporary publisher grant was removed, the replacement publisher
 key is inactive, the previous key is expired, and the shared MLflow VM is
-`STOPPED`. G7 candidate freeze and exact-hash final-test authorization are
-next.
+`STOPPED`.
+
+G7 completed on 2026-09-12 without test access. Candidate
+`5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`
+is bound to freeze receipt SHA-256
+`232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc`.
+The exact-hash operator statement is recorded in outer authorization receipt
+SHA-256
+`b0b6cee7fce8db3618cdaeb905ec7588d57a94985ef3823215664da4ce8ceed6`,
+binding signed-content SHA-256
+`dcf056eba18cd95169f3caade2f7d1c2285e1b49b94e2a9ab353bb74f1233db0`,
+signature SHA-256
+`a012abb5948b3cf058c77fd9336f5a81eaaa0b2c2782aab653d9ba3dbf3005ea`,
+and trusted public-key SHA-256
+`a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
+Independent verification reports `authorized`, `signature_verified=true`, and
+`final_identity_available=true`. G8's one final evaluation is next; MLflow
+remains stopped until that verified experiment window.
 
 ## Context
 
