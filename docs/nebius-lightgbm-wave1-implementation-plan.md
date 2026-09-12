@@ -1092,6 +1092,22 @@ authorization. If test bytes were read, there is no retry or further tuning.
 same observations; no post-test change occurs; MLflow governed-evaluation is
 logged only after verification.
 
+The G8 control plane preserves the already authorized image digest. A local
+`g8-prepare` command binds the G7 freeze and signature, C4 final-publication
+receipt, metadata-only C4 MLflow receipt, selected development-result URI,
+exact result prefix, and the small injected runner files into one immutable
+preflight package. It does not download or stage final rows.
+
+The injected runner executes inside the authorized image and performs gates in
+this order: verify the signed authorization, confirm authenticated MLflow
+health, prove the final result prefix is empty, checksum-download the frozen
+candidate, then make the first and only download of the sealed C4 final
+release. It joins those inputs only on ephemeral Job disk, runs the existing
+final-evaluation implementation, verifies the model release, records the
+governed-evaluation MLflow run, and publishes `SUCCESS` last. Any failure before
+the final download leaves the test fold untouched; any failure afterward is
+terminal and cannot be retried or tuned.
+
 ### G9 — Cost Reconciliation And Exit
 
 Operator exports the campaign's Nebius Billing usage with sensitive tenant

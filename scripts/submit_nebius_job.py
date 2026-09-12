@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest  # noqa: E402
+from app.ml.lightgbm.g8_evaluation import verify_g8_preflight  # noqa: E402
 from app.nebius.object_storage import verify_complete_result  # noqa: E402
 
 
@@ -133,6 +134,11 @@ def main() -> None:
         raise SystemExit("inline Object Storage credentials are forbidden; use MysteryBox secret IDs")
     if args.workload == "lightgbm-wave1":
         request = _load_wave1_request(args.request_evidence, args.input_uri)
+        g8_preflight = (
+            verify_g8_preflight(args.request_evidence.parent)
+            if request.mode == "final-evaluation" and args.request_evidence is not None
+            else None
+        )
         if request.mode in {"development", "final-evaluation"} and request.mlflow_tracking_uri is None:
             raise SystemExit("LightGBM Wave 1 cloud request requires an MLflow tracking URI")
         if (
@@ -141,11 +147,15 @@ def main() -> None:
             or not 0 <= args.campaign_spend_usd < 40
         ):
             raise SystemExit("LightGBM Wave 1 submission requires reconciled campaign spend below USD 40")
-        if (
-            args.development_jobs_consumed is None
-            or not 0 <= args.development_jobs_consumed < 20
+        if args.development_jobs_consumed is None or (
+            request.mode == "development"
+            and not 0 <= args.development_jobs_consumed < 20
+        ) or (
+            request.mode == "final-evaluation" and args.development_jobs_consumed != 20
         ):
-            raise SystemExit("LightGBM Wave 1 requires a reconciled development Job count below 20")
+            raise SystemExit(
+                "LightGBM Wave 1 requires the exact reconciled development Job count"
+            )
         if re.fullmatch(r".+@sha256:[0-9a-f]{64}", args.image) is None:
             raise SystemExit("LightGBM Wave 1 requires an immutable image digest")
         if request.image != args.image:
@@ -191,14 +201,34 @@ def main() -> None:
             r"[0-9a-f]{64}", args.trusted_authorization_public_key_sha256 or ""
         ) is None:
             raise SystemExit("final evaluation requires a trusted authorization public-key SHA-256")
+        if request.mode == "final-evaluation" and (
+            g8_preflight is None
+            or g8_preflight.trusted_authorization_public_key_sha256
+            != args.trusted_authorization_public_key_sha256
+        ):
+            raise SystemExit("final evaluation trusted key does not match G8 preflight")
         if os.environ.get("NEBIUS_VOLUME"):
             raise SystemExit("NEBIUS_VOLUME is forbidden for LightGBM Wave 1; use S3 API staging")
-        job_args = (
-            f"/job/serverless/jobs/run_lightgbm_wave1.py run-s3 --input-uri {args.input_uri} "
-            f"--work-root {args.work_root} --endpoint-url {args.s3_endpoint_url}"
-        )
+        if request.mode == "final-evaluation":
+            job_args = (
+                "/job/g8/run_lightgbm_g8.py "
+                "--request /job/g8/request.json "
+                "--authorization /job/g8/authorization/authorization.json "
+                "--authorization-signature /job/g8/authorization/authorization.sig "
+                "--authorization-public-key /job/g8/authorization/authorization-public.pem "
+                "--dataset-lineage /job/g8/manifests/c4-mlflow-dataset-release.json "
+                f"--final-input-uri {args.input_uri} "
+                f"--candidate-uri {g8_preflight.candidate_release_uri} "
+                f"--work-root {args.work_root} --endpoint-url {args.s3_endpoint_url}"
+            )
+        else:
+            job_args = (
+                f"/job/serverless/jobs/run_lightgbm_wave1.py run-s3 --input-uri {args.input_uri} "
+                f"--work-root {args.work_root} --endpoint-url {args.s3_endpoint_url}"
+            )
         args.parent_id = WAVE1_PROJECT_ID
     else:
+        g8_preflight = None
         deployment_image = args.image
         short_tag_workaround = False
         registry_verification = None
@@ -238,9 +268,16 @@ def main() -> None:
     ]
     if args.parent_id:
         command.extend(["--parent-id", args.parent_id])
+    review_command = list(command)
+    if g8_preflight is not None and args.request_evidence is not None:
+        for item in g8_preflight.injected_files:
+            source = (args.request_evidence.parent / item.local_name).resolve()
+            injection = f"{source}:{item.container_path}"
+            command.extend(["--inject-file", injection])
+            review_command.extend(["--inject-file", injection])
     if os.environ.get("NEBIUS_VOLUME") and args.workload != "lightgbm-wave1":
         command.extend(["--volume", os.environ["NEBIUS_VOLUME"]])
-    review_command = list(command)
+        review_command.extend(["--volume", os.environ["NEBIUS_VOLUME"]])
     for name, secret_id in (
         ("AWS_ACCESS_KEY_ID", args.access_key_secret_id),
         ("AWS_SECRET_ACCESS_KEY", args.secret_key_secret_id),
@@ -369,7 +406,8 @@ def main() -> None:
             "recovery_job_id": args.recover_existing_job_id,
             "campaign_spend_usd": args.campaign_spend_usd,
             "development_jobs_consumed_before_submit": args.development_jobs_consumed,
-            "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
+            "development_jobs_consumed_after_submit": args.development_jobs_consumed
+            + int(request.mode == "development"),
         }
         _write_evidence(intent_evidence_output, intent_payload)
         intent_evidence_sha256 = hashlib.sha256(intent_evidence_output.read_bytes()).hexdigest()
@@ -471,7 +509,8 @@ def main() -> None:
             "intent_evidence_sha256": intent_evidence_sha256,
             "campaign_spend_usd": args.campaign_spend_usd,
             "development_jobs_consumed_before_submit": args.development_jobs_consumed,
-            "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
+            "development_jobs_consumed_after_submit": args.development_jobs_consumed
+            + int(request.mode == "development"),
         }
         _write_evidence(created_evidence_output, created_payload)
         created_evidence_sha256 = hashlib.sha256(
@@ -551,7 +590,8 @@ def main() -> None:
             "created_evidence_sha256": created_evidence_sha256,
             "campaign_spend_usd": args.campaign_spend_usd,
             "development_jobs_consumed_before_submit": args.development_jobs_consumed,
-            "development_jobs_consumed_after_submit": args.development_jobs_consumed + 1,
+            "development_jobs_consumed_after_submit": args.development_jobs_consumed
+            + int(request.mode == "development"),
         }
         _write_evidence(args.evidence_output, payload)
         print(json.dumps(payload, indent=2, sort_keys=True))
@@ -581,11 +621,22 @@ def _load_wave1_request(evidence_path: Path | None, input_uri: str) -> LightGbmC
             request = LightGbmCloudJobRequest.model_validate_json(
                 (package / "request.json").read_text(encoding="utf-8")
             )
+        elif evidence.get("schema_version") == "lightgbm_wave1_g8_preflight_v1":
+            package = evidence_path.parent
+            verify_g8_preflight(package)
+            request = LightGbmCloudJobRequest.model_validate_json(
+                (package / "request.json").read_text(encoding="utf-8")
+            )
         else:
             request = LightGbmCloudJobRequest.model_validate(evidence["request"])
     except (OSError, ValueError, KeyError) as exc:
         raise SystemExit("LightGBM Wave 1 request evidence is invalid") from exc
-    if evidence.get("destination") != input_uri:
+    expected_input_uri = (
+        evidence.get("final_input_uri")
+        if evidence.get("schema_version") == "lightgbm_wave1_g8_preflight_v1"
+        else evidence.get("destination")
+    )
+    if expected_input_uri != input_uri:
         raise SystemExit("LightGBM Wave 1 input URI does not match the request evidence")
     if evidence.get("request_sha256") != request.canonical_hash():
         raise SystemExit("LightGBM Wave 1 request evidence hash mismatch")
