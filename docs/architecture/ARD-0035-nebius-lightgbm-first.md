@@ -217,11 +217,12 @@ during execution.
 For G8, the signed request, authorization, public key, metadata-only C4 lineage
 receipt, and a checksum-bound orchestration runner are injected as small
 read-only Job files. The authorized, unchanged image first verifies those
-files, MLflow health, and an empty result prefix; it then downloads the selected
-candidate from the development-results lane and reads the sealed C4 final
-release exactly once. The join exists only on ephemeral Job disk. This avoids a
-second mutable final-data package and does not rebuild the image authorized in
-G7.
+files and MLflow health, then atomically creates an exact-run intent object with
+`If-None-Match: *`; it then downloads the selected candidate from the
+development-results lane and reads the sealed C4 final release exactly once.
+The intent lives outside the checksum-bound result prefix, and the candidate /
+final join exists only on ephemeral Job disk. This avoids a second mutable
+final-data package and does not rebuild the image authorized in G7.
 
 The first cloud wave freezes one corpus/split/feature identity before tuning.
 Development runs may use train and validation only. After thresholds and

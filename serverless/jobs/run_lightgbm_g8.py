@@ -6,6 +6,7 @@ import base64
 import os
 import re
 import shutil
+import subprocess
 import tempfile
 import urllib.parse
 import urllib.request
@@ -23,7 +24,6 @@ from app.ml.lightgbm.cloud_contracts import (
 )
 from app.ml.lightgbm.cloud_runner import FrozenCandidate, _verify_signature, execute_wave1_request
 from app.nebius.object_storage import (
-    _list_s3_keys,
     download_s3_release,
     publish_s3_failure,
     publish_s3_result,
@@ -64,7 +64,7 @@ def main() -> int:
     trusted_key = os.environ.get("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", "")
     _verify_injected_authorization(request, args, trusted_key)
     _verify_mlflow_ready(request.mlflow_tracking_uri)
-    _require_empty_result(request.result_uri, args.endpoint_url)
+    _require_empty_result(request, args.endpoint_url)
 
     args.work_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="g8-", dir=args.work_root) as value:
@@ -216,11 +216,55 @@ def _verify_mlflow_ready(uri: str | None) -> None:
                 raise RuntimeError("G8 MLflow preflight failed before final access")
 
 
-def _require_empty_result(uri: str, endpoint_url: str) -> None:
-    parsed = urlsplit(uri)
+def _require_empty_result(
+    request: LightGbmCloudJobRequest,
+    endpoint_url: str,
+) -> None:
+    parsed = urlsplit(request.result_uri)
     prefix = parsed.path.strip("/")
-    if _list_s3_keys(parsed.netloc, prefix, endpoint_url=endpoint_url, limit=1):
-        raise FileExistsError("G8 final result prefix already exists; refusing a second run")
+    aws = shutil.which("aws")
+    if aws is None:
+        raise RuntimeError("G8 result guard requires the aws CLI")
+    intent_key = f"{prefix.rsplit('/', maxsplit=1)[0]}/.intents/{request.run_id}.json"
+    with tempfile.NamedTemporaryFile(prefix="g8-intent-", suffix=".json") as intent:
+        intent.write(request.canonical_bytes())
+        intent.flush()
+        completed = subprocess.run(
+            [
+                aws,
+                "--endpoint-url",
+                endpoint_url,
+                "s3api",
+                "put-object",
+                "--bucket",
+                parsed.netloc,
+                "--key",
+                intent_key,
+                "--body",
+                intent.name,
+                "--if-none-match",
+                "*",
+                "--content-type",
+                "application/json",
+                "--metadata",
+                f"request-sha256={request.canonical_hash()}",
+                "--output",
+                "json",
+            ],
+            check=False,
+            text=True,
+            capture_output=True,
+            timeout=30,
+            env={**os.environ, "AWS_PAGER": ""},
+        )
+    if completed.returncode == 0:
+        return
+    failure = (completed.stderr or "").lower()
+    if "preconditionfailed" in failure or "412" in failure:
+        raise FileExistsError(
+            "G8 final evaluation intent already exists; refusing a second run"
+        )
+    raise RuntimeError("G8 could not acquire the exactly-once final evaluation intent")
 
 
 def _validate_final_lineage(
