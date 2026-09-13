@@ -101,6 +101,8 @@ def test_g8_runner_checks_authorization_mlflow_and_empty_result_before_final_rea
 ) -> None:
     package, request = _g8_package(tmp_path)
     events: list[str] = []
+    acquired_intent = runner.S3PublicationIntent(destination=request.result_uri)
+    published_intents: list[runner.S3PublicationIntent | None] = []
 
     def fake_download(source: str, destination: Path, **_kwargs: object) -> None:
         events.append(f"download:{source}")
@@ -115,9 +117,11 @@ def test_g8_runner_checks_authorization_mlflow_and_empty_result_before_final_rea
         lambda *_args, **_kwargs: events.append("authorization"),
     )
     monkeypatch.setattr(runner, "_verify_mlflow_ready", lambda _uri: events.append("mlflow"))
-    monkeypatch.setattr(
-        runner, "_require_empty_result", lambda *_args: events.append("empty-result")
-    )
+    def claim_result(*_args: object) -> runner.S3PublicationIntent:
+        events.append("empty-result")
+        return acquired_intent
+
+    monkeypatch.setattr(runner, "_require_empty_result", claim_result)
     monkeypatch.setattr(
         runner.FrozenCandidate,
         "model_validate_json",
@@ -130,11 +134,11 @@ def test_g8_runner_checks_authorization_mlflow_and_empty_result_before_final_rea
     result = tmp_path / "local-result"
     result.mkdir()
     monkeypatch.setattr(runner, "execute_wave1_request", lambda *_args, **_kwargs: result)
-    monkeypatch.setattr(
-        runner,
-        "publish_s3_result",
-        lambda *_args, **_kwargs: events.append("publish"),
-    )
+    def fake_publish(*_args: object, **kwargs: object) -> None:
+        events.append("publish")
+        published_intents.append(kwargs.get("publication_intent"))
+
+    monkeypatch.setattr(runner, "publish_s3_result", fake_publish)
     _set_runtime_environment(monkeypatch)
     monkeypatch.setattr(
         sys,
@@ -169,6 +173,7 @@ def test_g8_runner_checks_authorization_mlflow_and_empty_result_before_final_rea
         f"download:{FINAL_URI}",
     ]
     assert events[-1] == "publish"
+    assert published_intents == [acquired_intent]
 
 
 def test_g8_runner_does_not_read_final_when_mlflow_is_unavailable(
@@ -228,7 +233,9 @@ def test_g8_result_guard_atomically_claims_exact_run(
     monkeypatch.setattr(runner.subprocess, "run", claimed)
     _package, request = _g8_package(tmp_path)
 
-    runner._require_empty_result(request, "https://storage.eu-north1.nebius.cloud")
+    intent = runner._require_empty_result(
+        request, "https://storage.eu-north1.nebius.cloud"
+    )
 
     assert len(commands) == 1
     command = commands[0]
@@ -239,6 +246,7 @@ def test_g8_result_guard_atomically_claims_exact_run(
         "campaigns/wave1-g8-test/final/.intents/wave1-g8-final.json"
     )
     assert command[command.index("--if-none-match") + 1] == "*"
+    assert intent.destination == RESULT_URI
 
 
 def test_g8_result_guard_fails_closed_on_denied_or_existing_intent(

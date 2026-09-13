@@ -1124,9 +1124,16 @@ The key was returned to `INACTIVE` and MLflow to `STOPPED`. A follow-up changes
 the guard to one conditional `PutObject` (`If-None-Match: *`) at the
 run's separate `final/.intents/<run_id>.json` key. That requires only the
 already-approved object-editor grant, creates a durable duplicate barrier, and
-does not add an object beneath the checksum-bound result prefix. No further Job
-is authorized by this incident; G8 remains open pending a fresh signed
-authorization.
+does not add an object beneath the checksum-bound result prefix. The acquired
+intent is carried into both successful and failed result publication, so those
+paths replace the incompatible result-prefix `ListObjectsV2` probe with an
+`If-None-Match: *` condition on every object write. A legacy or out-of-band
+object therefore fails closed without overwrite, and rollback deletes only
+objects created successfully by the current publication. Intent-backed
+publication rejects objects that would require the non-conditional managed
+multipart path; other publication callers retain the empty-prefix check. No
+further Job is authorized by this incident; G8 remains open pending a fresh
+signed authorization.
 
 A second exact-hash authorization produced receipt SHA-256
 `99c0660231ec0584c38ba85f0d2d6c25e155b22162014a00b6b9f60eab733d60`
