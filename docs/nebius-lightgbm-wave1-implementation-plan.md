@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G7 complete; the validation-only isotonic candidate is frozen and authorized; G8 is next
+Status: G0-G7 complete; the validation-only isotonic candidate is frozen; G8 awaits fresh authorization after two fail-closed pre-test attempts
 
 Date: 2026-08-26
 
@@ -1076,7 +1076,7 @@ and trusted public-key SHA-256
 `a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
 Independent replay returned `authorized`, `signature_verified=true`, and
 `final_identity_available=true`; the freeze still records
-`test_fold_accessed=false`. G8 has not started.
+`test_fold_accessed=false`. The G8 final fold remains unopened.
 
 ### G8 — One Final Evaluation
 
@@ -1134,6 +1134,36 @@ publication rejects objects that would require the non-conditional managed
 multipart path; other publication callers retain the empty-prefix check. No
 further Job is authorized by this incident; G8 remains open pending a fresh
 signed authorization.
+
+A second exact-hash authorization produced receipt SHA-256
+`99c0660231ec0584c38ba85f0d2d6c25e155b22162014a00b6b9f60eab733d60`
+and bound preflight SHA-256
+`18384b38c840fd903f3ee02824d98248b3704f885225c38a35a572c533379bea`.
+The one Job created from it, `aijob-e00rwzexvwb11rmt4c`, also failed closed at
+the intent claim before candidate or final-release download. Its recovered
+submission receipt SHA-256 is
+`1a41e50036da77febeb0d8e609c2f0e3febbd0ee9aee9ce09ebf8b0c9450136f`;
+the terminal monitor receipt SHA-256 is
+`8a2d21a435e15f19b8e8f62e99fabbd77e888542ebfcff2103263e5523eb66f8`;
+and the redacted log SHA-256 is
+`53c70aae73acf70488552a569ec6b7db49296e14d4609f3080fbcfc59fb8be80`.
+
+The live results-bucket read-back established the cause: policy version 3 had
+the G6 development writer, but omitted both the final identity's G6
+development-candidate viewer and G6 final-results writer rules. Policy version
+5 now contains both exact-prefix rules and preserves every existing rule. The
+provisioner now extends only recognized Wave 1 results rules, rejects broader
+or unknown rules, uses resource-version concurrency control, and verifies the
+updated policy by read-back. The final key is again `INACTIVE`, MLflow is
+`STOPPED`, and an authenticated MLflow query found zero governed-evaluation
+runs after submission. The redacted policy-remediation receipt SHA-256 is
+`5a9bbc2f998f8cc3621e2039b06428272ed19b2628b7f4c0a9fc5ce10fe680fd`;
+the idempotent provisioner state receipt SHA-256 is
+`7a1d3a7be81c4d526eed2479273adc2be76c74be2adc607c04a55eaaabca26c1`;
+the MLflow absence-verification receipt SHA-256 is
+`1d3457e241e726ff2ecc210f7ce33b0ddb69b9447c6cd7e4561edb3a59dce950`.
+No evaluation result exists to log, and another Job requires a new signed
+authorization.
 
 ### G9 — Cost Reconciliation And Exit
 
@@ -1208,11 +1238,15 @@ production/client performance claim.
   result summary, selected candidate, and consumed-slot status (2026-09-10).
 - [x] Issue #23 and ARD-0035 receive the G7 freeze and signed-authorization
   receipt identities (2026-09-12).
+- [x] The second pre-test G8 failure is receipt-bound, Issue #23 and ARD-0035
+  record the missing campaign-policy cause, the two exact G6 final-identity
+  rules are deployed, and the corrected provisioner passes a live idempotency
+  run (2026-09-13).
 - [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
 
-## Completed Implementation Through G7
+## Completed Implementation Through G7 And G8 Pre-Test Remediation
 
 G1-G7 are complete. They extended the existing Jobs image, renderer, submitter,
 orchestrator, evidence archive, MLflow tracking and monitoring; added the
@@ -1226,7 +1260,9 @@ fixed nine-Job matrix, logged nine distinct MLflow runs, passed all completion
 gates, and selected isotonic calibration without accessing the test fold. All
 20 development slots are now consumed. G7 then checksum-froze that exact
 candidate and verified the signed, exact-hash authorization without starting
-MLflow or exposing the test fold. G8's one final evaluation is next.
+MLflow or exposing the test fold. Two subsequent G8 Jobs failed closed before
+candidate or final-fold download; the discovered G6 policy omission is fixed,
+and G8 now waits for a fresh signed authorization.
 
 ## Related Documentation
 

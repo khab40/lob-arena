@@ -219,6 +219,24 @@ def test_wave1_identity_script_uses_current_non_inline_secret_flow() -> None:
     assert "secret_key_secret_reference_id" in source
 
 
+def test_wave1_identity_script_extends_only_recognized_results_rules() -> None:
+    source = PROVISION_WAVE1.read_text(encoding="utf-8")
+
+    assert 'policy_mode="${3:-exact}"' in source
+    assert '"${policy_mode}" == "preserve-superset"' in source
+    assert '"${name}" == "${DEV_BUCKET}"' in source
+    assert "existing bucket ${name} is missing a required policy rule" in source
+    assert '"${policy_mode}" == "extend-wave1-results"' in source
+    assert '"${name}" == "${RESULTS_BUCKET}"' in source
+    assert "existing results bucket has an unrecognized policy rule" in source
+    assert "storage bucket update" in source
+    assert '--resource-version "$(jq -er' in source
+    assert 'results bucket policy read-back does not match' in source
+    assert 'Campaign %s rules already present on %s' in source
+    assert '"${dev_policy}" preserve-superset' in source
+    assert '"${results_policy}" extend-wave1-results' in source
+
+
 def test_wave1_identity_script_rejects_wrong_project_and_region() -> None:
     wrong_project = _run(
         PROVISION_WAVE1,
