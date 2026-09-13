@@ -98,6 +98,7 @@ def _aws_failure_kind(stderr: str) -> str:
     normalized = stderr.lower()
     classifications = (
         (("unknown option", "unknown options", "unrecognized arguments"), "unsupported_option"),
+        (("preconditionfailed", "precondition failed", "status code: 412"), "precondition_failed"),
         (("invalidaccesskeyid", "invalid access key"), "invalid_access_key"),
         (("signaturedoesnotmatch", "signature mismatch"), "signature_mismatch"),
         (("accessdenied", "access denied"), "access_denied"),
@@ -626,7 +627,8 @@ def publish_s3_result(
 ) -> tuple[S3ObjectEvidence, ...]:
     """Publish a verified successful result, making SUCCESS visible last.
 
-    A matching publication intent replaces the default empty-prefix list probe.
+    A matching publication intent replaces the default empty-prefix list probe
+    with conditional creation of every object.
     """
 
     verify_complete_result(source, limits=limits)
@@ -650,7 +652,8 @@ def publish_s3_failure(
 ) -> tuple[S3ObjectEvidence, ...]:
     """Publish bounded failure evidence, making FAILED visible last.
 
-    A matching publication intent replaces the default empty-prefix list probe.
+    A matching publication intent replaces the default empty-prefix list probe
+    with conditional creation of every object.
     """
 
     source = source.resolve()
@@ -692,22 +695,40 @@ def _publish_s3_directory(
         bucket, prefix, endpoint_url=endpoint_url, limit=1
     ):
         raise FileExistsError(f"release prefix already exists: {destination}")
+    conditional_create = publication_intent is not None
+    if conditional_create:
+        oversized = next(
+            (
+                item.path
+                for item in complete_inventory.files
+                if item.size_bytes > S3_SINGLE_PUT_MAX_BYTES
+            ),
+            None,
+        )
+        if oversized is not None:
+            raise ValueError(
+                "intent-backed publication cannot safely create multipart object "
+                f"without overwrite: {oversized}"
+            )
 
     evidence: list[S3ObjectEvidence] = []
     uploaded_keys: list[str] = []
     try:
         for item in inventory.files:
             key = f"{prefix}/{item.path}"
-            uploaded_keys.append(key)
-            evidence.append(
-                _put_and_verify_s3_object(
-                    source / item.path,
-                    bucket=bucket,
-                    key=key,
-                    expected_sha256=item.sha256,
-                    endpoint_url=endpoint_url,
-                )
+            if not conditional_create:
+                uploaded_keys.append(key)
+            uploaded = _put_and_verify_s3_object(
+                source / item.path,
+                bucket=bucket,
+                key=key,
+                expected_sha256=item.sha256,
+                endpoint_url=endpoint_url,
+                if_absent=conditional_create,
             )
+            evidence.append(uploaded)
+            if conditional_create:
+                uploaded_keys.append(key)
 
         if require_version_ids and any(item.version_id is None for item in evidence):
             raise ValueError("versioned Object Storage publication omitted a version ID")
@@ -716,16 +737,19 @@ def _publish_s3_directory(
         if not terminal_marker.is_file():
             raise ValueError(f"published directory must contain {marker}")
         marker_key = f"{prefix}/{marker}"
-        evidence.append(
-            _put_and_verify_s3_object(
-                terminal_marker,
-                bucket=bucket,
-                key=marker_key,
-                expected_sha256=sha256_file(terminal_marker),
-                endpoint_url=endpoint_url,
-            )
+        if not conditional_create:
+            uploaded_keys.append(marker_key)
+        uploaded_marker = _put_and_verify_s3_object(
+            terminal_marker,
+            bucket=bucket,
+            key=marker_key,
+            expected_sha256=sha256_file(terminal_marker),
+            endpoint_url=endpoint_url,
+            if_absent=conditional_create,
         )
-        uploaded_keys.append(marker_key)
+        evidence.append(uploaded_marker)
+        if conditional_create:
+            uploaded_keys.append(marker_key)
     except Exception:
         for key in uploaded_keys:
             _aws_json(
@@ -748,9 +772,14 @@ def _put_and_verify_s3_object(
     key: str,
     expected_sha256: str,
     endpoint_url: str,
+    if_absent: bool = False,
 ) -> S3ObjectEvidence:
     transfer_timeout = max(300, int(source.stat().st_size / (5 * 1024 * 1024)) + 120)
     if source.stat().st_size > S3_SINGLE_PUT_MAX_BYTES:
+        if if_absent:
+            raise ValueError(
+                "conditional S3 creation does not support managed multipart upload"
+            )
         _aws_copy_file(
             endpoint_url,
             source,
@@ -760,8 +789,7 @@ def _put_and_verify_s3_object(
             timeout_seconds=transfer_timeout,
         )
     else:
-        _aws_json(
-            endpoint_url,
+        put_args = [
             "s3api",
             "put-object",
             "--bucket",
@@ -772,6 +800,12 @@ def _put_and_verify_s3_object(
             str(source),
             "--metadata",
             f"sha256={expected_sha256}",
+        ]
+        if if_absent:
+            put_args.extend(["--if-none-match", "*"])
+        _aws_json(
+            endpoint_url,
+            *put_args,
             timeout_seconds=transfer_timeout,
         )
     head = _aws_json(

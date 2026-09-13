@@ -696,8 +696,15 @@ def test_s3_result_publication_writes_success_last(
     monkeypatch.setattr(object_storage, "_list_s3_keys", fake_list)
 
     def fake_put(
-        source: Path, *, bucket: str, key: str, expected_sha256: str, endpoint_url: str
+        source: Path,
+        *,
+        bucket: str,
+        key: str,
+        expected_sha256: str,
+        endpoint_url: str,
+        if_absent: bool = False,
     ) -> S3ObjectEvidence:
+        assert if_absent is False
         uploaded.append(key)
         return S3ObjectEvidence(
             key=key,
@@ -741,17 +748,22 @@ def test_s3_publication_uses_matching_intent_without_listing(
     else:
         (staging / marker).write_text("{}\n", encoding="utf-8")
     uploaded: list[str] = []
+    conditional_creates: list[bool] = []
     destination = (
         "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/c1/final/r1"
     )
 
-    def fail_on_list(*_args: object, **_kwargs: object) -> tuple[str, ...]:
-        pytest.fail("an acquired publication intent must replace the list probe")
-
     def fake_put(
-        source: Path, *, bucket: str, key: str, expected_sha256: str, endpoint_url: str
+        source: Path,
+        *,
+        bucket: str,
+        key: str,
+        expected_sha256: str,
+        endpoint_url: str,
+        if_absent: bool = False,
     ) -> S3ObjectEvidence:
         uploaded.append(key)
+        conditional_creates.append(if_absent)
         return S3ObjectEvidence(
             key=key,
             sha256=expected_sha256,
@@ -759,7 +771,11 @@ def test_s3_publication_uses_matching_intent_without_listing(
             etag="test",
         )
 
-    monkeypatch.setattr(object_storage, "_list_s3_keys", fail_on_list)
+    monkeypatch.setattr(
+        object_storage,
+        "_list_s3_keys",
+        lambda *_args, **_kwargs: pytest.fail("intent publication must not list"),
+    )
     monkeypatch.setattr(object_storage, "_put_and_verify_s3_object", fake_put)
 
     publisher(
@@ -770,6 +786,139 @@ def test_s3_publication_uses_matching_intent_without_listing(
     )
 
     assert uploaded[-1].endswith(f"/{marker}")
+    assert conditional_creates == [True] * len(uploaded)
+
+
+def test_conditional_s3_object_creation_uses_if_none_match(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "metrics.json"
+    source.write_text("{}\n", encoding="utf-8")
+    expected_sha256 = object_storage.sha256_file(source)
+    calls: list[tuple[str, ...]] = []
+
+    def fake_aws_json(
+        _endpoint_url: str, *args: str, **_kwargs: object
+    ) -> dict[str, object]:
+        calls.append(args)
+        operation = args[1]
+        if operation == "put-object":
+            return {}
+        if operation == "head-object":
+            return {
+                "ContentLength": source.stat().st_size,
+                "Metadata": {"sha256": expected_sha256},
+                "ETag": '"conditional-etag"',
+            }
+        if operation == "get-object":
+            Path(args[-1]).write_bytes(source.read_bytes())
+            return {}
+        raise AssertionError(args)
+
+    monkeypatch.setattr(object_storage, "_aws_json", fake_aws_json)
+
+    object_storage._put_and_verify_s3_object(
+        source,
+        bucket="bucket-test",
+        key="prefix/metrics.json",
+        expected_sha256=expected_sha256,
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+        if_absent=True,
+    )
+
+    put_call = calls[0]
+    assert put_call[:2] == ("s3api", "put-object")
+    assert put_call[put_call.index("--if-none-match") + 1] == "*"
+
+
+@pytest.mark.parametrize("conflict_index", (0, 1, 2))
+def test_intent_publication_never_deletes_a_conflicting_existing_object(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    conflict_index: int,
+) -> None:
+    staging = tmp_path / "result-staging"
+    staging.mkdir()
+    (staging / "metrics.json").write_text("{}\n", encoding="utf-8")
+    result = publish_local_result(staging, (tmp_path / "result").as_uri())
+    destination = (
+        "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/c1/final/r1"
+    )
+    attempted: list[str] = []
+    deleted: list[str] = []
+
+    def conditional_put(
+        source: Path,
+        *,
+        bucket: str,
+        key: str,
+        expected_sha256: str,
+        endpoint_url: str,
+        if_absent: bool = False,
+    ) -> S3ObjectEvidence:
+        assert if_absent is True
+        attempted.append(key)
+        if len(attempted) - 1 == conflict_index:
+            raise RuntimeError("Object Storage command failed (precondition_failed)")
+        return S3ObjectEvidence(
+            key=key,
+            sha256=expected_sha256,
+            size_bytes=source.stat().st_size,
+            etag="test",
+        )
+
+    def record_delete(
+        _endpoint_url: str, *args: str, **_kwargs: object
+    ) -> dict[str, object]:
+        assert args[:2] == ("s3api", "delete-object")
+        deleted.append(args[args.index("--key") + 1])
+        return {}
+
+    monkeypatch.setattr(
+        object_storage,
+        "_list_s3_keys",
+        lambda *_args, **_kwargs: pytest.fail("intent publication must not list"),
+    )
+    monkeypatch.setattr(object_storage, "_put_and_verify_s3_object", conditional_put)
+    monkeypatch.setattr(object_storage, "_aws_json", record_delete)
+
+    with pytest.raises(RuntimeError, match="precondition_failed"):
+        publish_s3_result(
+            result,
+            destination,
+            endpoint_url="https://storage.eu-north1.nebius.cloud",
+            publication_intent=S3PublicationIntent(destination=destination),
+        )
+
+    conflicting_key = attempted[conflict_index]
+    assert conflicting_key not in deleted
+    assert deleted == attempted[:conflict_index]
+
+
+def test_intent_publication_rejects_multipart_before_any_upload(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    staging = tmp_path / "result-staging"
+    staging.mkdir()
+    (staging / "metrics.json").write_text("{}\n", encoding="utf-8")
+    result = publish_local_result(staging, (tmp_path / "result").as_uri())
+    destination = (
+        "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/c1/final/r1"
+    )
+    monkeypatch.setattr(object_storage, "S3_SINGLE_PUT_MAX_BYTES", 0)
+    monkeypatch.setattr(
+        object_storage,
+        "_put_and_verify_s3_object",
+        lambda *_args, **_kwargs: pytest.fail("multipart rejection must precede upload"),
+    )
+
+    with pytest.raises(ValueError, match="cannot safely create multipart object"):
+        publish_s3_result(
+            result,
+            destination,
+            endpoint_url="https://storage.eu-north1.nebius.cloud",
+            publication_intent=S3PublicationIntent(destination=destination),
+        )
 
 
 def test_s3_publication_rejects_intent_for_another_destination(
