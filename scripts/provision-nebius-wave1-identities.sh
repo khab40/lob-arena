@@ -279,7 +279,8 @@ ensure_final_key_inactive() {
 lifecycle_rules='[{"id":"abort-incomplete-multipart-after-1-day","status":"enabled","filter":{"prefix":""},"abort_incomplete_multipart_upload":{"days_after_initiation":1}}]'
 
 ensure_bucket() {
-  local name="$1" policy="$2" resource actual_policy desired_policy versioning lifecycle_ok lookup_status=0
+  local name="$1" policy="$2" policy_mode="${3:-exact}"
+  local resource actual_policy desired_policy merged_policy versioning lifecycle_ok lookup_status=0
   resource="$(lookup_by_name storage bucket get-by-name \
     --parent-id "${PROJECT_ID}" --name "${name}" --format json)" || lookup_status=$?
   if [[ ${lookup_status} -eq 0 ]]; then
@@ -291,11 +292,56 @@ ensure_bucket() {
         ((.status // "") | ascii_downcase) == "enabled" and
         (.abort_incomplete_multipart_upload.days_after_initiation // 0) == 1)' \
       <<<"${resource}")"
-    [[ "${actual_policy}" == "${desired_policy}" ]] || \
-      die "existing bucket ${name} has a different policy; refusing to overwrite it"
     [[ "${versioning}" == "enabled" ]] || die "existing bucket ${name} does not have versioning enabled"
     [[ "${lifecycle_ok}" == "true" ]] || \
       die "existing bucket ${name} lacks the approved incomplete-upload cleanup rule"
+    if [[ "${actual_policy}" != "${desired_policy}" ]]; then
+      if [[ "${policy_mode}" == "preserve-superset" && "${name}" == "${DEV_BUCKET}" ]]; then
+        jq -en \
+          --argjson actual "${actual_policy}" \
+          --argjson desired "${desired_policy}" \
+          'all($desired[]; . as $rule | $actual | any(.[]; . == $rule))' >/dev/null || \
+          die "existing bucket ${name} is missing a required policy rule"
+        printf 'Preserving additional governed rules on %s\n' "${name}" >&2
+      elif [[ "${policy_mode}" == "extend-wave1-results" && "${name}" == "${RESULTS_BUCKET}" ]]; then
+        jq -e \
+          --arg dev_group "${dev_group_id}" \
+          --arg final_group "${final_group_id}" \
+          'all(.[];
+            (.paths | type == "array" and length == 1) and
+            (.roles | type == "array" and length == 1) and
+            (
+              (.group_id == $dev_group and .roles == ["storage.object-editor"] and
+                (.paths[0] | test("^campaigns/[a-z0-9][a-z0-9-]{2,62}/development/\\*$"))) or
+              (.group_id == $final_group and .roles == ["storage.viewer"] and
+                (.paths[0] | test("^campaigns/[a-z0-9][a-z0-9-]{2,62}/development/\\*$"))) or
+              (.group_id == $final_group and .roles == ["storage.object-editor"] and
+                (.paths[0] | test("^campaigns/[a-z0-9][a-z0-9-]{2,62}/final/\\*$")))
+            ))' <<<"${actual_policy}" >/dev/null || \
+          die "existing results bucket has an unrecognized policy rule; refusing to extend it"
+        merged_policy="$(jq -cnS \
+          --argjson actual "${actual_policy}" \
+          --argjson desired "${desired_policy}" \
+          'reduce $desired[] as $rule
+            ($actual; if any(.[]; . == $rule) then . else . + [$rule] end)')"
+        if [[ "${actual_policy}" != "${merged_policy}" ]]; then
+          resource="$(nb storage bucket update \
+            --id "$(json_id "${resource}")" \
+            --resource-version "$(jq -er '.metadata.resource_version' <<<"${resource}")" \
+            --patch \
+            --bucket-policy-rules "${merged_policy}" \
+            --format json)"
+          actual_policy="$(jq -cS '.spec.bucket_policy.rules // []' <<<"${resource}")"
+          [[ "${actual_policy}" == "${merged_policy}" ]] || \
+            die "results bucket policy read-back does not match the requested extension"
+          printf 'Extended governed bucket %s for campaign %s\n' "${name}" "${CAMPAIGN_ID}" >&2
+        else
+          printf 'Campaign %s rules already present on %s\n' "${CAMPAIGN_ID}" "${name}" >&2
+        fi
+      else
+        die "existing bucket ${name} has a different policy; refusing to overwrite it"
+      fi
+    fi
     printf 'Reusing governed bucket %s\n' "${name}" >&2
   elif [[ ${lookup_status} -eq 1 ]]; then
     resource="$(nb storage bucket create \
@@ -349,9 +395,9 @@ results_policy="$(jq -cn \
 mlflow_policy="$(jq -cn --arg group_id "${mlflow_group_id}" \
   '[{paths:["artifacts/*"],roles:["storage.object-editor"],group_id:$group_id}]')"
 
-dev_bucket_id="$(ensure_bucket "${DEV_BUCKET}" "${dev_policy}")"
+dev_bucket_id="$(ensure_bucket "${DEV_BUCKET}" "${dev_policy}" preserve-superset)"
 final_bucket_id="$(ensure_bucket "${FINAL_BUCKET}" "${final_policy}")"
-results_bucket_id="$(ensure_bucket "${RESULTS_BUCKET}" "${results_policy}")"
+results_bucket_id="$(ensure_bucket "${RESULTS_BUCKET}" "${results_policy}" extend-wave1-results)"
 mlflow_bucket_id="$(ensure_bucket "${MLFLOW_BUCKET}" "${mlflow_policy}")"
 
 dev_key="$(ensure_access_key "${dev_sa_id}" "${DEV_KEY_NAME}")"
