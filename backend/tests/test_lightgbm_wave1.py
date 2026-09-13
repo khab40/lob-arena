@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
@@ -29,8 +30,10 @@ from app.ml.lightgbm import cloud_runner, cloud_transport  # noqa: E402
 from app.nebius import object_storage  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     S3ObjectEvidence,
+    S3PublicationIntent,
     download_s3_release,
     publish_local_result,
+    publish_s3_failure,
     publish_s3_result,
     verify_complete_result,
 )
@@ -684,8 +687,13 @@ def test_s3_result_publication_writes_success_last(
     (staging / "metrics.json").write_text("{}\n", encoding="utf-8")
     result = publish_local_result(staging, (tmp_path / "result").as_uri())
     uploaded: list[str] = []
+    listed: list[tuple[str, str]] = []
 
-    monkeypatch.setattr(object_storage, "_list_s3_keys", lambda *args, **kwargs: ())
+    def fake_list(bucket: str, prefix: str, **_kwargs: object) -> tuple[str, ...]:
+        listed.append((bucket, prefix))
+        return ()
+
+    monkeypatch.setattr(object_storage, "_list_s3_keys", fake_list)
 
     def fake_put(
         source: Path, *, bucket: str, key: str, expected_sha256: str, endpoint_url: str
@@ -707,6 +715,88 @@ def test_s3_result_publication_writes_success_last(
 
     assert uploaded[-1].endswith("/SUCCESS")
     assert uploaded.count(uploaded[-1]) == 1
+    assert listed == [
+        (
+            "aimada-wave1-results-e00g6zvxpr00",
+            "campaigns/c1/development/r1",
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    ("marker", "publisher"),
+    (("SUCCESS", publish_s3_result), ("FAILED", publish_s3_failure)),
+)
+def test_s3_publication_uses_matching_intent_without_listing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    marker: str,
+    publisher: Callable[..., tuple[S3ObjectEvidence, ...]],
+) -> None:
+    staging = tmp_path / "result-staging"
+    staging.mkdir()
+    if marker == "SUCCESS":
+        (staging / "metrics.json").write_text("{}\n", encoding="utf-8")
+        staging = publish_local_result(staging, (tmp_path / "result").as_uri())
+    else:
+        (staging / marker).write_text("{}\n", encoding="utf-8")
+    uploaded: list[str] = []
+    destination = (
+        "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/c1/final/r1"
+    )
+
+    def fail_on_list(*_args: object, **_kwargs: object) -> tuple[str, ...]:
+        pytest.fail("an acquired publication intent must replace the list probe")
+
+    def fake_put(
+        source: Path, *, bucket: str, key: str, expected_sha256: str, endpoint_url: str
+    ) -> S3ObjectEvidence:
+        uploaded.append(key)
+        return S3ObjectEvidence(
+            key=key,
+            sha256=expected_sha256,
+            size_bytes=source.stat().st_size,
+            etag="test",
+        )
+
+    monkeypatch.setattr(object_storage, "_list_s3_keys", fail_on_list)
+    monkeypatch.setattr(object_storage, "_put_and_verify_s3_object", fake_put)
+
+    publisher(
+        staging,
+        destination,
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+        publication_intent=S3PublicationIntent(destination=destination),
+    )
+
+    assert uploaded[-1].endswith(f"/{marker}")
+
+
+def test_s3_publication_rejects_intent_for_another_destination(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    staging = tmp_path / "result-staging"
+    staging.mkdir()
+    (staging / "metrics.json").write_text("{}\n", encoding="utf-8")
+    result = publish_local_result(staging, (tmp_path / "result").as_uri())
+    destination = (
+        "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/c1/final/r1"
+    )
+    monkeypatch.setattr(
+        object_storage,
+        "_list_s3_keys",
+        lambda *_args, **_kwargs: pytest.fail("mismatched intent must fail before listing"),
+    )
+
+    with pytest.raises(ValueError, match="does not reserve"):
+        publish_s3_result(
+            result,
+            destination,
+            endpoint_url="https://storage.eu-north1.nebius.cloud",
+            publication_intent=S3PublicationIntent(
+                destination=destination.replace("/r1", "/another-run")
+            ),
+        )
 
 
 def test_cloud_transport_stages_executes_and_publishes_without_mounts(

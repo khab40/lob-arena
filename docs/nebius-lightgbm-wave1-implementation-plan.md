@@ -1124,9 +1124,11 @@ The key was returned to `INACTIVE` and MLflow to `STOPPED`. A follow-up changes
 the guard to one conditional `PutObject` (`If-None-Match: *`) at the
 run's separate `final/.intents/<run_id>.json` key. That requires only the
 already-approved object-editor grant, creates a durable duplicate barrier, and
-does not add an object beneath the checksum-bound result prefix. No further Job
-is authorized by this incident; G8 remains open pending a fresh signed
-authorization.
+does not add an object beneath the checksum-bound result prefix. The acquired
+intent is carried into both successful and failed result publication, so those
+paths do not repeat the incompatible result-prefix `ListObjectsV2` probe. Other
+publication callers retain the empty-prefix check. No further Job is authorized
+by this incident; G8 remains open pending a fresh signed authorization.
 
 ### G9 — Cost Reconciliation And Exit
 

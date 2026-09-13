@@ -68,6 +68,13 @@ class S3ObjectEvidence:
 
 
 @dataclass(frozen=True)
+class S3PublicationIntent:
+    """Proof that a caller reserved one exact destination before publication."""
+
+    destination: str
+
+
+@dataclass(frozen=True)
 class VerifiedS3ReleaseMember:
     payload: bytes
     inventory: ChecksumInventory
@@ -615,8 +622,12 @@ def publish_s3_result(
     endpoint_url: str,
     require_version_ids: bool = False,
     limits: TransferLimits = TransferLimits(),
+    publication_intent: S3PublicationIntent | None = None,
 ) -> tuple[S3ObjectEvidence, ...]:
-    """Publish a verified successful result, making SUCCESS visible last."""
+    """Publish a verified successful result, making SUCCESS visible last.
+
+    A matching publication intent replaces the default empty-prefix list probe.
+    """
 
     verify_complete_result(source, limits=limits)
     return _publish_s3_directory(
@@ -626,6 +637,7 @@ def publish_s3_result(
         marker="SUCCESS",
         require_version_ids=require_version_ids,
         limits=limits,
+        publication_intent=publication_intent,
     )
 
 
@@ -634,13 +646,23 @@ def publish_s3_failure(
     destination: str,
     *,
     endpoint_url: str,
+    publication_intent: S3PublicationIntent | None = None,
 ) -> tuple[S3ObjectEvidence, ...]:
-    """Publish bounded failure evidence, making FAILED visible last."""
+    """Publish bounded failure evidence, making FAILED visible last.
+
+    A matching publication intent replaces the default empty-prefix list probe.
+    """
 
     source = source.resolve()
     if not (source / "FAILED").is_file() or (source / "SUCCESS").exists():
         raise ValueError("failure staging directory must contain FAILED and must not contain SUCCESS")
-    return _publish_s3_directory(source, destination, endpoint_url=endpoint_url, marker="FAILED")
+    return _publish_s3_directory(
+        source,
+        destination,
+        endpoint_url=endpoint_url,
+        marker="FAILED",
+        publication_intent=publication_intent,
+    )
 
 
 def _publish_s3_directory(
@@ -651,6 +673,7 @@ def _publish_s3_directory(
     marker: str,
     require_version_ids: bool = False,
     limits: TransferLimits = TransferLimits(),
+    publication_intent: S3PublicationIntent | None = None,
 ) -> tuple[S3ObjectEvidence, ...]:
     """Publish one immutable directory and expose its terminal marker last."""
 
@@ -661,7 +684,13 @@ def _publish_s3_directory(
     )
     verify_inventory(source, inventory, limits=limits)
     bucket, prefix = _s3_bucket_prefix(destination)
-    if _list_s3_keys(bucket, prefix, endpoint_url=endpoint_url, limit=1):
+    if publication_intent is not None and _s3_bucket_prefix(
+        publication_intent.destination
+    ) != (bucket, prefix):
+        raise ValueError("publication intent does not reserve the result destination")
+    if publication_intent is None and _list_s3_keys(
+        bucket, prefix, endpoint_url=endpoint_url, limit=1
+    ):
         raise FileExistsError(f"release prefix already exists: {destination}")
 
     evidence: list[S3ObjectEvidence] = []
