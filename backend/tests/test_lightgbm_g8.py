@@ -20,6 +20,7 @@ from app.ml.lightgbm.cloud_contracts import (
     Wave1FinalAuthorization,
     Wave1TabularProjectionInput,
 )
+from app.ml.lightgbm import g8_evaluation
 from app.ml.lightgbm.g8_evaluation import (
     G8InjectedFile,
     G8PreflightReceipt,
@@ -265,6 +266,91 @@ def test_g8_result_guard_fails_closed_on_denied_or_existing_intent(
         runner._require_empty_result(request, "https://storage.eu-north1.nebius.cloud")
 
 
+def test_g8_injected_publisher_conditionally_creates_every_object(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "result"
+    source.mkdir()
+    (source / "artifact.json").write_text('{"verified":true}\n', encoding="utf-8")
+    inventory = inventory_directory(source, exclude_markers=True)
+    write_checksum_file(source, inventory)
+    (source / "SUCCESS").write_text(inventory.model_dump_json(indent=2), encoding="utf-8")
+    calls: list[tuple[str, ...]] = []
+    objects: dict[str, bytes] = {}
+    hashes: dict[str, str] = {}
+
+    def fake_aws(_endpoint: str, *args: str, **_kwargs: object) -> dict[str, object]:
+        calls.append(args)
+        key = args[args.index("--key") + 1]
+        if args[:2] == ("s3api", "put-object"):
+            body = Path(args[args.index("--body") + 1])
+            objects[key] = body.read_bytes()
+            hashes[key] = args[args.index("--metadata") + 1].removeprefix("sha256=")
+            return {}
+        if args[:2] == ("s3api", "head-object"):
+            return {"ContentLength": len(objects[key]), "Metadata": {"sha256": hashes[key]}}
+        if args[:2] == ("s3api", "get-object"):
+            Path(args[-1]).write_bytes(objects[key])
+            return {}
+        raise AssertionError(args)
+
+    monkeypatch.setattr(runner.object_storage, "_aws_json", fake_aws)
+
+    runner.publish_s3_result(
+        source,
+        RESULT_URI,
+        endpoint_url="https://storage.eu-north1.nebius.cloud",
+        publication_intent=runner.S3PublicationIntent(destination=RESULT_URI),
+    )
+
+    assert all("list-objects-v2" not in call for call in calls)
+    puts = [call for call in calls if call[:2] == ("s3api", "put-object")]
+    assert all(call[call.index("--if-none-match") + 1] == "*" for call in puts)
+    assert puts[-1][puts[-1].index("--key") + 1].endswith("/SUCCESS")
+
+
+def test_g8_runtime_compatibility_runs_exact_runner_in_frozen_image_offline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    injected_runner = _write(tmp_path / "run_lightgbm_g8.py", b"print('ok')\n")
+    captured: dict[str, object] = {}
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+        return subprocess.CompletedProcess(command, 0, "usage: g8", "")
+
+    monkeypatch.setattr(g8_evaluation.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(g8_evaluation.subprocess, "run", fake_run)
+
+    receipt = g8_evaluation.verify_g8_runtime_compatibility(IMAGE, injected_runner)
+
+    command = captured["command"]
+    assert isinstance(command, list)
+    assert command[0] == "/usr/bin/docker"
+    assert command[command.index("--network") + 1] == "none"
+    assert command[command.index("--entrypoint") + 1] == "python"
+    assert IMAGE in command
+    assert str(injected_runner.resolve()) in command[command.index("--mount") + 1]
+    assert receipt.image == IMAGE
+    assert receipt.runner_sha256 == sha256_file(injected_runner)
+
+
+def test_g8_runtime_compatibility_rejects_import_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    injected_runner = _write(tmp_path / "run_lightgbm_g8.py", b"import missing_symbol\n")
+    monkeypatch.setattr(g8_evaluation.shutil, "which", lambda name: f"/usr/bin/{name}")
+    monkeypatch.setattr(
+        g8_evaluation.subprocess,
+        "run",
+        lambda command, **_kwargs: subprocess.CompletedProcess(command, 1, "", "ImportError"),
+    )
+
+    with pytest.raises(RuntimeError, match="incompatible with the frozen runtime image"):
+        g8_evaluation.verify_g8_runtime_compatibility(IMAGE, injected_runner)
+
+
 def test_submitter_accepts_g8_only_at_consumed_development_ceiling(tmp_path: Path) -> None:
     package, _request = _g8_package(tmp_path)
     script = Path(__file__).resolve().parents[2] / "scripts" / "submit_nebius_job.py"
@@ -399,6 +485,7 @@ def _g8_package(tmp_path: Path) -> tuple[Path, LightGbmCloudJobRequest]:
         )
     )
     receipt = G8PreflightReceipt(
+        schema_version="lightgbm_wave1_g8_preflight_v1",
         created_at=request.created_at,
         tool_git_commit="b" * 40,
         campaign_id=request.campaign_id,

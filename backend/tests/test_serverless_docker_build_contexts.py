@@ -24,10 +24,12 @@ def test_serverless_builds_use_context_specific_dockerignore_files() -> None:
 
 def test_serverless_images_use_distinct_dockerfiles_and_tags() -> None:
     build_script = (ROOT / "scripts" / "build-serverless-images.sh").read_text(encoding="utf-8")
+    jobs_dockerfile = (ROOT / "serverless" / "jobs" / "Dockerfile").read_text(encoding="utf-8")
 
     assert 'serverless/endpoint/Dockerfile"' in build_script
     assert 'serverless/jobs/Dockerfile"' in build_script
     assert 'if [[ "${ENDPOINT_IMAGE}" == "${JOBS_IMAGE}" ]]' in build_script
+    assert "python /job/serverless/jobs/run_lightgbm_g8.py --help" in jobs_dockerfile
 
 
 def test_runtime_images_exclude_development_dependencies() -> None:

@@ -1,10 +1,10 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G7 complete; the validation-only isotonic candidate is frozen; G8 awaits fresh authorization after two fail-closed pre-test attempts
+Status: G0-G7 complete; the validation-only isotonic candidate is frozen; G8 awaits fresh authorization after three fail-closed pre-test attempts
 
 Date: 2026-08-26
 
-Status reconciled: 2026-09-12
+Status reconciled: 2026-09-13
 
 ## Outcome
 
@@ -1165,6 +1165,35 @@ the MLflow absence-verification receipt SHA-256 is
 No evaluation result exists to log, and another Job requires a new signed
 authorization.
 
+A third exact-hash authorization created exactly one Job,
+`aijob-e00gw2jh294yqa39pd`, on 2026-09-13. It failed while importing the
+injected runner because the runner referenced `S3PublicationIntent`, which was
+added after the frozen runtime image was published. The failure preceded
+authorization verification, intent acquisition, candidate download and final
+download, so `test_fold_accessed=false` and no model evaluation occurred. An
+authenticated query of governed-evaluation experiment `3` found zero matching
+MLflow runs. The recovered submission, terminal monitor, redacted log and
+verified-outcome SHA-256 values are respectively
+`26a57b160b3abfd9fd5769076294c67c945056d5da02f07ce07705d62d558207`,
+`c69f11bce6d77a15cba4bce8fe9f6f7564ce2c37d057a049bb6772c5695c4d68`,
+`af12942515c13f6d270979a744d19cdc57018c065009cd271f36bd497be9d46f`,
+and `db743ebd216066feecec8d743246d2a6652558e25b2f1eef6409a3d3388ec9a7`.
+The final key is `INACTIVE`, MLflow is `STOPPED`, and the temporary operator
+SSH rule was removed.
+
+The corrected injected runner now owns its minimal publication-intent contract
+and conditional single-object publisher, so it remains compatible with the
+frozen model runtime while retaining `If-None-Match: *`, read-back checksum
+verification, marker-last publication and no bucket-list permission. G8
+preflight v2 additionally executes the exact injected runner inside the exact
+digest-pinned image with container networking disabled and binds that runner
+SHA-256 into the receipt. The formerly failing runtime passed this offline gate
+with runner SHA-256
+`139f68ff5926507124257ab4f8a252e13360001d485e1f8f5ea0da753b65dbfa`.
+The Jobs Dockerfile also imports the G8 entrypoint during every image build.
+No retry is authorized; another Job requires a new signed authorization and a
+new run ID.
+
 ### G9 — Cost Reconciliation And Exit
 
 Operator exports the campaign's Nebius Billing usage with sensitive tenant
@@ -1242,6 +1271,9 @@ production/client performance claim.
   record the missing campaign-policy cause, the two exact G6 final-identity
   rules are deployed, and the corrected provisioner passes a live idempotency
   run (2026-09-13).
+- [x] The third pre-test G8 failure is receipt-bound; the frozen-image/injected-
+  runner compatibility gap is fixed by an offline exact-image preflight and a
+  backwards-compatible conditional publisher (2026-09-13).
 - [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
@@ -1260,9 +1292,10 @@ fixed nine-Job matrix, logged nine distinct MLflow runs, passed all completion
 gates, and selected isotonic calibration without accessing the test fold. All
 20 development slots are now consumed. G7 then checksum-froze that exact
 candidate and verified the signed, exact-hash authorization without starting
-MLflow or exposing the test fold. Two subsequent G8 Jobs failed closed before
-candidate or final-fold download; the discovered G6 policy omission is fixed,
-and G8 now waits for a fresh signed authorization.
+MLflow or exposing the test fold. Three subsequent G8 Jobs failed closed before
+candidate or final-fold download. The G6 policy omission and then the injected-
+runner/frozen-image compatibility gap are fixed, and G8 now waits for a fresh
+signed authorization.
 
 ## Related Documentation
 

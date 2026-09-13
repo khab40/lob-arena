@@ -3,6 +3,16 @@
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 
+- Recorded the third exactly-once G8 Job as a verified pre-test failure: the
+  injected runner referenced a publication-intent type absent from the frozen
+  runtime image, so no candidate/final download, evaluation, or MLflow run
+  occurred. Made the injected conditional publisher backwards compatible,
+  added G8 preflight v2 to execute and bind the exact runner inside the exact
+  pinned image with networking disabled, added a build-time G8 entrypoint
+  smoke, and verified the formerly failing digest locally. The final key and
+  MLflow VM are returned to their inactive/stopped states; another Job requires
+  a new authorization.
+
 - Expanded the later CEO/customer UI into GitHub Story #91 and added it to
   Project #3 as Todo. The secure guided path is now Sign in → Data → Replay →
   Experiments → Management Summary, with selective restoration of the archived

@@ -15,6 +15,7 @@ from app.market_data.projections import C4MlflowDatasetReleaseReceipt
 from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import (
     CloudArtifact,
+    IMMUTABLE_IMAGE_PATTERN,
     LightGbmCloudJobRequest,
     Wave1ExperimentSpec,
     Wave1TabularProjectionInput,
@@ -77,9 +78,23 @@ class G8InjectedFile(_StrictModel):
         return self
 
 
+class G8RuntimeCompatibility(_StrictModel):
+    schema_version: Literal["lightgbm_wave1_g8_runtime_compatibility_v1"] = (
+        "lightgbm_wave1_g8_runtime_compatibility_v1"
+    )
+    verified: Literal[True] = True
+    verified_at: AwareDatetime
+    image: str = Field(pattern=IMMUTABLE_IMAGE_PATTERN)
+    runner_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    network_disabled: Literal[True] = True
+
+
 class G8PreflightReceipt(_StrictModel):
-    schema_version: Literal["lightgbm_wave1_g8_preflight_v1"] = (
-        "lightgbm_wave1_g8_preflight_v1"
+    schema_version: Literal[
+        "lightgbm_wave1_g8_preflight_v1",
+        "lightgbm_wave1_g8_preflight_v2",
+    ] = (
+        "lightgbm_wave1_g8_preflight_v2"
     )
     status: Literal["ready_for_exactly_one_submission"] = "ready_for_exactly_one_submission"
     created_at: AwareDatetime
@@ -103,6 +118,7 @@ class G8PreflightReceipt(_StrictModel):
     test_fold_accessed: Literal[False] = False
     cloud_resources_mutated: Literal[False] = False
     injected_files: tuple[G8InjectedFile, ...]
+    runtime_compatibility: G8RuntimeCompatibility | None = None
 
     @model_validator(mode="after")
     def validate_boundaries(self) -> "G8PreflightReceipt":
@@ -118,7 +134,66 @@ class G8PreflightReceipt(_StrictModel):
         paths = [item.container_path for item in self.injected_files]
         if len(paths) != len(set(paths)):
             raise ValueError("G8 injected container paths must be unique")
+        if self.schema_version == "lightgbm_wave1_g8_preflight_v2":
+            runner = next(
+                (item for item in self.injected_files if item.local_name == "run_lightgbm_g8.py"),
+                None,
+            )
+            if (
+                runner is None
+                or self.runtime_compatibility is None
+                or self.runtime_compatibility.image != self.image
+                or self.runtime_compatibility.runner_sha256 != runner.sha256
+            ):
+                raise ValueError(
+                    "G8 v2 preflight must bind the exact runner to the exact runtime image"
+                )
         return self
+
+
+def verify_g8_runtime_compatibility(
+    image: str,
+    runner: Path,
+    *,
+    verified_at: datetime | None = None,
+) -> G8RuntimeCompatibility:
+    """Import the exact injected runner inside the exact frozen image offline."""
+
+    runner = runner.resolve()
+    if not runner.is_file():
+        raise ValueError("G8 runtime compatibility requires the exact injected runner")
+    docker = shutil.which("docker")
+    if docker is None:
+        raise RuntimeError("G8 runtime compatibility requires Docker")
+    completed = subprocess.run(
+        [
+            docker,
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--entrypoint",
+            "python",
+            "--mount",
+            f"type=bind,source={runner},target=/job/g8/run_lightgbm_g8.py,readonly",
+            image,
+            "/job/g8/run_lightgbm_g8.py",
+            "--help",
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+        timeout=180,
+    )
+    if completed.returncode:
+        raise RuntimeError(
+            "G8 injected runner is incompatible with the frozen runtime image"
+        )
+    return G8RuntimeCompatibility(
+        verified_at=verified_at or datetime.now(UTC),
+        image=image,
+        runner_sha256=sha256_file(runner),
+    )
 
 
 def prepare_g8_preflight(
@@ -146,6 +221,11 @@ def prepare_g8_preflight(
     freeze = load_g7_candidate_freeze(freeze_root)
     authorization = load_g7_authorization(authorization_root)
     _verify_authorization_binding(freeze, authorization, freeze_root)
+    runtime_compatibility = verify_g8_runtime_compatibility(
+        freeze.image,
+        runner,
+        verified_at=prepared_at,
+    )
     publication = _load_final_publication(final_publication_evidence)
     lineage = C4MlflowDatasetReleaseReceipt.model_validate_json(
         c4_mlflow_evidence.read_text(encoding="utf-8")
@@ -258,6 +338,7 @@ def prepare_g8_preflight(
             )
         )
         receipt = G8PreflightReceipt(
+            schema_version="lightgbm_wave1_g8_preflight_v2",
             created_at=prepared_at,
             tool_git_commit=tool_git_commit,
             campaign_id=freeze.campaign_id,
@@ -275,6 +356,7 @@ def prepare_g8_preflight(
             request_sha256=request.canonical_hash(),
             image=freeze.image,
             injected_files=injected,
+            runtime_compatibility=runtime_compatibility,
         )
         (staging / "g8-preflight.json").write_text(
             receipt.model_dump_json(indent=2) + "\n", encoding="utf-8"
