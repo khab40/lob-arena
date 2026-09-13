@@ -186,8 +186,8 @@ diagnostic is retained separately from the passing final receipt.
 - G8: open. Three separately authorized Jobs failed closed before candidate or
   final-fold download. The latest Job, `aijob-e00gw2jh294yqa39pd`, exposed an
   injected-runner/frozen-image import mismatch before any evaluation or MLflow
-  run. The runner is now backwards compatible and G8 preflight v2 executes the
-  exact runner inside the exact pinned image offline; a fresh signed
+  run. The runner is now backwards compatible and G8 preflight v2 executes its
+  conditional-publication probe inside the exact pinned image offline; a fresh signed
   authorization is required before another submission.
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.

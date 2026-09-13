@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import urllib.parse
 import urllib.request
@@ -51,7 +52,78 @@ class S3PublicationIntent:
     destination: str
 
 
+def _runtime_compatibility_check() -> None:
+    """Exercise publication against the exact frozen helper call contract."""
+
+    calls: list[tuple[str, ...]] = []
+    objects: dict[str, bytes] = {}
+    hashes: dict[str, str] = {}
+
+    # Deliberately matches commit 690a9e9: no keyword arguments are accepted.
+    def frozen_aws_json(_endpoint_url: str, *args: str) -> dict[str, object]:
+        calls.append(args)
+        key = args[args.index("--key") + 1]
+        if args[:2] == ("s3api", "put-object"):
+            body = Path(args[args.index("--body") + 1])
+            objects[key] = body.read_bytes()
+            hashes[key] = args[args.index("--metadata") + 1].removeprefix("sha256=")
+            return {}
+        if args[:2] == ("s3api", "head-object"):
+            return {
+                "ContentLength": len(objects[key]),
+                "Metadata": {"sha256": hashes[key]},
+            }
+        if args[:2] == ("s3api", "get-object"):
+            Path(args[-1]).write_bytes(objects[key])
+            return {}
+        if args[:2] == ("s3api", "delete-object"):
+            objects.pop(key, None)
+            hashes.pop(key, None)
+            return {}
+        raise RuntimeError("G8 runtime compatibility probe reached an unexpected operation")
+
+    original_aws_json = object_storage._aws_json
+    object_storage._aws_json = frozen_aws_json
+    try:
+        with tempfile.TemporaryDirectory(prefix="g8-runtime-compat-") as directory:
+            source = Path(directory) / "result"
+            source.mkdir()
+            (source / "artifact.json").write_text(
+                '{"runtime_compatible":true}\n', encoding="utf-8"
+            )
+            inventory = object_storage.inventory_directory(source, exclude_markers=True)
+            object_storage.write_checksum_file(source, inventory)
+            (source / "SUCCESS").write_text(
+                inventory.model_dump_json(indent=2), encoding="utf-8"
+            )
+            destination = (
+                "s3://aimada-wave1-results-e00g6zvxpr00/"
+                "campaigns/runtime-compatibility/final/probe"
+            )
+            publish_s3_result(
+                source,
+                destination,
+                endpoint_url=ENDPOINT,
+                publication_intent=S3PublicationIntent(destination=destination),
+            )
+    finally:
+        object_storage._aws_json = original_aws_json
+
+    puts = [call for call in calls if call[:2] == ("s3api", "put-object")]
+    if (
+        not puts
+        or any("list-objects-v2" in call for call in calls)
+        or any(call[call.index("--if-none-match") + 1] != "*" for call in puts)
+        or not puts[-1][puts[-1].index("--key") + 1].endswith("/SUCCESS")
+    ):
+        raise RuntimeError("G8 runtime compatibility publication invariant failed")
+
+
 def main() -> int:
+    if sys.argv[1:] == ["--runtime-compatibility-check"]:
+        _runtime_compatibility_check()
+        print("g8-runtime-compatible")
+        return 0
     parser = argparse.ArgumentParser(
         description="Execute the one authorized LightGBM Wave 1 final evaluation."
     )
@@ -365,8 +437,8 @@ def _publish_s3_directory(
                 key=key,
                 expected_sha256=item.sha256,
                 endpoint_url=endpoint_url,
+                uploaded_keys=uploaded_keys,
             )
-            uploaded_keys.append(key)
 
         marker_path = source / marker
         if not marker_path.is_file():
@@ -378,8 +450,8 @@ def _publish_s3_directory(
             key=marker_key,
             expected_sha256=sha256_file(marker_path),
             endpoint_url=endpoint_url,
+            uploaded_keys=uploaded_keys,
         )
-        uploaded_keys.append(marker_key)
     except Exception:
         for key in uploaded_keys:
             try:
@@ -404,8 +476,8 @@ def _put_if_absent_and_verify(
     key: str,
     expected_sha256: str,
     endpoint_url: str,
+    uploaded_keys: list[str],
 ) -> None:
-    timeout_seconds = max(300, int(source.stat().st_size / (5 * 1024 * 1024)) + 120)
     object_storage._aws_json(
         endpoint_url,
         "s3api",
@@ -420,8 +492,10 @@ def _put_if_absent_and_verify(
         f"sha256={expected_sha256}",
         "--if-none-match",
         "*",
-        timeout_seconds=timeout_seconds,
     )
+    # The conditional create succeeded, so rollback owns this key before any
+    # verification that can fail. This includes the terminal marker.
+    uploaded_keys.append(key)
     head = object_storage._aws_json(
         endpoint_url,
         "s3api",
@@ -450,7 +524,6 @@ def _put_if_absent_and_verify(
             "--key",
             key,
             str(target),
-            timeout_seconds=timeout_seconds,
         )
         if sha256_file(target) != expected_sha256:
             raise ValueError(f"remote Object Storage read-back checksum mismatch: {key}")

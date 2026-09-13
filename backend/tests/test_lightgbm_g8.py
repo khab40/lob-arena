@@ -279,7 +279,8 @@ def test_g8_injected_publisher_conditionally_creates_every_object(
     objects: dict[str, bytes] = {}
     hashes: dict[str, str] = {}
 
-    def fake_aws(_endpoint: str, *args: str, **_kwargs: object) -> dict[str, object]:
+    # Match the exact helper signature in the governed 690a9e9 runtime.
+    def fake_aws(_endpoint: str, *args: str) -> dict[str, object]:
         calls.append(args)
         key = args[args.index("--key") + 1]
         if args[:2] == ("s3api", "put-object"):
@@ -309,6 +310,51 @@ def test_g8_injected_publisher_conditionally_creates_every_object(
     assert puts[-1][puts[-1].index("--key") + 1].endswith("/SUCCESS")
 
 
+def test_g8_runtime_probe_exercises_the_frozen_publication_contract() -> None:
+    runner._runtime_compatibility_check()
+
+
+def test_g8_publisher_rolls_back_a_put_that_fails_verification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / "result"
+    source.mkdir()
+    (source / "artifact.json").write_text('{"verified":true}\n', encoding="utf-8")
+    inventory = inventory_directory(source, exclude_markers=True)
+    write_checksum_file(source, inventory)
+    (source / "SUCCESS").write_text(
+        inventory.model_dump_json(indent=2), encoding="utf-8"
+    )
+    objects: dict[str, bytes] = {}
+    deleted: list[str] = []
+
+    def fake_aws(_endpoint: str, *args: str) -> dict[str, object]:
+        key = args[args.index("--key") + 1]
+        if args[:2] == ("s3api", "put-object"):
+            objects[key] = Path(args[args.index("--body") + 1]).read_bytes()
+            return {}
+        if args[:2] == ("s3api", "head-object"):
+            return {"ContentLength": len(objects[key]) + 1, "Metadata": {}}
+        if args[:2] == ("s3api", "delete-object"):
+            deleted.append(key)
+            objects.pop(key, None)
+            return {}
+        raise AssertionError(args)
+
+    monkeypatch.setattr(runner.object_storage, "_aws_json", fake_aws)
+
+    with pytest.raises(ValueError, match="metadata mismatch"):
+        runner.publish_s3_result(
+            source,
+            RESULT_URI,
+            endpoint_url="https://storage.eu-north1.nebius.cloud",
+            publication_intent=runner.S3PublicationIntent(destination=RESULT_URI),
+        )
+
+    assert len(deleted) == 1
+    assert objects == {}
+
+
 def test_g8_runtime_compatibility_runs_exact_runner_in_frozen_image_offline(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -332,6 +378,7 @@ def test_g8_runtime_compatibility_runs_exact_runner_in_frozen_image_offline(
     assert command[command.index("--entrypoint") + 1] == "python"
     assert IMAGE in command
     assert str(injected_runner.resolve()) in command[command.index("--mount") + 1]
+    assert command[-1] == "--runtime-compatibility-check"
     assert receipt.image == IMAGE
     assert receipt.runner_sha256 == sha256_file(injected_runner)
 

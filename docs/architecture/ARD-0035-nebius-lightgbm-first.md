@@ -230,11 +230,14 @@ The decision is to keep the authorized model runtime immutable and make the
 small injected control plane explicitly backwards compatible. Its private
 publication implementation performs only conditional `PutObject` operations,
 checksum read-back, marker-last publication and bounded rollback of objects it
-created. Preflight v2 now runs the exact injected runner inside the exact
-digest-pinned image with networking disabled and binds both identities in its
-receipt; the previously failing image passes with runner SHA-256
-`139f68ff5926507124257ab4f8a252e13360001d485e1f8f5ea0da753b65dbfa`.
-The image build independently imports the packaged G8 entrypoint. This closes
+created. Each successful conditional create enters rollback ownership before
+metadata or read-back verification can fail. Preflight v2 now runs the exact
+injected runner's conditional-
+publication compatibility probe inside the exact digest-pinned image with
+networking disabled and binds both identities in its receipt; the previously
+failing image passes with runner SHA-256
+`b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a`.
+The image build independently runs the same packaged G8 probe. This closes
 the compatibility class of failure before authorization or cloud spend without
 changing the frozen model or its dependency environment. No fourth Job is
 authorized by this remediation.

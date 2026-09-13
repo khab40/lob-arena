@@ -29,7 +29,10 @@ def test_serverless_images_use_distinct_dockerfiles_and_tags() -> None:
     assert 'serverless/endpoint/Dockerfile"' in build_script
     assert 'serverless/jobs/Dockerfile"' in build_script
     assert 'if [[ "${ENDPOINT_IMAGE}" == "${JOBS_IMAGE}" ]]' in build_script
-    assert "python /job/serverless/jobs/run_lightgbm_g8.py --help" in jobs_dockerfile
+    assert (
+        "python /job/serverless/jobs/run_lightgbm_g8.py --runtime-compatibility-check"
+        in jobs_dockerfile
+    )
 
 
 def test_runtime_images_exclude_development_dependencies() -> None:

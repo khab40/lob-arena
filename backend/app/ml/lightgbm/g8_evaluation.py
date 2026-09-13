@@ -157,7 +157,7 @@ def verify_g8_runtime_compatibility(
     *,
     verified_at: datetime | None = None,
 ) -> G8RuntimeCompatibility:
-    """Import the exact injected runner inside the exact frozen image offline."""
+    """Exercise the exact injected runner inside the exact frozen image offline."""
 
     runner = runner.resolve()
     if not runner.is_file():
@@ -178,7 +178,7 @@ def verify_g8_runtime_compatibility(
             f"type=bind,source={runner},target=/job/g8/run_lightgbm_g8.py,readonly",
             image,
             "/job/g8/run_lightgbm_g8.py",
-            "--help",
+            "--runtime-compatibility-check",
         ],
         check=False,
         text=True,

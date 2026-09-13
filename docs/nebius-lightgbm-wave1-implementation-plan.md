@@ -1184,13 +1184,16 @@ SSH rule was removed.
 The corrected injected runner now owns its minimal publication-intent contract
 and conditional single-object publisher, so it remains compatible with the
 frozen model runtime while retaining `If-None-Match: *`, read-back checksum
-verification, marker-last publication and no bucket-list permission. G8
-preflight v2 additionally executes the exact injected runner inside the exact
-digest-pinned image with container networking disabled and binds that runner
-SHA-256 into the receipt. The formerly failing runtime passed this offline gate
+verification, marker-last publication and no bucket-list permission. Every
+successful conditional create enters rollback ownership before its metadata or
+read-back verification. G8
+preflight v2 additionally executes the exact injected runner's conditional-
+publication compatibility probe inside the exact digest-pinned image with
+container networking disabled and binds that runner SHA-256 into the receipt.
+The formerly failing runtime passed this offline gate
 with runner SHA-256
-`139f68ff5926507124257ab4f8a252e13360001d485e1f8f5ea0da753b65dbfa`.
-The Jobs Dockerfile also imports the G8 entrypoint during every image build.
+`b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a`.
+The Jobs Dockerfile runs the same G8 publication probe during every image build.
 No retry is authorized; another Job requires a new signed authorization and a
 new run ID.
 
