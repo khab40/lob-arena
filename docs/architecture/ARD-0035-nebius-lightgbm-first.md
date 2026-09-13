@@ -4,11 +4,11 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-10
+Status reconciled: 2026-09-13
 
 ## Implementation Status
 
-Status: `[g0-g6-complete; g7-g9-pending]`
+Status: `[g0-g7-complete; g8-open; g9-pending]`
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -181,7 +181,7 @@ and trusted public-key SHA-256
 Independent verification reports `authorized`, `signature_verified=true`, and
 `final_identity_available=true`. G8's final fold remains unopened.
 
-Two separately authorized G8 Jobs have since failed closed before candidate or
+The first two separately authorized G8 Jobs failed closed before candidate or
 final-release download. The second, `aijob-e00rwzexvwb11rmt4c`, is bound to
 authorization receipt SHA-256
 `99c0660231ec0584c38ba85f0d2d6c25e155b22162014a00b6b9f60eab733d60`,
@@ -213,6 +213,34 @@ and
 the idempotent provisioner state receipt SHA-256 is
 `7a1d3a7be81c4d526eed2479273adc2be76c74be2adc607c04a55eaaabca26c1`.
 Another Job requires a fresh signed authorization.
+
+The third authorization was consumed by exactly one Job,
+`aijob-e00gw2jh294yqa39pd`. The container failed before authorization
+verification because the newly injected runner imported
+`S3PublicationIntent` from an older frozen runtime image that did not contain
+it. The submission, monitor, redacted-log and verified-outcome SHA-256 values
+are `26a57b160b3abfd9fd5769076294c67c945056d5da02f07ce07705d62d558207`,
+`c69f11bce6d77a15cba4bce8fe9f6f7564ce2c37d057a049bb6772c5695c4d68`,
+`af12942515c13f6d270979a744d19cdc57018c065009cd271f36bd497be9d46f`,
+and `db743ebd216066feecec8d743246d2a6652558e25b2f1eef6409a3d3388ec9a7`.
+No candidate or final object was downloaded, and an authenticated MLflow query
+found zero matching governed-evaluation runs.
+
+The decision is to keep the authorized model runtime immutable and make the
+small injected control plane explicitly backwards compatible. Its private
+publication implementation performs only conditional `PutObject` operations,
+checksum read-back, marker-last publication and bounded rollback of objects it
+created. Each successful conditional create enters rollback ownership before
+metadata or read-back verification can fail. Preflight v2 now runs the exact
+injected runner's conditional-
+publication compatibility probe inside the exact digest-pinned image with
+networking disabled and binds both identities in its receipt; the previously
+failing image passes with runner SHA-256
+`b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a`.
+The image build independently runs the same packaged G8 probe. This closes
+the compatibility class of failure before authorization or cloud spend without
+changing the frozen model or its dependency environment. No fourth Job is
+authorized by this remediation.
 
 ## Context
 

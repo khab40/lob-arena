@@ -621,7 +621,10 @@ def _load_wave1_request(evidence_path: Path | None, input_uri: str) -> LightGbmC
             request = LightGbmCloudJobRequest.model_validate_json(
                 (package / "request.json").read_text(encoding="utf-8")
             )
-        elif evidence.get("schema_version") == "lightgbm_wave1_g8_preflight_v1":
+        elif evidence.get("schema_version") in {
+            "lightgbm_wave1_g8_preflight_v1",
+            "lightgbm_wave1_g8_preflight_v2",
+        }:
             package = evidence_path.parent
             verify_g8_preflight(package)
             request = LightGbmCloudJobRequest.model_validate_json(
@@ -633,7 +636,8 @@ def _load_wave1_request(evidence_path: Path | None, input_uri: str) -> LightGbmC
         raise SystemExit("LightGBM Wave 1 request evidence is invalid") from exc
     expected_input_uri = (
         evidence.get("final_input_uri")
-        if evidence.get("schema_version") == "lightgbm_wave1_g8_preflight_v1"
+        if evidence.get("schema_version")
+        in {"lightgbm_wave1_g8_preflight_v1", "lightgbm_wave1_g8_preflight_v2"}
         else evidence.get("destination")
     )
     if expected_input_uri != input_uri:
