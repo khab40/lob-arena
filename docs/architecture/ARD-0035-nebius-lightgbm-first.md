@@ -179,8 +179,40 @@ signature SHA-256
 and trusted public-key SHA-256
 `a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
 Independent verification reports `authorized`, `signature_verified=true`, and
-`final_identity_available=true`. G8's one final evaluation is next; MLflow
-remains stopped until that verified experiment window.
+`final_identity_available=true`. G8's final fold remains unopened.
+
+Two separately authorized G8 Jobs have since failed closed before candidate or
+final-release download. The second, `aijob-e00rwzexvwb11rmt4c`, is bound to
+authorization receipt SHA-256
+`99c0660231ec0584c38ba85f0d2d6c25e155b22162014a00b6b9f60eab733d60`,
+preflight SHA-256
+`18384b38c840fd903f3ee02824d98248b3704f885225c38a35a572c533379bea`,
+recovered submission receipt SHA-256
+`1a41e50036da77febeb0d8e609c2f0e3febbd0ee9aee9ce09ebf8b0c9450136f`,
+terminal monitor receipt SHA-256
+`8a2d21a435e15f19b8e8f62e99fabbd77e888542ebfcff2103263e5523eb66f8`,
+and redacted log SHA-256
+`53c70aae73acf70488552a569ec6b7db49296e14d4609f3080fbcfc59fb8be80`.
+The log terminates at the exactly-once intent claim, which precedes both S3
+downloads and evaluation. An authenticated query of MLflow experiment `3`
+found zero runs after submission, so no test result or success claim was
+recorded.
+
+The decisive live read-back was results-bucket policy version 3: the active G6
+campaign had its development writer but neither the final identity's
+development-candidate viewer nor final-results writer. Version 5 now adds only
+those two exact G6 prefixes and preserves the five prior rules. The identity
+provisioner is changed to append missing rules only when every existing rule
+matches a recognized Wave 1 lane, to use resource-version concurrency control,
+and to verify the resulting policy by read-back. The final key is `INACTIVE`
+and MLflow is `STOPPED`. The policy-remediation and MLflow absence-verification
+receipt SHA-256 values are respectively
+`5a9bbc2f998f8cc3621e2039b06428272ed19b2628b7f4c0a9fc5ce10fe680fd`
+and
+`1d3457e241e726ff2ecc210f7ce33b0ddb69b9447c6cd7e4561edb3a59dce950`;
+the idempotent provisioner state receipt SHA-256 is
+`7a1d3a7be81c4d526eed2479273adc2be76c74be2adc607c04a55eaaabca26c1`.
+Another Job requires a fresh signed authorization.
 
 ## Context
 

@@ -183,7 +183,11 @@ diagnostic is retained separately from the passing final receipt.
 - G7: complete. The validation-selected candidate is checksum-frozen, the
   exact-hash operator statement is signed, and independent verification exposes
   the final identity without reading the test fold.
-- G8: run the final test exactly once.
+- G8: open. Two separately authorized Jobs failed closed before candidate or
+  final-fold download. The latest Job, `aijob-e00rwzexvwb11rmt4c`, exposed a
+  missing G6 final-identity results policy; the exact development-viewer and
+  final-writer rules are now deployed, but a fresh signed authorization is
+  required before another submission.
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
 
@@ -284,7 +288,9 @@ Reconciled on **2026-09-12**:
   the frozen four-date forward corpus, and its governed release evidence.
 - [#23](https://github.com/khab40/lob-arena/issues/23) records the completed
   G5-G7 evidence, the 20/20 consumed-slot reconciliation, the selected and
-  authorized validation-only isotonic candidate, and the G8-G9 remainder.
+  authorized validation-only isotonic candidate, both fail-closed pre-test G8
+  attempts, the corrected least-privilege G6 campaign policy, and the G8-G9
+  remainder.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),
