@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G7 complete; the validation-only isotonic candidate is frozen; G8 awaits fresh authorization after three fail-closed pre-test attempts
+Status: G0-G7 complete; G8 terminally failed after its single final-release access; G9 pending
 
 Date: 2026-08-26
 
@@ -1197,6 +1197,37 @@ The Jobs Dockerfile runs the same G8 publication probe during every image build.
 No retry is authorized; another Job requires a new signed authorization and a
 new run ID.
 
+The fourth authorization, timestamped `2026-09-13T15:33:19+00:00`, created
+exactly one Job: `aijob-e00vtamgkr07mwzt4t`. It downloaded both the frozen
+candidate and sealed C4 final release, then failed before loading or scoring any
+final rows. The C4 release stores projection objects beneath `artifacts`, while
+the reviewed request named the development input-package wrapper
+`projection-artifacts`; the runner therefore raised `ValueError` during dataset
+loading. Because final bytes were downloaded, the conservative governance
+record sets `test_fold_accessed=true` and the no-retry rule is now binding.
+
+The immutable FAILED publication contains 104 objects and 12,485,865 bytes;
+its locally reconstructed canonical inventory SHA-256 is
+`6a3eefd64067228450768b9a8a4a01e8640bd81771f5b29f782ad66d3a1f9ce0`.
+The authorization, preflight, submission, terminal monitor, redacted log, and
+verified-outcome SHA-256 values are respectively
+`3d901872cec5e8ae940e0cef35c30834b58409d78854a9fcd6e0a71e07fb957f`,
+`aa464851316d42e6374e8d9440625b9c933b6a8f20c2814dfa60e8b958bc2017`,
+`4a93402e9a1c4291429276e1e8b79480344c8fb91acc3d028662ba35975bfb57`,
+`e6975dcd517dda25b91a0b6bea9a786c87f7d82a451fcb71a8dcc34355016b72`,
+`eadddbdbac943939a9b8243398584ac8866352b30117ef7ea0e3fb9ed9ac2a8c`,
+and `f864b773dd0723e293f60e9b8ed9b086c84509685302c32160bc7028709fc91f`.
+An authenticated query of governed-evaluation experiment `3` found zero runs
+named `nasdaq-g8-final-r4-20260913`; no final metrics exist to log. The final
+access key is `INACTIVE`, MLflow is `STOPPED`, and the temporary `/32` SSH rule
+was removed. G8 is terminal, not passed.
+
+The forward-only correction binds future G8 requests to the final
+publication's actual `artifacts` root, validates that the C4 receipt inventories
+test objects under `artifacts/tabular/test`, and regression-tests the resulting
+copy layout. It cannot alter this campaign's terminal result and does not
+authorize another Job.
+
 ### G9 — Cost Reconciliation And Exit
 
 Operator exports the campaign's Nebius Billing usage with sensitive tenant
@@ -1262,7 +1293,9 @@ production/client performance claim.
   Jobs, 12 gates, 20/20 total development slots, isotonic selected).
 - [x] G7 candidate and final authorization are signed (2026-09-12; exact-hash
   authorization verified, final identity available, no test access).
-- [ ] G8 one final evaluation verifies.
+- [x] G8 exactly one final-release access executed and its terminal FAILED
+  outcome verifies (2026-09-13); no retry is permitted and no final metrics
+  exist.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
   and the G5 status (2026-09-07).
@@ -1277,6 +1310,9 @@ production/client performance claim.
 - [x] The third pre-test G8 failure is receipt-bound; the frozen-image/injected-
   runner compatibility gap is fixed by an offline exact-image preflight and a
   backwards-compatible conditional publisher (2026-09-13).
+- [x] The single test-reading G8 Job is receipt-bound, its FAILED publication
+  and zero-run MLflow result are verified, access is revoked, and the C4/G8
+  artifact-root mismatch has a forward-only regression fix (2026-09-13).
 - [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.

@@ -8,7 +8,7 @@ Status reconciled: 2026-09-13
 
 ## Implementation Status
 
-Status: `[g0-g7-complete; g8-open; g9-pending]`
+Status: `[g0-g7-complete; g8-terminal-failed; g9-pending]`
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -317,6 +317,28 @@ may produce the research-only `research_baseline_qualified` disposition and
 unlock Wave 2 engineering. Production/client acceptance still requires data
 rights, independent clean-window review and evaluation evidence appropriate to
 that claim.
+
+### G8 terminal outcome — 2026-09-13
+
+The fourth signed authorization created exactly one final Job,
+`aijob-e00vtamgkr07mwzt4t`. The Job downloaded the selected candidate and the
+sealed C4 final release, so the conservative record marks the test fold as
+accessed. It then failed before scoring: G8 requested the development wrapper
+`projection-artifacts`, but the final C4 publication is rooted at `artifacts`.
+The result prefix contains a verified `FAILED` marker and no final metrics. An
+authenticated lookup in MLflow experiment `3` found zero runs named
+`nasdaq-g8-final-r4-20260913`, consistent with failure before the tracking call.
+
+The immutable authorization, preflight, submission, monitor, redacted log, and
+verified-outcome receipt hashes are recorded in the Wave 1 implementation plan.
+The final Object Storage key is `INACTIVE`, the MLflow VM is `STOPPED`, and the
+temporary operator SSH rule was removed. Under the predeclared failure rule,
+there is no retry or post-test tuning. G8 is terminally complete but did not
+pass, and no final detector or calibration claim can be made.
+
+Future campaigns now bind G8 to the actual C4 `artifacts` root and require the
+publication inventory to prove test projection objects exist under that root.
+This forward-only correction does not change the terminal Wave 1 outcome.
 
 ## Cost And Operations
 

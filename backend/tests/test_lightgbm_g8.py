@@ -20,10 +20,12 @@ from app.ml.lightgbm.cloud_contracts import (
     Wave1FinalAuthorization,
     Wave1TabularProjectionInput,
 )
-from app.ml.lightgbm import g8_evaluation
+from app.ml.lightgbm import cloud_runner, g8_evaluation
 from app.ml.lightgbm.g8_evaluation import (
+    FINAL_PROJECTION_ARTIFACT_ROOT,
     G8InjectedFile,
     G8PreflightReceipt,
+    _verify_final_projection_layout,
     verify_g8_preflight,
 )
 from app.nebius.object_storage import inventory_directory, write_checksum_file
@@ -71,6 +73,56 @@ def test_g8_injected_destination_must_exactly_mirror_local_name() -> None:
             sha256="a" * 64,
             size_bytes=1,
         )
+
+
+def test_g8_final_projection_root_matches_c4_publication_layout() -> None:
+    release_prefix = "releases/nasdaq-public-sample-v1-c4-test/staging"
+    objects = (
+        {
+            "key": f"{release_prefix}/artifacts/tabular/test/test.parquet",
+            "sha256": "a" * 64,
+            "size_bytes": 42,
+        },
+    )
+
+    _verify_final_projection_layout(objects, FINAL_URI)
+    assert FINAL_PROJECTION_ARTIFACT_ROOT == "artifacts"
+
+
+def test_g8_final_projection_root_rejects_development_package_layout() -> None:
+    release_prefix = "releases/nasdaq-public-sample-v1-c4-test/staging"
+    objects = (
+        {
+            "key": f"{release_prefix}/projection-artifacts/tabular/test/test.parquet",
+            "sha256": "a" * 64,
+            "size_bytes": 42,
+        },
+    )
+
+    with pytest.raises(ValueError, match="declared artifact root"):
+        _verify_final_projection_layout(objects, FINAL_URI)
+
+
+def test_g8_final_projection_root_copies_c4_layout_without_extra_nesting(
+    tmp_path: Path,
+) -> None:
+    input_root = tmp_path / "input"
+    published = input_root / FINAL_PROJECTION_ARTIFACT_ROOT / "tabular" / "test"
+    published.mkdir(parents=True)
+    (published / "test.parquet").write_bytes(b"sealed-fixture")
+    artifact_root = tmp_path / "result" / "artifacts"
+    artifact_root.mkdir(parents=True)
+
+    cloud_runner._copy_projection_artifacts(
+        input_root,
+        artifact_root,
+        FINAL_PROJECTION_ARTIFACT_ROOT,
+    )
+
+    assert (artifact_root / "tabular" / "test" / "test.parquet").read_bytes() == (
+        b"sealed-fixture"
+    )
+    assert not (artifact_root / "artifacts").exists()
 
 
 @pytest.mark.parametrize(
@@ -498,7 +550,7 @@ def _g8_package(tmp_path: Path) -> tuple[Path, LightGbmCloudJobRequest]:
             dataset_lineage_receipt=_file_artifact(
                 manifests / "c4-mlflow-dataset-release.json", package, "dataset_lineage"
             ),
-            projection_artifact_root="projection-artifacts",
+            projection_artifact_root=FINAL_PROJECTION_ARTIFACT_ROOT,
         ),
         result_uri=RESULT_URI,
         input_release_uri=FINAL_URI,

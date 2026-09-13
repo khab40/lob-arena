@@ -614,10 +614,11 @@ def _load_dataset(
         return build_wave1_fixture_dataset(artifact_root, access_mode=access_mode)
     if request.input.kind == "tabular-projection":
         projected = request.input
-        projection_source = (input_root / projected.projection_artifact_root).resolve()
-        if input_root not in projection_source.parents or not projection_source.is_dir():
-            raise ValueError("projection artifact root is missing or outside the staged input root")
-        shutil.copytree(projection_source, artifact_root, dirs_exist_ok=True)
+        _copy_projection_artifacts(
+            input_root,
+            artifact_root,
+            projected.projection_artifact_root,
+        )
         root_path = _verify_cloud_artifact(input_root, projected.frozen_root)
         root = FrozenPublicSampleRoot.model_validate_json(root_path.read_text(encoding="utf-8"))
         receipt_path = _verify_cloud_artifact(input_root, projected.dataset_lineage_receipt)
@@ -651,6 +652,17 @@ def _load_dataset(
         corpus_artifact_root=artifact_root,
         access_mode=access_mode,
     )
+
+
+def _copy_projection_artifacts(
+    input_root: Path,
+    artifact_root: Path,
+    projection_artifact_root: str,
+) -> None:
+    projection_source = (input_root / projection_artifact_root).resolve()
+    if input_root not in projection_source.parents or not projection_source.is_dir():
+        raise ValueError("projection artifact root is missing or outside the staged input root")
+    shutil.copytree(projection_source, artifact_root, dirs_exist_ok=True)
 
 
 def _validate_tabular_projection_lineage(

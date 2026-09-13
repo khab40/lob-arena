@@ -183,14 +183,17 @@ diagnostic is retained separately from the passing final receipt.
 - G7: complete. The validation-selected candidate is checksum-frozen, the
   exact-hash operator statement is signed, and independent verification exposes
   the final identity without reading the test fold.
-- G8: open. Three separately authorized Jobs failed closed before candidate or
-  final-fold download. The latest Job, `aijob-e00gw2jh294yqa39pd`, exposed an
-  injected-runner/frozen-image import mismatch before any evaluation or MLflow
-  run. The runner is now backwards compatible and G8 preflight v2 executes its
-  conditional-publication probe inside the exact pinned image offline; a fresh signed
-  authorization is required before another submission.
-- G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
-  record.
+- G8: terminal on 2026-09-13. The fourth authorization created exactly one Job,
+  `aijob-e00vtamgkr07mwzt4t`. It downloaded the candidate and sealed final
+  release, then failed before scoring because the request named the development
+  package root `projection-artifacts` while C4 had published the final package
+  under `artifacts`. The immutable FAILED result and authenticated zero-run
+  MLflow lookup verify that there are no final detector or calibration metrics.
+  The one-test rule forbids a retry or tuning after this access. A forward-only
+  preflight correction now binds the request to the C4 `artifacts` layout and
+  rejects publication receipts without test objects beneath that root.
+- G9: reconcile the terminal G8 outcome, quality unavailability, operations,
+  memory, and cost; sign the go/no-go record. Wave 2 remains locked.
 
 Wave 2 starts only if the disposition is `qualified_for_wave2` or
 `research_baseline_qualified`.

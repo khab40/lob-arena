@@ -30,6 +30,7 @@ PROJECT_ID = "project-e00g6zvxpr00waz8t3y51k"
 FINAL_BUCKET = "aimada-wave1-final-e00g6zvxpr00"
 RESULTS_BUCKET = "aimada-wave1-results-e00g6zvxpr00"
 APPROVED_MLFLOW_URI = "http://10.4.0.54:5500"
+FINAL_PROJECTION_ARTIFACT_ROOT = "artifacts"
 FINAL_RELEASE_PATTERN = re.compile(
     rf"s3://{FINAL_BUCKET}/releases/[a-z0-9][a-z0-9-]{{2,62}}/staging"
 )
@@ -237,6 +238,7 @@ def prepare_g8_preflight(
     if lineage.release_id != release_id or lineage.raw_rows_uploaded_to_mlflow:
         raise ValueError("G8 C4 lineage receipt does not bind the sealed final release")
     objects = _publication_objects(publication)
+    _verify_final_projection_layout(objects, final_uri)
     frozen_root_ref = _remote_artifact(
         objects, final_uri, "manifests/frozen-root.json", "frozen_root"
     )
@@ -300,7 +302,7 @@ def prepare_g8_preflight(
                     staging,
                     "c4_mlflow_dataset_release",
                 ),
-                projection_artifact_root="projection-artifacts",
+                projection_artifact_root=FINAL_PROJECTION_ARTIFACT_ROOT,
             ),
             result_uri=(
                 f"s3://{RESULTS_BUCKET}/campaigns/{freeze.campaign_id}/final/{run_id}"
@@ -396,6 +398,8 @@ def verify_g8_preflight(root: Path) -> G8PreflightReceipt:
         or request.image != receipt.image
         or request.candidate is None
         or request.candidate.sha256 != receipt.candidate_hash
+        or request.input.kind != "tabular-projection"
+        or request.input.projection_artifact_root != FINAL_PROJECTION_ARTIFACT_ROOT
     ):
         raise ValueError("G8 request no longer matches its preflight receipt")
     return receipt
@@ -433,6 +437,23 @@ def _publication_objects(payload: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     if not isinstance(objects, list) or not objects:
         raise ValueError("C4 final publication has no object inventory")
     return tuple(item for item in objects if isinstance(item, dict))
+
+
+def _verify_final_projection_layout(
+    objects: tuple[dict[str, Any], ...], release_uri: str
+) -> None:
+    """Bind G8 to the directory layout actually published by C4."""
+
+    prefix = release_uri.split("/", maxsplit=3)[-1].rstrip("/") + "/"
+    projection_prefix = f"{prefix}{FINAL_PROJECTION_ARTIFACT_ROOT}/tabular/test/"
+    matches = [item for item in objects if str(item.get("key", "")).startswith(projection_prefix)]
+    if not matches:
+        raise ValueError(
+            "C4 final publication has no test projection objects under the declared artifact root"
+        )
+    for item in matches:
+        _required_hash(item, "sha256")
+        _required_int(item, "size_bytes")
 
 
 def _remote_artifact(
