@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -170,10 +172,18 @@ def log_governed_evaluation_run(
     _require_artifact_root_file(checksum_path, artifact_root)
     if prediction_manifest_path.read_bytes() != predictions.canonical_bytes():
         raise ValueError("MLflow prediction manifest path is not canonical governed content")
+    benchmark_metrics: dict[str, float] = {}
+    benchmark_tags: dict[str, str] = {}
+    if benchmark_results_path is not None:
+        _require_artifact_root_file(benchmark_results_path, artifact_root)
+        # Validate before opening an MLflow run, not midway through logging.
+        benchmark_metrics = _benchmark_metrics(benchmark_results_path)
+        benchmark_tags = _c4_benchmark_tags(benchmark_results_path, predictions)
     mlflow = _mlflow(tracking_uri)
     mlflow.set_experiment(EVALUATION_EXPERIMENT)
     with mlflow.start_run(run_name=predictions.prediction_run_id) as run:
         tags = _binding_tags(training, governance_state="release_verified")
+        tags.update(benchmark_tags)
         tags.update(
             {
                 "calibration_id": calibration.calibration_id,
@@ -204,10 +214,8 @@ def log_governed_evaluation_run(
                 **cloud_metrics,
             }
         )
-        if benchmark_results_path is not None:
-            metrics = _benchmark_metrics(benchmark_results_path)
-            if metrics:
-                mlflow.log_metrics(metrics)
+        if benchmark_metrics:
+            mlflow.log_metrics(benchmark_metrics)
         for path in (bundle_path, checksum_path, prediction_manifest_path):
             mlflow.log_artifact(str(path), artifact_path="governed")
         if benchmark_results_path is not None:
@@ -292,6 +300,20 @@ def _mlflow(tracking_uri: str | None) -> Any:
 
 def _benchmark_metrics(path: Path) -> dict[str, float]:
     payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") == "g8_c4_observation_metrics_v1":
+        from app.ml.lightgbm.c4_evaluation import C4_METRIC_NAMES
+
+        metrics = payload.get("metrics")
+        if not isinstance(metrics, dict) or set(metrics) != C4_METRIC_NAMES:
+            raise ValueError("C4 benchmark must contain the exact observation metric inventory")
+        result = {}
+        for name, value in metrics.items():
+            if value is None:
+                continue  # Undefined precision/recall is never silently changed to zero.
+            if type(value) not in (float, int) or not math.isfinite(value):
+                raise ValueError("C4 benchmark metrics must be finite numbers or null")
+            result[f"c4.test.{name}"] = float(value)
+        return result
     metrics = payload.get("metrics", payload)
     if not isinstance(metrics, dict):
         raise ValueError("governed benchmark metrics artifact is invalid")
@@ -308,6 +330,34 @@ def _benchmark_metrics(path: Path) -> dict[str, float]:
         f"test_{name}": float(value)
         for name, value in metrics.items()
         if name in allowed and isinstance(value, (int, float))
+    }
+
+
+def _c4_benchmark_tags(path: Path, predictions: DetectorPredictionsManifest) -> dict[str, str]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != "g8_c4_observation_metrics_v1":
+        return {}
+    if (
+        payload.get("same_observations_verified") is not True
+        or payload.get("seven_date_benchmark_compliance") is not False
+        or payload.get("observation_unit") != "supervised_projection_row"
+        or payload.get("negative_label_source") != "research_control_assumption"
+        or payload.get("prediction_manifest_sha256") != predictions.manifest_hash()
+        or payload.get("model_binding") != predictions.binding.model_dump(mode="json")
+        or payload.get("row_count") != predictions.row_count
+        or payload.get("frozen_threshold") != predictions.threshold
+    ):
+        raise ValueError("C4 benchmark is not a verified comparison for this prediction release")
+    for name in ("candidate_sha256", "evaluation_profile_sha256"):
+        if not isinstance(payload.get(name), str) or re.fullmatch(r"[a-f0-9]{64}", payload[name]) is None:
+            raise ValueError("C4 benchmark has no frozen candidate/profile identity")
+    return {
+        "evaluation_contract": "g8_c4_supervised_observations_v1",
+        "evaluation_profile_sha256": payload["evaluation_profile_sha256"],
+        "candidate_hash": payload["candidate_sha256"],
+        "seven_date_benchmark_compliance": "false",
+        "same_observations_verified": "true",
+        "negative_label_source": "research_control_assumption",
     }
 
 
