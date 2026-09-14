@@ -1,6 +1,6 @@
 # Main Roadmap
 
-Status date: 2026-09-10
+Status date: 2026-09-13
 
 Target completion for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -183,11 +183,16 @@ diagnostic is retained separately from the passing final receipt.
 - G7: complete. The validation-selected candidate is checksum-frozen, the
   exact-hash operator statement is signed, and independent verification exposes
   the final identity without reading the test fold.
-- G8: open. Two separately authorized Jobs failed closed before candidate or
-  final-fold download. The latest Job, `aijob-e00rwzexvwb11rmt4c`, exposed a
-  missing G6 final-identity results policy; the exact development-viewer and
-  final-writer rules are now deployed, but a fresh signed authorization is
-  required before another submission.
+- G8: open. After three pre-test failures, R4 (`aijob-e00vtamgkr07mwzt4t`)
+  downloaded the test release but failed before scoring on the projection-root
+  path. That path is fixed and a real synthetic scoring/release/MLflow rehearsal
+  passes inside the pinned image. Full synthetic C4 comparison now also passes
+  through the injected runner and reviewed overlays: 27 checkpoints, 198 paired
+  observations and verified local MLflow report/metrics. This is not a production
+  G8 result. Original live comparison availability, replacement package binding,
+  durable recovery, live preflight and replacement-specific authorization remain
+  required. A persistent-storage exception is approved for preparation only; see the
+  [G8 recovery record](g8-completion-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
 
@@ -282,15 +287,15 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Reconciled on **2026-09-12**:
+Reconciled on **2026-09-13**:
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
   the frozen four-date forward corpus, and its governed release evidence.
 - [#23](https://github.com/khab40/lob-arena/issues/23) records the completed
   G5-G7 evidence, the 20/20 consumed-slot reconciliation, the selected and
-  authorized validation-only isotonic candidate, both fail-closed pre-test G8
-  attempts, the corrected least-privilege G6 campaign policy, and the G8-G9
-  remainder.
+  authorized validation-only isotonic candidate, all three fail-closed
+  pre-test G8 attempts, the corrected least-privilege G6 campaign policy, the
+  exact-image runtime compatibility gate, and the G8-G9 remainder.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),

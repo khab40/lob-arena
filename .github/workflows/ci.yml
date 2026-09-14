@@ -123,6 +123,9 @@ jobs:
             tests/test_lightgbm_training.py \
             tests/test_lightgbm_v1.py
 
+      - name: Run G8 C4 evaluation and recovery gates with ML dependencies
+        run: make lightgbm-wave1-g8-check
+
   java-kernel:
     name: Java 25 kernel and control plane
     runs-on: ubuntu-latest

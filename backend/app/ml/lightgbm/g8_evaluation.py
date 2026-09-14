@@ -11,10 +11,12 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from app.market_data.projections import C4MlflowDatasetReleaseReceipt
+from app.market_data.preparation import ATTACK_FAMILIES, SEEDS, SYMBOLS
+from app.market_data.projections import C4MlflowDatasetReleaseReceipt, EXPECTED_SOURCE_DATES
 from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import (
     CloudArtifact,
+    IMMUTABLE_IMAGE_PATTERN,
     LightGbmCloudJobRequest,
     Wave1ExperimentSpec,
     Wave1TabularProjectionInput,
@@ -29,9 +31,8 @@ PROJECT_ID = "project-e00g6zvxpr00waz8t3y51k"
 FINAL_BUCKET = "aimada-wave1-final-e00g6zvxpr00"
 RESULTS_BUCKET = "aimada-wave1-results-e00g6zvxpr00"
 APPROVED_MLFLOW_URI = "http://10.4.0.54:5500"
-FINAL_RELEASE_PATTERN = re.compile(
-    rf"s3://{FINAL_BUCKET}/releases/[a-z0-9][a-z0-9-]{{2,62}}/staging"
-)
+FINAL_PROJECTION_ARTIFACT_ROOT = "artifacts"
+FINAL_RELEASE_PATTERN = re.compile(rf"s3://{FINAL_BUCKET}/releases/[a-z0-9][a-z0-9-]{{2,62}}/staging")
 DEVELOPMENT_RESULT_PATTERN = re.compile(
     rf"s3://{RESULTS_BUCKET}/campaigns/"
     r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}/development/"
@@ -44,9 +45,7 @@ class _StrictModel(BaseModel):
 
 
 class _FrozenCandidateMetadata(_StrictModel):
-    schema_version: Literal["lightgbm_wave1_candidate_v1"] = (
-        "lightgbm_wave1_candidate_v1"
-    )
+    schema_version: Literal["lightgbm_wave1_candidate_v1"] = "lightgbm_wave1_candidate_v1"
     campaign_id: str
     experiment: Wave1ExperimentSpec
     reproducibility_hash: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -77,10 +76,20 @@ class G8InjectedFile(_StrictModel):
         return self
 
 
+class G8RuntimeCompatibility(_StrictModel):
+    schema_version: Literal["lightgbm_wave1_g8_runtime_compatibility_v1"] = "lightgbm_wave1_g8_runtime_compatibility_v1"
+    verified: Literal[True] = True
+    verified_at: AwareDatetime
+    image: str = Field(pattern=IMMUTABLE_IMAGE_PATTERN)
+    runner_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    network_disabled: Literal[True] = True
+
+
 class G8PreflightReceipt(_StrictModel):
-    schema_version: Literal["lightgbm_wave1_g8_preflight_v1"] = (
-        "lightgbm_wave1_g8_preflight_v1"
-    )
+    schema_version: Literal[
+        "lightgbm_wave1_g8_preflight_v1",
+        "lightgbm_wave1_g8_preflight_v2",
+    ] = "lightgbm_wave1_g8_preflight_v2"
     status: Literal["ready_for_exactly_one_submission"] = "ready_for_exactly_one_submission"
     created_at: AwareDatetime
     tool_git_commit: str = Field(pattern=r"^[0-9a-f]{40}$")
@@ -95,14 +104,13 @@ class G8PreflightReceipt(_StrictModel):
     request_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     image: str
     mlflow_tracking_uri: Literal[APPROVED_MLFLOW_URI] = APPROVED_MLFLOW_URI
-    mlflow_experiment: Literal["lob-arena/governed-evaluation"] = (
-        "lob-arena/governed-evaluation"
-    )
+    mlflow_experiment: Literal["lob-arena/governed-evaluation"] = "lob-arena/governed-evaluation"
     development_jobs_consumed: Literal[20] = 20
     final_jobs_submitted_before: Literal[0] = 0
     test_fold_accessed: Literal[False] = False
     cloud_resources_mutated: Literal[False] = False
     injected_files: tuple[G8InjectedFile, ...]
+    runtime_compatibility: G8RuntimeCompatibility | None = None
 
     @model_validator(mode="after")
     def validate_boundaries(self) -> "G8PreflightReceipt":
@@ -110,15 +118,68 @@ class G8PreflightReceipt(_StrictModel):
             raise ValueError("G8 final input URI is outside the approved release boundary")
         if DEVELOPMENT_RESULT_PATTERN.fullmatch(self.candidate_release_uri) is None:
             raise ValueError("G8 candidate URI is outside the selected development boundary")
-        expected = (
-            f"s3://{RESULTS_BUCKET}/campaigns/{self.campaign_id}/final/{self.run_id}"
-        )
+        expected = f"s3://{RESULTS_BUCKET}/campaigns/{self.campaign_id}/final/{self.run_id}"
         if self.result_uri != expected:
             raise ValueError("G8 result URI does not match its exact campaign and run")
         paths = [item.container_path for item in self.injected_files]
         if len(paths) != len(set(paths)):
             raise ValueError("G8 injected container paths must be unique")
+        if self.schema_version == "lightgbm_wave1_g8_preflight_v2":
+            runner = next(
+                (item for item in self.injected_files if item.local_name == "run_lightgbm_g8.py"),
+                None,
+            )
+            if (
+                runner is None
+                or self.runtime_compatibility is None
+                or self.runtime_compatibility.image != self.image
+                or self.runtime_compatibility.runner_sha256 != runner.sha256
+            ):
+                raise ValueError("G8 v2 preflight must bind the exact runner to the exact runtime image")
         return self
+
+
+def verify_g8_runtime_compatibility(
+    image: str,
+    runner: Path,
+    *,
+    verified_at: datetime | None = None,
+) -> G8RuntimeCompatibility:
+    """Exercise the exact injected runner inside the exact frozen image offline."""
+
+    runner = runner.resolve()
+    if not runner.is_file():
+        raise ValueError("G8 runtime compatibility requires the exact injected runner")
+    docker = shutil.which("docker")
+    if docker is None:
+        raise RuntimeError("G8 runtime compatibility requires Docker")
+    completed = subprocess.run(
+        [
+            docker,
+            "run",
+            "--rm",
+            "--network",
+            "none",
+            "--entrypoint",
+            "python",
+            "--mount",
+            f"type=bind,source={runner},target=/job/g8/run_lightgbm_g8.py,readonly",
+            image,
+            "/job/g8/run_lightgbm_g8.py",
+            "--runtime-compatibility-check",
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+        timeout=180,
+    )
+    if completed.returncode:
+        raise RuntimeError("G8 injected runner is incompatible with the frozen runtime image")
+    return G8RuntimeCompatibility(
+        verified_at=verified_at or datetime.now(UTC),
+        image=image,
+        runner_sha256=sha256_file(runner),
+    )
 
 
 def prepare_g8_preflight(
@@ -146,10 +207,13 @@ def prepare_g8_preflight(
     freeze = load_g7_candidate_freeze(freeze_root)
     authorization = load_g7_authorization(authorization_root)
     _verify_authorization_binding(freeze, authorization, freeze_root)
-    publication = _load_final_publication(final_publication_evidence)
-    lineage = C4MlflowDatasetReleaseReceipt.model_validate_json(
-        c4_mlflow_evidence.read_text(encoding="utf-8")
+    runtime_compatibility = verify_g8_runtime_compatibility(
+        freeze.image,
+        runner,
+        verified_at=prepared_at,
     )
+    publication = _load_final_publication(final_publication_evidence)
+    lineage = C4MlflowDatasetReleaseReceipt.model_validate_json(c4_mlflow_evidence.read_text(encoding="utf-8"))
     final_uri = _required_string(publication, "destination").rstrip("/")
     if FINAL_RELEASE_PATTERN.fullmatch(final_uri) is None:
         raise ValueError("C4 final publication is outside the approved final release boundary")
@@ -157,26 +221,19 @@ def prepare_g8_preflight(
     if lineage.release_id != release_id or lineage.raw_rows_uploaded_to_mlflow:
         raise ValueError("G8 C4 lineage receipt does not bind the sealed final release")
     objects = _publication_objects(publication)
-    frozen_root_ref = _remote_artifact(
-        objects, final_uri, "manifests/frozen-root.json", "frozen_root"
-    )
-    projection_ref = _remote_artifact(
-        objects, final_uri, "manifests/tabular-projection.json", "final_projection"
-    )
+    _verify_final_projection_layout(objects, final_uri)
+    frozen_root_ref = _remote_artifact(objects, final_uri, "manifests/frozen-root.json", "frozen_root")
+    projection_ref = _remote_artifact(objects, final_uri, "manifests/tabular-projection.json", "final_projection")
     if (
         frozen_root_ref.sha256 != lineage.root_file_sha256
         or projection_ref.sha256 != lineage.tabular_final_sha256
-        or _required_string(publication, "frozen_root_identity_sha256")
-        != lineage.root_identity_sha256
-        or _required_string(publication, "tabular_projection_sha256")
-        != lineage.tabular_final_sha256
+        or _required_string(publication, "frozen_root_identity_sha256") != lineage.root_identity_sha256
+        or _required_string(publication, "tabular_projection_sha256") != lineage.tabular_final_sha256
     ):
         raise ValueError("G8 final publication hashes do not match the C4 MLflow receipt")
 
     candidate_path = freeze_root / freeze.candidate.uri
-    candidate = _FrozenCandidateMetadata.model_validate_json(
-        candidate_path.read_text(encoding="utf-8")
-    )
+    candidate = _FrozenCandidateMetadata.model_validate_json(candidate_path.read_text(encoding="utf-8"))
     candidate_request = LightGbmCloudJobRequest.model_validate_json(
         (freeze_root / "candidate" / "request.json").read_text(encoding="utf-8")
     )
@@ -220,11 +277,9 @@ def prepare_g8_preflight(
                     staging,
                     "c4_mlflow_dataset_release",
                 ),
-                projection_artifact_root="projection-artifacts",
+                projection_artifact_root=FINAL_PROJECTION_ARTIFACT_ROOT,
             ),
-            result_uri=(
-                f"s3://{RESULTS_BUCKET}/campaigns/{freeze.campaign_id}/final/{run_id}"
-            ),
+            result_uri=(f"s3://{RESULTS_BUCKET}/campaigns/{freeze.campaign_id}/final/{run_id}"),
             input_release_uri=final_uri,
             candidate=CloudArtifact(
                 logical_name="candidate",
@@ -232,9 +287,7 @@ def prepare_g8_preflight(
                 sha256=freeze.candidate_hash,
                 size_bytes=freeze.candidate.size_bytes,
             ),
-            authorization=_local_artifact(
-                authorization_dir / "authorization.json", staging, "authorization"
-            ),
+            authorization=_local_artifact(authorization_dir / "authorization.json", staging, "authorization"),
             authorization_signature=_local_artifact(
                 authorization_dir / "authorization.sig", staging, "authorization_signature"
             ),
@@ -258,32 +311,26 @@ def prepare_g8_preflight(
             )
         )
         receipt = G8PreflightReceipt(
+            schema_version="lightgbm_wave1_g8_preflight_v2",
             created_at=prepared_at,
             tool_git_commit=tool_git_commit,
             campaign_id=freeze.campaign_id,
             run_id=run_id,
             candidate_hash=freeze.candidate_hash,
-            authorization_receipt_sha256=sha256_file(
-                authorization_root / "g7-authorization.json"
-            ),
-            trusted_authorization_public_key_sha256=(
-                authorization.trusted_authorization_public_key_sha256
-            ),
+            authorization_receipt_sha256=sha256_file(authorization_root / "g7-authorization.json"),
+            trusted_authorization_public_key_sha256=(authorization.trusted_authorization_public_key_sha256),
             final_input_uri=final_uri,
             candidate_release_uri=candidate_release_uri,
             result_uri=request.result_uri,
             request_sha256=request.canonical_hash(),
             image=freeze.image,
             injected_files=injected,
+            runtime_compatibility=runtime_compatibility,
         )
-        (staging / "g8-preflight.json").write_text(
-            receipt.model_dump_json(indent=2) + "\n", encoding="utf-8"
-        )
+        (staging / "g8-preflight.json").write_text(receipt.model_dump_json(indent=2) + "\n", encoding="utf-8")
         inventory = inventory_directory(staging, exclude_markers=True)
         write_checksum_file(staging, inventory)
-        (staging / "SUCCESS").write_text(
-            inventory.model_dump_json(indent=2), encoding="utf-8"
-        )
+        (staging / "SUCCESS").write_text(inventory.model_dump_json(indent=2), encoding="utf-8")
         shutil.move(str(staging), output)
     verify_g8_preflight(output)
     return receipt
@@ -291,21 +338,13 @@ def prepare_g8_preflight(
 
 def verify_g8_preflight(root: Path) -> G8PreflightReceipt:
     verify_complete_result(root)
-    receipt = G8PreflightReceipt.model_validate_json(
-        (root / "g8-preflight.json").read_text(encoding="utf-8")
-    )
-    request = LightGbmCloudJobRequest.model_validate_json(
-        (root / "request.json").read_text(encoding="utf-8")
-    )
+    receipt = G8PreflightReceipt.model_validate_json((root / "g8-preflight.json").read_text(encoding="utf-8"))
+    request = LightGbmCloudJobRequest.model_validate_json((root / "request.json").read_text(encoding="utf-8"))
     if request.canonical_hash() != receipt.request_sha256:
         raise ValueError("G8 request changed after preflight")
     for item in receipt.injected_files:
         path = root / item.local_name
-        if (
-            not path.is_file()
-            or path.stat().st_size != item.size_bytes
-            or sha256_file(path) != item.sha256
-        ):
+        if not path.is_file() or path.stat().st_size != item.size_bytes or sha256_file(path) != item.sha256:
             raise ValueError(f"G8 injected file changed after preflight: {item.local_name}")
     if (
         request.mode != "final-evaluation"
@@ -314,6 +353,8 @@ def verify_g8_preflight(root: Path) -> G8PreflightReceipt:
         or request.image != receipt.image
         or request.candidate is None
         or request.candidate.sha256 != receipt.candidate_hash
+        or not isinstance(request.input, Wave1TabularProjectionInput)
+        or request.input.projection_artifact_root != FINAL_PROJECTION_ARTIFACT_ROOT
     ):
         raise ValueError("G8 request no longer matches its preflight receipt")
     return receipt
@@ -326,8 +367,7 @@ def _verify_authorization_binding(
 ) -> None:
     if (
         authorization.candidate_hash != freeze.candidate_hash
-        or authorization.freeze_receipt_sha256
-        != sha256_file(freeze_root / "g7-candidate-freeze.json")
+        or authorization.freeze_receipt_sha256 != sha256_file(freeze_root / "g7-candidate-freeze.json")
         or not authorization.signature_verified
         or not authorization.final_identity_available
         or freeze.test_fold_accessed
@@ -350,7 +390,37 @@ def _publication_objects(payload: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     objects = payload.get("objects")
     if not isinstance(objects, list) or not objects:
         raise ValueError("C4 final publication has no object inventory")
-    return tuple(item for item in objects if isinstance(item, dict))
+    if any(not isinstance(item, dict) for item in objects):
+        raise ValueError("C4 final publication contains an invalid inventory entry")
+    keys = [_required_string(item, "key") for item in objects]
+    if len(keys) != len(set(keys)):
+        raise ValueError("C4 final publication contains duplicate object keys")
+    return tuple(objects)
+
+
+def _verify_final_projection_layout(
+    objects: tuple[dict[str, Any], ...],
+    release_uri: str,
+) -> None:
+    prefix = release_uri.split("/", maxsplit=3)[-1].rstrip("/") + "/"
+    tabular_prefix = prefix + FINAL_PROJECTION_ARTIFACT_ROOT + "/tabular/test/"
+    expected = {
+        tabular_prefix + f"xnas-{EXPECTED_SOURCE_DATES[-1]}-{symbol.lower()}-{suffix}.parquet"
+        for symbol in SYMBOLS
+        for suffix in ("control", *(f"{family}-s{seed}" for family in ATTACK_FAMILIES for seed in SEEDS))
+    }
+    shards = []
+    for item in objects:
+        key = _required_string(item, "key")
+        if not key.startswith(prefix) or PurePosixPath(key).as_posix() != key or ".." in PurePosixPath(key).parts:
+            raise ValueError("C4 final publication contains a noncanonical object key")
+        if key.startswith(prefix + FINAL_PROJECTION_ARTIFACT_ROOT + "/tabular/"):
+            _required_hash(item, "sha256")
+            if _required_int(item, "size_bytes") == 0:
+                raise ValueError("C4 final tabular shard is empty")
+            shards.append(key)
+    if len(shards) != 30 or set(shards) != expected:
+        raise ValueError("C4 final publication must contain the exact 30 artifacts/tabular/test Parquet shards")
 
 
 def _remote_artifact(

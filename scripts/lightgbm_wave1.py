@@ -48,6 +48,7 @@ from app.ml.lightgbm.g8_evaluation import (  # noqa: E402
     prepare_g8_preflight,
     verify_g8_preflight,
 )
+from app.ml.lightgbm.g8_benchmark_readiness import assess_benchmark_compatibility  # noqa: E402
 from app.ml.lightgbm.reproducibility import compare_g5_results  # noqa: E402
 from app.nebius.object_storage import (  # noqa: E402
     download_s3_release,
@@ -194,6 +195,19 @@ def main(argv: list[str] | None = None) -> int:
         "g8-verify", help="Verify an immutable G8 preflight package without test access"
     )
     g8_verify.add_argument("--preflight", type=Path, required=True)
+    benchmark_audit = subparsers.add_parser(
+        "g8-benchmark-readiness", help="Audit candidate/C4/benchmark identities without reading test rows"
+    )
+    benchmark_audit.add_argument("--frozen-root", type=Path, required=True)
+    benchmark_audit.add_argument("--c4-mlflow-evidence", type=Path, required=True)
+    benchmark_audit.add_argument("--candidate", type=Path, required=True)
+    benchmark_audit.add_argument("--benchmark-protocol", type=Path, required=True)
+    benchmark_audit.add_argument("--output", type=Path, required=True)
+    c4_evaluate = subparsers.add_parser(
+        "g8-evaluate-c4", help="Compare an already-scored verified release with frozen C3 rules; never rescore"
+    )
+    for argument in ("profile", "frozen-root", "projection", "comparison", "result", "candidate", "output"):
+        c4_evaluate.add_argument("--" + argument, type=Path, required=True)
     exit_record = subparsers.add_parser("exit-record", help="Assemble a local Wave 1 exit record")
     exit_record.add_argument("--development", type=Path, required=True)
     exit_record.add_argument("--final", type=Path, required=True)
@@ -352,6 +366,50 @@ def main(argv: list[str] | None = None) -> int:
         print(receipt.model_dump_json(indent=2))
     elif args.command == "g8-verify":
         print(verify_g8_preflight(args.preflight).model_dump_json(indent=2))
+    elif args.command == "g8-benchmark-readiness":
+        report = assess_benchmark_compatibility(
+            frozen_root_path=args.frozen_root,
+            lineage_path=args.c4_mlflow_evidence,
+            candidate_path=args.candidate,
+            benchmark_protocol_path=args.benchmark_protocol,
+        )
+        _write_json_once(args.output, report)
+        print(json.dumps(report, indent=2))
+        return 2 if report["blocking_reasons"] else 0
+    elif args.command == "g8-evaluate-c4":
+        from app.market_data.projections import FrozenPublicSampleRoot
+        from app.ml.lightgbm.c4_evaluation import C4EvaluationProfile
+        from app.ml.lightgbm.c4_replay_evidence import evaluate_c4_release
+        from app.ml.lightgbm.contracts import DetectorPredictionsManifest
+
+        if args.output.exists():
+            raise FileExistsError("C4 evaluation output already exists")
+        if args.result.resolve() in args.output.resolve().parents:
+            raise ValueError("C4 evaluation must not mutate the scored immutable result")
+        run = verify_wave1_result(args.result)
+        profile = C4EvaluationProfile.model_validate_json(args.profile.read_bytes())
+        if run.mode != "final-evaluation" or run.candidate_hash != profile.candidate_sha256:
+            raise ValueError("C4 evaluation requires the exact already-scored final candidate")
+        artifacts = args.result / "artifacts"
+        report = evaluate_c4_release(
+            profile=profile,
+            root=FrozenPublicSampleRoot.model_validate_json(args.frozen_root.read_bytes()),
+            projection_path=args.projection,
+            comparison_path=args.comparison,
+            artifact_root=artifacts,
+            candidate_path=args.candidate,
+            predictions=DetectorPredictionsManifest.model_validate_json(
+                (artifacts / "prediction/prediction-manifest.json").read_bytes()
+            ),
+        )
+        report["source_result_inventory_sha256"] = sha256_file(args.result / "SUCCESS")
+        report["source_request_sha256"] = run.request_sha256
+        report["source_mlflow_run_id"] = run.mlflow_run_id
+        _write_json_once(args.output, report)
+        print(json.dumps(
+            {"report_sha256": sha256_file(args.output), "rescored": False, "mlflow_written": False},
+            indent=2,
+        ))
     else:
         create_exit_record(args.development, args.final, args.output)
     return 0

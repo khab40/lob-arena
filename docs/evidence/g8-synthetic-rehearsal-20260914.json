@@ -1,0 +1,19 @@
+{
+  "schema_version": "g8_synthetic_rehearsal_v1",
+  "production_test_accessed": false,
+  "runner_sha256": "b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a",
+  "rehearsal_sha256": "88c4ea29b3c7773a6b81dbbe6fb06fe4d1e52f93e0f9f0939f09335ec83b43a2",
+  "request_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "mlflow_run_id": "f8ff022f79404e8fa5c44f3a048ee790",
+  "local_mlflow_status": "FINISHED",
+  "final_download_count": 1,
+  "release_verified": true,
+  "mlflow_artifact_readback_verified": true,
+  "mlflow_metric_readback_verified": true,
+  "publication_object_count": 33,
+  "conditional_publication_verified": true,
+  "remote_authentication_verified": false,
+  "remote_storage_verified": false,
+  "rules_comparison_verified": false,
+  "production_g8_complete": false
+}
