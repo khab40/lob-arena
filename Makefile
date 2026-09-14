@@ -180,6 +180,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_mlflow_recovery.py \
 		tests/test_g8_scored_checkpoint.py \
 		tests/test_g8_replacement.py \
+		tests/test_g8_rehearsal_access.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
@@ -205,6 +206,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_mlflow_recovery.py \
 		tests/test_g8_scored_checkpoint.py \
 		tests/test_g8_replacement.py \
+		tests/test_g8_rehearsal_access.py \
 		../serverless/jobs/g8_live_rehearsal.py \
 		../serverless/jobs/run_lightgbm_g8_replacement.py \
 		../serverless/jobs/g8_rehearsal.py \

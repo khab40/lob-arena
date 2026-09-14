@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "id": "storagebucket-e004963828556923796882",
+    "resource_version": "3"
+  },
+  "spec": {
+    "bucket_policy": {
+      "rules": [
+        {
+          "paths": [
+            "releases/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "releases/g8-native-rehearsal-20260914/staging/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        }
+      ]
+    }
+  }
+}
