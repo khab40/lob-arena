@@ -87,6 +87,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     bundle.add_argument("--reliability-diagram", type=Path)
     bundle.add_argument("--mlflow-tracking-uri")
     bundle.add_argument("--benchmark-results", type=Path)
+    bundle.add_argument(
+        "--c4-evaluation-inputs", type=Path,
+        help="C4 evidence location manifest; required to verify C4 benchmark results before MLflow logging",
+    )
 
     verify = subparsers.add_parser("verify", help="Verify an existing governed model bundle")
     verify.add_argument("--artifact-root", type=Path, required=True)
@@ -172,6 +176,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "bundle":
+        c4_inputs = None
+        if args.c4_evaluation_inputs is not None:
+            if args.benchmark_results is None or args.mlflow_tracking_uri is None:
+                raise ValueError("C4 evaluation inputs require benchmark results and MLflow tracking")
+            from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs
+
+            c4_inputs = C4EvaluationInputs.from_file(args.c4_evaluation_inputs)
         training = _load_training(args.training_manifest)
         calibration = _load_calibration(args.calibration_manifest)
         predictions = _load_predictions(args.prediction_manifest)
@@ -203,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
                 checksum_path=result.checksum_path,
                 prediction_manifest_path=args.prediction_manifest,
                 benchmark_results_path=args.benchmark_results,
+                c4_evaluation_inputs=c4_inputs,
                 tracking_uri=args.mlflow_tracking_uri,
             )
             print(json.dumps({"mlflow_run_id": run_id}, sort_keys=True))

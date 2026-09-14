@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+from pathlib import Path
 from collections import defaultdict
 from collections.abc import Iterable
 from typing import Literal
@@ -43,6 +44,28 @@ C4_METRIC_NAMES = (
     )
     | frozenset(f"lightgbm.{score}_{metric}" for score in ("raw", "calibrated") for metric in ("brier", "ece"))
 )
+
+
+class C4EvaluationInputs(BaseModel):
+    """Evidence locations, not assertions that evaluation has been verified."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    profile: Path
+    frozen_root: Path
+    projection: Path
+    comparison: Path
+    candidate: Path
+    source_result: Path | None = None
+
+    @classmethod
+    def from_file(cls, path: Path) -> "C4EvaluationInputs":
+        inputs = cls.model_validate_json(path.read_bytes())
+        return cls(
+            **{
+                name: (path.parent / value).resolve() if value is not None else None
+                for name, value in inputs.model_dump().items()
+            }
+        )
 
 
 class C4EvaluationProfile(BaseModel):

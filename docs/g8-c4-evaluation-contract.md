@@ -74,14 +74,30 @@ results into event-level acceptance evidence.
 
 ## MLflow and recovery boundary
 
-The logger checks the report's exact metric inventory, prediction-manifest hash,
-model binding, threshold, row count and declared observation semantics before
-opening a run. It indexes finite point metrics under `c4.test.*`, tags the contract
-and candidate/profile identities, and uploads the complete JSON report (including
-uncertainty and reliability). Existing dataset lineage logging is retained.
-The report's provenance is established by `evaluate_c4_release`, not by trusting
-the `same_observations_verified` flag from an arbitrary JSON file. A live reviewed
-runner must generate and bind this report before handing it to the logger.
+The shared logger requires original C4 evidence inputs and independently invokes
+`evaluate_c4_release` before opening a run. It compares the complete submitted
+report against the computed result using canonical JSON SHA-256, including the
+candidate/profile identities, metrics, uncertainty, coverage and model binding.
+Self-asserted flags or hashes are never sufficient. Schema downgrades, wrapped C4
+claims and duplicate JSON keys fail closed. The logger captures the report once,
+uses a private snapshot for both parsing and artifact upload, and records its
+byte hash as `c4_evaluation_report_sha256`.
+
+It indexes finite point metrics under `c4.test.*`, tags the verified contract and
+candidate/profile identities, and uploads the complete report. Existing dataset
+lineage and non-C4/no-report logging remain supported. Recomputing comparison
+metrics over existing predictions does not retrain, recalibrate or rescore the
+model, but requires the original comparison evidence to be available.
+
+For the bundle CLI, pair `--benchmark-results <report>` with
+`--c4-evaluation-inputs <inputs.json>`. This evidence-location manifest contains
+`profile`, `frozen_root`, `projection`, `comparison` and `candidate` paths, resolved
+relative to the manifest's directory. It accepts no verification assertions.
+If a postprocessing report contains source-result identities, set the optional
+`source_result` path to the original immutable scored result (default: parent of
+the logging artifact root). The logger verifies that complete result, its exact
+prediction manifest and all three source identity fields. Keep a separate logging
+artifact copy when adding reports; never mutate the original scored result.
 
 `g8-evaluate-c4` only evaluates an already-scored, checksum-verified final result.
 It writes a separate new report and never mutates the source result, scores,
@@ -100,7 +116,9 @@ rehearsal, fresh spend/IAM checks and reviewed replacement authorization.
 guards, canonical-stream and join tamper tests, a 27-checkpoint inventory fixture,
 and a real local MLflow report/metrics/artifact round-trip. The MLflow transport
 fixture uses synthetic predictions and an explicitly synthetic silent rules
-detector; it does not prove the entire canonical comparison path end to end.
+detector at the checkpoint/join input. Candidate/model/root/projection verification
+and evaluator invocation are real; the fixture does not prove the entire canonical
+comparison path end to end.
 No production test rows or remote final-read credentials are used by these tests.
 
 Local validation on 2026-09-14: the G8 target passed 106 tests plus Ruff and the
