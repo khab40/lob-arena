@@ -111,6 +111,15 @@ path became unavailable. This covers **post-MLflow publication only**. It is not
 wired into live execution; pre-logging retention, same-run MLflow recovery and
 native-storage durability remain outstanding. No new execution is authorized.
 
+Follow-up after merged PR #175: [same-run MLflow recovery](g8-mlflow-recovery.md)
+now reserves an identity before scoring and resumes interrupted logging after
+independent C4 verification. The pinned-image synthetic rehearsal creates one
+run, scores once, recovers four lost-response cases, verifies 24 metrics, 30
+dataset inputs and all four artifacts, then repeats completed logging with zero
+writes. This does not retain scored payloads before logging or survive Job loss
+yet, and is not wired into live execution. Those integration and native-storage
+gates remain open, as do remote rehearsal and replacement-specific approval.
+
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
    replay streams, rules alerts, adjudications, regime evidence, streaming evidence

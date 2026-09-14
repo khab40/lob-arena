@@ -1,0 +1,32 @@
+{
+  "schema_version": "g8_synthetic_rehearsal_v1",
+  "production_test_accessed": false,
+  "runner_sha256": "615dc10506bfa1383b8802029af7835fbabab7195b04ab501e983f27de716208",
+  "rehearsal_sha256": "040a68a156c718f4be220acb30f653c23d908954eb40e4dcffb617f2d53fb6fd",
+  "request_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "mlflow_run_id": "dd146b2e4007473ea0963899c110f1f0",
+  "local_mlflow_status": "FINISHED",
+  "final_download_count": 1,
+  "final_scoring_call_count": 1,
+  "release_verified": true,
+  "mlflow_artifact_readback_verified": true,
+  "mlflow_metric_readback_verified": true,
+  "publication_object_count": 60,
+  "conditional_publication_verified": true,
+  "remote_authentication_verified": false,
+  "remote_storage_verified": false,
+  "rules_comparison_verified": true,
+  "c4_report_sha256": "ff8a30f196d2c40d44822bfcbbb0bc7dca580e01984ea1a0324091082cee0adb",
+  "c4_comparison_scope": "synthetic_contract_fixtures_not_production_or_java_execution",
+  "c4_row_count": 198,
+  "c4_session_count": 3,
+  "c4_observed_campaign_count": 27,
+  "evaluation_code_sha256": {
+    "tracking": "220985b414eeaebec5613b8b1d26cb6d572e97f78bfc70aa96f2ee7b413c6f9d",
+    "c4_evaluation": "262fe67b09eef944586ff9db3bc1e2d6acd727971c7e9922ce18399aeca0adb9",
+    "c4_replay_evidence": "4276de59c0ba6bf20298bc05b82bbcba1daa8e28b0778e3653432ab0c73a56e1",
+    "g8_benchmark_readiness": "d4f0b68448dbf886cd560f1cea4f4c61739c7a9dd4dde947a4b2a275aeeabaed",
+    "g8_c4_fixture": "944b93f5d9f28191adc28e90a6def337c019bd74cc25a81f1e00f545258f40e3"
+  },
+  "production_g8_complete": false
+}
