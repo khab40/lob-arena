@@ -179,6 +179,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_publication_recovery.py \
 		tests/test_g8_mlflow_recovery.py \
 		tests/test_g8_scored_checkpoint.py \
+		tests/test_g8_replacement.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
@@ -188,6 +189,8 @@ lightgbm-wave1-g8-check:
 		app/ml/lightgbm/g8_publication_recovery.py \
 		app/ml/lightgbm/g8_mlflow_recovery.py \
 		app/ml/lightgbm/g8_scored_checkpoint.py \
+		app/ml/lightgbm/g8_replacement.py \
+		app/ml/lightgbm/g8_live_recovery.py \
 		app/ml/lightgbm/c4_evaluation.py \
 		app/ml/lightgbm/c4_replay_evidence.py \
 		app/ml/lightgbm/g8_benchmark_readiness.py \
@@ -201,6 +204,9 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_publication_recovery.py \
 		tests/test_g8_mlflow_recovery.py \
 		tests/test_g8_scored_checkpoint.py \
+		tests/test_g8_replacement.py \
+		../serverless/jobs/g8_live_rehearsal.py \
+		../serverless/jobs/run_lightgbm_g8_replacement.py \
 		../serverless/jobs/g8_rehearsal.py \
 		../serverless/jobs/g8_publication_rehearsal.py \
 		../serverless/jobs/g8_mlflow_rehearsal.py \

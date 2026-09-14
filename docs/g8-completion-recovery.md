@@ -3,6 +3,13 @@
 Status: G0–G7 complete; G8 open; G9 blocked on a successful, fully evaluated G8.
 This is a recovery implementation record, not a final-test approval or G8 exit receipt.
 
+Current follow-up: [live replacement integration and preflight](g8-live-replacement.md)
+wires the scored checkpoint, same-run logging and completed-release publisher
+into a separate package-bound entrypoint. It preserves four prior submissions
+and R4 test access, requires a signed exception and native mount, and leaves the
+ordinary no-volume submitter unchanged. Native/remote rehearsal is proposed with
+a $2 cap but is not yet approved; no production execution readiness is claimed.
+
 ## What is fixed and verified
 
 The R4 request pointed the tabular loader at `projection-artifacts`. C4 actually

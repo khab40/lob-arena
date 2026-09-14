@@ -284,13 +284,14 @@ def _listed_keys(bucket: str, prefix: str, allowed: set[str]) -> set[str]:
         args = ["--continuation-token", token]
 
 
-def resume_publication(root: Path, *, expected_sha256: str, binding: RecoveryBinding) -> dict:
+def resume_publication(root: Path, *, expected_sha256: str, binding: RecoveryBinding,
+                       limits: storage.TransferLimits = storage.TransferLimits()) -> dict:
     """Publish only matching missing objects; preserve every object on any failure.
 
     No final-input transfer, scoring, MLflow write or intent creation is possible.
     An existing intent and independently bound checkpoint are mandatory.
     """
-    checkpoint = verify_checkpoint(root, expected_sha256=expected_sha256, binding=binding)
+    checkpoint = verify_checkpoint(root, expected_sha256=expected_sha256, binding=binding, limits=limits)
     payload = root / "payload"
     request = LightGbmCloudJobRequest.model_validate_json((payload / "request.json").read_bytes())
     bucket, prefix = binding.result_uri.removeprefix("s3://").split("/", 1)
@@ -320,7 +321,7 @@ def resume_publication(root: Path, *, expected_sha256: str, binding: RecoveryBin
         if source.is_symlink() or source.stat().st_size != entry.size_bytes or sha256_file(source) != entry.sha256:
             raise ValueError("checkpoint changed during publication")
         if key == marker:
-            verify_checkpoint(root, expected_sha256=expected_sha256, binding=binding)
+            verify_checkpoint(root, expected_sha256=expected_sha256, binding=binding, limits=limits)
         with _upload_snapshot(source, entry) as snapshot:
             try:
                 _transfer_json(
