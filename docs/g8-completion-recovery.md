@@ -7,8 +7,9 @@ This is a recovery implementation record, not a final-test approval or G8 exit r
 
 The R4 request pointed the tabular loader at `projection-artifacts`. C4 actually
 publishes `artifacts/tabular/test/...`, with shard URIs relative to `artifacts`.
-Preflight now selects `artifacts`, validates the published inventory's layout,
-rejects duplicate/noncanonical entries and rejects packages retaining the old root.
+Preflight now selects `artifacts`, requires all 30 exact frozen test shard keys
+(three symbols, each with one control and nine family/seed combinations), rejects
+missing, substituted, duplicate/noncanonical entries and packages retaining the old root.
 The frozen image and the selected production model are unchanged.
 
 `serverless/jobs/g8_rehearsal.py` executes synthetic C4-shaped train/validation/test

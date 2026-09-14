@@ -37,14 +37,50 @@ RESULT_URI = "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-g8-test/fin
 
 
 def test_g8_requires_the_published_c4_artifact_layout() -> None:
-    key = FINAL_URI.split("/", 3)[-1] + "/artifacts/tabular/test/session.parquet"
-    inventory = ({"key": key, "sha256": "a" * 64, "size_bytes": 100},)
+    inventory = _final_shard_inventory()
+    key = inventory[0]["key"]
     g8_evaluation._verify_final_projection_layout(inventory, FINAL_URI)
-    with pytest.raises(ValueError, match="no artifacts/tabular/test"):
+    with pytest.raises(ValueError, match="exact 30"):
         g8_evaluation._verify_final_projection_layout(
             ({**inventory[0], "key": key.replace("/artifacts/", "/projection-artifacts/")},),
             FINAL_URI,
         )
+
+
+def _final_shard_inventory() -> tuple[dict, ...]:
+    return tuple(
+        {
+            "key": FINAL_URI.split("/", 3)[-1]
+            + "/artifacts/tabular/test/"
+            + f"xnas-2019-12-30-{symbol}-{suffix}.parquet",
+            "sha256": "a" * 64,
+            "size_bytes": 100,
+        }
+        for symbol in ("aapl", "msft", "nvda")
+        for suffix in (
+            "control",
+            *(
+                f"{family}-s{seed}"
+                for family in ("spoofing_like_wall", "layering_like", "quote_stuffing")
+                for seed in (41, 42, 43)
+            ),
+        )
+    )
+
+
+@pytest.mark.parametrize("count", [0, 1, 29, 31])
+def test_g8_rejects_incomplete_or_duplicate_final_shards(count: int) -> None:
+    inventory = _final_shard_inventory()
+    malformed = (inventory + inventory[:1])[:count]
+    with pytest.raises(ValueError, match="exact 30"):
+        g8_evaluation._verify_final_projection_layout(malformed, FINAL_URI)
+
+
+def test_g8_rejects_same_count_with_wrong_final_shard_identity() -> None:
+    inventory = _final_shard_inventory()
+    replacement = {**inventory[0], "key": inventory[0]["key"].replace("2019-12-30", "2019-10-30")}
+    with pytest.raises(ValueError, match="exact 30"):
+        g8_evaluation._verify_final_projection_layout((replacement, *inventory[1:]), FINAL_URI)
 
 
 @pytest.mark.parametrize("suffix", ["../escape.parquet", "sub//rows.parquet", "sub/./rows.parquet"])

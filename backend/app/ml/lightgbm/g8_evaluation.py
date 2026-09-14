@@ -11,7 +11,8 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
-from app.market_data.projections import C4MlflowDatasetReleaseReceipt
+from app.market_data.preparation import ATTACK_FAMILIES, SEEDS, SYMBOLS
+from app.market_data.projections import C4MlflowDatasetReleaseReceipt, EXPECTED_SOURCE_DATES
 from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import (
     CloudArtifact,
@@ -403,18 +404,23 @@ def _verify_final_projection_layout(
 ) -> None:
     prefix = release_uri.split("/", maxsplit=3)[-1].rstrip("/") + "/"
     tabular_prefix = prefix + FINAL_PROJECTION_ARTIFACT_ROOT + "/tabular/test/"
+    expected = {
+        tabular_prefix + f"xnas-{EXPECTED_SOURCE_DATES[-1]}-{symbol.lower()}-{suffix}.parquet"
+        for symbol in SYMBOLS
+        for suffix in ("control", *(f"{family}-s{seed}" for family in ATTACK_FAMILIES for seed in SEEDS))
+    }
     shards = []
     for item in objects:
         key = _required_string(item, "key")
         if not key.startswith(prefix) or PurePosixPath(key).as_posix() != key or ".." in PurePosixPath(key).parts:
             raise ValueError("C4 final publication contains a noncanonical object key")
-        if key.startswith(tabular_prefix) and key.endswith(".parquet"):
+        if key.startswith(prefix + FINAL_PROJECTION_ARTIFACT_ROOT + "/tabular/"):
             _required_hash(item, "sha256")
             if _required_int(item, "size_bytes") == 0:
                 raise ValueError("C4 final tabular shard is empty")
             shards.append(key)
-    if not shards:
-        raise ValueError("C4 final publication has no artifacts/tabular/test Parquet shards")
+    if len(shards) != 30 or set(shards) != expected:
+        raise ValueError("C4 final publication must contain the exact 30 artifacts/tabular/test Parquet shards")
 
 
 def _remote_artifact(
