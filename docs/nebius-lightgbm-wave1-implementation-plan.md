@@ -1,6 +1,6 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G7 complete; the validation-only isotonic candidate is frozen; G8 awaits fresh authorization after three fail-closed pre-test attempts
+Status: G0-G7 complete; G8 open after R4's post-download, pre-scoring failure; synthetic recovery rehearsal passes; production completion gates remain pending
 
 Date: 2026-08-26
 
@@ -1080,6 +1080,13 @@ Independent replay returned `authorized`, `signature_verified=true`, and
 
 ### G8 — One Final Evaluation
 
+Current recovery status (2026-09-14): R4 downloaded the final release but failed
+before scoring. The input root is corrected; real C4-shaped synthetic scoring,
+release verification and local MLflow readback pass in the pinned image. The
+[G8 recovery record](g8-completion-recovery.md) defines the remaining benchmark,
+durability and replacement-authorization gates. Earlier statements that the
+final fold remains unopened are historical. No production G8 pass is claimed.
+
 Operator uses the final identity to submit the digest-pinned command exactly
 once. Codex collects and verifies predictions, model bundle, rules comparison,
 benchmark, uncertainty and cloud-run evidence. Operator disables the final
@@ -1263,6 +1270,11 @@ production/client performance claim.
 - [x] G7 candidate and final authorization are signed (2026-09-12; exact-hash
   authorization verified, final identity available, no test access).
 - [ ] G8 one final evaluation verifies.
+- [x] R4 projection-root correction and synthetic C4-shaped scoring, conditional
+  publication and local MLflow artifact/metric readback pass in the frozen image.
+- [ ] Complete rules/LightGBM benchmark and uncertainty use identical observations.
+- [ ] Durable publish/log-only recovery is verified without rescoring or duplicate runs.
+- [ ] Replacement-specific exception, signed package and live preflight verify.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
   and the G5 status (2026-09-07).
@@ -1297,8 +1309,10 @@ gates, and selected isotonic calibration without accessing the test fold. All
 candidate and verified the signed, exact-hash authorization without starting
 MLflow or exposing the test fold. Three subsequent G8 Jobs failed closed before
 candidate or final-fold download. The G6 policy omission and then the injected-
-runner/frozen-image compatibility gap are fixed, and G8 now waits for a fresh
-signed authorization.
+runner/frozen-image compatibility gap are fixed. R4 subsequently downloaded the
+test release but failed before scoring. Its root correction and offline synthetic
+rehearsal are complete; the recovery record governs the remaining work. A fresh
+signature alone is not sufficient to launch a replacement.
 
 ## Related Documentation
 

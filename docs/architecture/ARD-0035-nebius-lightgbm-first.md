@@ -4,11 +4,20 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-13
+Status reconciled: 2026-09-14
 
 ## Implementation Status
 
 Status: `[g0-g7-complete; g8-open; g9-pending]`
+
+Current G8 recovery: R4 downloaded the final release but failed before scoring
+on the projection artifact root. The root correction and synthetic C4-shaped
+scoring/publication/local-MLflow round-trip now pass in the unchanged pinned
+image. This is not production qualification. Canonical comparison evidence,
+complete benchmark wiring, durable recovery and replacement-specific authorization
+remain pending. The [recovery record](../g8-completion-recovery.md) supersedes
+the older "final fold remains unopened" status below without altering historical
+receipts or treating R4's failure as G8 completion.
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,

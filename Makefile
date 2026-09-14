@@ -171,12 +171,15 @@ lightgbm-wave1-g7-check:
 
 lightgbm-wave1-g8-check:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
+		tests/test_g8_rehearsal.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
 		app/ml/lightgbm/g8_evaluation.py \
+		tests/test_g8_rehearsal.py \
 		tests/test_lightgbm_g8.py \
+		../serverless/jobs/g8_rehearsal.py \
 		../serverless/jobs/run_lightgbm_g8.py \
 		../scripts/lightgbm_wave1.py \
 		../scripts/submit_nebius_job.py
