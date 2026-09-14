@@ -1,6 +1,7 @@
 # G8 C4-specific evaluation contract
 
-Status: implementation in review; not live-execution authority or a G8 exit.
+Status: core evaluator/provenance merged in PR #171; runner integration and full
+synthetic rehearsal in follow-up review. Not live-execution authority or a G8 exit.
 The user approved this C4-specific contract on 2026-09-14. Candidate, calibration,
 features and operating thresholds remain frozen. The replacement execution still
 requires the exception and package-specific approval in
@@ -104,11 +105,17 @@ It writes a separate new report and never mutates the source result, scores,
 submits a job, or writes MLflow. This command is a postprocessing primitive, not
 the complete durable publication/log-only recovery implementation.
 
-The frozen G8 runner is **not yet wired** to this evaluator. Its existing logging
+The injected G8 runner now accepts `--c4-evaluation-inputs`, rejects inconsistent
+frozen metadata before remote readiness/intent/download operations, computes the
+C4 report from its actual scored output, and supplies the report and original
+inputs to the shared logger for independent re-evaluation. It does not score again.
+The unchanged image needs the reviewed evaluator/tracking overlays. The option
+remains optional for legacy compatibility; replacement submission must require and
+hash-bind the C4 profile and code before live authorization. Its existing logging
 and temporary workspace must not be treated as duplicate-safe or durable recovery.
-Required next gates remain full frozen-image integration, persistent output
-recovery, original C3 inventory availability, authenticated remote MLflow/S3
-rehearsal, fresh spend/IAM checks and reviewed replacement authorization.
+Required next gates remain persistent output recovery, original C3 inventory
+availability, authenticated remote MLflow/S3 rehearsal, fresh spend/IAM checks and
+reviewed replacement authorization.
 
 ## Verification
 
@@ -126,3 +133,17 @@ existing CLI smoke checks. An additional 18 LightGBM-release, canonical-bundle
 and dataset-lineage regression tests passed. Local MLflow emitted Python 3.14
 `codecs.open` deprecation warnings; these were warnings, not failed assertions.
 These results do not replace CI or the pinned-image/remote rehearsal gates.
+
+Follow-up: `g8_rehearsal.py --c4` now adds a complete synthetic original-format C3
+inventory and C4 layout, without substituting checkpoint validation, the canonical
+join, evaluator or shared logger. Its 27 checkpoints resolve 30 replay domains and
+198 paired observations; it counts one call to the real final-scoring function and
+verifies one local MLflow run, report bytes/hash and all indexed point metrics.
+The rules alerts and numeric features are fixture-generated, not Java execution
+or production results. The exact frozen-image run with reviewed module overlays
+passed on 2026-09-14; see the
+[hash-bound receipt](evidence/g8-complete-c4-rehearsal-20260914.json) and
+[reproduction instructions](g8-completion-recovery.md#reproduce-offline).
+Follow-up local validation passed 121 G8 tests plus Ruff/CLI checks and the same
+18 release/canonical-bundle/dataset-lineage regressions. Remote transport and
+durable recovery remain separate unpassed gates.

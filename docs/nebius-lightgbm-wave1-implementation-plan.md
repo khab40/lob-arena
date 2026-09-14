@@ -1086,6 +1086,10 @@ release verification and local MLflow readback pass in the pinned image. The
 [G8 recovery record](g8-completion-recovery.md) defines the remaining benchmark,
 durability and replacement-authorization gates. Earlier statements that the
 final fold remains unopened are historical. No production G8 pass is claimed.
+The follow-up complete synthetic C4 comparison passes in the pinned image with
+reviewed overlays: 27 checkpoints, 198 paired observations, one scoring call and
+one verified local MLflow run. Storage-exception preparation is approved; native
+durability, remote rehearsal and replacement package binding are not yet verified.
 
 Operator uses the final identity to submit the digest-pinned command exactly
 once. Codex collects and verifies predictions, model bundle, rules comparison,
@@ -1273,6 +1277,11 @@ production/client performance claim.
 - [x] R4 projection-root correction and synthetic C4-shaped scoring, conditional
   publication and local MLflow artifact/metric readback pass in the frozen image.
 - [ ] Complete rules/LightGBM benchmark and uncertainty use identical observations.
+- [x] Complete **synthetic C4 contract** rehearsal verifies original-format
+  checkpoints, canonical joins, metrics/uncertainty and local MLflow read-back in
+  the pinned runtime with reviewed overlays (not production or Java execution).
+- [x] Prepare the user-approved narrow persistent-storage exception for review;
+  provisioning and a replacement execution remain unauthorized.
 - [ ] Durable publish/log-only recovery is verified without rescoring or duplicate runs.
 - [ ] Replacement-specific exception, signed package and live preflight verify.
 - [ ] G9 billing reconciliation and exit records are signed.

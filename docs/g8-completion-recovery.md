@@ -67,9 +67,39 @@ Update 2026-09-14: the user approved the separate
 that the four-date frozen protocol cannot use the seven-date benchmark unchanged.
 The new implementation adds paired observation metrics, calibration assessment,
 session-cluster uncertainty, original-checkpoint/replay verification and MLflow
-report support. This is partial progress on gates 1–2 below, not a successful G8
-evaluation. Production runner integration, durable recovery and remote rehearsal
-remain outstanding. Neither the candidate nor the existing benchmark was changed.
+report support. Following merged PR #171, the injected runner now accepts
+`--c4-evaluation-inputs`, checks its frozen metadata before remote operations,
+evaluates its actual scored output, and sends the report through the shared
+logger's independent provenance verification. This option is not yet required or
+bound by a replacement-specific submission package; the legacy no-report path is
+retained only for compatibility. Neither the production candidate nor the existing
+seven-date benchmark was changed.
+
+The full synthetic C4 contract rehearsal now passes in the pinned image with five
+read-only module overlays: 27 original-format checkpoint releases, 30 canonical
+replay domains, 198 paired observations, one final scoring invocation and one local
+MLflow run. It verifies detection metrics, calibration assessment, session-cluster
+uncertainty, rules comparison, conditional publication of 60 objects and artifact/
+metric read-back. Local run `a221a294cf0847eabb80fc2a602c7b59` is `FINISHED`;
+the [portable receipt](evidence/g8-complete-c4-rehearsal-20260914.json) binds the
+runner, rehearsal, all five overlays and report bytes. The matching
+[synthetic report](evidence/g8-complete-c4-synthetic-report-20260914.json) is retained
+byte-for-byte, not as a production quality claim. The complete local artifact
+tree was retained at `/tmp/g8-complete-c4-final.oTEwDb/rehearsal`; it is temporary
+engineering evidence, not a durable production archive.
+
+The original-checkpoint verification, canonical stream/observation join and shared
+logger's re-evaluation are real, not substituted. Features and Java-format rules
+alerts are synthetic fixtures; no Java process or real test data was used. Remote
+readiness, unique intent and S3 transport are simulated; local MLflow is file-backed.
+The receipt explicitly records remote authentication/storage as unverified and
+production G8 as incomplete. Negative tests reject altered profile bindings before
+remote access and corrupt checkpoint payloads before creating an MLflow run.
+
+The user approved **preparing** the
+[persistent-storage exception](g8-persistent-storage-exception.md). This is not
+permission to provision or submit. Durable recovery, original production checkpoint
+availability, remote rehearsal and replacement-specific authorization remain open.
 
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
@@ -93,6 +123,9 @@ remain outstanding. Neither the candidate nor the existing benchmark was changed
    held-out calibration assessment, rules comparison and session-cluster uncertainty.
    Verify the same-observation join and report limited test-session support honestly.
    Repeat the full synthetic rehearsal with this exact reviewed evaluation package.
+   The new injected-runner C4 path and full offline synthetic rehearsal satisfy
+   this engineering milestone; production package binding and remote validation
+   are still required. The unchanged image alone does not include these overlays.
 3. **Make publication recovery independent of scoring.** Prove verified predictions,
    manifests and the MLflow run ID survive publication failure on durable governed
    storage. The current temporary workspace is not durable across Job destruction.
@@ -129,6 +162,21 @@ cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216b
 ```
 
 Add `--wrong-root` and use another output directory for the expected-failure
-negative control. `make lightgbm-wave1-g8-check` includes both regression tests
+negative control. `make lightgbm-wave1-g8-check` includes these regression tests
 against the checkout; the pinned-image command separately verifies frozen-runtime
 compatibility. Neither command accesses real test data or starts a Nebius Job.
+
+For the **complete C4 comparison**, additionally mount these five files from
+`backend/app/ml/lightgbm/` read-only at the corresponding
+`/job/backend/app/ml/lightgbm/<filename>` paths before the image argument:
+
+- `tracking.py`
+- `c4_evaluation.py`
+- `c4_replay_evidence.py`
+- `g8_benchmark_readiness.py`
+- `g8_c4_fixture.py` (synthetic rehearsal only; not a production overlay)
+
+Add `--c4` to the rehearsal arguments and use a new empty output path. Keep
+`--network none`. The receipt records the actual imported module hashes, one
+scoring call, and the limited synthetic comparison scope. This command does not
+prove native Nebius mount durability or duplicate-safe MLflow recovery.

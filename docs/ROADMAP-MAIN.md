@@ -186,9 +186,12 @@ diagnostic is retained separately from the passing final receipt.
 - G8: open. After three pre-test failures, R4 (`aijob-e00vtamgkr07mwzt4t`)
   downloaded the test release but failed before scoring on the projection-root
   path. That path is fixed and a real synthetic scoring/release/MLflow rehearsal
-  passes inside the pinned image. This is not a production G8 result. Complete
-  comparison inputs, benchmark wiring, durable publication recovery, live preflight
-  and a replacement-specific authorization remain required; see the
+  passes inside the pinned image. Full synthetic C4 comparison now also passes
+  through the injected runner and reviewed overlays: 27 checkpoints, 198 paired
+  observations and verified local MLflow report/metrics. This is not a production
+  G8 result. Original live comparison availability, replacement package binding,
+  durable recovery, live preflight and replacement-specific authorization remain
+  required. A persistent-storage exception is approved for preparation only; see the
   [G8 recovery record](g8-completion-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.

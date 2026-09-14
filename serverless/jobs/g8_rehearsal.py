@@ -1,14 +1,17 @@
 """Offline C4-shaped scoring rehearsal; never authorizes a production evaluation.
 
-Run with the *unmodified pinned image*, mounting this file and run_lightgbm_g8.py.
-Only transport is replaced: no loader, model, calibration, signature or release
-verification is mocked. Local MLflow is real; authenticated remote MLflow and
-remote S3 still require a separate live smoke test before final access.
+Run in the pinned image with the reviewed runner and, for --c4, the five module
+overlays listed in docs/g8-completion-recovery.md. No loader, model, calibration,
+signature, checkpoint, join or release verification is replaced. Rules alerts
+and features are synthetic fixtures, not Java execution results. Remote readiness,
+intent and transport are simulated; local MLflow is real. Authenticated remote
+MLflow and S3 still require a separate smoke test before final access.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib
 import importlib.util
 import json
 import os
@@ -158,7 +161,7 @@ def projected_input(package: Path) -> Wave1TabularProjectionInput:
     )
 
 
-def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> dict:
+def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: bool = False) -> dict:
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     spec = importlib.util.spec_from_file_location("g8_rehearsed_runner", runner_path)
@@ -166,6 +169,11 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
     sys.modules[spec.name] = runner
     spec.loader.exec_module(runner)
     development, final_input = projections(output)
+    comparison_path = None
+    if c4:
+        from app.ml.lightgbm.g8_c4_fixture import complete_c4_fixtures
+
+        development, final_input, comparison_path = complete_c4_fixtures(output, development, final_input)
     selected = output / "selected"
     common = dict(
         campaign_id=CAMPAIGN,
@@ -254,6 +262,28 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
         "--work-root",
         str(output / "work"),
     ]
+    if c4:
+        from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs, C4EvaluationProfile
+
+        root = FrozenPublicSampleRoot.model_validate_json((final_input / "manifests/frozen-root.json").read_bytes())
+        evaluation_profile = C4EvaluationProfile(
+            candidate_sha256=candidate_hash,
+            frozen_root_sha256=root.canonical_hash(),
+            projection_sha256=sha256_file(final_input / "manifests/tabular-projection.json"),
+            comparison_evidence_sha256=sha256_file(comparison_path),
+        )
+        profile_path = output / "c4-profile.json"
+        write_manifest(profile_path, evaluation_profile)
+        c4_inputs = C4EvaluationInputs(
+            profile=profile_path,
+            frozen_root=final_input / "manifests/frozen-root.json",
+            projection=final_input / "manifests/tabular-projection.json",
+            comparison=comparison_path,
+            candidate=selected / "candidate.json",
+        )
+        inputs_path = output / "c4-inputs.json"
+        write_manifest(inputs_path, c4_inputs)
+        argv.extend(["--c4-evaluation-inputs", str(inputs_path)])
     environment = {
         "MLFLOW_ALLOW_FILE_STORE": "true",
         "WAVE1_ACTUAL_PROJECT_ID": common["project_id"],
@@ -266,6 +296,12 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
         "WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256": sha256_file(public),
     }
     downloads = []
+    scoring_calls = []
+    original_score = cloud_runner.predict_governed_fold
+
+    def score(*args, **kwargs):
+        scoring_calls.append(1)
+        return original_score(*args, **kwargs)
 
     def download(uri, destination, **kwargs):
         downloads.append(uri)
@@ -330,10 +366,11 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
         patch.object(runner, "publish_s3_failure"),
         patch.object(runner.object_storage, "_aws_json", aws_json),
         patch.object(cloud_runner, "log_governed_evaluation_run", log),
+        patch.object(cloud_runner, "predict_governed_fold", score),
     ):
         runner.main()
     run = cloud_runner.verify_wave1_result(published)
-    if downloads.count(FINAL) != 1 or not run.mlflow_run_id:
+    if downloads.count(FINAL) != 1 or len(scoring_calls) != 1 or not run.mlflow_run_id:
         raise AssertionError("rehearsal did not score once and log a verified release")
     from mlflow import MlflowClient
 
@@ -358,6 +395,28 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
     experiment = client.get_experiment_by_name("lob-arena/governed-evaluation")
     if len(client.search_runs([experiment.experiment_id])) != 1:
         raise AssertionError("rehearsal created more than one MLflow evaluation run")
+    c4_report = None
+    if c4:
+        from app.ml.lightgbm.tracking import _benchmark_metrics
+
+        path = published / "artifacts/c4-evaluation.json"
+        c4_report = json.loads(path.read_bytes())
+        readback = Path(
+            client.download_artifacts(run.mlflow_run_id, "governed-evaluation/c4-evaluation.json", str(output))
+        )
+        if sha256_file(readback) != sha256_file(path) or logged.data.tags.get(
+            "c4_evaluation_report_sha256"
+        ) != sha256_file(path):
+            raise AssertionError("C4 report artifact or indexed byte hash differs")
+        if any(logged.data.metrics.get(key) != value for key, value in _benchmark_metrics(path).items()):
+            raise AssertionError("C4 metrics differ from MLflow read-back")
+        if (
+            c4_report["session_count"] != 3
+            or c4_report["observed_campaign_count"] != 27
+            or c4_report["row_count"] != 198
+            or c4_report["coverage"]["paired_observation_count"] != 198
+        ):
+            raise AssertionError("C4 complete comparison did not cover the expected synthetic domains")
     runner._runtime_compatibility_check()
     receipt = dict(
         schema_version="g8_synthetic_rehearsal_v1",
@@ -368,6 +427,7 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
         mlflow_run_id=run.mlflow_run_id,
         local_mlflow_status=logged.info.status,
         final_download_count=downloads.count(FINAL),
+        final_scoring_call_count=len(scoring_calls),
         release_verified=True,
         mlflow_artifact_readback_verified=True,
         mlflow_metric_readback_verified=True,
@@ -375,7 +435,18 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False) -> di
         conditional_publication_verified=True,
         remote_authentication_verified=False,
         remote_storage_verified=False,
-        rules_comparison_verified=False,
+        rules_comparison_verified=c4,
+        c4_report_sha256=sha256_file(published / "artifacts/c4-evaluation.json") if c4 else None,
+        c4_comparison_scope="synthetic_contract_fixtures_not_production_or_java_execution" if c4 else None,
+        c4_row_count=c4_report["row_count"] if c4 else None,
+        c4_session_count=c4_report["session_count"] if c4 else None,
+        c4_observed_campaign_count=c4_report["observed_campaign_count"] if c4 else None,
+        evaluation_code_sha256={
+            name: sha256_file(Path(importlib.import_module("app.ml.lightgbm." + name).__file__))
+            for name in (
+                "tracking", "c4_evaluation", "c4_replay_evidence", "g8_benchmark_readiness", "g8_c4_fixture"
+            )
+        } if c4 else {},
         production_g8_complete=False,
     )
     (output / "rehearsal.json").write_text(json.dumps(receipt, indent=2) + "\n")
@@ -387,5 +458,8 @@ if __name__ == "__main__":
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--runner", type=Path, default=Path(__file__).with_name("run_lightgbm_g8.py"))
     parser.add_argument("--wrong-root", action="store_true", help="Negative control: reproduce R4 before scoring")
+    parser.add_argument(
+        "--c4", action="store_true", help="Exercise all 27 synthetic original checkpoints and the complete C4 evaluator"
+    )
     args = parser.parse_args()
-    print(json.dumps(rehearse(args.output, args.runner, wrong_root=args.wrong_root), indent=2))
+    print(json.dumps(rehearse(args.output, args.runner, wrong_root=args.wrong_root, c4=args.c4), indent=2))
