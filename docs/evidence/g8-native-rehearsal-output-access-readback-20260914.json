@@ -1,0 +1,103 @@
+{
+  "schema_version": "g8_native_rehearsal_output_access_v1",
+  "verified_at": "2026-09-14T16:58:34+00:00",
+  "results_bucket_id": "storagebucket-e009132243970085528999",
+  "results_bucket_resource_version": "6",
+  "output_policy_exact_match": true,
+  "output_policy_rules": [
+    {
+      "paths": [
+        "campaigns/wave1-research-20260816/development/*"
+      ],
+      "roles": [
+        "storage.object-editor"
+      ],
+      "group_id": "group-e00wb5ptvpq0q7dpaf"
+    },
+    {
+      "paths": [
+        "campaigns/wave1-research-20260816/development/*"
+      ],
+      "roles": [
+        "storage.viewer"
+      ],
+      "group_id": "group-e00gbaesf952eabrws"
+    },
+    {
+      "paths": [
+        "campaigns/wave1-research-20260816/final/*"
+      ],
+      "roles": [
+        "storage.object-editor"
+      ],
+      "group_id": "group-e00gbaesf952eabrws"
+    },
+    {
+      "paths": [
+        "campaigns/nasdaq-g5-repro-20260906/development/*"
+      ],
+      "roles": [
+        "storage.object-editor"
+      ],
+      "group_id": "group-e00wb5ptvpq0q7dpaf"
+    },
+    {
+      "paths": [
+        "campaigns/nasdaq-g6-development-20260907/development/*"
+      ],
+      "roles": [
+        "storage.object-editor"
+      ],
+      "group_id": "group-e00wb5ptvpq0q7dpaf"
+    },
+    {
+      "paths": [
+        "campaigns/nasdaq-g6-development-20260907/development/*"
+      ],
+      "roles": [
+        "storage.viewer"
+      ],
+      "group_id": "group-e00gbaesf952eabrws"
+    },
+    {
+      "paths": [
+        "campaigns/nasdaq-g6-development-20260907/final/*"
+      ],
+      "roles": [
+        "storage.object-editor"
+      ],
+      "group_id": "group-e00gbaesf952eabrws"
+    },
+    {
+      "paths": [
+        "campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*",
+        "campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json"
+      ],
+      "roles": [
+        "storage.object-editor"
+      ],
+      "group_id": "group-e00wb5ptvpq0q7dpaf"
+    }
+  ],
+  "final_bucket_id": "storagebucket-e004963828556923796882",
+  "final_bucket_resource_version": "3",
+  "final_bucket_policy_rules": [
+    {
+      "paths": [
+        "releases/*"
+      ],
+      "roles": [
+        "storage.viewer"
+      ],
+      "group_id": "group-e00gbaesf952eabrws"
+    }
+  ],
+  "synthetic_candidate_read_granted": false,
+  "synthetic_input_read_granted": false,
+  "synthetic_sources_staged": false,
+  "authenticated_synthetic_source_readbacks_verified": false,
+  "ready_to_submit": false,
+  "jobs_submitted": 0,
+  "filesystems_created": 0,
+  "production_test_accessed": false
+}

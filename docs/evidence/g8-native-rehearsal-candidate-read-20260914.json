@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "id": "storagebucket-e009132243970085528999",
+    "resource_version": "6"
+  },
+  "spec": {
+    "bucket_policy": {
+      "rules": [
+        {
+          "paths": [
+            "campaigns/wave1-research-20260816/development/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/wave1-research-20260816/development/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/wave1-research-20260816/final/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g5-repro-20260906/development/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g6-development-20260907/development/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g6-development-20260907/development/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g6-development-20260907/final/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*",
+            "campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        }
+      ]
+    }
+  }
+}

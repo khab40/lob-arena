@@ -129,7 +129,7 @@ The [pre-review receipt](evidence/g8-live-integration-rehearsal-20260914.json)
 is preserved as historical evidence. Eleven additional CLI regression cases cover
 recovery rendering, distinct execution/retention deadlines and mount detachment,
 replacement or source change during the signed-context wait on both live paths.
-Final local verification: `make lightgbm-wave1-g8-check` passed **266 tests**,
+Final local verification: `make lightgbm-wave1-g8-check` passed **270 tests**,
 Ruff and CLI smoke checks; the governed-release, canonical-evaluation-bundle and
 MLflow dataset-lineage regression selection passed **15 tests**. Python 3.14
 MLflow file-store deprecation warnings were non-failing.
@@ -141,9 +141,10 @@ active experiment `3` through the VM's internal service network. No remote run
 or artifact was written. Job-to-private-endpoint routing and authenticated S3/
 MLflow artifact round trips still require the approved rehearsal below.
 
-## Approval request: synthetic native/remote rehearsal only
+## Approved scope: synthetic native/remote rehearsal only
 
-Proposed **$2 maximum additional spend**, subject to fresh billing reconciliation
+Operator approved **$2 maximum additional spend** on 2026-09-14, including cleanup
+and stopping the existing MLflow VM afterward, subject to fresh billing reconciliation
 before provisioning: stop new work at $40 campaign spend; never exceed $50 total.
 The old $28.65 figure is not a current balance.
 
@@ -178,6 +179,128 @@ Sources: [Compute pricing](https://docs.nebius.com/compute/resources/pricing),
 [native Job mounts](https://docs.nebius.com/serverless/jobs/manage),
 [filesystem durability/encryption](https://docs.nebius.com/compute/storage/types).
 
-Approval is still required. It does **not** approve the replacement final test.
+This approval does **not** approve the replacement final test.
 After rehearsal and original-checkpoint metadata verification, assemble/review
 the actual production package and request its distinct signed exception.
+
+### Post-merge preflight and required operator action
+
+PR #178 merged as `0742225b00f185bc9f98980a947e7ec29d5ec378`; all its checks
+passed. The new rehearsal branch starts at that commit. The
+[preflight record](evidence/g8-native-rehearsal-preflight-20260914.json)
+records the approved bounds, observed project billing of **$33.49 including VAT**,
+healthy MLflow containers, no native filesystems and the inactive final-read key.
+After finding the operator-action gate, MLflow VM
+`computeinstance-e00xq8hqrzks2pf3gn` was stopped under the approved cost-control
+scope and independently read back as **STOPPED**, resource version **38**.
+Its disks and recorded MLflow evidence were not deleted. Restart only when the
+remaining prerequisites permit the bounded rehearsal.
+Billing is provider-lagged (last updated 13:52 UTC), not a real-time spend receipt;
+refresh it and reconcile accrued charges immediately before submission.
+
+No rehearsal Job, filesystem, MLflow run or S3 object was created during this
+preflight. The operator applied the output policy, and independent
+[readback](evidence/g8-native-rehearsal-output-access-readback-20260914.json)
+confirmed bucket version **6** and exactly the eight expected rules. This closes
+only the output-permission gate, not the synthetic-input or submission gates.
+Do not activate the production final key or put rehearsal outputs inside an
+existing production campaign.
+
+Nebius MCP safe mode does not permit policy updates or cleanup deletions through
+that connector. The initial output update was performed manually by the operator.
+The operator subsequently explicitly requested execution of the two source-read
+CLI commands and approved each exact update through terminal escalation. Only
+those two commands were executed under that separate authorization; the connector
+configuration was not changed and no broader mutation authority was inferred. The
+[prepared policy patch](evidence/g8-native-rehearsal-policy-grant-20260914.json)
+preserves all seven existing rules and adds only the existing development
+group's object-editor access to:
+
+- `campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*`
+- `campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json`
+
+This output-only patch grants no final-input bucket access, anonymous access or bucket-wide role.
+It uses the active development identity; existing credentials must never be
+printed or committed. This policy change does not itself validate credentials,
+Job routing, native durability, comparison evidence or remote artifact recovery.
+
+The original patch is preserved as historical evidence, bound to resource
+version **5**. It has already been applied: **do not run it again**.
+The command intentionally supplies only policy flags: the CLI's `--file` option
+defaults updates to full-resource replacement and must not be used for this
+partial policy document.
+
+### Review correction: synthetic source read access
+
+The first access package omitted two required reads. `run_live` always downloads
+the candidate and the request input release before scoring. Output/intent access
+alone is insufficient, and the offline harness's mocked downloads are not
+evidence that the real Job can read its inputs. **Do not submit either paid Job
+until all source staging and authenticated readback gates below pass.**
+
+Use the same active development identity, never the production final-read key,
+with the following separately scoped, temporary **read-only** additions:
+
+| Bucket | Exact permitted synthetic source | Role |
+| --- | --- | --- |
+| Results | `campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*` | `storage.viewer` |
+| Final inputs | `releases/g8-native-rehearsal-20260914/staging/*` | `storage.viewer` |
+
+The final bucket grant is only for the newly generated synthetic release; it
+does not grant the development group `releases/*`, access to the real C4 release,
+or any write permission. The pre-existing final-identity rule remains unchanged.
+The production final-read key must remain inactive throughout rehearsal.
+
+The [candidate-read patch](evidence/g8-native-rehearsal-candidate-read-20260914.json)
+preserves the eight current results rules and is guarded by version **6**.
+The [synthetic-input-read patch](evidence/g8-native-rehearsal-input-read-20260914.json)
+preserves the final bucket's existing rule and is guarded by version **3**.
+Both source-reader grants were applied on 2026-09-14 under explicit user/terminal
+approval. Independent [readback](evidence/g8-native-rehearsal-source-access-readback-20260914.json)
+verified results bucket version **7** (nine rules) and final-input bucket version
+**4** (two rules), with exact policy matches and all other bucket settings
+preserved. The original output grant was not rerun.
+
+The following commands are retained as execution history: **do not rerun them**.
+
+```sh
+rtk proxy nebius storage bucket update --id storagebucket-e009132243970085528999 --resource-version 6 --patch --bucket-policy-rules "$(rtk proxy jq -c '.spec.bucket_policy.rules' docs/evidence/g8-native-rehearsal-candidate-read-20260914.json)" --format json
+rtk proxy nebius storage bucket update --id storagebucket-e004963828556923796882 --resource-version 3 --patch --bucket-policy-rules "$(rtk proxy jq -c '.spec.bucket_policy.rules' docs/evidence/g8-native-rehearsal-input-read-20260914.json)" --format json
+```
+
+If either version changed, stop; re-read that bucket and preserve concurrent
+changes before regenerating its patch. If only one command succeeds, retain that
+partial state and reconcile it; do not blindly repeat both. Independently read
+back both complete policies before using them.
+
+Submission gates, in order:
+
+1. Generate the synthetic candidate, four-date C4-shaped input and synthetic
+   comparison package locally in the pinned runtime. They must contain no
+   production rows or production candidate, and retain their request/profile/
+   manifest/byte hashes. Use campaign `g8-native-rehearsal-20260914`, candidate run
+   `synthetic-development`, and scoring run `synthetic-final`.
+2. Stage the two complete synthetic source releases at the exact paths above
+   with separately reviewed, exact-prefix staging authority. The rehearsal
+   reader grants do **not** authorize staging writes. Publish manifests and
+   checksums with `SUCCESS` last; do not treat missing sources as an IAM problem.
+   Source staging and its writer-access setup are still outstanding.
+3. Using the version-pinned credentials intended for the Job, authenticate and
+   download/verify both complete synthetic releases against the retained hashes.
+   Verify denial for a known production C4 object without downloading its body.
+   Record exact source URIs, marker/manifest hashes, credential selectors and
+   observation time. A policy readback or empty-prefix listing is not proof.
+4. Bind that evidence, native mount plan, comparison inventory, current billing,
+   remote MLflow credentials and actual injected runner to the reviewed rehearsal
+   package. Do not run the offline mocked-transport harness as if it were a live
+   remote rehearsal. No live rehearsal package is declared ready by these patches.
+5. Only then provision/submit within the existing two-Job and USD 2 bounds, and
+   retain/recover the same scored checkpoint without rescoring.
+
+For cleanup, the operator must remove only the added output rule and the two
+synthetic source-reader rules (plus any separately approved staging rules) using a fresh
+resource-version-guarded patch, preserve all baseline/concurrent rules, and
+manually delete only the identified temporary rehearsal resources after
+independent evidence copies are verified. Existing development credentials and
+MLflow disks are not disposable rehearsal resources. The rehearsal cannot start
+until this operator step and the remaining live preflight checks are complete.
