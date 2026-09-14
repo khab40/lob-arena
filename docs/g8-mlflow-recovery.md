@@ -111,10 +111,11 @@ Keep the same pinned digest and `--network none`. No credentials are needed.
 
 ## Next gate
 
-Retain a checksum-bound **scored payload before logging**, together with the
-original C4 provenance, reservation, dataset source and logging context. Prove
-fresh-process log-only recovery after the original workspace is unavailable,
-then finalize the result and use the already-reviewed marker-last publisher.
+The [pre-logging checkpoint milestone](g8-prelogging-checkpoint.md) now retains
+the scored payload, original C4 provenance, reservation identity and original
+logging context and proves fresh-process recovery after synthetic workspace loss.
+Next finalize the execution result truthfully and integrate the already-reviewed
+marker-last publisher with the reviewed durable execution package.
 The existing production runner still uses a temporary workspace and its legacy
 logger; this API is deliberately not wired into submission yet.
 

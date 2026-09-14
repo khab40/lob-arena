@@ -196,9 +196,11 @@ diagnostic is retained separately from the passing final receipt.
   Post-MLflow checkpoint/publication recovery now passes synthetic fault tests;
   same-run MLflow reservation/logging recovery also passes the frozen synthetic
   fault rehearsal (one run, one scoring call, 24 metrics, 30 dataset inputs).
-  Pre-logging payload retention, native durability and live integration remain
-  open. See [publication recovery](g8-publication-recovery.md) and
-  [MLflow recovery](g8-mlflow-recovery.md).
+  Pre-logging checkpoints now pass synthetic fresh-process recovery after the
+  original workspace is removed, without rescoring or creating another run.
+  Native durability, execution-result finalization and live integration remain
+  open. See [pre-logging checkpoints](g8-prelogging-checkpoint.md),
+  [publication recovery](g8-publication-recovery.md) and [MLflow recovery](g8-mlflow-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
 

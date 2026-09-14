@@ -120,6 +120,15 @@ writes. This does not retain scored payloads before logging or survive Job loss
 yet, and is not wired into live execution. Those integration and native-storage
 gates remain open, as do remote rehearsal and replacement-specific approval.
 
+Follow-up after merged PR #176: [pre-logging checkpoints](g8-prelogging-checkpoint.md)
+now retain the scored release, original C4 comparison evidence and unchanged
+logging context before any evaluation evidence is logged. The synthetic proof
+abruptly exits after sealing, removes the original workspace, then runs the
+actual log-only CLI in fresh processes. Recovery also survives a second abrupt
+exit after an artifact upload and finishes the same run without rescoring.
+Native storage durability, full execution-result finalization/publication
+integration, remote rehearsal and replacement-specific approval remain gates.
+
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
    replay streams, rules alerts, adjudications, regime evidence, streaming evidence
