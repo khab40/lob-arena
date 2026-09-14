@@ -95,7 +95,10 @@ and hashed into a new execution package; placeholders must fail validation.
 ## Current disposition
 
 Only the design preparation is approved. No submission validator was relaxed,
-no resource was provisioned, and no durable-recovery implementation is claimed.
+no resource was provisioned, and full durable recovery is not claimed. The
+[completed-release publication primitive](g8-publication-recovery.md) now verifies
+local retention and publish-only fault recovery after MLflow has finished. It is
+not a pre-logging scored checkpoint, native-mount proof or live runner integration.
 Review/budget approval precedes live provisioning; successful synthetic durability
 and authenticated transport proofs precede the separately signed replacement
 execution. G8 remains open and G9 remains blocked.

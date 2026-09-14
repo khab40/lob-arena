@@ -1,0 +1,61 @@
+{
+  "schema_version": "g8_synthetic_publication_recovery_v1",
+  "request_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "scoring_receipt_sha256": "ea0a5b2679a6ad8f40de7fa7159c07fae9c99b8e92c0f29c6282d58cfea14646",
+  "recovery_module_sha256": "783e8a7188af13fbc88d894675721b59486432bcca5f38dc35f204a4c0a6ba10",
+  "recovery_cli_sha256": "ddf733ff5e40bb93ef69362ec81c5bb30888147f62959e3e992cf43ae5e4cde2",
+  "rehearsal_sha256": "7e28bc7af0a3f7a414ff084c9e38beaa5846f5e0ef99a5c891fe442d6781f93c",
+  "checkpoint_sha256": "266dc47b6dc33bba96ebb72acdf439a41a447e62c6cadd78ab6a79a68cc6203a",
+  "c4_report_sha256": "c6d66ad4ca927fecab8a8bb100c5c8c9a7ed0df569a880819e993c3a741ff5fe",
+  "mlflow_run_id": "751883c3bd7f450a9b9fb82ab7dded55",
+  "final_scoring_call_count": 1,
+  "local_mlflow_run_count": 1,
+  "source_path_unavailable": true,
+  "new_process_checkpoint_verified": true,
+  "fault_cases": {
+    "middle_put": {
+      "schema_version": "g8_publication_recovery_receipt_v1",
+      "checkpoint_sha256": "266dc47b6dc33bba96ebb72acdf439a41a447e62c6cadd78ab6a79a68cc6203a",
+      "request_sha256": "a0eb282ad7f2b39795cb908fcea8732ce88e9322bf651ebc776cc5bb33456093",
+      "mlflow_run_id": "751883c3bd7f450a9b9fb82ab7dded55",
+      "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-synthetic-rehearsal/final/synthetic-final",
+      "object_count": 60,
+      "previously_verified_objects": 2,
+      "conditionally_published_objects": 58,
+      "scoring_invocations": 0,
+      "mlflow_writes": 0,
+      "mlflow_remote_state_verified": false
+    },
+    "lost_response": {
+      "schema_version": "g8_publication_recovery_receipt_v1",
+      "checkpoint_sha256": "266dc47b6dc33bba96ebb72acdf439a41a447e62c6cadd78ab6a79a68cc6203a",
+      "request_sha256": "a0eb282ad7f2b39795cb908fcea8732ce88e9322bf651ebc776cc5bb33456093",
+      "mlflow_run_id": "751883c3bd7f450a9b9fb82ab7dded55",
+      "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-synthetic-rehearsal/final/synthetic-final",
+      "object_count": 60,
+      "previously_verified_objects": 0,
+      "conditionally_published_objects": 60,
+      "scoring_invocations": 0,
+      "mlflow_writes": 0,
+      "mlflow_remote_state_verified": false
+    },
+    "marker": {
+      "schema_version": "g8_publication_recovery_receipt_v1",
+      "checkpoint_sha256": "266dc47b6dc33bba96ebb72acdf439a41a447e62c6cadd78ab6a79a68cc6203a",
+      "request_sha256": "a0eb282ad7f2b39795cb908fcea8732ce88e9322bf651ebc776cc5bb33456093",
+      "mlflow_run_id": "751883c3bd7f450a9b9fb82ab7dded55",
+      "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-synthetic-rehearsal/final/synthetic-final",
+      "object_count": 60,
+      "previously_verified_objects": 59,
+      "conditionally_published_objects": 1,
+      "scoring_invocations": 0,
+      "mlflow_writes": 0,
+      "mlflow_remote_state_verified": false
+    }
+  },
+  "production_test_accessed": false,
+  "remote_storage_verified": false,
+  "native_storage_durability_verified": false,
+  "mlflow_interruption_recovery_verified": false,
+  "production_g8_complete": false
+}
