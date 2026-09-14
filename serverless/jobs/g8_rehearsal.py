@@ -161,7 +161,8 @@ def projected_input(package: Path) -> Wave1TabularProjectionInput:
     )
 
 
-def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: bool = False) -> dict:
+def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: bool = False,
+             execution_hook=None) -> dict:
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
     spec = importlib.util.spec_from_file_location("g8_rehearsed_runner", runner_path)
@@ -368,7 +369,10 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
         patch.object(cloud_runner, "log_governed_evaluation_run", log),
         patch.object(cloud_runner, "predict_governed_fold", score),
     ):
-        runner.main()
+        if execution_hook is None:
+            runner.main()
+        else:
+            execution_hook(runner, final_request, output)
     run = cloud_runner.verify_wave1_result(published)
     if downloads.count(FINAL) != 1 or len(scoring_calls) != 1 or not run.mlflow_run_id:
         raise AssertionError("rehearsal did not score once and log a verified release")

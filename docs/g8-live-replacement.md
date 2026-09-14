@@ -1,0 +1,172 @@
+# G8 replacement integration and approval gates
+
+Status: engineering implementation; **not final-test or provisioning authority**.
+G8 remains open and G9 blocked. This follows merged PR #177, from updated main
+`827ddc906f0e13f86570762f1eb4a59a83ab62d4`.
+
+## Execution boundary
+
+`serverless/jobs/run_lightgbm_g8_replacement.py` is a separate entrypoint. The
+ordinary submitter and its Wave 1 no-volume rule are unchanged. Verification is
+the default; `--command` renders a command without submitting; `--execute` and
+`--recover` are mutually exclusive explicit operations. Neither code nor this
+document authorizes issuing the rendered command.
+
+The canonical, Ed25519-signed `replacement.json` uses `ReplacementPlan` in
+`backend/app/ml/lightgbm/g8_replacement.py`. It binds:
+
+- The four prior submissions, R4 Job/run IDs, prior test access, monitor/log
+  digests, one replacement, and the no-tuning constraint. The first-run v2 receipt
+  cannot stand in for this exception. A fresh candidate authorization is required.
+- The unchanged production candidate/image and original final C4 root/projection
+  hashes and release URI; the corrected `artifacts` layout; the complete C4
+  profile, original comparison package, request, lineage and code-file hashes.
+- A single native filesystem ID at `/g8-durable`, rehearsal-observed virtiofs
+  source, capacity, transfer bounds, version-pinned MysteryBox selectors and
+  exact subnet. No S3/FUSE mount, nested mount, writable code injection or public
+  endpoint is introduced.
+- Signed, reviewed observations: native Job-loss/reattachment, authenticated
+  remote round trips, original 27-checkpoint metadata inventory and billing.
+  Their byte hashes are mandatory. Positive booleans are **not independently
+  obtained by this verifier**: the operator must review the underlying receipts
+  before signing the complete plan. No placeholder success receipts are generated.
+- Observations at most one hour old, an execution expiry within one hour,
+  campaign spend below $40, total exposure at most $50 and a retention/recovery
+  deadline within 24 hours. Expired execution cannot restart scoring; recovery
+  may continue only within its separately bounded retention window.
+
+The exact required flat file allowlist is enforced by `ReplacementPlan`.
+Each injection is at most 64 KiB; its byte count and SHA-256 are verified.
+The `CODE_PATHS` mapping renders the required overlay mounts as well as package
+copies, and the live CLI verifies the installed runtime files against the plan.
+No unsigned production example is presented as ready.
+
+After the operator submits the reviewed command **once**, they retain the actual
+Nebius API readback and stage an operator-signed context at
+`/g8-durable/contexts/<run-id>.json` and `<run-id>.sig`. Its exact keys are
+`execution_package_sha256`, `filesystem_id`, `context` (a
+`Wave1ExecutionContext` with the actual `aijob-...` ID), and
+`job_readback_sha256`, and `purpose` (`execute`). Sign with the same trusted operator key. Review the actual
+Job image, injected file identities, one volume, resources, credentials selectors,
+network and restart policy before releasing this context. The runner waits at
+most five minutes, bounded by execution expiry, without accessing final data.
+An ambiguous Job-create response is **not permission to submit again**; recover
+the exact API Job identity. The signer, not the runner, attests to API readback.
+For an explicit recovery Job, stage `<run-id>-recovery.json`/`.sig`, with purpose
+`recover` and that recovery Job's actual identity. The CLI returns the current
+executing Job ID separately; it never replaces the original scoring identity in
+the immutable release or MLflow logging plan. Retain these signed contexts and
+CLI receipts with the API readbacks in the execution audit archive.
+
+## Durable lifecycle
+
+1. Validate signatures, fixed identities, actual native mount and Job context.
+2. Exclusively create `/g8-durable/<new-run-id>` and hold a filesystem lock.
+   An occupied directory cannot execute again. Verify MLflow readiness, claim
+   the conditional S3 intent, and durably reserve one MLflow run before final
+   access. Ambiguous intent/run creation never permits another scoring execution.
+3. Keep the entire workspace on that filesystem. Verify the candidate, mark final
+   access, download the final release once and invoke the frozen `_run_final`
+   once with the approved C4 evaluator/logger hook. Keep the legacy failure
+   publisher out of this path; exceptions preserve the workspace and checkpoints.
+4. Capture original scoring-process resources, Job identity, environment and
+   input inventory. Seal scored artifacts plus original comparison evidence;
+   fsync a separate receipt before the first evaluation-evidence logging call.
+5. Use the same log-only recovery operation on normal execution and after Job/
+   workspace loss. Reverify the C4 report and complete evidence, then finish the
+   reserved MLflow run. No input downloader, model execution or run creation is
+   reachable from `finish_retained`.
+6. Reconstruct the cloud result from the seal, preserving **original** Job and
+   resource measurements. `g8-recovery.json` explicitly scopes resource timing
+   to the original process through pre-logging; it does not claim recovery CPU
+   usage was original scoring usage. Retain a complete publication checkpoint
+   and independently fsynced pointer. Reverify all publication artifacts against
+   the original scored seal, even if a publication checkpoint was re-sealed.
+7. Independently verify same-run MLflow again before resuming marker-last S3
+   publication. Preserve matching partial objects; refuse conflicts; verify
+   metadata and actual bytes. A completed repeat performs no MLflow or S3 writes.
+
+Unsealed checkpoints, missing independent receipts/ledger or insufficient disk
+space stop recovery; they do not authorize rescoring. Partial local finalization
+directories are retained for diagnosis, not deleted automatically. Capacity must
+cover five bounded working copies; current free space is checked before final
+access and before rebuilding finalization. Cleanup may remove only reviewed
+temporary copies, never the sole verified copy. Loss before the scored seal
+still requires the original native workspace; this code grants no scoring retry.
+
+## Synthetic evidence and remote observations
+
+`serverless/jobs/g8_live_rehearsal.py` exercises `run_live`, the frozen scorer,
+`LiveCheckpointLogger`, `finish_retained` and the actual conditional publisher.
+It terminates the scoring process after the pre-logging seal, removes both
+synthetic workspaces, terminates fresh recovery after an MLflow artifact upload,
+then recovers and injects a SUCCESS-upload failure. It verifies the published
+bytes, original Job identity and a zero-write completed repeat.
+
+The synthetic harness substitutes approval inputs, native mount and remote
+transport with explicit fixtures; MLflow is real but file-backed. It is not a
+test of native attachment or authenticated remote writes, and uses no production
+test rows. The CLI signature/mount/expiry/allowlist checks have separate negative
+tests. The G8 Make target runs all of these tests and Ruff.
+
+The [portable pinned-image receipt](evidence/g8-live-integration-rehearsal-20260914.json)
+records one scoring call, local MLflow run `f6e1940c6d91458cb2324a3f830c4f5e`,
+64 byte-verified published objects, original Job identity preservation and a
+zero-write completed repeat. Its publication checkpoint SHA-256 is
+`c58870eab0caadb7df71843a4107706c24215a3907ba1f532f03e186742b7a07`.
+Full temporary engineering evidence remains at
+`/tmp/g8-live-frozen.GqkZcp/delivery`. Networking was disabled for this run.
+This receipt binds the delivered lifecycle code and CLI hashes; CLI policy checks
+were tested separately, not bypassed and then reported as live approval.
+Final local verification: `make lightgbm-wave1-g8-check` passed **255 tests**,
+Ruff and CLI smoke checks; the governed-release, canonical-evaluation-bundle and
+MLflow dataset-lineage regression selection passed **15 tests**. Python 3.14
+MLflow file-store deprecation warnings were non-failing.
+
+Live read-only observation on 2026-09-14: MLflow VM
+`computeinstance-e00xq8hqrzks2pf3gn` is RUNNING; MLflow, Postgres and exporter
+containers are healthy. The existing governed writer authenticated and read
+active experiment `3` through the VM's internal service network. No remote run
+or artifact was written. Job-to-private-endpoint routing and authenticated S3/
+MLflow artifact round trips still require the approved rehearsal below.
+
+## Approval request: synthetic native/remote rehearsal only
+
+Proposed **$2 maximum additional spend**, subject to fresh billing reconciliation
+before provisioning: stop new work at $40 campaign spend; never exceed $50 total.
+The old $28.65 figure is not a current balance.
+
+- One dedicated **10 GiB network_ssd filesystem**, at most **24 hours** retention.
+- At most **two cpu-d3, 4vcpu-16gb Jobs**, each with a **1-hour timeout**, 100 GiB
+  ephemeral disk, no restart, no GPU. First writes/seals synthetic evidence and
+  is lost/cancelled; second reattaches and performs recovery/remote readback.
+- At most **four hours of the existing MLflow VM's rehearsal uptime** included
+  in the allowance. Obtain consent to stop that user-started VM at the end; do
+  not assume it is disposable or delete its disks.
+- A unique synthetic S3 prefix and explicitly synthetic MLflow identity, scoped
+  writer credentials, private routing, negative unauthenticated-access checks,
+  artifact/metric/lineage hash round trips and zero-rescoring assertions.
+  No final-read credential activation, production checkpoint rows, production
+  scoring, training experiments or model selection.
+- Archive verified synthetic receipts, revoke temporary attachment/write access,
+  and remove only this rehearsal's temporary Jobs/filesystem after verifying
+  independent copies. Cleanup owner: approving operator with Codex execution;
+  deadline: creation +24h. Escalate if cleanup or billing reconciliation fails.
+
+Published list-price estimate checked 2026-09-14: CPU $0.012/vCPU-hour,
+RAM $0.0032/GiB-hour, SSD disk $0.071/GiB/730h and shared filesystem
+$0.08/GiB/730h. Two full Job hours including disks are about $0.218;
+10 GiB filesystem for 24h about $0.026; MLflow 2vCPU/8GiB plus 32GiB disk for
+four hours about $0.211: **about $0.46 infrastructure subtotal**, before network,
+object requests and other applicable charges. The $2 cap provides headroom, not
+a provider-enforced billing cap. Check current project-specific rates and spend
+before starting; do not proceed if the quoted scope cannot fit.
+
+Sources: [Compute pricing](https://docs.nebius.com/compute/resources/pricing),
+[Serverless billing](https://docs.nebius.com/serverless/pricing-quotas),
+[native Job mounts](https://docs.nebius.com/serverless/jobs/manage),
+[filesystem durability/encryption](https://docs.nebius.com/compute/storage/types).
+
+Approval is still required. It does **not** approve the replacement final test.
+After rehearsal and original-checkpoint metadata verification, assemble/review
+the actual production package and request its distinct signed exception.

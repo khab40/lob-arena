@@ -198,8 +198,12 @@ diagnostic is retained separately from the passing final receipt.
   fault rehearsal (one run, one scoring call, 24 metrics, 30 dataset inputs).
   Pre-logging checkpoints now pass synthetic fresh-process recovery after the
   original workspace is removed, without rescoring or creating another run.
-  Native durability, execution-result finalization and live integration remain
-  open. See [pre-logging checkpoints](g8-prelogging-checkpoint.md),
+  A separate [replacement entrypoint/preflight](g8-live-replacement.md) now wires
+  scored checkpoints, same-run logging, truthful execution-result finalization
+  and marker-last publication together. Native durability, authenticated remote
+  rehearsal, actual package review/binding and replacement approval remain open.
+  The proposed synthetic native/remote rehearsal has a $2 cap, pending approval.
+  See [pre-logging checkpoints](g8-prelogging-checkpoint.md),
   [publication recovery](g8-publication-recovery.md) and [MLflow recovery](g8-mlflow-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.

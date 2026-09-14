@@ -24,9 +24,15 @@ rehearsal. Pre-scoring MLflow reservation and same-run logging recovery now pass
 the frozen synthetic rehearsal too (one run, one scoring call, 24 metrics and 30
 dataset inputs, zero writes on completed recovery). Pre-logging payload retention
 and fresh-process log-only recovery now also pass after removal of the synthetic
-workspace, including a second interruption after an artifact upload. Native
-durability, truthful execution-result finalization and live integration remain
-required. See [pre-logging checkpoints](../g8-prelogging-checkpoint.md),
+workspace, including a second interruption after an artifact upload. A separate
+[signed replacement entrypoint](../g8-live-replacement.md) now integrates these
+components and reconstructs the cloud result with the original scoring Job and
+resource evidence before marker-last publication. It preserves R4 history and
+requires a native mount and fresh package-bound approval; the ordinary Wave 1
+volume prohibition remains intact. Native durability, authenticated remote
+rehearsal and actual production package review remain required. The $2 synthetic
+rehearsal proposal is not provisioning authority.
+See [pre-logging checkpoints](../g8-prelogging-checkpoint.md),
 [publication recovery](../g8-publication-recovery.md) and
 [MLflow recovery](../g8-mlflow-recovery.md).
 The [recovery record](../g8-completion-recovery.md) supersedes
