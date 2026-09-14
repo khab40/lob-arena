@@ -151,9 +151,10 @@ after the completed local result exists; it cannot recover R4, which has no scor
 result, or a process loss during scoring/MLflow logging. Do not treat this partial
 milestone as the full recovery gate.
 
-Next implement a pre-scoring reservation for one MLflow run, a durable pre-logging
-scored checkpoint, and log-only resume into that same run with independent C4
-provenance validation. Bind those operations and this publisher into the reviewed
+Pre-scoring reservation and same-run logging now pass the separate
+[MLflow recovery rehearsal](g8-mlflow-recovery.md) with independent C4 provenance
+validation. Next retain a durable pre-logging scored checkpoint and prove
+fresh-process log-only recovery after workspace loss. Bind those operations and this publisher into the reviewed
 replacement package, with mandatory C4 evidence, explicit R4 history and native
 storage exception identities. Budget/review/provisioning approval, synthetic native
 mount failure tests, authenticated remote MLflow/S3 rehearsal and original C3

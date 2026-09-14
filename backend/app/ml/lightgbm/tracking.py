@@ -11,6 +11,7 @@ from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs
+    from app.ml.lightgbm.g8_mlflow_recovery import ResumeTarget
 
 from app.ml.lightgbm.contracts import (
     CalibrationManifest,
@@ -164,6 +165,7 @@ def log_governed_evaluation_run(
     tracking_uri: str | None = None,
     dataset_source_uri: str | None = None,
     cloud_metadata: dict[str, str | int | float] | None = None,
+    resume_target: ResumeTarget | None = None,
 ) -> str:
     """Index an already-verified frozen-test release in MLflow."""
 
@@ -183,6 +185,47 @@ def log_governed_evaluation_run(
         benchmark_results_path, artifact_root=artifact_root,
         predictions=predictions, c4_inputs=c4_evaluation_inputs,
     ) as (benchmark_metrics, benchmark_tags, benchmark_snapshot):
+        if resume_target is not None:
+            from app.ml.lightgbm.g8_mlflow_recovery import resume_verified_logging
+
+            if tracking_uri != resume_target.spec.tracking_uri or benchmark_snapshot is None:
+                raise ValueError("MLflow recovery requires the reserved tracking URI and C4 report")
+            cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
+            return resume_verified_logging(
+                resume_target,
+                tags={
+                    **_binding_tags(training, governance_state="release_verified"),
+                    **benchmark_tags, **cloud_tags,
+                    "calibration_id": calibration.calibration_id,
+                    "prediction_run_id": predictions.prediction_run_id,
+                    "model_bundle_hash": bundle.manifest_hash(),
+                    "operating_mode": predictions.operating_mode,
+                    "test_accessed": "true",
+                },
+                metrics={
+                    "test_alert_count": float(predictions.alert_count),
+                    "test_row_count": float(predictions.row_count),
+                    "frozen_threshold": predictions.threshold,
+                    **cloud_metrics, **benchmark_metrics,
+                },
+                inputs=feature_dataset_inputs(
+                    predictions.input_features,
+                    source_root_uri=dataset_source_uri or artifact_root.resolve().as_uri(),
+                    feature_release_id=training.feature_release_id,
+                    feature_release_sha256=training.feature_release_sha256,
+                    expected_folds={"test"},
+                ),
+                artifacts={
+                    "governed/" + bundle_path.name: (bundle_path, hashlib.sha256(bundle.canonical_bytes()).hexdigest()),
+                    "governed/" + checksum_path.name: (checksum_path, bundle.artifact_map()["checksums"].sha256),
+                    "governed/" + prediction_manifest_path.name: (
+                        prediction_manifest_path, hashlib.sha256(predictions.canonical_bytes()).hexdigest(),
+                    ),
+                    "governed-evaluation/" + benchmark_snapshot.name: (
+                        benchmark_snapshot, benchmark_tags.get("c4_evaluation_report_sha256", ""),
+                    ),
+                },
+            )
         mlflow = _mlflow(tracking_uri)
         mlflow.set_experiment(EVALUATION_EXPERIMENT)
         with mlflow.start_run(run_name=predictions.prediction_run_id) as run:

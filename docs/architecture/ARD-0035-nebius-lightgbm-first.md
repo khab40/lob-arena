@@ -20,8 +20,12 @@ or Java execution evidence. Live original comparison availability, replacement
 package binding, durable recovery and replacement-specific authorization remain
 pending. Persistent-storage exception preparation is approved, not provisioning.
 Post-MLflow checkpoint/publication recovery also passes the frozen synthetic fault
-rehearsal; pre-logging retention, same-run tracking recovery and live integration
-remain required. See [publication recovery](../g8-publication-recovery.md).
+rehearsal. Pre-scoring MLflow reservation and same-run logging recovery now pass
+the frozen synthetic rehearsal too (one run, one scoring call, 24 metrics and 30
+dataset inputs, zero writes on completed recovery). Pre-logging payload retention,
+native durability and live integration remain required. See
+[publication recovery](../g8-publication-recovery.md) and
+[MLflow recovery](../g8-mlflow-recovery.md).
 The [recovery record](../g8-completion-recovery.md) supersedes
 the older "final fold remains unopened" status below without altering historical
 receipts or treating R4's failure as G8 completion.

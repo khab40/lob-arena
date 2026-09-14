@@ -1286,6 +1286,11 @@ production/client performance claim.
 - [x] Post-MLflow completed-release checkpoint and publish-only recovery pass
   synthetic failure tests in the pinned runtime; not live integration, native
   storage durability or interruption recovery during MLflow logging.
+- [x] Pre-scoring MLflow reservation and same-run logging recovery pass the frozen
+  synthetic fault rehearsal; 24 metric histories, 30 dataset inputs and four
+  artifacts verify with one run/one scoring call. See
+  [MLflow recovery](g8-mlflow-recovery.md). Pre-logging payload retention,
+  fresh-process log-only recovery and live integration are still required.
 - [ ] Replacement-specific exception, signed package and live preflight verify.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
