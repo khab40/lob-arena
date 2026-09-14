@@ -75,6 +75,27 @@ logging, immutable logging plans, and zero second create POSTs through the actua
 MLflow HTTP SDK when a loopback test server disconnects or returns HTTP 503.
 Forged C4 reports remain rejected before either the legacy or recovery sink.
 
+### PR #176 tag-order review follow-up
+
+The reviewed local and frozen MLflow 3.15.2 SDK already serializes dataset tags
+as a mapping; the reported ordering failure was not reproduced in that runtime.
+Normalization is now explicit from raw key/value entries, independent of the
+SDK's serialized container, with duplicate keys rejected before normalization.
+The canonical identity stays compatible with existing mapping-based ledgers.
+Five regression cases cover all tag permutations with mapping/list serializers,
+identical/conflicting duplicate keys, and reordered backend lineage after a lost
+input-log response (no duplicate input write and zero completed-recovery writes).
+
+The pinned-image rehearsal was repeated with reversed tag lists on remote
+readback: 210 dataset-input readbacks exercised the ordering boundary. Synthetic
+run `6c945617cba74a4695fd74a86c237481` finished with one creation, one scoring
+call, 24 metrics, 30 inputs, four verified artifacts and zero completed-recovery
+writes. The [review-fix receipt](evidence/g8-mlflow-tag-review-20260914.json) and
+[source receipt](evidence/g8-mlflow-tag-review-scoring-20260914.json) bind the
+updated code. The original receipts above are preserved as history. Full local
+outputs: `/tmp/g8-mlflow-tag-review.zL7Z46/rehearsal`. This remains an offline
+file-store rehearsal with reordered responses, not a live PostgreSQL test.
+
 ## Reproduce
 
 `make lightgbm-wave1-g8-check` includes the recovery tests and lint. The two SDK

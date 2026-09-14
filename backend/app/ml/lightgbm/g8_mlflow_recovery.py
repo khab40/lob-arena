@@ -212,9 +212,14 @@ def _dataset_entities(inputs):
 
 
 def _dataset_identity(entity):
-    value = entity.to_dictionary()
-    if len(value["tags"]) != len(entity.tags):
-        raise ValueError("duplicate MLflow dataset input tags")
+    # Normalize from the raw entries, not the SDK serializer's representation
+    # or the backend's list ordering. Reject duplicates before collapsing keys.
+    tags = {}
+    for tag in entity.tags:
+        if tag.key in tags:
+            raise ValueError("duplicate MLflow dataset input tags")
+        tags[tag.key] = tag.value
+    value = {"dataset": entity.dataset.to_dictionary(), "tags": tags}
     value["dataset"]["source"] = json.loads(value["dataset"]["source"])
     return _canonical(value).decode()
 

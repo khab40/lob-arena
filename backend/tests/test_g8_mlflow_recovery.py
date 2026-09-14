@@ -119,6 +119,68 @@ def test_same_ledger_cannot_be_used_concurrently(setup):
         recovery.reserve_run(target)
 
 
+@pytest.mark.parametrize("serialization", ["mapping", "list"])
+def test_dataset_identity_ignores_tag_order_and_sdk_container(tmp_path, monkeypatch, serialization):
+    from itertools import permutations
+    from mlflow.entities import DatasetInput
+
+    item = recovery._dataset_entities(arguments(tmp_path)["inputs"])[0]
+    expected = recovery._dataset_identity(item)
+
+    def serialized(entity):
+        entries = [{"key": tag.key, "value": tag.value} for tag in entity.tags]
+        tags = entries if serialization == "list" else {tag.key: tag.value for tag in entity.tags}
+        return {"dataset": entity.dataset.to_dictionary(), "tags": tags}
+
+    monkeypatch.setattr(DatasetInput, "to_dictionary", serialized)
+    for tags in permutations(item.tags):
+        assert recovery._dataset_identity(DatasetInput(item.dataset, list(tags))) == expected
+
+
+@pytest.mark.parametrize("value", ["test", "conflicting"])
+def test_dataset_identity_rejects_duplicate_keys_before_normalizing(tmp_path, value):
+    from mlflow.entities import InputTag
+
+    item = recovery._dataset_entities(arguments(tmp_path)["inputs"])[0]
+    item.tags.append(InputTag("fold", value))
+    with pytest.raises(ValueError, match="duplicate MLflow dataset input tags"):
+        recovery._dataset_identity(item)
+
+
+def test_reordered_remote_lineage_recovers_after_lost_input_response(setup, tmp_path, monkeypatch):
+    target, client, experiment = setup
+    run_id = recovery.reserve_run(target)
+    kwargs = arguments(tmp_path)
+    original_log = client.log_inputs
+    original_get = client.get_run
+    calls = []
+    reordered = []
+
+    def log(*args, **kwargs):
+        original_log(*args, **kwargs)
+        calls.append(1)
+        raise TimeoutError("lost input response")
+
+    def get(*args, **kwargs):
+        run = original_get(*args, **kwargs)
+        for item in run.inputs.dataset_inputs:
+            item.tags.reverse()
+            reordered.append(1)
+        return run
+
+    monkeypatch.setattr(client, "log_inputs", log)
+    monkeypatch.setattr(client, "get_run", get)
+    with pytest.raises(TimeoutError):
+        recovery.resume_verified_logging(target, **kwargs)
+    assert recovery.resume_verified_logging(target, **kwargs) == run_id
+    assert calls == [1]  # Persisted lineage was recognized, not submitted again.
+    assert reordered
+    assert len(client.search_runs([experiment])) == 1
+    for method in ("create_run", "log_batch", "log_inputs", "log_artifact", "set_terminated"):
+        monkeypatch.setattr(client, method, lambda *a, **kw: pytest.fail("completed recovery wrote MLflow"))
+    assert recovery.resume_verified_logging(target, **kwargs) == run_id
+
+
 @pytest.mark.parametrize("fault", ["tags", "metrics", "lineage", "artifact", "finish", None])
 def test_real_mlflow_partial_logging_and_lost_responses_recover_once(setup, tmp_path, monkeypatch, fault):
     target, client, experiment = setup
@@ -244,6 +306,7 @@ def test_complete_c4_scoring_recovers_logging_into_reserved_run(tmp_path):
     assert receipt["completed_recovery_write_count"] == 0
     assert receipt["verified_dataset_input_count"] == 30
     assert receipt["logging_attempts"] == 4
+    assert receipt["reordered_dataset_input_read_count"] > 0
     assert receipt["faults_recovered"] == ["create_response", "metric_response", "artifact_response", "finish_response"]
     assert not receipt["production_g8_complete"]
     assert not receipt["pre_logging_payload_retention_verified"]

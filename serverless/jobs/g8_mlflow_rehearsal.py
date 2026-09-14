@@ -27,7 +27,7 @@ def rehearse_mlflow(output: Path) -> dict:
     output = output.resolve()
     original_score = cloud_runner.predict_governed_fold
     original_log = cloud_runner.log_governed_evaluation_run
-    state = {"create_calls": 0, "writes": 0, "faults": [], "logging_attempts": 0}
+    state = {"create_calls": 0, "writes": 0, "faults": [], "logging_attempts": 0, "reordered_inputs": 0}
     pending = ["create_response", "metric_response", "artifact_response", "finish_response"]
 
     def lose_response(kind):
@@ -41,6 +41,14 @@ def rehearse_mlflow(output: Path) -> dict:
 
         def __getattr__(self, name):
             original = getattr(self.actual, name)
+            if name == "get_run":
+                def reordered(*args, **kwargs):
+                    run = original(*args, **kwargs)
+                    for item in run.inputs.dataset_inputs:
+                        item.tags.reverse()  # A backend need not preserve insertion order.
+                        state["reordered_inputs"] += 1
+                    return run
+                return reordered
             if name not in {"create_run", "log_batch", "log_inputs", "log_artifact", "set_terminated"}:
                 return original
 
@@ -120,6 +128,8 @@ def rehearse_mlflow(output: Path) -> dict:
                     raise AssertionError("logging recovery duplicated metric history")
             if len(run.inputs.dataset_inputs) != 30:
                 raise AssertionError("logging recovery did not retain the exact 30-shard lineage")
+            if state["reordered_inputs"] == 0:
+                raise AssertionError("rehearsal did not exercise reordered remote dataset tags")
             target = state["target"]
             completed = target.ledger_root / target.spec.identity() / "logging-complete.json"
             receipt = {
@@ -135,6 +145,7 @@ def rehearse_mlflow(output: Path) -> dict:
                 "completed_recovery_write_count": state["repeat_writes"],
                 "verified_metric_count": len(run.data.metrics),
                 "metric_history_exactly_once": True, "verified_dataset_input_count": 30,
+                "reordered_dataset_input_read_count": state["reordered_inputs"],
                 "artifact_bytes_verified": True, "c4_report_sha256": source["c4_report_sha256"],
                 "source_rehearsal_sha256": sha256_file(output / "rehearsal.json"),
                 "rehearsal_sha256": sha256_file(Path(__file__)),
