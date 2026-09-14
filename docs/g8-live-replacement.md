@@ -206,9 +206,12 @@ only the output-permission gate, not the synthetic-input or submission gates.
 Do not activate the production final key or put rehearsal outputs inside an
 existing production campaign.
 
-Nebius MCP safe mode forbids policy updates and cleanup deletions. An operator
-must perform these actions manually; the agent does not route them through a
-different execution tool to evade that restriction. The
+Nebius MCP safe mode does not permit policy updates or cleanup deletions through
+that connector. The initial output update was performed manually by the operator.
+The operator subsequently explicitly requested execution of the two source-read
+CLI commands and approved each exact update through terminal escalation. Only
+those two commands were executed under that separate authorization; the connector
+configuration was not changed and no broader mutation authority was inferred. The
 [prepared policy patch](evidence/g8-native-rehearsal-policy-grant-20260914.json)
 preserves all seven existing rules and adds only the existing development
 group's object-editor access to:
@@ -252,7 +255,13 @@ The [candidate-read patch](evidence/g8-native-rehearsal-candidate-read-20260914.
 preserves the eight current results rules and is guarded by version **6**.
 The [synthetic-input-read patch](evidence/g8-native-rehearsal-input-read-20260914.json)
 preserves the final bucket's existing rule and is guarded by version **3**.
-After reviewing both, the operator can run:
+Both source-reader grants were applied on 2026-09-14 under explicit user/terminal
+approval. Independent [readback](evidence/g8-native-rehearsal-source-access-readback-20260914.json)
+verified results bucket version **7** (nine rules) and final-input bucket version
+**4** (two rules), with exact policy matches and all other bucket settings
+preserved. The original output grant was not rerun.
+
+The following commands are retained as execution history: **do not rerun them**.
 
 ```sh
 rtk proxy nebius storage bucket update --id storagebucket-e009132243970085528999 --resource-version 6 --patch --bucket-policy-rules "$(rtk proxy jq -c '.spec.bucket_policy.rules' docs/evidence/g8-native-rehearsal-candidate-read-20260914.json)" --format json
@@ -275,7 +284,7 @@ Submission gates, in order:
    with separately reviewed, exact-prefix staging authority. The rehearsal
    reader grants do **not** authorize staging writes. Publish manifests and
    checksums with `SUCCESS` last; do not treat missing sources as an IAM problem.
-Source staging and its writer-access setup are still outstanding.
+   Source staging and its writer-access setup are still outstanding.
 3. Using the version-pinned credentials intended for the Job, authenticate and
    download/verify both complete synthetic releases against the retained hashes.
    Verify denial for a known production C4 object without downloading its body.

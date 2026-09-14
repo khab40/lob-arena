@@ -62,3 +62,22 @@ def test_output_permission_is_not_submission_or_source_readback_evidence():
                  "ready_to_submit", "production_test_accessed"):
         assert observed[gate] is False
     assert observed["jobs_submitted"] == observed["filesystems_created"] == 0
+
+
+def test_applied_source_policies_match_patches_but_do_not_claim_data_readiness():
+    observed = read("source-access-readback")
+    assert observed["original_output_grant_rerun"] is False
+    assert observed["production_final_read_key_state_after_updates"] == "INACTIVE"
+    for grant, patch_name, version in zip(
+        observed["grants"], ("candidate-read", "input-read"), ("7", "4"), strict=True
+    ):
+        patch = read(patch_name)
+        assert grant["bucket_id"] == patch["metadata"]["id"]
+        assert grant["before_resource_version"] == patch["metadata"]["resource_version"]
+        assert grant["after_resource_version"] == version
+        assert grant["applied_rules"] == patch["spec"]["bucket_policy"]["rules"]
+        assert grant["policy_exact_match"] and grant["other_bucket_settings_preserved"]
+    for field in ("source_staging_verified", "authenticated_source_downloads_verified",
+                  "ready_to_submit", "original_output_grant_rerun", "production_test_accessed"):
+        assert observed[field] is False
+    assert observed["jobs_submitted"] == observed["filesystems_created"] == observed["mlflow_runs_created"] == 0
