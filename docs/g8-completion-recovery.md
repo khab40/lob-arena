@@ -62,6 +62,15 @@ must not be repurposed as replacement-history evidence.
 
 ## Remaining gates, in execution order
 
+Update 2026-09-14: the user approved the separate
+[C4 evaluation contract](g8-c4-evaluation-contract.md). Its metadata audit confirms
+that the four-date frozen protocol cannot use the seven-date benchmark unchanged.
+The new implementation adds paired observation metrics, calibration assessment,
+session-cluster uncertainty, original-checkpoint/replay verification and MLflow
+report support. This is partial progress on gates 1–2 below, not a successful G8
+evaluation. Production runner integration, durable recovery and remote rehearsal
+remain outstanding. Neither the candidate nor the existing benchmark was changed.
+
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
    replay streams, rules alerts, adjudications, regime evidence, streaming evidence
@@ -74,6 +83,10 @@ must not be repurposed as replacement-history evidence.
    preparing this metadata-only authorization. If the required evidence was not
    retained, record that as a blocker and obtain a protocol decision; do not silently
    replace event/campaign metrics with row-classification metrics.
+   Following the explicit C4-contract approval, evaluate the approved row-level
+   scope under its own metric names; retain the seven-date incompatibility and
+   exclusions rather than claiming equivalence. Original rules checkpoint
+   availability still requires verification before an execution package is ready.
 2. **Wire and rehearse the complete evaluator.** The frozen `_run_final` currently
    builds predictions and a bundle but does not call the canonical benchmark or
    pass `benchmark_results_path` to MLflow. Add frozen-threshold detection metrics,
