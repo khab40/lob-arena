@@ -101,6 +101,16 @@ The user approved **preparing** the
 permission to provision or submit. Durable recovery, original production checkpoint
 availability, remote rehearsal and replacement-specific authorization remain open.
 
+Follow-up after merged PR #172: a
+[completed-release publication recovery primitive](g8-publication-recovery.md)
+now retains an independently checksum-bound copy and resumes exact-prefix S3
+publication without deleting partial objects, rescoring, or writing MLflow. The
+frozen synthetic fault rehearsal passed for payload failure, lost PUT response
+and marker failure; a fresh process verified the retained copy after the original
+path became unavailable. This covers **post-MLflow publication only**. It is not
+wired into live execution; pre-logging retention, same-run MLflow recovery and
+native-storage durability remain outstanding. No new execution is authorized.
+
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
    replay streams, rules alerts, adjudications, regime evidence, streaming evidence

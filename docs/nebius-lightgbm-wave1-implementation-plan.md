@@ -1283,6 +1283,9 @@ production/client performance claim.
 - [x] Prepare the user-approved narrow persistent-storage exception for review;
   provisioning and a replacement execution remain unauthorized.
 - [ ] Durable publish/log-only recovery is verified without rescoring or duplicate runs.
+- [x] Post-MLflow completed-release checkpoint and publish-only recovery pass
+  synthetic failure tests in the pinned runtime; not live integration, native
+  storage durability or interruption recovery during MLflow logging.
 - [ ] Replacement-specific exception, signed package and live preflight verify.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities

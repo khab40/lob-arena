@@ -193,6 +193,9 @@ diagnostic is retained separately from the passing final receipt.
   durable recovery, live preflight and replacement-specific authorization remain
   required. A persistent-storage exception is approved for preparation only; see the
   [G8 recovery record](g8-completion-recovery.md).
+  Post-MLflow checkpoint/publication recovery now passes synthetic fault tests;
+  pre-logging retention and same-run MLflow recovery remain open. See
+  [publication recovery](g8-publication-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
 
