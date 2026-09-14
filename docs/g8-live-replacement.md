@@ -141,9 +141,10 @@ active experiment `3` through the VM's internal service network. No remote run
 or artifact was written. Job-to-private-endpoint routing and authenticated S3/
 MLflow artifact round trips still require the approved rehearsal below.
 
-## Approval request: synthetic native/remote rehearsal only
+## Approved scope: synthetic native/remote rehearsal only
 
-Proposed **$2 maximum additional spend**, subject to fresh billing reconciliation
+Operator approved **$2 maximum additional spend** on 2026-09-14, including cleanup
+and stopping the existing MLflow VM afterward, subject to fresh billing reconciliation
 before provisioning: stop new work at $40 campaign spend; never exceed $50 total.
 The old $28.65 figure is not a current balance.
 
@@ -178,6 +179,63 @@ Sources: [Compute pricing](https://docs.nebius.com/compute/resources/pricing),
 [native Job mounts](https://docs.nebius.com/serverless/jobs/manage),
 [filesystem durability/encryption](https://docs.nebius.com/compute/storage/types).
 
-Approval is still required. It does **not** approve the replacement final test.
+This approval does **not** approve the replacement final test.
 After rehearsal and original-checkpoint metadata verification, assemble/review
 the actual production package and request its distinct signed exception.
+
+### Post-merge preflight and required operator action
+
+PR #178 merged as `0742225b00f185bc9f98980a947e7ec29d5ec378`; all its checks
+passed. The new rehearsal branch starts at that commit. The
+[preflight record](evidence/g8-native-rehearsal-preflight-20260914.json)
+records the approved bounds, observed project billing of **$33.49 including VAT**,
+healthy MLflow containers, no native filesystems and the inactive final-read key.
+After finding the operator-action gate, MLflow VM
+`computeinstance-e00xq8hqrzks2pf3gn` was stopped under the approved cost-control
+scope and independently read back as **STOPPED**, resource version **38**.
+Its disks and recorded MLflow evidence were not deleted. Restart only when the
+remaining prerequisites permit the bounded rehearsal.
+Billing is provider-lagged (last updated 13:52 UTC), not a real-time spend receipt;
+refresh it and reconcile accrued charges immediately before submission.
+
+No rehearsal Job, filesystem, MLflow run or S3 object was created during this
+preflight. Existing results-bucket rules do not cover the isolated synthetic
+campaign. Do not activate the production final key or put rehearsal outputs
+inside an existing production campaign to bypass this gate.
+
+Nebius MCP safe mode forbids policy updates and cleanup deletions. An operator
+must perform these actions manually; the agent does not route them through a
+different execution tool to evade that restriction. The
+[prepared policy patch](evidence/g8-native-rehearsal-policy-grant-20260914.json)
+preserves all seven existing rules and adds only the existing development
+group's object-editor access to:
+
+- `campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*`
+- `campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json`
+
+This grants no final-input bucket access, anonymous access or bucket-wide role.
+It uses the active development identity; existing credentials must never be
+printed or committed. This policy change does not itself validate credentials,
+Job routing, native durability, comparison evidence or remote artifact recovery.
+
+After reviewing the patch, run from the repository root:
+
+```sh
+rtk proxy nebius storage bucket update --id storagebucket-e009132243970085528999 --resource-version 5 --patch --bucket-policy-rules "$(rtk proxy jq -c '.spec.bucket_policy.rules' docs/evidence/g8-native-rehearsal-policy-grant-20260914.json)" --format json
+rtk proxy nebius storage bucket get --id storagebucket-e009132243970085528999 --format json
+```
+
+The patch is bound to observed bucket resource version **5**. If the version
+changed, stop and regenerate from a fresh readback while preserving concurrent
+changes; do not remove the version guard. Confirm the readback exactly matches
+the eight expected rules before using the permission.
+The command intentionally supplies only policy flags: the CLI's `--file` option
+defaults updates to full-resource replacement and must not be used for this
+partial policy document.
+
+For cleanup, the operator must remove only this added rule using a fresh
+resource-version-guarded patch, preserve all baseline/concurrent rules, and
+manually delete only the identified temporary rehearsal resources after
+independent evidence copies are verified. Existing development credentials and
+MLflow disks are not disposable rehearsal resources. The rehearsal cannot start
+until this operator step and the remaining live preflight checks are complete.
