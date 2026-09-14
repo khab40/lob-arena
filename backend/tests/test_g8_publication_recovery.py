@@ -19,6 +19,12 @@ from serverless.jobs.g8_rehearsal import rehearse  # noqa: E402
 from serverless.jobs.g8_publication_rehearsal import FakeS3  # noqa: E402
 
 
+def fake_transport(monkeypatch, fake):
+    monkeypatch.setattr(recovery.storage, "_aws_json", fake.aws)
+    monkeypatch.setattr(recovery.shutil, "which", lambda _: "/synthetic/aws")
+    monkeypatch.setattr(recovery.subprocess, "run", fake.run)
+
+
 @pytest.fixture(scope="module")
 def completed(tmp_path_factory):
     output = tmp_path_factory.mktemp("g8-publication") / "rehearsal"
@@ -113,7 +119,7 @@ def test_publication_fault_recovers_without_scoring_or_mlflow(checkpoint, comple
         fake.lose_response = key
     else:
         fake.fail_put = fake.prefix + "/SUCCESS" if fault == "marker" else key
-    monkeypatch.setattr(recovery.storage, "_aws_json", fake.aws)
+    fake_transport(monkeypatch, fake)
     monkeypatch.setattr(cloud_runner, "predict_governed_fold", lambda *a, **k: pytest.fail("rescoring"))
     monkeypatch.setattr(mlflow, "start_run", lambda *a, **k: pytest.fail("new MLflow run"))
     if fault != "lost_response":
@@ -157,28 +163,27 @@ def test_remote_conflicts_fail_without_writes(checkpoint, completed, monkeypatch
         fake.objects[fake.prefix + "/FAILED"] = b"incident"
     elif conflict == "intent":
         fake.metadata[fake.intent]["request-sha256"] = "f" * 64
-    monkeypatch.setattr(recovery.storage, "_aws_json", fake.aws)
+    fake_transport(monkeypatch, fake)
     with pytest.raises(ValueError):
         recovery.resume_publication(root, expected_sha256=digest, binding=binding)
     assert not any(args[1] == "put-object" for args in fake.calls)
 
 
-def test_mutation_during_put_cannot_change_the_expected_digest(checkpoint, completed, monkeypatch):
+def test_checkpoint_mutation_during_put_cannot_poison_the_prefix(checkpoint, completed, monkeypatch):
     root, digest, binding = checkpoint
     fake = FakeS3(completed[0], binding)
-    changed = []
-
-    def aws(endpoint, *args):
-        if args[1] == "put-object" and not changed:
-            source = Path(args[args.index("--body") + 1])
-            source.write_bytes(b"x" * source.stat().st_size)
-            changed.append(source)
-        return fake.aws(endpoint, *args)
-
-    monkeypatch.setattr(recovery.storage, "_aws_json", aws)
-    with pytest.raises(ValueError, match="bytes conflict"):
+    fake.mutate_source = root / "payload"
+    fake_transport(monkeypatch, fake)
+    with pytest.raises(ValueError, match="checkpoint payload differs"):
         recovery.resume_publication(root, expected_sha256=digest, binding=binding)
     assert fake.prefix + "/SUCCESS" not in fake.objects
+    source, original = fake.mutated
+    key = fake.prefix + "/" + source.relative_to(root / "payload").as_posix()
+    assert fake.objects[key] == original
+    source.write_bytes(original)
+    receipt = recovery.resume_publication(root, expected_sha256=digest, binding=binding)
+    assert receipt["object_count"] == 60
+    assert sum(a[1] == "put-object" and a[a.index("--key") + 1] == key for a in fake.calls) == 1
 
 
 def test_unlisted_source_file_rejected_before_checkpoint_creation(tmp_path, completed):
@@ -202,3 +207,85 @@ def test_nonprogressing_remote_pagination_fails_closed(monkeypatch):
     with pytest.raises(ValueError, match="pagination"):
         recovery._listed_keys("fixture", "exact/prefix", {"exact/prefix/a"})
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("status", ["verified", "failed"])
+@pytest.mark.parametrize("stage", ["retain", "resume"])
+def test_non_succeeded_cloud_run_rejected_even_with_regenerated_inventories(
+    tmp_path, completed, checkpoint, monkeypatch, status, stage,
+):
+    source, binding = completed
+    root, _, _ = checkpoint
+    if stage == "retain":
+        source = shutil.copytree(source, tmp_path / "altered")
+    else:
+        source = root / "payload"
+    cloud_run = source / "cloud-run.json"
+    data = json.loads(cloud_run.read_bytes())
+    data["status"] = status
+    if status == "failed":
+        data["error_type"] = "SyntheticFailure"
+    recovery.LightGbmCloudRun.model_validate(data)  # A valid schema must still be rejected by recovery.
+    cloud_run.write_text(json.dumps(data))
+    inventory = recovery.storage.inventory_directory(source, exclude_markers=True)
+    recovery.storage.write_checksum_file(source, inventory)
+    (source / "SUCCESS").write_text(inventory.model_dump_json(indent=2))
+    monkeypatch.setattr(recovery.storage, "_aws_json", lambda *a: pytest.fail("unexpected remote access"))
+    if stage == "retain":
+        with pytest.raises(ValueError, match="completed G8 release differs"):
+            recovery.retain_completed_release(source, tmp_path / "rejected", binding=binding)
+        assert not (tmp_path / "rejected").exists()
+    else:
+        seal = recovery.PublicationCheckpoint(binding=binding, inventory=recovery.storage.inventory_directory(source))
+        (root / "checkpoint.json").write_bytes(recovery._canonical(seal))
+        with pytest.raises(ValueError, match="completed G8 release differs"):
+            recovery.resume_publication(root, expected_sha256=sha256_file(root / "checkpoint.json"), binding=binding)
+
+
+@pytest.mark.parametrize("operation", ["put-object", "get-object"])
+@pytest.mark.parametrize("size,expected_timeout", [(0, 300), (1024**3, 325), (5 * 1024**3, 1144)])
+def test_transfer_uses_sealed_size_timeout_without_calling_frozen_helper(monkeypatch, operation, size, expected_timeout):
+    calls = []
+    monkeypatch.setattr(recovery.shutil, "which", lambda _: "/synthetic/aws")
+    monkeypatch.setattr(recovery.storage, "_aws_json", lambda *a: pytest.fail("frozen helper has no timeout keyword"))
+
+    def run(command, **kwargs):
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(command, 0, "{}", "")
+
+    monkeypatch.setattr(recovery.subprocess, "run", run)
+    assert recovery._transfer_json(size, "s3api", operation) == {}
+    assert calls[0][0] == ["/synthetic/aws", "--endpoint-url", recovery.ENDPOINT, "s3api", operation, "--output", "json"]
+    assert calls[0][1]["timeout"] == expected_timeout
+    assert calls[0][1]["env"]["AWS_PAGER"] == ""
+
+
+def test_changed_bytes_during_snapshot_copy_never_reach_upload(tmp_path, monkeypatch):
+    source = tmp_path / "checkpoint-object"
+    source.write_bytes(b"sealed bytes")
+    entry = recovery.storage.InventoryEntry(path=source.name, size_bytes=source.stat().st_size, sha256=sha256_file(source))
+    original_copy = recovery.shutil.copyfileobj
+
+    def changed(original, output):
+        source.write_bytes(b"changed data")
+        original_copy(original, output)
+
+    monkeypatch.setattr(recovery.shutil, "copyfileobj", changed)
+    with pytest.raises(ValueError, match="upload snapshot"):
+        with recovery._upload_snapshot(source, entry):
+            pytest.fail("unverified copy reached the upload path")
+
+
+@pytest.mark.parametrize("failure", ["timeout", "exit", "json"])
+def test_transfer_errors_are_sanitized(monkeypatch, failure):
+    monkeypatch.setattr(recovery.shutil, "which", lambda _: "/synthetic/aws")
+
+    def run(command, **kwargs):
+        if failure == "timeout":
+            raise subprocess.TimeoutExpired(command, kwargs["timeout"], stderr="sensitive fixture text")
+        return subprocess.CompletedProcess(command, 1 if failure == "exit" else 0, "sensitive fixture text", "secret")
+
+    monkeypatch.setattr(recovery.subprocess, "run", run)
+    with pytest.raises(RuntimeError) as error:
+        recovery._transfer_json(5 * 1024**3, "s3api", "put-object")
+    assert "sensitive" not in str(error.value) and "secret" not in str(error.value)

@@ -7,7 +7,9 @@ pre-MLflow checkpoint, native-storage durability proof or execution approval.**
 
 `g8_publication_recovery.retain_completed_release` accepts only a complete final
 result with `SUCCESS`, a verified model/prediction bundle, C4 report and the already
-recorded MLflow run ID. A caller-provided `RecoveryBinding` binds the execution
+recorded MLflow run ID. Its cloud-run status must be `succeeded`; schema-valid
+`verified` or `failed` records are rejected even with regenerated inventories.
+A caller-provided `RecoveryBinding` binds the execution
 package SHA-256, request hash, candidate hash, report byte hash, MLflow run ID and
 exact final-result URI. The binding must be retained with the reviewed execution
 receipt; it is not an authorization signature or proof that remote MLflow finished.
@@ -47,17 +49,51 @@ Only after the reviewed recovery procedure authorizes remote writes, add
   Creates missing objects with `If-None-Match: *`; conflicting content fails closed.
   A lost PUT success response is resolved only through matching read-back.
 - Compares against sealed inventory hashes, not newly computed expectations from
-  mutable files. Rechecks the checkpoint before publishing `SUCCESS` last, then
+  mutable files. PUT reads a separate private, verified, read-only snapshot, not
+  the checkpoint path, so concurrent checkpoint changes cannot poison a reserved
+  key before read-back. The snapshot is a copy, not a hard link, and stays alive
+  through ambiguous-response verification. Rechecks the checkpoint before
+  publishing `SUCCESS` last, then
   independently checks the entire exact remote inventory and all object bytes.
 - Preserves all partial objects on failure. It has no delete, overwrite, bucket-wide
   listing or multipart fallback. Repeating a fully verified recovery writes nothing.
-  Frozen storage-helper calls are positional; no `timeout_seconds` keyword is used.
+  Metadata/list calls to the frozen helper remain positional. PUT and GET use a
+  local subprocess adapter with `max(300, ceil(sealed_bytes / 5 MiB) + 120)` seconds,
+  reaching 1,144 seconds for a 5 GiB object. No unsupported `timeout_seconds`
+  keyword is passed to the frozen helper, and command errors are sanitized.
+  These per-transfer limits do not enlarge the approved Job/runtime budget.
+
+Each upload temporarily needs its own verified object copy plus read-back space
+(up to 10 GiB combined at the single-object limit); live disk/storage budgeting
+must account for this in addition to the retained checkpoint.
 
 The recovery receipt carries the original MLflow ID and reports zero scoring and
 MLflow writes. `mlflow_remote_state_verified=false` is intentional: independently
 checking the original run's status, metrics and artifact hashes remains required.
 
 ## Verified synthetic evidence
+
+Review-fix update: the
+[new frozen-runtime receipt](evidence/g8-publication-recovery-review-fix-20260914.json)
+and [source scoring receipt](evidence/g8-publication-recovery-review-scoring-20260914.json)
+bind the reviewed code changes. They supersede the implementation coverage of the
+original receipts below without replacing that history. All four fault scenarios,
+including checkpoint mutation during PUT, passed with 60 correct result objects,
+one scoring call and one local MLflow run (`49042bcc5e7a43ddbdeea5c18dc10b31`).
+The original checkpoint mutation blocks `SUCCESS`, but does not corrupt remote
+bytes; restoring the sealed local bytes permits completion without rewriting the
+already correct object. Changed bytes during snapshot creation fail before PUT.
+
+The frozen-runtime subprocess-adapter probe verifies 1,144-second timeouts for
+both maximum-size PUT and GET without using the frozen transfer helper. This is
+a dispatch/timeout probe, **not a real 5 GiB transfer or throughput measurement**.
+Local validation passed 154 G8 tests plus Ruff/CLI checks, including regenerated
+non-success cloud records at retention and recovery, copy/upload races, size-based
+PUT/GET timeouts and sanitized failure handling. The updated local evidence tree is
+`/tmp/g8-recovery-review.etfTnJ/rehearsal`; native storage, remote transport and
+MLflow-interruption recovery remain unverified.
+
+### Original publication-recovery rehearsal
 
 The [publication recovery receipt](evidence/g8-publication-recovery-rehearsal-20260914.json)
 and its [source scoring receipt](evidence/g8-publication-recovery-scoring-20260914.json)

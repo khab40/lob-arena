@@ -26,6 +26,21 @@ class FakeS3:
         self.calls = []
         self.fail_put = None
         self.lose_response = None
+        self.mutate_source = None
+        self.mutated = None
+
+    def run(self, command, **kwargs):
+        # Exercise the real recovery subprocess adapter, replacing only AWS I/O.
+        assert command[1:3] == ["--endpoint-url", recovery.ENDPOINT]
+        assert command[-2:] == ["--output", "json"]
+        args = tuple(command[3:-2])
+        assert args[:2] in (("s3api", "put-object"), ("s3api", "get-object"))
+        size = (
+            Path(args[args.index("--body") + 1]).stat().st_size if args[1] == "put-object"
+            else len(self.objects[args[args.index("--key") + 1]])
+        )
+        assert kwargs["timeout"] == recovery._transfer_timeout(size)
+        return subprocess.CompletedProcess(command, 0, json.dumps(self.aws(recovery.ENDPOINT, *args)), "")
 
     def aws(self, endpoint, *args):
         assert endpoint == recovery.ENDPOINT
@@ -41,7 +56,14 @@ class FakeS3:
                 raise RuntimeError("injected PUT failure before persistence")
             if key in self.objects:
                 raise RuntimeError("PreconditionFailed")
-            self.objects[key] = Path(args[args.index("--body") + 1]).read_bytes()
+            body = Path(args[args.index("--body") + 1])
+            assert body.stat().st_mode & 0o222 == 0
+            if self.mutate_source is not None and self.mutated is None:
+                original = self.mutate_source / key.removeprefix(self.prefix + "/")
+                assert original != body
+                self.mutated = (original, original.read_bytes())
+                original.write_bytes(b"x" * original.stat().st_size)
+            self.objects[key] = body.read_bytes()
             self.metadata[key] = {"sha256": args[args.index("--metadata") + 1].removeprefix("sha256=")}
             if key == self.lose_response:
                 raise RuntimeError("injected response loss after persistence")
@@ -92,23 +114,36 @@ def rehearse_recovery(output: Path) -> dict:
         raise AssertionError("new-process checkpoint verification failed")
     inventory = recovery.verify_checkpoint(checkpoint, expected_sha256=digest, binding=binding).inventory.files
     outcomes = {}
-    for fault in ("middle_put", "lost_response", "marker"):
+    for fault in ("middle_put", "lost_response", "marker", "checkpoint_mutation"):
         fake = FakeS3(checkpoint / "payload", binding)
         key = fake.prefix + "/" + inventory[3].path
         if fault == "lost_response":
             fake.lose_response = key
+        elif fault == "checkpoint_mutation":
+            fake.mutate_source = checkpoint / "payload"
         else:
             fake.fail_put = fake.prefix + "/SUCCESS" if fault == "marker" else key
         with (
             patch.object(recovery.storage, "_aws_json", fake.aws),
+            patch.object(recovery.shutil, "which", return_value="/synthetic/aws"),
+            patch.object(recovery.subprocess, "run", fake.run),
             patch.object(cloud_runner, "predict_governed_fold", side_effect=AssertionError("rescoring forbidden")),
             patch.object(mlflow, "start_run", side_effect=AssertionError("MLflow writes forbidden")),
         ):
             if fault != "lost_response":
                 try:
                     recovery.resume_publication(checkpoint, expected_sha256=digest, binding=binding)
-                except RuntimeError:
-                    pass
+                except (RuntimeError, ValueError) as error:
+                    if fault == "checkpoint_mutation":
+                        if not isinstance(error, ValueError) or fake.mutated is None:
+                            raise AssertionError("checkpoint mutation did not fail closed") from error
+                        original, content = fake.mutated
+                        remote_key = fake.prefix + "/" + original.relative_to(checkpoint / "payload").as_posix()
+                        if fake.objects[remote_key] != content:
+                            raise AssertionError("mutation poisoned the remote prefix")
+                        original.write_bytes(content)
+                    elif not isinstance(error, RuntimeError):
+                        raise
                 else:
                     raise AssertionError("injected publication failure did not occur")
                 if len(fake.objects) <= 1 or fake.prefix + "/SUCCESS" in fake.objects:
@@ -122,6 +157,21 @@ def rehearse_recovery(output: Path) -> dict:
             if puts[-1] != fake.prefix + "/SUCCESS" or (fault == "lost_response" and puts.count(key) != 1):
                 raise AssertionError("marker order or lost-response recovery failed")
         outcomes[fault] = receipt
+    transfer_probes = []
+
+    def transfer_probe(command, **kwargs):
+        transfer_probes.append((command[4], kwargs["timeout"]))
+        return subprocess.CompletedProcess(command, 0, "{}", "")
+
+    with (
+        patch.object(recovery.shutil, "which", return_value="/synthetic/aws"),
+        patch.object(recovery.subprocess, "run", transfer_probe),
+        patch.object(recovery.storage, "_aws_json", side_effect=AssertionError("frozen helper called for transfer")),
+    ):
+        for operation in ("put-object", "get-object"):
+            recovery._transfer_json(recovery.SINGLE_PUT_MAX_BYTES, "s3api", operation)
+    if transfer_probes != [("put-object", 1144), ("get-object", 1144)]:
+        raise AssertionError("maximum-size transfer timeout probe failed")
     with patch.dict(os.environ, {"MLFLOW_ALLOW_FILE_STORE": "true"}):
         client = MlflowClient(tracking_uri=(base / "mlruns").as_uri())
         experiment = client.get_experiment_by_name("lob-arena/governed-evaluation")
@@ -142,6 +192,8 @@ def rehearse_recovery(output: Path) -> dict:
         local_mlflow_run_count=1,
         source_path_unavailable=True,
         new_process_checkpoint_verified=True,
+        maximum_object_transfer_timeout_seconds=1144,
+        size_based_put_and_get_subprocess_probe_verified=True,
         fault_cases=outcomes,
         production_test_accessed=False,
         remote_storage_verified=False,

@@ -13,7 +13,9 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Literal
 
@@ -90,7 +92,7 @@ def _verify_release(root: Path, binding: RecoveryBinding, limits: storage.Transf
     request = LightGbmCloudJobRequest.model_validate_json((root / "request.json").read_bytes())
     run = LightGbmCloudRun.model_validate_json((root / "cloud-run.json").read_bytes())
     if (
-        request.mode != "final-evaluation" or run.mode != "final-evaluation"
+        request.mode != "final-evaluation" or run.mode != "final-evaluation" or run.status != "succeeded"
         or request.candidate is None
         or request.canonical_hash() != binding.request_sha256
         or run.request_sha256 != binding.request_sha256
@@ -190,6 +192,57 @@ def verify_checkpoint(
     return checkpoint
 
 
+def _transfer_timeout(size: int) -> int:
+    if not 0 <= size <= SINGLE_PUT_MAX_BYTES:
+        raise ValueError("transfer size is outside the conditional single-object limit")
+    # Same conservative 5 MiB/s envelope as the main storage publisher, rounded
+    # up, with 120 seconds overhead. The 5 GiB limit receives 1,144 seconds.
+    return max(300, (size + 5 * 1024**2 - 1) // (5 * 1024**2) + 120)
+
+
+def _transfer_json(size: int, *args: str) -> dict:
+    """Own the subprocess timeout: the frozen helper accepts no timeout keyword."""
+    timeout = _transfer_timeout(size)
+    aws = shutil.which("aws")
+    if aws is None:
+        raise RuntimeError("aws CLI is required for recovery transfers")
+    try:
+        completed = subprocess.run(
+            [aws, "--endpoint-url", ENDPOINT, *args, "--output", "json"],
+            check=False, capture_output=True, text=True, timeout=timeout,
+            env={**os.environ, "AWS_PAGER": ""},
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("recovery transfer exceeded its size-based timeout") from None
+    if completed.returncode:
+        raise RuntimeError(f"recovery transfer failed with exit code {completed.returncode}")
+    try:
+        result = json.loads(completed.stdout) if completed.stdout.strip() else {}
+    except json.JSONDecodeError:
+        raise RuntimeError("recovery transfer returned invalid JSON") from None
+    if not isinstance(result, dict):
+        raise RuntimeError("recovery transfer returned a non-object response")
+    return result
+
+
+@contextmanager
+def _upload_snapshot(source: Path, entry: storage.InventoryEntry):
+    """Never give the CLI a path in the concurrently mutable checkpoint tree.
+
+    Copy (not link) into a private directory, validate the copied bytes against
+    the seal, close its writer and make it read-only before handing it to AWS.
+    The private copy stays alive through PUT and ambiguous-response read-back.
+    """
+    with tempfile.TemporaryDirectory(prefix="g8-verified-upload-") as directory:
+        snapshot = Path(directory) / "object"
+        with source.open("rb") as original, snapshot.open("xb") as output:
+            shutil.copyfileobj(original, output)
+        if snapshot.stat().st_size != entry.size_bytes or sha256_file(snapshot) != entry.sha256:
+            raise ValueError("checkpoint changed while preparing upload snapshot")
+        snapshot.chmod(0o400)
+        yield snapshot
+
+
 def _readback(bucket: str, key: str, *, digest: str, size: int, metadata_name: str = "sha256") -> None:
     head = storage._aws_json(ENDPOINT, "s3api", "head-object", "--bucket", bucket, "--key", key)
     metadata = {str(k).lower(): v for k, v in (head.get("Metadata") or {}).items()}
@@ -199,7 +252,7 @@ def _readback(bucket: str, key: str, *, digest: str, size: int, metadata_name: s
         raise ValueError("remote recovery object metadata conflicts with the checkpoint")
     with tempfile.TemporaryDirectory(prefix="g8-publication-readback-") as temporary:
         target = Path(temporary) / "object"
-        storage._aws_json(ENDPOINT, "s3api", "get-object", "--bucket", bucket, "--key", key, str(target))
+        _transfer_json(size, "s3api", "get-object", "--bucket", bucket, "--key", key, str(target))
         if sha256_file(target) != digest:
             raise ValueError("remote recovery object bytes conflict with the checkpoint")
 
@@ -268,17 +321,18 @@ def resume_publication(root: Path, *, expected_sha256: str, binding: RecoveryBin
             raise ValueError("checkpoint changed during publication")
         if key == marker:
             verify_checkpoint(root, expected_sha256=expected_sha256, binding=binding)
-        try:
-            storage._aws_json(
-                ENDPOINT, "s3api", "put-object", "--bucket", bucket, "--key", key,
-                "--body", str(source), "--metadata", "sha256=" + entry.sha256, "--if-none-match", "*",
-            )
-        except RuntimeError:
-            # May be a lost success response or a concurrent conditional create.
-            # Accept only an exact read-back. Never overwrite, delete or rescore.
-            readback(key)
-        else:
-            readback(key)
+        with _upload_snapshot(source, entry) as snapshot:
+            try:
+                _transfer_json(
+                    entry.size_bytes, "s3api", "put-object", "--bucket", bucket, "--key", key,
+                    "--body", str(snapshot), "--metadata", "sha256=" + entry.sha256, "--if-none-match", "*",
+                )
+            except RuntimeError:
+                # May be a lost success response or a concurrent conditional create.
+                # Accept only an exact read-back. Never overwrite, delete or rescore.
+                readback(key)
+            else:
+                readback(key)
         created += 1
     if _listed_keys(bucket, prefix, set(expected)) != set(expected):
         raise ValueError("published recovery inventory is incomplete")
