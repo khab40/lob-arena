@@ -183,12 +183,13 @@ diagnostic is retained separately from the passing final receipt.
 - G7: complete. The validation-selected candidate is checksum-frozen, the
   exact-hash operator statement is signed, and independent verification exposes
   the final identity without reading the test fold.
-- G8: open. Three separately authorized Jobs failed closed before candidate or
-  final-fold download. The latest Job, `aijob-e00gw2jh294yqa39pd`, exposed an
-  injected-runner/frozen-image import mismatch before any evaluation or MLflow
-  run. The runner is now backwards compatible and G8 preflight v2 executes its
-  conditional-publication probe inside the exact pinned image offline; a fresh signed
-  authorization is required before another submission.
+- G8: open. After three pre-test failures, R4 (`aijob-e00vtamgkr07mwzt4t`)
+  downloaded the test release but failed before scoring on the projection-root
+  path. That path is fixed and a real synthetic scoring/release/MLflow rehearsal
+  passes inside the pinned image. This is not a production G8 result. Complete
+  comparison inputs, benchmark wiring, durable publication recovery, live preflight
+  and a replacement-specific authorization remain required; see the
+  [G8 recovery record](g8-completion-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
 

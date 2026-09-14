@@ -31,18 +31,38 @@ from serverless.jobs import run_lightgbm_g8 as runner
 
 
 IMAGE = "ghcr.io/khab40/lob-arena-jobs@sha256:" + "d" * 64
-FINAL_URI = (
-    "s3://aimada-wave1-final-e00g6zvxpr00/"
-    "releases/nasdaq-public-sample-v1-c4-test/staging"
-)
-CANDIDATE_URI = (
-    "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
-    "wave1-g8-test/development/selected"
-)
-RESULT_URI = (
-    "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/"
-    "wave1-g8-test/final/wave1-g8-final"
-)
+FINAL_URI = "s3://aimada-wave1-final-e00g6zvxpr00/releases/nasdaq-public-sample-v1-c4-test/staging"
+CANDIDATE_URI = "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-g8-test/development/selected"
+RESULT_URI = "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-g8-test/final/wave1-g8-final"
+
+
+def test_g8_requires_the_published_c4_artifact_layout() -> None:
+    key = FINAL_URI.split("/", 3)[-1] + "/artifacts/tabular/test/session.parquet"
+    inventory = ({"key": key, "sha256": "a" * 64, "size_bytes": 100},)
+    g8_evaluation._verify_final_projection_layout(inventory, FINAL_URI)
+    with pytest.raises(ValueError, match="no artifacts/tabular/test"):
+        g8_evaluation._verify_final_projection_layout(
+            ({**inventory[0], "key": key.replace("/artifacts/", "/projection-artifacts/")},),
+            FINAL_URI,
+        )
+
+
+@pytest.mark.parametrize("suffix", ["../escape.parquet", "sub//rows.parquet", "sub/./rows.parquet"])
+def test_g8_rejects_noncanonical_inventory_paths(suffix: str) -> None:
+    item = {
+        "key": FINAL_URI.split("/", 3)[-1] + "/artifacts/tabular/test/" + suffix,
+        "sha256": "a" * 64,
+        "size_bytes": 100,
+    }
+    with pytest.raises(ValueError, match="noncanonical"):
+        g8_evaluation._verify_final_projection_layout((item,), FINAL_URI)
+
+
+def test_g8_rejects_duplicate_or_invalid_inventory_entries() -> None:
+    with pytest.raises(ValueError, match="duplicate"):
+        g8_evaluation._publication_objects({"objects": [{"key": "same"}, {"key": "same"}]})
+    with pytest.raises(ValueError, match="invalid inventory entry"):
+        g8_evaluation._publication_objects({"objects": [{"key": "valid"}, None]})
 
 
 def test_g8_preflight_package_is_immutable_and_final_only(tmp_path: Path) -> None:
@@ -118,6 +138,7 @@ def test_g8_runner_checks_authorization_mlflow_and_empty_result_before_final_rea
         lambda *_args, **_kwargs: events.append("authorization"),
     )
     monkeypatch.setattr(runner, "_verify_mlflow_ready", lambda _uri: events.append("mlflow"))
+
     def claim_result(*_args: object) -> runner.S3PublicationIntent:
         events.append("empty-result")
         return acquired_intent
@@ -135,6 +156,7 @@ def test_g8_runner_checks_authorization_mlflow_and_empty_result_before_final_rea
     result = tmp_path / "local-result"
     result.mkdir()
     monkeypatch.setattr(runner, "execute_wave1_request", lambda *_args, **_kwargs: result)
+
     def fake_publish(*_args: object, **kwargs: object) -> None:
         events.append("publish")
         published_intents.append(kwargs.get("publication_intent"))
@@ -222,7 +244,8 @@ def test_g8_runner_does_not_read_final_when_mlflow_is_unavailable(
 
 
 def test_g8_result_guard_atomically_claims_exact_run(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     commands: list[list[str]] = []
 
@@ -234,24 +257,21 @@ def test_g8_result_guard_atomically_claims_exact_run(
     monkeypatch.setattr(runner.subprocess, "run", claimed)
     _package, request = _g8_package(tmp_path)
 
-    intent = runner._require_empty_result(
-        request, "https://storage.eu-north1.nebius.cloud"
-    )
+    intent = runner._require_empty_result(request, "https://storage.eu-north1.nebius.cloud")
 
     assert len(commands) == 1
     command = commands[0]
     assert "put-object" in command
     assert "list-objects-v2" not in command
     assert "head-object" not in command
-    assert command[command.index("--key") + 1] == (
-        "campaigns/wave1-g8-test/final/.intents/wave1-g8-final.json"
-    )
+    assert command[command.index("--key") + 1] == ("campaigns/wave1-g8-test/final/.intents/wave1-g8-final.json")
     assert command[command.index("--if-none-match") + 1] == "*"
     assert intent.destination == RESULT_URI
 
 
 def test_g8_result_guard_fails_closed_on_denied_or_existing_intent(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _package, request = _g8_package(tmp_path)
     monkeypatch.setattr(runner.shutil, "which", lambda _name: "/usr/bin/aws")
@@ -314,17 +334,13 @@ def test_g8_runtime_probe_exercises_the_frozen_publication_contract() -> None:
     runner._runtime_compatibility_check()
 
 
-def test_g8_publisher_rolls_back_a_put_that_fails_verification(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_g8_publisher_rolls_back_a_put_that_fails_verification(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     source = tmp_path / "result"
     source.mkdir()
     (source / "artifact.json").write_text('{"verified":true}\n', encoding="utf-8")
     inventory = inventory_directory(source, exclude_markers=True)
     write_checksum_file(source, inventory)
-    (source / "SUCCESS").write_text(
-        inventory.model_dump_json(indent=2), encoding="utf-8"
-    )
+    (source / "SUCCESS").write_text(inventory.model_dump_json(indent=2), encoding="utf-8")
     objects: dict[str, bytes] = {}
     deleted: list[str] = []
 
@@ -383,9 +399,7 @@ def test_g8_runtime_compatibility_runs_exact_runner_in_frozen_image_offline(
     assert receipt.runner_sha256 == sha256_file(injected_runner)
 
 
-def test_g8_runtime_compatibility_rejects_import_failure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_g8_runtime_compatibility_rejects_import_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     injected_runner = _write(tmp_path / "run_lightgbm_g8.py", b"import missing_symbol\n")
     monkeypatch.setattr(g8_evaluation.shutil, "which", lambda name: f"/usr/bin/{name}")
     monkeypatch.setattr(
@@ -473,9 +487,7 @@ def _g8_package(tmp_path: Path) -> tuple[Path, LightGbmCloudJobRequest]:
         candidate_hash=candidate_hash,
         signer="Alexey Khabalov — Wave 1 Release Approver",
         signed_at=signed_at,
-        statement=(
-            f"APPROVE WAVE1 FINAL TEST {candidate_hash} {signed_at.isoformat()}"
-        ),
+        statement=(f"APPROVE WAVE1 FINAL TEST {candidate_hash} {signed_at.isoformat()}"),
     )
     (authorization / "authorization.json").write_bytes(final_authorization.canonical_bytes())
     (authorization / "authorization.sig").write_bytes(b"signature")
@@ -492,23 +504,17 @@ def _g8_package(tmp_path: Path) -> tuple[Path, LightGbmCloudJobRequest]:
         experiment=Wave1ExperimentSpec(calibration_method="isotonic"),
         input=Wave1TabularProjectionInput(
             frozen_root=_artifact("manifests/frozen-root.json", "f" * 64, 10, "frozen_root"),
-            projection=_artifact(
-                "manifests/tabular-projection.json", "e" * 64, 10, "final_projection"
-            ),
+            projection=_artifact("manifests/tabular-projection.json", "e" * 64, 10, "final_projection"),
             dataset_lineage_receipt=_file_artifact(
                 manifests / "c4-mlflow-dataset-release.json", package, "dataset_lineage"
             ),
-            projection_artifact_root="projection-artifacts",
+            projection_artifact_root="artifacts",
         ),
         result_uri=RESULT_URI,
         input_release_uri=FINAL_URI,
         candidate=_artifact("candidate/candidate.json", candidate_hash, 9, "candidate"),
-        authorization=_file_artifact(
-            authorization / "authorization.json", package, "authorization"
-        ),
-        authorization_signature=_file_artifact(
-            authorization / "authorization.sig", package, "authorization_signature"
-        ),
+        authorization=_file_artifact(authorization / "authorization.json", package, "authorization"),
+        authorization_signature=_file_artifact(authorization / "authorization.sig", package, "authorization_signature"),
         authorization_public_key=_file_artifact(
             authorization / "authorization-public.pem", package, "authorization_public_key"
         ),
@@ -547,9 +553,7 @@ def _g8_package(tmp_path: Path) -> tuple[Path, LightGbmCloudJobRequest]:
         image=IMAGE,
         injected_files=injected,
     )
-    (package / "g8-preflight.json").write_text(
-        receipt.model_dump_json(indent=2) + "\n", encoding="utf-8"
-    )
+    (package / "g8-preflight.json").write_text(receipt.model_dump_json(indent=2) + "\n", encoding="utf-8")
     inventory = inventory_directory(package, exclude_markers=True)
     write_checksum_file(package, inventory)
     (package / "SUCCESS").write_text(inventory.model_dump_json(indent=2), encoding="utf-8")
