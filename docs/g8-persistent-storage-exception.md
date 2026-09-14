@@ -99,6 +99,11 @@ no resource was provisioned, and full durable recovery is not claimed. The
 [completed-release publication primitive](g8-publication-recovery.md) now verifies
 local retention and publish-only fault recovery after MLflow has finished. It is
 not a pre-logging scored checkpoint, native-mount proof or live runner integration.
+The separate [pre-logging checkpoint implementation](g8-prelogging-checkpoint.md)
+now passes synthetic process/workspace-loss recovery with the same MLflow run.
+It retains copied payloads plus a private recovery snapshot, whose capacity must
+be budgeted alongside the original workspace and ledger. Local fsync is not a
+native-mount durability/locking proof; live integration remains unapproved.
 Review/budget approval precedes live provisioning; successful synthetic durability
 and authenticated transport proofs precede the separately signed replacement
 execution. G8 remains open and G9 remains blocked.

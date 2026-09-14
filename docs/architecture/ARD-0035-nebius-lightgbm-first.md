@@ -22,8 +22,11 @@ pending. Persistent-storage exception preparation is approved, not provisioning.
 Post-MLflow checkpoint/publication recovery also passes the frozen synthetic fault
 rehearsal. Pre-scoring MLflow reservation and same-run logging recovery now pass
 the frozen synthetic rehearsal too (one run, one scoring call, 24 metrics and 30
-dataset inputs, zero writes on completed recovery). Pre-logging payload retention,
-native durability and live integration remain required. See
+dataset inputs, zero writes on completed recovery). Pre-logging payload retention
+and fresh-process log-only recovery now also pass after removal of the synthetic
+workspace, including a second interruption after an artifact upload. Native
+durability, truthful execution-result finalization and live integration remain
+required. See [pre-logging checkpoints](../g8-prelogging-checkpoint.md),
 [publication recovery](../g8-publication-recovery.md) and
 [MLflow recovery](../g8-mlflow-recovery.md).
 The [recovery record](../g8-completion-recovery.md) supersedes
