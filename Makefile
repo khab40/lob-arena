@@ -181,6 +181,7 @@ lightgbm-wave1-g8-check:
 		tests/test_lightgbm_wave1.py
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
 		app/ml/lightgbm/g8_evaluation.py \
+		app/ml/lightgbm/g8_c4_fixture.py \
 		app/ml/lightgbm/c4_evaluation.py \
 		app/ml/lightgbm/c4_replay_evidence.py \
 		app/ml/lightgbm/g8_benchmark_readiness.py \

@@ -13,9 +13,13 @@ Status: `[g0-g7-complete; g8-open; g9-pending]`
 Current G8 recovery: R4 downloaded the final release but failed before scoring
 on the projection artifact root. The root correction and synthetic C4-shaped
 scoring/publication/local-MLflow round-trip now pass in the unchanged pinned
-image. This is not production qualification. Canonical comparison evidence,
-complete benchmark wiring, durable recovery and replacement-specific authorization
-remain pending. The [recovery record](../g8-completion-recovery.md) supersedes
+image. The injected runner and reviewed evaluator overlays additionally pass the
+complete synthetic C4 comparison (27 checkpoints, 198 paired observations, one
+scoring call, one verified local MLflow run). This is not production qualification
+or Java execution evidence. Live original comparison availability, replacement
+package binding, durable recovery and replacement-specific authorization remain
+pending. Persistent-storage exception preparation is approved, not provisioning.
+The [recovery record](../g8-completion-recovery.md) supersedes
 the older "final fold remains unopened" status below without altering historical
 receipts or treating R4's failure as G8 completion.
 

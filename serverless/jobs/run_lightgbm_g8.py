@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import json
 import os
 import re
 import shutil
@@ -134,6 +135,8 @@ def main() -> int:
     parser.add_argument("--dataset-lineage", type=Path, required=True)
     parser.add_argument("--final-input-uri", required=True)
     parser.add_argument("--candidate-uri", required=True)
+    parser.add_argument("--c4-evaluation-inputs", type=Path,
+                        help="Reviewed C4 profile and original comparison-evidence locations")
     parser.add_argument("--work-root", type=Path, default=Path("/job/wave1-g8"))
     parser.add_argument("--endpoint-url", default=ENDPOINT)
     args = parser.parse_args()
@@ -146,6 +149,7 @@ def main() -> int:
     _validate_request(request, args.final_input_uri, args.candidate_uri)
     trusted_key = os.environ.get("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", "")
     _verify_injected_authorization(request, args, trusted_key)
+    c4_inputs = _validate_c4_inputs(request, args.c4_evaluation_inputs)
     _verify_mlflow_ready(request.mlflow_tracking_uri)
     publication_intent = _require_empty_result(request, args.endpoint_url)
 
@@ -197,7 +201,12 @@ def main() -> int:
         request_path.write_bytes(request.canonical_bytes())
         local_result = staging / "result"
         original_lineage_validator = cloud_runner._validate_tabular_projection_lineage
+        original_evaluation_logger = cloud_runner.log_governed_evaluation_run
         cloud_runner._validate_tabular_projection_lineage = _validate_final_lineage
+        if c4_inputs is not None:
+            def log_c4(**kwargs):
+                return _log_final_with_c4(c4_inputs, original_evaluation_logger, **kwargs)
+            cloud_runner.log_governed_evaluation_run = log_c4
         try:
             completed = execute_wave1_request(
                 request_path,
@@ -223,8 +232,50 @@ def main() -> int:
             raise
         finally:
             cloud_runner._validate_tabular_projection_lineage = original_lineage_validator
+            cloud_runner.log_governed_evaluation_run = original_evaluation_logger
     print(request.result_uri)
     return 0
+
+
+def _validate_c4_inputs(request: LightGbmCloudJobRequest, path: Path | None):
+    if path is None:
+        return None  # Compatibility only; the replacement package must require C4.
+    from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs, C4EvaluationProfile
+
+    inputs = C4EvaluationInputs.from_file(path)
+    profile = C4EvaluationProfile.model_validate_json(inputs.profile.read_bytes())
+    root = FrozenPublicSampleRoot.model_validate_json(inputs.frozen_root.read_bytes())
+    projected = request.input if isinstance(request.input, Wave1TabularProjectionInput) else None
+    if (
+        request.candidate is None or projected is None or inputs.source_result is not None
+        or sha256_file(inputs.candidate) != request.candidate.sha256
+        or profile.candidate_sha256 != request.candidate.sha256
+        or sha256_file(inputs.frozen_root) != projected.frozen_root.sha256
+        or profile.frozen_root_sha256 != root.canonical_hash()
+        or sha256_file(inputs.projection) != projected.projection.sha256
+        or profile.projection_sha256 != projected.projection.sha256
+        or sha256_file(inputs.comparison) != profile.comparison_evidence_sha256
+    ):
+        raise ValueError("C4 evaluation inputs differ from the authorized frozen request")
+    return inputs
+
+
+def _log_final_with_c4(inputs, logger, **kwargs):
+    from app.ml.lightgbm.c4_evaluation import C4EvaluationProfile
+    from app.ml.lightgbm.c4_replay_evidence import evaluate_c4_release
+
+    report = evaluate_c4_release(
+        profile=C4EvaluationProfile.model_validate_json(inputs.profile.read_bytes()),
+        root=FrozenPublicSampleRoot.model_validate_json(inputs.frozen_root.read_bytes()),
+        projection_path=inputs.projection, comparison_path=inputs.comparison,
+        artifact_root=kwargs["artifact_root"], candidate_path=inputs.candidate, predictions=kwargs["predictions"],
+    )
+    path = kwargs["artifact_root"] / "c4-evaluation.json"
+    with path.open("x", encoding="utf-8") as output:
+        output.write(json.dumps(report, sort_keys=True, allow_nan=False) + "\n")
+    # The shared logger independently re-verifies the original evidence. There
+    # is no trusted boolean/receipt shortcut and this path never scores again.
+    return logger(**kwargs, benchmark_results_path=path, c4_evaluation_inputs=inputs)
 
 
 def _validate_request(
