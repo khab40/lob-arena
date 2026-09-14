@@ -69,11 +69,13 @@ def main():
     mode.add_argument("--execute", action="store_true")
     mode.add_argument("--recover", action="store_true")
     mode.add_argument("--command", action="store_true", help="Print a reviewed command; do not submit")
+    mode.add_argument("--recovery-command", action="store_true", help="Print a recovery command; do not submit")
     args = parser.parse_args()
     trusted = os.environ.get("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", "")
-    plan, request = verify_package(args.package, trusted_key=trusted, recovery=args.recover)
-    if args.command:
-        print(json.dumps(job_command(plan, args.package, trusted)))
+    recovery = args.recover or args.recovery_command
+    plan, request = verify_package(args.package, trusted_key=trusted, recovery=recovery)
+    if args.command or args.recovery_command:
+        print(json.dumps(job_command(plan, args.package, trusted, recovery=recovery)))
         return
     if not (args.execute or args.recover):
         print(json.dumps({"package_sha256": plan.identity(), "verified": True, "remote_accessed": False}))
@@ -82,7 +84,7 @@ def main():
     for name, path in CODE_PATHS.items():
         if sha256_file(Path(path)) != plan.files[name].sha256:
             raise ValueError("runtime overlay differs from signed package: " + name)
-    verify_mount(plan)
+    mount_identity = verify_mount(plan)
     from app.ml.lightgbm.g8_live_recovery import execution_lock, finish_retained, run_live
     from app.ml.lightgbm.g8_mlflow_recovery import ResumeTarget
     from app.nebius.object_storage import TransferLimits
@@ -94,6 +96,8 @@ def main():
         _validate_execution_context(request, context)
         root = Path(plan.mount_path) / plan.run_id
         target = ResumeTarget(root / "ledger", reservation(plan, request))
+        if verify_mount(plan) != mount_identity:
+            raise ValueError("durable mount changed while waiting for signed Job context")
         with execution_lock(root, create=False):
             receipt = finish_retained(root, target, limits=TransferLimits(
                 max_files=plan.max_checkpoint_files, max_bytes=plan.max_checkpoint_bytes))
@@ -108,8 +112,11 @@ def main():
             authorization_public_key=args.package / "authorization-public.pem"), trusted)
         context = observed_context(plan, args.package, trusted)
         legacy._execution_context = lambda: context
-        # Recheck expiry immediately before the single-use live entry.
+        # Recheck expiry and native mount identity after the potentially long
+        # context wait, immediately before the single-use live entry.
         verify_package(args.package, trusted_key=trusted)
+        if verify_mount(plan) != mount_identity:
+            raise ValueError("durable mount changed while waiting for signed Job context")
         receipt = run_live(plan, request, args.package, legacy)
     print(json.dumps({**receipt, "executing_job_id": context.nebius_job_id,
                       "execution_purpose": "recover" if args.recover else "execute"}, sort_keys=True))

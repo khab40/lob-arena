@@ -8,8 +8,12 @@ G8 remains open and G9 blocked. This follows merged PR #177, from updated main
 
 `serverless/jobs/run_lightgbm_g8_replacement.py` is a separate entrypoint. The
 ordinary submitter and its Wave 1 no-volume rule are unchanged. Verification is
-the default; `--command` renders a command without submitting; `--execute` and
-`--recover` are mutually exclusive explicit operations. Neither code nor this
+the default; `--command` renders the scoring command and `--recovery-command`
+renders a command with `--recover`, without submitting. Both rendering flags
+and the live `--execute` / `--recover` flags are mutually exclusive.
+Recovery rendering uses the retention deadline, not the scoring expiry, and
+retains the same signed package, run directory and filesystem; only the Job name
+gets a `-recovery` suffix. Neither code nor this
 document authorizes issuing the rendered command.
 
 The canonical, Ed25519-signed `replacement.json` uses `ReplacementPlan` in
@@ -61,6 +65,9 @@ CLI receipts with the API readbacks in the execution audit archive.
 ## Durable lifecycle
 
 1. Validate signatures, fixed identities, actual native mount and Job context.
+   After waiting for context, recheck the package and the native mount immediately
+   before execution or recovery acquires its filesystem lock. A missing mount,
+   changed source/type/options or changed kernel mount identity fails closed.
 2. Exclusively create `/g8-durable/<new-run-id>` and hold a filesystem lock.
    An occupied directory cannot execute again. Verify MLflow readiness, claim
    the conditional S3 intent, and durably reserve one MLflow run before final
@@ -109,16 +116,20 @@ test of native attachment or authenticated remote writes, and uses no production
 test rows. The CLI signature/mount/expiry/allowlist checks have separate negative
 tests. The G8 Make target runs all of these tests and Ruff.
 
-The [portable pinned-image receipt](evidence/g8-live-integration-rehearsal-20260914.json)
-records one scoring call, local MLflow run `f6e1940c6d91458cb2324a3f830c4f5e`,
+The [post-review pinned-image receipt](evidence/g8-live-integration-review-rehearsal-20260914.json)
+records one scoring call, local MLflow run `dd651d71090044a5924600d0410ce763`,
 64 byte-verified published objects, original Job identity preservation and a
 zero-write completed repeat. Its publication checkpoint SHA-256 is
-`c58870eab0caadb7df71843a4107706c24215a3907ba1f532f03e186742b7a07`.
+`799927aa33dade768743c53350bbe7eeb78df3b7555d92d80b3affac26c2bb90`.
 Full temporary engineering evidence remains at
-`/tmp/g8-live-frozen.GqkZcp/delivery`. Networking was disabled for this run.
+`/tmp/g8-live-review.0GVJP0/rehearsal`. Networking was disabled for this run.
 This receipt binds the delivered lifecycle code and CLI hashes; CLI policy checks
 were tested separately, not bypassed and then reported as live approval.
-Final local verification: `make lightgbm-wave1-g8-check` passed **255 tests**,
+The [pre-review receipt](evidence/g8-live-integration-rehearsal-20260914.json)
+is preserved as historical evidence. Eleven additional CLI regression cases cover
+recovery rendering, distinct execution/retention deadlines and mount detachment,
+replacement or source change during the signed-context wait on both live paths.
+Final local verification: `make lightgbm-wave1-g8-check` passed **266 tests**,
 Ruff and CLI smoke checks; the governed-release, canonical-evaluation-bundle and
 MLflow dataset-lineage regression selection passed **15 tests**. Python 3.14
 MLflow file-store deprecation warnings were non-failing.

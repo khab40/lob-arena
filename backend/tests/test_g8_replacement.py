@@ -125,6 +125,52 @@ def test_signed_complete_package_verifies_without_remote_access(package):
     assert len([x for x in command if x.endswith(":/job/g8/replacement.json")]) == 1
 
 
+@pytest.mark.parametrize("mode,expired", [
+    ("--command", False), ("--recovery-command", False), ("--recovery-command", True),
+])
+def test_cli_renders_exact_operation_without_entering_lifecycle(package, monkeypatch, capsys, mode, expired):
+    import sys
+    from serverless.jobs import run_lightgbm_g8_replacement as cli
+
+    root, _, plan, trusted = package
+    monkeypatch.setenv("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", trusted)
+    monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), mode])
+    verify = replacement.verify_package
+    monkeypatch.setattr(cli, "verify_package", lambda *a, **kw: verify(
+        *a, **kw, now=plan.expires_at if expired else plan.verified_at))
+    monkeypatch.setattr(cli, "verify_mount", lambda *a: pytest.fail("rendering inspected live mount"))
+    monkeypatch.setattr(cli, "observed_context", lambda *a, **kw: pytest.fail("rendering waited for context"))
+    monkeypatch.setattr(live, "run_live", lambda *a, **kw: pytest.fail("rendering entered scoring"))
+    monkeypatch.setattr(live, "finish_retained", lambda *a, **kw: pytest.fail("rendering entered recovery"))
+    cli.main()
+    command = json.loads(capsys.readouterr().out)
+    recovery = mode == "--recovery-command"
+    operation = "--recover" if recovery else "--execute"
+    assert command[command.index("--args") + 1] == (
+        f"/job/g8/run_lightgbm_g8_replacement.py {operation} --package /job/g8")
+    assert command[command.index("--name") + 1] == plan.run_id + ("-recovery" if recovery else "")
+    assert command == replacement.job_command(plan, root, trusted, recovery=recovery)
+    assert command[command.index("--volume") + 1] == f"{plan.filesystem_id}:{plan.mount_path}:rw"
+    assert not (root / "__pycache__").exists()
+
+
+@pytest.mark.parametrize("mode,deadline", [
+    ("--command", "expires_at"), ("--recovery-command", "cleanup_deadline"),
+])
+def test_cli_rendering_respects_its_own_deadline(package, monkeypatch, mode, deadline):
+    import sys
+    from serverless.jobs import run_lightgbm_g8_replacement as cli
+
+    root, _, plan, trusted = package
+    monkeypatch.setenv("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", trusted)
+    monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), mode])
+    verify = replacement.verify_package
+    monkeypatch.setattr(cli, "verify_package", lambda *a, **kw: verify(*a, **kw, now=getattr(plan, deadline)))
+    monkeypatch.setattr(cli, "job_command", lambda *a, **kw: pytest.fail("expired command rendered"))
+    with pytest.raises(ValueError, match="current|retention window"):
+        cli.main()
+
+
 def test_cli_rechecks_package_without_creating_bytecode_members(package, monkeypatch):
     import sys
     from serverless.jobs import run_lightgbm_g8_replacement as cli
@@ -134,14 +180,53 @@ def test_cli_rechecks_package_without_creating_bytecode_members(package, monkeyp
     monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), "--execute"])
     monkeypatch.setattr(sys, "dont_write_bytecode", False)
     monkeypatch.setattr(cli, "CODE_PATHS", {})  # Installed-path/mount observations tested separately.
-    monkeypatch.setattr(cli, "verify_mount", lambda plan: None)
+    events = []
+    monkeypatch.setattr(cli, "verify_mount", lambda plan: events.append("mount") or ("31", "20", "0:44", "/"))
     from types import SimpleNamespace
-    monkeypatch.setattr(cli, "observed_context", lambda *a: SimpleNamespace(nebius_job_id="aijob-synthetic"))
+    monkeypatch.setattr(cli, "observed_context", lambda *a: events.append("context") or SimpleNamespace(
+        nebius_job_id="aijob-synthetic"))
     called = []
-    monkeypatch.setattr(live, "run_live", lambda *a: called.append(1) or {})
+    monkeypatch.setattr(live, "run_live", lambda *a: events.append("run") or called.append(1) or {})
     cli.main()
     assert called == [1]
+    assert events == ["mount", "context", "mount", "run"]
     assert not (root / "__pycache__").exists()
+
+
+@pytest.mark.parametrize("mode", ["--execute", "--recover"])
+@pytest.mark.parametrize("change", ["detached", "replaced", "source_changed"])
+def test_cli_rechecks_native_mount_after_context_wait(package, monkeypatch, mode, change):
+    import sys
+    from types import SimpleNamespace
+    from app.ml.lightgbm import cloud_runner
+    from serverless.jobs import run_lightgbm_g8_replacement as cli
+
+    root, _, _, trusted = package
+    monkeypatch.setenv("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", trusted)
+    monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), mode])
+    monkeypatch.setattr(cli, "CODE_PATHS", {})
+    line = "31 20 0:44 / /g8-durable rw,relatime - virtiofs synthetic-volume rw"
+    current = [line]
+    observations = []
+
+    def mount(plan):
+        observations.append(current[0])
+        return replacement.verify_mount(plan, current[0])
+
+    def context(*a, **kw):
+        current[0] = {"detached": "", "replaced": line.replace("31 20", "32 20"),
+                      "source_changed": line.replace("synthetic-volume", "other")}[change]
+        return SimpleNamespace(nebius_job_id="aijob-synthetic")
+
+    monkeypatch.setattr(cli, "verify_mount", mount)
+    monkeypatch.setattr(cli, "observed_context", context)
+    monkeypatch.setattr(cloud_runner, "_validate_execution_context", lambda *a: None)
+    monkeypatch.setattr(live, "execution_lock", lambda *a, **kw: pytest.fail("changed mount reached lock"))
+    monkeypatch.setattr(live, "run_live", lambda *a, **kw: pytest.fail("changed mount reached scoring"))
+    monkeypatch.setattr(live, "finish_retained", lambda *a, **kw: pytest.fail("changed mount reached recovery"))
+    with pytest.raises(ValueError, match="durable mount"):
+        cli.main()
+    assert observations == [line, current[0]]
 
 
 def test_signed_job_context_is_purpose_bound_and_uses_actual_job_id(package, tmp_path):

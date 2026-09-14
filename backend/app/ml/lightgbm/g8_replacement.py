@@ -268,18 +268,23 @@ def verify_mount(plan: ReplacementPlan, mountinfo: str | None = None):
     if (filesystem[0] != plan.mount_type or filesystem[1] != plan.mount_source
             or "rw" not in fields[5].split(",") or "rw" not in filesystem[2].split(",")):
         raise ValueError("durable mount differs from reviewed native filesystem evidence")
+    # Kernel mount ID, parent ID, device and root detect replacement during the
+    # signed-context wait, even when the new mount advertises the same source.
+    return tuple(fields[:4])
 
 
-def job_command(plan: ReplacementPlan, root: Path, trusted_key: str) -> list[str]:
+def job_command(plan: ReplacementPlan, root: Path, trusted_key: str, *, recovery: bool = False) -> list[str]:
     """Render only; the operator must persist the submission intent before issuing this once."""
     import re
     if re.fullmatch(SHA, trusted_key) is None:
         raise ValueError("trusted public-key hash required")
-    command = ["nebius", "ai", "job", "create", "--name", plan.run_id, "--image", plan.image,
+    operation = "--recover" if recovery else "--execute"
+    job_name = plan.run_id + "-recovery" if recovery else plan.run_id
+    command = ["nebius", "ai", "job", "create", "--name", job_name, "--image", plan.image,
         "--parent-id", "project-e00g6zvxpr00waz8t3y51k", "--subnet-id", plan.subnet_id,
         "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi", "--timeout", "1h",
         "--restart-policy", "never", "--volume", f"{plan.filesystem_id}:{plan.mount_path}:rw",
-        "--container-command", "python", "--args", "/job/g8/run_lightgbm_g8_replacement.py --execute --package /job/g8",
+        "--container-command", "python", "--args", f"/job/g8/run_lightgbm_g8_replacement.py {operation} --package /job/g8",
         "--format", "json"]
     for name in sorted(set(plan.files) | {"replacement.json", "replacement.sig"}):
         destination = CODE_PATHS.get(name, f"/job/g8/{name}")
