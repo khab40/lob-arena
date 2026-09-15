@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+# These exact values identify Lockbox resources in the G8 staging evidence;
+# they are references used to retrieve credentials, not credential values.
+# Match the detected value so this survives merges and evidence line changes.
+[allowlist]
+description = "Two reviewed G8 Lockbox resource IDs"
+regexTarget = "secret"
+regexes = [
+  '''^mbsec-e00arhndyprqr8egjw$''',
+  '''^mbsec-e00s7qtjj5n9ghacnh$''',
+]
