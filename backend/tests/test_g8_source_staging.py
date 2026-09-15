@@ -2,6 +2,7 @@
 import hashlib
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -174,3 +175,28 @@ def test_proposed_staging_grants_preserve_existing_policies():
         assert rules[:-1] == before["spec"]["bucket_policy"]["rules"]
         assert rules[-1] == {"paths": [uri.removeprefix("s3://").split("/", 1)[1] + "/*"],
                              "roles": ["storage.object-editor"], "group_id": proposal["group_id"]}
+
+
+def test_closed_staging_window_restored_baseline_and_does_not_claim_full_success():
+    evidence = Path(__file__).resolve().parents[2] / "docs/evidence"
+    receipt = json.loads((evidence / "g8-source-staging-session-20260915.json").read_bytes())
+    proposal = json.loads((evidence / "g8-source-staging-access-proposal-20260915.json").read_bytes())
+    elapsed = (datetime.fromisoformat(receipt["revoked_at"]) -
+               datetime.fromisoformat(receipt["session_started_at"])).total_seconds()
+    assert 0 < elapsed < 3600
+    assert abs(elapsed - receipt["conservative_write_window_seconds"]) < 1
+    assert receipt["cleanup_complete"] and receipt["cloud_jobs_created"] == 0
+    assert not receipt["original_grants_rerun"]
+    for result, original in zip(receipt["policy_checks"], proposal["buckets"], strict=True):
+        assert result["original_spec_restored"]
+        assert result["independent_after"]["spec"] == original["before"]["spec"]
+        assert int(result["revoked_resource_version"]) > int(result["granted_resource_version"])
+    readback = receipt["read_only_candidate_verification"]
+    assert readback["candidate_complete_release_verified"]
+    assert readback["candidate_object_count"] == 25
+    assert readback["input_prefix_empty"] and readback["production_head_denied"]
+    assert readback["production_final_key_state"] == "INACTIVE"
+    assert not any(readback[key] for key in (
+        "production_body_downloaded", "full_source_staging_complete", "native_storage_verified",
+        "mlflow_remote_verified", "production_g8_complete",
+    ))
