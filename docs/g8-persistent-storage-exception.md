@@ -1,5 +1,7 @@
 # G8 replacement: persistent-storage exception proposal
 
+Architecture decision: [ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md).
+
 Status (2026-09-14): **preparation approved; not provisioned or executable**.
 The user approved preparing a narrowly scoped persistent-storage exception for
 the single G8 replacement, with review and budgeting before live provisioning.

@@ -6,6 +6,15 @@ Date: 2026-07-26
 
 Implementation Status: `[done]`
 
+## C4 Scope Clarification — 2026-09-15
+
+The four-date frozen C4 release does not satisfy this seven-date benchmark
+contract. [ARD-0038](ARD-0038-c4-specific-evaluation.md) records a separately
+approved retained-observation evaluation with research-control negative labels
+and explicit metric/coverage exclusions. It does not confer this protocol's
+qualification or independently reviewed-clean status. Protocol hashes, not the
+shared readable dataset name, determine compatibility.
+
 ## Context
 
 A sophisticated detector can appear accurate when adjacent rolling windows,

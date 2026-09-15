@@ -4,6 +4,16 @@ Status: Accepted and Implemented
 
 Date: 2026-07-28
 
+## Evaluation and Recovery Update — 2026-09-15
+
+C4 reports now require independent recomputation from original evidence before
+MLflow indexing, as specified in [ARD-0038](ARD-0038-c4-specific-evaluation.md).
+[ARD-0039](ARD-0039-same-run-mlflow-recovery.md) adds pre-scoring reservation and
+same-run, readback-verified log-only recovery through the shared logger API.
+The live runner still uses legacy logging; durable pre-logging retention and
+remote recovery rehearsal remain pending. These changes preserve MLflow's role
+as an index and do not make a reserved run a completed evaluation receipt.
+
 ## Context
 
 The governed LightGBM and real-corpus tracks need one shared experiment,
@@ -14,7 +24,7 @@ validation-only selection, release checksums, corpus review, or signatures.
 
 ## Decision
 
-Deploy pinned MLflow 3.13 in an opt-in Docker Compose profile with:
+Deploy pinned MLflow 3.15.2 in an opt-in Docker Compose profile with:
 
 - PostgreSQL as the metadata and registry backend;
 - private MinIO as the default local S3-compatible artifact store, with Nebius

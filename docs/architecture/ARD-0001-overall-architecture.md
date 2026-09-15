@@ -4,6 +4,23 @@ Status: Superseded in part by [ARD-0020](ARD-0020-java-arena-websocket-agent-orc
 
 Date: 2026-05-31
 
+## Design Reconciliation — 2026-09-15
+
+This is a historical record. The current overview is [architecture.md](../architecture.md).
+Nasdaq ITCH ingestion and deterministic injection/profile calibration extend the
+historical plane under [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md),
+[ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) and
+[ARD-0034](ARD-0034-itch-market-profile-calibration.md). LightGBM v1 is implemented;
+[ARD-0035](ARD-0035-nebius-lightgbm-first.md) cloud qualification has G8 open and
+G9 blocked after R4 accessed the final release and failed before scoring.
+Transformer/cascade records ARD-0036/0037 remain proposals. The new evaluation
+and recovery boundaries below are implemented primitives, not completed durable
+live execution.
+
+- [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
+- [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
+- [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
+
 ## Implementation Status
 
 Status as of 2026-07-28: `[historical decision; current ownership documented in ARD-0020 through ARD-0027]`
