@@ -513,3 +513,21 @@ the complete candidate release and resume conditionally; do not overwrite it or
 regenerate the retained fixture package. Before another writer window, review a
 bounded transport that avoids per-object emulated CLI startup overhead, then
 obtain fresh approval and current resource-version-guarded policy readbacks.
+
+### Synthetic source staging closed (2026-09-15)
+
+Following merged PR #187, the operator approved one input-only writer window.
+The [completed session](evidence/g8-input-staging-session-20260915.json) records
+325 conditional input PUTs, zero candidate PUTs, and verified policy restoration
+within 397.215 seconds (input bucket **6 → 7 → 8**). A fresh container independently
+downloaded and verified all 350 source objects after revocation, checked 30 replay
+domains and confirmed production-object HEAD denial. Full GET snapshots and
+publication/readback receipts are checksum-bound in the session record.
+The frozen package and both source `SUCCESS` identities are preserved.
+
+Source staging and operator-side authenticated downloads are complete. The next
+gate is the reviewed native/remote package and fresh billing reconciliation before
+the previously approved two-Job/$2 rehearsal. Future synthetic rehearsals and
+pre-production model/runtime tests run on Nebius Serverless, per the operator's
+2026-09-15 instruction. No native or remote-MLflow proof is claimed yet; G8 remains
+open and G9 blocked. Historical staging grants must not be rerun.

@@ -1,5 +1,8 @@
 """Regression checks for the reviewed synthetic-only operator policy package."""
 import json
+import hashlib
+from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
 
 
@@ -81,3 +84,47 @@ def test_applied_source_policies_match_patches_but_do_not_claim_data_readiness()
                   "ready_to_submit", "original_output_grant_rerun", "production_test_accessed"):
         assert observed[field] is False
     assert observed["jobs_submitted"] == observed["filesystems_created"] == observed["mlflow_runs_created"] == 0
+
+
+def test_approved_input_writer_window_has_bound_grant_and_revocation_evidence():
+    record = json.loads((EVIDENCE / "g8-input-staging-session-20260915.json").read_bytes())
+    proposal = json.loads((EVIDENCE / record["proposal"]).read_bytes())
+
+    def bound(reference):
+        raw = (EVIDENCE / reference["path"]).read_bytes()
+        assert hashlib.sha256(raw).hexdigest() == reference["sha256"]
+        return json.loads(raw)
+
+    before = proposal["before"]
+    granted = bound(record["snapshots"]["granted"])
+    revoked = bound(record["snapshots"]["revoked"])
+    expected = deepcopy(before["spec"])
+    expected["bucket_policy"] = proposal["proposed_update"]["spec"]["bucket_policy"]
+    assert granted["spec"] == expected
+    assert revoked["spec"] == before["spec"]
+    for snapshot in (granted, revoked):
+        for field in ("id", "parent_id", "name", "created_at", "labels"):
+            assert snapshot["metadata"][field] == before["metadata"][field]
+    assert (int(before["metadata"]["resource_version"]) < int(granted["metadata"]["resource_version"])
+            < int(revoked["metadata"]["resource_version"]))
+    start, grant, end = (datetime.fromisoformat(record[key])
+                         for key in ("window_started_at", "grant_verified_at", "revoked_at"))
+    assert start <= datetime.fromisoformat(granted["metadata"]["updated_at"]) <= grant
+    assert grant < datetime.fromisoformat(revoked["metadata"]["updated_at"]) <= end
+    assert 0 < (end - start).total_seconds() < proposal["maximum_writer_window_seconds"] == 1800
+    assert abs(record["writer_window_seconds"] - (end - start).total_seconds()) < 1
+    assert record["cleanup_complete"] and record["baseline_spec_restored"]
+    publication, readback = bound(record["publication"]), bound(record["readback"])
+    assert publication["source_package_sha256"] == readback["source_package_sha256"] == record["source_package_sha256"]
+    assert [release["object_count"] for release in publication["releases"]] == [25, 325]
+    assert [release["put_attempts"] for release in publication["releases"]] == [0, 325]
+    assert publication["credential_access_key_sha256"] == readback["credential_access_key_sha256"]
+    assert readback["credential_access_key_sha256"] == record["credential_access_key_id_sha256"]
+    assert datetime.fromisoformat(publication["verified_at"]) < end < datetime.fromisoformat(readback["verified_at"])
+    assert readback["remote_source_bytes_verified"] and readback["production_head_denial_verified"]
+    assert readback["comparison_replay_domains_verified"] == 30
+    assert len(readback["local_only_metadata"]) == 6
+    assert record["source_staging_complete"] and record["cloud_jobs_created"] == 0
+    for field in ("candidate_writer_granted", "production_body_downloaded", "pinned_job_credential_injection_verified",
+                  "native_storage_verified", "mlflow_remote_verified", "production_g8_complete"):
+        assert record[field] is False
