@@ -199,10 +199,30 @@ if __name__ == "__main__":
     mode.add_argument("--publish", action="store_true")
     mode.add_argument("--readback", action="store_true")
     parser.add_argument("--destination", type=Path)
+    parser.add_argument("--sdk", action="store_true", help="reuse one frozen AWS SDK client")
+    parser.add_argument("--session-seconds", type=int, default=900, help="SDK deadline, at most 1800 seconds")
     args = parser.parse_args()
     if args.readback != (args.destination is not None):
         parser.error("--destination is required only with --readback")
-    if args.publish:
+    if args.sdk and not (args.publish or args.readback):
+        parser.error("--sdk requires --publish or --readback")
+    if args.sdk:
+        if __package__:
+            from .g8_source_sdk import SourceSDK, session_deadline
+        else:
+            from g8_source_sdk import SourceSDK, session_deadline
+        with session_deadline(args.session_seconds):
+            s3 = SourceSDK()
+            try:
+                if args.publish:
+                    receipt = publish(args.package, expected_sha256=args.expected_sha256, s3=s3)
+                else:
+                    receipt = readback(args.package, args.destination, expected_sha256=args.expected_sha256, s3=s3,
+                                       head_denied=lambda: s3.production_head_denied(PRODUCTION_BUCKET, PRODUCTION_KEY))
+            finally:
+                s3.client.close()
+        receipt.update(transport="single_client_frozen_aws_sdk", session_limit_seconds=args.session_seconds)
+    elif args.publish:
         receipt = publish(args.package, expected_sha256=args.expected_sha256)
     elif args.readback:
         receipt = readback(args.package, args.destination, expected_sha256=args.expected_sha256)
