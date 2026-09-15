@@ -2,6 +2,7 @@
 import hashlib
 import json
 import shutil
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
@@ -177,6 +178,71 @@ def test_proposed_staging_grants_preserve_existing_policies():
                              "roles": ["storage.object-editor"], "group_id": proposal["group_id"]}
 
 
+def _assert_applied_policy_readbacks(receipt, proposal):
+    """Verify committed GET snapshots, not grant timestamps or local audit paths."""
+    assert len(receipt["policy_checks"]) == len(proposal["buckets"]) == 2
+    for result, original in zip(receipt["policy_checks"], proposal["buckets"], strict=True):
+        before = original["before"]
+        applied = result["independent_granted"]
+        after = result["independent_after"]
+        for snapshot in (applied, after):
+            for key in ("id", "parent_id", "name", "created_at", "labels"):
+                assert snapshot["metadata"][key] == before["metadata"][key]
+        assert result["bucket_id"] == before["metadata"]["id"]
+        assert result["baseline_resource_version"] == before["metadata"]["resource_version"]
+        assert applied["metadata"]["resource_version"] == result["granted_resource_version"]
+        assert after["metadata"]["resource_version"] == result["revoked_resource_version"]
+        assert (int(result["baseline_resource_version"]) < int(result["granted_resource_version"])
+                < int(result["revoked_resource_version"]))
+        expected = deepcopy(before["spec"])
+        expected["bucket_policy"] = original["proposed_update"]["spec"]["bucket_policy"]
+        assert applied["spec"] == expected
+        assert after["spec"] == before["spec"]
+        assert (datetime.fromisoformat(receipt["session_started_at"])
+                <= datetime.fromisoformat(applied["metadata"]["updated_at"])
+                <= datetime.fromisoformat(result["grant_verified_at"])
+                < datetime.fromisoformat(after["metadata"]["updated_at"])
+                <= datetime.fromisoformat(result["revocation_verified_at"])
+                <= datetime.fromisoformat(receipt["revoked_at"]))
+
+
+@pytest.mark.parametrize("bucket_index", [0, 1])
+@pytest.mark.parametrize("mutation", [
+    "missing", "baseline_rule", "extra_rule", "writer_path", "writer_role",
+    "writer_group", "bucket_setting", "identity", "version", "timestamp",
+])
+def test_applied_policy_readback_rejects_missing_or_changed_evidence(bucket_index, mutation):
+    evidence = Path(__file__).resolve().parents[2] / "docs/evidence"
+    receipt = json.loads((evidence / "g8-source-staging-session-20260915.json").read_bytes())
+    proposal = json.loads((evidence / receipt["proposal"]).read_bytes())
+    _assert_applied_policy_readbacks(receipt, proposal)
+    result = receipt["policy_checks"][bucket_index]
+    applied = result["independent_granted"]
+    rules = applied["spec"]["bucket_policy"]["rules"]
+    if mutation == "missing":
+        del result["independent_granted"]
+    elif mutation == "baseline_rule":
+        rules.pop(0)
+    elif mutation == "extra_rule":
+        rules.append(deepcopy(rules[-1]))
+    elif mutation == "writer_path":
+        rules[-1]["paths"] = ["*"]
+    elif mutation == "writer_role":
+        rules[-1]["roles"] = ["storage.admin"]
+    elif mutation == "writer_group":
+        rules[-1]["group_id"] = "unexpected-group"
+    elif mutation == "bucket_setting":
+        applied["spec"]["versioning_policy"] = "DISABLED"
+    elif mutation == "identity":
+        applied["metadata"]["id"] = "wrong-bucket"
+    elif mutation == "version":
+        applied["metadata"]["resource_version"] = result["baseline_resource_version"]
+    elif mutation == "timestamp":
+        result["grant_verified_at"] = receipt["revoked_at"]
+    with pytest.raises((AssertionError, KeyError)):
+        _assert_applied_policy_readbacks(receipt, proposal)
+
+
 def test_closed_staging_window_restored_baseline_and_does_not_claim_full_success():
     evidence = Path(__file__).resolve().parents[2] / "docs/evidence"
     receipt = json.loads((evidence / "g8-source-staging-session-20260915.json").read_bytes())
@@ -187,6 +253,7 @@ def test_closed_staging_window_restored_baseline_and_does_not_claim_full_success
     assert abs(elapsed - receipt["conservative_write_window_seconds"]) < 1
     assert receipt["cleanup_complete"] and receipt["cloud_jobs_created"] == 0
     assert not receipt["original_grants_rerun"]
+    _assert_applied_policy_readbacks(receipt, proposal)
     for result, original in zip(receipt["policy_checks"], proposal["buckets"], strict=True):
         assert result["original_spec_restored"]
         assert result["independent_after"]["spec"] == original["before"]["spec"]

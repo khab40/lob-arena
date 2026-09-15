@@ -490,8 +490,16 @@ window was **445.857 seconds (7 minutes 26 seconds)**, from
 version-7/version-4 staging grant commands above must **not** be rerun.
 
 The [closed-session receipt](evidence/g8-source-staging-session-20260915.json)
-contains the policy readbacks and subsequent authenticated, read-only candidate
-verification. After revocation, the reader downloaded and hash-checked all
+contains the actual post-grant GET snapshots (`policy_checks[].independent_granted`)
+retained from the session audit, the post-revocation GET snapshots
+(`independent_after`), and subsequent authenticated, read-only candidate
+verification. Grant verification is checked against each reviewed proposal:
+the complete applied spec must equal the baseline spec with only its proposed
+bucket policy substituted. Tests also bind bucket identities, resource versions
+and readback timestamps, and reject missing snapshots, changed baseline rules,
+extra or broadened writer rules, and unrelated bucket-setting changes. The local
+audit path is supplemental; these policy claims do not depend on that uncommitted
+file. After revocation, the reader downloaded and hash-checked all
 **25 candidate objects / 343,345 bytes**, including the matching `SUCCESS` and
 frozen candidate `e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c`.
 This is the isolated **synthetic** candidate, not the production model. Exact
