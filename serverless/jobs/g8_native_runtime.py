@@ -114,20 +114,27 @@ def observed_context(plan, package, *, phase, trusted):
             raise ValueError("signed native Job context unavailable before deadline")
         time.sleep(1)
     raw = bounded(path)
-    signed(raw, bounded(sig, 64), bounded(package / "reviewer-public.pem"), trusted)
+    signature = bounded(sig, 64)
+    public = bounded(package / "reviewer-public.pem")
+    signed(raw, signature, public, trusted)
     context = json.loads(raw)
-    if (set(context) != {"execution_package_sha256", "phase", "job_id", "readback", "previous_terminal"}
+    if (raw != canonical(context)
+            or set(context) != {"execution_package_sha256", "phase", "job_id", "readback", "previous_terminal"}
             or context["execution_package_sha256"] != plan.identity() or context["phase"] != phase):
         raise ValueError("signed native Job context differs from package/phase")
     receipt = verify_readback(plan, context["readback"], phase=phase, expected_job_id=context["job_id"])
     if phase == "score" and context["previous_terminal"] is not None:
         raise ValueError("score context cannot carry another Job")
     if phase == "recover":
-        original = json.loads(bounded(Path(plan.mount_path) / "native-evidence/score-context.json"))
+        original_path = Path(plan.mount_path) / "native-evidence/score-context.json"
+        original_raw = bounded(original_path)
+        signed(original_raw, bounded(original_path.with_suffix(".sig"), 64), public, trusted)
+        original = json.loads(original_raw)
         previous = context["previous_terminal"]
-        if (previous is None or previous["metadata"]["id"] != original["job_id"]
+        if (original["execution_package_sha256"] != plan.identity() or original["phase"] != "score"
+                or previous is None or previous["metadata"]["id"] != original["job_id"]
                 or context["job_id"] == original["job_id"]
                 or previous["spec"] != original["readback"]["spec"]
                 or previous["status"]["state"] != "FAILED" or not previous["status"].get("finished_at")):
             raise ValueError("the original score Job must be terminal before reattachment")
-    return context, receipt
+    return context, receipt, signature
