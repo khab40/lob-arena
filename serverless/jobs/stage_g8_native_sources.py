@@ -59,22 +59,22 @@ def _plans(package: Path, digest: str):
     return verified, manifest, plans
 
 
-def _check_existing(bucket, prefix, entries, *, complete=False):
-    existing = transport._listed_keys(bucket, prefix, set(entries))
+def _check_existing(bucket, prefix, entries, *, complete=False, s3=transport):
+    existing = s3._listed_keys(bucket, prefix, set(entries))
     if (complete or prefix + "/SUCCESS" in existing) and existing != set(entries):
         raise ValueError("source SUCCESS is missing or its payload is incomplete; refusing repair")
     for key in sorted(existing):
         item = entries[key]
-        transport._readback(bucket, key, digest=item.sha256, size=item.size_bytes)
+        s3._readback(bucket, key, digest=item.sha256, size=item.size_bytes)
     return existing
 
 
-def publish(package: Path, *, expected_sha256: str) -> dict:
+def publish(package: Path, *, expected_sha256: str, s3=transport) -> dict:
     verified, _, plans = _plans(package, expected_sha256)
     identity = _credential_identity()
     # Check BOTH prefixes before the first write; never alter the candidate if
     # the input prefix already contains an incompatible or premature release.
-    preflight = [_check_existing(bucket, prefix, entries) for _, bucket, prefix, entries in plans]
+    preflight = [_check_existing(bucket, prefix, entries, s3=s3) for _, bucket, prefix, entries in plans]
     results = []
     for (uri, bucket, prefix, entries), existing in zip(plans, preflight, strict=True):
         puts = 0
@@ -83,12 +83,12 @@ def publish(package: Path, *, expected_sha256: str) -> dict:
             if key == prefix + "/SUCCESS":
                 sources.verify(package, expected_sha256=expected_sha256)
                 # Recheck every remote payload immediately before exposing SUCCESS.
-                observed = _check_existing(bucket, prefix, entries)
+                observed = _check_existing(bucket, prefix, entries, s3=s3)
                 if not (set(entries) - {key}) <= observed:
                     raise ValueError("remote source changed before completion")
             with transport._upload_snapshot(package / "payload" / item.path, item) as snapshot:
                 try:
-                    transport._transfer_json(
+                    s3._transfer_json(
                         item.size_bytes, "s3api", "put-object", "--bucket", bucket, "--key", key,
                         "--body", str(snapshot), "--metadata", "sha256=" + item.sha256,
                         "--if-none-match", "*",
@@ -96,11 +96,11 @@ def publish(package: Path, *, expected_sha256: str) -> dict:
                 except RuntimeError:
                     # Lost success/conditional race: read-only resolution, never a
                     # second PUT, overwrite, deletion or model execution.
-                    transport._readback(bucket, key, digest=item.sha256, size=item.size_bytes)
+                    s3._readback(bucket, key, digest=item.sha256, size=item.size_bytes)
                 else:
-                    transport._readback(bucket, key, digest=item.sha256, size=item.size_bytes)
+                    s3._readback(bucket, key, digest=item.sha256, size=item.size_bytes)
             puts += 1
-        _check_existing(bucket, prefix, entries, complete=True)
+        _check_existing(bucket, prefix, entries, complete=True, s3=s3)
         results.append({"uri": uri, "object_count": len(entries), "put_attempts": puts,
                         "matching_preexisting_objects": len(existing)})
     return {
@@ -137,7 +137,7 @@ def _production_head_denied() -> None:
         raise ValueError("production HEAD did not return an explicit access denial")
 
 
-def readback(package: Path, destination: Path, *, expected_sha256: str) -> dict:
+def readback(package: Path, destination: Path, *, expected_sha256: str, s3=transport, head_denied=None) -> dict:
     verified, manifest, plans = _plans(package, expected_sha256)
     identity = _credential_identity()
     if destination.resolve() != destination.absolute():
@@ -149,15 +149,15 @@ def readback(package: Path, destination: Path, *, expected_sha256: str) -> dict:
     if destination.exists():
         raise FileExistsError("readback destination exists; preserve prior evidence")
     for _, bucket, prefix, entries in plans:
-        _check_existing(bucket, prefix, entries, complete=True)
+        _check_existing(bucket, prefix, entries, complete=True, s3=s3)
     destination.mkdir(parents=True, mode=0o700)
     # Retain the independently downloaded bytes, not only HEAD metadata or IDs.
     for _, bucket, _, entries in plans:
         for key, item in sorted(entries.items()):
             target = destination / "payload" / item.path
             target.parent.mkdir(parents=True, exist_ok=True)
-            transport._transfer_json(item.size_bytes, "s3api", "get-object",
-                                     "--bucket", bucket, "--key", key, str(target))
+            s3._transfer_json(item.size_bytes, "s3api", "get-object",
+                              "--bucket", bucket, "--key", key, str(target))
             if target.stat().st_size != item.size_bytes or sha256_file(target) != item.sha256:
                 raise ValueError("downloaded synthetic source differs from retained inventory")
     # Non-S3 execution metadata stays explicitly local; only sources/ is remote.
@@ -174,8 +174,8 @@ def readback(package: Path, destination: Path, *, expected_sha256: str) -> dict:
     if observed != verified:
         raise ValueError("remote source verification differs from the original package")
     for _, bucket, prefix, entries in plans:
-        _check_existing(bucket, prefix, entries, complete=True)
-    _production_head_denied()
+        _check_existing(bucket, prefix, entries, complete=True, s3=s3)
+    (head_denied or _production_head_denied)()
     return {
         "schema_version": "g8_synthetic_source_readback_v1", "verified_at": datetime.now(UTC).isoformat(),
         "source_package_sha256": expected_sha256, "candidate_sha256": verified["candidate_sha256"],
@@ -199,10 +199,34 @@ if __name__ == "__main__":
     mode.add_argument("--publish", action="store_true")
     mode.add_argument("--readback", action="store_true")
     parser.add_argument("--destination", type=Path)
+    parser.add_argument("--sdk", action="store_true", help="reuse one frozen AWS SDK client")
+    parser.add_argument("--session-seconds", type=int, help="SDK deadline, default 900, at most 1800 seconds")
     args = parser.parse_args()
     if args.readback != (args.destination is not None):
         parser.error("--destination is required only with --readback")
-    if args.publish:
+    if args.sdk and not (args.publish or args.readback):
+        parser.error("--sdk requires --publish or --readback")
+    if args.session_seconds is not None and not args.sdk:
+        parser.error("--session-seconds requires --sdk")
+    if args.session_seconds is None:
+        args.session_seconds = 900
+    if args.sdk:
+        if __package__:
+            from .g8_source_sdk import SourceSDK, session_deadline
+        else:
+            from g8_source_sdk import SourceSDK, session_deadline
+        with session_deadline(args.session_seconds):
+            s3 = SourceSDK()
+            try:
+                if args.publish:
+                    receipt = publish(args.package, expected_sha256=args.expected_sha256, s3=s3)
+                else:
+                    receipt = readback(args.package, args.destination, expected_sha256=args.expected_sha256, s3=s3,
+                                       head_denied=lambda: s3.production_head_denied(PRODUCTION_BUCKET, PRODUCTION_KEY))
+            finally:
+                s3.client.close()
+        receipt.update(transport="single_client_frozen_aws_sdk", session_limit_seconds=args.session_seconds)
+    elif args.publish:
         receipt = publish(args.package, expected_sha256=args.expected_sha256)
     elif args.readback:
         receipt = readback(args.package, args.destination, expected_sha256=args.expected_sha256)

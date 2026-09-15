@@ -243,8 +243,11 @@ def _upload_snapshot(source: Path, entry: storage.InventoryEntry):
         yield snapshot
 
 
-def _readback(bucket: str, key: str, *, digest: str, size: int, metadata_name: str = "sha256") -> None:
-    head = storage._aws_json(ENDPOINT, "s3api", "head-object", "--bucket", bucket, "--key", key)
+def _readback(bucket: str, key: str, *, digest: str, size: int, metadata_name: str = "sha256",
+              aws_json=None, transfer_json=None) -> None:
+    aws_json = aws_json or storage._aws_json
+    transfer_json = transfer_json or _transfer_json
+    head = aws_json(ENDPOINT, "s3api", "head-object", "--bucket", bucket, "--key", key)
     metadata = {str(k).lower(): v for k, v in (head.get("Metadata") or {}).items()}
     # Intent metadata uses the canonical request hash, which omits no bytes in
     # the actual request.json emitted by the runner.
@@ -252,18 +255,19 @@ def _readback(bucket: str, key: str, *, digest: str, size: int, metadata_name: s
         raise ValueError("remote recovery object metadata conflicts with the checkpoint")
     with tempfile.TemporaryDirectory(prefix="g8-publication-readback-") as temporary:
         target = Path(temporary) / "object"
-        _transfer_json(size, "s3api", "get-object", "--bucket", bucket, "--key", key, str(target))
+        transfer_json(size, "s3api", "get-object", "--bucket", bucket, "--key", key, str(target))
         if sha256_file(target) != digest:
             raise ValueError("remote recovery object bytes conflict with the checkpoint")
 
 
-def _listed_keys(bucket: str, prefix: str, allowed: set[str]) -> set[str]:
+def _listed_keys(bucket: str, prefix: str, allowed: set[str], *, aws_json=None) -> set[str]:
+    aws_json = aws_json or storage._aws_json
     keys: set[str] = set()
     tokens: set[str] = set()
     args = []
     while True:
         previous_count = len(keys)
-        page = storage._aws_json(
+        page = aws_json(
             ENDPOINT, "s3api", "list-objects-v2", "--bucket", bucket, "--prefix", prefix + "/",
             "--max-keys", str(min(len(allowed) + 1, 1000)), "--no-paginate", *args,
         )
