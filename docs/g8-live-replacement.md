@@ -465,3 +465,51 @@ passed. The final two-line remote-inventory recheck also passed the repeated
 pinned-image protocol rehearsal. Concurrent docs/password-helper PR #182 was
 fast-forwarded into this uncommitted branch before delivery; it changed none of
 these runtime paths.
+
+### Approved staging window closed (2026-09-15)
+
+The operator approved the two temporary source-writer rules after PR #183 merged
+as `3861df4`. Both rules were applied and independently read back: results bucket
+**7 → 8**, input bucket **4 → 5**. The publication ran only against the approved
+synthetic prefixes using the exact development MysteryBox versions resolved
+directly into process memory. No secret values were printed or persisted.
+
+Publication was stopped proactively after the frozen x86 AWS CLI, running
+through Rosetta on this Mac, spent over six minutes verifying the 25-object
+candidate source. At that observed throughput, the full 350-object sequential
+publication was unlikely to fit the one-hour window. This was an operator stop,
+not a model evaluation failure or a reached timeout. All uploaded objects were
+preserved; no retry of scoring/training occurred.
+
+Both temporary rules were removed, with cleanup independently verified:
+results **8 → 9**, input **5 → 6**. The full original bucket specs and their
+reader/output rules match the pre-grant state. The conservative permission
+window was **445.857 seconds (7 minutes 26 seconds)**, from
+`2026-09-15T04:12:14.376560+00:00` to
+`2026-09-15T04:19:40.264690+00:00`. No cloud Job was created. The historical
+version-7/version-4 staging grant commands above must **not** be rerun.
+
+The [closed-session receipt](evidence/g8-source-staging-session-20260915.json)
+contains the actual post-grant GET snapshots (`policy_checks[].independent_granted`)
+retained from the session audit, the post-revocation GET snapshots
+(`independent_after`), and subsequent authenticated, read-only candidate
+verification. Grant verification is checked against each reviewed proposal:
+the complete applied spec must equal the baseline spec with only its proposed
+bucket policy substituted. Tests also bind bucket identities, resource versions
+and readback timestamps, and reject missing snapshots, changed baseline rules,
+extra or broadened writer rules, and unrelated bucket-setting changes. The local
+audit path is supplemental; these policy claims do not depend on that uncommitted
+file. After revocation, the reader downloaded and hash-checked all
+**25 candidate objects / 343,345 bytes**, including the matching `SUCCESS` and
+frozen candidate `e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c`.
+This is the isolated **synthetic** candidate, not the production model. Exact
+MysteryBox version selectors and the access-ID digest match across staging and
+readback. The production final-read key remains inactive; production-object
+HEAD was explicitly denied, and no production object body was downloaded.
+
+The synthetic input prefix is still empty. The full source staging gate,
+native-storage proof and remote MLflow proof therefore remain open. Preserve
+the complete candidate release and resume conditionally; do not overwrite it or
+regenerate the retained fixture package. Before another writer window, review a
+bounded transport that avoids per-object emulated CLI startup overhead, then
+obtain fresh approval and current resource-version-guarded policy readbacks.
