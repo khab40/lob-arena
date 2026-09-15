@@ -1,0 +1,140 @@
+"""Native pre-access gates. No cloud calls, dataset loading, or model execution."""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import time
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+if __package__:
+    from .g8_native_contract import NativePlan, canonical, environment, injections
+    from .g8_native_readback import verify_readback, verify_previous_job
+    from .g8_native_source_capsule import verify as verify_capsule
+else:
+    from g8_native_contract import NativePlan, canonical, environment, injections
+    from g8_native_readback import verify_readback, verify_previous_job
+    from g8_native_source_capsule import verify as verify_capsule
+
+
+def bounded(path, maximum=65536):
+    if path.absolute() != path.resolve() or not path.is_file() or path.stat().st_size > maximum:
+        raise ValueError("bounded canonical regular file required: " + path.name)
+    raw = path.read_bytes()
+    if len(raw) > maximum:
+        raise ValueError("file grew beyond its bound")
+    return raw
+
+
+def signed(raw, signature, public, trusted):
+    from cryptography.hazmat.primitives.serialization import load_pem_public_key
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    if hashlib.sha256(public).hexdigest() != trusted:
+        raise ValueError("reviewer key differs from injected trust anchor")
+    key = load_pem_public_key(public)
+    if not isinstance(key, Ed25519PublicKey):
+        raise ValueError("Ed25519 reviewer required")
+    key.verify(signature, raw)
+
+
+def verify_package(package, *, phase, trusted, now=None):
+    raw = bounded(package / "native-plan.json")
+    signed(raw, bounded(package / "native-plan.sig", 64), bounded(package / "reviewer-public.pem"), trusted)
+    plan = NativePlan.model_validate_json(raw)
+    if raw != canonical(plan):
+        raise ValueError("canonical signed plan required")
+    expected = set(plan.files) | {"native-plan.json", "native-plan.sig"}
+    if any(p.is_symlink() for p in package.rglob("*")) or {
+        p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()
+    } != expected:
+        raise ValueError("package has missing, linked or unexpected files")
+    for name, ref in plan.files.items():
+        content = bounded(package / name)
+        if len(content) != ref.size_bytes or hashlib.sha256(content).hexdigest() != ref.sha256:
+            raise ValueError("package bytes differ: " + name)
+    verify_capsule(package / "source-capsule")
+    filesystem = json.loads(bounded(package / "filesystem.json"))
+    if (filesystem["metadata"]["id"] != plan.filesystem_id
+            or filesystem["metadata"]["parent_id"] != "project-e00g6zvxpr00waz8t3y51k"
+            or filesystem["spec"].get("type") != "network_ssd"
+            or filesystem["spec"].get("size_bytes") not in (10 * 1024**3, str(10 * 1024**3))):
+        raise ValueError("filesystem readback differs from approved identity, capacity or type")
+    current = now or datetime.now(UTC)
+    if phase not in {"score", "recover"} or not plan.verified_at <= current < (
+            plan.expires_at if phase == "score" else plan.cleanup_deadline):
+        raise ValueError("native phase outside reviewed window")
+    billing = json.loads(bounded(package / "billing.json"))
+    if set(billing) != {"observed_at", "campaign_spend_usd", "lag_allowance_usd", "provider_reference"}:
+        raise ValueError("exact billing observation required")
+    observed = datetime.fromisoformat(billing["observed_at"])
+    spend, lag = billing["campaign_spend_usd"], billing["lag_allowance_usd"]
+    if (not isinstance(spend, (float, int)) or not isinstance(lag, (float, int))
+            or not 0 <= spend <= spend + lag == plan.campaign_spend_usd
+            or not isinstance(billing["provider_reference"], str) or not billing["provider_reference"]
+            or observed.tzinfo is None or not plan.verified_at - timedelta(hours=1) <= observed <= plan.verified_at):
+        raise ValueError("fresh reconciled billing with lag allowance required")
+    return plan
+
+
+def native_mount(plan, mountinfo=None):
+    lines = (Path("/proc/self/mountinfo").read_text() if mountinfo is None else mountinfo).splitlines()
+    found = []
+    for line in lines:
+        before, after = line.split(" - ", 1)
+        fields, fs = before.split(), after.split()
+        if fields[4].startswith(plan.mount_path + "/"):
+            raise ValueError("nested durable mounts are forbidden")
+        if fields[4] == plan.mount_path:
+            if fs[0] != "virtiofs" or "rw" not in fields[5].split(",") or "rw" not in fs[2].split(","):
+                raise ValueError("writable native virtiofs required")
+            found.append({"kernel_identity": fields[:4], "source": fs[1], "type": fs[0]})
+    if len(found) != 1:
+        raise ValueError("exactly one durable native mount required")
+    return {"filesystem_id": plan.filesystem_id, **found[0]}
+
+
+def actual_runtime(plan, package):
+    for path, name in injections(plan).items():
+        path = Path(path)
+        if bounded(path) != bounded(package / name) or not os.statvfs(path).f_flag & os.ST_RDONLY:
+            raise ValueError("runtime injection must match reviewed bytes and be read-only: " + name)
+    for key, value in environment(plan).items():
+        if os.environ.get(key) != value:
+            raise ValueError("actual Job environment differs: " + key)
+    if any(not os.environ.get(k) for k in plan.secret_selectors):
+        raise ValueError("required Job credentials missing")
+    if any(os.environ.get(k) for k in ("AWS_SESSION_TOKEN", "AWS_PROFILE", "MLFLOW_TRACKING_TOKEN", "MLFLOW_ALLOW_FILE_STORE")):
+        raise ValueError("unreviewed credential or tracking fallback")
+    return {"injected_file_bytes_verified": True, "runtime_environment_verified": True}
+
+
+def observed_context(plan, package, *, phase, trusted):
+    """Operator stages signed normal API readback on the approved native mount."""
+    path = Path(plan.mount_path) / "contexts" / (phase + ".json")
+    sig = path.with_suffix(".sig")
+    deadline = time.monotonic() + 300
+    while not (path.is_file() and sig.is_file()):
+        if time.monotonic() >= deadline or datetime.now(UTC) >= (
+                plan.expires_at if phase == "score" else plan.cleanup_deadline):
+            raise ValueError("signed native Job context unavailable before deadline")
+        time.sleep(1)
+    raw = bounded(path)
+    signature = bounded(sig, 64)
+    public = bounded(package / "reviewer-public.pem")
+    signed(raw, signature, public, trusted)
+    context = json.loads(raw)
+    if (raw != canonical(context)
+            or set(context) != {"execution_package_sha256", "phase", "job_id", "readback", "previous_terminal"}
+            or context["execution_package_sha256"] != plan.identity() or context["phase"] != phase):
+        raise ValueError("signed native Job context differs from package/phase")
+    receipt = verify_readback(plan, context["readback"], phase=phase, expected_job_id=context["job_id"])
+    if phase == "score" and context["previous_terminal"] is not None:
+        raise ValueError("score context cannot carry another Job")
+    if phase == "recover":
+        original_path = Path(plan.mount_path) / "native-evidence/score-context.json"
+        original_raw = bounded(original_path)
+        signed(original_raw, bounded(original_path.with_suffix(".sig"), 64), public, trusted)
+        original = json.loads(original_raw)
+        verify_previous_job(plan, original, context["previous_terminal"], recovery_job_id=context["job_id"])
+    return context, receipt, signature

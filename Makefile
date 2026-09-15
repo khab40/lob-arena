@@ -185,6 +185,9 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_source_staging.py \
 		tests/test_g8_source_sdk.py \
 		tests/test_g8_native_source_capsule.py \
+		tests/test_g8_native_readback.py \
+		tests/test_g8_native_runtime.py \
+		tests/test_g8_native_context.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
@@ -215,6 +218,16 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_source_staging.py \
 		tests/test_g8_source_sdk.py \
 		tests/test_g8_native_source_capsule.py \
+		tests/test_g8_native_readback.py \
+		tests/test_g8_native_runtime.py \
+		tests/test_g8_native_context.py \
+		../serverless/jobs/g8_native_contract.py \
+		../serverless/jobs/g8_native_readback.py \
+		../serverless/jobs/g8_native_runtime.py \
+		../serverless/jobs/g8_native_lifecycle.py \
+		../serverless/jobs/run_g8_native_rehearsal.py \
+		../scripts/prepare_g8_native_rehearsal.py \
+		../scripts/sign_g8_native_context.py \
 		../serverless/jobs/g8_native_source_capsule.py \
 		../serverless/jobs/g8_source_sdk.py \
 		../serverless/jobs/stage_g8_native_sources.py \
@@ -235,6 +248,8 @@ lightgbm-wave1-g8-check:
 		python ../scripts/lightgbm_wave1.py g8-prepare --help >/dev/null
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
 		python ../scripts/lightgbm_wave1.py g8-verify --help >/dev/null
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
+		python -c 'import sys; sys.path.insert(0, ".."); from serverless.jobs import g8_native_lifecycle; assert callable(g8_native_lifecycle.score)'
 
 lightgbm-wave1-local-e2e:
 	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \

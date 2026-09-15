@@ -1,8 +1,8 @@
 # G8 native-storage and MLflow rehearsal package
 
-Status: **source injection ready; execution package not yet ready to submit**.
-Base: `286f4b516e9aaea0ff7e5db1486d931152f17db4` (merged PR #188).
-This is the next implementation slice after the completed
+Status: **native entrypoint and package tools implemented; cloud rehearsal not executed**.
+Implementation base: `6ab428694cebc4707fe03f042af54b73bfae4bad` (merged PR #189).
+This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
 The [existing synthetic rehearsal authorization](g8-live-replacement.md#approved-scope-synthetic-nativeremote-rehearsal-only)
 remains bounded to two Jobs and $2; its input-writer window is closed.
@@ -30,14 +30,14 @@ rtk proxy python3 serverless/jobs/g8_native_source_capsule.py --capsule /absolut
 ```
 
 Inject the eight parts individually into `/job/g8/source-capsule/`. Keep the
-receipt outside that exact eight-file directory. The future native entrypoint
+receipt outside that exact eight-file directory. The native entrypoint
 calls `hydrate(capsule, destination)` after verifying its Job context and mount.
 Hydration verifies the development access-ID fingerprint, requires an explicit
 production-object HEAD denial, downloads only the 350 inventory-bound synthetic
 objects and writes the original source marker last. Partial downloads remain
 unsealed. The helper cannot submit Jobs, claim native durability, or prove which
 secret version provided environment credentials. It deliberately has no hydration
-CLI that could bypass the native entrypoint's pending gates.
+CLI that could bypass the native entrypoint's gates.
 
 After hydration, call `prepare_g8_native_sources.verify` with the fixed source hash
 to verify the full candidate/C4/comparison/authorization contract before scoring.
@@ -45,7 +45,7 @@ The six local metadata members are not misreported as S3 downloads.
 
 ## Required execution package bindings
 
-The next runner integration must seal the following before submission:
+The package builder requires these bindings before submission:
 
 | Binding | Required value or evidence |
 | --- | --- |
@@ -60,12 +60,65 @@ The next runner integration must seal the following before submission:
 | Retention | Filesystem deadline within 24h; MLflow VM uptime within 4h; cleanup identity list |
 
 Each submitted Job needs a fresh API readback matching the immutable image,
-resources, mount ID, code injections and **both secret ID and version ID for each
+resources, mount ID, injection paths and **both secret ID and version ID for each
 environment binding**. Preserve its hash and actual Job ID. An operator-signed
 context binds that readback to the package before the entrypoint accesses inputs.
 Runtime access-ID matching and authenticated calls complement that control-plane
 evidence; they do not independently attest secret-version provenance. Do not
 resolve the PR #188 attestation gap by changing a receipt boolean alone.
+
+The ordinary API view omits injected file bytes but includes plain environment
+configuration values. This was verified against R4's current readback and the
+[Job API definition](https://github.com/nebius/api/blob/main/nebius/ai/v1/job.proto).
+`g8_native_readback.py` therefore checks paths, exact version selectors and plain
+configuration values;
+`g8_native_runtime.py` separately compares actual file bytes, read-only mounts and
+environment values against the signed package before any source access. Neither
+the ordinary readback nor these static tests alone establishes native durability.
+
+MysteryBox selectors in the contract are resource/version identifiers, not AWS
+credential values. GitGuardian incident 37285889 flags one such identifier as a
+generic high-entropy secret; classify that specific incident as a false positive
+through GitGuardian's supported workflow. Keep credential scanning enabled.
+
+## Package and context tools
+
+`scripts/prepare_g8_native_rehearsal.py` requires a clean reviewed checkout, the
+retained capsule, fresh billing JSON, the returned filesystem JSON, completed
+plan bindings and an existing Ed25519 reviewer key. It copies only the 21 reviewed
+code files, eight capsule parts, billing/filesystem evidence and reviewer public
+key. It signs the immutable manifest and prints the two commands without submitting.
+The reviewer private key stays outside the package and is never injected.
+
+```bash
+rtk proxy python3 scripts/prepare_g8_native_rehearsal.py --capsule /absolute/capsule --bindings /absolute/bindings.json --billing /absolute/billing.json --filesystem /absolute/filesystem.json --private-key /absolute/reviewer.pem --output /absolute/new-package
+rtk proxy python3 scripts/sign_g8_native_context.py --package /absolute/new-package --readback /absolute/score-job.json --job-id aijob-REPLACE --phase score --private-key /absolute/reviewer.pem --output /absolute/new-score-context
+```
+
+Use Python with the repository's Pydantic/cryptography dependencies. Bindings
+contain the `NativePlan` fields except `files`, `source_commit` and
+`billing_receipt_sha256`, which the builder derives. Billing JSON has exactly
+`observed_at` (timezone-aware ISO timestamp), `campaign_spend_usd`,
+`lag_allowance_usd` and `provider_reference`; the first two cost values sum to the
+plan's reconciled campaign spend. The filesystem readback must identify the
+approved project, exact returned ID, `network_ssd` and 10 GiB in `size_bytes`.
+
+Sign each context only after validating the actual Job ID returned by create.
+Recovery additionally requires `--previous-terminal` and `--original-context`;
+the original context's `.sig` must be adjacent. Context output contains canonical
+`score.json`/`score.sig` or `recover.json`/`recover.sig`. Publish both to
+`/g8-durable/contexts/` through the reviewed native-filesystem attachment while the
+Job waits, at most five minutes. The native entrypoint rechecks signature, package
+expiry, code and kernel mount identity after this wait. An absent context stops
+the Job before source access; it never triggers another submission.
+
+**Context delivery is still an operational preflight gate.** Before provisioning,
+review how the operator will write the context and archive retained outputs through
+the private network. A proposed temporary attachment to the existing MLflow VM
+must bind that VM ID, attachment/mount paths, permission checks and restoration
+steps to its before/after API readbacks. This PR does not attach storage, open a
+Job SSH port or declare that path tested. Do not use the output/intent prefixes
+for context transport, because the live lifecycle requires them empty initially.
 
 ## Two-Job sequence
 
@@ -87,11 +140,25 @@ resolve the PR #188 attestation gap by changing a receipt boolean alone.
    process, interrupt immediately after a real authenticated MLflow artifact PUT.
    Resume in a fresh child process using the same ledger and run. Verify metrics,
    histories, all artifact bytes and 30 dataset inputs, then publish the verified
-   release with conditional writes and SUCCESS last. Repeating completed recovery
+   release with conditional writes, deliberately withhold SUCCESS once, and resume
+   publication from the retained seal. Repeating completed recovery
    must perform zero MLflow or S3 writes. Archive evidence before cleanup.
 
-The existing `g8_live_rehearsal.py` provides fault patterns but substitutes mounts
-and transports. It is not the native entrypoint. No fixture regeneration, local
+`run_g8_native_rehearsal.py` is the native entrypoint. Its score Job exits with
+code 73 after the fsynced seal; the second Job requires the first Job's FAILED
+terminal readback and verifies that seal before removing its scoring workspace.
+A recovery child exits with code 74 after a real MLflow artifact write, then a
+fresh child completes logging/publication and verifies a read-only repeat.
+Preflight and both recovery children share a 55-minute deadline from entrypoint
+start. The artifact-loss child has at most 15 minutes; the finish child receives
+only the remaining budget. No child starts after expiry, leaving five minutes
+within the one-hour Job limit for final evidence and execution overhead.
+Both Jobs retain the original execution identity. MLflow reservation/logging tags
+explicitly mark synthetic rehearsal, placeholder dataset registration and fixture
+comparison evidence. Neither source transport nor remote tracking is mocked.
+
+The existing `g8_live_rehearsal.py` supplies earlier offline fault patterns and
+remains separate. No fixture regeneration, local
 runtime rehearsal, extra probe Job, or unreviewed fallback image is part of this
 sequence. Ambiguous submission is resolved by readback, never another create call.
 
@@ -112,11 +179,10 @@ availability, production quality, replacement authorization or G8 completion.
 
 ## Delivery gates
 
-- This PR: source capsule construction, corruption checks, bounded hydration helper
-  and the reviewed two-Job sequence. The receipt records static byte verification.
-- Next fresh branch from merged `main`: native entrypoint, immutable execution
-  package/command rendering and exact Job-readback validation, including explicit
-  synthetic lineage labeling and native/remote fault hooks. Hash that final code.
+- PR #189: source capsule construction, corruption checks and bounded hydration.
+- This implementation: native entrypoint, immutable package/command rendering,
+  signed contexts, exact Job-readback validation and native/remote fault hooks.
+  Static checks pass; no native/authenticated runtime receipt is claimed.
 - Before provisioning: complete the unresolved execution bindings above and refresh
   billing. Run within the existing approval only when the concrete package is ready.
 - After rehearsal: preserve evidence and reconcile
