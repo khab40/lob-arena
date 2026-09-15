@@ -1,7 +1,7 @@
 """Validate ordinary Nebius Job readbacks without requesting the SECRET view.
 
-Normal reads omit file content and plain environment values. This module checks
-their identities only; the native runtime must separately check actual bytes.
+Normal reads omit injected file content but include plain environment values.
+The native runtime must separately check actual bytes and process configuration.
 """
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
             secret_id, version_id = plan.secret_selectors[name].split("@")
             if entry != {"name": name, "mysterybox_secret": {"secret_id": secret_id, "version_id": version_id}}:
                 raise ValueError("Job secret ID or exact version differs: " + name)
-        elif entry not in ({"name": name}, {"name": name, "value": expected_plain[name]}):
+        elif entry != {"name": name, "value": expected_plain[name]}:
             raise ValueError("Job plain environment differs: " + name)
     files = _unique(spec.get("injected_files"), "container_path")
     if set(files) != set(injections(plan)) or any(v != {"container_path": k} for k, v in files.items()):
@@ -101,6 +101,7 @@ def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
         "execution_package_sha256": plan.identity(), "filesystem_id": plan.filesystem_id,
         "job_readback_sha256": hashlib.sha256(canonical(raw)).hexdigest(),
         "secret_version_selectors_verified": True, "injected_file_paths_verified": True,
+        "plain_environment_configuration_verified": True,
         "injected_file_bytes_verified": False, "runtime_environment_verified": False,
         "native_storage_verified": False, "remote_mlflow_verified": False,
     }

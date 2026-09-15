@@ -12,6 +12,8 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2"
 PROJECT = "project-e00g6zvxpr00waz8t3y51k"
 SUBNET = "vpcsubnet-e00ppzc4353dxv210j"
+# MysteryBox resource/version identifiers, never credential values. The Job
+# service resolves these pinned references into credentials at execution time.
 S3_SELECTORS = {
     "AWS_ACCESS_KEY_ID": "mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna",
     "AWS_SECRET_ACCESS_KEY": "mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv",

@@ -67,13 +67,19 @@ Runtime access-ID matching and authenticated calls complement that control-plane
 evidence; they do not independently attest secret-version provenance. Do not
 resolve the PR #188 attestation gap by changing a receipt boolean alone.
 
-The ordinary API view omits injected file bytes and plain environment values.
-This was verified against R4's current readback and the
+The ordinary API view omits injected file bytes but includes plain environment
+configuration values. This was verified against R4's current readback and the
 [Job API definition](https://github.com/nebius/api/blob/main/nebius/ai/v1/job.proto).
-`g8_native_readback.py` therefore attests paths and exact version selectors;
+`g8_native_readback.py` therefore checks paths, exact version selectors and plain
+configuration values;
 `g8_native_runtime.py` separately compares actual file bytes, read-only mounts and
 environment values against the signed package before any source access. Neither
 the ordinary readback nor these static tests alone establishes native durability.
+
+MysteryBox selectors in the contract are resource/version identifiers, not AWS
+credential values. GitGuardian incident 37285889 flags one such identifier as a
+generic high-entropy secret; classify that specific incident as a false positive
+through GitGuardian's supported workflow. Keep credential scanning enabled.
 
 ## Package and context tools
 

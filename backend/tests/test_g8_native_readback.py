@@ -42,9 +42,9 @@ def readback(plan):
             "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": contract.SUBNET,
             "timeout": "3600s", "disk": {"type": "NETWORK_SSD", "size_bytes": "107374182400"},
             "volumes": [{"source": plan.filesystem_id, "container_path": "/g8-durable", "mode": "READ_WRITE"}],
-            # Ordinary API views redact file content and plain environment values.
+            # Ordinary API views omit injected content but retain plain settings.
             "injected_files": [{"container_path": p} for p in contract.injections(plan)],
-            "environment_variables": [{"name": k} for k in contract.environment(plan)] + [
+            "environment_variables": [{"name": k, "value": v} for k, v in contract.environment(plan).items()] + [
                 {"name": k, "mysterybox_secret": {"secret_id": s.split("@")[0], "version_id": s.split("@")[1]}}
                 for k, s in plan.secret_selectors.items()],
         }, "status": {"state": "RUNNING", "instances": [{"private_ip": "10.4.0.1"}]},
@@ -58,10 +58,22 @@ def check(plan, readback):
 def test_normal_redaction_does_not_claim_runtime_bytes(plan, readback):
     result = check(plan, readback)
     assert result["secret_version_selectors_verified"] and result["injected_file_paths_verified"]
+    assert result["plain_environment_configuration_verified"]
     assert not result["injected_file_bytes_verified"] and not result["runtime_environment_verified"]
     assert not result["native_storage_verified"] and not result["remote_mlflow_verified"]
     readback["spec"].update(restart_attempts="0", public_ip=False, preemptible=False)
     assert check(plan, readback)["job_id"] == "aijob-example"
+
+
+@pytest.mark.parametrize("change", ["missing", "wrong", "redacted"])
+def test_plain_environment_requires_actual_reviewed_configuration(plan, readback, change):
+    entry = next(v for v in readback["spec"]["environment_variables"] if v["name"] == "AWS_DEFAULT_REGION")
+    if change == "missing":
+        del entry["value"]
+    else:
+        entry["value"] = "us-east-1" if change == "wrong" else "[REDACTED]"
+    with pytest.raises(ValueError, match="Job plain environment differs"):
+        check(plan, readback)
 
 
 @pytest.mark.parametrize("key,value", [
