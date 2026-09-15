@@ -50,6 +50,8 @@ def main():
     if request.canonical_hash() != plan.request_sha256:
         raise ValueError("native source request differs from the signed plan")
     evidence = Path(plan.mount_path) / "native-evidence"
+    if evidence.absolute() != evidence.resolve():
+        raise ValueError("native evidence directory must not traverse links")
     evidence.mkdir(mode=0o700, exist_ok=True)
     _persist(evidence / (args.phase + "-context.json"), context)
     sig_path = evidence / (args.phase + "-context.sig")
