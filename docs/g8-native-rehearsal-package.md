@@ -149,6 +149,10 @@ code 73 after the fsynced seal; the second Job requires the first Job's FAILED
 terminal readback and verifies that seal before removing its scoring workspace.
 A recovery child exits with code 74 after a real MLflow artifact write, then a
 fresh child completes logging/publication and verifies a read-only repeat.
+Preflight and both recovery children share a 55-minute deadline from entrypoint
+start. The artifact-loss child has at most 15 minutes; the finish child receives
+only the remaining budget. No child starts after expiry, leaving five minutes
+within the one-hour Job limit for final evidence and execution overhead.
 Both Jobs retain the original execution identity. MLflow reservation/logging tags
 explicitly mark synthetic rehearsal, placeholder dataset registration and fixture
 comparison evidence. Neither source transport nor remote tracking is mocked.

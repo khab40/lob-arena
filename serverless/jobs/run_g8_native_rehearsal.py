@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,7 +18,23 @@ else:
     from g8_native_runtime import actual_runtime, native_mount, observed_context, verify_package
 
 
+def recovery_workers(deadline):
+    """Share the parent's budget, leaving provider termination/evidence headroom."""
+    for worker, expected in (("artifact-loss", 74), ("finish", 0)):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("native recovery budget exhausted before " + worker)
+        timeout = min(900, remaining) if worker == "artifact-loss" else remaining
+        result = subprocess.run([sys.executable, str(Path(__file__)), "--phase", "recover", "--worker", worker],
+                                check=False, timeout=timeout)
+        if result.returncode != expected:
+            raise RuntimeError("native recovery child did not reach its reviewed outcome: " + worker)
+
+
 def main():
+    # Both children and all preflight/context waiting share 55 minutes; the
+    # one-hour provider limit retains five minutes for final evidence/overhead.
+    recovery_deadline = time.monotonic() + 3300
     sys.dont_write_bytecode = True
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--phase", required=True, choices=("score", "recover"))
@@ -90,11 +107,7 @@ def main():
             print(json.dumps(receipt, sort_keys=True))
             return
         # Fresh processes in the second Job; no extra Job or resubmission is used.
-        for worker, expected in (("artifact-loss", 74), ("finish", 0)):
-            result = subprocess.run([sys.executable, str(Path(__file__)), "--phase", "recover", "--worker", worker],
-                                    check=False, timeout=3300)
-            if result.returncode != expected:
-                raise RuntimeError("native recovery child did not reach its reviewed outcome: " + worker)
+        recovery_workers(recovery_deadline)
         _persist(evidence / "job-reattachment.json", {
             "original_job_id": context["previous_terminal"]["metadata"]["id"],
             "recovery_job_id": context["job_id"], "filesystem_id": plan.filesystem_id,

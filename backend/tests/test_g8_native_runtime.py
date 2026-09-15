@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat,
 
 from serverless.jobs import g8_native_contract as contract, g8_native_runtime as runtime  # noqa: E402
 import test_g8_native_readback as fixtures  # noqa: E402
+from serverless.jobs import run_g8_native_rehearsal as entrypoint  # noqa: E402
 
 NOW = fixtures.NOW
 plan_data, plan = fixtures.plan_data, fixtures.plan
@@ -105,3 +106,33 @@ def test_native_mount_requires_writable_virtiofs_without_nested_mounts(plan):
                     text + "42 41 0:31 / /g8-durable/sub rw - tmpfs tmpfs rw\n", text + text):
         with pytest.raises(ValueError):
             runtime.native_mount(plan, changed)
+
+
+def test_recovery_workers_share_deadline_including_preflight(monkeypatch):
+    clock = iter((600, 1500))  # Preflight and the interrupted worker consume time.
+    calls = []
+    monkeypatch.setattr(entrypoint.time, "monotonic", lambda: next(clock))
+
+    def child(command, *, check, timeout):
+        calls.append((command[-1], timeout))
+        return SimpleNamespace(returncode=74 if command[-1] == "artifact-loss" else 0)
+
+    monkeypatch.setattr(entrypoint.subprocess, "run", child)
+    entrypoint.recovery_workers(3300)
+    assert calls == [("artifact-loss", 900), ("finish", 1800)]
+
+
+@pytest.mark.parametrize("clock_values", [(3300,), (3200, 3301)])
+def test_expired_budget_does_not_start_another_worker(monkeypatch, clock_values):
+    clock = iter(clock_values)
+    calls = []
+    monkeypatch.setattr(entrypoint.time, "monotonic", lambda: next(clock))
+
+    def child(command, *, check, timeout):
+        calls.append((command[-1], timeout))
+        return SimpleNamespace(returncode=74)
+
+    monkeypatch.setattr(entrypoint.subprocess, "run", child)
+    with pytest.raises(TimeoutError, match="budget exhausted"):
+        entrypoint.recovery_workers(3300)
+    assert calls == ([] if len(clock_values) == 1 else [("artifact-loss", 100)])
