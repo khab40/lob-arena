@@ -35,6 +35,11 @@ def main() -> None:
         backup = common / "ref-copy-backups" / name
         if backup.exists() and backup.read_bytes() != raw:
             raise SystemExit(f"Conflicting backup: {backup}")
+        existing = subprocess.run(
+            ["git", "rev-parse", "--verify", recovery], capture_output=True, text=True
+        )
+        if existing.returncode == 0 and existing.stdout.strip() != oid:
+            raise SystemExit(f"Conflicting recovery ref: {recovery}")
         candidates.append((path, name, raw, oid, recovery, backup))
     for path, name, raw, oid, recovery, backup in candidates:
         print(f"{name} -> {recovery}")
