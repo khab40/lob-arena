@@ -3,12 +3,13 @@ import hashlib
 from types import SimpleNamespace
 
 import pytest
-from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+pytest.importorskip("cryptography")
+from cryptography.exceptions import InvalidSignature  # noqa: E402
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey  # noqa: E402
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, PrivateFormat, NoEncryption  # noqa: E402
 
-from serverless.jobs import g8_native_contract as contract, g8_native_runtime as runtime
-import test_g8_native_readback as fixtures
+from serverless.jobs import g8_native_contract as contract, g8_native_runtime as runtime  # noqa: E402
+import test_g8_native_readback as fixtures  # noqa: E402
 
 NOW = fixtures.NOW
 plan_data, plan = fixtures.plan_data, fixtures.plan
@@ -21,6 +22,9 @@ def package(tmp_path, plan_data, monkeypatch):
     monkeypatch.setattr(runtime, "verify_capsule", lambda _: None)
     root = tmp_path / "package"
     key = Ed25519PrivateKey.generate()
+    private = tmp_path / "reviewer.pem"
+    private.write_bytes(key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()))
+    private.chmod(0o600)
     public = key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
     for name in plan_data["files"]:
         path = root / name

@@ -24,6 +24,21 @@ def _unique(items, key):
     return result
 
 
+def verify_previous_job(plan, original, previous, *, recovery_job_id, now=None):
+    current = now or datetime.now(UTC)
+    if (original["execution_package_sha256"] != plan.identity() or original["phase"] != "score"
+            or original["job_id"] == recovery_job_id or previous is None
+            or any(previous["metadata"].get(k) != original["readback"]["metadata"].get(k)
+                   for k in ("id", "parent_id", "name", "created_at"))
+            or previous["metadata"]["id"] != original["job_id"]
+            or previous["spec"] != original["readback"]["spec"] or previous["status"]["state"] != "FAILED"):
+        raise ValueError("original score Job must be terminal with the same reviewed configuration")
+    created = datetime.fromisoformat(previous["metadata"]["created_at"].replace("Z", "+00:00"))
+    finished = datetime.fromisoformat(previous["status"].get("finished_at", "").replace("Z", "+00:00"))
+    if created.tzinfo is None or finished.tzinfo is None or not plan.verified_at <= created <= finished <= current:
+        raise ValueError("original Job terminal time is invalid")
+
+
 def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
     """Operator supplies the ID returned by create; never infer it from a name."""
     current = now or datetime.now(UTC)

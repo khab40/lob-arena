@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from serverless.jobs.g8_native_contract import canonical  # noqa: E402
-from serverless.jobs.g8_native_readback import verify_readback  # noqa: E402
+from serverless.jobs.g8_native_readback import verify_readback, verify_previous_job  # noqa: E402
 from serverless.jobs.g8_native_runtime import bounded, signed, verify_package  # noqa: E402
 
 
@@ -41,11 +41,7 @@ def sign_context(*, package, readback, job_id, phase, private_key, output,
         signed(original_raw, bounded(original_context.with_suffix(".sig"), 64), public, trusted)
         original = json.loads(original_raw)
         prior = json.loads(bounded(previous_terminal))
-        if (original["execution_package_sha256"] != plan.identity() or original["phase"] != "score"
-                or original["job_id"] == job_id or prior["metadata"]["id"] != original["job_id"]
-                or prior["spec"] != original["readback"]["spec"] or prior["status"]["state"] != "FAILED"
-                or not prior["status"].get("finished_at")):
-            raise ValueError("original score Job must be terminal with the same reviewed configuration")
+        verify_previous_job(plan, original, prior, recovery_job_id=job_id)
     elif previous_terminal is not None or original_context is not None:
         raise ValueError("score context cannot carry a previous execution")
     context = {"execution_package_sha256": plan.identity(), "phase": phase, "job_id": job_id,

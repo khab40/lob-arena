@@ -10,11 +10,11 @@ from pathlib import Path
 
 if __package__:
     from .g8_native_contract import NativePlan, canonical, environment, injections
-    from .g8_native_readback import verify_readback
+    from .g8_native_readback import verify_readback, verify_previous_job
     from .g8_native_source_capsule import verify as verify_capsule
 else:
     from g8_native_contract import NativePlan, canonical, environment, injections
-    from g8_native_readback import verify_readback
+    from g8_native_readback import verify_readback, verify_previous_job
     from g8_native_source_capsule import verify as verify_capsule
 
 
@@ -136,11 +136,5 @@ def observed_context(plan, package, *, phase, trusted):
         original_raw = bounded(original_path)
         signed(original_raw, bounded(original_path.with_suffix(".sig"), 64), public, trusted)
         original = json.loads(original_raw)
-        previous = context["previous_terminal"]
-        if (original["execution_package_sha256"] != plan.identity() or original["phase"] != "score"
-                or previous is None or previous["metadata"]["id"] != original["job_id"]
-                or context["job_id"] == original["job_id"]
-                or previous["spec"] != original["readback"]["spec"]
-                or previous["status"]["state"] != "FAILED" or not previous["status"].get("finished_at")):
-            raise ValueError("the original score Job must be terminal before reattachment")
+        verify_previous_job(plan, original, context["previous_terminal"], recovery_job_id=context["job_id"])
     return context, receipt, signature
