@@ -132,7 +132,8 @@ def hydrate(capsule: Path, destination: Path, *, s3=None):
             raise ValueError("hydrated bytes differ: " + name)
     # The source seal appears only after every remote/local member verifies.
     (destination / "source-package.json").write_bytes(raw)
-    return {"source_package_sha256": SOURCE_SHA256, "remote_objects_verified": 350,
+    return {"source_package_sha256": SOURCE_SHA256,
+            "remote_objects_verified": sum(e["path"].startswith("sources/") for e in entries),
             "production_head_denied": True, "credential_version_provenance_verified": False}
 
 

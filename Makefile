@@ -184,6 +184,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_native_sources.py \
 		tests/test_g8_source_staging.py \
 		tests/test_g8_source_sdk.py \
+		tests/test_g8_native_source_capsule.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
@@ -213,6 +214,8 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_native_sources.py \
 		tests/test_g8_source_staging.py \
 		tests/test_g8_source_sdk.py \
+		tests/test_g8_native_source_capsule.py \
+		../serverless/jobs/g8_native_source_capsule.py \
 		../serverless/jobs/g8_source_sdk.py \
 		../serverless/jobs/stage_g8_native_sources.py \
 		../serverless/jobs/g8_source_staging_rehearsal.py \
