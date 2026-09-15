@@ -30,8 +30,12 @@ components and reconstructs the cloud result with the original scoring Job and
 resource evidence before marker-last publication. It preserves R4 history and
 requires a native mount and fresh package-bound approval; the ordinary Wave 1
 volume prohibition remains intact. Native durability, authenticated remote
-rehearsal and actual production package review remain required. The $2 synthetic
-rehearsal proposal is not provisioning authority.
+rehearsal and actual production package review remain required. The synthetic
+rehearsal's two-Job/$2 scope is approved, subject to source staging, current billing
+and the reviewed live package. The [bounded source transport](../g8-source-sdk.md)
+now passes frozen-image tests and authenticated synthetic candidate readback;
+input staging needs a fresh input-only writer window after the previous grant's
+verified revocation. No production replacement authorization is implied.
 See [pre-logging checkpoints](../g8-prelogging-checkpoint.md),
 [publication recovery](../g8-publication-recovery.md) and
 [MLflow recovery](../g8-mlflow-recovery.md).

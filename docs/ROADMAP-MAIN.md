@@ -202,7 +202,12 @@ diagnostic is retained separately from the passing final receipt.
   scored checkpoints, same-run logging, truthful execution-result finalization
   and marker-last publication together. Native durability, authenticated remote
   rehearsal, actual package review/binding and replacement approval remain open.
-  The proposed synthetic native/remote rehearsal has a $2 cap, pending approval.
+  The synthetic native/remote rehearsal has an approved $2 cap and two-Job limit;
+  source staging and the reviewed live package remain prerequisites. The synthetic
+  candidate is remotely verified; input staging is pending after the previous
+  writer window was revoked. The [bounded SDK transport](g8-source-sdk.md) passes
+  frozen-image tests and authenticated candidate readback. Its narrower input-only
+  writer proposal requires a fresh approval; no paid rehearsal Job has started.
   See [pre-logging checkpoints](g8-prelogging-checkpoint.md),
   [publication recovery](g8-publication-recovery.md) and [MLflow recovery](g8-mlflow-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go

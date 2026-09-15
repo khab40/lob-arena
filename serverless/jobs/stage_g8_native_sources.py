@@ -200,12 +200,16 @@ if __name__ == "__main__":
     mode.add_argument("--readback", action="store_true")
     parser.add_argument("--destination", type=Path)
     parser.add_argument("--sdk", action="store_true", help="reuse one frozen AWS SDK client")
-    parser.add_argument("--session-seconds", type=int, default=900, help="SDK deadline, at most 1800 seconds")
+    parser.add_argument("--session-seconds", type=int, help="SDK deadline, default 900, at most 1800 seconds")
     args = parser.parse_args()
     if args.readback != (args.destination is not None):
         parser.error("--destination is required only with --readback")
     if args.sdk and not (args.publish or args.readback):
         parser.error("--sdk requires --publish or --readback")
+    if args.session_seconds is not None and not args.sdk:
+        parser.error("--session-seconds requires --sdk")
+    if args.session_seconds is None:
+        args.session_seconds = 900
     if args.sdk:
         if __package__:
             from .g8_source_sdk import SourceSDK, session_deadline

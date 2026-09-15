@@ -116,7 +116,8 @@ def test_deadline_stops_a_blocked_process_and_restores_handler():
     assert signal.getitimer(signal.ITIMER_REAL)[0] == 0
 
 
-def test_full_protocol_uses_sdk_without_cli_and_preserves_partial_sources(prepared, fake, client, tmp_path):  # noqa: F811
+@pytest.mark.parametrize("fault", ["marker", "lost"])
+def test_full_protocol_uses_sdk_without_cli_and_preserves_partial_sources(prepared, fake, client, tmp_path, fault):  # noqa: F811
     """Model-validated SDK calls, backed only by the explicit synthetic object store."""
     original = client._make_api_call
 
@@ -142,11 +143,17 @@ def test_full_protocol_uses_sdk_without_cli_and_preserves_partial_sources(prepar
         s3, (package, digest) = adapter(client), prepared
         _, _, plans = staging._plans(package, digest)
         _, bucket, prefix, _ = plans[1]
-        fake.fail = bucket, prefix + "/SUCCESS"
-        with pytest.raises(RuntimeError):
+        marker = bucket, prefix + "/SUCCESS"
+        if fault == "marker":
+            fake.fail = marker
+            with pytest.raises(RuntimeError):
+                staging.publish(package, expected_sha256=digest, s3=s3)
+        else:
+            fake.lost = marker
             staging.publish(package, expected_sha256=digest, s3=s3)
+            assert fake.puts.count(marker) == 1
         retained = dict(fake.objects)
-        assert len(retained) == 349
+        assert len(retained) == (349 if fault == "marker" else 350)
         fake.fail = None
         staging.publish(package, expected_sha256=digest, s3=s3)
         count = len(fake.puts)
