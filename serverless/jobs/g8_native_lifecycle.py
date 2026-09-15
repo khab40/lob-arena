@@ -120,6 +120,24 @@ def recover(plan, request, *, interrupt):
             stack.enter_context(patch.object(mlflow.MlflowClient, "log_artifact", lose_artifact_response))
             live.finish_retained(root, target, limits=limits, publish=False)
             raise AssertionError("remote artifact interruption did not occur")
+        transfer = publication._transfer_json
+        marker_withheld = False
+
+        def withhold_marker(size, *args):
+            nonlocal marker_withheld
+            if args[1] == "put-object" and args[args.index("--key") + 1].endswith("/SUCCESS"):
+                marker_withheld = True
+                raise RuntimeError("deliberate synthetic failure before SUCCESS publication")
+            return transfer(size, *args)
+
+        with patch.object(publication, "_transfer_json", withhold_marker):
+            try:
+                live.finish_retained(root, target, limits=limits)
+            except RuntimeError:
+                if not marker_withheld:
+                    raise
+            else:
+                raise AssertionError("publication did not reach the withheld marker")
         receipt = live.finish_retained(root, target, limits=limits)
         for name in ("log_batch", "log_inputs", "log_artifact", "set_terminated", "set_tag"):
             stack.enter_context(patch.object(mlflow.MlflowClient, name, forbidden))
@@ -138,4 +156,5 @@ def recover(plan, request, *, interrupt):
         if run.info.status != "FINISHED" or len(run.inputs.dataset_inputs) != 30:
             raise ValueError("remote synthetic MLflow completion/lineage differs")
         return {**receipt, "verified_metric_count": len(run.data.metrics), "verified_dataset_inputs": 30,
-                "completed_repeat_writes": 0, "original_workspace_absent": not workspace.exists()}
+                "completed_repeat_writes": 0, "publication_marker_fault_recovered": marker_withheld,
+                "original_workspace_absent": not workspace.exists()}
