@@ -1,0 +1,80 @@
+{
+  "schema_version": "g8_approved_input_staging_session_v1",
+  "approval": "User explicitly approved the proposed 30-minute input-only staging window.",
+  "base_main_commit": "9190c982c808eefc67d3a5e588cbf36782ae6516",
+  "proposal": "g8-input-only-staging-proposal-20260915.json",
+  "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "code_sha256": {
+    "serverless/jobs/g8_source_sdk.py": "f76b3ab7538b90fadf893c2e90e26c69829a3355fae0dea22f0cd79efbe3678f",
+    "serverless/jobs/stage_g8_native_sources.py": "c3a154ebb310eefc80c542534ad34cc416f8c9901fdb7d091b11d7035d2bc9a8",
+    "serverless/jobs/prepare_g8_native_sources.py": "50fd69779fbda1f98a0e9402620e905545343f68f8d1673ceb2899594f0066f8",
+    "serverless/jobs/g8_rehearsal.py": "e2062dc56c3dff06eca49ee8305513847830f76aa09c3e464617b59eb1c050a1",
+    "serverless/jobs/run_lightgbm_g8.py": "615dc10506bfa1383b8802029af7835fbabab7195b04ab501e983f27de716208",
+    "backend/app/ml/lightgbm/tracking.py": "220985b414eeaebec5613b8b1d26cb6d572e97f78bfc70aa96f2ee7b413c6f9d",
+    "backend/app/ml/lightgbm/c4_evaluation.py": "262fe67b09eef944586ff9db3bc1e2d6acd727971c7e9922ce18399aeca0adb9",
+    "backend/app/ml/lightgbm/c4_replay_evidence.py": "4276de59c0ba6bf20298bc05b82bbcba1daa8e28b0778e3653432ab0c73a56e1",
+    "backend/app/ml/lightgbm/g8_benchmark_readiness.py": "d4f0b68448dbf886cd560f1cea4f4c61739c7a9dd4dde947a4b2a275aeeabaed",
+    "backend/app/ml/lightgbm/g8_c4_fixture.py": "944b93f5d9f28191adc28e90a6def337c019bd74cc25a81f1e00f545258f40e3",
+    "backend/app/ml/lightgbm/g8_publication_recovery.py": "a9d907545c7aa1cb31c46dc7b08c3eb88f960931b9b70d68e91fa78fc328b92d"
+  },
+  "credential_selectors": {
+    "AWS_ACCESS_KEY_ID": {
+      "secret_id": "mbsec-e00arhndyprqr8egjw",
+      "version_id": "mbsecver-e00rjzerny1pf9qhna"
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "secret_id": "mbsec-e00s7qtjj5n9ghacnh",
+      "version_id": "mbsecver-e00yfn5w54jc1ybkwv"
+    }
+  },
+  "credential_access_key_id_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d",
+  "window_started_at": "2026-09-15T11:44:15.627109+00:00",
+  "grant_verified_at": "2026-09-15T11:44:25.401037+00:00",
+  "revoked_at": "2026-09-15T11:50:52.898565+00:00",
+  "writer_window_seconds": 397.215,
+  "cleanup_complete": true,
+  "baseline_spec_restored": true,
+  "completed_at": "2026-09-15T11:54:18.563593+00:00",
+  "cloud_jobs_created": 0,
+  "production_body_downloaded": false,
+  "candidate_writer_granted": false,
+  "snapshots": {
+    "granted": {
+      "path": "g8-input-staging-granted-20260915.json",
+      "sha256": "cc19c3f7884ac002d82d055853ac734055c9afe7f8bce1027f10ff97bff16d67"
+    },
+    "revoked": {
+      "path": "g8-input-staging-revoked-20260915.json",
+      "sha256": "1e583c4aa287132ec7c02f8df10038ac52bdf42692e7137832869226343a3c55"
+    }
+  },
+  "publication": {
+    "path": "g8-input-staging-publication-20260915.json",
+    "sha256": "67d34bc637aae9682acce1ecb8255fca185508159d03e918d2a34a672596929e"
+  },
+  "readback": {
+    "path": "g8-input-staging-readback-20260915.json",
+    "sha256": "0c063df1eef64751022b67126dc1ec60e7a37197682e13f06cdece78a0c3f85c"
+  },
+  "downloaded_source_inventory": {
+    "candidate": {
+      "files": 25,
+      "bytes": 343345
+    },
+    "input": {
+      "files": 325,
+      "bytes": 2304747
+    }
+  },
+  "candidate_success_sha256": "ba4c729c0bcaeae03bfcd66c0e1db384b41c3ebbd27a0b8114ed5dde83d626e4",
+  "input_success_sha256": "aad5040e21d8b3de8957ce5d7a24dd69fbeef13fd12a21bfec581a5cf241fac9",
+  "source_staging_complete": true,
+  "pinned_job_credential_injection_verified": false,
+  "native_storage_verified": false,
+  "mlflow_remote_verified": false,
+  "production_g8_complete": false,
+  "next_gate": "Review the native/remote rehearsal execution package and reconcile current billing before provisioning within the existing two-Job/$2 approval.",
+  "retained_reader_copy": "outputs/g8-input-staging-approved-20260915/source-reader-copy",
+  "raw_session_sha256": "4f37343fc096c10d04d7ee46009407f905cc1ef142fe308e8117f0c3b92d0653"
+}
