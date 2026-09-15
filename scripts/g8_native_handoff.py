@@ -74,7 +74,7 @@ def render(before, current, filesystem, *, detach=False):
     if (status.get("read_only_attachments", [])
             or status.get("read_write_attachments", []) != ([VM] if detach else [])):
         raise ValueError("unexpected filesystem attachment owners")
-    command = ["nebius", "compute", "instance", "update", "--id", VM, "--patch",
+    command = ["nebius", "compute", "instance", "update", "--id", VM, "--parent-id", PROJECT, "--patch",
                "--resource-version", str(current["metadata"]["resource_version"])]
     # Clearing an empty repeated field explicitly avoids patch-mode omission.
     command += (["--clear-mask", "spec.filesystems"] if detach else

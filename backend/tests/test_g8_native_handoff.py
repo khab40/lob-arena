@@ -34,6 +34,7 @@ def attached(before, filesystem):
 def test_attach_and_restore_use_current_resource_version(before, filesystem):
     command = handoff.render(before, before, filesystem)["command"]
     assert "--patch" in command and command[command.index("--resource-version") + 1] == "40"
+    assert command[command.index("--parent-id") + 1] == handoff.PROJECT
     current = attached(before, filesystem)
     receipt = handoff.verify_vm(before, current, filesystem["metadata"]["id"], attached=True)
     assert not receipt["context_delivery_verified"] and not receipt["native_mount_verified"]
