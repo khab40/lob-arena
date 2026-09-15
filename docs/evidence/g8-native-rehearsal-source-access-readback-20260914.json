@@ -1,0 +1,140 @@
+{
+  "schema_version": "g8_native_rehearsal_source_access_v1",
+  "verified_at": "2026-09-14T17:12:11+00:00",
+  "authorization": "User explicitly requested applying both read-only commands; each CLI update received explicit terminal escalation approval.",
+  "original_output_grant_rerun": false,
+  "production_final_read_key_state_after_updates": "INACTIVE",
+  "grants": [
+    {
+      "kind": "candidate",
+      "bucket_id": "storagebucket-e009132243970085528999",
+      "before_resource_version": "6",
+      "after_resource_version": "7",
+      "updated_at": "2026-09-14T17:11:41.666880Z",
+      "operation_id": "opstoragebucket-e00h9wg3ee26hp8j19",
+      "policy_exact_match": true,
+      "other_bucket_settings_preserved": true,
+      "applied_rules": [
+        {
+          "paths": [
+            "campaigns/wave1-research-20260816/development/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/wave1-research-20260816/development/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/wave1-research-20260816/final/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g5-repro-20260906/development/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g6-development-20260907/development/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g6-development-20260907/development/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/nasdaq-g6-development-20260907/final/*"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*",
+            "campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json"
+          ],
+          "roles": [
+            "storage.object-editor"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        },
+        {
+          "paths": [
+            "campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        }
+      ]
+    },
+    {
+      "kind": "input",
+      "bucket_id": "storagebucket-e004963828556923796882",
+      "before_resource_version": "3",
+      "after_resource_version": "4",
+      "updated_at": "2026-09-14T17:12:01.644668Z",
+      "operation_id": "opstoragebucket-e00at8j8c0wd1ng8fz",
+      "policy_exact_match": true,
+      "other_bucket_settings_preserved": true,
+      "applied_rules": [
+        {
+          "paths": [
+            "releases/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00gbaesf952eabrws"
+        },
+        {
+          "paths": [
+            "releases/g8-native-rehearsal-20260914/staging/*"
+          ],
+          "roles": [
+            "storage.viewer"
+          ],
+          "group_id": "group-e00wb5ptvpq0q7dpaf"
+        }
+      ]
+    }
+  ],
+  "source_staging_verified": false,
+  "authenticated_source_downloads_verified": false,
+  "ready_to_submit": false,
+  "jobs_submitted": 0,
+  "filesystems_created": 0,
+  "mlflow_runs_created": 0,
+  "production_test_accessed": false
+}

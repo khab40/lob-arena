@@ -1,0 +1,55 @@
+{
+  "schema_version": "g8_native_rehearsal_preflight_v1",
+  "source_commit": "0742225b00f185bc9f98980a947e7ec29d5ec378",
+  "rehearsal_authorization": {
+    "source": "user approved synthetic native-storage/authenticated-remote rehearsal in this conversation",
+    "maximum_additional_cost_usd": 2,
+    "filesystem_capacity_gib": 10,
+    "filesystem_maximum_hours": 24,
+    "maximum_jobs": 2,
+    "job_platform": "cpu-d3",
+    "job_preset": "4vcpu-16gb",
+    "job_timeout_seconds": 3600,
+    "job_disk_gib": 100,
+    "mlflow_maximum_hours": 4,
+    "cleanup_and_stop_mlflow_approved": true,
+    "production_final_test_authorized": false
+  },
+  "billing": {
+    "observation_window_start": "2026-09-14T16:45:35+00:00",
+    "observation_window_end": "2026-09-14T16:49:59+00:00",
+    "source": "authenticated Nebius Console project-filtered Usage",
+    "project_id": "project-e00g6zvxpr00waz8t3y51k",
+    "period_start": "2026-08-15",
+    "period_end": "2026-09-14",
+    "provider_last_updated_time_utc": "13:52",
+    "subtotal_display_usd": 27.69,
+    "vat_display_usd": 5.81,
+    "total_display_usd": 33.49,
+    "fresh_reconciliation_before_submission_required": true,
+    "notes": "Displayed subtotal and VAT round separately; total copied as shown, not recomputed. Provider lag is not treated as zero accrued cost."
+  },
+  "checks": {
+    "mlflow_containers_healthy_before_stop": true,
+    "mlflow_vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+    "mlflow_vm_final_state": "STOPPED",
+    "mlflow_vm_final_resource_version": "38",
+    "mlflow_stop_readback_at": "2026-09-14T16:51:07+00:00",
+    "final_read_key_state": "INACTIVE",
+    "native_filesystems_listed": 0,
+    "results_bucket_id": "storagebucket-e009132243970085528999",
+    "results_bucket_resource_version": "5",
+    "synthetic_results_prefix_granted": false
+  },
+  "outcomes": {
+    "jobs_submitted": 0,
+    "filesystems_created": 0,
+    "mlflow_runs_created": 0,
+    "remote_s3_writes": 0,
+    "production_test_accessed": false,
+    "native_storage_verified": false,
+    "authenticated_remote_roundtrip_verified": false,
+    "g8_complete": false
+  },
+  "blocker": "Required exact synthetic-prefix bucket-policy update and cleanup deletions require operator execution under Nebius MCP safe-mode instructions."
+}

@@ -3,6 +3,13 @@
 Status: G0–G7 complete; G8 open; G9 blocked on a successful, fully evaluated G8.
 This is a recovery implementation record, not a final-test approval or G8 exit receipt.
 
+Current follow-up: [live replacement integration and preflight](g8-live-replacement.md)
+wires the scored checkpoint, same-run logging and completed-release publisher
+into a separate package-bound entrypoint. It preserves four prior submissions
+and R4 test access, requires a signed exception and native mount, and leaves the
+ordinary no-volume submitter unchanged. Native/remote rehearsal is proposed with
+a $2 cap but is not yet approved; no production execution readiness is claimed.
+
 ## What is fixed and verified
 
 The R4 request pointed the tabular loader at `projection-artifacts`. C4 actually
@@ -119,6 +126,15 @@ dataset inputs and all four artifacts, then repeats completed logging with zero
 writes. This does not retain scored payloads before logging or survive Job loss
 yet, and is not wired into live execution. Those integration and native-storage
 gates remain open, as do remote rehearsal and replacement-specific approval.
+
+Follow-up after merged PR #176: [pre-logging checkpoints](g8-prelogging-checkpoint.md)
+now retain the scored release, original C4 comparison evidence and unchanged
+logging context before any evaluation evidence is logged. The synthetic proof
+abruptly exits after sealing, removes the original workspace, then runs the
+actual log-only CLI in fresh processes. Recovery also survives a second abrupt
+exit after an artifact upload and finishes the same run without rescoring.
+Native storage durability, full execution-result finalization/publication
+integration, remote rehearsal and replacement-specific approval remain gates.
 
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
