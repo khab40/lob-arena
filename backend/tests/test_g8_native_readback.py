@@ -15,14 +15,14 @@ NOW = datetime(2026, 9, 15, 13, tzinfo=UTC)
 def plan_data():
     values = {name: get_args(field.annotation)[0] for name, field in contract.NativePlan.model_fields.items()
               if get_origin(field.annotation) is Literal}
-    values.update(filesystem_id="computefilesystem-example", verified_at=NOW - timedelta(minutes=5),
+    values.update(source_commit="1" * 40, filesystem_id="computefilesystem-example", verified_at=NOW - timedelta(minutes=5),
         expires_at=NOW + timedelta(minutes=30), cleanup_deadline=NOW + timedelta(hours=3),
         campaign_spend_usd=34, billing_receipt_sha256="a" * 64,
         secret_selectors={**contract.S3_SELECTORS,
             "MLFLOW_TRACKING_USERNAME": "mbsec-exampleuser@mbsecver-exampleuser",
             "MLFLOW_TRACKING_PASSWORD": "mbsec-examplepassword@mbsecver-examplepassword"},
         files={name: {"sha256": "a" * 64, "size_bytes": 1}
-               for name in set(contract.CODE_PATHS) | contract.CAPSULE | {"reviewer-public.pem", "billing.json"}})
+               for name in set(contract.CODE_PATHS) | contract.CAPSULE | {"reviewer-public.pem", "billing.json", "filesystem.json"}})
     return values
 
 

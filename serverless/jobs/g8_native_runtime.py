@@ -54,6 +54,12 @@ def verify_package(package, *, phase, trusted, now=None):
         if len(content) != ref.size_bytes or hashlib.sha256(content).hexdigest() != ref.sha256:
             raise ValueError("package bytes differ: " + name)
     verify_capsule(package / "source-capsule")
+    filesystem = json.loads(bounded(package / "filesystem.json"))
+    if (filesystem["metadata"]["id"] != plan.filesystem_id
+            or filesystem["metadata"]["parent_id"] != "project-e00g6zvxpr00waz8t3y51k"
+            or filesystem["spec"].get("type") != "network_ssd"
+            or filesystem["spec"].get("size_bytes") not in (10 * 1024**3, str(10 * 1024**3))):
+        raise ValueError("filesystem readback differs from approved identity, capacity or type")
     current = now or datetime.now(UTC)
     if phase not in {"score", "recover"} or not plan.verified_at <= current < (
             plan.expires_at if phase == "score" else plan.cleanup_deadline):

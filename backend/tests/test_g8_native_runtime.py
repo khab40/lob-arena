@@ -27,6 +27,9 @@ def package(tmp_path, plan_data, monkeypatch):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"reviewed fixture bytes for " + name.encode())
     (root / "reviewer-public.pem").write_bytes(public)
+    (root / "filesystem.json").write_bytes(contract.canonical({
+        "metadata": {"id": plan_data["filesystem_id"], "parent_id": contract.PROJECT},
+        "spec": {"type": "network_ssd", "size_bytes": str(10 * 1024**3)}}))
     (root / "billing.json").write_bytes(contract.canonical({
         "observed_at": plan_data["verified_at"].isoformat(), "campaign_spend_usd": 33.49,
         "lag_allowance_usd": 0.51, "provider_reference": "synthetic-static-billing-fixture"}))

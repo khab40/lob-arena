@@ -46,6 +46,7 @@ class FileRef(Strict):
 
 class NativePlan(Strict):
     schema_version: Literal["g8_native_rehearsal_plan_v1"] = "g8_native_rehearsal_plan_v1"
+    source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     run_id: Literal["synthetic-final"] = "synthetic-final"
     request_sha256: Literal["6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486"]
     candidate_sha256: Literal["e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c"]
@@ -82,7 +83,7 @@ class NativePlan(Strict):
                        for s in self.secret_selectors.values())
                 or any(self.secret_selectors[k] != v for k, v in S3_SELECTORS.items())):
             raise ValueError("exact development S3 and four version-pinned selectors required")
-        if set(self.files) != set(CODE_PATHS) | CAPSULE | {"reviewer-public.pem", "billing.json"}:
+        if set(self.files) != set(CODE_PATHS) | CAPSULE | {"reviewer-public.pem", "billing.json", "filesystem.json"}:
             raise ValueError("exact native code, capsule, reviewer and billing allowlist required")
         if self.files["billing.json"].sha256 != self.billing_receipt_sha256:
             raise ValueError("billing receipt differs from reviewed file")
