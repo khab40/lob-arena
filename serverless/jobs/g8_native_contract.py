@@ -21,7 +21,7 @@ MODULES = ("g8_replacement", "g8_live_recovery", "g8_scored_checkpoint", "g8_mlf
            "g8_benchmark_readiness", "g8_c4_fixture")
 SCRIPTS = ("run_lightgbm_g8", "prepare_g8_native_sources", "g8_rehearsal", "stage_g8_native_sources",
            "g8_source_sdk", "g8_native_source_capsule", "g8_native_contract", "g8_native_readback",
-           "g8_native_runtime", "run_g8_native_rehearsal")
+           "g8_native_runtime", "g8_native_lifecycle", "run_g8_native_rehearsal")
 CODE_PATHS = {f"{n}.py": f"/job/backend/app/ml/lightgbm/{n}.py" for n in MODULES}
 CODE_PATHS.update({f"{n}.py": f"/job/g8/{n}.py" for n in SCRIPTS})
 CAPSULE = {f"source-capsule/inventory-{i}.part" for i in range(2)} | {
@@ -49,7 +49,7 @@ class NativePlan(Strict):
     run_id: Literal["synthetic-final"] = "synthetic-final"
     request_sha256: Literal["6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486"]
     candidate_sha256: Literal["e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c"]
-    evaluation_profile_sha256: Literal["9c973661c1f80c2a7dfbd7a3c4cef6f7b1aad6bf2fb8c7b19965f5848ab07b30"]
+    evaluation_profile_sha256: Literal["4cdace51a0133e3be41baa385ea806c7010ded42c48ae172a0fee18c5c5f589e"]
     image: Literal[IMAGE] = IMAGE
     filesystem_id: str = Field(pattern=r"^computefilesystem-[a-z0-9]+$")
     mount_path: Literal["/g8-durable"] = "/g8-durable"
