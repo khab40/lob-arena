@@ -70,6 +70,8 @@
   "candidate_success_sha256": "ba4c729c0bcaeae03bfcd66c0e1db384b41c3ebbd27a0b8114ed5dde83d626e4",
   "input_success_sha256": "aad5040e21d8b3de8957ce5d7a24dd69fbeef13fd12a21bfec581a5cf241fac9",
   "source_staging_complete": true,
+  "credential_version_provenance_verified": false,
+  "credential_selector_evidence": "Operator-recorded configuration; SDK receipts attest the access-ID fingerprint and authenticated source access, not secret-version provenance.",
   "pinned_job_credential_injection_verified": false,
   "native_storage_verified": false,
   "mlflow_remote_verified": false,

@@ -120,11 +120,13 @@ def test_approved_input_writer_window_has_bound_grant_and_revocation_evidence():
     assert [release["put_attempts"] for release in publication["releases"]] == [0, 325]
     assert publication["credential_access_key_sha256"] == readback["credential_access_key_sha256"]
     assert readback["credential_access_key_sha256"] == record["credential_access_key_id_sha256"]
+    assert publication["credential_source"] == readback["credential_source"] == "explicit_process_environment_not_version_attested"
     assert datetime.fromisoformat(publication["verified_at"]) < end < datetime.fromisoformat(readback["verified_at"])
     assert readback["remote_source_bytes_verified"] and readback["production_head_denial_verified"]
     assert readback["comparison_replay_domains_verified"] == 30
     assert len(readback["local_only_metadata"]) == 6
     assert record["source_staging_complete"] and record["cloud_jobs_created"] == 0
-    for field in ("candidate_writer_granted", "production_body_downloaded", "pinned_job_credential_injection_verified",
+    for field in ("candidate_writer_granted", "production_body_downloaded", "credential_version_provenance_verified",
+                  "pinned_job_credential_injection_verified",
                   "native_storage_verified", "mlflow_remote_verified", "production_g8_complete"):
         assert record[field] is False

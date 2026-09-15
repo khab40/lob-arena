@@ -28,8 +28,8 @@ The [execution receipt](evidence/g8-sdk-source-transport-20260915.json) records:
 - 17 tests passing in the pinned image with networking disabled, covering SDK
   request models, failed marker publication, lost PUT responses, preserved
   partial uploads, zero-write completed repeats, bounded downloads and deadlines.
-- An actual authenticated, read-only S3 probe using the exact previously reviewed
-  development MysteryBox versions. All 25 candidate objects / 343,345 bytes were
+- An actual authenticated, read-only S3 probe with the development access-key
+  fingerprint recorded in the receipt. All 25 candidate objects / 343,345 bytes were
   verified and an independent reader copy retained in **19.566 seconds**.
 - 50 GETs, 26 HEADs and two listings; zero writes. The synthetic input prefix
   remained empty and HEAD of the known production object was explicitly denied.
@@ -89,12 +89,17 @@ The completed 25-object candidate release was preserved. Each source published
 its top-level `SUCCESS` last and verified its payload bytes.
 
 A fresh container then downloaded and verified both complete releases using
-the same exact development MysteryBox versions, after writer revocation:
+the same authenticated development access-key fingerprint, after writer revocation:
 **350 source objects / 2,648,092 bytes**, including 30 comparison replay domains.
 The six execution-metadata files remained explicitly local, as recorded in the
 readback receipt. HEAD of the known production object returned an explicit denial;
 no production body was downloaded. The primary checkout retains the independent
 copy at `outputs/g8-input-staging-approved-20260915/source-reader-copy`.
+
+MysteryBox selectors in the session record describe operator configuration.
+The SDK receipts explicitly attest environment credentials and the access-ID
+fingerprint, not secret-version provenance. Both version attestation and native
+Job credential injection remain separate gates for the Nebius rehearsal.
 
 This closes synthetic source staging and operator-side authenticated readback.
 No cloud Job, native filesystem or MLflow evaluation was created. Job credential
