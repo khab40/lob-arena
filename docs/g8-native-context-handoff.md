@@ -1,0 +1,75 @@
+# G8 native context handoff
+
+This completes the operator procedure for the
+[native rehearsal package](g8-native-rehearsal-package.md). It creates no new
+authorization and consumes no additional Jobs. All training/scoring and runtime
+rehearsals remain on Nebius Serverless.
+
+## Fixed transport
+
+| Binding | Value |
+| --- | --- |
+| Existing VM | `computeinstance-e00xq8hqrzks2pf3gn` (`aimada-wave1-mlflow`) |
+| Project | `project-e00g6zvxpr00waz8t3y51k` |
+| Private MLflow address | `10.4.0.54:5500` |
+| Operator connection | Existing key-authenticated SSH as `aimada`; preserve host-key checking and firewall |
+| Filesystem | One returned ID, `NETWORK_SSD`, READY, 10 GiB; same ID in both Jobs |
+| VM mount tag/path | `g8-native-rehearsal` / `/mnt/g8-native-rehearsal` |
+| Job mount path | `/g8-durable` |
+| Context destination | Native filesystem root: `contexts/score.{json,sig}`, then `contexts/recover.{json,sig}` |
+| Temporary VM transport files | `/opt/aimada/g8-native-handoff/`; no private signing key or credentials copied |
+
+## Prepare and attach
+
+1. Refresh billing and include accrued/lagged usage under the existing $2,
+   two-Job, four-hour VM and 24-hour filesystem bounds. Archive the VM's current
+   API readback. Stop the VM and read it back again as `vm-before.json`.
+2. Require no existing filesystem attachments. Create only the approved 10 GiB
+   filesystem and preserve its raw API readback, including READY status and
+   actual capacity. Do not attach while the VM is running.
+3. Render a resource-version-guarded patch with the tool below. Execute the printed
+   argument array only after reviewing it. Read the VM again and use
+   `verify-attached` to reject unrelated disk, identity or network changes.
+4. Start the existing VM, record its uptime start, and repeat `verify-attached`
+   with `--running`. Through its existing SSH connection, require the chosen
+   mount path to be absent or an empty canonical directory. Mount with
+   `sudo mount -t virtiofs -o rw,nodev,nosuid,noexec g8-native-rehearsal /mnt/g8-native-rehearsal`.
+   Do not add an fstab entry. The mount is for data/context transport only.
+
+```bash
+rtk proxy python3 scripts/g8_native_handoff.py attach --before /absolute/vm-before.json --current /absolute/vm-current.json --filesystem /absolute/filesystem.json
+rtk proxy python3 scripts/g8_native_handoff.py verify-attached --before /absolute/vm-before.json --current /absolute/vm-attached.json --filesystem /absolute/filesystem.json
+```
+
+## Deliver and archive
+
+Sign the ordinary Job readback locally with `sign_g8_native_context.py` after
+binding its returned Job ID. Transfer only the signed context pair and reviewed
+`publish_g8_native_context.py` through the existing operator SSH connection.
+Verify transferred script/context hashes before invocation. Run the publisher as
+root with `--context`, `--signature`, their SHA-256 flags and `--phase`.
+It checks the exact writable virtiofs tag, capacity, absence of nested mounts and
+root-owned private context directory. It fsyncs complete files and publishes the
+signature last, using links that cannot overwrite existing paths. An identical
+transport retry is allowed; changed bytes and symlinks fail. The waiting Job still
+verifies the Ed25519 signature, signed package, actual code/mount and API readback.
+The transport receipt alone does not attest successful Job validation.
+
+Before cleanup, archive the retained native evidence and sealed checkpoint through
+the same operator connection; verify hashes independently against the native
+inventory. Independently verify S3 and MLflow evidence as specified in the package.
+
+## Restore
+
+After both Jobs are terminal and independent copies are verified, unmount the VM
+path, stop the VM, and get fresh VM/filesystem readbacks. Render `detach` using
+those readbacks. The patch clears only `spec.filesystems` and uses the current
+resource version. Run `verify-restored` after a fresh readback; require the original
+VM configuration, preserved network and STOPPED state. Verify no filesystem
+attachment owners remain before deleting only the recorded temporary filesystem
+and Jobs. Keep MLflow disks and evidence. Remove only this handoff's temporary
+transport files; preserve readbacks and cleanup receipts locally.
+
+Provider references: [attachment and mounting](https://docs.nebius.com/compute/storage/use),
+[detachment](https://docs.nebius.com/compute/storage/detach-volume),
+[filesystem API](https://github.com/nebius/api/blob/main/nebius/compute/v1/filesystem.proto).
