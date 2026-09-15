@@ -1,5 +1,8 @@
 # G8 replacement integration and approval gates
 
+Next implementation slice: [native-storage and MLflow rehearsal package](g8-native-rehearsal-package.md).
+The source capsule is prepared; native entrypoint and execution bindings remain open.
+
 Status: engineering implementation; **not final-test or provisioning authority**.
 G8 remains open and G9 blocked. This follows merged PR #177, from updated main
 `827ddc906f0e13f86570762f1eb4a59a83ab62d4`.
