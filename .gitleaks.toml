@@ -1,13 +1,15 @@
 [extend]
 useDefault = true
 
-# These exact values identify Lockbox resources in the G8 staging evidence;
-# they are references used to retrieve credentials, not credential values.
+# These exact values are Lockbox resource references and the SHA-256 fingerprint
+# of the reviewed development access-key ID, not credential values. The fingerprint
+# binds the publication/readback receipts to the version-pinned staging identity.
 # Match the detected value so this survives merges and evidence line changes.
 [allowlist]
-description = "Two reviewed G8 Lockbox resource IDs"
+description = "Reviewed G8 Lockbox resource IDs and access-ID fingerprint"
 regexTarget = "secret"
 regexes = [
   '''^mbsec-e00arhndyprqr8egjw$''',
   '''^mbsec-e00s7qtjj5n9ghacnh$''',
+  '''^4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d$''',
 ]

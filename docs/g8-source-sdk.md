@@ -28,8 +28,8 @@ The [execution receipt](evidence/g8-sdk-source-transport-20260915.json) records:
 - 17 tests passing in the pinned image with networking disabled, covering SDK
   request models, failed marker publication, lost PUT responses, preserved
   partial uploads, zero-write completed repeats, bounded downloads and deadlines.
-- An actual authenticated, read-only S3 probe using the exact previously reviewed
-  development MysteryBox versions. All 25 candidate objects / 343,345 bytes were
+- An actual authenticated, read-only S3 probe with the development access-key
+  fingerprint recorded in the receipt. All 25 candidate objects / 343,345 bytes were
   verified and an independent reader copy retained in **19.566 seconds**.
 - 50 GETs, 26 HEADs and two listings; zero writes. The synthetic input prefix
   remained empty and HEAD of the known production object was explicitly denied.
@@ -39,7 +39,10 @@ it is not a guarantee of publication throughput. Full remote source publication,
 native Job-loss durability and authenticated MLflow recovery are still unproved.
 The original 350-object package and completed candidate release remain frozen.
 
-## Next reviewed writer window
+## Reviewed writer window
+
+**Historical proposal: approved, executed and revoked on 2026-09-15. Do not
+reapply its version-6 patch.** See the completed-session evidence below.
 
 The previous staging authorization ended with verified revocation. The new
 [unapplied proposal](evidence/g8-input-only-staging-proposal-20260915.json)
@@ -69,3 +72,45 @@ This proposal starts no Job, filesystem, MLflow VM or final evaluation. The
 previously approved two-Job/$2 synthetic rehearsal still requires complete source
 readback, current billing and a reviewed native/remote execution package. The
 production replacement requires its separate signed exception afterward.
+
+## Approved input staging completed
+
+After PR #187 merged as `9190c98`, the operator approved the proposed 30-minute
+input-only window. The [session receipt](evidence/g8-input-staging-session-20260915.json)
+binds separate complete GET snapshots for the applied and revoked policies,
+the publication receipt and the independent readback receipt by SHA-256.
+The full bucket spec changed only by the reviewed input writer rule: **6 → 7 → 8**.
+Both original reader rules and all other settings were restored after publication.
+
+The permission window ran from **11:44:15 to 11:50:52 UTC**, conservatively
+**397.215 seconds**, below the 1,800-second limit. The single publication
+conditionally created all **325 input objects** and made **zero candidate PUTs**.
+The completed 25-object candidate release was preserved. Each source published
+its top-level `SUCCESS` last and verified its payload bytes.
+
+A fresh container then downloaded and verified both complete releases using
+the same authenticated development access-key fingerprint, after writer revocation:
+**350 source objects / 2,648,092 bytes**, including 30 comparison replay domains.
+The six execution-metadata files remained explicitly local, as recorded in the
+readback receipt. HEAD of the known production object returned an explicit denial;
+no production body was downloaded. The primary checkout retains the independent
+copy at `outputs/g8-input-staging-approved-20260915/source-reader-copy`.
+
+MysteryBox selectors in the session record describe operator configuration.
+The SDK receipts explicitly attest environment credentials and the access-ID
+fingerprint, not secret-version provenance. Both version attestation and native
+Job credential injection remain separate gates for the Nebius rehearsal.
+
+This closes synthetic source staging and operator-side authenticated readback.
+No cloud Job, native filesystem or MLflow evaluation was created. Job credential
+injection, native durability, authenticated remote MLflow recovery, fresh billing
+and the reviewed native execution package remain open. G8 is not complete.
+
+## Execution location for subsequent workloads
+
+On 2026-09-15 the operator directed that future model workloads, including
+synthetic rehearsals and pre-production evaluation-path tests, run as bounded
+Nebius Serverless Jobs. The already-running approved source-staging session
+finishes its publication, revocation and readback. Subsequent workload execution
+uses Nebius; local orchestration, static checks and artifact inspection remain
+available. Record explicit Job resources, timeouts, spend and runtime identities.
