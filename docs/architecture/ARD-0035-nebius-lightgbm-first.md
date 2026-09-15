@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-14
+Status reconciled: 2026-09-15
 
 ## Implementation Status
 
@@ -208,7 +208,8 @@ signature SHA-256
 and trusted public-key SHA-256
 `a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
 Independent verification reports `authorized`, `signature_verified=true`, and
-`final_identity_available=true`. G8's final fold remains unopened.
+`final_identity_available=true`. At that G7 checkpoint the final fold was unopened;
+R4 subsequently downloaded it and failed before scoring (see current status above).
 
 The first two separately authorized G8 Jobs failed closed before candidate or
 final-release download. The second, `aijob-e00rwzexvwb11rmt4c`, is bound to
@@ -270,6 +271,23 @@ The image build independently runs the same packaged G8 probe. This closes
 the compatibility class of failure before authorization or cloud spend without
 changing the frozen model or its dependency environment. No fourth Job is
 authorized by this remediation.
+
+## Evaluation and Recovery Decision Dependencies — 2026-09-15
+
+The following records extend this execution decision and preserve its frozen
+candidate and release-authority boundary:
+
+- [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
+- [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
+- [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
+
+The C4 evaluator is available in the injected runner. MLflow reservation/recovery
+and completed-release publication recovery are separate APIs, not live runner
+integration. The replacement must require/hash-bind C4 evidence and reviewed
+code, preserve R4's consumed authorization and test-access history, and complete
+pre-logging retention, native-storage and remote rehearsal gates. The
+[storage exception](../g8-persistent-storage-exception.md) remains a proposal.
+Earlier G7/R1–R3 status paragraphs below describe historical checkpoints.
 
 ## Context
 

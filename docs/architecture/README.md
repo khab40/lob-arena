@@ -6,7 +6,7 @@ ARDs capture architecture decisions, context, tradeoffs, implementation phases, 
 
 ## Implementation Summary
 
-Status as of 2026-08-16:
+Status reconciled as of 2026-09-15 (historical implementation labels retained):
 
 | ARD | Implementation | Notes |
 |-----|----------------|-------|
@@ -42,9 +42,12 @@ Status as of 2026-08-16:
 | [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
 | [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
 | [ARD-0034](ARD-0034-itch-market-profile-calibration.md) | `[phase-3 done]` | Versioned ITCH distributions, deterministic parameter compilation, profile-bound Java simulation, dynamic reference path, and held-out realism reports |
-| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G0-G7 complete; G8 open]` | G5 reproducibility and the 20-Job G6 campaign passed; isotonic is frozen and signed; three G8 Jobs failed closed before test access, and the latest exact-image compatibility gap is remediated pending fresh authorization |
+| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G0-G7 complete; G8 open]` | G0–G7 complete; R4 accessed the final release then failed before scoring; C4 evaluation and recovery primitives pass synthetic rehearsals, while durable live integration and replacement authorization remain open |
 | [ARD-0036](ARD-0036-market-sequence-transformer.md) | `[todo after ARD-0035 disposition]` | No Transformer implementation yet; train a causal challenger through bounded GPU Jobs only after the LightGBM baseline is frozen |
 | [ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) | `[todo after ARD-0036 disposition]` | No cascade implementation yet; feed versioned causal Transformer features into a new LightGBM family with ablation, fallback and promotion gates |
+| [ARD-0038](ARD-0038-c4-specific-evaluation.md) | `[implemented; live qualification pending]` | C4-Specific Frozen Evaluation; see record for recovery/integration limits |
+| [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) | `[implemented; live qualification pending]` | Same-Run MLflow Evaluation Recovery; see record for recovery/integration limits |
+| [ARD-0040](ARD-0040-completed-release-publication-recovery.md) | `[implemented; live qualification pending]` | Completed-Release Publication Recovery; see record for recovery/integration limits |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -83,6 +86,12 @@ diagrams document the execution boundaries.
 - [ARD-0035: Nebius-First Qualification Of Governed LightGBM](ARD-0035-nebius-lightgbm-first.md) — CPU-first Nebius execution, evidence, performance, cost and exit gates for the existing LightGBM v1 boundary
 - [ARD-0036: Governed Market-Sequence Transformer Challenger](ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training, standalone evaluation and the gate into derived-feature work
 - [ARD-0037: Transformer-Derived Features Into LightGBM](ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned Transformer feature releases, exact joins, CPU decision layer, fallback and governed promotion
+
+### Frozen Evaluation and Recovery
+
+- [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
+- [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
+- [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
 
 ### Agent Execution
 
@@ -137,7 +146,7 @@ Each ARD includes:
 
 ## Workflow & Traceability
 
-All ARDs are linked in the main [Architecture](../architecture.md) document and in [Use Cases](../USE_CASES.md) to show which decisions support which workflows.
+All ARDs are indexed here and linked from the main [Architecture](../architecture.md) document. [Use Cases](../USE_CASES.md) provides product workflow context; each record links its design dependencies and supporting implementation evidence.
 
 This ensures:
 - ✓ No stale decisions (ARDs are always referenced)

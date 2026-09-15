@@ -6,6 +6,19 @@ Date: 2026-07-31
 
 Implementation Status: `[lightgbm-v1 done]`
 
+## Wave 1 Evaluation Update — 2026-09-15
+
+Local v1 implementation is complete; cloud qualification remains open under
+[ARD-0035](ARD-0035-nebius-lightgbm-first.md). Wave 1 froze isotonic calibration
+through validation-only selection; the generic Platt default below is unchanged.
+The frozen four-date C4 candidate uses the separate
+[ARD-0038](ARD-0038-c4-specific-evaluation.md) evaluation contract, without claiming
+seven-date benchmark equivalence. Same-run logging and post-logging publication
+recovery extend the release lifecycle through
+[ARD-0039](ARD-0039-same-run-mlflow-recovery.md) and
+[ARD-0040](ARD-0040-completed-release-publication-recovery.md). They do not yet
+provide durable pre-logging recovery in the live runner.
+
 ## Context
 
 Phase 2 produced a deterministic binary `attack_active` model but deliberately

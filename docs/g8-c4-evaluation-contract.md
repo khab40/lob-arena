@@ -1,7 +1,11 @@
 # G8 C4-specific evaluation contract
 
-Status: core evaluator/provenance merged in PR #171; runner integration and full
-synthetic rehearsal in follow-up review. Not live-execution authority or a G8 exit.
+Architecture decision: [ARD-0038](architecture/ARD-0038-c4-specific-evaluation.md).
+
+Status (2026-09-15): core evaluator/provenance merged in PR #171; injected-runner
+C4 integration and full synthetic rehearsal merged in PR #172. Recovery APIs
+subsequently merged in PRs #175 and #176; durable live integration remains open.
+Not live-execution authority or a G8 exit.
 The user approved this C4-specific contract on 2026-09-14. Candidate, calibration,
 features and operating thresholds remain frozen. The replacement execution still
 requires the exception and package-specific approval in

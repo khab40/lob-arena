@@ -1,5 +1,7 @@
 # G8 same-run MLflow recovery — 2026-09-14
 
+Architecture decision: [ARD-0039](architecture/ARD-0039-same-run-mlflow-recovery.md).
+
 Engineering milestone only. G8 remains open and G9 blocked. This extends the
 merged [post-MLflow publication recovery](g8-publication-recovery.md); it does not
 authorize a replacement, provision storage, or change the production runner.
