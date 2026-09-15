@@ -1,6 +1,8 @@
 # G8 completed-release publication recovery
 
-Status (2026-09-14): post-MLflow recovery primitive, in review. **Not a G8 exit,
+Architecture decision: [ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md).
+
+Status (2026-09-15): post-MLflow recovery primitive merged in PR #175. **Not a G8 exit,
 pre-MLflow checkpoint, native-storage durability proof or execution approval.**
 
 ## Implemented boundary
