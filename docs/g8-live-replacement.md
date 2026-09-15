@@ -304,3 +304,68 @@ manually delete only the identified temporary rehearsal resources after
 independent evidence copies are verified. Existing development credentials and
 MLflow disks are not disposable rehearsal resources. The rehearsal cannot start
 until this operator step and the remaining live preflight checks are complete.
+
+### Synthetic sources prepared on 2026-09-15
+
+Following merged PR #179 (`5bf5c3d`),
+`serverless/jobs/prepare_g8_native_sources.py` separates fixture preparation from
+the mocked-transport evaluation harness. It trains only synthetic development,
+creates the four-date-shaped final input plus all 27 original synthetic
+comparison checkpoints, and seals a portable package. It neither submits Jobs
+nor invokes final scoring, S3 transport or MLflow logging. The synthetic lineage
+receipt deliberately remains a contract placeholder, **not a remotely registered
+MLflow dataset**. Its ephemeral authorization key cannot approve the production
+candidate. Production execution policy and its runner are unchanged.
+
+The [pinned-runtime execution receipt](evidence/g8-native-source-preparation-20260915.json)
+records successful preparation and fresh-container verification with networking
+disabled. The second container mounted only the package read-only at a different
+path; the original build workspace was unavailable. It verified 356 payload
+files (2,652,554 bytes), 27 checkpoints, 30 replay domains and 198 synthetic test
+rows without training or rescoring. This proves local source-package portability,
+**not native Job-loss durability or authenticated remote recovery**.
+
+The retained package is `outputs/g8-native-sources-reviewed-20260915` in this worktree
+(ignored by Git); the independently retained package SHA-256 is
+`792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9`.
+The candidate and complete input releases ready for staging are respectively
+`payload/sources/candidate` and `payload/sources/input`. The input includes
+`comparison-evidence`; C4 paths in `payload/c4-inputs.json` are fixed relative
+paths. Both releases already have locally verified `SUCCESS`/checksum envelopes.
+No S3 object was staged and no existing grant was rerun.
+
+To reproduce inside the pinned image, inject the three reviewed scripts
+(`prepare_g8_native_sources.py`, `g8_rehearsal.py`, `run_lightgbm_g8.py`) in one
+read-only script directory, and overlay these six modules read-only at
+`/job/backend/app/ml/lightgbm/`: `tracking`, `c4_evaluation`, `c4_replay_evidence`,
+`g8_benchmark_readiness`, `g8_c4_fixture`, `g8_publication_recovery`. Set
+`PYTHONDONTWRITEBYTECODE=1`, `--network none`, `--platform linux/amd64` and
+`--entrypoint python`. The receipt binds all nine file hashes. Run the following
+arguments (the first output directory must not already exist):
+
+```text
+/rehearsal/prepare_g8_native_sources.py --output /evidence/prepared
+```
+
+Retain the emitted hash independently. Start a fresh container with only
+`prepared/package` mounted read-only as `/relocated`, plus the same code, and run:
+
+```text
+/rehearsal/prepare_g8_native_sources.py --output /relocated --verify --expected-sha256 <retained-package-sha256>
+```
+
+The next gates remain: review this implementation; prepare separately reviewed
+exact-prefix staging-writer authority and conditional, marker-last publication;
+verify complete downloads with the pinned Job credentials and a production-object
+HEAD denial; finish the actual native/remote rehearsal package; then refresh
+billing and run within the existing two-Job/$2 approval. Do not run the ordinary
+nonconditional input publisher or activate the final-read key as a shortcut.
+The previous source-read grants are already applied and must not be rerun.
+
+Validation for this source-preparation change: `make lightgbm-wave1-g8-check`
+passed **283 tests**, Ruff and CLI smoke checks. This includes twelve new source
+tests for no final scoring/MLflow logging, relocation without the original build,
+tamper and symlink rejection, fixed portable C4 paths, output preservation,
+synthetic-only campaigns, relative output paths and rejection of R4's wrong
+projection layout. The two SDK retry tests required local loopback permission;
+the initial sandbox-only run's socket-bind failures were environmental.
