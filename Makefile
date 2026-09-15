@@ -247,7 +247,7 @@ lightgbm-wave1-g8-check:
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
 		python ../scripts/lightgbm_wave1.py g8-verify --help >/dev/null
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
-		python -c 'from serverless.jobs import g8_native_lifecycle; assert callable(g8_native_lifecycle.score)'
+		python -c 'import sys; sys.path.insert(0, ".."); from serverless.jobs import g8_native_lifecycle; assert callable(g8_native_lifecycle.score)'
 
 lightgbm-wave1-local-e2e:
 	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \
