@@ -25,7 +25,8 @@ def prepare(*, capsule, bindings, billing, filesystem, private_key, output):
     key = load_pem_private_key(bounded(private_key), password=None)
     if not isinstance(key, Ed25519PrivateKey):
         raise ValueError("Ed25519 reviewer key required")
-    if output.absolute() != output.resolve():
+    if (output.absolute() != output.resolve() or output.resolve().is_relative_to(capsule.resolve())
+            or capsule.resolve().is_relative_to(output.resolve())):
         raise ValueError("canonical output required")
     # Fail before writing a signed package when the source checkout is dirty.
     status = subprocess.run(["git", "status", "--porcelain", "--untracked-files=normal"],
