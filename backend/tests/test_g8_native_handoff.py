@@ -32,14 +32,14 @@ def attached(before, filesystem):
 
 
 def test_attach_and_restore_use_current_resource_version(before, filesystem):
-    command = handoff.render(before, before, filesystem)["command"]
+    command = handoff.render(before, before, filesystem, filesystem_id="computefilesystem-example")["command"]
     assert "--patch" in command and command[command.index("--resource-version") + 1] == "40"
     assert command[command.index("--parent-id") + 1] == handoff.PROJECT
     current = attached(before, filesystem)
     receipt = handoff.verify_vm(before, current, filesystem["metadata"]["id"], attached=True)
     assert not receipt["context_delivery_verified"] and not receipt["native_mount_verified"]
     filesystem["status"]["read_write_attachments"] = [handoff.VM]
-    command = handoff.render(before, current, filesystem, detach=True)["command"]
+    command = handoff.render(before, current, filesystem, filesystem_id="computefilesystem-example", detach=True)["command"]
     assert command[command.index("--resource-version") + 1] == "41"
     assert command[-2:] == ["--clear-mask", "spec.filesystems"]
     restored = deepcopy(before)
@@ -64,10 +64,17 @@ def test_unrelated_vm_drift_rejected(before, filesystem, section, key, value):
 def test_existing_filesystem_owner_and_unstopped_baseline_rejected(before, filesystem):
     filesystem["status"]["read_write_attachments"] = ["computeinstance-other"]
     with pytest.raises(ValueError, match="owners"):
-        handoff.render(before, before, filesystem)
+        handoff.render(before, before, filesystem, filesystem_id="computefilesystem-example")
     before["status"]["state"] = "RUNNING"
     with pytest.raises(ValueError, match="stopped"):
-        handoff.render(before, before, filesystem)
+        handoff.render(before, before, filesystem, filesystem_id="computefilesystem-example")
+
+
+def test_other_valid_filesystem_and_stale_restoration_are_rejected(before, filesystem):
+    with pytest.raises(ValueError, match="filesystem identity"):
+        handoff.render(before, before, filesystem, filesystem_id="computefilesystem-approved-other")
+    with pytest.raises(ValueError, match="newer than the baseline"):
+        handoff.verify_vm(before, before, filesystem["metadata"]["id"], attached=False)
 
 
 def test_context_publish_is_immutable_and_safe_to_repeat(tmp_path):

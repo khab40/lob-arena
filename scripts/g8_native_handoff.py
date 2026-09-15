@@ -42,7 +42,7 @@ def baseline(before):
         raise ValueError("baseline must be the stopped VM without filesystem attachments")
 
 
-def verify_vm(before, current, filesystem_id, *, attached, stopped=True):
+def verify_vm(before, current, filesystem_id, *, attached, stopped=True, allow_baseline=False):
     baseline(before)
     identity(current)
     expected = [attachment(filesystem_id)] if attached else []
@@ -53,8 +53,9 @@ def verify_vm(before, current, filesystem_id, *, attached, stopped=True):
         if ({k: v for k, v in before[field].items() if k not in ignored}
                 != {k: v for k, v in current[field].items() if k not in ignored}):
             raise ValueError("unrelated VM configuration changed")
-    if int(current["metadata"]["resource_version"]) < int(before["metadata"]["resource_version"]):
-        raise ValueError("VM resource version moved backwards")
+    old, new = int(before["metadata"]["resource_version"]), int(current["metadata"]["resource_version"])
+    if new < old or (new == old and not allow_baseline):
+        raise ValueError("VM observation must be newer than the baseline")
     if (current["status"]["state"] != ("STOPPED" if stopped else "RUNNING")
             or current["spec"].get("stopped", False) is not stopped
             or current["status"].get("network_interfaces") != before["status"].get("network_interfaces")):
@@ -66,10 +67,9 @@ def verify_vm(before, current, filesystem_id, *, attached, stopped=True):
             "native_mount_verified": False, "context_delivery_verified": False}
 
 
-def render(before, current, filesystem, *, detach=False):
-    filesystem_id = filesystem["metadata"]["id"]
+def render(before, current, filesystem, *, filesystem_id, detach=False):
     verify_filesystem(filesystem, filesystem_id)
-    verify_vm(before, current, filesystem_id, attached=detach)
+    verify_vm(before, current, filesystem_id, attached=detach, allow_baseline=not detach)
     status = filesystem["status"]
     if (status.get("read_only_attachments", [])
             or status.get("read_write_attachments", []) != ([VM] if detach else [])):
@@ -88,15 +88,16 @@ if __name__ == "__main__":
     parser.add_argument("action", choices=("attach", "detach", "verify-attached", "verify-restored"))
     for name in ("before", "current", "filesystem"):
         parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--filesystem-id", required=True, help="Independent ID from the approved provisioning receipt")
     parser.add_argument("--running", action="store_true")
     args = parser.parse_args()
     before, current, filesystem = [json.loads(bounded(getattr(args, n))) for n in ("before", "current", "filesystem")]
     if args.action.startswith("verify-"):
-        verify_filesystem(filesystem, filesystem["metadata"]["id"])
-        result = verify_vm(before, current, filesystem["metadata"]["id"],
+        verify_filesystem(filesystem, args.filesystem_id)
+        result = verify_vm(before, current, args.filesystem_id,
                            attached=args.action == "verify-attached", stopped=not args.running)
     else:
         if args.running:
             parser.error("attachment changes require the stopped VM")
-        result = render(before, current, filesystem, detach=args.action == "detach")
+        result = render(before, current, filesystem, filesystem_id=args.filesystem_id, detach=args.action == "detach")
     print(json.dumps(result, indent=2))

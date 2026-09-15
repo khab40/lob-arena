@@ -37,9 +37,14 @@ rehearsals remain on Nebius Serverless.
    Do not add an fstab entry. The mount is for data/context transport only.
 
 ```bash
-rtk proxy python3 scripts/g8_native_handoff.py attach --before /absolute/vm-before.json --current /absolute/vm-current.json --filesystem /absolute/filesystem.json
-rtk proxy python3 scripts/g8_native_handoff.py verify-attached --before /absolute/vm-before.json --current /absolute/vm-attached.json --filesystem /absolute/filesystem.json
+rtk proxy python3 scripts/g8_native_handoff.py attach --before /absolute/vm-before.json --current /absolute/vm-current.json --filesystem /absolute/filesystem.json --filesystem-id computefilesystem-APPROVED
+rtk proxy python3 scripts/g8_native_handoff.py verify-attached --before /absolute/vm-before.json --current /absolute/vm-attached.json --filesystem /absolute/filesystem.json --filesystem-id computefilesystem-APPROVED
 ```
+
+Supply the filesystem ID independently from the approved provisioning receipt;
+use that identical ID when signing the Job package. Verification receipts require
+a VM resource version newer than the pre-attachment baseline. Only rendering the
+initial attach command allows the unchanged baseline.
 
 ## Deliver and archive
 
