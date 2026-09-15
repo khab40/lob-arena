@@ -170,7 +170,7 @@ lightgbm-wave1-g7-check:
 		python ../scripts/lightgbm_wave1.py g7-verify --help >/dev/null
 
 lightgbm-wave1-g8-check:
-	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml --with awscli==1.46.1 python -m pytest -q \
 		tests/test_c4_evaluation.py \
 		tests/test_c4_replay_evidence.py \
 		tests/test_c4_tracking.py \
@@ -183,6 +183,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_rehearsal_access.py \
 		tests/test_g8_native_sources.py \
 		tests/test_g8_source_staging.py \
+		tests/test_g8_source_sdk.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
@@ -211,6 +212,8 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_rehearsal_access.py \
 		tests/test_g8_native_sources.py \
 		tests/test_g8_source_staging.py \
+		tests/test_g8_source_sdk.py \
+		../serverless/jobs/g8_source_sdk.py \
 		../serverless/jobs/stage_g8_native_sources.py \
 		../serverless/jobs/g8_source_staging_rehearsal.py \
 		../serverless/jobs/prepare_g8_native_sources.py \
