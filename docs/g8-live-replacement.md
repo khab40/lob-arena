@@ -369,3 +369,99 @@ tamper and symlink rejection, fixed portable C4 paths, output preservation,
 synthetic-only campaigns, relative output paths and rejection of R4's wrong
 projection layout. The two SDK retry tests required local loopback permission;
 the initial sandbox-only run's socket-bind failures were environmental.
+
+### Conditional source staging implementation (2026-09-15)
+
+PR #181 merged as `546c95e`; the next branch starts from that updated main.
+`stage_g8_native_sources.py` defaults to local verification. `--publish` accepts
+only the two source URIs in the sealed synthetic package. It validates both
+remote prefixes before its first write, preserves matching partial uploads,
+uses `If-None-Match: *` with a private hash-checked copy for every PUT, and checks
+all payload bytes before each top-level `SUCCESS`. Ambiguous PUT responses are
+resolved by readback, never by overwriting or deleting. Repeating a completed
+publication makes zero PUT calls. Production publication/recovery code is not
+changed; its bounded transfer subprocess is reused without passing unsupported
+keywords to the frozen `_aws_json` helper.
+
+`--readback --destination <new-directory>` downloads every synthetic source
+object, preserves the bytes locally, rechecks the complete remote inventories
+and verifies the candidate, projection and 30 comparison domains. The six
+non-source package metadata files are explicitly copied from the retained local
+package, not represented as S3 downloads. It then issues only HEAD for the known
+production frozen-root object. Only explicit 403/AccessDenied/Forbidden counts
+as denial; 404, invalid key/signature, timeout and successful access all fail.
+No production object body is requested. Failed readbacks remain for diagnosis;
+their directories must not be overwritten or counted as successful receipts.
+
+Credentials must be explicitly supplied through the process environment; the
+tool never retrieves secrets, uses profile/instance-role fallback, changes IAM,
+creates Jobs, scores or writes MLflow. It records a hash of the access-key ID,
+not the key or secret. Environment credentials alone do **not** prove which
+MysteryBox versions were injected. Receipts therefore explicitly leave
+`pinned_job_credentials_verified`, native durability and remote MLflow false.
+The approved Job/secret-injection readback must establish that separate binding.
+
+Operator-reviewed invocation inside the pinned image, with the same six module
+overlays listed above and the additional `stage_g8_native_sources.py` script:
+
+```text
+/rehearsal/stage_g8_native_sources.py --package /package --expected-sha256 792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9
+/rehearsal/stage_g8_native_sources.py --package /package --expected-sha256 792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9 --publish
+/rehearsal/stage_g8_native_sources.py --package /package --expected-sha256 792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9 --readback --destination /evidence/source-readback
+```
+
+Only the first command is offline. The other two require reviewed networking,
+approved credentials and source-write setup below. Mount `/package` read-only;
+retain emitted receipts independently. Neither command starts the evaluation.
+
+#### Proposed temporary staging-writer permission — not applied
+
+Fresh Nebius readbacks still show results bucket version **7** and final-input
+bucket version **4**. The [proposal](evidence/g8-source-staging-access-proposal-20260915.json)
+preserves those entire existing policies and adds one `storage.object-editor`
+rule per bucket, for development group `group-e00wb5ptvpq0q7dpaf`, on exactly:
+
+- `campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*`
+- `releases/g8-native-rehearsal-20260914/staging/*`
+
+This temporarily adds source-write authority to the existing development
+identity; it does not create a new writer identity. It grants no production
+final access or bucket-wide access. The role also permits deletion, but the
+staging code never performs it. This new authority requires explicit operator
+approval. MCP safe mode cannot apply it; use operator-run CLI or separately
+approved terminal execution. **Do not rerun any historical output/reader grant.**
+
+After approval and immediately refreshed version/policy checks, the proposed
+partial updates are:
+
+```sh
+rtk proxy nebius storage bucket update --id storagebucket-e009132243970085528999 --resource-version 7 --patch --bucket-policy-rules "$(rtk proxy jq -c '.buckets[0].proposed_update.spec.bucket_policy.rules' docs/evidence/g8-source-staging-access-proposal-20260915.json)" --format json
+rtk proxy nebius storage bucket update --id storagebucket-e004963828556923796882 --resource-version 4 --patch --bucket-policy-rules "$(rtk proxy jq -c '.buckets[1].proposed_update.spec.bucket_policy.rules' docs/evidence/g8-source-staging-access-proposal-20260915.json)" --format json
+```
+
+If a version or policy differs, stop and reconcile concurrent changes; never
+reuse these stale arrays. Read back both applied policies before publication.
+Allow only one staging session; revoke the two appended writer rules within
+one hour and **before any rehearsal Job**, preserving the reader/output rules.
+This is an operator-enforced window, **not automatic IAM expiration**. Cleanup
+requires fresh GETs and their resource versions, removing only these exact
+appended rules and preserving concurrent changes. Verify viewer-only source
+access afterward, then do the authenticated reader check. Partial grant or
+staging failure requires reconciliation/cleanup, never a broader grant.
+
+No new grant, S3 upload, remote MLflow run or paid resource was created while
+preparing this change. Review and grant approval remain the next live gate.
+
+The [pinned-runtime protocol receipt](evidence/g8-source-staging-frozen-rehearsal-20260915.json)
+records 350 verified synthetic source objects, 349 retained through an injected
+top-level marker failure, 30 reverified comparison domains and zero PUTs on a
+completed repeat. `g8_source_staging_rehearsal.py` uses the same retained package
+read-only, simulates only S3 transport, and runs with networking disabled. Its
+denial response is simulated; **no real authenticated S3 or native-storage result
+is claimed**. No candidate was retrained or final fold rescored by this protocol
+rehearsal. Validation: the full G8 target passed **301 tests**, Ruff and smoke
+checks; after adding the final inventory-race regression, all **19 staging tests**
+passed. The final two-line remote-inventory recheck also passed the repeated
+pinned-image protocol rehearsal. Concurrent docs/password-helper PR #182 was
+fast-forwarded into this uncommitted branch before delivery; it changed none of
+these runtime paths.
