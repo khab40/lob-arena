@@ -38,6 +38,24 @@ def signed(raw, signature, public, trusted):
     key.verify(signature, raw)
 
 
+def verify_filesystem(filesystem, expected_id):
+    """Validate the unmodified Compute API enum, size oneof and ready capacity."""
+    spec, status = filesystem["spec"], filesystem["status"]
+    units = {"size_bytes": 1, "size_kibibytes": 1024, "size_mebibytes": 1024**2, "size_gibibytes": 1024**3}
+    sizes = [(spec[k], factor) for k, factor in units.items() if k in spec]
+    if len(sizes) != 1:
+        raise ValueError("filesystem must carry exactly one configured size")
+    value, factor = sizes[0]
+    if (type(value) not in (int, str) or not str(value).isdigit()
+            or int(value) * factor != 10 * 1024**3
+            or filesystem["metadata"]["id"] != expected_id
+            or filesystem["metadata"]["parent_id"] != "project-e00g6zvxpr00waz8t3y51k"
+            or spec.get("type") != "NETWORK_SSD" or status.get("state") != "READY"
+            or status.get("reconciling", False) is not False
+            or status.get("size_bytes") not in (10 * 1024**3, str(10 * 1024**3))):
+        raise ValueError("filesystem identity, type or ready 10 GiB capacity differs")
+
+
 def verify_package(package, *, phase, trusted, now=None):
     raw = bounded(package / "native-plan.json")
     signed(raw, bounded(package / "native-plan.sig", 64), bounded(package / "reviewer-public.pem"), trusted)
@@ -55,11 +73,7 @@ def verify_package(package, *, phase, trusted, now=None):
             raise ValueError("package bytes differ: " + name)
     verify_capsule(package / "source-capsule")
     filesystem = json.loads(bounded(package / "filesystem.json"))
-    if (filesystem["metadata"]["id"] != plan.filesystem_id
-            or filesystem["metadata"]["parent_id"] != "project-e00g6zvxpr00waz8t3y51k"
-            or filesystem["spec"].get("type") != "network_ssd"
-            or filesystem["spec"].get("size_bytes") not in (10 * 1024**3, str(10 * 1024**3))):
-        raise ValueError("filesystem readback differs from approved identity, capacity or type")
+    verify_filesystem(filesystem, plan.filesystem_id)
     current = now or datetime.now(UTC)
     if phase not in {"score", "recover"} or not plan.verified_at <= current < (
             plan.expires_at if phase == "score" else plan.cleanup_deadline):

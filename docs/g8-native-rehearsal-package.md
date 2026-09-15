@@ -1,7 +1,7 @@
 # G8 native-storage and MLflow rehearsal package
 
 Status: **native entrypoint and package tools implemented; cloud rehearsal not executed**.
-Implementation base: `6ab428694cebc4707fe03f042af54b73bfae4bad` (merged PR #189).
+Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
 The [existing synthetic rehearsal authorization](g8-live-replacement.md#approved-scope-synthetic-nativeremote-rehearsal-only)
@@ -101,7 +101,10 @@ contain the `NativePlan` fields except `files`, `source_commit` and
 `observed_at` (timezone-aware ISO timestamp), `campaign_spend_usd`,
 `lag_allowance_usd` and `provider_reference`; the first two cost values sum to the
 plan's reconciled campaign spend. The filesystem readback must identify the
-approved project, exact returned ID, `network_ssd` and 10 GiB in `size_bytes`.
+approved project, exact returned ID, API enum `NETWORK_SSD`, exactly one configured
+size unit equivalent to 10 GiB, and READY status reporting that capacity without
+reconciliation in progress. Preserve the API readback unchanged; the CLI's
+lowercase create option is not its returned enum spelling.
 
 Sign each context only after validating the actual Job ID returned by create.
 Recovery additionally requires `--previous-terminal` and `--original-context`;
@@ -112,13 +115,11 @@ Job waits, at most five minutes. The native entrypoint rechecks signature, packa
 expiry, code and kernel mount identity after this wait. An absent context stops
 the Job before source access; it never triggers another submission.
 
-**Context delivery is still an operational preflight gate.** Before provisioning,
-review how the operator will write the context and archive retained outputs through
-the private network. A proposed temporary attachment to the existing MLflow VM
-must bind that VM ID, attachment/mount paths, permission checks and restoration
-steps to its before/after API readbacks. This PR does not attach storage, open a
-Job SSH port or declare that path tested. Do not use the output/intent prefixes
-for context transport, because the live lifecycle requires them empty initially.
+The [native handoff procedure](g8-native-context-handoff.md) binds the existing
+MLflow VM, mount tag/path, version-guarded attachment, immutable context transport
+and restoration checks. Its static validation does not establish cloud transport:
+retain actual attachment/mount/context receipts before claiming that evidence.
+Do not use output/intent prefixes for context transport; they must begin empty.
 
 ## Two-Job sequence
 

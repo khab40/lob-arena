@@ -34,7 +34,8 @@ def package(tmp_path, plan_data, monkeypatch):
     (root / "reviewer-public.pem").write_bytes(public)
     (root / "filesystem.json").write_bytes(contract.canonical({
         "metadata": {"id": plan_data["filesystem_id"], "parent_id": contract.PROJECT},
-        "spec": {"type": "network_ssd", "size_bytes": str(10 * 1024**3)}}))
+        "spec": {"type": "NETWORK_SSD", "size_gibibytes": "10"},
+        "status": {"state": "READY", "size_bytes": str(10 * 1024**3)}}))
     (root / "billing.json").write_bytes(contract.canonical({
         "observed_at": plan_data["verified_at"].isoformat(), "campaign_spend_usd": 33.49,
         "lag_allowance_usd": 0.51, "provider_reference": "synthetic-static-billing-fixture"}))
@@ -57,6 +58,29 @@ def test_signed_package_and_current_window_required(package):
     assert verify(package).identity() == package[2].identity()
     with pytest.raises(ValueError, match="window"):
         runtime.verify_package(package[0], phase="score", trusted=package[1], now=package[2].expires_at)
+
+
+@pytest.mark.parametrize("unit,amount", [("size_bytes", 10 * 1024**3), ("size_kibibytes", 10 * 1024**2),
+                                       ("size_mebibytes", 10240), ("size_gibibytes", "10")])
+def test_filesystem_accepts_api_size_oneof(package, unit, amount):
+    import json
+    filesystem = json.loads((package[0] / "filesystem.json").read_bytes())
+    filesystem["spec"] = {"type": "NETWORK_SSD", unit: amount}
+    runtime.verify_filesystem(filesystem, package[2].filesystem_id)
+
+
+@pytest.mark.parametrize("section,key,value", [
+    ("spec", "type", "NETWORK_HDD"), ("spec", "type", "network_ssd"),
+    ("spec", "size_gibibytes", 100), ("spec", "size_gibibytes", True), ("spec", "size_gibibytes", 10.0),
+    ("spec", "size_bytes", 10 * 1024**3), ("status", "state", "CREATING"),
+    ("status", "size_bytes", "0"), ("status", "reconciling", True),
+])
+def test_filesystem_rejects_unready_or_ambiguous_capacity(package, section, key, value):
+    import json
+    filesystem = json.loads((package[0] / "filesystem.json").read_bytes())
+    filesystem[section][key] = value
+    with pytest.raises(ValueError, match="filesystem"):
+        runtime.verify_filesystem(filesystem, package[2].filesystem_id)
 
 
 @pytest.mark.parametrize("name", ["native-plan.json", "native-plan.sig", "g8_native_lifecycle.py"])

@@ -188,6 +188,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_native_readback.py \
 		tests/test_g8_native_runtime.py \
 		tests/test_g8_native_context.py \
+		tests/test_g8_native_handoff.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
@@ -221,6 +222,9 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_native_readback.py \
 		tests/test_g8_native_runtime.py \
 		tests/test_g8_native_context.py \
+		tests/test_g8_native_handoff.py \
+		../scripts/g8_native_handoff.py \
+		../scripts/publish_g8_native_context.py \
 		../serverless/jobs/g8_native_contract.py \
 		../serverless/jobs/g8_native_readback.py \
 		../serverless/jobs/g8_native_runtime.py \
