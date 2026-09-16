@@ -1,0 +1,517 @@
+{
+  "schema_version": "g8_approved_source_staging_closed_v1",
+  "base_main_commit": "3861df48206b5e7620d5ce99932926cf07c6ceb7",
+  "approval": "User explicitly approved temporary writes to the two synthetic source prefixes, revoked within one hour and before any Job.",
+  "proposal": "g8-source-staging-access-proposal-20260915.json",
+  "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+  "session_started_at": "2026-09-15T04:12:14.376560+00:00",
+  "revoked_at": "2026-09-15T04:19:40.264690+00:00",
+  "conservative_write_window_seconds": 445.857,
+  "cleanup_complete": true,
+  "original_grants_rerun": false,
+  "cloud_jobs_created": 0,
+  "policy_checks": [
+    {
+      "bucket_id": "storagebucket-e009132243970085528999",
+      "baseline_resource_version": "7",
+      "grant_verified_at": "2026-09-15T04:12:20.586976+00:00",
+      "granted_resource_version": "8",
+      "independent_granted": {
+        "metadata": {
+          "id": "storagebucket-e009132243970085528999",
+          "parent_id": "project-e00g6zvxpr00waz8t3y51k",
+          "name": "aimada-wave1-results-e00g6zvxpr00",
+          "resource_version": "8",
+          "created_at": "2026-08-16T06:28:57.676641Z",
+          "updated_at": "2026-09-15T04:12:19.628017Z",
+          "labels": {
+            "managed-by": "aimada-bootstrap",
+            "wave": "1"
+          }
+        },
+        "spec": {
+          "versioning_policy": "ENABLED",
+          "lifecycle_configuration": {
+            "rules": [
+              {
+                "id": "abort-incomplete-multipart-after-1-day",
+                "status": "ENABLED",
+                "filter": {},
+                "abort_incomplete_multipart_upload": {
+                  "days_after_initiation": 1
+                }
+              }
+            ]
+          },
+          "default_storage_class": "STANDARD",
+          "force_storage_class": true,
+          "object_audit_logging": "MUTATE_ONLY",
+          "bucket_policy": {
+            "rules": [
+              {
+                "paths": [
+                  "campaigns/wave1-research-20260816/development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/wave1-research-20260816/development/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/wave1-research-20260816/final/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g5-repro-20260906/development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g6-development-20260907/development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g6-development-20260907/development/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g6-development-20260907/final/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*",
+                  "campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              }
+            ]
+          }
+        },
+        "status": {
+          "counters": [
+            {
+              "storage_class": "STANDARD",
+              "counters": {
+                "simple_objects_quantity": "1440",
+                "simple_objects_size": "163680785"
+              },
+              "non_current_counters": {}
+            }
+          ],
+          "state": "ACTIVE",
+          "suspension_state": "NOT_SUSPENDED",
+          "domain_name": "storage.eu-north1.nebius.cloud",
+          "region": "eu-north1",
+          "insecure_endpoint": {
+            "mode": "DISABLED"
+          },
+          "bucket_type": "REGULAR"
+        }
+      },
+      "revocation_verified_at": "2026-09-15T04:19:36.060408+00:00",
+      "revoked_resource_version": "9",
+      "original_spec_restored": true,
+      "independent_after": {
+        "metadata": {
+          "id": "storagebucket-e009132243970085528999",
+          "parent_id": "project-e00g6zvxpr00waz8t3y51k",
+          "name": "aimada-wave1-results-e00g6zvxpr00",
+          "resource_version": "9",
+          "created_at": "2026-08-16T06:28:57.676641Z",
+          "updated_at": "2026-09-15T04:19:34.871374Z",
+          "labels": {
+            "managed-by": "aimada-bootstrap",
+            "wave": "1"
+          }
+        },
+        "spec": {
+          "versioning_policy": "ENABLED",
+          "lifecycle_configuration": {
+            "rules": [
+              {
+                "id": "abort-incomplete-multipart-after-1-day",
+                "status": "ENABLED",
+                "filter": {},
+                "abort_incomplete_multipart_upload": {
+                  "days_after_initiation": 1
+                }
+              }
+            ]
+          },
+          "default_storage_class": "STANDARD",
+          "force_storage_class": true,
+          "object_audit_logging": "MUTATE_ONLY",
+          "bucket_policy": {
+            "rules": [
+              {
+                "paths": [
+                  "campaigns/wave1-research-20260816/development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/wave1-research-20260816/development/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/wave1-research-20260816/final/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g5-repro-20260906/development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g6-development-20260907/development/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g6-development-20260907/development/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/nasdaq-g6-development-20260907/final/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "campaigns/g8-native-rehearsal-20260914/final/synthetic-final/*",
+                  "campaigns/g8-native-rehearsal-20260914/final/.intents/synthetic-final.json"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "campaigns/g8-native-rehearsal-20260914/development/synthetic-development/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              }
+            ]
+          }
+        },
+        "status": {
+          "counters": [
+            {
+              "storage_class": "STANDARD",
+              "counters": {
+                "simple_objects_quantity": "1465",
+                "simple_objects_size": "164024130"
+              },
+              "non_current_counters": {}
+            }
+          ],
+          "state": "ACTIVE",
+          "suspension_state": "NOT_SUSPENDED",
+          "domain_name": "storage.eu-north1.nebius.cloud",
+          "region": "eu-north1",
+          "insecure_endpoint": {
+            "mode": "DISABLED"
+          },
+          "bucket_type": "REGULAR"
+        }
+      }
+    },
+    {
+      "bucket_id": "storagebucket-e004963828556923796882",
+      "baseline_resource_version": "4",
+      "grant_verified_at": "2026-09-15T04:12:25.961380+00:00",
+      "granted_resource_version": "5",
+      "independent_granted": {
+        "metadata": {
+          "id": "storagebucket-e004963828556923796882",
+          "parent_id": "project-e00g6zvxpr00waz8t3y51k",
+          "name": "aimada-wave1-final-e00g6zvxpr00",
+          "resource_version": "5",
+          "created_at": "2026-08-16T06:28:52.675543Z",
+          "updated_at": "2026-09-15T04:12:24.598520Z",
+          "labels": {
+            "managed-by": "aimada-bootstrap",
+            "wave": "1"
+          }
+        },
+        "spec": {
+          "versioning_policy": "ENABLED",
+          "lifecycle_configuration": {
+            "rules": [
+              {
+                "id": "abort-incomplete-multipart-after-1-day",
+                "status": "ENABLED",
+                "filter": {},
+                "abort_incomplete_multipart_upload": {
+                  "days_after_initiation": 1
+                }
+              }
+            ]
+          },
+          "default_storage_class": "STANDARD",
+          "force_storage_class": true,
+          "object_audit_logging": "MUTATE_ONLY",
+          "bucket_policy": {
+            "rules": [
+              {
+                "paths": [
+                  "releases/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "releases/g8-native-rehearsal-20260914/staging/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              },
+              {
+                "paths": [
+                  "releases/g8-native-rehearsal-20260914/staging/*"
+                ],
+                "roles": [
+                  "storage.object-editor"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              }
+            ]
+          }
+        },
+        "status": {
+          "counters": [
+            {
+              "storage_class": "STANDARD",
+              "counters": {
+                "simple_objects_quantity": "65",
+                "simple_objects_size": "10912451"
+              },
+              "non_current_counters": {}
+            }
+          ],
+          "state": "ACTIVE",
+          "suspension_state": "NOT_SUSPENDED",
+          "domain_name": "storage.eu-north1.nebius.cloud",
+          "region": "eu-north1",
+          "insecure_endpoint": {
+            "mode": "DISABLED"
+          },
+          "bucket_type": "REGULAR"
+        }
+      },
+      "revocation_verified_at": "2026-09-15T04:19:40.260242+00:00",
+      "revoked_resource_version": "6",
+      "original_spec_restored": true,
+      "independent_after": {
+        "metadata": {
+          "id": "storagebucket-e004963828556923796882",
+          "parent_id": "project-e00g6zvxpr00waz8t3y51k",
+          "name": "aimada-wave1-final-e00g6zvxpr00",
+          "resource_version": "6",
+          "created_at": "2026-08-16T06:28:52.675543Z",
+          "updated_at": "2026-09-15T04:19:39.821779Z",
+          "labels": {
+            "managed-by": "aimada-bootstrap",
+            "wave": "1"
+          }
+        },
+        "spec": {
+          "versioning_policy": "ENABLED",
+          "lifecycle_configuration": {
+            "rules": [
+              {
+                "id": "abort-incomplete-multipart-after-1-day",
+                "status": "ENABLED",
+                "filter": {},
+                "abort_incomplete_multipart_upload": {
+                  "days_after_initiation": 1
+                }
+              }
+            ]
+          },
+          "default_storage_class": "STANDARD",
+          "force_storage_class": true,
+          "object_audit_logging": "MUTATE_ONLY",
+          "bucket_policy": {
+            "rules": [
+              {
+                "paths": [
+                  "releases/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00gbaesf952eabrws"
+              },
+              {
+                "paths": [
+                  "releases/g8-native-rehearsal-20260914/staging/*"
+                ],
+                "roles": [
+                  "storage.viewer"
+                ],
+                "group_id": "group-e00wb5ptvpq0q7dpaf"
+              }
+            ]
+          }
+        },
+        "status": {
+          "counters": [
+            {
+              "storage_class": "STANDARD",
+              "counters": {
+                "simple_objects_quantity": "65",
+                "simple_objects_size": "10912451"
+              },
+              "non_current_counters": {}
+            }
+          ],
+          "state": "ACTIVE",
+          "suspension_state": "NOT_SUSPENDED",
+          "domain_name": "storage.eu-north1.nebius.cloud",
+          "region": "eu-north1",
+          "insecure_endpoint": {
+            "mode": "DISABLED"
+          },
+          "bucket_type": "REGULAR"
+        }
+      }
+    }
+  ],
+  "publication_status": "operator_stopped_after_slow_candidate_publication; full source publication did not complete",
+  "stop_reason": "Observed frozen x86 AWS CLI running through Rosetta; still verifying the 25-object candidate after over six minutes. Stopped proactively instead of risking the one-hour write window.",
+  "timeout_reached": false,
+  "all_uploaded_objects_preserved": true,
+  "read_only_candidate_verification": {
+    "schema_version": "g8_post_revocation_candidate_readback_v1",
+    "verified_at": "2026-09-15T04:30:40.156014+00:00",
+    "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+    "credential_selectors": {
+      "AWS_ACCESS_KEY_ID": {
+        "secret_id": "mbsec-e00arhndyprqr8egjw",
+        "version_id": "mbsecver-e00rjzerny1pf9qhna"
+      },
+      "AWS_SECRET_ACCESS_KEY": {
+        "secret_id": "mbsec-e00s7qtjj5n9ghacnh",
+        "version_id": "mbsecver-e00yfn5w54jc1ybkwv"
+      }
+    },
+    "credential_access_key_id_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d",
+    "credential_values_resolved_from_exact_versions_in_memory": true,
+    "candidate_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/development/synthetic-development",
+    "candidate_object_count": 25,
+    "candidate_downloaded_byte_count": 343345,
+    "candidate_sha256": "e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c",
+    "candidate_success_sha256": "ba4c729c0bcaeae03bfcd66c0e1db384b41c3ebbd27a0b8114ed5dde83d626e4",
+    "candidate_complete_release_verified": true,
+    "candidate_mode": "development",
+    "input_uri": "s3://aimada-wave1-final-e00g6zvxpr00/releases/g8-native-rehearsal-20260914/staging",
+    "input_prefix_empty": true,
+    "production_head_denied": true,
+    "production_body_downloaded": false,
+    "production_final_key_state": "INACTIVE",
+    "full_source_staging_complete": false,
+    "native_storage_verified": false,
+    "mlflow_remote_verified": false,
+    "cloud_jobs_created": 0,
+    "production_g8_complete": false
+  },
+  "local_full_session_audit": "outputs/g8-approved-source-staging-20260915/session.json",
+  "local_readback": "outputs/g8-approved-source-staging-20260915/candidate-reader-copy",
+  "production_g8_complete": false,
+  "remaining_gate": "Complete the synthetic input source with a reviewed bounded transport; any new writer window requires fresh approval and resource-version guards."
+}

@@ -4,11 +4,55 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-10
+Status reconciled: 2026-09-16
+
+## Validation execution policy — 2026-09-16
+
+The operator removed administrative submission/retention windows, billing checks
+and fixed validation spend/VM limits until LightGBM and Transformers validation
+have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+in preference to older operational bounds in this record. No billing queries or
+balance-refresh requests. Finite Job timeouts, execution identities, evidence
+integrity and separate final-test authorization remain. This is an execution-policy
+change, not model-quality acceptance or a completed G8/G9 milestone.
 
 ## Implementation Status
 
-Status: `[g0-g6-complete; g7-g9-pending]`
+Status: `[g0-g7-complete; g8-open; g9-pending]`
+
+Current G8 recovery: R4 downloaded the final release but failed before scoring
+on the projection artifact root. The root correction and synthetic C4-shaped
+scoring/publication/local-MLflow round-trip now pass in the unchanged pinned
+image. The injected runner and reviewed evaluator overlays additionally pass the
+complete synthetic C4 comparison (27 checkpoints, 198 paired observations, one
+scoring call, one verified local MLflow run). This is not production qualification
+or Java execution evidence. Live original comparison availability, replacement
+package binding, durable recovery and replacement-specific authorization remain
+pending. Persistent-storage exception preparation is approved, not provisioning.
+Post-MLflow checkpoint/publication recovery also passes the frozen synthetic fault
+rehearsal. Pre-scoring MLflow reservation and same-run logging recovery now pass
+the frozen synthetic rehearsal too (one run, one scoring call, 24 metrics and 30
+dataset inputs, zero writes on completed recovery). Pre-logging payload retention
+and fresh-process log-only recovery now also pass after removal of the synthetic
+workspace, including a second interruption after an artifact upload. A separate
+[signed replacement entrypoint](../g8-live-replacement.md) now integrates these
+components and reconstructs the cloud result with the original scoring Job and
+resource evidence before marker-last publication. It preserves R4 history and
+requires a native mount and fresh package-bound approval; the ordinary Wave 1
+volume prohibition remains intact. Native durability, authenticated remote
+rehearsal and actual production package review remain required. The synthetic
+rehearsal's two-phase design is approved, subject to the reviewed execution
+package and the validation policy above. [Synthetic source staging](../g8-source-sdk.md) is complete: all 350
+objects were independently downloaded and verified after input writer revocation
+within 397 seconds. Future model/runtime rehearsals use Nebius Serverless. Native
+durability and remote MLflow proof still require execution; no production
+replacement authorization is implied.
+See [pre-logging checkpoints](../g8-prelogging-checkpoint.md),
+[publication recovery](../g8-publication-recovery.md) and
+[MLflow recovery](../g8-mlflow-recovery.md).
+The [recovery record](../g8-completion-recovery.md) supersedes
+the older "final fold remains unopened" status below without altering historical
+receipts or treating R4's failure as G8 completion.
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
@@ -179,9 +223,10 @@ signature SHA-256
 and trusted public-key SHA-256
 `a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
 Independent verification reports `authorized`, `signature_verified=true`, and
-`final_identity_available=true`. G8's final fold remains unopened.
+`final_identity_available=true`. At that G7 checkpoint the final fold was unopened;
+R4 subsequently downloaded it and failed before scoring (see current status above).
 
-Two separately authorized G8 Jobs have since failed closed before candidate or
+The first two separately authorized G8 Jobs failed closed before candidate or
 final-release download. The second, `aijob-e00rwzexvwb11rmt4c`, is bound to
 authorization receipt SHA-256
 `99c0660231ec0584c38ba85f0d2d6c25e155b22162014a00b6b9f60eab733d60`,
@@ -213,6 +258,51 @@ and
 the idempotent provisioner state receipt SHA-256 is
 `7a1d3a7be81c4d526eed2479273adc2be76c74be2adc607c04a55eaaabca26c1`.
 Another Job requires a fresh signed authorization.
+
+The third authorization was consumed by exactly one Job,
+`aijob-e00gw2jh294yqa39pd`. The container failed before authorization
+verification because the newly injected runner imported
+`S3PublicationIntent` from an older frozen runtime image that did not contain
+it. The submission, monitor, redacted-log and verified-outcome SHA-256 values
+are `26a57b160b3abfd9fd5769076294c67c945056d5da02f07ce07705d62d558207`,
+`c69f11bce6d77a15cba4bce8fe9f6f7564ce2c37d057a049bb6772c5695c4d68`,
+`af12942515c13f6d270979a744d19cdc57018c065009cd271f36bd497be9d46f`,
+and `db743ebd216066feecec8d743246d2a6652558e25b2f1eef6409a3d3388ec9a7`.
+No candidate or final object was downloaded, and an authenticated MLflow query
+found zero matching governed-evaluation runs.
+
+The decision is to keep the authorized model runtime immutable and make the
+small injected control plane explicitly backwards compatible. Its private
+publication implementation performs only conditional `PutObject` operations,
+checksum read-back, marker-last publication and bounded rollback of objects it
+created. Each successful conditional create enters rollback ownership before
+metadata or read-back verification can fail. Preflight v2 now runs the exact
+injected runner's conditional-
+publication compatibility probe inside the exact digest-pinned image with
+networking disabled and binds both identities in its receipt; the previously
+failing image passes with runner SHA-256
+`b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a`.
+The image build independently runs the same packaged G8 probe. This closes
+the compatibility class of failure before authorization or cloud spend without
+changing the frozen model or its dependency environment. No fourth Job is
+authorized by this remediation.
+
+## Evaluation and Recovery Decision Dependencies — 2026-09-15
+
+The following records extend this execution decision and preserve its frozen
+candidate and release-authority boundary:
+
+- [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
+- [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
+- [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
+
+The C4 evaluator is available in the injected runner. MLflow reservation/recovery
+and completed-release publication recovery are separate APIs, not live runner
+integration. The replacement must require/hash-bind C4 evidence and reviewed
+code, preserve R4's consumed authorization and test-access history, and complete
+pre-logging retention, native-storage and remote rehearsal gates. The
+[storage exception](../g8-persistent-storage-exception.md) remains a proposal.
+Earlier G7/R1–R3 status paragraphs below describe historical checkpoints.
 
 ## Context
 

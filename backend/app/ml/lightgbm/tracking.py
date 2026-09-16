@@ -1,8 +1,17 @@
 from __future__ import annotations
 
 import json
+import math
+import re
+import hashlib
+import tempfile
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs
+    from app.ml.lightgbm.g8_mlflow_recovery import ResumeTarget
 
 from app.ml.lightgbm.contracts import (
     CalibrationManifest,
@@ -152,9 +161,11 @@ def log_governed_evaluation_run(
     checksum_path: Path,
     prediction_manifest_path: Path,
     benchmark_results_path: Path | None = None,
+    c4_evaluation_inputs: C4EvaluationInputs | None = None,
     tracking_uri: str | None = None,
     dataset_source_uri: str | None = None,
     cloud_metadata: dict[str, str | int | float] | None = None,
+    resume_target: ResumeTarget | None = None,
 ) -> str:
     """Index an already-verified frozen-test release in MLflow."""
 
@@ -170,49 +181,183 @@ def log_governed_evaluation_run(
     _require_artifact_root_file(checksum_path, artifact_root)
     if prediction_manifest_path.read_bytes() != predictions.canonical_bytes():
         raise ValueError("MLflow prediction manifest path is not canonical governed content")
-    mlflow = _mlflow(tracking_uri)
-    mlflow.set_experiment(EVALUATION_EXPERIMENT)
-    with mlflow.start_run(run_name=predictions.prediction_run_id) as run:
-        tags = _binding_tags(training, governance_state="release_verified")
-        tags.update(
-            {
-                "calibration_id": calibration.calibration_id,
-                "prediction_run_id": predictions.prediction_run_id,
-                "model_bundle_hash": bundle.manifest_hash(),
-                "operating_mode": predictions.operating_mode,
-                "test_accessed": "true",
-            }
+    with _verified_benchmark_snapshot(
+        benchmark_results_path, artifact_root=artifact_root,
+        predictions=predictions, c4_inputs=c4_evaluation_inputs,
+    ) as (benchmark_metrics, benchmark_tags, benchmark_snapshot):
+        if resume_target is not None:
+            from app.ml.lightgbm.g8_mlflow_recovery import resume_verified_logging
+
+            if tracking_uri != resume_target.spec.tracking_uri or benchmark_snapshot is None:
+                raise ValueError("MLflow recovery requires the reserved tracking URI and C4 report")
+            cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
+            return resume_verified_logging(
+                resume_target,
+                tags={
+                    **_binding_tags(training, governance_state="release_verified"),
+                    **benchmark_tags, **cloud_tags,
+                    "calibration_id": calibration.calibration_id,
+                    "prediction_run_id": predictions.prediction_run_id,
+                    "model_bundle_hash": bundle.manifest_hash(),
+                    "operating_mode": predictions.operating_mode,
+                    "test_accessed": "true",
+                },
+                metrics={
+                    "test_alert_count": float(predictions.alert_count),
+                    "test_row_count": float(predictions.row_count),
+                    "frozen_threshold": predictions.threshold,
+                    **cloud_metrics, **benchmark_metrics,
+                },
+                inputs=feature_dataset_inputs(
+                    predictions.input_features,
+                    source_root_uri=dataset_source_uri or artifact_root.resolve().as_uri(),
+                    feature_release_id=training.feature_release_id,
+                    feature_release_sha256=training.feature_release_sha256,
+                    expected_folds={"test"},
+                ),
+                artifacts={
+                    "governed/" + bundle_path.name: (bundle_path, hashlib.sha256(bundle.canonical_bytes()).hexdigest()),
+                    "governed/" + checksum_path.name: (checksum_path, bundle.artifact_map()["checksums"].sha256),
+                    "governed/" + prediction_manifest_path.name: (
+                        prediction_manifest_path, hashlib.sha256(predictions.canonical_bytes()).hexdigest(),
+                    ),
+                    "governed-evaluation/" + benchmark_snapshot.name: (
+                        benchmark_snapshot, benchmark_tags.get("c4_evaluation_report_sha256", ""),
+                    ),
+                },
+            )
+        mlflow = _mlflow(tracking_uri)
+        mlflow.set_experiment(EVALUATION_EXPERIMENT)
+        with mlflow.start_run(run_name=predictions.prediction_run_id) as run:
+            tags = _binding_tags(training, governance_state="release_verified")
+            tags.update(benchmark_tags)
+            tags.update(
+                {
+                    "calibration_id": calibration.calibration_id,
+                    "prediction_run_id": predictions.prediction_run_id,
+                    "model_bundle_hash": bundle.manifest_hash(),
+                    "operating_mode": predictions.operating_mode,
+                    "test_accessed": "true",
+                }
+            )
+            cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
+            tags.update(cloud_tags)
+            mlflow.set_tags(tags)
+            log_dataset_inputs(
+                mlflow,
+                feature_dataset_inputs(
+                    predictions.input_features,
+                    source_root_uri=dataset_source_uri or artifact_root.resolve().as_uri(),
+                    feature_release_id=training.feature_release_id,
+                    feature_release_sha256=training.feature_release_sha256,
+                    expected_folds={"test"},
+                ),
+            )
+            mlflow.log_metrics(
+                {
+                    "test_alert_count": float(predictions.alert_count),
+                    "test_row_count": float(predictions.row_count),
+                    "frozen_threshold": predictions.threshold,
+                    **cloud_metrics,
+                }
+            )
+            if benchmark_metrics:
+                mlflow.log_metrics(benchmark_metrics)
+            for path in (bundle_path, checksum_path, prediction_manifest_path):
+                mlflow.log_artifact(str(path), artifact_path="governed")
+            if benchmark_snapshot is not None:
+                mlflow.log_artifact(str(benchmark_snapshot), artifact_path="governed-evaluation")
+            return str(run.info.run_id)
+
+
+def _reject_duplicate_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("benchmark JSON contains duplicate keys")
+        result[key] = value
+    return result
+
+
+def _has_c4_claims(value: Any) -> bool:
+    """Do not let a schema downgrade/wrapper launder C4 evidence as legacy JSON."""
+    if isinstance(value, dict):
+        reserved = {"same_observations_verified", "evaluation_profile_sha256", "candidate_sha256",
+                    "seven_date_benchmark_compliance"}
+        return any(
+            key in reserved or key.startswith(("c4.", "lightgbm.", "rules.", "delta.lightgbm_minus_rules."))
+            or _has_c4_claims(item)
+            for key, item in value.items()
         )
-        cloud_tags, cloud_metrics = _validated_cloud_metadata(cloud_metadata)
-        tags.update(cloud_tags)
-        mlflow.set_tags(tags)
-        log_dataset_inputs(
-            mlflow,
-            feature_dataset_inputs(
-                predictions.input_features,
-                source_root_uri=dataset_source_uri or artifact_root.resolve().as_uri(),
-                feature_release_id=training.feature_release_id,
-                feature_release_sha256=training.feature_release_sha256,
-                expected_folds={"test"},
-            ),
+    if isinstance(value, list):
+        return any(_has_c4_claims(item) for item in value)
+    return isinstance(value, str) and value.startswith(("g8_c4_", "c4.test."))
+
+
+@contextmanager
+def _verified_benchmark_snapshot(
+    path: Path | None, *, artifact_root: Path, predictions: DetectorPredictionsManifest,
+    c4_inputs: C4EvaluationInputs | None,
+):
+    if path is None:
+        if c4_inputs is not None:
+            raise ValueError("C4 evidence inputs require a benchmark report")
+        yield {}, {}, None
+        return
+    _require_artifact_root_file(path, artifact_root)
+    content = path.read_bytes()
+    payload = json.loads(content, object_pairs_hook=_reject_duplicate_keys)
+    if not isinstance(payload, dict):
+        raise ValueError("governed benchmark report must be an object")
+    is_c4 = payload.get("schema_version") == "g8_c4_observation_metrics_v1"
+    if is_c4:
+        if c4_inputs is None:
+            raise ValueError("C4 report requires original evaluation evidence inputs")
+        # Lazy import avoids the cloud_runner -> tracking -> evaluator cycle.
+        from app.market_data.projections import FrozenPublicSampleRoot
+        from app.ml.lightgbm.c4_evaluation import C4EvaluationProfile
+        from app.ml.lightgbm.c4_replay_evidence import evaluate_c4_release
+
+        expected = evaluate_c4_release(
+            profile=C4EvaluationProfile.model_validate_json(c4_inputs.profile.read_bytes()),
+            root=FrozenPublicSampleRoot.model_validate_json(c4_inputs.frozen_root.read_bytes()),
+            projection_path=c4_inputs.projection, comparison_path=c4_inputs.comparison,
+            candidate_path=c4_inputs.candidate, artifact_root=artifact_root, predictions=predictions,
         )
-        mlflow.log_metrics(
-            {
-                "test_alert_count": float(predictions.alert_count),
-                "test_row_count": float(predictions.row_count),
-                "frozen_threshold": predictions.threshold,
-                **cloud_metrics,
-            }
-        )
-        if benchmark_results_path is not None:
-            metrics = _benchmark_metrics(benchmark_results_path)
-            if metrics:
-                mlflow.log_metrics(metrics)
-        for path in (bundle_path, checksum_path, prediction_manifest_path):
-            mlflow.log_artifact(str(path), artifact_path="governed")
-        if benchmark_results_path is not None:
-            mlflow.log_artifact(str(benchmark_results_path), artifact_path="governed-evaluation")
-        return str(run.info.run_id)
+        source_fields = {"source_result_inventory_sha256", "source_request_sha256", "source_mlflow_run_id"}
+        if source_fields & payload.keys():
+            from app.ml.lightgbm.cloud_runner import verify_wave1_result
+            from app.ml.lightgbm.artifacts import sha256_file
+
+            source_root = c4_inputs.source_result or artifact_root.parent
+            source_run = verify_wave1_result(source_root)
+            if source_run.mode != "final-evaluation" or source_run.candidate_hash != expected["candidate_sha256"]:
+                raise ValueError("C4 report source result differs from the evaluated candidate")
+            source_predictions = DetectorPredictionsManifest.model_validate_json(
+                (source_root / "artifacts/prediction/prediction-manifest.json").read_bytes()
+            )
+            if source_predictions.manifest_hash() != predictions.manifest_hash():
+                raise ValueError("C4 report source result differs from the evaluated predictions")
+            expected.update(
+                source_result_inventory_sha256=sha256_file(source_root / "SUCCESS"),
+                source_request_sha256=source_run.request_sha256,
+                source_mlflow_run_id=source_run.mlflow_run_id,
+            )
+        def canonical(value):
+            return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+        if hashlib.sha256(canonical(payload)).digest() != hashlib.sha256(canonical(expected)).digest():
+            raise ValueError("C4 report differs from verified evaluator output and candidate/profile evidence")
+    elif c4_inputs is not None or _has_c4_claims(payload):
+        raise ValueError("C4 evidence claims require the canonical C4 report schema and evaluation inputs")
+    # Never reread the caller's mutable file for metrics, tags or artifact upload.
+    with tempfile.TemporaryDirectory(prefix="mlflow-benchmark-") as temporary:
+        snapshot = Path(temporary) / path.name
+        snapshot.write_bytes(content)
+        metrics = _benchmark_metrics(snapshot)
+        tags = _c4_benchmark_tags(snapshot, predictions)
+        if is_c4:
+            tags["c4_evaluation_report_sha256"] = hashlib.sha256(content).hexdigest()
+        yield metrics, tags, snapshot
 
 
 def _binding_tags(
@@ -292,6 +437,20 @@ def _mlflow(tracking_uri: str | None) -> Any:
 
 def _benchmark_metrics(path: Path) -> dict[str, float]:
     payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") == "g8_c4_observation_metrics_v1":
+        from app.ml.lightgbm.c4_evaluation import C4_METRIC_NAMES
+
+        metrics = payload.get("metrics")
+        if not isinstance(metrics, dict) or set(metrics) != C4_METRIC_NAMES:
+            raise ValueError("C4 benchmark must contain the exact observation metric inventory")
+        result = {}
+        for name, value in metrics.items():
+            if value is None:
+                continue  # Undefined precision/recall is never silently changed to zero.
+            if type(value) not in (float, int) or not math.isfinite(value):
+                raise ValueError("C4 benchmark metrics must be finite numbers or null")
+            result[f"c4.test.{name}"] = float(value)
+        return result
     metrics = payload.get("metrics", payload)
     if not isinstance(metrics, dict):
         raise ValueError("governed benchmark metrics artifact is invalid")
@@ -308,6 +467,34 @@ def _benchmark_metrics(path: Path) -> dict[str, float]:
         f"test_{name}": float(value)
         for name, value in metrics.items()
         if name in allowed and isinstance(value, (int, float))
+    }
+
+
+def _c4_benchmark_tags(path: Path, predictions: DetectorPredictionsManifest) -> dict[str, str]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != "g8_c4_observation_metrics_v1":
+        return {}
+    if (
+        payload.get("same_observations_verified") is not True
+        or payload.get("seven_date_benchmark_compliance") is not False
+        or payload.get("observation_unit") != "supervised_projection_row"
+        or payload.get("negative_label_source") != "research_control_assumption"
+        or payload.get("prediction_manifest_sha256") != predictions.manifest_hash()
+        or payload.get("model_binding") != predictions.binding.model_dump(mode="json")
+        or payload.get("row_count") != predictions.row_count
+        or payload.get("frozen_threshold") != predictions.threshold
+    ):
+        raise ValueError("C4 benchmark is not a verified comparison for this prediction release")
+    for name in ("candidate_sha256", "evaluation_profile_sha256"):
+        if not isinstance(payload.get(name), str) or re.fullmatch(r"[a-f0-9]{64}", payload[name]) is None:
+            raise ValueError("C4 benchmark has no frozen candidate/profile identity")
+    return {
+        "evaluation_contract": "g8_c4_supervised_observations_v1",
+        "evaluation_profile_sha256": payload["evaluation_profile_sha256"],
+        "candidate_hash": payload["candidate_sha256"],
+        "seven_date_benchmark_compliance": "false",
+        "same_observations_verified": "true",
+        "negative_label_source": "research_control_assumption",
     }
 
 

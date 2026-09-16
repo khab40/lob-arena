@@ -170,13 +170,93 @@ lightgbm-wave1-g7-check:
 		python ../scripts/lightgbm_wave1.py g7-verify --help >/dev/null
 
 lightgbm-wave1-g8-check:
-	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest -q \
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml --with awscli==1.46.1 python -m pytest -q \
+		tests/test_c4_evaluation.py \
+		tests/test_c4_replay_evidence.py \
+		tests/test_c4_tracking.py \
+		tests/test_g8_benchmark_readiness.py \
+		tests/test_g8_rehearsal.py \
+		tests/test_g8_publication_recovery.py \
+		tests/test_g8_mlflow_recovery.py \
+		tests/test_g8_scored_checkpoint.py \
+		tests/test_g8_replacement.py \
+		tests/test_g8_rehearsal_access.py \
+		tests/test_g8_native_sources.py \
+		tests/test_g8_source_staging.py \
+		tests/test_g8_source_sdk.py \
+		tests/test_g8_native_source_capsule.py \
+		tests/test_g8_native_readback.py \
+		tests/test_g8_native_archive.py \
+		tests/test_g8_native_runtime.py \
+		tests/test_g8_native_context.py \
+		tests/test_g8_native_submission.py \
+		tests/test_g8_native_handoff.py \
+		tests/test_g8_vm_deadline.py \
+		tests/test_g8_validation_policy.py \
 		tests/test_lightgbm_g8.py \
 		tests/test_lightgbm_g7.py \
 		tests/test_lightgbm_wave1.py
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --group dev ruff check \
 		app/ml/lightgbm/g8_evaluation.py \
+		app/ml/lightgbm/g8_c4_fixture.py \
+		app/ml/lightgbm/g8_publication_recovery.py \
+		app/ml/lightgbm/g8_mlflow_recovery.py \
+		app/ml/lightgbm/g8_scored_checkpoint.py \
+		app/ml/lightgbm/g8_replacement.py \
+		app/ml/lightgbm/g8_live_recovery.py \
+		app/ml/lightgbm/c4_evaluation.py \
+		app/ml/lightgbm/c4_replay_evidence.py \
+		app/ml/lightgbm/g8_benchmark_readiness.py \
+		app/ml/lightgbm/tracking.py \
+		tests/test_c4_evaluation.py \
+		tests/test_c4_replay_evidence.py \
+		tests/test_c4_tracking.py \
+		tests/test_g8_benchmark_readiness.py \
+		tests/test_g8_rehearsal.py \
 		tests/test_lightgbm_g8.py \
+		tests/test_g8_publication_recovery.py \
+		tests/test_g8_mlflow_recovery.py \
+		tests/test_g8_scored_checkpoint.py \
+		tests/test_g8_replacement.py \
+		tests/test_g8_rehearsal_access.py \
+		tests/test_g8_native_sources.py \
+		tests/test_g8_source_staging.py \
+		tests/test_g8_source_sdk.py \
+		tests/test_g8_native_source_capsule.py \
+		tests/test_g8_native_readback.py \
+		tests/test_g8_native_archive.py \
+		tests/test_g8_native_runtime.py \
+		tests/test_g8_native_context.py \
+		tests/test_g8_native_submission.py \
+		tests/test_g8_native_handoff.py \
+		tests/test_g8_vm_deadline.py \
+		tests/test_g8_validation_policy.py \
+		../scripts/g8_vm_deadline.py \
+		../scripts/g8_native_handoff.py \
+		../scripts/publish_g8_native_context.py \
+		../serverless/jobs/g8_native_contract.py \
+		../serverless/jobs/g8_native_archive.py \
+		../serverless/jobs/g8_native_bootstrap.py \
+		../serverless/jobs/g8_native_readback.py \
+		../serverless/jobs/g8_native_runtime.py \
+		../serverless/jobs/g8_native_lifecycle.py \
+		../serverless/jobs/run_g8_native_rehearsal.py \
+		../scripts/prepare_g8_native_rehearsal.py \
+		../scripts/sign_g8_native_context.py \
+		../scripts/submit_g8_native_rehearsal.py \
+		../serverless/jobs/g8_native_source_capsule.py \
+		../serverless/jobs/g8_source_sdk.py \
+		../serverless/jobs/stage_g8_native_sources.py \
+		../serverless/jobs/g8_source_staging_rehearsal.py \
+		../serverless/jobs/prepare_g8_native_sources.py \
+		../serverless/jobs/g8_live_rehearsal.py \
+		../serverless/jobs/run_lightgbm_g8_replacement.py \
+		../serverless/jobs/g8_rehearsal.py \
+		../serverless/jobs/g8_publication_rehearsal.py \
+		../serverless/jobs/g8_mlflow_rehearsal.py \
+		../serverless/jobs/g8_checkpoint_rehearsal.py \
+		../serverless/jobs/recover_lightgbm_g8_scored.py \
+		../serverless/jobs/recover_lightgbm_g8_publication.py \
 		../serverless/jobs/run_lightgbm_g8.py \
 		../scripts/lightgbm_wave1.py \
 		../scripts/submit_nebius_job.py
@@ -184,6 +264,8 @@ lightgbm-wave1-g8-check:
 		python ../scripts/lightgbm_wave1.py g8-prepare --help >/dev/null
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
 		python ../scripts/lightgbm_wave1.py g8-verify --help >/dev/null
+	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml \
+		python -c 'import sys; sys.path.insert(0, ".."); from serverless.jobs import g8_native_lifecycle; assert callable(g8_native_lifecycle.score)'
 
 lightgbm-wave1-local-e2e:
 	WAVE1_TMP="$$(mktemp -d /tmp/lob-arena-wave1.XXXXXX)"; \

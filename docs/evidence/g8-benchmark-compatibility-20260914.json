@@ -1,0 +1,30 @@
+{
+  "benchmark_minimum_distinct_dates": 7,
+  "benchmark_protocol_file_sha256": "1eaa810497b718257da8d1a3446cae82ef37acf0ab8424fe57a97672cbde0f1a",
+  "benchmark_protocol_id": "nasdaq-public-sample-v1",
+  "benchmark_protocol_sha256": "f18f30e735da0fea18d086260baf3b7601f77cae5bacbf37a3e709eca8da6ddb",
+  "blocking_reasons": [
+    "protocol_hash_mismatch",
+    "insufficient_frozen_source_dates"
+  ],
+  "c4_mlflow_receipt_sha256": "c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b",
+  "candidate_c4_binding_verified": true,
+  "candidate_hash": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "frozen_protocol_id": "nasdaq-public-sample-v1",
+  "frozen_protocol_sha256": "39d34e59adfe395177682961d35586113d12287860eee5d39abb585b4f0a75b3",
+  "frozen_root_file_sha256": "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9",
+  "frozen_root_identity_sha256": "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803",
+  "frozen_source_dates": [
+    "2019-01-30",
+    "2019-03-27",
+    "2019-10-30",
+    "2019-12-30"
+  ],
+  "negative_label_source": "research_control_assumption",
+  "replay_availability_verified": false,
+  "schema_version": "g8_benchmark_compatibility_v1",
+  "status": "incompatible",
+  "submission_authorized": false,
+  "test_rows_read_by_audit": false,
+  "training_manifest_sha256": "fa528a8660d0a687940bd1df9ce4d5fe2a1e21ca2d6be3ca823aafbd543e037b"
+}

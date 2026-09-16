@@ -1,0 +1,82 @@
+{
+  "schema_version": "g8_native_source_preparation_execution_v1",
+  "verified_at": "2026-09-15T03:04:26Z",
+  "base_main_commit": "5bf5c3d345f6aad9335296e6385e7b75ebbd3784",
+  "scope": "offline_synthetic_source_preparation_and_relocated_verification_only",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "platform": "linux/amd64",
+  "network": "none",
+  "code_sha256": {
+    "serverless/jobs/prepare_g8_native_sources.py": "50fd69779fbda1f98a0e9402620e905545343f68f8d1673ceb2899594f0066f8",
+    "serverless/jobs/g8_rehearsal.py": "e2062dc56c3dff06eca49ee8305513847830f76aa09c3e464617b59eb1c050a1",
+    "serverless/jobs/run_lightgbm_g8.py": "615dc10506bfa1383b8802029af7835fbabab7195b04ab501e983f27de716208",
+    "backend/app/ml/lightgbm/g8_c4_fixture.py": "944b93f5d9f28191adc28e90a6def337c019bd74cc25a81f1e00f545258f40e3",
+    "backend/app/ml/lightgbm/g8_publication_recovery.py": "99f8e69494c9d9488c3cdd5e9cfeb09c5b4a2238aa247d0e2ccc076a681e04ec",
+    "backend/app/ml/lightgbm/tracking.py": "220985b414eeaebec5613b8b1d26cb6d572e97f78bfc70aa96f2ee7b413c6f9d",
+    "backend/app/ml/lightgbm/c4_evaluation.py": "262fe67b09eef944586ff9db3bc1e2d6acd727971c7e9922ce18399aeca0adb9",
+    "backend/app/ml/lightgbm/c4_replay_evidence.py": "4276de59c0ba6bf20298bc05b82bbcba1daa8e28b0778e3653432ab0c73a56e1",
+    "backend/app/ml/lightgbm/g8_benchmark_readiness.py": "d4f0b68448dbf886cd560f1cea4f4c61739c7a9dd4dde947a4b2a275aeeabaed"
+  },
+  "preparation": {
+    "entrypoint": "python",
+    "argv": [
+      "/rehearsal/prepare_g8_native_sources.py",
+      "--output",
+      "/evidence/prepared-reviewed"
+    ],
+    "exit_code": 0,
+    "development_training_rows": 72,
+    "final_scoring_performed": false,
+    "mlflow_run_id": null
+  },
+  "relocated_verification": {
+    "entrypoint": "python",
+    "argv": [
+      "/rehearsal/prepare_g8_native_sources.py",
+      "--output",
+      "/relocated",
+      "--verify",
+      "--expected-sha256",
+      "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9"
+    ],
+    "exit_code": 0,
+    "package_mounted_read_only": true,
+    "build_workspace_mounted": false,
+    "original_package_path_available": false,
+    "receipt_identical_to_preparation": true
+  },
+  "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+  "candidate_sha256": "e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c",
+  "request_sha256": "6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486",
+  "candidate_success_sha256": "ba4c729c0bcaeae03bfcd66c0e1db384b41c3ebbd27a0b8114ed5dde83d626e4",
+  "input_success_sha256": "aad5040e21d8b3de8957ce5d7a24dd69fbeef13fd12a21bfec581a5cf241fac9",
+  "comparison_sha256": "f665b68d4739b6530165611181cae0dc3017367a45c591ddbc165de7b0b7bee8",
+  "candidate_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/development/synthetic-development",
+  "input_uri": "s3://aimada-wave1-final-e00g6zvxpr00/releases/g8-native-rehearsal-20260914/staging",
+  "checkpoint_count": 27,
+  "replay_domain_count": 30,
+  "synthetic_test_row_count": 198,
+  "payload_file_count": 356,
+  "payload_size_bytes": 2652554,
+  "retained_local_package": "outputs/g8-native-sources-reviewed-20260915",
+  "original_local_package": "/tmp/g8-native-sources.2DrZHb/prepared-reviewed/package",
+  "superseded_local_engineering_package_sha256": "ceb6b8b319e1dc08cb3555a71a1d6393a37556d135012b00c1155b21ba207faf",
+  "local_source_verification_passed": true,
+  "dataset_lineage_kind": "synthetic_placeholder_not_remote_mlflow_registration",
+  "comparison_kind": "synthetic_contract_fixtures_not_java_execution",
+  "remote_sources_staged": false,
+  "remote_authentication_verified": false,
+  "native_storage_verified": false,
+  "production_test_accessed": false,
+  "production_g8_complete": false,
+  "cloud_jobs_created": 0,
+  "native_filesystems_created": 0,
+  "cloud_policy_changes": 0,
+  "remaining_gates": [
+    "review source preparation changes",
+    "separately reviewed exact-prefix staging writer and conditional marker-last source publication",
+    "version-pinned Job-credential source downloads plus production-object HEAD denial",
+    "actual native/authenticated-remote rehearsal execution package",
+    "fresh billing reconciliation and approved bounded two-Job rehearsal"
+  ]
+}

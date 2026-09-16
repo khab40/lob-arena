@@ -1,10 +1,10 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
-Status: G0-G7 complete; the validation-only isotonic candidate is frozen; G8 awaits fresh authorization after two fail-closed pre-test attempts
+Status: G0-G7 complete; G8 open after R4's post-download, pre-scoring failure; synthetic recovery rehearsal passes; production completion gates remain pending
 
 Date: 2026-08-26
 
-Status reconciled: 2026-09-12
+Status reconciled: 2026-09-13
 
 ## Outcome
 
@@ -1080,6 +1080,17 @@ Independent replay returned `authorized`, `signature_verified=true`, and
 
 ### G8 — One Final Evaluation
 
+Current recovery status (2026-09-14): R4 downloaded the final release but failed
+before scoring. The input root is corrected; real C4-shaped synthetic scoring,
+release verification and local MLflow readback pass in the pinned image. The
+[G8 recovery record](g8-completion-recovery.md) defines the remaining benchmark,
+durability and replacement-authorization gates. Earlier statements that the
+final fold remains unopened are historical. No production G8 pass is claimed.
+The follow-up complete synthetic C4 comparison passes in the pinned image with
+reviewed overlays: 27 checkpoints, 198 paired observations, one scoring call and
+one verified local MLflow run. Storage-exception preparation is approved; native
+durability, remote rehearsal and replacement package binding are not yet verified.
+
 Operator uses the final identity to submit the digest-pinned command exactly
 once. Codex collects and verifies predictions, model bundle, rules comparison,
 benchmark, uncertainty and cloud-run evidence. Operator disables the final
@@ -1165,6 +1176,38 @@ the MLflow absence-verification receipt SHA-256 is
 No evaluation result exists to log, and another Job requires a new signed
 authorization.
 
+A third exact-hash authorization created exactly one Job,
+`aijob-e00gw2jh294yqa39pd`, on 2026-09-13. It failed while importing the
+injected runner because the runner referenced `S3PublicationIntent`, which was
+added after the frozen runtime image was published. The failure preceded
+authorization verification, intent acquisition, candidate download and final
+download, so `test_fold_accessed=false` and no model evaluation occurred. An
+authenticated query of governed-evaluation experiment `3` found zero matching
+MLflow runs. The recovered submission, terminal monitor, redacted log and
+verified-outcome SHA-256 values are respectively
+`26a57b160b3abfd9fd5769076294c67c945056d5da02f07ce07705d62d558207`,
+`c69f11bce6d77a15cba4bce8fe9f6f7564ce2c37d057a049bb6772c5695c4d68`,
+`af12942515c13f6d270979a744d19cdc57018c065009cd271f36bd497be9d46f`,
+and `db743ebd216066feecec8d743246d2a6652558e25b2f1eef6409a3d3388ec9a7`.
+The final key is `INACTIVE`, MLflow is `STOPPED`, and the temporary operator
+SSH rule was removed.
+
+The corrected injected runner now owns its minimal publication-intent contract
+and conditional single-object publisher, so it remains compatible with the
+frozen model runtime while retaining `If-None-Match: *`, read-back checksum
+verification, marker-last publication and no bucket-list permission. Every
+successful conditional create enters rollback ownership before its metadata or
+read-back verification. G8
+preflight v2 additionally executes the exact injected runner's conditional-
+publication compatibility probe inside the exact digest-pinned image with
+container networking disabled and binds that runner SHA-256 into the receipt.
+The formerly failing runtime passed this offline gate
+with runner SHA-256
+`b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a`.
+The Jobs Dockerfile runs the same G8 publication probe during every image build.
+No retry is authorized; another Job requires a new signed authorization and a
+new run ID.
+
 ### G9 — Cost Reconciliation And Exit
 
 Operator exports the campaign's Nebius Billing usage with sensitive tenant
@@ -1231,6 +1274,32 @@ production/client performance claim.
 - [x] G7 candidate and final authorization are signed (2026-09-12; exact-hash
   authorization verified, final identity available, no test access).
 - [ ] G8 one final evaluation verifies.
+- [x] R4 projection-root correction and synthetic C4-shaped scoring, conditional
+  publication and local MLflow artifact/metric readback pass in the frozen image.
+- [ ] Complete rules/LightGBM benchmark and uncertainty use identical observations.
+- [x] Complete **synthetic C4 contract** rehearsal verifies original-format
+  checkpoints, canonical joins, metrics/uncertainty and local MLflow read-back in
+  the pinned runtime with reviewed overlays (not production or Java execution).
+- [x] Prepare the user-approved narrow persistent-storage exception for review;
+  provisioning and a replacement execution remain unauthorized.
+- [ ] Durable publish/log-only recovery is verified without rescoring or duplicate runs.
+- [x] Post-MLflow completed-release checkpoint and publish-only recovery pass
+  synthetic failure tests in the pinned runtime; not live integration, native
+  storage durability or interruption recovery during MLflow logging.
+- [x] Pre-scoring MLflow reservation and same-run logging recovery pass the frozen
+  synthetic fault rehearsal; 24 metric histories, 30 dataset inputs and four
+  artifacts verify with one run/one scoring call. See
+  [MLflow recovery](g8-mlflow-recovery.md).
+- [x] Pre-logging scored checkpoints and fresh-process log-only recovery pass
+  after removal of the original synthetic workspace, with no rescoring or new
+  MLflow run. See [checkpoint proof](g8-prelogging-checkpoint.md).
+- [x] Implement separate signed replacement preflight and live lifecycle wiring:
+  scored seal, same-run logging, original scoring execution identities and
+  marker-last publication; synthetic workspace-loss/MLflow/marker-failure tests.
+  See [live integration and budget proposal](g8-live-replacement.md).
+- [ ] Review/merge the integration and verify native Job-loss/reattachment plus
+  authenticated remote MLflow/S3 rehearsal (proposed $2 cap; approval pending).
+- [ ] Replacement-specific exception, signed package and live preflight verify.
 - [ ] G9 billing reconciliation and exit records are signed.
 - [x] Issue #23 and ARD-0035 receive G5 comparison/execution receipt identities
   and the G5 status (2026-09-07).
@@ -1242,6 +1311,9 @@ production/client performance claim.
   record the missing campaign-policy cause, the two exact G6 final-identity
   rules are deployed, and the corrected provisioner passes a live idempotency
   run (2026-09-13).
+- [x] The third pre-test G8 failure is receipt-bound; the frozen-image/injected-
+  runner compatibility gap is fixed by an offline exact-image preflight and a
+  backwards-compatible conditional publisher (2026-09-13).
 - [ ] Issue #23 and ARD-0035 receive the final G9 disposition.
 - [ ] Issue #24 remains Todo unless disposition is `qualified_for_wave2` or
   `research_baseline_qualified`; the latter unlocks engineering only.
@@ -1260,9 +1332,12 @@ fixed nine-Job matrix, logged nine distinct MLflow runs, passed all completion
 gates, and selected isotonic calibration without accessing the test fold. All
 20 development slots are now consumed. G7 then checksum-froze that exact
 candidate and verified the signed, exact-hash authorization without starting
-MLflow or exposing the test fold. Two subsequent G8 Jobs failed closed before
-candidate or final-fold download; the discovered G6 policy omission is fixed,
-and G8 now waits for a fresh signed authorization.
+MLflow or exposing the test fold. Three subsequent G8 Jobs failed closed before
+candidate or final-fold download. The G6 policy omission and then the injected-
+runner/frozen-image compatibility gap are fixed. R4 subsequently downloaded the
+test release but failed before scoring. Its root correction and offline synthetic
+rehearsal are complete; the recovery record governs the remaining work. A fresh
+signature alone is not sufficient to launch a replacement.
 
 ## Related Documentation
 

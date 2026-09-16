@@ -3,16 +3,20 @@ from __future__ import annotations
 
 import argparse
 import base64
+import json
 import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
 
+from app.nebius import object_storage
 from app.ml.lightgbm.artifacts import sha256_file
 from app.market_data.projections import C4MlflowDatasetReleaseReceipt, FrozenPublicSampleRoot
 from app.ml.lightgbm import cloud_runner
@@ -23,12 +27,7 @@ from app.ml.lightgbm.cloud_contracts import (
     Wave1TabularProjectionInput,
 )
 from app.ml.lightgbm.cloud_runner import FrozenCandidate, _verify_signature, execute_wave1_request
-from app.nebius.object_storage import (
-    S3PublicationIntent,
-    download_s3_release,
-    publish_s3_failure,
-    publish_s3_result,
-)
+from app.nebius.object_storage import download_s3_release
 
 
 ENDPOINT = "https://storage.eu-north1.nebius.cloud"
@@ -39,9 +38,93 @@ DEVELOPMENT_RESULT_PATH = re.compile(
     r"/campaigns/[A-Za-z0-9][A-Za-z0-9._:-]{0,127}/development/"
     r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}"
 )
+S3_SINGLE_PUT_MAX_BYTES = 5 * 1024**3
+
+
+@dataclass(frozen=True)
+class S3PublicationIntent:
+    """Reservation for one exact G8 result destination.
+
+    The injected runner owns this tiny contract so it remains compatible with
+    the frozen model runtime image. Publication still uses conditional S3 puts
+    and never falls back to a bucket-list or overwrite-capable code path.
+    """
+
+    destination: str
+
+
+def _runtime_compatibility_check() -> None:
+    """Exercise publication against the exact frozen helper call contract."""
+
+    calls: list[tuple[str, ...]] = []
+    objects: dict[str, bytes] = {}
+    hashes: dict[str, str] = {}
+
+    # Deliberately matches commit 690a9e9: no keyword arguments are accepted.
+    def frozen_aws_json(_endpoint_url: str, *args: str) -> dict[str, object]:
+        calls.append(args)
+        key = args[args.index("--key") + 1]
+        if args[:2] == ("s3api", "put-object"):
+            body = Path(args[args.index("--body") + 1])
+            objects[key] = body.read_bytes()
+            hashes[key] = args[args.index("--metadata") + 1].removeprefix("sha256=")
+            return {}
+        if args[:2] == ("s3api", "head-object"):
+            return {
+                "ContentLength": len(objects[key]),
+                "Metadata": {"sha256": hashes[key]},
+            }
+        if args[:2] == ("s3api", "get-object"):
+            Path(args[-1]).write_bytes(objects[key])
+            return {}
+        if args[:2] == ("s3api", "delete-object"):
+            objects.pop(key, None)
+            hashes.pop(key, None)
+            return {}
+        raise RuntimeError("G8 runtime compatibility probe reached an unexpected operation")
+
+    original_aws_json = object_storage._aws_json
+    object_storage._aws_json = frozen_aws_json
+    try:
+        with tempfile.TemporaryDirectory(prefix="g8-runtime-compat-") as directory:
+            source = Path(directory) / "result"
+            source.mkdir()
+            (source / "artifact.json").write_text(
+                '{"runtime_compatible":true}\n', encoding="utf-8"
+            )
+            inventory = object_storage.inventory_directory(source, exclude_markers=True)
+            object_storage.write_checksum_file(source, inventory)
+            (source / "SUCCESS").write_text(
+                inventory.model_dump_json(indent=2), encoding="utf-8"
+            )
+            destination = (
+                "s3://aimada-wave1-results-e00g6zvxpr00/"
+                "campaigns/runtime-compatibility/final/probe"
+            )
+            publish_s3_result(
+                source,
+                destination,
+                endpoint_url=ENDPOINT,
+                publication_intent=S3PublicationIntent(destination=destination),
+            )
+    finally:
+        object_storage._aws_json = original_aws_json
+
+    puts = [call for call in calls if call[:2] == ("s3api", "put-object")]
+    if (
+        not puts
+        or any("list-objects-v2" in call for call in calls)
+        or any(call[call.index("--if-none-match") + 1] != "*" for call in puts)
+        or not puts[-1][puts[-1].index("--key") + 1].endswith("/SUCCESS")
+    ):
+        raise RuntimeError("G8 runtime compatibility publication invariant failed")
 
 
 def main() -> int:
+    if sys.argv[1:] == ["--runtime-compatibility-check"]:
+        _runtime_compatibility_check()
+        print("g8-runtime-compatible")
+        return 0
     parser = argparse.ArgumentParser(
         description="Execute the one authorized LightGBM Wave 1 final evaluation."
     )
@@ -52,6 +135,8 @@ def main() -> int:
     parser.add_argument("--dataset-lineage", type=Path, required=True)
     parser.add_argument("--final-input-uri", required=True)
     parser.add_argument("--candidate-uri", required=True)
+    parser.add_argument("--c4-evaluation-inputs", type=Path,
+                        help="Reviewed C4 profile and original comparison-evidence locations")
     parser.add_argument("--work-root", type=Path, default=Path("/job/wave1-g8"))
     parser.add_argument("--endpoint-url", default=ENDPOINT)
     args = parser.parse_args()
@@ -64,6 +149,7 @@ def main() -> int:
     _validate_request(request, args.final_input_uri, args.candidate_uri)
     trusted_key = os.environ.get("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", "")
     _verify_injected_authorization(request, args, trusted_key)
+    c4_inputs = _validate_c4_inputs(request, args.c4_evaluation_inputs)
     _verify_mlflow_ready(request.mlflow_tracking_uri)
     publication_intent = _require_empty_result(request, args.endpoint_url)
 
@@ -115,7 +201,12 @@ def main() -> int:
         request_path.write_bytes(request.canonical_bytes())
         local_result = staging / "result"
         original_lineage_validator = cloud_runner._validate_tabular_projection_lineage
+        original_evaluation_logger = cloud_runner.log_governed_evaluation_run
         cloud_runner._validate_tabular_projection_lineage = _validate_final_lineage
+        if c4_inputs is not None:
+            def log_c4(**kwargs):
+                return _log_final_with_c4(c4_inputs, original_evaluation_logger, **kwargs)
+            cloud_runner.log_governed_evaluation_run = log_c4
         try:
             completed = execute_wave1_request(
                 request_path,
@@ -141,8 +232,50 @@ def main() -> int:
             raise
         finally:
             cloud_runner._validate_tabular_projection_lineage = original_lineage_validator
+            cloud_runner.log_governed_evaluation_run = original_evaluation_logger
     print(request.result_uri)
     return 0
+
+
+def _validate_c4_inputs(request: LightGbmCloudJobRequest, path: Path | None):
+    if path is None:
+        return None  # Compatibility only; the replacement package must require C4.
+    from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs, C4EvaluationProfile
+
+    inputs = C4EvaluationInputs.from_file(path)
+    profile = C4EvaluationProfile.model_validate_json(inputs.profile.read_bytes())
+    root = FrozenPublicSampleRoot.model_validate_json(inputs.frozen_root.read_bytes())
+    projected = request.input if isinstance(request.input, Wave1TabularProjectionInput) else None
+    if (
+        request.candidate is None or projected is None or inputs.source_result is not None
+        or sha256_file(inputs.candidate) != request.candidate.sha256
+        or profile.candidate_sha256 != request.candidate.sha256
+        or sha256_file(inputs.frozen_root) != projected.frozen_root.sha256
+        or profile.frozen_root_sha256 != root.canonical_hash()
+        or sha256_file(inputs.projection) != projected.projection.sha256
+        or profile.projection_sha256 != projected.projection.sha256
+        or sha256_file(inputs.comparison) != profile.comparison_evidence_sha256
+    ):
+        raise ValueError("C4 evaluation inputs differ from the authorized frozen request")
+    return inputs
+
+
+def _log_final_with_c4(inputs, logger, **kwargs):
+    from app.ml.lightgbm.c4_evaluation import C4EvaluationProfile
+    from app.ml.lightgbm.c4_replay_evidence import evaluate_c4_release
+
+    report = evaluate_c4_release(
+        profile=C4EvaluationProfile.model_validate_json(inputs.profile.read_bytes()),
+        root=FrozenPublicSampleRoot.model_validate_json(inputs.frozen_root.read_bytes()),
+        projection_path=inputs.projection, comparison_path=inputs.comparison,
+        artifact_root=kwargs["artifact_root"], candidate_path=inputs.candidate, predictions=kwargs["predictions"],
+    )
+    path = kwargs["artifact_root"] / "c4-evaluation.json"
+    with path.open("x", encoding="utf-8") as output:
+        output.write(json.dumps(report, sort_keys=True, allow_nan=False) + "\n")
+    # The shared logger independently re-verifies the original evidence. There
+    # is no trusted boolean/receipt shortcut and this path never scores again.
+    return logger(**kwargs, benchmark_results_path=path, c4_evaluation_inputs=inputs)
 
 
 def _validate_request(
@@ -276,6 +409,175 @@ def _require_empty_result(
             "G8 final evaluation intent already exists; refusing a second run"
         )
     raise RuntimeError("G8 could not acquire the exactly-once final evaluation intent")
+
+
+def publish_s3_result(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+    publication_intent: S3PublicationIntent,
+) -> None:
+    object_storage.verify_complete_result(source)
+    _publish_s3_directory(
+        source,
+        destination,
+        endpoint_url=endpoint_url,
+        marker="SUCCESS",
+        publication_intent=publication_intent,
+    )
+
+
+def publish_s3_failure(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+    publication_intent: S3PublicationIntent,
+) -> None:
+    source = source.resolve()
+    if not (source / "FAILED").is_file() or (source / "SUCCESS").exists():
+        raise ValueError("failure staging directory must contain FAILED and must not contain SUCCESS")
+    _publish_s3_directory(
+        source,
+        destination,
+        endpoint_url=endpoint_url,
+        marker="FAILED",
+        publication_intent=publication_intent,
+    )
+
+
+def _publish_s3_directory(
+    source: Path,
+    destination: str,
+    *,
+    endpoint_url: str,
+    marker: str,
+    publication_intent: S3PublicationIntent,
+) -> None:
+    """Publish one reserved directory with conditional single-object puts."""
+
+    source = source.resolve()
+    if publication_intent.destination.rstrip("/") != destination.rstrip("/"):
+        raise ValueError("publication intent does not reserve the result destination")
+    complete_inventory = object_storage.inventory_directory(source)
+    inventory = object_storage.ChecksumInventory(
+        files=tuple(item for item in complete_inventory.files if item.path != marker)
+    )
+    object_storage.verify_inventory(source, inventory)
+    oversized = next(
+        (item.path for item in complete_inventory.files if item.size_bytes > S3_SINGLE_PUT_MAX_BYTES),
+        None,
+    )
+    if oversized is not None:
+        raise ValueError(
+            "G8 conditional publication cannot safely create multipart object: "
+            f"{oversized}"
+        )
+
+    parsed = urlsplit(destination)
+    bucket = parsed.netloc
+    prefix = parsed.path.strip("/").rstrip("/")
+    uploaded_keys: list[str] = []
+    try:
+        for item in inventory.files:
+            key = f"{prefix}/{item.path}"
+            _put_if_absent_and_verify(
+                source / item.path,
+                bucket=bucket,
+                key=key,
+                expected_sha256=item.sha256,
+                endpoint_url=endpoint_url,
+                uploaded_keys=uploaded_keys,
+            )
+
+        marker_path = source / marker
+        if not marker_path.is_file():
+            raise ValueError(f"published directory must contain {marker}")
+        marker_key = f"{prefix}/{marker}"
+        _put_if_absent_and_verify(
+            marker_path,
+            bucket=bucket,
+            key=marker_key,
+            expected_sha256=sha256_file(marker_path),
+            endpoint_url=endpoint_url,
+            uploaded_keys=uploaded_keys,
+        )
+    except Exception:
+        for key in uploaded_keys:
+            try:
+                object_storage._aws_json(
+                    endpoint_url,
+                    "s3api",
+                    "delete-object",
+                    "--bucket",
+                    bucket,
+                    "--key",
+                    key,
+                )
+            except RuntimeError:
+                pass
+        raise
+
+
+def _put_if_absent_and_verify(
+    source: Path,
+    *,
+    bucket: str,
+    key: str,
+    expected_sha256: str,
+    endpoint_url: str,
+    uploaded_keys: list[str],
+) -> None:
+    object_storage._aws_json(
+        endpoint_url,
+        "s3api",
+        "put-object",
+        "--bucket",
+        bucket,
+        "--key",
+        key,
+        "--body",
+        str(source),
+        "--metadata",
+        f"sha256={expected_sha256}",
+        "--if-none-match",
+        "*",
+    )
+    # The conditional create succeeded, so rollback owns this key before any
+    # verification that can fail. This includes the terminal marker.
+    uploaded_keys.append(key)
+    head = object_storage._aws_json(
+        endpoint_url,
+        "s3api",
+        "head-object",
+        "--bucket",
+        bucket,
+        "--key",
+        key,
+    )
+    metadata = {
+        str(name).lower(): value for name, value in (head.get("Metadata") or {}).items()
+    }
+    if (
+        int(head.get("ContentLength", -1)) != source.stat().st_size
+        or metadata.get("sha256") != expected_sha256
+    ):
+        raise ValueError(f"remote Object Storage metadata mismatch: {key}")
+    with tempfile.TemporaryDirectory(prefix="g8-s3-readback-") as directory:
+        target = Path(directory) / "object"
+        object_storage._aws_json(
+            endpoint_url,
+            "s3api",
+            "get-object",
+            "--bucket",
+            bucket,
+            "--key",
+            key,
+            str(target),
+        )
+        if sha256_file(target) != expected_sha256:
+            raise ValueError(f"remote Object Storage read-back checksum mismatch: {key}")
 
 
 def _validate_final_lineage(

@@ -28,4 +28,4 @@ fi
 printf '%s' "${password}" | pbcopy
 unset password
 
-printf 'Copied the Nebius MLflow password to the clipboard. Username: admin\n'
+printf 'Copied the Nebius MLflow password to the clipboard. Username: governed-writer\n'

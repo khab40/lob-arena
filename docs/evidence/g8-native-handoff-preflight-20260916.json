@@ -1,0 +1,61 @@
+{
+  "schema_version": "g8_native_handoff_preflight_v1",
+  "status": "partial_preflight_stopped_before_job_submission",
+  "implementation_source_commit": "86abf683405d1d9b5a512e261493ea423d950e8c",
+  "project_id": "project-e00g6zvxpr00waz8t3y51k",
+  "vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+  "filesystem_id": "computefilesystem-e00gj4fw720pvntb1h",
+  "filesystem_created_at": "2026-09-15T17:24:48.965664Z",
+  "filesystem_deleted_at": "2026-09-16T05:41:08.736138Z",
+  "filesystem_delete_operation": "computeoperation-e00mn63thzzhp1wz0w",
+  "filesystem_not_found_after_deletion": true,
+  "filesystem_capacity_bytes": 10737418240,
+  "vm_versions": {"baseline_stopped": "40", "attached": "41", "running": "42", "stopped": "43", "restored": "44"},
+  "vm_baseline_sha256": "9694bd39e92aa50bdf3d52bf3ef54d4b099e5592f1b3eaeab3cd911b98f8f72c",
+  "vm_restored_sha256": "4520dac17ce41bdbcf4aab5fb46755038249418a0d4df7321c3ade9da3877f9b",
+  "vm_configuration_restored": true,
+  "vm_final_state": "STOPPED",
+  "vm_disks_preserved": true,
+  "operator_mount": {
+    "path": "/mnt/g8-native-rehearsal",
+    "tag": "g8-native-rehearsal",
+    "type": "virtiofs",
+    "options": "rw,nosuid,nodev,noexec,relatime",
+    "publisher_sha256": "f9ddfca7adb1f92886decf50b120523cf4e46f26fbd73922745983ce0cbb8f21",
+    "mount_check_passed": true,
+    "job_context_delivered": false
+  },
+  "mlflow_readiness": {
+    "identity_source": "existing_VM_writer_environment_not_Job_injection",
+    "experiment_id": "3",
+    "authenticated_status": 200,
+    "unauthenticated_status": 401,
+    "artifact_roundtrip_verified": false
+  },
+  "uptime_exception": {
+    "approved_maximum_hours": 4,
+    "start_operation": "computeoperation-e00df4axvfd0gyszb8",
+    "start_requested_at": "2026-09-15T17:31:46.063808Z",
+    "stop_operation": "computeoperation-e00vmayt10bgpt2fr5",
+    "stop_finished_at": "2026-09-16T04:14:47.695059Z",
+    "within_approved_limit": false,
+    "cause": "Operator-side session waited overnight for tool approval without an independent VM deadline guard",
+    "future_vm_window_requires_renewal": true
+  },
+  "billing": {"last_operator_report_usd": 33.66, "lag_allowance_usd": 0.5, "fresh_after_overnight_wait": false, "actual_incremental_cost_reconciled": false},
+  "rejected_package": {
+    "sha256": "d7f66c5cb2ec189068aa06dfd3d7f794d18808448c63ef19e72f202f00afe3fd",
+    "verified_at": "2026-09-16T04:13:29.153046Z",
+    "reason": "fresh reconciled billing with lag allowance required",
+    "submission_allowed": false
+  },
+  "native_jobs_submitted": 0,
+  "scoring_executions": 0,
+  "mlflow_runs_created": 0,
+  "s3_publications": 0,
+  "production_final_read_key_state": "INACTIVE",
+  "native_job_loss_reattachment_verified": false,
+  "production_g8_complete": false,
+  "retained_local_evidence": "outputs/g8-native-execution-20260915",
+  "remaining_vm_transport_file": "/opt/aimada/g8-native-handoff/publish_g8_native_context.py"
+}

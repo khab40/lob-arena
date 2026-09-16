@@ -1,0 +1,50 @@
+{
+  "schema_version": "g8_native_source_capsule_v1",
+  "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+  "injections": {
+    "inventory-0.part": {
+      "sha256": "94ded731423d9c58474246b63590b3b6331e69346bb7e589b5d47cb6ce09c44f",
+      "size_bytes": 65536
+    },
+    "inventory-1.part": {
+      "sha256": "fe95c804c7cbb99b8dbab374b11a94185da5b1e7a42348c31968c5e18cdab126",
+      "size_bytes": 9208
+    },
+    "metadata-0.part": {
+      "sha256": "ede692fed8349748dd2513402fe0706f100f39a09625551e435fc9336a1a2d7b",
+      "size_bytes": 113
+    },
+    "metadata-1.part": {
+      "sha256": "c5fbc92e92cf095f7ebfb8015923e6e7cb38eaa74da60c27294cb1b989b11cac",
+      "size_bytes": 424
+    },
+    "metadata-2.part": {
+      "sha256": "2be4ef28db92fe54390b8221877a615965a2287cfb057fbef34c775d42c911a1",
+      "size_bytes": 64
+    },
+    "metadata-3.part": {
+      "sha256": "8c29d0f5108704bae709152a55e498c7ec09c5b9b0c03c38314e7f1549663f51",
+      "size_bytes": 308
+    },
+    "metadata-4.part": {
+      "sha256": "9c973661c1f80c2a7dfbd7a3c4cef6f7b1aad6bf2fb8c7b19965f5848ab07b30",
+      "size_bytes": 793
+    },
+    "metadata-5.part": {
+      "sha256": "6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486",
+      "size_bytes": 2760
+    }
+  },
+  "remote_object_count": 350,
+  "submission_authorized": false,
+  "native_storage_verified": false,
+  "remote_mlflow_verified": false,
+  "base_commit": "286f4b516e9aaea0ff7e5db1486d931152f17db4",
+  "code_commit": "cc01125",
+  "code_sha256": "e6d54f479f57fe223f65f7224962dbd7b6217e3c0280dd798498ff85de2542bc",
+  "verification_scope": "local static bytes only; no model imports, hydration or cloud calls",
+  "original_inventory_size_bytes": 74744,
+  "jobs_submitted": 0,
+  "filesystems_created": 0,
+  "mlflow_runs_created": 0
+}
