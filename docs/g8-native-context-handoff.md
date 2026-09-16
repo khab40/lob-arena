@@ -21,7 +21,8 @@ rehearsals remain on Nebius Serverless.
 
 ## Prepare and attach
 
-1. Refresh billing and include accrued/lagged usage under the existing $2,
+1. Complete any interactive CLI authentication and command approvals while the VM
+   is stopped. Refresh billing and include accrued/lagged usage under the $2,
    two-Job, four-hour VM and 24-hour filesystem bounds. Archive the VM's current
    API readback. Stop the VM and read it back again as `vm-before.json`.
 2. Require no existing filesystem attachments. Create only the approved 10 GiB
@@ -30,7 +31,15 @@ rehearsals remain on Nebius Serverless.
 3. Render a resource-version-guarded patch with the tool below. Execute the printed
    argument array only after reviewing it. Read the VM again and use
    `verify-attached` to reject unrelated disk, identity or network changes.
-4. Start the existing VM, record its uptime start, and repeat `verify-attached`
+4. Before starting, arm `scripts/g8_vm_deadline.py` with `arm --directory` pointing
+   to a new private evidence directory and `--deadline` set to an absolute UTC
+   time at most three hours away. Require its armed receipt and live process.
+   It runs independently of the assistant, disables interactive browser auth,
+   retries stop failures and independently reads back STOPPED. Keep the operator
+   host online with valid CLI access; this is not a provider-enforced billing cap.
+   Its deadline leaves one hour of recovery headroom. Archive its events, including
+   failures. Do not start if the guard cannot arm; do not extend it after startup.
+5. Start the existing VM, record its uptime start, and repeat `verify-attached`
    with `--running`. Through its existing SSH connection, require the chosen
    mount path to be absent or an empty canonical directory. Mount with
    `sudo mount -t virtiofs -o rw,nodev,nosuid,noexec g8-native-rehearsal /mnt/g8-native-rehearsal`.
@@ -81,3 +90,21 @@ transport files; preserve readbacks and cleanup receipts locally.
 Provider references: [attachment and mounting](https://docs.nebius.com/compute/storage/use),
 [detachment](https://docs.nebius.com/compute/storage/detach-volume),
 [filesystem API](https://github.com/nebius/api/blob/main/nebius/compute/v1/filesystem.proto).
+
+## September 15–16 preflight outcome
+
+The [retained receipt](evidence/g8-native-handoff-preflight-20260916.json) records
+an actual native VM mount and authenticated MLflow read (200), with unauthenticated
+access denied (401). No Job context or evaluation was submitted. An overnight
+tool-approval wait left the VM running for approximately 10h43m, exceeding its
+four-hour limit; operator monitoring failed to enforce the bound. Package
+validation then rejected stale billing before submission. The failed signed
+package is retained as rejected, never relabeled successful.
+
+Cleanup restored the VM to STOPPED at version 44 and deleted the temporary
+filesystem within 24 hours. VM disks remain intact. Only the non-secret publisher
+script remains in the temporary VM transport directory; remove it during the next
+authorized VM session rather than restarting solely for deletion.
+The independent guard was added after this failure. A fresh billing reconciliation
+and renewed VM window are required before another start. The two-Job rehearsal,
+authenticated artifact recovery and independent S3/MLflow verification remain open.

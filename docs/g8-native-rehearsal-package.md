@@ -1,11 +1,15 @@
 # G8 native-storage and MLflow rehearsal package
 
-Status: **native entrypoint and package tools implemented; cloud rehearsal not executed**.
+Status: **native VM handoff preflight verified; two-Job cloud rehearsal not executed**.
 Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
 The [existing synthetic rehearsal authorization](g8-live-replacement.md#approved-scope-synthetic-nativeremote-rehearsal-only)
 remains bounded to two Jobs and $2; its input-writer window is closed.
+The [September 15–16 preflight](g8-native-context-handoff.md#september-1516-preflight-outcome)
+exceeded the VM uptime limit during an overnight approval wait. The VM is stopped
+and temporary filesystem deleted. Fresh billing and a renewed VM window are now
+required; no evaluation Job was submitted.
 
 ## Frozen source capsule
 
