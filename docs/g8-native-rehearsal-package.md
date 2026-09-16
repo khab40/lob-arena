@@ -46,10 +46,13 @@ the [rejection receipt](evidence/g8-native-image-label-rejection-20260916.json) 
 Keep `plan.image` at the full frozen digest. Submit only the existing
 `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee` alias.
 Use `scripts.submit_nebius_job._verify_short_tag` to record its exact full digest
-when preparing bindings and immediately before each create. After creation,
-`_verify_created_short_tag_job` must verify both the returned Job's image and the
-registry mapping again; cancel the returned Job if either check fails. Preserve
-all observations. Never retag or rebuild an image during this procedure.
+when preparing bindings. The package emits only commands for
+`scripts/submit_g8_native_rehearsal.py`, which requires the clean signed source
+commit, checks the registry immediately before creation, writes a single-use
+submission intent, validates the returned Job and registry mapping afterward,
+and requests cancellation on any post-create failure. Preserve its evidence;
+an ambiguous create is resolved by readback, never another call. Never retag or
+rebuild an image during this procedure.
 
 Supply the post-create registry JSON to `sign_g8_native_context.py` with
 `--registry-verification`. The signer rejects a different alias/digest, observations
