@@ -37,7 +37,7 @@ class PackageFile(Strict):
 
 
 class ReplacementPlan(Strict):
-    schema_version: Literal["g8_replacement_plan_v1"] = "g8_replacement_plan_v1"
+    schema_version: Literal["g8_replacement_plan_v2"] = "g8_replacement_plan_v2"
     run_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,127}$")
     request_sha256: str = Field(pattern=SHA)
     candidate_sha256: str = Field(default=CANDIDATE, pattern=SHA)
@@ -64,14 +64,11 @@ class ReplacementPlan(Strict):
     subnet_id: Literal["vpcsubnet-e00ppzc4353dxv210j"] = "vpcsubnet-e00ppzc4353dxv210j"
     secret_selectors: dict[str, str]
     verified_at: AwareDatetime
-    expires_at: AwareDatetime
-    campaign_spend_usd: float = Field(ge=0, lt=40, allow_inf_nan=False)
-    maximum_additional_cost_usd: float = Field(gt=0, allow_inf_nan=False)
+    validation_policy: Literal["lightgbm_transformers_validation_v1"] = "lightgbm_transformers_validation_v1"
+    spend_monitoring: Literal["operator_managed_alerts"] = "operator_managed_alerts"
     native_durability_receipt_sha256: str = Field(pattern=SHA)
     authenticated_remote_receipt_sha256: str = Field(pattern=SHA)
     comparison_inventory_receipt_sha256: str = Field(pattern=SHA)
-    billing_receipt_sha256: str = Field(pattern=SHA)
-    cleanup_deadline: AwareDatetime
     files: dict[str, PackageFile]
 
     @model_validator(mode="after")
@@ -86,19 +83,13 @@ class ReplacementPlan(Strict):
             raise ValueError("replacement requires four version-pinned MysteryBox selectors")
         if self.run_id == self.prior_run_id:
             raise ValueError("replacement must have a new run identity")
-        if not self.verified_at < self.expires_at <= self.verified_at + timedelta(hours=1):
-            raise ValueError("preflight expires within one hour of verification")
-        if not self.expires_at < self.cleanup_deadline <= self.verified_at + timedelta(hours=24):
-            raise ValueError("storage retention must be bounded to 24 hours")
-        if self.campaign_spend_usd + self.maximum_additional_cost_usd > 50:
-            raise ValueError("replacement exceeds the USD 50 campaign ceiling")
         # Workspace, scored copy, recovery snapshot and completed/publication copies.
         if 5 * self.max_checkpoint_bytes > self.capacity_gib * 1024**3:
             raise ValueError("storage budget must cover five bounded working copies")
         required = set(CODE_PATHS) | {"request.json", "profile.json", "frozen-root.json", "projection.json",
             "candidate.json", "c4-inputs.json", "dataset-lineage.json", "authorization.json",
             "authorization.sig", "authorization-public.pem", "native-durability.json", "remote-roundtrip.json",
-            "comparison-inventory.json", "billing.json"}
+            "comparison-inventory.json"}
         if set(self.files) != required:
             raise ValueError("replacement package must bind the exact complete file allowlist")
         return self
@@ -114,9 +105,9 @@ def canonical(value):
 
 def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
                    recovery: bool = False) -> tuple[ReplacementPlan, LightGbmCloudJobRequest]:
-    """Offline verification. Signature covers all code, evidence and spending limits.
+    """Offline verification. Signature covers all code, evidence and execution identities.
 
-    Expiry stops new execution, but does not prohibit approved log/publish-only recovery.
+    Validation packages have no administrative submission or recovery expiry.
     The original durable reservation and scoring seal are separately mandatory there.
     """
     if root.absolute() != root.resolve() or not root.is_dir():
@@ -142,10 +133,8 @@ def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
     _verify_signature(root / "replacement.json", root / "replacement.sig", root / "authorization-public.pem",
                       trusted_public_key_sha256=trusted_key)
     current = now or datetime.now(UTC)
-    if plan.verified_at > current or (not recovery and current >= plan.expires_at):
-        raise ValueError("replacement preflight is not current")
-    if recovery and current >= plan.cleanup_deadline:
-        raise ValueError("approved recovery/retention window expired; retain evidence and request an extension")
+    if plan.verified_at > current:
+        raise ValueError("replacement verification timestamp is in the future")
     request = LightGbmCloudJobRequest.model_validate_json((root / "request.json").read_bytes())
     if (request.canonical_hash() != plan.request_sha256 or request.run_id != plan.run_id
             or request.mode != "final-evaluation" or request.candidate is None
@@ -216,15 +205,13 @@ def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
         raise ValueError("C4 input locations must match the signed mount/package")
     for name, digest in (("native-durability", plan.native_durability_receipt_sha256),
                          ("remote-roundtrip", plan.authenticated_remote_receipt_sha256),
-                         ("comparison-inventory", plan.comparison_inventory_receipt_sha256),
-                         ("billing", plan.billing_receipt_sha256)):
+                         ("comparison-inventory", plan.comparison_inventory_receipt_sha256)):
         if sha256_file(root / f"{name}.json") != digest:
             raise ValueError("preflight evidence receipt binding differs")
     # These are operator-reviewed observations, never credentials or self-created approvals.
     native = json.loads((root / "native-durability.json").read_bytes())
     remote = json.loads((root / "remote-roundtrip.json").read_bytes())
     comparison = json.loads((root / "comparison-inventory.json").read_bytes())
-    billing = json.loads((root / "billing.json").read_bytes())
     if (native.get("filesystem_id") != plan.filesystem_id or native.get("mount_source") != plan.mount_source
             or native.get("mount_type") != plan.mount_type or native.get("capacity_gib") != plan.capacity_gib
             or native.get("job_loss_reattachment_verified") is not True
@@ -234,14 +221,12 @@ def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
             or remote.get("image") != plan.image
             or comparison.get("comparison_sha256") != plan.comparison_sha256
             or comparison.get("original_checkpoint_count") != 27
-            or comparison.get("metadata_inventory_verified") is not True
-            or billing.get("campaign_spend_usd") != plan.campaign_spend_usd
-            or billing.get("maximum_additional_cost_usd") != plan.maximum_additional_cost_usd):
+            or comparison.get("metadata_inventory_verified") is not True):
         raise ValueError("replacement readiness evidence is incomplete or mismatched")
-    for receipt in (native, remote, comparison, billing):
+    for receipt in (native, remote, comparison):
         observed = datetime.fromisoformat(receipt["verified_at"])
-        if observed.tzinfo is None or not plan.verified_at - timedelta(hours=1) <= observed <= plan.verified_at:
-            raise ValueError("readiness observations must be fresh and timezone-aware")
+        if observed.tzinfo is None or observed > plan.verified_at:
+            raise ValueError("readiness observations must precede package signing and be timezone-aware")
     return plan, request
 
 
