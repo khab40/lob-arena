@@ -11,6 +11,10 @@ import runpy
 import sys
 import zipfile
 
+# Independent bootstrap cannot import unverified overlays for these constants.
+MAX_INJECTION = 40 * 1024
+ARCHIVE_COUNT = 3
+
 
 class Overlays(importlib.abc.MetaPathFinder, importlib.abc.SourceLoader):
     def __init__(self, sources):
@@ -33,9 +37,9 @@ class Overlays(importlib.abc.MetaPathFinder, importlib.abc.SourceLoader):
 
 def install(package):
     sources = {}
-    for index in range(2):
+    for index in range(ARCHIVE_COUNT):
         path = package / f"native-code-{index}.zip"
-        if (path.absolute() != path.resolve() or not path.is_file() or path.stat().st_size > 65536
+        if (path.absolute() != path.resolve() or not path.is_file() or path.stat().st_size > MAX_INJECTION
                 or not os.statvfs(path).f_flag & os.ST_RDONLY):
             raise ValueError("bounded read-only code archive required")
         raw = path.read_bytes()

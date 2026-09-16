@@ -9,6 +9,11 @@ from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
+if __package__:
+    from .g8_native_source_capsule import MAX_INJECTION
+else:
+    from g8_native_source_capsule import MAX_INJECTION
+
 IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2"
 DEPLOYMENT_IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee"
 IMAGE_DIGEST = "sha256:" + IMAGE.rsplit("sha256:", 1)[1]
@@ -26,7 +31,7 @@ MODULES = ("g8_replacement", "g8_live_recovery", "g8_scored_checkpoint", "g8_mlf
 SCRIPTS = ("run_lightgbm_g8", "prepare_g8_native_sources", "g8_rehearsal", "stage_g8_native_sources",
            "g8_source_sdk", "g8_native_source_capsule", "g8_native_contract", "g8_native_readback",
            "g8_native_runtime", "g8_native_lifecycle", "run_g8_native_rehearsal", "g8_native_archive")
-ARCHIVES = ("native-code-0.zip", "native-code-1.zip")
+ARCHIVES = ("native-code-0.zip", "native-code-1.zip", "native-code-2.zip")
 BOOTSTRAP = "g8_native_bootstrap.py"
 CODE_PATHS = {f"{n}.py": f"/job/backend/app/ml/lightgbm/{n}.py" for n in MODULES}
 CODE_PATHS.update({f"{n}.py": f"/job/g8/{n}.py" for n in SCRIPTS})
@@ -59,7 +64,7 @@ class RegistryVerification(Strict):
 
 
 class NativePlan(Strict):
-    schema_version: Literal["g8_native_rehearsal_plan_v3"] = "g8_native_rehearsal_plan_v3"
+    schema_version: Literal["g8_native_rehearsal_plan_v4"] = "g8_native_rehearsal_plan_v4"
     source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     run_id: Literal["synthetic-final"] = "synthetic-final"
     request_sha256: Literal["6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486"]
@@ -96,6 +101,8 @@ class NativePlan(Strict):
             raise ValueError("exact development S3 and four version-pinned selectors required")
         if set(self.files) != set(CODE_PATHS) | CAPSULE | set(ARCHIVES) | {BOOTSTRAP, "reviewer-public.pem", "filesystem.json"}:
             raise ValueError("exact native code, capsule, reviewer and filesystem allowlist required")
+        if any(ref.size_bytes > MAX_INJECTION for name, ref in self.files.items() if name not in CODE_PATHS):
+            raise ValueError("physical injection exceeds 40 KiB transport bound")
         return self
 
     def identity(self):

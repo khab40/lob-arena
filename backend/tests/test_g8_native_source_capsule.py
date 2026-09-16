@@ -29,7 +29,8 @@ def test_original_inventory_survives_split_and_relocation(prepared, tmp_path):
     moved = tmp_path / "relocated"
     output.rename(moved)
     receipt = capsule.verify(moved)
-    assert all(x["size_bytes"] <= 65536 for x in receipt["injections"].values())
+    assert receipt["schema_version"] == "g8_native_source_capsule_v2"
+    assert all(x["size_bytes"] <= 40 * 1024 for x in receipt["injections"].values())
     assert b"".join((moved / f"inventory-{i}.part").read_bytes() for i in range(2)) == (
         source / "source-package.json").read_bytes()
     assert not receipt["submission_authorized"]

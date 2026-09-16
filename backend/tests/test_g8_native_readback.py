@@ -146,7 +146,7 @@ def test_plan_rejects_production_candidate_and_unbounded_resources(plan_data):
 
 def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_path):
     command = contract.job_command(plan, tmp_path, phase="recover")
-    assert command.count("--inject-file") == 15
+    assert command.count("--inject-file") == 16
     assert command[command.index("--args") + 1] == "/job/g8/g8_native_bootstrap.py --phase recover"
     assert not any(p.endswith("/g8_native_lifecycle.py") for p in contract.injections(plan))
     assert command.count("--volume") == 1
@@ -156,6 +156,14 @@ def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_pa
     assert len(contract.DEPLOYMENT_IMAGE) <= 64 and plan.image == contract.IMAGE
     assert {command[i + 1] for i, v in enumerate(command) if v == "--env-secret"} == {
         f"{k}={v}" for k, v in plan.secret_selectors.items()}
+
+
+def test_transport_bound_does_not_limit_uncompressed_code(plan_data):
+    plan_data["files"][next(iter(contract.CODE_PATHS))]["size_bytes"] = 65536
+    contract.NativePlan.model_validate(plan_data)
+    plan_data["files"]["native-code-2.zip"]["size_bytes"] = 40961
+    with pytest.raises(ValueError, match="40 KiB"):
+        contract.NativePlan.model_validate(plan_data)
 
 
 def test_delayed_submission_readback_keeps_identity_checks(plan, readback):

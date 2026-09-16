@@ -114,6 +114,12 @@ def test_untrusted_key_or_unreviewed_file_rejected(package):
         verify(package)
 
 
+def test_manifest_obeys_transport_bound_before_parsing(package):
+    (package[0] / "native-plan.json").write_bytes(b" " * 40961)
+    with pytest.raises(ValueError, match="bounded"):
+        verify(package)
+
+
 def test_runtime_rechecks_the_actual_overlay_and_environment(package, monkeypatch, tmp_path):
     root, _, plan = package
     overlay = tmp_path / "actual-overlay.py"
