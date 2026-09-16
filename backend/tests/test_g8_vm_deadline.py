@@ -63,9 +63,9 @@ def test_monotonic_budget_cannot_be_extended(tmp_path, monkeypatch):
     assert calls[1] == ("get", None)
 
 
-@pytest.mark.parametrize("hours", [-1, 4])
-def test_unbounded_or_expired_arm_rejected(tmp_path, hours):
-    with pytest.raises(ValueError, match="within three hours"):
+@pytest.mark.parametrize("hours", [-1, 0])
+def test_expired_arm_rejected(tmp_path, hours):
+    with pytest.raises(ValueError, match="in the future"):
         guard.arm(tmp_path / "new", datetime.now(UTC) + timedelta(hours=hours))
 
 
@@ -101,5 +101,33 @@ def test_delayed_approval_cannot_start_after_guard_deadline(tmp_path, monkeypatc
     lease(tmp_path, deadline)
     guard.record(tmp_path / "events.jsonl", {"event": "armed", "pid": 123, "deadline": deadline.isoformat()})
     monkeypatch.setattr(guard, "cli", lambda _: pytest.fail("expired guard must not call the provider"))
-    with pytest.raises(ValueError, match="two hours remaining"):
+    with pytest.raises(ValueError, match="future deadline"):
         guard.start(tmp_path)
+
+
+def test_operator_managed_start_needs_no_lease_and_never_retries(tmp_path, monkeypatch):
+    directory = tmp_path / "start"
+    calls = []
+
+    def cli(action):
+        calls.append(action)
+        if action == "start":
+            intent = json.loads((directory / "start-intent.json").read_text())
+            assert intent["spend_monitoring"] == "operator_managed_alerts"
+            assert "deadline" not in intent
+            raise TimeoutError("ambiguous provider response")
+        return {"state": "STOPPED"}
+
+    monkeypatch.setattr(guard, "cli", cli)
+    with pytest.raises(TimeoutError):
+        guard.start(directory, operator_managed=True)
+    with pytest.raises(FileExistsError):
+        guard.start(directory, operator_managed=True)
+    assert calls.count("start") == 1
+
+
+def test_operator_managed_start_does_not_touch_running_vm(tmp_path, monkeypatch):
+    monkeypatch.setattr(guard, "cli", lambda _: {"state": "RUNNING"})
+    with pytest.raises(ValueError, match="stopped"):
+        guard.start(tmp_path / "start", operator_managed=True)
+    assert not (tmp_path / "start").exists()
