@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -56,3 +57,9 @@ def test_jobs_mlflow_dependencies_match_the_locked_compatible_pair() -> None:
 
     assert "databricks-sdk==0.67.0" in jobs_requirements
     assert "protobuf>=7.36.1,<8.0.0" in jobs_requirements
+    names = [
+        re.split(r"[<>=!~]", line)[0].lower().replace("_", "-")
+        for line in jobs_requirements.splitlines()
+        if line.strip() and not line.startswith("#")
+    ]
+    assert len(names) == len(set(names)), "Each dependency must have one requirement"

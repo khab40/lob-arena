@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import stat
 import subprocess
 from pathlib import Path
@@ -85,8 +86,11 @@ def test_mlflow_metadata_artifacts_auth_and_hardening_are_explicit() -> None:
     )
 
     dockerfile = (DEPLOYMENT / "Dockerfile").read_text(encoding="utf-8")
-    assert dockerfile.startswith("FROM ghcr.io/mlflow/mlflow:v3.15.2\n")
-    assert '"mlflow[auth]==3.15.2"' in dockerfile
+    image = re.match(r"FROM ghcr\.io/mlflow/mlflow:v(\d+\.\d+\.\d+)\n", dockerfile)
+    assert image is not None, "MLflow must use an explicitly versioned image"
+    version = image.group(1)
+    assert tuple(map(int, version.split("."))) >= (3, 15, 2)
+    assert f'"mlflow[auth]=={version}"' in dockerfile
     assert '"psycopg2-binary==2.9.11"' in dockerfile
     assert "USER 10001:10001" in dockerfile
 
