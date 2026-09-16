@@ -9,11 +9,13 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 if __package__:
-    from .g8_native_contract import NativePlan, canonical, environment, injections
+    from .g8_native_contract import CODE_PATHS, NativePlan, canonical, environment, injections
+    from .g8_native_archive import read_code
     from .g8_native_readback import verify_readback, verify_previous_job
     from .g8_native_source_capsule import verify as verify_capsule
 else:
-    from g8_native_contract import NativePlan, canonical, environment, injections
+    from g8_native_contract import CODE_PATHS, NativePlan, canonical, environment, injections
+    from g8_native_archive import read_code
     from g8_native_readback import verify_readback, verify_previous_job
     from g8_native_source_capsule import verify as verify_capsule
 
@@ -62,13 +64,15 @@ def verify_package(package, *, phase, trusted, now=None):
     plan = NativePlan.model_validate_json(raw)
     if raw != canonical(plan):
         raise ValueError("canonical signed plan required")
-    expected = set(plan.files) | {"native-plan.json", "native-plan.sig"}
+    expected = (set(plan.files) - set(CODE_PATHS)) | {"native-plan.json", "native-plan.sig"}
     if any(p.is_symlink() for p in package.rglob("*")) or {
         p.relative_to(package).as_posix() for p in package.rglob("*") if p.is_file()
     } != expected:
         raise ValueError("package has missing, linked or unexpected files")
-    for name, ref in plan.files.items():
-        content = bounded(package / name)
+    # Authenticate archive bytes before interpreting member metadata/content.
+    for name in sorted(plan.files, key=lambda name: name in CODE_PATHS):
+        ref = plan.files[name]
+        content = read_code(package, name) if name in CODE_PATHS else bounded(package / name)
         if len(content) != ref.size_bytes or hashlib.sha256(content).hexdigest() != ref.sha256:
             raise ValueError("package bytes differ: " + name)
     verify_capsule(package / "source-capsule")

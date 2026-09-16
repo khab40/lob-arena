@@ -22,7 +22,8 @@ def plan_data():
             "MLFLOW_TRACKING_USERNAME": "mbsec-exampleuser@mbsecver-exampleuser",
             "MLFLOW_TRACKING_PASSWORD": "mbsec-examplepassword@mbsecver-examplepassword"},
         files={name: {"sha256": "a" * 64, "size_bytes": 1}
-               for name in set(contract.CODE_PATHS) | contract.CAPSULE | {"reviewer-public.pem", "billing.json", "filesystem.json"}})
+               for name in set(contract.CODE_PATHS) | contract.CAPSULE | set(contract.ARCHIVES)
+               | {contract.BOOTSTRAP, "reviewer-public.pem", "billing.json", "filesystem.json"}})
     return values
 
 
@@ -38,7 +39,7 @@ def readback(plan):
                      "parent_id": contract.PROJECT, "created_at": NOW.isoformat()},
         "spec": {
             "image": contract.IMAGE, "container_command": "python",
-            "args": "/job/g8/run_g8_native_rehearsal.py --phase score",
+            "args": "/job/g8/g8_native_bootstrap.py --phase score",
             "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": contract.SUBNET,
             "timeout": "3600s", "disk": {"type": "NETWORK_SSD", "size_bytes": "107374182400"},
             "volumes": [{"source": plan.filesystem_id, "container_path": "/g8-durable", "mode": "READ_WRITE"}],
@@ -144,6 +145,9 @@ def test_plan_rejects_production_candidate_and_unbounded_resources(plan_data):
 
 def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_path):
     command = contract.job_command(plan, tmp_path, phase="recover")
+    assert command.count("--inject-file") == 16
+    assert command[command.index("--args") + 1] == "/job/g8/g8_native_bootstrap.py --phase recover"
+    assert not any(p.endswith("/g8_native_lifecycle.py") for p in contract.injections(plan))
     assert command.count("--volume") == 1
     assert command[command.index("--volume") + 1] == plan.filesystem_id + ":/g8-durable:rw"
     assert command[command.index("--restart-policy") + 1] == "never"

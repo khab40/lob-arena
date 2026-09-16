@@ -11,10 +11,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 if __package__:
-    from .g8_native_contract import PROJECT
+    from .g8_native_contract import BOOTSTRAP, PROJECT
     from .g8_native_runtime import actual_runtime, native_mount, observed_context, verify_package
 else:
-    from g8_native_contract import PROJECT
+    from g8_native_contract import BOOTSTRAP, PROJECT
     from g8_native_runtime import actual_runtime, native_mount, observed_context, verify_package
 
 
@@ -25,7 +25,7 @@ def recovery_workers(deadline):
         if remaining <= 0:
             raise TimeoutError("native recovery budget exhausted before " + worker)
         timeout = min(900, remaining) if worker == "artifact-loss" else remaining
-        result = subprocess.run([sys.executable, str(Path(__file__)), "--phase", "recover", "--worker", worker],
+        result = subprocess.run([sys.executable, "/job/g8/" + BOOTSTRAP, "--phase", "recover", "--worker", worker],
                                 check=False, timeout=timeout)
         if result.returncode != expected:
             raise RuntimeError("native recovery child did not reach its reviewed outcome: " + worker)

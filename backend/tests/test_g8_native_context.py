@@ -36,7 +36,7 @@ def test_signed_context_binds_job_and_requires_terminal_original(package, readba
     previous_file = tmp_path / "terminal.json"
     previous_file.write_bytes(contract.canonical(previous))
     readback["metadata"].update(id="aijob-recovery", name="g8-native-20260915-recover")
-    readback["spec"]["args"] = "/job/g8/run_g8_native_rehearsal.py --phase recover"
+    readback["spec"]["args"] = "/job/g8/g8_native_bootstrap.py --phase recover"
     job_file.write_bytes(contract.canonical(readback))
     kwargs.update(phase="recover", job_id="aijob-recovery", output=tmp_path / "recover",
                   original_context=output / "score.json", previous_terminal=previous_file)

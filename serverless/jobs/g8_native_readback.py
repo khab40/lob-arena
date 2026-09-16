@@ -10,9 +10,9 @@ import re
 from datetime import UTC, datetime
 
 if __package__:
-    from .g8_native_contract import PROJECT, SUBNET, canonical, environment, injections, job_name
+    from .g8_native_contract import BOOTSTRAP, PROJECT, SUBNET, canonical, environment, injections, job_name
 else:
-    from g8_native_contract import PROJECT, SUBNET, canonical, environment, injections, job_name
+    from g8_native_contract import BOOTSTRAP, PROJECT, SUBNET, canonical, environment, injections, job_name
 
 
 def _unique(items, key):
@@ -53,7 +53,7 @@ def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
     if created.tzinfo is None or not plan.verified_at <= created <= current < deadline:
         raise ValueError("Job is outside the reviewed time window")
     required = {"image": plan.image, "container_command": "python",
-        "args": f"/job/g8/run_g8_native_rehearsal.py --phase {phase}",
+        "args": f"/job/g8/{BOOTSTRAP} --phase {phase}",
         "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": SUBNET, "timeout": "3600s"}
     if any(spec.get(k) != v for k, v in required.items()):
         raise ValueError("Job execution configuration differs")
