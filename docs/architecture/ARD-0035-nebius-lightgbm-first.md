@@ -4,7 +4,17 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-15
+Status reconciled: 2026-09-16
+
+## Validation execution policy — 2026-09-16
+
+The operator removed administrative submission/retention windows, billing checks
+and fixed validation spend/VM limits until LightGBM and Transformers validation
+have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+in preference to older operational bounds in this record. No billing queries or
+balance-refresh requests. Finite Job timeouts, execution identities, evidence
+integrity and separate final-test authorization remain. This is an execution-policy
+change, not model-quality acceptance or a completed G8/G9 milestone.
 
 ## Implementation Status
 
@@ -31,8 +41,8 @@ resource evidence before marker-last publication. It preserves R4 history and
 requires a native mount and fresh package-bound approval; the ordinary Wave 1
 volume prohibition remains intact. Native durability, authenticated remote
 rehearsal and actual production package review remain required. The synthetic
-rehearsal's two-Job/$2 scope is approved, subject to current billing and the reviewed
-live package. [Synthetic source staging](../g8-source-sdk.md) is complete: all 350
+rehearsal's two-phase design is approved, subject to the reviewed execution
+package and the validation policy above. [Synthetic source staging](../g8-source-sdk.md) is complete: all 350
 objects were independently downloaded and verified after input writer revocation
 within 397 seconds. Future model/runtime rehearsals use Nebius Serverless. Native
 durability and remote MLflow proof still require execution; no production
