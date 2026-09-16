@@ -74,3 +74,32 @@ def test_arm_requires_stopped_vm_before_start(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="before starting"):
         guard.arm(tmp_path / "new", datetime.now(UTC) + timedelta(hours=2))
     assert not (tmp_path / "new").exists()
+
+
+def test_start_checks_live_guard_and_persists_single_start_intent(tmp_path, monkeypatch):
+    deadline = datetime.now(UTC) + timedelta(hours=2, minutes=30)
+    lease(tmp_path, deadline)
+    guard.record(tmp_path / "events.jsonl", {"event": "armed", "pid": 123, "deadline": deadline.isoformat()})
+    calls = []
+    monkeypatch.setattr(guard.os, "kill", lambda pid, signal: calls.append((pid, signal)))
+
+    def cli(action):
+        calls.append(action)
+        if action == "start":
+            assert (tmp_path / "start-intent.json").is_file()
+        return {"state": "STOPPED" if action == "get" else "RUNNING"}
+
+    monkeypatch.setattr(guard, "cli", cli)
+    assert guard.start(tmp_path)["state"] == "RUNNING"
+    with pytest.raises(FileExistsError):
+        guard.start(tmp_path)
+    assert calls.count("start") == 1 and calls[0] == (123, 0)
+
+
+def test_delayed_approval_cannot_start_after_guard_deadline(tmp_path, monkeypatch):
+    deadline = datetime.now(UTC) - timedelta(seconds=1)
+    lease(tmp_path, deadline)
+    guard.record(tmp_path / "events.jsonl", {"event": "armed", "pid": 123, "deadline": deadline.isoformat()})
+    monkeypatch.setattr(guard, "cli", lambda _: pytest.fail("expired guard must not call the provider"))
+    with pytest.raises(ValueError, match="two hours remaining"):
+        guard.start(tmp_path)

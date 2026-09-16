@@ -88,9 +88,34 @@ def arm(directory, deadline):
     raise RuntimeError("stop guard did not acknowledge; do not start the VM")
 
 
+def start(directory):
+    """Check the guard in the same invocation that starts the VM after approval."""
+    lease = json.loads((directory / "lease.json").read_text())
+    deadline = datetime.fromisoformat(lease["deadline"])
+    events = [json.loads(line) for line in (directory / "events.jsonl").read_text().splitlines()]
+    if (lease["vm_id"] != VM or deadline.tzinfo is None
+            or not timedelta(hours=2) <= deadline - datetime.now(UTC) <= timedelta(hours=3)
+            or len(events) != 1 or events[0].get("event") != "armed"
+            or events[0].get("deadline") != deadline.isoformat()):
+        raise ValueError("live guard with two hours remaining required before start")
+    pid = events[0].get("pid")
+    if type(pid) is not int or pid <= 1:
+        raise ValueError("guard process identity required")
+    os.kill(pid, 0)
+    if cli("get")["state"] != "STOPPED":
+        raise ValueError("VM must still be stopped before guarded startup")
+    # Persist intent before the API call. An ambiguous start must be resolved by
+    # readback; a retry cannot start this VM twice under the same lease.
+    with (directory / "start-intent.json").open("x") as stream:
+        stream.write(json.dumps({"vm_id": VM, "deadline": deadline.isoformat()}))
+        stream.flush()
+        os.fsync(stream.fileno())
+    return cli("start")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("arm", "watch"))
+    parser.add_argument("action", choices=("arm", "watch", "start"))
     parser.add_argument("--directory", required=True, type=Path)
     parser.add_argument("--deadline", type=datetime.fromisoformat)
     args = parser.parse_args()
@@ -98,5 +123,7 @@ if __name__ == "__main__":
         if args.deadline is None:
             parser.error("arm requires --deadline")
         print(json.dumps(arm(args.directory, args.deadline), sort_keys=True))
+    elif args.action == "start":
+        print(json.dumps(start(args.directory), sort_keys=True))
     else:
         watch(args.directory)

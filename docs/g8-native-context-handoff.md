@@ -39,7 +39,11 @@ rehearsals remain on Nebius Serverless.
    host online with valid CLI access; this is not a provider-enforced billing cap.
    Its deadline leaves one hour of recovery headroom. Archive its events, including
    failures. Do not start if the guard cannot arm; do not extend it after startup.
-5. Start the existing VM, record its uptime start, and repeat `verify-attached`
+5. Use `g8_vm_deadline.py start --directory /absolute/guard-directory` to start
+   the VM. It rechecks guard liveness and at least two hours remaining in the same
+   invocation after any command-approval wait. Its persisted single-start intent
+   forbids repeating an ambiguous start; resolve uncertainty by API readback.
+   Record the uptime start and repeat `verify-attached`
    with `--running`. Through its existing SSH connection, require the chosen
    mount path to be absent or an empty canonical directory. Mount with
    `sudo mount -t virtiofs -o rw,nodev,nosuid,noexec g8-native-rehearsal /mnt/g8-native-rehearsal`.
