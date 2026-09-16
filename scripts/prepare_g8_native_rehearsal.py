@@ -12,7 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from serverless.jobs.g8_native_contract import BOOTSTRAP, CODE_PATHS, MODULES, NativePlan, canonical, job_command  # noqa: E402
+from serverless.jobs.g8_native_contract import BOOTSTRAP, CODE_PATHS, MODULES, NativePlan, canonical  # noqa: E402
+from scripts.submit_g8_native_rehearsal import submission_command  # noqa: E402
 from serverless.jobs.g8_native_archive import build  # noqa: E402
 from serverless.jobs.g8_native_runtime import bounded, verify_package  # noqa: E402
 from serverless.jobs.g8_native_source_capsule import verify as verify_capsule  # noqa: E402
@@ -58,8 +59,8 @@ def prepare(*, capsule, bindings, filesystem, private_key, output):
     (output / "native-plan.sig").write_bytes(key.sign(raw))
     verify_package(output, phase="score", trusted=files["reviewer-public.pem"]["sha256"])
     return {"package_sha256": plan.identity(), "source_commit": commit,
-            "score_command": job_command(plan, output, phase="score"),
-            "recovery_command": job_command(plan, output, phase="recover"),
+            "score_command": submission_command(output, "score"),
+            "recovery_command": submission_command(output, "recover"),
             "jobs_submitted": 0, "native_storage_verified": False, "remote_mlflow_verified": False}
 
 
