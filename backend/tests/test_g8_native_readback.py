@@ -43,7 +43,8 @@ def readback(plan):
             "args": "/job/g8/g8_native_bootstrap.py --phase score",
             "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": contract.SUBNET,
             "timeout": "3600s", "disk": {"type": "NETWORK_SSD", "size_bytes": "107374182400"},
-            "volumes": [{"source": plan.filesystem_id, "container_path": "/g8-durable", "mode": "READ_WRITE"}],
+            "volumes": [{"source": plan.filesystem_id, "container_path": "/g8-durable", "mode": "READ_WRITE"},
+                        {"source": plan.filesystem_id, "container_path": "/g8-package", "mode": "READ_ONLY"}],
             # Ordinary API views omit injected content but retain plain settings.
             "injected_files": [{"container_path": p} for p in contract.injections(plan)],
             "environment_variables": [{"name": k, "value": v} for k, v in contract.environment(plan).items()] + [
@@ -144,12 +145,14 @@ def test_plan_rejects_production_candidate_and_unbounded_resources(plan_data):
             contract.NativePlan.model_validate({**plan_data, key: value})
 
 
-def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_path):
+def test_commands_pin_secrets_and_mount_one_filesystem_in_two_modes(plan, tmp_path):
     command = contract.job_command(plan, tmp_path, phase="recover")
-    assert command.count("--inject-file") == 16
+    assert command.count("--inject-file") == 1
     assert command[command.index("--args") + 1] == "/job/g8/g8_native_bootstrap.py --phase recover"
     assert not any(p.endswith("/g8_native_lifecycle.py") for p in contract.injections(plan))
-    assert command.count("--volume") == 1
+    assert command.count("--volume") == 2
+    assert {command[i + 1] for i, value in enumerate(command) if value == "--volume"} == {
+        plan.filesystem_id + ":/g8-durable:rw", plan.filesystem_id + ":/g8-package:ro"}
     assert command[command.index("--volume") + 1] == plan.filesystem_id + ":/g8-durable:rw"
     assert command[command.index("--restart-policy") + 1] == "never"
     assert command[command.index("--image") + 1] == contract.DEPLOYMENT_IMAGE
@@ -164,6 +167,19 @@ def test_transport_bound_does_not_limit_uncompressed_code(plan_data):
     plan_data["files"]["native-code-2.zip"]["size_bytes"] = 40961
     with pytest.raises(ValueError, match="40 KiB"):
         contract.NativePlan.model_validate(plan_data)
+
+
+@pytest.mark.parametrize("change", ["writable", "different-filesystem", "missing"])
+def test_read_only_package_mount_is_mandatory(plan, readback, change):
+    volume = readback["spec"]["volumes"][1]
+    if change == "writable":
+        volume["mode"] = "READ_WRITE"
+    elif change == "different-filesystem":
+        volume["source"] = "computefilesystem-other"
+    else:
+        readback["spec"]["volumes"].pop()
+    with pytest.raises(ValueError, match="mounts"):
+        check(plan, readback)
 
 
 def test_delayed_submission_readback_keeps_identity_checks(plan, readback):

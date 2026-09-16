@@ -14,6 +14,7 @@ import zipfile
 # Independent bootstrap cannot import unverified overlays for these constants.
 MAX_INJECTION = 40 * 1024
 ARCHIVE_COUNT = 3
+PACKAGE = "/g8-package/package"
 
 
 class Overlays(importlib.abc.MetaPathFinder, importlib.abc.SourceLoader):
@@ -65,5 +66,5 @@ def install(package):
 
 if __name__ == "__main__":
     sys.dont_write_bytecode = True
-    install(Path(__file__).resolve().parent)
+    install(Path(PACKAGE))
     runpy.run_module("run_g8_native_rehearsal", run_name="__main__")

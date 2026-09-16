@@ -82,10 +82,12 @@ def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
     if disk not in ({"type": "NETWORK_SSD", "size_bytes": str(100 * 1024**3)},
                     {"type": "NETWORK_SSD", "size_bytes": 100 * 1024**3}):
         raise ValueError("Job ephemeral disk differs")
-    volumes = spec.get("volumes")
-    expected_volume = {"source": plan.filesystem_id, "container_path": "/g8-durable", "mode": "READ_WRITE"}
-    if volumes not in ([expected_volume], [{**expected_volume, "source_path": ""}]):
-        raise ValueError("exact native filesystem mount required")
+    volumes = _unique(spec.get("volumes"), "container_path")
+    expected = {path: {"source": plan.filesystem_id, "container_path": path, "mode": mode}
+                for path, mode in (("/g8-durable", "READ_WRITE"), ("/g8-package", "READ_ONLY"))}
+    if set(volumes) != set(expected) or any(
+            volumes[path] not in (value, {**value, "source_path": ""}) for path, value in expected.items()):
+        raise ValueError("exact writable checkpoint and read-only package mounts required")
     expected_plain = environment(plan)
     observed = _unique(spec.get("environment_variables"), "name")
     if set(observed) != set(expected_plain) | set(plan.secret_selectors):

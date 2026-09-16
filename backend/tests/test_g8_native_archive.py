@@ -18,6 +18,7 @@ def test_actual_reviewed_sources_fit_three_deterministic_archives(tmp_path):
     packed = archive.build(code)
     assert packed == archive.build(dict(reversed(list(code.items()))))
     assert set(packed) == set(contract.ARCHIVES)
+    assert bootstrap.PACKAGE == contract.PACKAGE == "/g8-package/package"
     for name, raw in packed.items():
         assert len(raw) <= contract.MAX_INJECTION == bootstrap.MAX_INJECTION == 40 * 1024
         assert len(packed) == bootstrap.ARCHIVE_COUNT == 3

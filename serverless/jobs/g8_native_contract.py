@@ -33,6 +33,7 @@ SCRIPTS = ("run_lightgbm_g8", "prepare_g8_native_sources", "g8_rehearsal", "stag
            "g8_native_runtime", "g8_native_lifecycle", "run_g8_native_rehearsal", "g8_native_archive")
 ARCHIVES = ("native-code-0.zip", "native-code-1.zip", "native-code-2.zip")
 BOOTSTRAP = "g8_native_bootstrap.py"
+PACKAGE = "/g8-package/package"
 CODE_PATHS = {f"{n}.py": f"/job/backend/app/ml/lightgbm/{n}.py" for n in MODULES}
 CODE_PATHS.update({f"{n}.py": f"/job/g8/{n}.py" for n in SCRIPTS})
 CAPSULE = {f"source-capsule/inventory-{i}.part" for i in range(2)} | {
@@ -64,7 +65,7 @@ class RegistryVerification(Strict):
 
 
 class NativePlan(Strict):
-    schema_version: Literal["g8_native_rehearsal_plan_v4"] = "g8_native_rehearsal_plan_v4"
+    schema_version: Literal["g8_native_rehearsal_plan_v5"] = "g8_native_rehearsal_plan_v5"
     source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     run_id: Literal["synthetic-final"] = "synthetic-final"
     request_sha256: Literal["6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486"]
@@ -120,10 +121,8 @@ def environment(plan):
 
 
 def injections(plan):
-    paths = {f"/job/g8/{name}": name for name in (set(plan.files) - set(CODE_PATHS)) | {"native-plan.json", "native-plan.sig"}}
-    if len(paths) > 16:
-        raise ValueError("Nebius permits at most 16 injected files")
-    return paths
+    # Bulk code/metadata use native storage, not SecretStash/KMS injections.
+    return {f"/job/g8/{BOOTSTRAP}": BOOTSTRAP}
 
 
 def job_name(phase):
@@ -138,6 +137,7 @@ def job_command(plan, package, *, phase):
         "--image", plan.deployment_image, "--parent-id", PROJECT, "--subnet-id", SUBNET,
         "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi",
         "--timeout", "1h", "--restart-policy", "never", "--volume", f"{plan.filesystem_id}:/g8-durable:rw",
+        "--volume", f"{plan.filesystem_id}:/g8-package:ro",
         "--container-command", "python", "--args", f"/job/g8/{BOOTSTRAP} --phase {phase}",
         "--format", "json"]
     for path, name in sorted(injections(plan).items()):

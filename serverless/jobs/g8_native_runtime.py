@@ -102,6 +102,9 @@ def native_mount(plan, mountinfo=None):
 
 
 def actual_runtime(plan, package):
+    for name in (set(plan.files) - set(CODE_PATHS)) | {"native-plan.json", "native-plan.sig"}:
+        if not os.statvfs(package / name).f_flag & os.ST_RDONLY:
+            raise ValueError("native package files must be read-only: " + name)
     for path, name in injections(plan).items():
         path = Path(path)
         if bounded(path) != bounded(package / name) or not os.statvfs(path).f_flag & os.ST_RDONLY:
