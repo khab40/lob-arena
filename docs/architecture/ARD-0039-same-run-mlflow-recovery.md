@@ -64,6 +64,14 @@ The production runner still uses its legacy logger and temporary workspace.
 Pre-logging scored-payload retention, fresh-process recovery after workspace
 loss, native-mount durability and authenticated remote rehearsal remain open.
 
+The [native rehearsal package](../g8-native-rehearsal-package.md) uses the existing
+filesystem for hash-verified package staging and checkpoint retention. Its Job
+mounts that filesystem read-only for package loading and read-write for recovery
+evidence. Only the small bootstrap uses Job file injection; both earlier bulk
+injection layouts failed at KMS before any Job existed. Signed package checks,
+injected archive hash anchors and in-memory code loading remain required. Neither
+read-only mounting nor provider dry-run proves successful native recovery.
+
 ## Alternatives and consequences
 
 Creating a replacement run after timeout can duplicate evaluation history.
