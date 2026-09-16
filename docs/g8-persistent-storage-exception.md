@@ -1,5 +1,13 @@
 # G8 replacement: persistent-storage exception proposal
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
+Architecture decision: [ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md).
+
 Status (2026-09-14): **preparation approved; not provisioned or executable**.
 The user approved preparing a narrowly scoped persistent-storage exception for
 the single G8 replacement, with review and budgeting before live provisioning.
@@ -95,7 +103,15 @@ and hashed into a new execution package; placeholders must fail validation.
 ## Current disposition
 
 Only the design preparation is approved. No submission validator was relaxed,
-no resource was provisioned, and no durable-recovery implementation is claimed.
+no resource was provisioned, and full durable recovery is not claimed. The
+[completed-release publication primitive](g8-publication-recovery.md) now verifies
+local retention and publish-only fault recovery after MLflow has finished. It is
+not a pre-logging scored checkpoint, native-mount proof or live runner integration.
+The separate [pre-logging checkpoint implementation](g8-prelogging-checkpoint.md)
+now passes synthetic process/workspace-loss recovery with the same MLflow run.
+It retains copied payloads plus a private recovery snapshot, whose capacity must
+be budgeted alongside the original workspace and ledger. Local fsync is not a
+native-mount durability/locking proof; live integration remains unapproved.
 Review/budget approval precedes live provisioning; successful synthetic durability
 and authenticated transport proofs precede the separately signed replacement
 execution. G8 remains open and G9 remains blocked.

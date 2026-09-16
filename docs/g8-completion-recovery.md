@@ -1,7 +1,20 @@
 # G8 completion recovery — 2026-09-14
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
 Status: G0–G7 complete; G8 open; G9 blocked on a successful, fully evaluated G8.
 This is a recovery implementation record, not a final-test approval or G8 exit receipt.
+
+Current follow-up: [live replacement integration and preflight](g8-live-replacement.md)
+wires the scored checkpoint, same-run logging and completed-release publisher
+into a separate package-bound entrypoint. It preserves four prior submissions
+and R4 test access, requires a signed exception and native mount, and leaves the
+ordinary no-volume submitter unchanged. Native/remote rehearsal is proposed with
+a $2 cap but is not yet approved; no production execution readiness is claimed.
 
 ## What is fixed and verified
 
@@ -101,6 +114,34 @@ The user approved **preparing** the
 permission to provision or submit. Durable recovery, original production checkpoint
 availability, remote rehearsal and replacement-specific authorization remain open.
 
+Follow-up after merged PR #172: a
+[completed-release publication recovery primitive](g8-publication-recovery.md)
+now retains an independently checksum-bound copy and resumes exact-prefix S3
+publication without deleting partial objects, rescoring, or writing MLflow. The
+frozen synthetic fault rehearsal passed for payload failure, lost PUT response
+and marker failure; a fresh process verified the retained copy after the original
+path became unavailable. This covers **post-MLflow publication only**. It is not
+wired into live execution; pre-logging retention, same-run MLflow recovery and
+native-storage durability remain outstanding. No new execution is authorized.
+
+Follow-up after merged PR #175: [same-run MLflow recovery](g8-mlflow-recovery.md)
+now reserves an identity before scoring and resumes interrupted logging after
+independent C4 verification. The pinned-image synthetic rehearsal creates one
+run, scores once, recovers four lost-response cases, verifies 24 metrics, 30
+dataset inputs and all four artifacts, then repeats completed logging with zero
+writes. This does not retain scored payloads before logging or survive Job loss
+yet, and is not wired into live execution. Those integration and native-storage
+gates remain open, as do remote rehearsal and replacement-specific approval.
+
+Follow-up after merged PR #176: [pre-logging checkpoints](g8-prelogging-checkpoint.md)
+now retain the scored release, original C4 comparison evidence and unchanged
+logging context before any evaluation evidence is logged. The synthetic proof
+abruptly exits after sealing, removes the original workspace, then runs the
+actual log-only CLI in fresh processes. Recovery also survives a second abrupt
+exit after an artifact upload and finishes the same run without rescoring.
+Native storage durability, full execution-result finalization/publication
+integration, remote rehearsal and replacement-specific approval remain gates.
+
 1. **Resolve canonical benchmark inputs.** The C4 final projection publication
    contains feature/sequence shards and projection manifests, not the canonical
    replay streams, rules alerts, adjudications, regime evidence, streaming evidence
@@ -134,7 +175,7 @@ availability, remote rehearsal and replacement-specific authorization remain ope
    scoring, during MLflow logging, after a successful PUT with a lost response, and
    during marker publication; verify recovery without re-execution.
 4. **Review/merge, bind the exception and run live preflight.** Use a fresh PR from
-   current main for subsequent delivery. Verify fresh billing, exact image digest,
+   current main for subsequent delivery. Verify exact image digest,
    scoped credentials, private authenticated MLflow and a synthetic remote artifact
    round-trip. No final-read credential activation or cloud Job occurs in this PR.
    Obtain the replacement-specific signed authorization only for the completed,

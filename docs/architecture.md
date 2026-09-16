@@ -4,7 +4,7 @@ LOB Arena separates six concerns:
 
 - **User and integration surfaces**: React/Vite UI, CLIs, batch jobs, and future
   external detector adapters.
-- **Data plane**: licensed LOBSTER ingestion, immutable normalized Parquet,
+- **Data plane**: licensed LOBSTER and Nasdaq ITCH ingestion, immutable normalized Parquet,
   source manifests, synthetic scenarios, and distinct ground truth.
 - **Java execution plane**: the only live-book writer for synthetic,
   historical-only, and hybrid streams.
@@ -20,6 +20,21 @@ The architecture supports interactive replay/investigation and offline governed
 corpus/training/evaluation paths. Both paths reuse the same canonical Java
 stream, scenario ground truth, hashes, and release contracts.
 
+## Current Design — 2026-09-15
+
+Java remains the sole live exchange/replay authority; Python owns ingestion,
+features, ML and cloud orchestration. LOBSTER and Nasdaq ITCH feed the normalized
+historical-data boundary. Governed LightGBM v1 is implemented; the Transformer
+and Transformer-to-LightGBM cascade remain proposed follow-on work.
+
+Wave 1 G0–G7 are complete. G8 remains open and G9 blocked: R4 downloaded the
+final release and failed before scoring. The frozen candidate remains unchanged.
+C4-specific evaluation, same-run MLflow recovery and completed-release publication
+recovery are implemented and synthetically rehearsed. Durable pre-logging payload
+retention and live recovery integration remain unfinished. Native storage is a
+proposal; original production C3 availability, remote rehearsal and a reviewed
+replacement execution package remain gates.
+
 ## System High-Level Design
 
 ```mermaid
@@ -31,6 +46,7 @@ flowchart LR
 
     subgraph Data["Data and scenario sources"]
         LOBSTER["Licensed LOBSTER CSV"]
+        ITCH["Nasdaq TotalView-ITCH"]
         Normalize["Validated immutable<br/>Parquet + manifest"]
         Scenario["Synthetic agents<br/>and attack scenarios"]
     end
@@ -49,7 +65,7 @@ flowchart LR
         Runner["agent-runner<br/>normal + heavy + LangGraph"]
         Corpus["Reviewed corpus +<br/>frozen chronological split"]
         Features["Causal feature pipeline"]
-        Models["Learned detectors<br/>governed LightGBM v1 + sequence challengers"]
+        Models["Governed LightGBM v1<br/>sequence challengers proposed"]
         Evaluate["Rules / model paired evaluation"]
     end
 
@@ -69,6 +85,7 @@ flowchart LR
     UI --> API
     Client --> API
     LOBSTER --> API
+    ITCH --> API
     API --> Normalize
     Normalize --> Replay
     Replay -->|"historical phase"| Exchange
@@ -228,10 +245,43 @@ Release verification resolves only safe relative paths and verifies every
 artifact's bytes, size, schema, SHA-256 value, canonical manifest binding, and
 checksum-inventory membership.
 
+### Frozen C4 Evaluation and Recovery
+
+[ARD-0038](architecture/ARD-0038-c4-specific-evaluation.md) defines the four-date
+C4 contract separately from the seven-date benchmark. Original C3 checkpoints
+bind the rules comparison to the same retained observations. Row metrics,
+calibration and session-cluster uncertainty retain their explicit coverage limits.
+The logger independently recomputes the report before indexing `c4.test.*` metrics.
+
+```mermaid
+flowchart LR
+    C4["Frozen candidate + C4 projection"] --> Score["Final scoring"]
+    Score --> Eval["C4 report + original C3 evidence"]
+    Eval --> Log["Independent verification + MLflow logging"]
+    Reserve["Same-run reservation API"] -. "integration pending" .-> Score
+    Score -. "not implemented" .-> Durable["Durable pre-logging checkpoint"]
+    Durable -. "integration pending" .-> Log
+    Log --> Complete["Completed local release"]
+    Complete --> Retain["Sealed publication checkpoint API"]
+    Retain --> Publish["Exact-prefix conditional PUTs + SUCCESS last"]
+```
+
+The diagram connects the intended lifecycle; reservation and recovery helpers
+are implemented separately and are not wired into the live runner.
+[ARD-0039](architecture/ARD-0039-same-run-mlflow-recovery.md) reserves one MLflow
+identity before scoring and resumes verified logging without creating another run.
+[ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md) retains
+an already completed release and resumes publication without scoring or MLflow
+writes. Neither helper proves scored payloads survive Job loss before logging.
+See the [recovery gates](g8-completion-recovery.md) and
+[proposed native storage exception](g8-persistent-storage-exception.md).
+
 ### Shared MLflow Tracking Plane
 
 The opt-in `mlflow` Compose profile provides an authenticated shared tracking
-server backed by PostgreSQL metadata and private S3-compatible MinIO artifacts.
+server (image pinned to MLflow 3.15.2) backed by PostgreSQL metadata and private
+S3-compatible MinIO artifacts locally. The Nebius profile uses Object Storage
+and a Registry digest-pinned image on the CPU VM, without MinIO.
 It defines separate experiment namespaces for corpus releases, LightGBM
 development, and governed evaluation, plus the governed binary `attack_active`
 registered-model namespace. A deployment smoke test exercises authentication,
@@ -496,5 +546,8 @@ Detailed architecture decisions are recorded in [Architecture Records (ARDs)](ar
 - [ARD-0035: Nebius-First Qualification Of Governed LightGBM](architecture/ARD-0035-nebius-lightgbm-first.md) — CPU-first cloud execution, reproducibility, performance, cost and exit gates
 - [ARD-0036: Governed Market-Sequence Transformer Challenger](architecture/ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training and standalone evaluation
 - [ARD-0037: Transformer-Derived Features Into LightGBM](architecture/ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned temporal features, exact joins, CPU decision layer, fallback and promotion gates
+- [ARD-0038: C4-Specific Frozen Evaluation](architecture/ARD-0038-c4-specific-evaluation.md)
+- [ARD-0039: Same-Run MLflow Evaluation Recovery](architecture/ARD-0039-same-run-mlflow-recovery.md)
+- [ARD-0040: Completed-Release Publication Recovery](architecture/ARD-0040-completed-release-publication-recovery.md)
 - [Hybrid Dataset Validation](hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
 - [Causal Feature Engineering for LightGBM](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and governed trainer consumption contract

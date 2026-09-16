@@ -4,6 +4,16 @@ Status: Accepted
 
 Date: 2026-06-02
 
+## Validation execution policy — 2026-09-16
+
+The operator removed administrative submission/retention windows, billing checks
+and fixed validation spend/VM limits until LightGBM and Transformers validation
+have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+in preference to older operational bounds in this record. No billing queries or
+balance-refresh requests. Finite Job timeouts, execution identities, evidence
+integrity and separate final-test authorization remain. This is an execution-policy
+change, not model-quality acceptance or a completed G8/G9 milestone.
+
 ## Implementation Status
 
 Status as of 2026-07-14: `[partial]`
