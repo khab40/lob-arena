@@ -40,7 +40,8 @@ The next submission passed the injection-count gate but was rejected before Job
 creation because Nebius copied the 131-character image reference into a 64-character
 Compute label. This is the [existing approved provider workaround](nebius-lightgbm-wave1-implementation-plan.md#2026-08-26-g4-submission-reconciliation),
 tracked in [Issue #84](https://github.com/khab40/lob-arena/issues/84).
-The VM was stopped/restored at version 52 and the empty filesystem deleted.
+The VM was stopped/restored at version 52 and the empty filesystem deleted;
+the [rejection receipt](evidence/g8-native-image-label-rejection-20260916.json) preserves this attempt.
 
 Keep `plan.image` at the full frozen digest. Submit only the existing
 `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee` alias.
@@ -54,7 +55,7 @@ Supply the post-create registry JSON to `sign_g8_native_context.py` with
 `--registry-verification`. The signer rejects a different alias/digest, observations
 before Job creation, future timestamps and observations older than five minutes.
 The signed context carries that evidence into the waiting Job. Recovery children
-reuse the signed observation within the package lifetime. These checks retain the
+reuse the signed observation during recovery. These checks retain the
 approved short-tag exception; they do not claim a mutable tag is digest addressing.
 
 ## Frozen source capsule
@@ -143,7 +144,7 @@ The reviewer private key stays outside the package and is never injected.
 
 ```bash
 rtk proxy python3 scripts/prepare_g8_native_rehearsal.py --capsule /absolute/capsule --bindings /absolute/bindings.json --filesystem /absolute/filesystem.json --private-key /absolute/reviewer.pem --output /absolute/new-package
-rtk proxy python3 scripts/sign_g8_native_context.py --package /absolute/new-package --readback /absolute/score-job.json --job-id aijob-REPLACE --phase score --private-key /absolute/reviewer.pem --output /absolute/new-score-context
+rtk proxy python3 scripts/sign_g8_native_context.py --package /absolute/new-package --readback /absolute/score-job.json --job-id aijob-REPLACE --phase score --private-key /absolute/reviewer.pem --registry-verification /absolute/post-create-registry.json --output /absolute/new-score-context
 ```
 
 Use Python with the repository's Pydantic/cryptography dependencies. Bindings
