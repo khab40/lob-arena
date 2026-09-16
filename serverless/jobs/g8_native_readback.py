@@ -7,12 +7,22 @@ from __future__ import annotations
 
 import hashlib
 import re
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 if __package__:
-    from .g8_native_contract import BOOTSTRAP, PROJECT, SUBNET, canonical, environment, injections, job_name
+    from .g8_native_contract import BOOTSTRAP, PROJECT, SUBNET, RegistryVerification, canonical, environment, injections, job_name
 else:
-    from g8_native_contract import BOOTSTRAP, PROJECT, SUBNET, canonical, environment, injections, job_name
+    from g8_native_contract import BOOTSTRAP, PROJECT, SUBNET, RegistryVerification, canonical, environment, injections, job_name
+
+
+def verify_registry(receipt, *, created_at=None, now=None, fresh=True):
+    current = now or datetime.now(UTC)
+    observed = RegistryVerification.model_validate(receipt)
+    created = datetime.fromisoformat(created_at.replace("Z", "+00:00")) if created_at else current - timedelta(minutes=5)
+    earliest = max(created, current - timedelta(minutes=5)) if fresh else created
+    if created.tzinfo is None or not earliest <= observed.verified_at <= current:
+        raise ValueError("fresh registry mapping after Job creation required")
+    return observed
 
 
 def _unique(items, key):
@@ -51,7 +61,7 @@ def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
     created = datetime.fromisoformat(metadata["created_at"].replace("Z", "+00:00"))
     if created.tzinfo is None or not plan.verified_at <= created <= current:
         raise ValueError("Job creation timestamp is invalid")
-    required = {"image": plan.image, "container_command": "python",
+    required = {"image": plan.deployment_image, "container_command": "python",
         "args": f"/job/g8/{BOOTSTRAP} --phase {phase}",
         "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": SUBNET, "timeout": "3600s"}
     if any(spec.get(k) != v for k, v in required.items()):

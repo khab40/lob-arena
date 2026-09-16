@@ -1,5 +1,6 @@
 """Static signing protocol tests; no Job, filesystem or model workload is started."""
 from copy import deepcopy
+from datetime import timedelta
 import json
 
 import pytest
@@ -19,11 +20,16 @@ def test_signed_context_binds_job_and_requires_terminal_original(package, readba
     monkeypatch.setattr(signer, "verify_package", lambda *a, **kw: plan)  # Signature checked by runtime tests.
     monkeypatch.setattr(signer, "verify_readback", lambda *a, **kw: readbacks.verify_readback(*a, **kw, now=fixtures.NOW))
     monkeypatch.setattr(signer, "verify_previous_job", lambda *a, **kw: readbacks.verify_previous_job(*a, **kw, now=fixtures.NOW))
+    monkeypatch.setattr(signer, "verify_registry", lambda *a, **kw: readbacks.verify_registry(*a, **kw, now=fixtures.NOW))
     job_file = tmp_path / "job.json"
     job_file.write_bytes(contract.canonical(readback))
     output = tmp_path / "score"
+    registry_file = tmp_path / "registry.json"
+    registry = plan.registry_verification.model_dump(mode="json")
+    registry["verified_at"] = fixtures.NOW.isoformat()
+    registry_file.write_bytes(contract.canonical(registry))
     kwargs = dict(package=root, readback=job_file, job_id="aijob-example", phase="score",
-                  private_key=tmp_path / "reviewer.pem", output=output)
+                  private_key=tmp_path / "reviewer.pem", output=output, registry_verification=registry_file)
     receipt = signer.sign_context(**kwargs)
     assert receipt["secret_version_selectors_verified"]
     content = (output / "score.json").read_bytes()
@@ -58,3 +64,30 @@ def test_terminal_timestamp_and_same_job_cannot_prove_reattachment(plan, readbac
     readback["status"]["finished_at"] = fixtures.NOW.isoformat()
     with pytest.raises(ValueError):
         readbacks.verify_previous_job(plan, original, readback, recovery_job_id="aijob-example", now=fixtures.NOW)
+
+
+@pytest.mark.parametrize("change", ["digest", "alias", "before-create", "future", "stale"])
+def test_registry_context_rejects_drift_and_wrong_observation_time(plan, change):
+    receipt = plan.registry_verification.model_dump(mode="json")
+    receipt["verified_at"] = fixtures.NOW.isoformat()
+    created = (fixtures.NOW - timedelta(minutes=1)).isoformat()
+    if change == "digest":
+        receipt["resolved_digest"] = "sha256:" + "a" * 64
+    elif change == "alias":
+        receipt["deployment_image"] = "registry.example/other:latest"
+    elif change == "before-create":
+        receipt["verified_at"] = (fixtures.NOW - timedelta(minutes=2)).isoformat()
+    elif change == "future":
+        receipt["verified_at"] = (fixtures.NOW + timedelta(seconds=1)).isoformat()
+    else:
+        created = (fixtures.NOW - timedelta(minutes=10)).isoformat()
+        receipt["verified_at"] = (fixtures.NOW - timedelta(minutes=6)).isoformat()
+    with pytest.raises(ValueError):
+        readbacks.verify_registry(receipt, created_at=created, now=fixtures.NOW)
+
+
+def test_recovery_children_reuse_signed_post_creation_registry_observation(plan):
+    receipt = plan.registry_verification.model_dump(mode="json")
+    receipt["verified_at"] = fixtures.NOW.isoformat()
+    assert readbacks.verify_registry(receipt, created_at=fixtures.NOW.isoformat(),
+                                    now=fixtures.NOW + timedelta(minutes=20), fresh=False)
