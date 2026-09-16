@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 
@@ -47,7 +48,12 @@ def test_preparation_image_consumes_prebuilt_control_plane() -> None:
     assert "pyarrow" in requirements
     assert "protobuf" in requirements
     assert "lightgbm" not in requirements
-    assert "mlflow-skinny==3.15.2" in requirements
+    project = tomllib.loads((ROOT / "backend" / "pyproject.toml").read_text(encoding="utf-8"))
+    mlflow_pin = next(
+        item for item in project["project"]["optional-dependencies"]["ml"]
+        if item.startswith("mlflow-skinny==")
+    )
+    assert mlflow_pin in requirements.splitlines()
     assert "!build/market-data/control-plane.jar" in dockerignore
     assert "!java" not in dockerignore
 
