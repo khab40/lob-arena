@@ -2,7 +2,9 @@
 
 This completes the operator procedure for the
 [native rehearsal package](g8-native-rehearsal-package.md). It creates no new
-authorization and consumes no additional Jobs. All training/scoring and runtime
+final-test authorization and consumes no additional Jobs. Apply the
+[validation execution policy](model-validation-execution-policy.md): no billing
+checks, mandatory session/retention windows or package-age rejection. All training/scoring and runtime
 rehearsals remain on Nebius Serverless.
 
 ## Fixed transport
@@ -22,8 +24,8 @@ rehearsals remain on Nebius Serverless.
 ## Prepare and attach
 
 1. Complete any interactive CLI authentication and command approvals while the VM
-   is stopped. Refresh billing and include accrued/lagged usage under the $2,
-   two-Job, four-hour VM and 24-hour filesystem bounds. Archive the VM's current
+   is stopped. Spend monitoring belongs to the operator's alerts; no billing
+   query or refreshed balance is required. Archive the VM's current
    API readback. Stop the VM and read it back again as `vm-before.json`.
 2. Require no existing filesystem attachments. Create only the approved 10 GiB
    filesystem and preserve its raw API readback, including READY status and
@@ -31,18 +33,15 @@ rehearsals remain on Nebius Serverless.
 3. Render a resource-version-guarded patch with the tool below. Execute the printed
    argument array only after reviewing it. Read the VM again and use
    `verify-attached` to reject unrelated disk, identity or network changes.
-4. Before starting, arm `scripts/g8_vm_deadline.py` with `arm --directory` pointing
-   to a new private evidence directory and `--deadline` set to an absolute UTC
-   time at most three hours away. Require its armed receipt and live process.
-   It runs independently of the assistant, disables interactive browser auth,
-   retries stop failures and independently reads back STOPPED. Keep the operator
-   host online with valid CLI access; this is not a provider-enforced billing cap.
-   Its deadline leaves one hour of recovery headroom. Archive its events, including
-   failures. Do not start if the guard cannot arm; do not extend it after startup.
-5. Use `g8_vm_deadline.py start --directory /absolute/guard-directory` to start
-   the VM. It rechecks guard liveness and at least two hours remaining in the same
-   invocation after any command-approval wait. Its persisted single-start intent
-   forbids repeating an ambiguous start; resolve uncertainty by API readback.
+4. Start with `g8_vm_deadline.py start --operator-managed --directory
+   /absolute/new-start-directory`. This records a single-use intent without a
+   mandatory stop lease or remaining-session gate. Resolve an ambiguous response
+   by VM readback, never by repeating the start in a new directory.
+5. An explicit stop timer remains optional: `arm --directory /absolute/new-guard
+   --deadline TIMESTAMP`, then `start --directory /absolute/new-guard`. Only a
+   future deadline and live guard are required; there is no fixed three-hour cap
+   or two-hour headroom minimum. Keep the operator host and CLI available when
+   choosing this local guard. An expired chosen timer still blocks a timed start.
    Record the uptime start and repeat `verify-attached`
    with `--running`. Through its existing SSH connection, require the chosen
    mount path to be absent or an empty canonical directory. Mount with
@@ -109,6 +108,7 @@ Cleanup restored the VM to STOPPED at version 44 and deleted the temporary
 filesystem within 24 hours. VM disks remain intact. Only the non-secret publisher
 script remains in the temporary VM transport directory; remove it during the next
 authorized VM session rather than restarting solely for deletion.
-The independent guard was added after this failure. A fresh billing reconciliation
-and renewed VM window are required before another start. The two-Job rehearsal,
+The independent guard was added after this failure. The September 16 validation
+policy subsequently made timed guards optional and removed billing/session gates;
+the historical overrun remains recorded. The two-Job rehearsal,
 authenticated artifact recovery and independent S3/MLflow verification remain open.
