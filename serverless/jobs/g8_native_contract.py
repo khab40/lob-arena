@@ -23,7 +23,9 @@ MODULES = ("g8_replacement", "g8_live_recovery", "g8_scored_checkpoint", "g8_mlf
            "g8_benchmark_readiness", "g8_c4_fixture")
 SCRIPTS = ("run_lightgbm_g8", "prepare_g8_native_sources", "g8_rehearsal", "stage_g8_native_sources",
            "g8_source_sdk", "g8_native_source_capsule", "g8_native_contract", "g8_native_readback",
-           "g8_native_runtime", "g8_native_lifecycle", "run_g8_native_rehearsal")
+           "g8_native_runtime", "g8_native_lifecycle", "run_g8_native_rehearsal", "g8_native_archive")
+ARCHIVES = ("native-code-0.zip", "native-code-1.zip")
+BOOTSTRAP = "g8_native_bootstrap.py"
 CODE_PATHS = {f"{n}.py": f"/job/backend/app/ml/lightgbm/{n}.py" for n in MODULES}
 CODE_PATHS.update({f"{n}.py": f"/job/g8/{n}.py" for n in SCRIPTS})
 CAPSULE = {f"source-capsule/inventory-{i}.part" for i in range(2)} | {
@@ -47,7 +49,7 @@ class FileRef(Strict):
 
 
 class NativePlan(Strict):
-    schema_version: Literal["g8_native_rehearsal_plan_v1"] = "g8_native_rehearsal_plan_v1"
+    schema_version: Literal["g8_native_rehearsal_plan_v2"] = "g8_native_rehearsal_plan_v2"
     source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     run_id: Literal["synthetic-final"] = "synthetic-final"
     request_sha256: Literal["6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486"]
@@ -85,7 +87,7 @@ class NativePlan(Strict):
                        for s in self.secret_selectors.values())
                 or any(self.secret_selectors[k] != v for k, v in S3_SELECTORS.items())):
             raise ValueError("exact development S3 and four version-pinned selectors required")
-        if set(self.files) != set(CODE_PATHS) | CAPSULE | {"reviewer-public.pem", "billing.json", "filesystem.json"}:
+        if set(self.files) != set(CODE_PATHS) | CAPSULE | set(ARCHIVES) | {BOOTSTRAP, "reviewer-public.pem", "billing.json", "filesystem.json"}:
             raise ValueError("exact native code, capsule, reviewer and billing allowlist required")
         if self.files["billing.json"].sha256 != self.billing_receipt_sha256:
             raise ValueError("billing receipt differs from reviewed file")
@@ -101,12 +103,14 @@ def environment(plan):
         "AWS_EC2_METADATA_DISABLED": "true", "AWS_DEFAULT_REGION": "eu-north1",
         "PYTHONDONTWRITEBYTECODE": "1",
         "G8_NATIVE_REVIEWER_SHA256": plan.files["reviewer-public.pem"].sha256,
+        **{f"G8_NATIVE_CODE_{i}_SHA256": plan.files[name].sha256 for i, name in enumerate(ARCHIVES)},
     }
 
 
 def injections(plan):
-    paths = {f"/job/g8/{name}": name for name in set(plan.files) | {"native-plan.json", "native-plan.sig"}}
-    paths.update({path: name for name, path in CODE_PATHS.items()})
+    paths = {f"/job/g8/{name}": name for name in (set(plan.files) - set(CODE_PATHS)) | {"native-plan.json", "native-plan.sig"}}
+    if len(paths) > 16:
+        raise ValueError("Nebius permits at most 16 injected files")
     return paths
 
 
@@ -122,7 +126,7 @@ def job_command(plan, package, *, phase):
         "--image", plan.image, "--parent-id", PROJECT, "--subnet-id", SUBNET,
         "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi",
         "--timeout", "1h", "--restart-policy", "never", "--volume", f"{plan.filesystem_id}:/g8-durable:rw",
-        "--container-command", "python", "--args", f"/job/g8/run_g8_native_rehearsal.py --phase {phase}",
+        "--container-command", "python", "--args", f"/job/g8/{BOOTSTRAP} --phase {phase}",
         "--format", "json"]
     for path, name in sorted(injections(plan).items()):
         command.extend(["--inject-file", f"{package / name}:{path}"])
