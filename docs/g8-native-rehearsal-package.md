@@ -1,6 +1,6 @@
 # G8 native-storage and MLflow rehearsal package
 
-Status: **native VM handoff preflight verified; two-Job cloud rehearsal not executed**.
+Status: **native VM handoff verified; first submission rejected before Job creation**.
 Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
@@ -9,7 +9,27 @@ remains bounded to two Jobs and $2; its input-writer window is closed.
 The [September 15–16 preflight](g8-native-context-handoff.md#september-1516-preflight-outcome)
 exceeded the VM uptime limit during an overnight approval wait. The VM is stopped
 and temporary filesystem deleted. Fresh billing and a renewed VM window are now
-required; no evaluation Job was submitted.
+required; no evaluation Job was submitted in that attempt. On September 16 the
+operator reported $33.25 and renewed the VM window. The provider then rejected the
+44-file package: a container may inject at most 16 files. The independently guarded
+VM was stopped and restored, and the empty filesystem deleted. No Job was created.
+See the [rejection receipt](evidence/g8-native-injection-rejection-20260916.json).
+
+## Sixteen-file transport
+
+The v2 package injects exactly 16 read-only files: two code ZIPs, one bootstrap,
+eight unchanged source-capsule parts, billing/filesystem/public-key evidence, and
+the signed manifest pair. Each file is at most 64 KiB. The deterministic archives
+retain all reviewed overlay bytes plus the archive reader; no model/data member
+is regenerated. The signed plan binds each archive, bootstrap and individual
+Python member hash. The old 44-file v1 package remains rejected and is not reused.
+
+The bootstrap checks archive hashes against the injected configuration and checks
+read-only mounts before installing an import hook. It imports members directly
+from memory without extracting code to writable storage. The ordinary signed
+package gate then validates exact archive membership and individual source hashes
+before input access. Both recovery children enter through this same bootstrap.
+Packaging tests exercise inert source only; the frozen runtime still runs on Nebius.
 
 ## Frozen source capsule
 
@@ -89,9 +109,10 @@ through GitGuardian's supported workflow. Keep credential scanning enabled.
 
 `scripts/prepare_g8_native_rehearsal.py` requires a clean reviewed checkout, the
 retained capsule, fresh billing JSON, the returned filesystem JSON, completed
-plan bindings and an existing Ed25519 reviewer key. It copies only the 21 reviewed
-code files, eight capsule parts, billing/filesystem evidence and reviewer public
-key. It signs the immutable manifest and prints the two commands without submitting.
+plan bindings and an existing Ed25519 reviewer key. It archives the 22 reviewed
+code files and copies the bootstrap, eight capsule parts, billing/filesystem
+evidence and reviewer public key. It signs the immutable manifest and prints the
+two commands without submitting; rendering fails above 16 injected files.
 The reviewer private key stays outside the package and is never injected.
 
 ```bash
