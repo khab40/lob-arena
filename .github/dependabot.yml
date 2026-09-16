@@ -49,6 +49,16 @@ updates:
       - dependency-name: "pyarrow"
         versions:
           - ">=25.0.1"
+      # Keep SDK 0.67.0 while Jobs require protobuf>=7.36.1,<8.0.0.
+      # SDK 0.139.0 requires protobuf<7 (see PR #196).
+      # Remove this rule after an SDK release supports Protobuf 7 and passes
+      # dependency resolution, compatibility tests, and the Jobs image build.
+      # update-types suppresses version updates only; security updates stay enabled.
+      - dependency-name: "databricks-sdk"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
 
   - package-ecosystem: "docker"
     directories:
