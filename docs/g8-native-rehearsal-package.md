@@ -1,6 +1,6 @@
 # G8 native-storage and MLflow rehearsal package
 
-Status: **native VM handoff verified; first submission rejected before Job creation**.
+Status: **native VM handoff verified; submissions rejected before Job creation**.
 Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
@@ -20,9 +20,9 @@ See the [rejection receipt](evidence/g8-native-injection-rejection-20260916.json
 
 ## Transport within the sixteen-file provider limit
 
-The v3 package injects exactly 15 read-only files: two code ZIPs, one bootstrap,
-eight unchanged source-capsule parts, filesystem/public-key evidence, and
-the signed manifest pair. Each file is at most 64 KiB. The deterministic archives
+The v4 package injects exactly 16 read-only files: three code ZIPs, one bootstrap,
+eight source-capsule parts, filesystem/public-key evidence, and
+the signed manifest pair. Each physical file is at most 40 KiB. The deterministic archives
 retain all reviewed overlay bytes plus the archive reader; no model/data member
 is regenerated. The signed plan binds each archive, bootstrap and individual
 Python member hash. The old 44-file v1 package remains rejected and is not reused.
@@ -33,6 +33,32 @@ from memory without extracting code to writable storage. The ordinary signed
 package gate then validates exact archive membership and individual source hashes
 before input access. Both recovery children enter through this same bootstrap.
 Packaging tests exercise inert source only; the frozen runtime still runs on Nebius.
+
+## KMS rejection and payload headroom
+
+The v3 package met the 16-file and 64 KiB raw-file limits, but actual creation
+failed with `plaintext must not exceed 65536 bytes` from KMS. No Job was created.
+The identical request subsequently passed the provider's `--dry-run` validation.
+The [rejection receipt](evidence/g8-native-kms-rejection-20260916.json) preserves
+both outcomes. The MLflow VM was stopped; its empty native filesystem is retained.
+
+The [Job schema](https://github.com/nebius/api/blob/main/nebius/ai/v1/job.proto)
+describes each injection as a SecretStash payload, but neither it nor the
+[KMS schema](https://github.com/nebius/api/blob/main/nebius/kms/v1/symmetric_crypto_service.proto)
+specifies the internal encryption envelope. Encoding/metadata overhead is an
+unconfirmed cause, not a diagnosed provider implementation detail.
+
+The 40 KiB application bound leaves headroom: even base64 transport is at most
+54,616 bytes, below 65,536. This is a conservative mitigation, not a documented
+Nebius limit or proof that creation succeeds. Three deterministic archives fit
+below that bound; uncompressed code members retain their separate 64 KiB bound.
+Package verification also checks the signed manifest's physical size.
+
+The wrapper retains a [provider dry-run](https://docs.nebius.com/cli/reference/ai/job/create)
+receipt before checking the registry and writing a create intent. A failure stops
+submission; a pass does not prove KMS persistence, mount access or runtime success.
+Preserve the rejected v3 package and intent. Build a new v4 package from the same
+frozen sources; native acceptance and end-to-end recovery still require evidence.
 
 ## Existing short-tag exception
 
@@ -67,11 +93,13 @@ The retained source inventory is **74,744 bytes**. Nebius permits at most
 **64 KiB per injected file**, so directly injecting `source-package.json` fails
 the documented [Job file limit](https://docs.nebius.com/serverless/jobs/manage).
 `serverless/jobs/g8_native_source_capsule.py` splits those exact bytes into
-65,536-byte and 9,208-byte parts. Six additional parts carry the unchanged request,
+40,960-byte and 33,784-byte parts. Six additional parts carry the unchanged request,
 C4 profile/paths and synthetic authorization. No checkpoint or data is injected.
 
-The [capsule receipt](evidence/g8-native-source-capsule-20260915.json) binds all eight
-parts. Reassembly must preserve source SHA-256
+The [original capsule receipt](evidence/g8-native-source-capsule-20260915.json)
+preserves the old split. Rebuild capsule v2 from the retained verified source tree;
+do not overwrite the old capsule. Its new part hashes belong in the signed v4
+package. Reassembly must preserve source SHA-256
 `792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9`.
 The candidate remains
 `e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c`.

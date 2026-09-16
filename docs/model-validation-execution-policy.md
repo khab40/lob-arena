@@ -48,11 +48,12 @@ not made valid by editing its timestamps or relabeling its failed attempt.
 
 ## Implementation and migration
 
-Native package schema `g8_native_rehearsal_plan_v3` and replacement schema
+Native package schema `g8_native_rehearsal_plan_v4` and replacement schema
 `g8_replacement_plan_v2` bind `lightgbm_transformers_validation_v1` and
 `operator_managed_alerts`. Neither carries billing or expiry fields. Native
-packages now inject 15 files, within the provider's 16-file limit.
-Rebuild and sign from reviewed code using the retained frozen source capsule;
+packages now inject 16 files with a conservative 40 KiB per-file bound after the
+[KMS rejection](g8-native-rehearsal-package.md#kms-rejection-and-payload-headroom).
+Rebuild capsule v2 from the retained frozen source tree, then sign from reviewed code;
 remove old expiry, cleanup, spend and billing fields from bindings. Do not reuse
 old signed packages, old submission intents or consumed final-test authorization.
 The native builder no longer accepts `--billing`.
