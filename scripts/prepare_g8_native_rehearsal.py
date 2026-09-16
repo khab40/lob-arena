@@ -12,7 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from serverless.jobs.g8_native_contract import CODE_PATHS, MODULES, NativePlan, canonical, job_command  # noqa: E402
+from serverless.jobs.g8_native_contract import BOOTSTRAP, CODE_PATHS, MODULES, NativePlan, canonical, job_command  # noqa: E402
+from serverless.jobs.g8_native_archive import build  # noqa: E402
 from serverless.jobs.g8_native_runtime import bounded, verify_package  # noqa: E402
 from serverless.jobs.g8_native_source_capsule import verify as verify_capsule  # noqa: E402
 
@@ -39,14 +40,19 @@ def prepare(*, capsule, bindings, billing, filesystem, private_key, output):
         raise ValueError("file bindings and source commit are derived, never caller-supplied")
     output.mkdir(parents=True, exist_ok=False)
     shutil.copytree(capsule, output / "source-capsule")
+    code = {}
     for name in CODE_PATHS:
         source = ROOT / ("backend/app/ml/lightgbm" if name.removesuffix(".py") in MODULES else "serverless/jobs") / name
-        (output / name).write_bytes(bounded(source))
+        code[name] = bounded(source)
+    for name, content in build(code).items():
+        (output / name).write_bytes(content)
+    (output / BOOTSTRAP).write_bytes(bounded(ROOT / "serverless/jobs" / BOOTSTRAP))
     (output / "reviewer-public.pem").write_bytes(key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
     (output / "billing.json").write_bytes(bounded(billing))
     (output / "filesystem.json").write_bytes(bounded(filesystem))
     files = {p.relative_to(output).as_posix(): {"sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
                                               "size_bytes": p.stat().st_size} for p in output.rglob("*") if p.is_file()}
+    files.update({name: {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)} for name, raw in code.items()})
     plan = NativePlan.model_validate({**values, "source_commit": commit, "files": files,
                                      "billing_receipt_sha256": files["billing.json"]["sha256"]})
     raw = canonical(plan)

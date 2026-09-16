@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey 
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, PrivateFormat, NoEncryption  # noqa: E402
 
 from serverless.jobs import g8_native_contract as contract, g8_native_runtime as runtime  # noqa: E402
+from serverless.jobs.g8_native_archive import build, read_code  # noqa: E402
 import test_g8_native_readback as fixtures  # noqa: E402
 from serverless.jobs import run_g8_native_rehearsal as entrypoint  # noqa: E402
 
@@ -27,10 +28,13 @@ def package(tmp_path, plan_data, monkeypatch):
     private.write_bytes(key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()))
     private.chmod(0o600)
     public = key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo)
-    for name in plan_data["files"]:
+    code = {name: b"reviewed fixture bytes for " + name.encode() for name in contract.CODE_PATHS}
+    for name in set(plan_data["files"]) - set(contract.CODE_PATHS):
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"reviewed fixture bytes for " + name.encode())
+    for name, content in build(code).items():
+        (root / name).write_bytes(content)
     (root / "reviewer-public.pem").write_bytes(public)
     (root / "filesystem.json").write_bytes(contract.canonical({
         "metadata": {"id": plan_data["filesystem_id"], "parent_id": contract.PROJECT},
@@ -39,8 +43,10 @@ def package(tmp_path, plan_data, monkeypatch):
     (root / "billing.json").write_bytes(contract.canonical({
         "observed_at": plan_data["verified_at"].isoformat(), "campaign_spend_usd": 33.49,
         "lag_allowance_usd": 0.51, "provider_reference": "synthetic-static-billing-fixture"}))
-    plan_data["files"] = {name: {"sha256": hashlib.sha256((root / name).read_bytes()).hexdigest(),
-                                "size_bytes": (root / name).stat().st_size} for name in plan_data["files"]}
+    contents = {name: read_code(root, name) if name in contract.CODE_PATHS else (root / name).read_bytes()
+                for name in plan_data["files"]}
+    plan_data["files"] = {name: {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)}
+                          for name, raw in contents.items()}
     plan_data["billing_receipt_sha256"] = plan_data["files"]["billing.json"]["sha256"]
     reviewed = contract.NativePlan.model_validate(plan_data)
     raw = contract.canonical(reviewed)
@@ -83,7 +89,7 @@ def test_filesystem_rejects_unready_or_ambiguous_capacity(package, section, key,
         runtime.verify_filesystem(filesystem, package[2].filesystem_id)
 
 
-@pytest.mark.parametrize("name", ["native-plan.json", "native-plan.sig", "g8_native_lifecycle.py"])
+@pytest.mark.parametrize("name", ["native-plan.json", "native-plan.sig", "native-code-0.zip", "g8_native_bootstrap.py"])
 def test_signed_or_injected_bytes_cannot_change(package, name):
     path = package[0] / name
     content = path.read_bytes()
@@ -103,8 +109,8 @@ def test_untrusted_key_or_unreviewed_file_rejected(package):
 def test_runtime_rechecks_the_actual_overlay_and_environment(package, monkeypatch, tmp_path):
     root, _, plan = package
     overlay = tmp_path / "actual-overlay.py"
-    overlay.write_bytes((root / "g8_native_lifecycle.py").read_bytes())
-    monkeypatch.setattr(runtime, "injections", lambda _: {str(overlay): "g8_native_lifecycle.py"})
+    overlay.write_bytes((root / "native-code-0.zip").read_bytes())
+    monkeypatch.setattr(runtime, "injections", lambda _: {str(overlay): "native-code-0.zip"})
     monkeypatch.setattr(runtime.os, "statvfs", lambda _: SimpleNamespace(f_flag=runtime.os.ST_RDONLY))
     for key, value in contract.environment(plan).items():
         monkeypatch.setenv(key, value)
@@ -116,7 +122,7 @@ def test_runtime_rechecks_the_actual_overlay_and_environment(package, monkeypatc
     overlay.write_bytes(b"old runtime")
     with pytest.raises(ValueError, match="reviewed bytes"):
         runtime.actual_runtime(plan, root)
-    overlay.write_bytes((root / "g8_native_lifecycle.py").read_bytes())
+    overlay.write_bytes((root / "native-code-0.zip").read_bytes())
     monkeypatch.setattr(runtime.os, "statvfs", lambda _: SimpleNamespace(f_flag=0))
     with pytest.raises(ValueError, match="read-only"):
         runtime.actual_runtime(plan, root)
