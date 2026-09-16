@@ -4,7 +4,10 @@ from typing import Literal, get_args, get_origin
 
 import pytest
 
-from app.ml.lightgbm.g8_replacement import CODE_PATHS, ReplacementPlan
+pytest.importorskip("lightgbm")
+pytest.importorskip("mlflow")
+
+from app.ml.lightgbm.g8_replacement import CODE_PATHS, ReplacementPlan  # noqa: E402
 
 
 def replacement_values():
