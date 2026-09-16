@@ -70,6 +70,10 @@ def test_signed_package_survives_approval_delay_without_billing(package, phase):
         runtime.verify_package(root, phase=phase, trusted=trusted, now=NOW + timedelta(days=7))
 
 
+def test_operator_alerts_do_not_require_repeated_billing_refresh(package):
+    assert verify(package).spend_monitoring == "operator_managed_alerts"
+
+
 @pytest.mark.parametrize("unit,amount", [("size_bytes", 10 * 1024**3), ("size_kibibytes", 10 * 1024**2),
                                        ("size_mebibytes", 10240), ("size_gibibytes", "10")])
 def test_filesystem_accepts_api_size_oneof(package, unit, amount):

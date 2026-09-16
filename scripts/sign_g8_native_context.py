@@ -15,12 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from serverless.jobs.g8_native_contract import canonical  # noqa: E402
-from serverless.jobs.g8_native_readback import verify_readback, verify_previous_job  # noqa: E402
+from serverless.jobs.g8_native_readback import verify_readback, verify_previous_job, verify_registry  # noqa: E402
 from serverless.jobs.g8_native_runtime import bounded, signed, verify_package  # noqa: E402
 
 
 def sign_context(*, package, readback, job_id, phase, private_key, output,
-                 previous_terminal=None, original_context=None):
+                 registry_verification, previous_terminal=None, original_context=None):
     from cryptography.hazmat.primitives.serialization import load_pem_private_key, Encoding, PublicFormat
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -33,6 +33,8 @@ def sign_context(*, package, readback, job_id, phase, private_key, output,
         raise ValueError("context signer must be the package reviewer")
     job = json.loads(bounded(readback))
     receipt = verify_readback(plan, job, phase=phase, expected_job_id=job_id)
+    registry = json.loads(bounded(registry_verification))
+    verify_registry(registry, created_at=job["metadata"]["created_at"])
     prior = None
     if phase == "recover":
         if previous_terminal is None or original_context is None:
@@ -45,7 +47,7 @@ def sign_context(*, package, readback, job_id, phase, private_key, output,
     elif previous_terminal is not None or original_context is not None:
         raise ValueError("score context cannot carry a previous execution")
     context = {"execution_package_sha256": plan.identity(), "phase": phase, "job_id": job_id,
-               "readback": job, "previous_terminal": prior}
+               "readback": job, "previous_terminal": prior, "registry_verification": registry}
     content = canonical(context)
     if len(content) > 65536 or output.absolute() != output.resolve():
         raise ValueError("bounded context and canonical new output required")
@@ -57,7 +59,7 @@ def sign_context(*, package, readback, job_id, phase, private_key, output,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("package", "readback", "private-key", "output"):
+    for name in ("package", "readback", "private-key", "output", "registry-verification"):
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--job-id", required=True)
     parser.add_argument("--phase", choices=("score", "recover"), required=True)

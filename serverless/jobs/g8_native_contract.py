@@ -4,11 +4,14 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from datetime import timedelta
 from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2"
+DEPLOYMENT_IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee"
+IMAGE_DIGEST = "sha256:" + IMAGE.rsplit("sha256:", 1)[1]
 PROJECT = "project-e00g6zvxpr00waz8t3y51k"
 SUBNET = "vpcsubnet-e00ppzc4353dxv210j"
 # MysteryBox resource/version identifiers, never credential values. The Job
@@ -47,6 +50,14 @@ class FileRef(Strict):
     size_bytes: int = Field(gt=0, le=65536)
 
 
+class RegistryVerification(Strict):
+    deployment_image: Literal[DEPLOYMENT_IMAGE]
+    expected_digest: Literal[IMAGE_DIGEST]
+    resolved_digest: Literal[IMAGE_DIGEST]
+    manifest_sha256: str = Field(pattern=SHA)
+    verified_at: AwareDatetime
+
+
 class NativePlan(Strict):
     schema_version: Literal["g8_native_rehearsal_plan_v3"] = "g8_native_rehearsal_plan_v3"
     source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
@@ -55,6 +66,8 @@ class NativePlan(Strict):
     candidate_sha256: Literal["e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c"]
     evaluation_profile_sha256: Literal["4cdace51a0133e3be41baa385ea806c7010ded42c48ae172a0fee18c5c5f589e"]
     image: Literal[IMAGE] = IMAGE
+    deployment_image: Literal[DEPLOYMENT_IMAGE] = DEPLOYMENT_IMAGE
+    registry_verification: RegistryVerification
     filesystem_id: str = Field(pattern=r"^computefilesystem-[a-z0-9]+$")
     mount_path: Literal["/g8-durable"] = "/g8-durable"
     capacity_gib: Literal[10] = 10
@@ -73,6 +86,8 @@ class NativePlan(Strict):
 
     @model_validator(mode="after")
     def boundaries(self):
+        if not self.verified_at - timedelta(minutes=5) <= self.registry_verification.verified_at <= self.verified_at:
+            raise ValueError("fresh registry mapping required when signing the package")
         names = set(S3_SELECTORS) | {"MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD"}
         if (set(self.secret_selectors) != names
                 or any(re.fullmatch(r"mbsec-[a-z0-9]+@mbsecver-[a-z0-9]+", s) is None
@@ -113,7 +128,7 @@ def job_name(phase):
 def job_command(plan, package, *, phase):
     """Render argv only. Persist intent and verify the package before one create."""
     command = ["nebius", "ai", "job", "create", "--name", job_name(phase),
-        "--image", plan.image, "--parent-id", PROJECT, "--subnet-id", SUBNET,
+        "--image", plan.deployment_image, "--parent-id", PROJECT, "--subnet-id", SUBNET,
         "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi",
         "--timeout", "1h", "--restart-policy", "never", "--volume", f"{plan.filesystem_id}:/g8-durable:rw",
         "--container-command", "python", "--args", f"/job/g8/{BOOTSTRAP} --phase {phase}",

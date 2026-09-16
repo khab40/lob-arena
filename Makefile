@@ -189,6 +189,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_native_archive.py \
 		tests/test_g8_native_runtime.py \
 		tests/test_g8_native_context.py \
+		tests/test_g8_native_submission.py \
 		tests/test_g8_native_handoff.py \
 		tests/test_g8_vm_deadline.py \
 		tests/test_g8_validation_policy.py \
@@ -226,6 +227,7 @@ lightgbm-wave1-g8-check:
 		tests/test_g8_native_archive.py \
 		tests/test_g8_native_runtime.py \
 		tests/test_g8_native_context.py \
+		tests/test_g8_native_submission.py \
 		tests/test_g8_native_handoff.py \
 		tests/test_g8_vm_deadline.py \
 		tests/test_g8_validation_policy.py \
@@ -241,6 +243,7 @@ lightgbm-wave1-g8-check:
 		../serverless/jobs/run_g8_native_rehearsal.py \
 		../scripts/prepare_g8_native_rehearsal.py \
 		../scripts/sign_g8_native_context.py \
+		../scripts/submit_g8_native_rehearsal.py \
 		../serverless/jobs/g8_native_source_capsule.py \
 		../serverless/jobs/g8_source_sdk.py \
 		../serverless/jobs/stage_g8_native_sources.py \

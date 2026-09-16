@@ -16,6 +16,9 @@ def plan_data():
     values = {name: get_args(field.annotation)[0] for name, field in contract.NativePlan.model_fields.items()
               if get_origin(field.annotation) is Literal}
     values.update(source_commit="1" * 40, filesystem_id="computefilesystem-example", verified_at=NOW - timedelta(minutes=5),
+        registry_verification={"deployment_image": contract.DEPLOYMENT_IMAGE, "expected_digest": contract.IMAGE_DIGEST,
+                               "resolved_digest": contract.IMAGE_DIGEST, "manifest_sha256": "b" * 64,
+                               "verified_at": NOW - timedelta(minutes=5)},
         secret_selectors={**contract.S3_SELECTORS,
             "MLFLOW_TRACKING_USERNAME": "mbsec-exampleuser@mbsecver-exampleuser",
             "MLFLOW_TRACKING_PASSWORD": "mbsec-examplepassword@mbsecver-examplepassword"},
@@ -36,7 +39,7 @@ def readback(plan):
         "metadata": {"id": "aijob-example", "name": "g8-native-20260915-score",
                      "parent_id": contract.PROJECT, "created_at": NOW.isoformat()},
         "spec": {
-            "image": contract.IMAGE, "container_command": "python",
+            "image": contract.DEPLOYMENT_IMAGE, "container_command": "python",
             "args": "/job/g8/g8_native_bootstrap.py --phase score",
             "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": contract.SUBNET,
             "timeout": "3600s", "disk": {"type": "NETWORK_SSD", "size_bytes": "107374182400"},
@@ -149,7 +152,8 @@ def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_pa
     assert command.count("--volume") == 1
     assert command[command.index("--volume") + 1] == plan.filesystem_id + ":/g8-durable:rw"
     assert command[command.index("--restart-policy") + 1] == "never"
-    assert command[command.index("--image") + 1] == contract.IMAGE
+    assert command[command.index("--image") + 1] == contract.DEPLOYMENT_IMAGE
+    assert len(contract.DEPLOYMENT_IMAGE) <= 64 and plan.image == contract.IMAGE
     assert {command[i + 1] for i, v in enumerate(command) if v == "--env-secret"} == {
         f"{k}={v}" for k, v in plan.secret_selectors.items()}
 

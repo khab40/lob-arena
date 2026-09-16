@@ -11,12 +11,12 @@ from pathlib import Path
 if __package__:
     from .g8_native_contract import CODE_PATHS, NativePlan, canonical, environment, injections
     from .g8_native_archive import read_code
-    from .g8_native_readback import verify_readback, verify_previous_job
+    from .g8_native_readback import verify_readback, verify_previous_job, verify_registry
     from .g8_native_source_capsule import verify as verify_capsule
 else:
     from g8_native_contract import CODE_PATHS, NativePlan, canonical, environment, injections
     from g8_native_archive import read_code
-    from g8_native_readback import verify_readback, verify_previous_job
+    from g8_native_readback import verify_readback, verify_previous_job, verify_registry
     from g8_native_source_capsule import verify as verify_capsule
 
 
@@ -131,10 +131,13 @@ def observed_context(plan, package, *, phase, trusted):
     signed(raw, signature, public, trusted)
     context = json.loads(raw)
     if (raw != canonical(context)
-            or set(context) != {"execution_package_sha256", "phase", "job_id", "readback", "previous_terminal"}
+            or set(context) != {"execution_package_sha256", "phase", "job_id", "readback", "previous_terminal", "registry_verification"}
             or context["execution_package_sha256"] != plan.identity() or context["phase"] != phase):
         raise ValueError("signed native Job context differs from package/phase")
     receipt = verify_readback(plan, context["readback"], phase=phase, expected_job_id=context["job_id"])
+    # The signer requires a fresh lookup after create; recovery children reuse
+    # that signed observation during recovery, without a new lookup.
+    verify_registry(context["registry_verification"], created_at=context["readback"]["metadata"]["created_at"], fresh=False)
     if phase == "score" and context["previous_terminal"] is not None:
         raise ValueError("score context cannot carry another Job")
     if phase == "recover":
