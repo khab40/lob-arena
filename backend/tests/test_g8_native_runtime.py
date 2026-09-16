@@ -1,5 +1,6 @@
 """Static signature/mount checks; native execution is deliberately not exercised locally."""
 import hashlib
+from datetime import timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -40,14 +41,10 @@ def package(tmp_path, plan_data, monkeypatch):
         "metadata": {"id": plan_data["filesystem_id"], "parent_id": contract.PROJECT},
         "spec": {"type": "NETWORK_SSD", "size_gibibytes": "10"},
         "status": {"state": "READY", "size_bytes": str(10 * 1024**3)}}))
-    (root / "billing.json").write_bytes(contract.canonical({
-        "observed_at": plan_data["verified_at"].isoformat(), "campaign_spend_usd": 33.49,
-        "lag_allowance_usd": 0.51, "provider_reference": "synthetic-static-billing-fixture"}))
     contents = {name: read_code(root, name) if name in contract.CODE_PATHS else (root / name).read_bytes()
                 for name in plan_data["files"]}
     plan_data["files"] = {name: {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)}
                           for name, raw in contents.items()}
-    plan_data["billing_receipt_sha256"] = plan_data["files"]["billing.json"]["sha256"]
     reviewed = contract.NativePlan.model_validate(plan_data)
     raw = contract.canonical(reviewed)
     (root / "native-plan.json").write_bytes(raw)
@@ -60,10 +57,17 @@ def verify(package):
     return runtime.verify_package(root, phase="score", trusted=trusted, now=NOW)
 
 
-def test_signed_package_and_current_window_required(package):
-    assert verify(package).identity() == package[2].identity()
-    with pytest.raises(ValueError, match="window"):
-        runtime.verify_package(package[0], phase="score", trusted=package[1], now=package[2].expires_at)
+@pytest.mark.parametrize("phase", ["score", "recover"])
+def test_signed_package_survives_approval_delay_without_billing(package, phase):
+    root, trusted, plan = package
+    assert not (root / "billing.json").exists()
+    assert runtime.verify_package(root, phase=phase, trusted=trusted,
+                                  now=NOW + timedelta(days=7)).identity() == plan.identity()
+    with pytest.raises(ValueError, match="future"):
+        runtime.verify_package(root, phase=phase, trusted=trusted, now=plan.verified_at - timedelta(seconds=1))
+    (root / "native-code-0.zip").write_bytes(b"tampered after waiting")
+    with pytest.raises(ValueError):
+        runtime.verify_package(root, phase=phase, trusted=trusted, now=NOW + timedelta(days=7))
 
 
 @pytest.mark.parametrize("unit,amount", [("size_bytes", 10 * 1024**3), ("size_kibibytes", 10 * 1024**2),

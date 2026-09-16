@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from datetime import timedelta
 from typing import Literal
 
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
@@ -49,7 +48,7 @@ class FileRef(Strict):
 
 
 class NativePlan(Strict):
-    schema_version: Literal["g8_native_rehearsal_plan_v2"] = "g8_native_rehearsal_plan_v2"
+    schema_version: Literal["g8_native_rehearsal_plan_v3"] = "g8_native_rehearsal_plan_v3"
     source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     run_id: Literal["synthetic-final"] = "synthetic-final"
     request_sha256: Literal["6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486"]
@@ -64,13 +63,9 @@ class NativePlan(Strict):
     candidate_release_uri: Literal["s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/development/synthetic-development"]
     secret_selectors: dict[str, str]
     verified_at: AwareDatetime
-    expires_at: AwareDatetime
-    cleanup_deadline: AwareDatetime
-    campaign_spend_usd: float = Field(ge=0, lt=40, allow_inf_nan=False)
-    maximum_additional_cost_usd: Literal[2] = 2
+    validation_policy: Literal["lightgbm_transformers_validation_v1"] = "lightgbm_transformers_validation_v1"
+    spend_monitoring: Literal["operator_managed_alerts"] = "operator_managed_alerts"
     maximum_jobs: Literal[2] = 2
-    mlflow_maximum_hours: Literal[4] = 4
-    billing_receipt_sha256: str = Field(pattern=SHA)
     files: dict[str, FileRef]
     production_final_test_authorized: Literal[False] = False
     dataset_lineage_kind: Literal["synthetic_placeholder_not_remote_mlflow_registration"]
@@ -78,19 +73,14 @@ class NativePlan(Strict):
 
     @model_validator(mode="after")
     def boundaries(self):
-        if (not self.verified_at < self.expires_at <= self.verified_at + timedelta(hours=1)
-                or not self.expires_at < self.cleanup_deadline <= self.verified_at + timedelta(hours=24)):
-            raise ValueError("bounded execution and retention windows required")
         names = set(S3_SELECTORS) | {"MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD"}
         if (set(self.secret_selectors) != names
                 or any(re.fullmatch(r"mbsec-[a-z0-9]+@mbsecver-[a-z0-9]+", s) is None
                        for s in self.secret_selectors.values())
                 or any(self.secret_selectors[k] != v for k, v in S3_SELECTORS.items())):
             raise ValueError("exact development S3 and four version-pinned selectors required")
-        if set(self.files) != set(CODE_PATHS) | CAPSULE | set(ARCHIVES) | {BOOTSTRAP, "reviewer-public.pem", "billing.json", "filesystem.json"}:
-            raise ValueError("exact native code, capsule, reviewer and billing allowlist required")
-        if self.files["billing.json"].sha256 != self.billing_receipt_sha256:
-            raise ValueError("billing receipt differs from reviewed file")
+        if set(self.files) != set(CODE_PATHS) | CAPSULE | set(ARCHIVES) | {BOOTSTRAP, "reviewer-public.pem", "filesystem.json"}:
+            raise ValueError("exact native code, capsule, reviewer and filesystem allowlist required")
         return self
 
     def identity(self):

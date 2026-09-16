@@ -49,9 +49,8 @@ def verify_readback(plan, raw, *, phase, expected_job_id, now=None):
             or metadata.get("parent_id") != PROJECT):
         raise ValueError("Job metadata differs from submitted native phase")
     created = datetime.fromisoformat(metadata["created_at"].replace("Z", "+00:00"))
-    deadline = plan.expires_at if phase == "score" else plan.cleanup_deadline
-    if created.tzinfo is None or not plan.verified_at <= created <= current < deadline:
-        raise ValueError("Job is outside the reviewed time window")
+    if created.tzinfo is None or not plan.verified_at <= created <= current:
+        raise ValueError("Job creation timestamp is invalid")
     required = {"image": plan.image, "container_command": "python",
         "args": f"/job/g8/{BOOTSTRAP} --phase {phase}",
         "platform": "cpu-d3", "preset": "4vcpu-16gb", "subnet_id": SUBNET, "timeout": "3600s"}

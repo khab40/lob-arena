@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 if __package__:
@@ -79,19 +79,8 @@ def verify_package(package, *, phase, trusted, now=None):
     filesystem = json.loads(bounded(package / "filesystem.json"))
     verify_filesystem(filesystem, plan.filesystem_id)
     current = now or datetime.now(UTC)
-    if phase not in {"score", "recover"} or not plan.verified_at <= current < (
-            plan.expires_at if phase == "score" else plan.cleanup_deadline):
-        raise ValueError("native phase outside reviewed window")
-    billing = json.loads(bounded(package / "billing.json"))
-    if set(billing) != {"observed_at", "campaign_spend_usd", "lag_allowance_usd", "provider_reference"}:
-        raise ValueError("exact billing observation required")
-    observed = datetime.fromisoformat(billing["observed_at"])
-    spend, lag = billing["campaign_spend_usd"], billing["lag_allowance_usd"]
-    if (not isinstance(spend, (float, int)) or not isinstance(lag, (float, int))
-            or not 0 <= spend <= spend + lag == plan.campaign_spend_usd
-            or not isinstance(billing["provider_reference"], str) or not billing["provider_reference"]
-            or observed.tzinfo is None or not plan.verified_at - timedelta(hours=1) <= observed <= plan.verified_at):
-        raise ValueError("fresh reconciled billing with lag allowance required")
+    if phase not in {"score", "recover"} or plan.verified_at > current:
+        raise ValueError("invalid native phase or future verification timestamp")
     return plan
 
 
@@ -133,8 +122,7 @@ def observed_context(plan, package, *, phase, trusted):
     sig = path.with_suffix(".sig")
     deadline = time.monotonic() + 300
     while not (path.is_file() and sig.is_file()):
-        if time.monotonic() >= deadline or datetime.now(UTC) >= (
-                plan.expires_at if phase == "score" else plan.cleanup_deadline):
+        if time.monotonic() >= deadline:
             raise ValueError("signed native Job context unavailable before deadline")
         time.sleep(1)
     raw = bounded(path)
