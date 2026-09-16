@@ -1,0 +1,57 @@
+{
+  "schema_version": "g8_sdk_candidate_readonly_v1",
+  "verified_at": "2026-09-15T10:09:14.318913+00:00",
+  "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+  "candidate_sha256": "e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c",
+  "candidate_objects": 25,
+  "candidate_bytes": 343345,
+  "candidate_success_sha256": "ba4c729c0bcaeae03bfcd66c0e1db384b41c3ebbd27a0b8114ed5dde83d626e4",
+  "candidate_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/development/synthetic-development",
+  "input_uri": "s3://aimada-wave1-final-e00g6zvxpr00/releases/g8-native-rehearsal-20260914/staging",
+  "elapsed_seconds": 19.566,
+  "sdk_request_counts": {
+    "GetObject": 50,
+    "HeadObject": 26,
+    "ListObjectsV2": 2
+  },
+  "credential_access_key_id_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d",
+  "input_prefix_empty": true,
+  "production_head_denied": true,
+  "source_writes": 0,
+  "production_body_downloaded": false,
+  "cloud_jobs_created": 0,
+  "native_storage_verified": false,
+  "mlflow_remote_verified": false,
+  "production_g8_complete": false,
+  "credential_selectors": {
+    "AWS_ACCESS_KEY_ID": {
+      "secret_id": "mbsec-e00arhndyprqr8egjw",
+      "version_id": "mbsecver-e00rjzerny1pf9qhna"
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "secret_id": "mbsec-e00s7qtjj5n9ghacnh",
+      "version_id": "mbsecver-e00yfn5w54jc1ybkwv"
+    }
+  },
+  "base_main_commit": "7afd1f4",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "platform": "linux/amd64",
+  "remote_probe_code_sha256": {
+    "backend/app/ml/lightgbm/g8_publication_recovery.py": "a9d907545c7aa1cb31c46dc7b08c3eb88f960931b9b70d68e91fa78fc328b92d",
+    "serverless/jobs/g8_source_sdk.py": "f76b3ab7538b90fadf893c2e90e26c69829a3355fae0dea22f0cd79efbe3678f",
+    "serverless/jobs/stage_g8_native_sources.py": "2922705ce40ae8b4c3871574fae4217fedc8e0036d394d90facbd8fb5711faa3"
+  },
+  "frozen_test_code_sha256": {
+    "backend/app/ml/lightgbm/g8_publication_recovery.py": "a9d907545c7aa1cb31c46dc7b08c3eb88f960931b9b70d68e91fa78fc328b92d",
+    "serverless/jobs/g8_source_sdk.py": "f76b3ab7538b90fadf893c2e90e26c69829a3355fae0dea22f0cd79efbe3678f",
+    "serverless/jobs/stage_g8_native_sources.py": "c3a154ebb310eefc80c542534ad34cc416f8c9901fdb7d091b11d7035d2bc9a8",
+    "backend/tests/test_g8_source_sdk.py": "8205766df194b3f42ac5d344a37f2584b56eb95a3f54fa2c5538068040717f49"
+  },
+  "local_reader_copy": "outputs/g8-sdk-transport-20260915/candidate-reader-copy",
+  "remote_probe_scope": "actual_authenticated_read_only_S3; no remote publication or native MLflow proof",
+  "frozen_test_scope": "SDK request models and source protocol with simulated S3 responses; networking disabled",
+  "pinned_image_frozen_tests": 17,
+  "full_g8_check_before_final_review_tests": 339,
+  "note": "Final review adds lost-PUT-response coverage and rejects --session-seconds without --sdk. SDK transport bytes are unchanged from the remote read-only probe.",
+  "frozen_test_log_sha256": "9cd06c9f8bb8378fd2ae9839645e4597568a58a685cccb15add96eef9da0ef7d"
+}

@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -64,16 +65,16 @@ def artifact(path: Path, root: Path, name: str) -> CloudArtifact:
     )
 
 
-def projections(output: Path) -> tuple[Path, Path]:
+def projections(output: Path, *, campaign: str = CAMPAIGN) -> tuple[Path, Path]:
     """Generate only synthetic rows; mirror C4's artifacts/tabular/<fold> layout."""
     root = FrozenPublicSampleRoot(
-        release_id=CAMPAIGN,
+        release_id=campaign,
         protocol_sha256=fixture_hash("protocol"),
-        corpus_id=CAMPAIGN,
+        corpus_id=campaign,
         corpus_sha256=fixture_hash("corpus"),
-        split_id=CAMPAIGN,
+        split_id=campaign,
         assignment_sha256=fixture_hash("assignment"),
-        feature_release_id=CAMPAIGN,
+        feature_release_id=campaign,
         feature_release_sha256=fixture_hash("features"),
         feature_config_sha256=fixture_hash("wave1-fixture-feature-config"),
         source_config_sha256=fixture_hash("source"),
@@ -123,7 +124,7 @@ def projections(output: Path) -> tuple[Path, Path]:
         write_manifest(
             manifests / "tabular-projection.json",
             TabularProjectionManifest(
-                projection_id=CAMPAIGN + "-" + scope.replace("_", "-"),
+                projection_id=campaign + "-" + scope.replace("_", "-"),
                 access_scope=scope,
                 root_release_id=root.release_id,
                 root_sha256=root.canonical_hash(),
@@ -161,14 +162,27 @@ def projected_input(package: Path) -> Wave1TabularProjectionInput:
     )
 
 
-def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: bool = False) -> dict:
+@dataclass(frozen=True)
+class PreparedSources:
+    development: Path
+    final_input: Path
+    selected: Path
+    request: LightGbmCloudJobRequest
+    comparison: Path | None
+
+
+def prepare_sources(output: Path, *, campaign: str = CAMPAIGN,
+                    wrong_root: bool = False, c4: bool = False) -> PreparedSources:
+    """Generate and train synthetic development only; no final scoring or transport.
+
+    The caller retains the ephemeral public key/signature, never its private key.
+    These synthetic identities are not production evaluation authorization.
+    """
+    if campaign not in {CAMPAIGN, "g8-native-rehearsal-20260914"}:
+        raise ValueError("only explicitly synthetic fixture campaigns are allowed")
     output = output.resolve()
     output.mkdir(parents=True, exist_ok=False)
-    spec = importlib.util.spec_from_file_location("g8_rehearsed_runner", runner_path)
-    runner = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = runner
-    spec.loader.exec_module(runner)
-    development, final_input = projections(output)
+    development, final_input = projections(output, campaign=campaign)
     comparison_path = None
     if c4:
         from app.ml.lightgbm.g8_c4_fixture import complete_c4_fixtures
@@ -176,7 +190,7 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
         development, final_input, comparison_path = complete_c4_fixtures(output, development, final_input)
     selected = output / "selected"
     common = dict(
-        campaign_id=CAMPAIGN,
+        campaign_id=campaign,
         project_id="project-e00g6zvxpr00waz8t3y51k",
         image=IMAGE,
         created_at=datetime.now(UTC),
@@ -203,7 +217,7 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
     signed_at = datetime.now(UTC)
     auth.write_bytes(
         Wave1FinalAuthorization(
-            campaign_id=CAMPAIGN,
+            campaign_id=campaign,
             candidate_hash=candidate_hash,
             # The frozen schema fixes this label. The synthetic candidate and
             # ephemeral trust key cannot authorize the production candidate.
@@ -228,8 +242,8 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
         run_id="synthetic-final",
         mode="final-evaluation",
         input=final_projection,
-        input_release_uri=FINAL,
-        result_uri=RESULTS + "/final/synthetic-final",
+        input_release_uri=f"s3://aimada-wave1-final-e00g6zvxpr00/releases/{campaign}/staging",
+        result_uri=f"s3://aimada-wave1-results-e00g6zvxpr00/campaigns/{campaign}/final/synthetic-final",
         candidate=CloudArtifact(
             logical_name="candidate",
             uri="candidate/candidate.json",
@@ -243,25 +257,6 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
     )
     final_request_path = output / "request.json"
     final_request_path.write_bytes(final_request.canonical_bytes())
-    argv = [
-        str(runner_path),
-        "--request",
-        str(final_request_path),
-        "--authorization",
-        str(auth),
-        "--authorization-signature",
-        str(signature),
-        "--authorization-public-key",
-        str(public),
-        "--dataset-lineage",
-        str(final_input / "manifests/c4-mlflow-dataset-release.json"),
-        "--final-input-uri",
-        FINAL,
-        "--candidate-uri",
-        RESULTS + "/development/selected",
-        "--work-root",
-        str(output / "work"),
-    ]
     if c4:
         from app.ml.lightgbm.c4_evaluation import C4EvaluationInputs, C4EvaluationProfile
 
@@ -283,10 +278,35 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
         )
         inputs_path = output / "c4-inputs.json"
         write_manifest(inputs_path, c4_inputs)
+    return PreparedSources(development, final_input, selected, final_request, comparison_path)
+
+
+def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: bool = False,
+             execution_hook=None) -> dict:
+    output = output.resolve()
+    prepared = prepare_sources(output, wrong_root=wrong_root, c4=c4)
+    final_input, selected, final_request = prepared.final_input, prepared.selected, prepared.request
+    public = output / "authorization/authorization-public.pem"
+    spec = importlib.util.spec_from_file_location("g8_rehearsed_runner", runner_path)
+    runner = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = runner
+    spec.loader.exec_module(runner)
+    argv = [
+        str(runner_path), "--request", str(output / "request.json"),
+        "--authorization", str(output / "authorization/authorization.json"),
+        "--authorization-signature", str(output / "authorization/authorization.sig"),
+        "--authorization-public-key", str(public),
+        "--dataset-lineage", str(final_input / "manifests/c4-mlflow-dataset-release.json"),
+        "--final-input-uri", FINAL,
+        "--candidate-uri", RESULTS + "/development/selected",
+        "--work-root", str(output / "work"),
+    ]
+    if c4:
+        inputs_path = output / "c4-inputs.json"
         argv.extend(["--c4-evaluation-inputs", str(inputs_path)])
     environment = {
         "MLFLOW_ALLOW_FILE_STORE": "true",
-        "WAVE1_ACTUAL_PROJECT_ID": common["project_id"],
+        "WAVE1_ACTUAL_PROJECT_ID": final_request.project_id,
         "WAVE1_ACTUAL_IMAGE_REPOSITORY": IMAGE.split("@sha256:")[0],
         "WAVE1_ACTUAL_IMAGE_SHA256": IMAGE.split("@sha256:")[1],
         "WAVE1_ACTUAL_PLATFORM": "cpu-d3",
@@ -368,7 +388,10 @@ def rehearse(output: Path, runner_path: Path, *, wrong_root: bool = False, c4: b
         patch.object(cloud_runner, "log_governed_evaluation_run", log),
         patch.object(cloud_runner, "predict_governed_fold", score),
     ):
-        runner.main()
+        if execution_hook is None:
+            runner.main()
+        else:
+            execution_hook(runner, final_request, output)
     run = cloud_runner.verify_wave1_result(published)
     if downloads.count(FINAL) != 1 or len(scoring_calls) != 1 or not run.mlflow_run_id:
         raise AssertionError("rehearsal did not score once and log a verified release")

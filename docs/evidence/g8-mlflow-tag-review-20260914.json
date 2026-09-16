@@ -1,0 +1,40 @@
+{
+  "schema_version": "g8_mlflow_recovery_rehearsal_v1",
+  "request_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "mlflow_run_id": "6c945617cba74a4695fd74a86c237481",
+  "local_mlflow_status": "FINISHED",
+  "reservation_sha256": "11cc8f7eb674247c95e5f9e2f4e8476004c1ca7ec3c94ac6528b359fcccd8f1f",
+  "logging_complete_sha256": "ae2beb9c7c5833b4dc996a44795ce4c0a7c627060e8a406c50016ce3d46f41cb",
+  "create_run_call_count": 1,
+  "reserved_before_scoring": true,
+  "final_scoring_call_count": 1,
+  "faults_recovered": [
+    "create_response",
+    "metric_response",
+    "artifact_response",
+    "finish_response"
+  ],
+  "logging_attempts": 4,
+  "completed_recovery_write_count": 0,
+  "verified_metric_count": 24,
+  "metric_history_exactly_once": true,
+  "verified_dataset_input_count": 30,
+  "reordered_dataset_input_read_count": 210,
+  "artifact_bytes_verified": true,
+  "c4_report_sha256": "f8724caa8e90b21a8b72df61a3f15e3dad80eeac05c1389a3594b59cac28475f",
+  "source_rehearsal_sha256": "9bc1d9132bbd2e3785098014aa28a660b15e773ec4b4d488dfb468673c107144",
+  "rehearsal_sha256": "652b513dd02fa1c96486928da685359fa2d0308f3c9b9553a2c40009792e2eba",
+  "recovery_module_sha256": "077cd7d895d20d177f88fdf91cdad2a69cc414a48bb5ed1b2a112ac175e50738",
+  "evaluation_code_sha256": {
+    "tracking": "220985b414eeaebec5613b8b1d26cb6d572e97f78bfc70aa96f2ee7b413c6f9d",
+    "c4_evaluation": "262fe67b09eef944586ff9db3bc1e2d6acd727971c7e9922ce18399aeca0adb9",
+    "c4_replay_evidence": "4276de59c0ba6bf20298bc05b82bbcba1daa8e28b0778e3653432ab0c73a56e1",
+    "g8_benchmark_readiness": "d4f0b68448dbf886cd560f1cea4f4c61739c7a9dd4dde947a4b2a275aeeabaed",
+    "g8_c4_fixture": "944b93f5d9f28191adc28e90a6def337c019bd74cc25a81f1e00f545258f40e3"
+  },
+  "production_test_accessed": false,
+  "production_g8_complete": false,
+  "remote_authentication_verified": false,
+  "native_storage_verified": false,
+  "pre_logging_payload_retention_verified": false
+}

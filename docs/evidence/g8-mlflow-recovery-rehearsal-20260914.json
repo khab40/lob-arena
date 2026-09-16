@@ -1,0 +1,39 @@
+{
+  "schema_version": "g8_mlflow_recovery_rehearsal_v1",
+  "request_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "mlflow_run_id": "dd146b2e4007473ea0963899c110f1f0",
+  "local_mlflow_status": "FINISHED",
+  "reservation_sha256": "d2f5de7dcfe334ba65213f1886f3b1d9d85de08f2f098653a26d239847315365",
+  "logging_complete_sha256": "bade51b44df77d0d43dc44fd1380df389ebabb0d15d303db883bc8879a64a82e",
+  "create_run_call_count": 1,
+  "reserved_before_scoring": true,
+  "final_scoring_call_count": 1,
+  "faults_recovered": [
+    "create_response",
+    "metric_response",
+    "artifact_response",
+    "finish_response"
+  ],
+  "logging_attempts": 4,
+  "completed_recovery_write_count": 0,
+  "verified_metric_count": 24,
+  "metric_history_exactly_once": true,
+  "verified_dataset_input_count": 30,
+  "artifact_bytes_verified": true,
+  "c4_report_sha256": "ff8a30f196d2c40d44822bfcbbb0bc7dca580e01984ea1a0324091082cee0adb",
+  "source_rehearsal_sha256": "b7758e3532cecce51631f9a28940fcbb5cd3b72d33d6eaad0390558984bfc8fb",
+  "rehearsal_sha256": "3811263c6e4435138bf61987f76af2e01a61330f99663a4d3df6083427a03d3c",
+  "recovery_module_sha256": "8413c586302470452fe6994f88a00199f3e67157ec4e80321b1468f5a2d76f21",
+  "evaluation_code_sha256": {
+    "tracking": "220985b414eeaebec5613b8b1d26cb6d572e97f78bfc70aa96f2ee7b413c6f9d",
+    "c4_evaluation": "262fe67b09eef944586ff9db3bc1e2d6acd727971c7e9922ce18399aeca0adb9",
+    "c4_replay_evidence": "4276de59c0ba6bf20298bc05b82bbcba1daa8e28b0778e3653432ab0c73a56e1",
+    "g8_benchmark_readiness": "d4f0b68448dbf886cd560f1cea4f4c61739c7a9dd4dde947a4b2a275aeeabaed",
+    "g8_c4_fixture": "944b93f5d9f28191adc28e90a6def337c019bd74cc25a81f1e00f545258f40e3"
+  },
+  "production_test_accessed": false,
+  "production_g8_complete": false,
+  "remote_authentication_verified": false,
+  "native_storage_verified": false,
+  "pre_logging_payload_retention_verified": false
+}

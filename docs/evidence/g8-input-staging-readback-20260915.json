@@ -1,0 +1,31 @@
+{
+  "schema_version": "g8_synthetic_source_readback_v1",
+  "verified_at": "2026-09-15T11:54:18.243912+00:00",
+  "source_package_sha256": "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9",
+  "candidate_sha256": "e04f50ff0748a0077c0602c397ed7c9c3087757fe0892f1a2d284e91b2383b7c",
+  "credential_access_key_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d",
+  "credential_source": "explicit_process_environment_not_version_attested",
+  "remote_source_bytes_verified": true,
+  "comparison_replay_domains_verified": 30,
+  "remote_source_uris": [
+    "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/development/synthetic-development",
+    "s3://aimada-wave1-final-e00g6zvxpr00/releases/g8-native-rehearsal-20260914/staging"
+  ],
+  "local_only_metadata": [
+    "authorization/authorization-public.pem",
+    "authorization/authorization.json",
+    "authorization/authorization.sig",
+    "c4-inputs.json",
+    "c4-profile.json",
+    "request.json"
+  ],
+  "production_head_denial_verified": true,
+  "production_head_uri": "s3://aimada-wave1-final-e00g6zvxpr00/releases/nasdaq-public-sample-v1-c4-5c85182-20260905/staging/manifests/frozen-root.json",
+  "production_body_downloaded": false,
+  "pinned_job_credentials_verified": false,
+  "native_storage_verified": false,
+  "mlflow_remote_verified": false,
+  "production_g8_complete": false,
+  "transport": "single_client_frozen_aws_sdk",
+  "session_limit_seconds": 900
+}

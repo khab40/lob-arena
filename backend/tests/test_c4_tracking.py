@@ -45,7 +45,8 @@ def _logger_arguments(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("variant", ["normal", "missing_schema", "legacy_schema", "wrapped", "duplicate"])
-def test_self_asserted_report_is_rejected_before_mlflow(tmp_path, monkeypatch, variant):
+@pytest.mark.parametrize("resume", [False, True])
+def test_self_asserted_report_is_rejected_before_mlflow(tmp_path, monkeypatch, variant, resume):
     from app.ml.lightgbm import tracking
 
     arguments, report = _logger_arguments(tmp_path, monkeypatch)
@@ -66,6 +67,10 @@ def test_self_asserted_report_is_rejected_before_mlflow(tmp_path, monkeypatch, v
         pytest.fail("unverified C4 report reached MLflow")
 
     monkeypatch.setattr(tracking, "_mlflow", forbidden_mlflow)
+    if resume:
+        from app.ml.lightgbm import g8_mlflow_recovery
+        monkeypatch.setattr(g8_mlflow_recovery, "resume_verified_logging", forbidden_mlflow)
+        arguments["resume_target"] = object()  # Must not even be inspected before C4 verification.
     with pytest.raises(ValueError, match="C4|duplicate keys"):
         tracking.log_governed_evaluation_run(**arguments, benchmark_results_path=path)
 

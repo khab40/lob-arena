@@ -193,6 +193,24 @@ diagnostic is retained separately from the passing final receipt.
   durable recovery, live preflight and replacement-specific authorization remain
   required. A persistent-storage exception is approved for preparation only; see the
   [G8 recovery record](g8-completion-recovery.md).
+  Post-MLflow checkpoint/publication recovery now passes synthetic fault tests;
+  same-run MLflow reservation/logging recovery also passes the frozen synthetic
+  fault rehearsal (one run, one scoring call, 24 metrics, 30 dataset inputs).
+  Pre-logging checkpoints now pass synthetic fresh-process recovery after the
+  original workspace is removed, without rescoring or creating another run.
+  A separate [replacement entrypoint/preflight](g8-live-replacement.md) now wires
+  scored checkpoints, same-run logging, truthful execution-result finalization
+  and marker-last publication together. Native durability, authenticated remote
+  rehearsal, actual package review/binding and replacement approval remain open.
+  The synthetic native/remote rehearsal has an approved $2 cap and two-Job limit;
+  the reviewed live package and fresh billing remain prerequisites. Synthetic
+  [source staging and authenticated readback](g8-source-sdk.md) are complete:
+  350 source objects verified, with input writer access revoked after 397 seconds.
+  Future rehearsals and pre-production model/runtime tests use Nebius Serverless.
+  No paid rehearsal Job has started; native durability and remote MLflow proof
+  remain outstanding.
+  See [pre-logging checkpoints](g8-prelogging-checkpoint.md),
+  [publication recovery](g8-publication-recovery.md) and [MLflow recovery](g8-mlflow-recovery.md).
 - G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
   record.
 
