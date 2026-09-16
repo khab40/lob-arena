@@ -1,5 +1,11 @@
 # Bounded synthetic source staging
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
 Prepared from `main` at `7afd1f4` (PR #186). G8 remains open and G9 blocked.
 PR #169 is closed; its useful C4-layout work is already superseded on main.
 
@@ -70,7 +76,7 @@ read-only assessment; it does not authorize another writer session or rescoring.
 
 This proposal starts no Job, filesystem, MLflow VM or final evaluation. The
 previously approved two-Job/$2 synthetic rehearsal still requires complete source
-readback, current billing and a reviewed native/remote execution package. The
+readback and a reviewed native/remote execution package. The
 production replacement requires its separate signed exception afterward.
 
 ## Approved input staging completed
@@ -103,7 +109,7 @@ Job credential injection remain separate gates for the Nebius rehearsal.
 
 This closes synthetic source staging and operator-side authenticated readback.
 No cloud Job, native filesystem or MLflow evaluation was created. Job credential
-injection, native durability, authenticated remote MLflow recovery, fresh billing
+injection, native durability, authenticated remote MLflow recovery, execution bindings
 and the reviewed native execution package remain open. G8 is not complete.
 
 ## Execution location for subsequent workloads

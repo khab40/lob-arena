@@ -1,5 +1,11 @@
 # G8 completion recovery — 2026-09-14
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
 Status: G0–G7 complete; G8 open; G9 blocked on a successful, fully evaluated G8.
 This is a recovery implementation record, not a final-test approval or G8 exit receipt.
 
@@ -169,7 +175,7 @@ integration, remote rehearsal and replacement-specific approval remain gates.
    scoring, during MLflow logging, after a successful PUT with a lost response, and
    during marker publication; verify recovery without re-execution.
 4. **Review/merge, bind the exception and run live preflight.** Use a fresh PR from
-   current main for subsequent delivery. Verify fresh billing, exact image digest,
+   current main for subsequent delivery. Verify exact image digest,
    scoped credentials, private authenticated MLflow and a synthetic remote artifact
    round-trip. No final-read credential activation or cloud Job occurs in this PR.
    Obtain the replacement-specific signed authorization only for the completed,

@@ -7,6 +7,14 @@ Status: engineering implementation; **not final-test or provisioning authority**
 G8 remains open and G9 blocked. This follows merged PR #177, from updated main
 `827ddc906f0e13f86570762f1eb4a59a83ab62d4`.
 
+## Current validation policy (2026-09-16)
+
+Apply the [operator-managed validation policy](model-validation-execution-policy.md)
+until LightGBM and Transformers validation outcomes are recorded. It supersedes
+older dollar caps, billing-refresh instructions and VM/filesystem/package windows
+in the historical execution notes below. Do not query billing or request balances.
+Separate final-test approval, frozen inputs and the one-execution rule remain.
+
 ## Execution boundary
 
 `serverless/jobs/run_lightgbm_g8_replacement.py` is a separate entrypoint. The
@@ -14,12 +22,13 @@ ordinary submitter and its Wave 1 no-volume rule are unchanged. Verification is
 the default; `--command` renders the scoring command and `--recovery-command`
 renders a command with `--recover`, without submitting. Both rendering flags
 and the live `--execute` / `--recover` flags are mutually exclusive.
-Recovery rendering uses the retention deadline, not the scoring expiry, and
-retains the same signed package, run directory and filesystem; only the Job name
+Recovery rendering has no administrative expiry and retains the same signed
+package, run directory and filesystem; only the Job name
 gets a `-recovery` suffix. Neither code nor this
 document authorizes issuing the rendered command.
 
-The canonical, Ed25519-signed `replacement.json` uses `ReplacementPlan` in
+The canonical, Ed25519-signed `replacement.json` uses `g8_replacement_plan_v2`
+(`ReplacementPlan`) in
 `backend/app/ml/lightgbm/g8_replacement.py`. It binds:
 
 - The four prior submissions, R4 Job/run IDs, prior test access, monitor/log
@@ -33,14 +42,16 @@ The canonical, Ed25519-signed `replacement.json` uses `ReplacementPlan` in
   exact subnet. No S3/FUSE mount, nested mount, writable code injection or public
   endpoint is introduced.
 - Signed, reviewed observations: native Job-loss/reattachment, authenticated
-  remote round trips, original 27-checkpoint metadata inventory and billing.
+  remote round trips and original 27-checkpoint metadata inventory.
   Their byte hashes are mandatory. Positive booleans are **not independently
   obtained by this verifier**: the operator must review the underlying receipts
   before signing the complete plan. No placeholder success receipts are generated.
-- Observations at most one hour old, an execution expiry within one hour,
-  campaign spend below $40, total exposure at most $50 and a retention/recovery
-  deadline within 24 hours. Expired execution cannot restart scoring; recovery
-  may continue only within its separately bounded retention window.
+- Timezone-aware observations preceding signing, without package-age rejection,
+  billing evidence or submission/recovery expiry. The separate candidate approval
+  must still be replacement-specific and signed when preparing the live package;
+  its existing one-hour signing-to-preparation check is an authorization gate,
+  not an expiry on subsequent submission or recovery.
+
 
 The exact required flat file allowlist is enforced by `ReplacementPlan`.
 Each injection is at most 64 KiB; its byte count and SHA-256 are verified.
@@ -56,7 +67,7 @@ Nebius API readback and stage an operator-signed context at
 `job_readback_sha256`, and `purpose` (`execute`). Sign with the same trusted operator key. Review the actual
 Job image, injected file identities, one volume, resources, credentials selectors,
 network and restart policy before releasing this context. The runner waits at
-most five minutes, bounded by execution expiry, without accessing final data.
+most five minutes without accessing final data.
 An ambiguous Job-create response is **not permission to submit again**; recover
 the exact API Job identity. The signer, not the runner, attests to API readback.
 For an explicit recovery Job, stage `<run-id>-recovery.json`/`.sig`, with purpose
@@ -146,6 +157,9 @@ MLflow artifact round trips still require the approved rehearsal below.
 
 ## Approved scope: synthetic native/remote rehearsal only
 
+Historical September 14 approval follows. Its dollar and timing limits are
+superseded by the September 16 policy above; its data/access boundaries remain.
+
 Operator approved **$2 maximum additional spend** on 2026-09-14, including cleanup
 and stopping the existing MLflow VM afterward, subject to fresh billing reconciliation
 before provisioning: stop new work at $40 campaign spend; never exceed $50 total.
@@ -174,8 +188,8 @@ $0.08/GiB/730h. Two full Job hours including disks are about $0.218;
 10 GiB filesystem for 24h about $0.026; MLflow 2vCPU/8GiB plus 32GiB disk for
 four hours about $0.211: **about $0.46 infrastructure subtotal**, before network,
 object requests and other applicable charges. The $2 cap provides headroom, not
-a provider-enforced billing cap. Check current project-specific rates and spend
-before starting; do not proceed if the quoted scope cannot fit.
+a provider-enforced billing cap. This historical estimate is not an execution gate; spend monitoring now belongs
+to operator alerts.
 
 Sources: [Compute pricing](https://docs.nebius.com/compute/resources/pricing),
 [Serverless billing](https://docs.nebius.com/serverless/pricing-quotas),
@@ -293,11 +307,11 @@ Submission gates, in order:
    Verify denial for a known production C4 object without downloading its body.
    Record exact source URIs, marker/manifest hashes, credential selectors and
    observation time. A policy readback or empty-prefix listing is not proof.
-4. Bind that evidence, native mount plan, comparison inventory, current billing,
+4. Bind that evidence, native mount plan, comparison inventory,
    remote MLflow credentials and actual injected runner to the reviewed rehearsal
    package. Do not run the offline mocked-transport harness as if it were a live
    remote rehearsal. No live rehearsal package is declared ready by these patches.
-5. Only then provision/submit within the existing two-Job and USD 2 bounds, and
+5. Only then provision/submit with the reviewed two-phase design, and
    retain/recover the same scored checkpoint without rescoring.
 
 For cleanup, the operator must remove only the added output rule and the two
@@ -361,7 +375,7 @@ The next gates remain: review this implementation; prepare separately reviewed
 exact-prefix staging-writer authority and conditional, marker-last publication;
 verify complete downloads with the pinned Job credentials and a production-object
 HEAD denial; finish the actual native/remote rehearsal package; then refresh
-billing and run within the existing two-Job/$2 approval. Do not run the ordinary
+execution identities and run under the validation policy. Do not run the ordinary
 nonconditional input publisher or activate the final-read key as a shortcut.
 The previous source-read grants are already applied and must not be rerun.
 
@@ -529,8 +543,8 @@ publication/readback receipts are checksum-bound in the session record.
 The frozen package and both source `SUCCESS` identities are preserved.
 
 Source staging and operator-side authenticated downloads are complete. The next
-gate is the reviewed native/remote package and fresh billing reconciliation before
-the previously approved two-Job/$2 rehearsal. Future synthetic rehearsals and
+gate is the reviewed native/remote package before the two-phase rehearsal; no
+billing reconciliation or renewed submission window is required. Future synthetic rehearsals and
 pre-production model/runtime tests run on Nebius Serverless, per the operator's
 2026-09-15 instruction. No native or remote-MLflow proof is claimed yet; G8 remains
 open and G9 blocked. Historical staging grants must not be rerun.

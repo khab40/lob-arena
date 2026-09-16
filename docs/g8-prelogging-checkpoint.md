@@ -1,5 +1,11 @@
 # G8 pre-logging checkpoint and workspace-loss recovery
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
 Status: synthetic engineering milestone, not a live G8 exit receipt. Built on
 merged PR #176 from main `157eacb`. G8 remains open and G9 blocked.
 
