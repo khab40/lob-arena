@@ -1,5 +1,11 @@
 # G8 same-run MLflow recovery — 2026-09-14
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
 Architecture decision: [ARD-0039](architecture/ARD-0039-same-run-mlflow-recovery.md).
 
 Engineering milestone only. G8 remains open and G9 blocked. This extends the

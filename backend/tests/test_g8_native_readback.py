@@ -16,14 +16,12 @@ def plan_data():
     values = {name: get_args(field.annotation)[0] for name, field in contract.NativePlan.model_fields.items()
               if get_origin(field.annotation) is Literal}
     values.update(source_commit="1" * 40, filesystem_id="computefilesystem-example", verified_at=NOW - timedelta(minutes=5),
-        expires_at=NOW + timedelta(minutes=30), cleanup_deadline=NOW + timedelta(hours=3),
-        campaign_spend_usd=34, billing_receipt_sha256="a" * 64,
         secret_selectors={**contract.S3_SELECTORS,
             "MLFLOW_TRACKING_USERNAME": "mbsec-exampleuser@mbsecver-exampleuser",
             "MLFLOW_TRACKING_PASSWORD": "mbsec-examplepassword@mbsecver-examplepassword"},
         files={name: {"sha256": "a" * 64, "size_bytes": 1}
                for name in set(contract.CODE_PATHS) | contract.CAPSULE | set(contract.ARCHIVES)
-               | {contract.BOOTSTRAP, "reviewer-public.pem", "billing.json", "filesystem.json"}})
+               | {contract.BOOTSTRAP, "reviewer-public.pem", "filesystem.json"}})
     return values
 
 
@@ -126,13 +124,13 @@ def test_mount_and_injection_identity_drift_rejected(plan, readback, change):
         check(plan, readback)
 
 
-def test_old_job_wrong_phase_and_expired_context_rejected(plan, readback):
+def test_old_job_wrong_phase_and_future_context_rejected(plan, readback):
     with pytest.raises(ValueError):
         verify_readback(plan, readback, phase="recover", expected_job_id="aijob-example", now=NOW)
     with pytest.raises(ValueError):
         verify_readback(plan, readback, phase="score", expected_job_id="aijob-other", now=NOW)
     with pytest.raises(ValueError):
-        verify_readback(plan, readback, phase="score", expected_job_id="aijob-example", now=plan.expires_at)
+        verify_readback(plan, readback, phase="score", expected_job_id="aijob-example", now=NOW - timedelta(seconds=1))
 
 
 def test_plan_rejects_production_candidate_and_unbounded_resources(plan_data):
@@ -145,7 +143,7 @@ def test_plan_rejects_production_candidate_and_unbounded_resources(plan_data):
 
 def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_path):
     command = contract.job_command(plan, tmp_path, phase="recover")
-    assert command.count("--inject-file") == 16
+    assert command.count("--inject-file") == 15
     assert command[command.index("--args") + 1] == "/job/g8/g8_native_bootstrap.py --phase recover"
     assert not any(p.endswith("/g8_native_lifecycle.py") for p in contract.injections(plan))
     assert command.count("--volume") == 1
@@ -154,3 +152,13 @@ def test_commands_pin_each_secret_version_and_only_one_native_mount(plan, tmp_pa
     assert command[command.index("--image") + 1] == contract.IMAGE
     assert {command[i + 1] for i, v in enumerate(command) if v == "--env-secret"} == {
         f"{k}={v}" for k, v in plan.secret_selectors.items()}
+
+
+def test_delayed_submission_readback_keeps_identity_checks(plan, readback):
+    delayed = NOW + timedelta(days=7)
+    readback["metadata"]["created_at"] = delayed.isoformat()
+    assert verify_readback(plan, readback, phase="score", expected_job_id="aijob-example",
+                           now=delayed)["job_id"] == "aijob-example"
+    readback["spec"]["image"] = "unreviewed"
+    with pytest.raises(ValueError, match="configuration"):
+        verify_readback(plan, readback, phase="score", expected_job_id="aijob-example", now=delayed)

@@ -1,5 +1,11 @@
 # G8 replacement: persistent-storage exception proposal
 
+Current execution policy (2026-09-16): the
+[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+supersedes older billing, dollar-ceiling and package/VM/retention windows below.
+No billing queries or balance refreshes. Identity/integrity checks and separate
+final-test authorization remain; historical receipts keep their original context.
+
 Architecture decision: [ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md).
 
 Status (2026-09-14): **preparation approved; not provisioned or executable**.

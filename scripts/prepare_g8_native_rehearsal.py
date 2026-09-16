@@ -18,7 +18,7 @@ from serverless.jobs.g8_native_runtime import bounded, verify_package  # noqa: E
 from serverless.jobs.g8_native_source_capsule import verify as verify_capsule  # noqa: E402
 
 
-def prepare(*, capsule, bindings, billing, filesystem, private_key, output):
+def prepare(*, capsule, bindings, filesystem, private_key, output):
     from cryptography.hazmat.primitives.serialization import load_pem_private_key, Encoding, PublicFormat
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -36,7 +36,7 @@ def prepare(*, capsule, bindings, billing, filesystem, private_key, output):
         raise ValueError("package preparation requires a clean reviewed checkout")
     commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
     values = json.loads(bounded(bindings))
-    if set(values) & {"files", "source_commit", "billing_receipt_sha256"}:
+    if set(values) & {"files", "source_commit"}:
         raise ValueError("file bindings and source commit are derived, never caller-supplied")
     output.mkdir(parents=True, exist_ok=False)
     shutil.copytree(capsule, output / "source-capsule")
@@ -48,13 +48,11 @@ def prepare(*, capsule, bindings, billing, filesystem, private_key, output):
         (output / name).write_bytes(content)
     (output / BOOTSTRAP).write_bytes(bounded(ROOT / "serverless/jobs" / BOOTSTRAP))
     (output / "reviewer-public.pem").write_bytes(key.public_key().public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
-    (output / "billing.json").write_bytes(bounded(billing))
     (output / "filesystem.json").write_bytes(bounded(filesystem))
     files = {p.relative_to(output).as_posix(): {"sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
                                               "size_bytes": p.stat().st_size} for p in output.rglob("*") if p.is_file()}
     files.update({name: {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw)} for name, raw in code.items()})
-    plan = NativePlan.model_validate({**values, "source_commit": commit, "files": files,
-                                     "billing_receipt_sha256": files["billing.json"]["sha256"]})
+    plan = NativePlan.model_validate({**values, "source_commit": commit, "files": files})
     raw = canonical(plan)
     (output / "native-plan.json").write_bytes(raw)
     (output / "native-plan.sig").write_bytes(key.sign(raw))
@@ -67,6 +65,6 @@ def prepare(*, capsule, bindings, billing, filesystem, private_key, output):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("capsule", "bindings", "billing", "filesystem", "private-key", "output"):
+    for name in ("capsule", "bindings", "filesystem", "private-key", "output"):
         parser.add_argument("--" + name, type=Path, required=True)
     print(json.dumps(prepare(**vars(parser.parse_args())), indent=2))

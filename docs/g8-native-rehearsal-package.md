@@ -5,20 +5,23 @@ Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
 The [existing synthetic rehearsal authorization](g8-live-replacement.md#approved-scope-synthetic-nativeremote-rehearsal-only)
-remains bounded to two Jobs and $2; its input-writer window is closed.
+uses two phases/Jobs; its input-writer window is closed. The
+[2026-09-16 validation policy](model-validation-execution-policy.md) removes
+administrative expiry, billing gates and fixed VM/filesystem windows.
 The [September 15–16 preflight](g8-native-context-handoff.md#september-1516-preflight-outcome)
 exceeded the VM uptime limit during an overnight approval wait. The VM is stopped
-and temporary filesystem deleted. Fresh billing and a renewed VM window are now
-required; no evaluation Job was submitted in that attempt. On September 16 the
+and that temporary filesystem was deleted. At the time, refreshed billing and a
+renewed VM window were required; those gates are now superseded. No evaluation
+Job was submitted in that attempt. On September 16 the
 operator reported $33.25 and renewed the VM window. The provider then rejected the
 44-file package: a container may inject at most 16 files. The independently guarded
 VM was stopped and restored, and the empty filesystem deleted. No Job was created.
 See the [rejection receipt](evidence/g8-native-injection-rejection-20260916.json).
 
-## Sixteen-file transport
+## Transport within the sixteen-file provider limit
 
-The v2 package injects exactly 16 read-only files: two code ZIPs, one bootstrap,
-eight unchanged source-capsule parts, billing/filesystem/public-key evidence, and
+The v3 package injects exactly 15 read-only files: two code ZIPs, one bootstrap,
+eight unchanged source-capsule parts, filesystem/public-key evidence, and
 the signed manifest pair. Each file is at most 64 KiB. The deterministic archives
 retain all reviewed overlay bytes plus the archive reader; no model/data member
 is regenerated. The signed plan binds each archive, bootstrap and individual
@@ -79,9 +82,9 @@ The package builder requires these bindings before submission:
 | Storage | One returned `computefilesystem-…` ID, `network_ssd`, 10 GiB, `/g8-durable`; observed writable `virtiofs` mount; reject nested mounts |
 | Network | Project `project-e00g6zvxpr00waz8t3y51k`, subnet `vpcsubnet-e00ppzc4353dxv210j`; private MLflow `http://10.4.0.54:5500` |
 | Credentials | Four explicit `SECRET_ID@VERSION_ID` selectors for development S3 and MLflow; no latest-version selectors or inline values |
-| Budget | Fresh provider billing plus lag allowance, campaign below $40, total ceiling $50, additional rehearsal ceiling $2 |
+| Spend monitoring | Operator-managed alerts; no billing queries, receipts, freshness gate or dollar ceiling |
 | Jobs | Two named phases, `cpu-d3`, `4vcpu-16gb`, 100 GiB ephemeral disk, 1h timeout each, restart `never`, no GPU |
-| Retention | Filesystem deadline within 24h; MLflow VM uptime within 4h; cleanup identity list |
+| Retention | Keep sealed outputs through verification/recovery; stop idle compute; archive before approved cleanup |
 
 Each submitted Job needs a fresh API readback matching the immutable image,
 resources, mount ID, injection paths and **both secret ID and version ID for each
@@ -108,24 +111,22 @@ through GitGuardian's supported workflow. Keep credential scanning enabled.
 ## Package and context tools
 
 `scripts/prepare_g8_native_rehearsal.py` requires a clean reviewed checkout, the
-retained capsule, fresh billing JSON, the returned filesystem JSON, completed
+retained capsule, the returned filesystem JSON, completed
 plan bindings and an existing Ed25519 reviewer key. It archives the 22 reviewed
-code files and copies the bootstrap, eight capsule parts, billing/filesystem
+code files and copies the bootstrap, eight capsule parts, filesystem
 evidence and reviewer public key. It signs the immutable manifest and prints the
 two commands without submitting; rendering fails above 16 injected files.
 The reviewer private key stays outside the package and is never injected.
 
 ```bash
-rtk proxy python3 scripts/prepare_g8_native_rehearsal.py --capsule /absolute/capsule --bindings /absolute/bindings.json --billing /absolute/billing.json --filesystem /absolute/filesystem.json --private-key /absolute/reviewer.pem --output /absolute/new-package
+rtk proxy python3 scripts/prepare_g8_native_rehearsal.py --capsule /absolute/capsule --bindings /absolute/bindings.json --filesystem /absolute/filesystem.json --private-key /absolute/reviewer.pem --output /absolute/new-package
 rtk proxy python3 scripts/sign_g8_native_context.py --package /absolute/new-package --readback /absolute/score-job.json --job-id aijob-REPLACE --phase score --private-key /absolute/reviewer.pem --output /absolute/new-score-context
 ```
 
 Use Python with the repository's Pydantic/cryptography dependencies. Bindings
-contain the `NativePlan` fields except `files`, `source_commit` and
-`billing_receipt_sha256`, which the builder derives. Billing JSON has exactly
-`observed_at` (timezone-aware ISO timestamp), `campaign_spend_usd`,
-`lag_allowance_usd` and `provider_reference`; the first two cost values sum to the
-plan's reconciled campaign spend. The filesystem readback must identify the
+contain the `NativePlan` fields except `files` and `source_commit`, which the
+builder derives. The v3 schema carries the validation policy and operator-managed
+alerts, without billing or expiry fields. The filesystem readback must identify the
 approved project, exact returned ID, API enum `NETWORK_SSD`, exactly one configured
 size unit equivalent to 10 GiB, and READY status reporting that capacity without
 reconciliation in progress. Preserve the API readback unchanged; the CLI's
@@ -137,7 +138,7 @@ the original context's `.sig` must be adjacent. Context output contains canonica
 `score.json`/`score.sig` or `recover.json`/`recover.sig`. Publish both to
 `/g8-durable/contexts/` through the reviewed native-filesystem attachment while the
 Job waits, at most five minutes. The native entrypoint rechecks signature, package
-expiry, code and kernel mount identity after this wait. An absent context stops
+integrity, code and kernel mount identity after this wait. An absent context stops
 the Job before source access; it never triggers another submission.
 
 The [native handoff procedure](g8-native-context-handoff.md) binds the existing
@@ -148,7 +149,7 @@ Do not use output/intent prefixes for context transport; they must begin empty.
 
 ## Two-Job sequence
 
-1. **Score and seal.** Check fresh budget, inactive production key, source/output
+1. **Score and seal.** Check inactive production key, source/output
    access, empty synthetic output and intent, actual mount and submitted Job
    readback. Start the existing MLflow VM only when these gates are ready.
    Verify authenticated MLflow readiness and require an unauthenticated request
@@ -194,7 +195,7 @@ Independently download the final S3 release and verify it against the retained
 scored/publication seals. Independently query the original MLflow run, metric
 histories and artifact hashes. Preserve both Job readbacks/terminal statuses,
 mount observations, reservation ID, package/code hashes, fault logs, exact output
-inventory and billing/cleanup receipts. Stop the MLflow VM and delete only the
+inventory and cleanup receipts. Stop the MLflow VM and delete only the
 identified rehearsal Jobs/filesystem after evidence has been archived and checked.
 
 The source receipt contains a **synthetic placeholder** dataset-registration ID
@@ -209,8 +210,8 @@ availability, production quality, replacement authorization or G8 completion.
 - This implementation: native entrypoint, immutable package/command rendering,
   signed contexts, exact Job-readback validation and native/remote fault hooks.
   Static checks pass; no native/authenticated runtime receipt is claimed.
-- Before provisioning: complete the unresolved execution bindings above and refresh
-  billing. Run within the existing approval only when the concrete package is ready.
+- Before provisioning: complete the unresolved execution bindings above. Use the
+  reviewed package under the validation policy; approval delays do not expire it.
 - After rehearsal: preserve evidence and reconcile
   [ARD-0035](architecture/ARD-0035-nebius-lightgbm-first.md), Issue #23 and the roadmap.
   G8 remains open and G9 blocked until the separately approved production work passes.

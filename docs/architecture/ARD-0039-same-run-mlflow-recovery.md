@@ -6,6 +6,16 @@ Date: 2026-09-15
 
 Implementation Status: `[recovery API implemented; live runner integration pending]`
 
+## Validation execution policy — 2026-09-16
+
+The operator removed administrative submission/retention windows, billing checks
+and fixed validation spend/VM limits until LightGBM and Transformers validation
+have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+in preference to older operational bounds in this record. No billing queries or
+balance-refresh requests. Finite Job timeouts, execution identities, evidence
+integrity and separate final-test authorization remain. This is an execution-policy
+change, not model-quality acceptance or a completed G8/G9 milestone.
+
 ## Context
 
 A lost MLflow response may follow a successful write. Retrying with a new run

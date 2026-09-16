@@ -1,6 +1,6 @@
-"""Independent operator-side stop guard for the existing G8 MLflow VM.
+"""Optional operator-side stop guard for the existing G8 MLflow VM.
 
-Arm before starting the VM. This is orchestration, never a model rehearsal.
+Validation starts use operator-managed alerts; a timed stop is opt-in.
 The operator host must remain online; CLI/network failures are recorded and retried.
 """
 from __future__ import annotations
@@ -11,7 +11,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 VM = "computeinstance-e00xq8hqrzks2pf3gn"
@@ -42,8 +42,8 @@ def watch(directory):
     if lease["vm_id"] != VM or deadline.tzinfo is None:
         raise ValueError("exact VM and timezone-aware deadline required")
     # Absolute time catches suspension/clock jumps; monotonic time prevents a
-    # clock correction from extending the original three-hour stop budget.
-    remaining = min(10800, max(0, (deadline - datetime.now(UTC)).total_seconds()))
+    # clock correction from extending the chosen stop time.
+    remaining = max(0, (deadline - datetime.now(UTC)).total_seconds())
     end = time.monotonic() + remaining
     record(directory / "events.jsonl", {"event": "armed", "pid": os.getpid(), "deadline": deadline.isoformat()})
     while True:
@@ -67,8 +67,8 @@ def watch(directory):
 
 def arm(directory, deadline):
     now = datetime.now(UTC)
-    if deadline.tzinfo is None or not now < deadline <= now + timedelta(hours=3):
-        raise ValueError("stop deadline must be within three hours, preserving one-hour headroom")
+    if deadline.tzinfo is None or deadline <= now:
+        raise ValueError("stop deadline must be timezone-aware and in the future")
     if directory.absolute() != directory.resolve():
         raise ValueError("canonical guard directory required")
     if cli("get")["state"] != "STOPPED":
@@ -88,16 +88,27 @@ def arm(directory, deadline):
     raise RuntimeError("stop guard did not acknowledge; do not start the VM")
 
 
-def start(directory):
-    """Check the guard in the same invocation that starts the VM after approval."""
+def start(directory, *, operator_managed=False):
+    """Persist a single start intent; validation has no mandatory wall-clock lease."""
+    if operator_managed:
+        if directory.absolute() != directory.resolve():
+            raise ValueError("canonical start directory required")
+        if cli("get")["state"] != "STOPPED":
+            raise ValueError("VM must still be stopped before startup")
+        directory.mkdir(mode=0o700, parents=True, exist_ok=False)
+        record(directory / "start-intent.json", {
+            "vm_id": VM, "spend_monitoring": "operator_managed_alerts",
+            "requested_at": datetime.now(UTC).isoformat(),
+        })
+        return cli("start")
     lease = json.loads((directory / "lease.json").read_text())
     deadline = datetime.fromisoformat(lease["deadline"])
     events = [json.loads(line) for line in (directory / "events.jsonl").read_text().splitlines()]
     if (lease["vm_id"] != VM or deadline.tzinfo is None
-            or not timedelta(hours=2) <= deadline - datetime.now(UTC) <= timedelta(hours=3)
+            or deadline <= datetime.now(UTC)
             or len(events) != 1 or events[0].get("event") != "armed"
             or events[0].get("deadline") != deadline.isoformat()):
-        raise ValueError("live guard with two hours remaining required before start")
+        raise ValueError("live guard with a future deadline required before timed start")
     pid = events[0].get("pid")
     if type(pid) is not int or pid <= 1:
         raise ValueError("guard process identity required")
@@ -118,12 +129,15 @@ if __name__ == "__main__":
     parser.add_argument("action", choices=("arm", "watch", "start"))
     parser.add_argument("--directory", required=True, type=Path)
     parser.add_argument("--deadline", type=datetime.fromisoformat)
+    parser.add_argument("--operator-managed", action="store_true", help="Start without a stop timer during validation")
     args = parser.parse_args()
+    if args.operator_managed and args.action != "start":
+        parser.error("--operator-managed applies only to start")
     if args.action == "arm":
         if args.deadline is None:
             parser.error("arm requires --deadline")
         print(json.dumps(arm(args.directory, args.deadline), sort_keys=True))
     elif args.action == "start":
-        print(json.dumps(start(args.directory), sort_keys=True))
+        print(json.dumps(start(args.directory, operator_managed=args.operator_managed), sort_keys=True))
     else:
         watch(args.directory)

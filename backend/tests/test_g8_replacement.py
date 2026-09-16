@@ -77,7 +77,6 @@ def package(tmp_path, synthetic, monkeypatch):
                              "tracking_uri": request.mlflow_tracking_uri, "image": request.image},
         "comparison-inventory": {"comparison_sha256": profile.comparison_evidence_sha256,
                                  "original_checkpoint_count": 27, "metadata_inventory_verified": True},
-        "billing": {"campaign_spend_usd": 29, "maximum_additional_cost_usd": 2},
     }
     for name, value in receipts.items():
         (root / f"{name}.json").write_text(json.dumps({**value, "verified_at": now.isoformat()}))
@@ -96,14 +95,13 @@ def package(tmp_path, synthetic, monkeypatch):
         candidate_release_uri="s3://aimada-wave1-results-e00g6zvxpr00/campaigns/synthetic/development/selected",
         secret_selectors={name: "mbsec-synthetic@mbsecver-synthetic" for name in
                           ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "MLFLOW_TRACKING_USERNAME", "MLFLOW_TRACKING_PASSWORD")},
-        verified_at=now, expires_at=now + timedelta(minutes=30), cleanup_deadline=now + timedelta(hours=2),
-        campaign_spend_usd=29, maximum_additional_cost_usd=2,
+        verified_at=now,
         prior_monitor_sha256="e6975dcd517dda25b91a0b6bea9a786c87f7d82a451fcb71a8dcc34355016b72",
         prior_log_sha256="eadddbdbac943939a9b8243398584ac8866352b30117ef7ea0e3fb9ed9ac2a8c",
         native_durability_receipt_sha256=files["native-durability.json"].sha256,
         authenticated_remote_receipt_sha256=files["remote-roundtrip.json"].sha256,
         comparison_inventory_receipt_sha256=files["comparison-inventory.json"].sha256,
-        billing_receipt_sha256=files["billing.json"].sha256, files=files)
+        files=files)
     sign(root, private, plan)
     return root, private, plan, sha256_file(root / "authorization-public.pem")
 
@@ -125,10 +123,10 @@ def test_signed_complete_package_verifies_without_remote_access(package):
     assert len([x for x in command if x.endswith(":/job/g8/replacement.json")]) == 1
 
 
-@pytest.mark.parametrize("mode,expired", [
+@pytest.mark.parametrize("mode,delayed", [
     ("--command", False), ("--recovery-command", False), ("--recovery-command", True),
 ])
-def test_cli_renders_exact_operation_without_entering_lifecycle(package, monkeypatch, capsys, mode, expired):
+def test_cli_renders_exact_operation_without_entering_lifecycle(package, monkeypatch, capsys, mode, delayed):
     import sys
     from serverless.jobs import run_lightgbm_g8_replacement as cli
 
@@ -137,7 +135,7 @@ def test_cli_renders_exact_operation_without_entering_lifecycle(package, monkeyp
     monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), mode])
     verify = replacement.verify_package
     monkeypatch.setattr(cli, "verify_package", lambda *a, **kw: verify(
-        *a, **kw, now=plan.expires_at if expired else plan.verified_at))
+        *a, **kw, now=plan.verified_at + timedelta(days=7) if delayed else plan.verified_at))
     monkeypatch.setattr(cli, "verify_mount", lambda *a: pytest.fail("rendering inspected live mount"))
     monkeypatch.setattr(cli, "observed_context", lambda *a, **kw: pytest.fail("rendering waited for context"))
     monkeypatch.setattr(live, "run_live", lambda *a, **kw: pytest.fail("rendering entered scoring"))
@@ -154,10 +152,8 @@ def test_cli_renders_exact_operation_without_entering_lifecycle(package, monkeyp
     assert not (root / "__pycache__").exists()
 
 
-@pytest.mark.parametrize("mode,deadline", [
-    ("--command", "expires_at"), ("--recovery-command", "cleanup_deadline"),
-])
-def test_cli_rendering_respects_its_own_deadline(package, monkeypatch, mode, deadline):
+@pytest.mark.parametrize("mode", ["--command", "--recovery-command"])
+def test_cli_rendering_rejects_future_package(package, monkeypatch, mode):
     import sys
     from serverless.jobs import run_lightgbm_g8_replacement as cli
 
@@ -165,9 +161,10 @@ def test_cli_rendering_respects_its_own_deadline(package, monkeypatch, mode, dea
     monkeypatch.setenv("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", trusted)
     monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), mode])
     verify = replacement.verify_package
-    monkeypatch.setattr(cli, "verify_package", lambda *a, **kw: verify(*a, **kw, now=getattr(plan, deadline)))
-    monkeypatch.setattr(cli, "job_command", lambda *a, **kw: pytest.fail("expired command rendered"))
-    with pytest.raises(ValueError, match="current|retention window"):
+    monkeypatch.setattr(cli, "verify_package", lambda *a, **kw: verify(
+        *a, **kw, now=plan.verified_at - timedelta(seconds=1)))
+    monkeypatch.setattr(cli, "job_command", lambda *a, **kw: pytest.fail("future package rendered"))
+    with pytest.raises(ValueError, match="future"):
         cli.main()
 
 
@@ -271,8 +268,7 @@ def test_missing_signed_job_context_times_out_without_final_access(package, tmp_
 
 
 @pytest.mark.parametrize("field,value", [("prior_final_jobs_submitted", 0), ("prior_test_fold_accessed", False),
-    ("run_id", "nasdaq-g8-final-r4-20260913"), ("candidate_sha256", "0" * 64), ("campaign_spend_usd", 40),
-    ("maximum_additional_cost_usd", 30), ("capacity_gib", 1), ("filesystem_id", "storagebucket-synthetic"),
+    ("run_id", "nasdaq-g8-final-r4-20260913"), ("candidate_sha256", "0" * 64), ("capacity_gib", 1), ("filesystem_id", "storagebucket-synthetic"),
     ("mount_path", "/job"), ("max_checkpoint_bytes", 0)])
 def test_replacement_boundaries_reject(package, field, value):
     _, _, plan, _ = package
@@ -293,18 +289,18 @@ def test_changed_signed_plan_and_untrusted_key_rejected(package):
     root, _, plan, trusted = package
     with pytest.raises(ValueError, match="trusted"):
         replacement.verify_package(root, trusted_key="0" * 64)
-    (root / "replacement.json").write_bytes(replacement.canonical(plan.model_copy(update={"maximum_additional_cost_usd": 3})))
+    (root / "replacement.json").write_bytes(replacement.canonical(plan.model_copy(update={"capacity_gib": 11})))
     with pytest.raises(ValueError, match="signature"):
         replacement.verify_package(root, trusted_key=trusted)
 
 
-def test_expired_execution_forbidden_but_recovery_identity_verification_allowed(package):
+def test_delayed_package_keeps_authorization_without_billing(package):
     root, _, plan, trusted = package
-    with pytest.raises(ValueError, match="current"):
-        replacement.verify_package(root, trusted_key=trusted, now=plan.expires_at)
-    replacement.verify_package(root, trusted_key=trusted, now=plan.expires_at, recovery=True)
-    with pytest.raises(ValueError, match="retention window"):
-        replacement.verify_package(root, trusted_key=trusted, now=plan.cleanup_deadline, recovery=True)
+    assert not (root / "billing.json").exists()
+    for recovery in (False, True):
+        verified, _ = replacement.verify_package(root, trusted_key=trusted,
+            now=plan.verified_at + timedelta(days=7), recovery=recovery)
+        assert verified.identity() == plan.identity()
 
 
 def test_signed_but_failed_remote_receipt_rejected(package):

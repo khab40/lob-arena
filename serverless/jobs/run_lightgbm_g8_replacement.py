@@ -8,7 +8,6 @@ import os
 import sys
 import tempfile
 import time
-from datetime import UTC, datetime
 from pathlib import Path
 
 from app.ml.lightgbm.artifacts import sha256_file
@@ -21,7 +20,7 @@ def observed_context(plan, package, trusted_key, *, recovery=False):
     """Wait for an operator-signed API readback, not a guessed/preassigned Job ID.
 
     The operator stages this in the approved filesystem after create returns.
-    No final access occurs while waiting; expiry fails closed. No create retry.
+    No final access occurs while waiting; the bounded wait fails closed. No create retry.
     """
     purpose = "recover" if recovery else "execute"
     suffix = "-recovery" if recovery else ""
@@ -29,7 +28,7 @@ def observed_context(plan, package, trusted_key, *, recovery=False):
     signature = path.with_suffix(".sig")
     deadline = time.monotonic() + 300
     while not (path.is_file() and signature.is_file()):
-        if time.monotonic() >= deadline or datetime.now(UTC) >= (plan.cleanup_deadline if recovery else plan.expires_at):
+        if time.monotonic() >= deadline:
             raise ValueError("signed Job readback unavailable before execution deadline")
         time.sleep(1)
     if (path.resolve() != path.absolute() or signature.resolve() != signature.absolute()
@@ -61,7 +60,7 @@ def observed_context(plan, package, trusted_key, *, recovery=False):
 
 def main():
     # Importing the injected legacy runner must not add __pycache__ to the exact
-    # immutable package allowlist before the final expiry/signature recheck.
+    # immutable package allowlist before the final signature recheck.
     sys.dont_write_bytecode = True
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--package", type=Path, required=True)
@@ -112,7 +111,7 @@ def main():
             authorization_public_key=args.package / "authorization-public.pem"), trusted)
         context = observed_context(plan, args.package, trusted)
         legacy._execution_context = lambda: context
-        # Recheck expiry and native mount identity after the potentially long
+        # Recheck package and native mount identity after the potentially long
         # context wait, immediately before the single-use live entry.
         verify_package(args.package, trusted_key=trusted)
         if verify_mount(plan) != mount_identity:
