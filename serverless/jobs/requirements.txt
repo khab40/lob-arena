@@ -1,6 +1,6 @@
 awscli>=1.46.1,<2.0.0
 # Keep the SDK compatible with the Protobuf 7 generated runtime.
-databricks-sdk==0.67.0
+databricks-sdk==0.139.0
 google-auth==2.58.0
 gitpython>=3.1.62,<4.0.0
 lightgbm>=4.7.0,<5.0.0
