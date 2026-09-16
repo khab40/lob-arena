@@ -68,8 +68,11 @@ inventory. Independently verify S3 and MLflow evidence as specified in the packa
 
 After both Jobs are terminal and independent copies are verified, unmount the VM
 path, stop the VM, and get fresh VM/filesystem readbacks. Render `detach` using
-those readbacks. The patch clears only `spec.filesystems` and uses the current
-resource version. Run `verify-restored` after a fresh readback; require the original
+those readbacks. Detachment preserves the full current VM configuration and
+resource version, omitting only `spec.filesystems`. The live API rejected the
+clear-mask-only patch with `invalid resource size type: <nil>`; preserve that
+failed attempt and re-read before using the full configuration. Run
+`verify-restored` after a fresh readback; require the original
 VM configuration, preserved network and STOPPED state. Verify no filesystem
 attachment owners remain before deleting only the recorded temporary filesystem
 and Jobs. Keep MLflow disks and evidence. Remove only this handoff's temporary

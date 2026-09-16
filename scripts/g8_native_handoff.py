@@ -76,9 +76,15 @@ def render(before, current, filesystem, *, filesystem_id, detach=False):
         raise ValueError("unexpected filesystem attachment owners")
     command = ["nebius", "compute", "instance", "update", "--id", VM, "--parent-id", PROJECT, "--patch",
                "--resource-version", str(current["metadata"]["resource_version"])]
-    # Clearing an empty repeated field explicitly avoids patch-mode omission.
-    command += (["--clear-mask", "spec.filesystems"] if detach else
-                ["--filesystems", json.dumps([attachment(filesystem_id)], separators=(",", ":"))])
+    if detach:
+        # The live API rejects a clear-mask-only patch with missing resource size.
+        # Preserve the complete current configuration; omit only our attachment.
+        request = {"metadata": {k: v for k, v in current["metadata"].items()
+                                if k in {"id", "parent_id", "name", "resource_version", "labels"}},
+                   "spec": {k: v for k, v in current["spec"].items() if k != "filesystems"}}
+        command = ["nebius", "compute", "instance", "update", "--full", json.dumps(request)]
+    else:
+        command += ["--filesystems", json.dumps([attachment(filesystem_id)], separators=(",", ":"))]
     return {"command": command, "vm_id": VM, "filesystem_id": filesystem_id,
             "mount_tag": TAG, "mount_path": MOUNT, "submitted": False}
 

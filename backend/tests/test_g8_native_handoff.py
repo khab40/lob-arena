@@ -1,5 +1,6 @@
 """Static operator transport checks; no cloud calls or model imports."""
 from copy import deepcopy
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -13,6 +14,7 @@ def before():
     return {"metadata": {"id": handoff.VM, "parent_id": handoff.PROJECT,
                          "name": "aimada-wave1-mlflow", "resource_version": "40"},
             "spec": {"stopped": True, "boot_disk": {"managed_disk": {"name": "preserve-me"}},
+                     "resources": {"platform": "cpu-e2", "preset": "2vcpu-8gb"},
                      "service_account_id": "preserve-service-account", "network_interfaces": [{"name": "eth0"}]},
             "status": {"state": "STOPPED", "network_interfaces": [{"private_ip": "10.4.0.54"}]}}
 
@@ -40,8 +42,12 @@ def test_attach_and_restore_use_current_resource_version(before, filesystem):
     assert not receipt["context_delivery_verified"] and not receipt["native_mount_verified"]
     filesystem["status"]["read_write_attachments"] = [handoff.VM]
     command = handoff.render(before, current, filesystem, filesystem_id="computefilesystem-example", detach=True)["command"]
-    assert command[command.index("--resource-version") + 1] == "41"
-    assert command[-2:] == ["--clear-mask", "spec.filesystems"]
+    assert command[-2] == "--full"
+    request = json.loads(command[-1])
+    assert request["metadata"]["resource_version"] == "41"
+    assert request["spec"] == before["spec"]
+    assert request["spec"]["boot_disk"]["managed_disk"]["name"] == "preserve-me"
+    assert request["spec"]["resources"]["preset"] == "2vcpu-8gb"
     restored = deepcopy(before)
     restored["metadata"]["resource_version"] = "44"
     assert not handoff.verify_vm(before, restored, filesystem["metadata"]["id"], attached=False)["attached"]
