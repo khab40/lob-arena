@@ -58,7 +58,16 @@ def prepare(*, capsule, bindings, filesystem, private_key, output):
     (output / "native-plan.json").write_bytes(raw)
     (output / "native-plan.sig").write_bytes(key.sign(raw))
     verify_package(output, phase="score", trusted=files["reviewer-public.pem"]["sha256"])
+    transport = canonical({"files": {
+        p.relative_to(output).as_posix(): {"sha256": hashlib.sha256(p.read_bytes()).hexdigest(),
+                                         "size_bytes": p.stat().st_size}
+        for p in output.rglob("*") if p.is_file()}})
+    transport_path = output.with_name(output.name + "-transport.json")
+    with transport_path.open("xb") as stream:
+        stream.write(transport)
     return {"package_sha256": plan.identity(), "source_commit": commit,
+            "transport_inventory": str(transport_path),
+            "transport_inventory_sha256": hashlib.sha256(transport).hexdigest(),
             "score_command": submission_command(output, "score"),
             "recovery_command": submission_command(output, "recover"),
             "jobs_submitted": 0, "native_storage_verified": False, "remote_mlflow_verified": False}
