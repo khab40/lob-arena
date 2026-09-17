@@ -13,6 +13,7 @@ from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest
 from app.ml.lightgbm.cloud_runner import _verify_signature
 from app.ml.lightgbm.g8_mlflow_recovery import ReservationSpec
+from app.ml.lightgbm.g8_production_transport import ARCHIVES, BOOTSTRAP, DEPLOYMENT_IMAGE, PACKAGE, verify_archives
 
 SHA = r"^[0-9a-f]{64}$"
 IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2"
@@ -21,7 +22,8 @@ FINAL_RELEASE = "s3://aimada-wave1-final-e00g6zvxpr00/releases/nasdaq-public-sam
 FROZEN_ROOT = "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9"
 FINAL_PROJECTION = "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7"
 MODULES = ("g8_replacement", "g8_live_recovery", "g8_scored_checkpoint", "g8_mlflow_recovery",
-           "g8_publication_recovery", "tracking", "c4_evaluation", "c4_replay_evidence", "g8_benchmark_readiness")
+           "g8_publication_recovery", "tracking", "c4_evaluation", "c4_replay_evidence", "g8_benchmark_readiness",
+           "g8_production_transport")
 CODE_PATHS = {f"{name}.py": f"/job/backend/app/ml/lightgbm/{name}.py" for name in MODULES}
 CODE_PATHS.update({name: f"/job/g8/{name}" for name in
                    ("run_lightgbm_g8.py", "run_lightgbm_g8_replacement.py")})
@@ -37,7 +39,8 @@ class PackageFile(Strict):
 
 
 class ReplacementPlan(Strict):
-    schema_version: Literal["g8_replacement_plan_v2"] = "g8_replacement_plan_v2"
+    schema_version: Literal["g8_replacement_plan_v3"] = "g8_replacement_plan_v3"
+    source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
     run_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,127}$")
     request_sha256: str = Field(pattern=SHA)
     candidate_sha256: str = Field(default=CANDIDATE, pattern=SHA)
@@ -86,7 +89,7 @@ class ReplacementPlan(Strict):
         # Workspace, scored copy, recovery snapshot and completed/publication copies.
         if 5 * self.max_checkpoint_bytes > self.capacity_gib * 1024**3:
             raise ValueError("storage budget must cover five bounded working copies")
-        required = set(CODE_PATHS) | {"request.json", "profile.json", "frozen-root.json", "projection.json",
+        required = set(CODE_PATHS) | set(ARCHIVES) | {BOOTSTRAP, "request.json", "profile.json", "frozen-root.json", "projection.json",
             "candidate.json", "c4-inputs.json", "dataset-lineage.json", "authorization.json",
             "authorization.sig", "authorization-public.pem", "native-durability.json", "remote-roundtrip.json",
             "comparison-inventory.json"}
@@ -132,6 +135,7 @@ def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
             raise ValueError("replacement package file changed: " + name)
     _verify_signature(root / "replacement.json", root / "replacement.sig", root / "authorization-public.pem",
                       trusted_public_key_sha256=trusted_key)
+    verify_archives(root, CODE_PATHS)
     current = now or datetime.now(UTC)
     if plan.verified_at > current:
         raise ValueError("replacement verification timestamp is in the future")
@@ -197,7 +201,7 @@ def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
             or sha256_file(root / "projection.json") != request.input.projection.sha256
             or profile.projection_sha256 != request.input.projection.sha256):
         raise ValueError("replacement C4 contract differs from frozen metadata")
-    expected_inputs = {name: f"/job/g8/{file}" for name, file in
+    expected_inputs = {name: f"{PACKAGE}/{file}" for name, file in
         (("profile", "profile.json"), ("frozen_root", "frozen-root.json"), ("projection", "projection.json"),
          ("candidate", "candidate.json"))}
     expected_inputs["comparison"] = plan.mount_path + "/" + plan.comparison_relative_path
@@ -265,21 +269,20 @@ def job_command(plan: ReplacementPlan, root: Path, trusted_key: str, *, recovery
         raise ValueError("trusted public-key hash required")
     operation = "--recover" if recovery else "--execute"
     job_name = plan.run_id + "-recovery" if recovery else plan.run_id
-    command = ["nebius", "ai", "job", "create", "--name", job_name, "--image", plan.image,
+    command = ["nebius", "ai", "job", "create", "--name", job_name, "--image", DEPLOYMENT_IMAGE,
         "--parent-id", "project-e00g6zvxpr00waz8t3y51k", "--subnet-id", plan.subnet_id,
         "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi", "--timeout", "1h",
         "--restart-policy", "never", "--volume", f"{plan.filesystem_id}:{plan.mount_path}:rw",
-        "--container-command", "python", "--args", f"/job/g8/run_lightgbm_g8_replacement.py {operation} --package /job/g8",
+        "--volume", f"{plan.filesystem_id}:/g8-package:ro",
+        "--container-command", "python", "--args", f"/job/g8/{BOOTSTRAP} {operation} --package {PACKAGE}",
         "--format", "json"]
-    for name in sorted(set(plan.files) | {"replacement.json", "replacement.sig"}):
-        destination = CODE_PATHS.get(name, f"/job/g8/{name}")
-        command.extend(["--inject-file", f"{root / name}:{destination}"])
-        # Keep an immutable copy in the package as well as the imported overlay.
-        if name in CODE_PATHS and destination != f"/job/g8/{name}":
-            command.extend(["--inject-file", f"{root / name}:/job/g8/{name}"])
+    command.extend(["--inject-file", f"{root / BOOTSTRAP}:/job/g8/{BOOTSTRAP}"])
+    for index, archive in enumerate(ARCHIVES):
+        command.extend(["--env", f"G8_NATIVE_CODE_{index}_SHA256={plan.files[archive].sha256}"])
     for key, value in sorted(plan.secret_selectors.items()):
         command.extend(["--env-secret", f"{key}={value}"])
-    for value in ("MLFLOW_HTTP_REQUEST_MAX_RETRIES=0", "AWS_EC2_METADATA_DISABLED=true",
+    for value in ("G8_NATIVE_TARGET=production", "MLFLOW_HTTP_REQUEST_MAX_RETRIES=0",
+                  "MLFLOW_HTTP_REQUEST_TIMEOUT=20", "AWS_EC2_METADATA_DISABLED=true",
                   "PYTHONDONTWRITEBYTECODE=1",
                   "AWS_DEFAULT_REGION=eu-north1", f"WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256={trusted_key}"):
         command.extend(["--env", value])

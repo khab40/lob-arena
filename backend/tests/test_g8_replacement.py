@@ -16,6 +16,7 @@ from app.ml.lightgbm import g8_replacement as replacement  # noqa: E402
 from app.ml.lightgbm import g8_live_recovery as live  # noqa: E402
 from app.ml.lightgbm.artifacts import sha256_file  # noqa: E402
 from app.ml.lightgbm.c4_evaluation import C4EvaluationProfile  # noqa: E402
+from app.ml.lightgbm.g8_production_transport import BOOTSTRAP, PACKAGE, build_archives  # noqa: E402
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest, CloudArtifact  # noqa: E402
 from serverless.jobs.g8_checkpoint_rehearsal import prepare  # noqa: E402
 from serverless.jobs.g8_live_rehearsal import rehearse_live  # noqa: E402
@@ -65,7 +66,7 @@ def package(tmp_path, synthetic, monkeypatch):
     monkeypatch.setattr(replacement, "FROZEN_ROOT", request.input.frozen_root.sha256)
     monkeypatch.setattr(replacement, "FINAL_PROJECTION", request.input.projection.sha256)
     profile = C4EvaluationProfile.model_validate_json((root / "profile.json").read_bytes())
-    inputs = {name: f"/job/g8/{file}" for name, file in (("candidate", "candidate.json"),
+    inputs = {name: f"{PACKAGE}/{file}" for name, file in (("candidate", "candidate.json"),
         ("profile", "profile.json"), ("projection", "projection.json"), ("frozen_root", "frozen-root.json"))}
     inputs["comparison"] = "/g8-durable/comparison/original/comparison.json"
     (root / "c4-inputs.json").write_text(json.dumps(inputs))
@@ -85,9 +86,13 @@ def package(tmp_path, synthetic, monkeypatch):
         source_file = (repo / "backend/app/ml/lightgbm" if name.removesuffix(".py") in replacement.MODULES
                        else repo / "serverless/jobs") / name
         shutil.copyfile(source_file, root / name)
+    for name, raw in build_archives({name: (root / name).read_bytes() for name in replacement.CODE_PATHS},
+                                    replacement.CODE_PATHS).items():
+        (root / name).write_bytes(raw)
+    shutil.copyfile(repo / "serverless/jobs" / BOOTSTRAP, root / BOOTSTRAP)
     files = {path.name: replacement.PackageFile(sha256=sha256_file(path), size_bytes=path.stat().st_size)
              for path in root.iterdir()}
-    plan = replacement.ReplacementPlan(run_id=request.run_id, request_sha256=request.canonical_hash(),
+    plan = replacement.ReplacementPlan(source_commit="a" * 40, run_id=request.run_id, request_sha256=request.canonical_hash(),
         candidate_sha256=request.candidate.sha256, filesystem_id="computefilesystem-synthetic",
         mount_source="synthetic-volume", capacity_gib=10, max_checkpoint_bytes=1024**3, max_checkpoint_files=10000,
         comparison_relative_path="comparison/original/comparison.json",
@@ -117,10 +122,12 @@ def test_signed_complete_package_verifies_without_remote_access(package):
     verified, request = replacement.verify_package(root, trusted_key=trusted)
     assert verified == plan and request.canonical_hash() == plan.request_sha256
     command = replacement.job_command(plan, root, trusted)
-    assert command.count("--volume") == 1 and "--public" not in command
+    assert command.count("--volume") == 2 and "--public" not in command
     assert command[command.index("--volume") + 1] == "computefilesystem-synthetic:/g8-durable:rw"
     assert "MLFLOW_HTTP_REQUEST_MAX_RETRIES=0" in command
-    assert len([x for x in command if x.endswith(":/job/g8/replacement.json")]) == 1
+    assert command.count("--inject-file") == 1
+    assert command[command.index("--inject-file") + 1].endswith(":/job/g8/" + BOOTSTRAP)
+    assert "computefilesystem-synthetic:/g8-package:ro" in command
 
 
 @pytest.mark.parametrize("mode,delayed", [
@@ -145,7 +152,7 @@ def test_cli_renders_exact_operation_without_entering_lifecycle(package, monkeyp
     recovery = mode == "--recovery-command"
     operation = "--recover" if recovery else "--execute"
     assert command[command.index("--args") + 1] == (
-        f"/job/g8/run_lightgbm_g8_replacement.py {operation} --package /job/g8")
+        f"/job/g8/{BOOTSTRAP} {operation} --package {PACKAGE}")
     assert command[command.index("--name") + 1] == plan.run_id + ("-recovery" if recovery else "")
     assert command == replacement.job_command(plan, root, trusted, recovery=recovery)
     assert command[command.index("--volume") + 1] == f"{plan.filesystem_id}:{plan.mount_path}:rw"
@@ -176,7 +183,7 @@ def test_cli_rechecks_package_without_creating_bytecode_members(package, monkeyp
     monkeypatch.setenv("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", trusted)
     monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), "--execute"])
     monkeypatch.setattr(sys, "dont_write_bytecode", False)
-    monkeypatch.setattr(cli, "CODE_PATHS", {})  # Installed-path/mount observations tested separately.
+    monkeypatch.setattr(cli, "verify_runtime", lambda *a: None)  # Tested separately without model work.
     events = []
     monkeypatch.setattr(cli, "verify_mount", lambda plan: events.append("mount") or ("31", "20", "0:44", "/"))
     from types import SimpleNamespace
@@ -201,7 +208,7 @@ def test_cli_rechecks_native_mount_after_context_wait(package, monkeypatch, mode
     root, _, _, trusted = package
     monkeypatch.setenv("WAVE1_TRUSTED_AUTHORIZATION_PUBLIC_KEY_SHA256", trusted)
     monkeypatch.setattr(sys, "argv", ["replacement", "--package", str(root), mode])
-    monkeypatch.setattr(cli, "CODE_PATHS", {})
+    monkeypatch.setattr(cli, "verify_runtime", lambda *a: None)
     line = "31 20 0:44 / /g8-durable rw,relatime - virtiofs synthetic-volume rw"
     current = [line]
     observations = []

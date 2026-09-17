@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import argparse
-import importlib.util
+import importlib
 import json
 import os
 import sys
@@ -10,10 +10,10 @@ import tempfile
 import time
 from pathlib import Path
 
-from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import Wave1ExecutionContext
 from app.ml.lightgbm.cloud_runner import _verify_signature
 from app.ml.lightgbm.g8_replacement import CODE_PATHS, job_command, reservation, verify_mount, verify_package
+from app.ml.lightgbm.g8_production_transport import verify_runtime
 
 
 def observed_context(plan, package, trusted_key, *, recovery=False):
@@ -80,9 +80,7 @@ def main():
         print(json.dumps({"package_sha256": plan.identity(), "verified": True, "remote_accessed": False}))
         return
     # Verify actual imports/entrypoints, not just copies included beside the manifest.
-    for name, path in CODE_PATHS.items():
-        if sha256_file(Path(path)) != plan.files[name].sha256:
-            raise ValueError("runtime overlay differs from signed package: " + name)
+    verify_runtime(args.package, plan, CODE_PATHS)
     mount_identity = verify_mount(plan)
     from app.ml.lightgbm.g8_live_recovery import execution_lock, finish_retained, run_live
     from app.ml.lightgbm.g8_mlflow_recovery import ResumeTarget
@@ -91,6 +89,7 @@ def main():
     if args.recover:
         context = observed_context(plan, args.package, trusted, recovery=True)
         verify_package(args.package, trusted_key=trusted, recovery=True)
+        verify_runtime(args.package, plan, CODE_PATHS)
         from app.ml.lightgbm.cloud_runner import _validate_execution_context
         _validate_execution_context(request, context)
         root = Path(plan.mount_path) / plan.run_id
@@ -101,10 +100,8 @@ def main():
             receipt = finish_retained(root, target, limits=TransferLimits(
                 max_files=plan.max_checkpoint_files, max_bytes=plan.max_checkpoint_bytes))
     else:
-        spec = importlib.util.spec_from_file_location("g8_signed_legacy", args.package / "run_lightgbm_g8.py")
-        legacy = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = legacy
-        spec.loader.exec_module(legacy)
+        legacy = importlib.import_module(".run_lightgbm_g8", __package__) if __package__ else (
+            importlib.import_module("run_lightgbm_g8"))
         legacy._validate_request(request, request.input_release_uri, plan.candidate_release_uri)
         legacy._verify_injected_authorization(request, argparse.Namespace(
             authorization=args.package / "authorization.json", authorization_signature=args.package / "authorization.sig",
@@ -114,6 +111,7 @@ def main():
         # Recheck package and native mount identity after the potentially long
         # context wait, immediately before the single-use live entry.
         verify_package(args.package, trusted_key=trusted)
+        verify_runtime(args.package, plan, CODE_PATHS)
         if verify_mount(plan) != mount_identity:
             raise ValueError("durable mount changed while waiting for signed Job context")
         receipt = run_live(plan, request, args.package, legacy)

@@ -12,7 +12,9 @@ else:
     from publish_g8_native_context import MOUNT, check_mount, immutable_write, read_input, sync_directory
 
 
-def publish(source, inventory, inventory_sha256):
+def publish(source, inventory, inventory_sha256, destination_name="package"):
+    if destination_name not in {"package", "production"}:
+        raise ValueError("reviewed native package destination required")
     value = json.loads(read_input(inventory, inventory_sha256, 16384))
     if set(value) != {"files"} or not isinstance(value["files"], dict) or not 1 <= len(value["files"]) <= 32:
         raise ValueError("bounded package inventory required")
@@ -35,7 +37,7 @@ def publish(source, inventory, inventory_sha256):
     } != set(contents):
         raise ValueError("source package inventory differs")
     check_mount()
-    destination = MOUNT / "package"
+    destination = MOUNT / destination_name
     destination.mkdir(mode=0o700, exist_ok=False)  # Never overwrite or reuse a partial package.
     directories = {destination}
     for name, raw in sorted(contents.items()):
@@ -61,4 +63,5 @@ if __name__ == "__main__":
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--inventory", required=True, type=Path)
     parser.add_argument("--inventory-sha256", required=True)
+    parser.add_argument("--destination-name", choices=("package", "production"), default="package")
     print(json.dumps(publish(**vars(parser.parse_args())), sort_keys=True))
