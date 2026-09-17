@@ -65,8 +65,9 @@ The [September 17 native rehearsal](../evidence/g8-native-recovery-20260917.json
 now establishes pre-logging checkpoint retention, recovery in a second Job after
 workspace loss, and authenticated recovery of the same remote MLflow run for
 synthetic inputs. Independent MLflow artifact hashes, metrics and lineage match.
-The Job verified S3 publication; separate S3 readback remains incomplete because
-the MLflow service identity cannot read the results bucket. Production data,
+The Job verified S3 publication; [independent readback](../evidence/g8-independent-s3-readback-20260917.json)
+subsequently verified all 64 objects with the already-authorized development
+identity, after the MLflow identity was denied. No access was widened. Production data,
 actual Java comparisons, quality acceptance and G8 completion remain separate.
 
 The [native rehearsal package](../g8-native-rehearsal-package.md) uses the existing

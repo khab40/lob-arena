@@ -2,7 +2,7 @@
 
 Status: **unsigned review package prepared; no production Job authorized or submitted**.
 This follows [PR #200](https://github.com/khab40/lob-arena/pull/200) and independent
-readback of all 64 rehearsal S3 objects. Their sizes/hashes, SUCCESS inventory,
+[readback of all 64 rehearsal S3 objects](evidence/g8-independent-s3-readback-20260917.json). Their sizes/hashes, SUCCESS inventory,
 checksum inventory and four MLflow artifact hashes match the retained checkpoint.
 
 ## Frozen review bindings

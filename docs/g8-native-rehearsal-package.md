@@ -1,7 +1,7 @@
 # G8 native-storage and MLflow rehearsal package
 
 Status: **native two-Job recovery completed on September 17; independent MLflow
-readback passed; separate S3 readback remains incomplete**.
+and S3 readbacks passed**.
 Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
@@ -42,7 +42,10 @@ Independent authenticated readback through the separate MLflow VM verified
 24 metrics (including single-value histories), 30 dataset inputs, identity tags
 and all four artifact hashes. The Job verified all 64 published S3 objects;
 the separate verifier received AccessDenied using the MLflow service identity.
-That separate S3 check remains open; no permission was widened. The native
+The subsequent [authorized-reader verification](evidence/g8-independent-s3-readback-20260917.json)
+downloaded all 64 objects and verified every size/hash, both inventories and all
+four MLflow artifact hashes. It used the existing development identity without
+widening permissions. The earlier AccessDenied remains preserved history. The native
 checkpoint, package and receipts were downloaded in a verified 828-file archive.
 
 This is synthetic transport/recovery evidence. Dataset lineage uses synthetic

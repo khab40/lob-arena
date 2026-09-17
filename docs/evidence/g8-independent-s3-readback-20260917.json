@@ -1,0 +1,33 @@
+{
+  "schema_version": "g8_independent_s3_readback_v1",
+  "verified_at": "2026-09-17T06:39:32.880225+00:00",
+  "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/final/synthetic-final",
+  "checkpoint_sha256": "d3497ec1a18cc518b029e3cc083379f972cd49716cff05f9f52939e8d2d5792e",
+  "object_count": 64,
+  "total_bytes": 1533279,
+  "all_object_bytes_and_hashes_verified": true,
+  "success_inventory_verified": true,
+  "downloaded_copies_rehashed": true,
+  "checksums_file_exact_inventory_verified": true,
+  "mlflow_run_and_c4_artifact_crosschecked": true,
+  "mlflow_artifact_matches": {
+    "governed-evaluation/c4-evaluation.json": [
+      "artifacts/c4-evaluation.json"
+    ],
+    "governed/checksums.sha256": [
+      "artifacts/bundle/checksums.sha256"
+    ],
+    "governed/model-bundle.json": [
+      "artifacts/bundle/model-bundle.json"
+    ],
+    "governed/prediction-manifest.json": [
+      "artifacts/prediction/prediction-manifest.json"
+    ]
+  },
+  "cloud_writes": 0,
+  "permission_changes": false,
+  "jobs_submitted": 0,
+  "production_g8_complete": false,
+  "full_receipt": "outputs/g8-native-execution-20260916-v7/independent-s3-reader/verification.json",
+  "full_receipt_sha256": "8b6f91abdc33241bd9b291416d2436f0d610b96493193bbcbda7060f5b29e620"
+}
