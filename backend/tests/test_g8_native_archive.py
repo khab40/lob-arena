@@ -11,15 +11,17 @@ from serverless.jobs import g8_native_archive as archive, g8_native_bootstrap as
 from serverless.jobs import g8_native_contract as contract
 
 
-def test_actual_reviewed_sources_fit_two_deterministic_archives(tmp_path):
+def test_actual_reviewed_sources_fit_three_deterministic_archives(tmp_path):
     root = Path(__file__).resolve().parents[2]
     code = {name: (root / ("backend/app/ml/lightgbm" if name.removesuffix(".py") in contract.MODULES
                           else "serverless/jobs") / name).read_bytes() for name in contract.CODE_PATHS}
     packed = archive.build(code)
     assert packed == archive.build(dict(reversed(list(code.items()))))
     assert set(packed) == set(contract.ARCHIVES)
+    assert bootstrap.PACKAGE == contract.PACKAGE == "/g8-package/package"
     for name, raw in packed.items():
-        assert len(raw) <= 65536
+        assert len(raw) <= contract.MAX_INJECTION == bootstrap.MAX_INJECTION == 40 * 1024
+        assert len(packed) == bootstrap.ARCHIVE_COUNT == 3
         (tmp_path / name).write_bytes(raw)
     for name, raw in code.items():
         assert archive.read_code(tmp_path, name) == raw
@@ -61,7 +63,7 @@ def inert_archives(tmp_path, monkeypatch, *, duplicate=False):
     for index, filename in enumerate(contract.ARCHIVES):
         data = io.BytesIO()
         with zipfile.ZipFile(data, "w", compression=zipfile.ZIP_DEFLATED) as target:
-            name = "g8_static_probe" if index == 0 or duplicate else "g8_static_second"
+            name = "g8_static_probe" if index == 0 or duplicate else f"g8_static_probe_{index}"
             target.writestr(name + ".py", b"VALUE = 42\n")
         raw = data.getvalue()
         (tmp_path / filename).write_bytes(raw)

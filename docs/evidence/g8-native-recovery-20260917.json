@@ -1,0 +1,105 @@
+{
+  "schema_version": "g8_native_recovery_evidence_v1",
+  "source_commit": "5b735de3d5a7d458aa4033fb1180495137b60fd5",
+  "execution_package_sha256": "236420f68fcef270305a061d373dd6c078c47fe8fa474474d2ac8ad130387d11",
+  "evidence_directory": "outputs/g8-native-execution-20260916-v7",
+  "score": {
+    "job_id": "aijob-e00rqsnbarhxt04s15",
+    "state": "FAILED",
+    "expected_exit": 73,
+    "scoring_calls": 1
+  },
+  "recovery": {
+    "execution_package_sha256": "236420f68fcef270305a061d373dd6c078c47fe8fa474474d2ac8ad130387d11",
+    "filesystem_id": "computefilesystem-e00vy2fs9w2sm4bm3v",
+    "native_checkpoint_reattachment_verified": true,
+    "original_job_id": "aijob-e00rqsnbarhxt04s15",
+    "original_job_terminal_verified": true,
+    "production_g8_complete": false,
+    "recovery_job_id": "aijob-e00w8srejmj1jz44w4",
+    "state": "COMPLETED",
+    "finished_at": "2026-09-17T05:35:55.312714627Z"
+  },
+  "remote_recovery": {
+    "checkpoint_sha256": "d3497ec1a18cc518b029e3cc083379f972cd49716cff05f9f52939e8d2d5792e",
+    "comparison_kind": "synthetic_contract_fixtures_not_java_execution",
+    "completed_repeat_writes": 0,
+    "conditionally_published_objects": 1,
+    "dataset_lineage_kind": "synthetic_placeholder_not_remote_mlflow_registration",
+    "executing_job_id": "aijob-e00w8srejmj1jz44w4",
+    "execution_package_sha256": "236420f68fcef270305a061d373dd6c078c47fe8fa474474d2ac8ad130387d11",
+    "mlflow_logging_mode": "resume_existing_run",
+    "mlflow_remote_state_verified": true,
+    "mlflow_run_id": "00033cd0aa554002b77c1f46da64cb35",
+    "object_count": 64,
+    "original_workspace_absent": true,
+    "previously_verified_objects": 63,
+    "production_g8_complete": false,
+    "publication_marker_fault_recovered": true,
+    "publication_mlflow_writes": 0,
+    "request_sha256": "6f7d5b2aec04f49719b16ed9146baee472f7373374f1cd0dedf51dddb61ec486",
+    "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/g8-native-rehearsal-20260914/final/synthetic-final",
+    "schema_version": "g8_publication_recovery_receipt_v1",
+    "scoring_invocations": 0,
+    "verified_dataset_inputs": 30,
+    "verified_metric_count": 24
+  },
+  "independent_mlflow": {
+    "run_id": "00033cd0aa554002b77c1f46da64cb35",
+    "status": "FINISHED",
+    "metric_count": 24,
+    "dataset_input_count": 30,
+    "artifact_hashes": {
+      "governed-evaluation/c4-evaluation.json": "2d4a90f58cbaef436e75c2bbb38f705fed71583abe8c5b78e3f7d1c26e41260f",
+      "governed/checksums.sha256": "693fe27bb4f60eb65ccb0507ba6470c45a3807b3ed9ac4df6106c0a761c8a0b8",
+      "governed/model-bundle.json": "006cdf236dbfb06c326f7e2b8cfab21860119bc7f9126d332f0f02cf5494d8a2",
+      "governed/prediction-manifest.json": "fc48f0af3da53550ce629df2812c09659c3c7c1aa2435aa77662c18e761ca6dc"
+    },
+    "single_value_metric_histories_verified": true,
+    "identity_tags_verified": true,
+    "cloud_writes": 0
+  },
+  "independent_s3": {
+    "verified": false,
+    "failure": "AccessDenied on GetObject using the separate MLflow server identity",
+    "permission_changes": false
+  },
+  "provider_mount_error": {
+    "job_id": "aijob-e00w8srejmj1jz44w4",
+    "observed_at": "2026-09-17T05:25:41Z",
+    "reason": "storage_mount",
+    "stage": "workload_preparation",
+    "container_started_at": "2026-09-17T05:25:59Z",
+    "actual_mount_type": "virtiofs",
+    "nonfatal_for_this_execution": true,
+    "cause": "unresolved"
+  },
+  "archive": {
+    "archive": "native-filesystem-evidence.tar.gz",
+    "sha256": "868430ce93b473134b63ac4dfc9d46e75b30f9572def9c188f9e99025b3f568a",
+    "size_bytes": 1885372,
+    "file_count": 828
+  },
+  "evidence_sha256": {
+    "score-terminal.json": "7e24e587126e6ab4965f033c4c59966a651316f263a74000e536d8eaf0bbb834",
+    "recover-terminal.json": "33c679e347b60cbf71d34ca1c77d8c317e0400bac95c072fc06ee4887ec7b121",
+    "independent-native-snapshot.json": "3e9ca6011b049e5b243f7664a4f73d2cccb354694d8db8b67997bf84ae2a57c8",
+    "independent-mlflow.json": "a468597e39648babc48220357b964ab2ff45503467869a12ed939e95c3ccf6fc",
+    "independent-s3-process.json": "9781f4f3fbc083770f9924a23623948e16b16b353aba1e5bd2e65a663a8f24ef",
+    "native-archive-receipt.json": "e9cecefd37710cd245ad791978f330a9cadd17a5d5ad5046b2069196d1b8cc50",
+    "vm-after-stop.json": "cbe5ef17956766065c54935ebad68c488e8d5385c4fa52870cdcafe1503ddd3f",
+    "filesystem-after.json": "fda402cd5c6e795a1faafda3f8641c685e49fe367d825453d71107ab3ccc79f1",
+    "production-key-after.json": "d2767929d188abcef2461848d2055aa1d4812ba602e69cbf33580d50c37fd288",
+    "recover-provider.log": "e9f3550eba46e51dd267df4d4909693d4f1fd2bf9a23f8f07450f8346d3022a4"
+  },
+  "production_g8_complete": false,
+  "g9_unblocked": false,
+  "retention": {
+    "mlflow_vm_state": "STOPPED",
+    "mlflow_vm_resource_version": "65",
+    "filesystem_state": "READY",
+    "filesystem_retained": true,
+    "production_access_key_state": "INACTIVE",
+    "resources_deleted": false
+  }
+}

@@ -11,10 +11,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 if __package__:
-    from .g8_native_contract import BOOTSTRAP, PROJECT
+    from .g8_native_contract import BOOTSTRAP, PACKAGE, PROJECT
     from .g8_native_runtime import actual_runtime, native_mount, observed_context, verify_package
 else:
-    from g8_native_contract import BOOTSTRAP, PROJECT
+    from g8_native_contract import BOOTSTRAP, PACKAGE, PROJECT
     from g8_native_runtime import actual_runtime, native_mount, observed_context, verify_package
 
 
@@ -42,7 +42,7 @@ def main():
     args = parser.parse_args()
     if args.worker and args.phase != "recover":
         parser.error("only recovery has child processes")
-    package = Path("/job/g8")
+    package = Path(PACKAGE)
     trusted = os.environ.get("G8_NATIVE_REVIEWER_SHA256", "")
     plan = verify_package(package, phase=args.phase, trusted=trusted)
     runtime = actual_runtime(plan, package)

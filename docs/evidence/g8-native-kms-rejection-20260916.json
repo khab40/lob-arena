@@ -1,0 +1,32 @@
+{
+  "schema_version": "g8_native_kms_rejection_v1",
+  "status": "provider_rejected_before_job_creation",
+  "source_commit": "68c4569092fb0218ccb7619db330496eb1a0ae20",
+  "rejected_package_sha256": "418f0cf8e336d14a70f7b07ddafc1151d7692f871d550b2bd11580c5ac9d6ee4",
+  "physical_injection_count": 15,
+  "largest_injection_bytes": 65536,
+  "provider_error": "plaintext must not exceed 65536 bytes",
+  "provider_service": "kms-dpl",
+  "provider_request_id": "bada04c6-d6d5-44ec-bd02-22ca09ece47c",
+  "provider_trace_id": "091f9e2892d4fde1b29adb21b1845a9e",
+  "identical_request_dry_run_returncode": 0,
+  "native_jobs_created": 0,
+  "scoring_executions": 0,
+  "mlflow_runs_created": 0,
+  "s3_publications": 0,
+  "vm_final_state": "STOPPED",
+  "vm_resource_version": "59",
+  "filesystem_retained": true,
+  "native_storage_verified": false,
+  "remote_mlflow_artifacts_verified": false,
+  "production_g8_complete": false,
+  "internal_kms_serialization_confirmed": false,
+  "local_evidence": "outputs/g8-native-execution-20260916-v5",
+  "receipt_sha256": {
+    "score-submission/create-process.json": "01a5ed48ab386ec2039e9e4b0b2495ffb3d3f9c5d69e2f3f0026f2a60b3a8403",
+    "provider-dry-run-original-network.json": "6ef52d031d607f6ed38d8ef546e4b00cee7dd25c64ca9b8d2a3ea31c077d788f",
+    "jobs-after-rejection.json": "39de0638af06f35a76ffbf3cacfac1f1d9447b23df6e497ad0837f8277e907f4",
+    "vm-stop-after-kms-rejection.json": "f58ea4c7db173ca9b49ec5d3b70b2e54e9bf2ab418c368c97f1d8f00a68b0c73",
+    "mlflow-readiness-confirmed.json": "fa5c26ef351c9001fe543e33538d591725f72537109ceca732215526347e8f3b"
+  }
+}

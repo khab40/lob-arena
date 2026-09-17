@@ -9,12 +9,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 if __package__:
-    from .g8_native_contract import CODE_PATHS, NativePlan, canonical, environment, injections
+    from .g8_native_contract import CODE_PATHS, MAX_INJECTION, NativePlan, canonical, environment, injections
     from .g8_native_archive import read_code
     from .g8_native_readback import verify_readback, verify_previous_job, verify_registry
     from .g8_native_source_capsule import verify as verify_capsule
 else:
-    from g8_native_contract import CODE_PATHS, NativePlan, canonical, environment, injections
+    from g8_native_contract import CODE_PATHS, MAX_INJECTION, NativePlan, canonical, environment, injections
     from g8_native_archive import read_code
     from g8_native_readback import verify_readback, verify_previous_job, verify_registry
     from g8_native_source_capsule import verify as verify_capsule
@@ -59,7 +59,7 @@ def verify_filesystem(filesystem, expected_id):
 
 
 def verify_package(package, *, phase, trusted, now=None):
-    raw = bounded(package / "native-plan.json")
+    raw = bounded(package / "native-plan.json", MAX_INJECTION)
     signed(raw, bounded(package / "native-plan.sig", 64), bounded(package / "reviewer-public.pem"), trusted)
     plan = NativePlan.model_validate_json(raw)
     if raw != canonical(plan):
@@ -72,7 +72,7 @@ def verify_package(package, *, phase, trusted, now=None):
     # Authenticate archive bytes before interpreting member metadata/content.
     for name in sorted(plan.files, key=lambda name: name in CODE_PATHS):
         ref = plan.files[name]
-        content = read_code(package, name) if name in CODE_PATHS else bounded(package / name)
+        content = read_code(package, name) if name in CODE_PATHS else bounded(package / name, MAX_INJECTION)
         if len(content) != ref.size_bytes or hashlib.sha256(content).hexdigest() != ref.sha256:
             raise ValueError("package bytes differ: " + name)
     verify_capsule(package / "source-capsule")
@@ -102,6 +102,9 @@ def native_mount(plan, mountinfo=None):
 
 
 def actual_runtime(plan, package):
+    for name in (set(plan.files) - set(CODE_PATHS)) | {"native-plan.json", "native-plan.sig"}:
+        if not os.statvfs(package / name).f_flag & os.ST_RDONLY:
+            raise ValueError("native package files must be read-only: " + name)
     for path, name in injections(plan).items():
         path = Path(path)
         if bounded(path) != bounded(package / name) or not os.statvfs(path).f_flag & os.ST_RDONLY:

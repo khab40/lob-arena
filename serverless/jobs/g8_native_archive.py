@@ -5,9 +5,9 @@ import io
 import zipfile
 
 if __package__:
-    from .g8_native_contract import ARCHIVES, CODE_PATHS, MODULES
+    from .g8_native_contract import ARCHIVES, CODE_PATHS, MAX_INJECTION, MODULES
 else:
-    from g8_native_contract import ARCHIVES, CODE_PATHS, MODULES
+    from g8_native_contract import ARCHIVES, CODE_PATHS, MAX_INJECTION, MODULES
 
 
 def member(name):
@@ -17,7 +17,7 @@ def member(name):
 
 def groups():
     names = sorted(CODE_PATHS)
-    return {archive: names[index::2] for index, archive in enumerate(ARCHIVES)}
+    return {archive: names[index::len(ARCHIVES)] for index, archive in enumerate(ARCHIVES)}
 
 
 def build(code):
@@ -35,7 +35,7 @@ def build(code):
                 info.external_attr = 0o100444 << 16
                 target.writestr(info, code[name], compresslevel=9)
         result[archive] = buffer.getvalue()
-        if len(result[archive]) > 65536:
+        if len(result[archive]) > MAX_INJECTION:
             raise ValueError("code archive exceeds Nebius injected-file limit")
     return result
 
@@ -47,7 +47,7 @@ def read_code(package, name):
         if name not in names:
             continue
         path = package / archive
-        if path.absolute() != path.resolve() or path.stat().st_size > 65536:
+        if path.absolute() != path.resolve() or path.stat().st_size > MAX_INJECTION:
             raise ValueError("bounded canonical archive required")
         with zipfile.ZipFile(io.BytesIO(path.read_bytes())) as source:
             expected = [member(n) for n in names]

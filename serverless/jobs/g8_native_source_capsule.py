@@ -12,7 +12,9 @@ from pathlib import Path
 
 SOURCE_SHA256 = "792b25de957556d287ec2812645fe36f92aeca79b89bc62448e071f67cc60de9"
 ACCESS_ID_SHA256 = "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d"
-MAX_INJECTION = 64 * 1024
+# Transport headroom below the observed 64 KiB KMS plaintext boundary.
+# This is our conservative bound, not a documented Nebius encoding formula.
+MAX_INJECTION = 40 * 1024
 METADATA = (
     "authorization/authorization-public.pem", "authorization/authorization.json",
     "authorization/authorization.sig", "c4-inputs.json", "c4-profile.json", "request.json",
@@ -86,7 +88,7 @@ def verify(capsule: Path):
         if sha(regular(capsule / f"metadata-{index}.part", size=entry["size_bytes"])) != entry["sha256"]:
             raise ValueError("capsule metadata differs: " + name)
     return {
-        "schema_version": "g8_native_source_capsule_v1", "source_package_sha256": SOURCE_SHA256,
+        "schema_version": "g8_native_source_capsule_v2", "source_package_sha256": SOURCE_SHA256,
         "injections": {name: {"sha256": sha((capsule / name).read_bytes()),
                               "size_bytes": (capsule / name).stat().st_size} for name in sorted(names)},
         "remote_object_count": sum(e["path"].startswith("sources/") for e in entries),

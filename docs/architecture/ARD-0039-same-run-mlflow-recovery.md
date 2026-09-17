@@ -60,9 +60,24 @@ four verified artifacts, including reordered tag readback and zero writes on
 completed recovery. Lost create, metric, artifact and FINISHED responses are
 covered by the [recovery rehearsal](../g8-mlflow-recovery.md).
 
-The production runner still uses its legacy logger and temporary workspace.
-Pre-logging scored-payload retention, fresh-process recovery after workspace
-loss, native-mount durability and authenticated remote rehearsal remain open.
+The production runner still needs a reviewed replacement execution package.
+The [September 17 native rehearsal](../evidence/g8-native-recovery-20260917.json)
+now establishes pre-logging checkpoint retention, recovery in a second Job after
+workspace loss, and authenticated recovery of the same remote MLflow run for
+synthetic inputs. Independent MLflow artifact hashes, metrics and lineage match.
+The Job verified S3 publication; separate S3 readback remains incomplete because
+the MLflow service identity cannot read the results bucket. Production data,
+actual Java comparisons, quality acceptance and G8 completion remain separate.
+
+The [native rehearsal package](../g8-native-rehearsal-package.md) uses the existing
+filesystem for hash-verified package staging and checkpoint retention. Its Job
+mounts that filesystem read-only for package loading and read-write for recovery
+evidence. Only the small bootstrap uses Job file injection; both earlier bulk
+injection layouts failed at KMS before any Job existed. Signed package checks,
+injected archive hash anchors and in-memory code loading remain required. Neither
+read-only mounting nor provider dry-run proves successful native recovery. The
+completed two-Job execution supplies that evidence. Its provider preparation
+logs also contain a nonfatal mount error whose cause remains unresolved.
 
 ## Alternatives and consequences
 

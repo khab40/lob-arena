@@ -43,10 +43,17 @@ def submit(package, phase):
         raise ValueError("submission requires the clean signed source commit")
     evidence = package.parent / (phase + "-submission")
     evidence.mkdir(mode=0o700, exist_ok=False)  # Never retry an ambiguous create.
+    argv = job_command(plan, package, phase=phase) + ["--no-browser", "--retries", "1"]
+    # Provider validation catches request errors, but does not exercise the
+    # KMS persistence path: the rejected v3 package also passed this dry-run.
+    validation = invoke(argv + ["--dry-run"])
+    write(evidence / "dry-run-process.json", {"returncode": validation.returncode,
+          "stdout": validation.stdout, "stderr": validation.stderr})
+    if validation.returncode:
+        raise RuntimeError("provider dry-run failed; no create attempted")
     registry = _verify_short_tag(plan.deployment_image, plan.image)
     verify_registry(registry)
     write(evidence / "registry-before.json", registry)
-    argv = job_command(plan, package, phase=phase) + ["--no-browser", "--retries", "1"]
     write(evidence / "intent.json", {"package_sha256": plan.identity(), "argv": argv})
     result = invoke(argv)
     write(evidence / "create-process.json", {"returncode": result.returncode,

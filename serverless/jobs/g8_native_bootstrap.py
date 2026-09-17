@@ -11,6 +11,11 @@ import runpy
 import sys
 import zipfile
 
+# Independent bootstrap cannot import unverified overlays for these constants.
+MAX_INJECTION = 40 * 1024
+ARCHIVE_COUNT = 3
+PACKAGE = "/g8-package/package"
+
 
 class Overlays(importlib.abc.MetaPathFinder, importlib.abc.SourceLoader):
     def __init__(self, sources):
@@ -33,9 +38,9 @@ class Overlays(importlib.abc.MetaPathFinder, importlib.abc.SourceLoader):
 
 def install(package):
     sources = {}
-    for index in range(2):
+    for index in range(ARCHIVE_COUNT):
         path = package / f"native-code-{index}.zip"
-        if (path.absolute() != path.resolve() or not path.is_file() or path.stat().st_size > 65536
+        if (path.absolute() != path.resolve() or not path.is_file() or path.stat().st_size > MAX_INJECTION
                 or not os.statvfs(path).f_flag & os.ST_RDONLY):
             raise ValueError("bounded read-only code archive required")
         raw = path.read_bytes()
@@ -61,5 +66,5 @@ def install(package):
 
 if __name__ == "__main__":
     sys.dont_write_bytecode = True
-    install(Path(__file__).resolve().parent)
+    install(Path(PACKAGE))
     runpy.run_module("run_g8_native_rehearsal", run_name="__main__")
