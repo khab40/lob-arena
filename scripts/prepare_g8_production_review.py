@@ -17,7 +17,7 @@ from scripts.g8_production_review_inputs import collect, digest  # noqa: E402
 
 
 def prepare(*, r4, candidate, rehearsal, output, run_id, frozen_root=None):
-    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,118}", run_id):
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,53}", run_id):
         raise ValueError("bounded new run ID required, including recovery name headroom")
     if output.absolute() != output.resolve():
         raise ValueError("canonical review destination required")

@@ -13,7 +13,7 @@ from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest
 from app.ml.lightgbm.cloud_runner import _verify_signature
 from app.ml.lightgbm.g8_mlflow_recovery import ReservationSpec
-from app.ml.lightgbm.g8_production_transport import ARCHIVES, BOOTSTRAP, DEPLOYMENT_IMAGE, PACKAGE, verify_archives
+from app.ml.lightgbm.g8_production_transport import ARCHIVES, BOOTSTRAP, DEPLOYMENT_IMAGE, MAX_FILE, PACKAGE, verify_archives
 
 SHA = r"^[0-9a-f]{64}$"
 IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2"
@@ -35,13 +35,13 @@ class Strict(BaseModel):
 
 class PackageFile(Strict):
     sha256: str = Field(pattern=SHA)
-    size_bytes: int = Field(gt=0, le=64 * 1024)
+    size_bytes: int = Field(gt=0, le=MAX_FILE)
 
 
 class ReplacementPlan(Strict):
     schema_version: Literal["g8_replacement_plan_v3"] = "g8_replacement_plan_v3"
     source_commit: str = Field(pattern=r"^[a-f0-9]{40}$")
-    run_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,127}$")
+    run_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,53}$")
     request_sha256: str = Field(pattern=SHA)
     candidate_sha256: str = Field(default=CANDIDATE, pattern=SHA)
     image: Literal[IMAGE] = IMAGE
@@ -141,6 +141,7 @@ def verify_package(root: Path, *, trusted_key: str, now: datetime | None = None,
         raise ValueError("replacement verification timestamp is in the future")
     request = LightGbmCloudJobRequest.model_validate_json((root / "request.json").read_bytes())
     if (request.canonical_hash() != plan.request_sha256 or request.run_id != plan.run_id
+            or request.git_commit != plan.source_commit
             or request.mode != "final-evaluation" or request.candidate is None
             or request.candidate.sha256 != plan.candidate_sha256 or request.image != plan.image
             or request.input.kind != "tabular-projection"

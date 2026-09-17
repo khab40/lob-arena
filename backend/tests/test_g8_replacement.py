@@ -58,7 +58,7 @@ def package(tmp_path, synthetic, monkeypatch):
                       ("authorization_public_key", "authorization-public.pem")):
         refs[key] = CloudArtifact(logical_name=key, uri="authorization/" + name, sha256=sha256_file(root / name),
                                   size_bytes=(root / name).stat().st_size)
-    request = request.model_copy(update=refs)
+    request = request.model_copy(update={**refs, "git_commit": "a" * 40})
     (root / "request.json").write_bytes(request.canonical_bytes())
     # Freeze the synthetic identities for this unit test only. No production bypass flag exists.
     monkeypatch.setattr(replacement, "CANDIDATE", request.candidate.sha256)
