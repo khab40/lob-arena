@@ -14,7 +14,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "autoprefixer": "^10.5.6",
+    "autoprefixer": "^10.6.0",
     "postcss": "^8.5.28",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
