@@ -66,5 +66,10 @@ def install(package):
 
 if __name__ == "__main__":
     sys.dont_write_bytecode = True
-    install(Path(PACKAGE))
-    runpy.run_module("run_g8_native_rehearsal", run_name="__main__")
+    target = os.environ.get("G8_NATIVE_TARGET", "rehearsal")
+    if target not in {"rehearsal", "production"}:
+        raise ValueError("unreviewed native entrypoint")
+    package, entrypoint = (PACKAGE, "run_g8_native_rehearsal") if target == "rehearsal" else (
+        "/g8-package/production", "run_lightgbm_g8_replacement")
+    install(Path(package))
+    runpy.run_module(entrypoint, run_name="__main__")

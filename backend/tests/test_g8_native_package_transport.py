@@ -40,6 +40,21 @@ def test_publish_verifies_native_bytes_and_never_replaces(staging):
     assert destination.read_bytes() == b"frozen bytes"
 
 
+def test_production_staging_preserves_rehearsal_package(staging):
+    source, inventory, mount = staging
+    publish(staging)
+    receipt = publisher.publish(source, inventory, hashlib.sha256(inventory.read_bytes()).hexdigest(),
+                                destination_name="production")
+    assert receipt["native_package_bytes_verified"]
+    assert (mount / "package/nested/inert.txt").read_bytes() == b"frozen bytes"
+    assert (mount / "production/nested/inert.txt").read_bytes() == b"frozen bytes"
+    with pytest.raises(FileExistsError):
+        publisher.publish(source, inventory, hashlib.sha256(inventory.read_bytes()).hexdigest(),
+                          destination_name="production")
+    with pytest.raises(ValueError, match="destination"):
+        publisher.publish(source, inventory, "0" * 64, destination_name="../elsewhere")
+
+
 @pytest.mark.parametrize("fault", ["tamper", "link", "extra", "path", "oversize", "inventory-hash"])
 def test_invalid_input_fails_before_native_writes(staging, fault):
     source, inventory, mount = staging

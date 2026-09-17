@@ -8,19 +8,20 @@ pytest.importorskip("lightgbm")
 pytest.importorskip("mlflow")
 
 from app.ml.lightgbm.g8_replacement import CODE_PATHS, ReplacementPlan  # noqa: E402
+from app.ml.lightgbm.g8_production_transport import ARCHIVES, BOOTSTRAP  # noqa: E402
 
 
 def replacement_values():
     values = {name: get_args(field.annotation)[0]
               for name, field in ReplacementPlan.model_fields.items()
               if get_origin(field.annotation) is Literal}
-    files = set(CODE_PATHS) | {
+    files = set(CODE_PATHS) | set(ARCHIVES) | {BOOTSTRAP,
         "request.json", "profile.json", "frozen-root.json", "projection.json", "candidate.json",
         "c4-inputs.json", "dataset-lineage.json", "authorization.json", "authorization.sig",
         "authorization-public.pem", "native-durability.json", "remote-roundtrip.json",
         "comparison-inventory.json",
     }
-    values.update(run_id="replacement-new", request_sha256="a" * 64,
+    values.update(source_commit="a" * 40, run_id="replacement-new", request_sha256="a" * 64,
         filesystem_id="computefilesystem-example", mount_source="native", capacity_gib=10,
         max_checkpoint_bytes=1024, max_checkpoint_files=10,
         comparison_relative_path="comparison/original/comparison.json",

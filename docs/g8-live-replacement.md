@@ -1,7 +1,8 @@
 # G8 replacement integration and approval gates
 
-Next implementation slice: [native-storage and MLflow rehearsal package](g8-native-rehearsal-package.md).
-The source capsule and native entrypoint are implemented; live execution bindings and native/remote proof remain open.
+Current implementation: [production native review package](g8-production-package.md).
+The native rehearsal completed and independent S3/MLflow readbacks passed.
+Production package preparation does not authorize final-test access or execution.
 
 Status: engineering implementation; **not final-test or provisioning authority**.
 G8 remains open and G9 blocked. This follows merged PR #177, from updated main
@@ -27,7 +28,7 @@ package, run directory and filesystem; only the Job name
 gets a `-recovery` suffix. Neither code nor this
 document authorizes issuing the rendered command.
 
-The canonical, Ed25519-signed `replacement.json` uses `g8_replacement_plan_v2`
+The canonical, Ed25519-signed `replacement.json` uses `g8_replacement_plan_v3`
 (`ReplacementPlan`) in
 `backend/app/ml/lightgbm/g8_replacement.py`. It binds:
 
@@ -35,9 +36,9 @@ The canonical, Ed25519-signed `replacement.json` uses `g8_replacement_plan_v2`
   digests, one replacement, and the no-tuning constraint. The first-run v2 receipt
   cannot stand in for this exception. A fresh candidate authorization is required.
 - The unchanged production candidate/image and original final C4 root/projection
-  hashes and release URI; the corrected `artifacts` layout; the complete C4
+  hashes and release URI; source commit matching the request; the corrected `artifacts` layout; the complete C4
   profile, original comparison package, request, lineage and code-file hashes.
-- A single native filesystem ID at `/g8-durable`, rehearsal-observed virtiofs
+- A single native filesystem ID at `/g8-durable:rw` and `/g8-package:ro`, rehearsal-observed virtiofs
   source, capacity, transfer bounds, version-pinned MysteryBox selectors and
   exact subnet. No S3/FUSE mount, nested mount, writable code injection or public
   endpoint is introduced.
@@ -53,11 +54,21 @@ The canonical, Ed25519-signed `replacement.json` uses `g8_replacement_plan_v2`
   not an expiry on subsequent submission or recovery.
 
 
-The exact required flat file allowlist is enforced by `ReplacementPlan`.
-Each injection is at most 64 KiB; its byte count and SHA-256 are verified.
-The `CODE_PATHS` mapping renders the required overlay mounts as well as package
-copies, and the live CLI verifies the installed runtime files against the plan.
-No unsigned production example is presented as ready.
+The exact flat file allowlist is enforced by `ReplacementPlan`; every physical
+member is bounded to 40 KiB. Only `g8_native_bootstrap.py` is injected. Three
+deterministic archives and their exact source copies are signed package members
+on `/g8-package/production`. Injected archive hash anchors are checked before
+in-memory imports. The production CLI verifies the actual loader bytes, bootstrap
+and read-only files before final access and again after signed-context waiting.
+The writable checkpoint alias shares the underlying filesystem, so this is
+hash-bound integrity rather than a claim of immutable storage.
+
+Command rendering uses the existing short image alias to avoid the provider's
+image-label length failure; `plan.image` retains the full frozen digest. Before
+submission, independently verify alias-to-digest mapping, preserve a create
+intent, submit once and validate the returned Job. Dry-run does not prove KMS
+persistence or runtime readiness. Rendering alone is not submission approval.
+The unsigned review tool deliberately emits no `replacement.json` or signature.
 
 After the operator submits the reviewed command **once**, they retain the actual
 Nebius API readback and stage an operator-signed context at
@@ -65,7 +76,7 @@ Nebius API readback and stage an operator-signed context at
 `execution_package_sha256`, `filesystem_id`, `context` (a
 `Wave1ExecutionContext` with the actual `aijob-...` ID), and
 `job_readback_sha256`, and `purpose` (`execute`). Sign with the same trusted operator key. Review the actual
-Job image, injected file identities, one volume, resources, credentials selectors,
+Job image, the one bootstrap injection, both volume aliases/modes, resources, credentials selectors,
 network and restart policy before releasing this context. The runner waits at
 most five minutes without accessing final data.
 An ambiguous Job-create response is **not permission to submit again**; recover
