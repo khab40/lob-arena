@@ -6,10 +6,13 @@ useDefault = true
 # binds the publication/readback receipts to the version-pinned staging identity.
 # Match the detected value so this survives merges and evidence line changes.
 [allowlist]
-description = "Reviewed G8 Lockbox resource IDs and access-ID fingerprint"
+description = "Reviewed G8 resource IDs, access-ID fingerprint and metadata receipt checksum"
 regexTarget = "secret"
 regexes = [
   '''^mbsec-e00arhndyprqr8egjw$''',
   '''^mbsec-e00s7qtjj5n9ghacnh$''',
   '''^4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d$''',
+  # SHA-256 of production-key-after.json (inactive key metadata, no secret payload).
+  # Recorded in docs/evidence/g8-native-recovery-20260917.json.
+  '''^d2767929d188abcef2461848d2055aa1d4812ba602e69cbf33580d50c37fd288$''',
 ]
