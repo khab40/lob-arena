@@ -1,6 +1,7 @@
 # G8 native-storage and MLflow rehearsal package
 
-Status: **native VM handoff verified; submissions rejected before Job creation**.
+Status: **native two-Job recovery completed on September 17; independent MLflow
+readback passed; separate S3 readback remains incomplete**.
 Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.
 This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
@@ -19,6 +20,34 @@ VM was stopped and restored, and the empty filesystem deleted. No Job was create
 See the [rejection receipt](evidence/g8-native-injection-rejection-20260916.json).
 
 ## Bootstrap injection and native package transport
+
+### September 17 execution evidence
+
+The [native execution receipt](evidence/g8-native-recovery-20260917.json) records
+the v5 package from commit `5b735de3d5a7d458aa4033fb1180495137b60fd5`.
+The score Job `aijob-e00rqsnbarhxt04s15` scored once, sealed its checkpoint and
+exited deliberately with code 73. The recovery Job `aijob-e00w8srejmj1jz44w4`
+reattached that filesystem and **COMPLETED at 2026-09-17 05:35:55 UTC**.
+It recovered the same MLflow run after a deliberate artifact-upload interruption,
+recovered publication after withholding SUCCESS, and verified a completed repeat
+with zero writes. No recovery scoring or new MLflow run was allowed.
+
+Both Jobs emitted a provider `storage_mount` preparation error before starting
+their containers. The recovery runtime nevertheless verified the expected
+`virtiofs` identity, loaded the read-only package and recovered the retained
+checkpoint. Preserve the error: its cause is unknown, and successful execution
+does not establish why the provider reported it.
+
+Independent authenticated readback through the separate MLflow VM verified
+24 metrics (including single-value histories), 30 dataset inputs, identity tags
+and all four artifact hashes. The Job verified all 64 published S3 objects;
+the separate verifier received AccessDenied using the MLflow service identity.
+That separate S3 check remains open; no permission was widened. The native
+checkpoint, package and receipts were downloaded in a verified 828-file archive.
+
+This is synthetic transport/recovery evidence. Dataset lineage uses synthetic
+placeholders and rules comparisons use contract fixtures, not actual Java
+execution. It neither qualifies production model quality nor closes G8/G9.
 
 The v5 package injects only the small read-only bootstrap. The bulk package is
 staged on the existing native filesystem and mounted read-only at `/g8-package`;
@@ -69,8 +98,8 @@ verification is repeated after context waiting, before source access.
 The wrapper retains a [provider dry-run](https://docs.nebius.com/cli/reference/ai/job/create)
 receipt before checking the registry and writing a create intent. A failure stops
 submission; a pass does not prove KMS persistence, mount access or runtime success.
-Preserve both rejected packages and intents. Build a new v5 package from the same
-frozen sources; native acceptance and end-to-end recovery still require evidence.
+Preserve both rejected packages and intents. The September 17 v5 execution above
+establishes native acceptance and recovery for the unchanged synthetic sources.
 
 ## Existing short-tag exception
 
@@ -183,7 +212,7 @@ plan bindings and an existing Ed25519 reviewer key. It archives the 22 reviewed
 code files and copies the bootstrap, eight capsule parts, filesystem
 evidence and reviewer public key. It signs the immutable manifest and prints the
 two wrapper commands without submitting. The bootstrap is the only injected file.
-Only the bootstrap is injected. The builder also emits `package-transport.json`
+The builder also emits `package-transport.json`
 outside the package, with hashes and sizes for every physical file. Copy the
 package and inventory through the existing SSH operator path and run
 `scripts/publish_g8_native_package.py` on the VM with `--source`, `--inventory`
