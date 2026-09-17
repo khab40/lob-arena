@@ -1,6 +1,8 @@
 """Static transport checks use inert code, never the frozen model runtime."""
 import hashlib
+import ast
 import os
+from pathlib import Path
 import sys
 from types import SimpleNamespace
 
@@ -8,6 +10,18 @@ import pytest
 
 from app.ml.lightgbm import g8_production_transport as transport
 from serverless.jobs import g8_native_bootstrap as bootstrap
+
+
+def test_actual_source_archives_fit_bootstrap_without_importing_runtime():
+    repo = Path(__file__).resolve().parents[2]
+    contract = repo / "backend/app/ml/lightgbm/g8_replacement.py"
+    modules = next(ast.literal_eval(node.value) for node in ast.parse(contract.read_text()).body
+                   if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", None) == "MODULES")
+    paths = {name + ".py": "/job/backend/app/ml/lightgbm/" + name + ".py" for name in modules}
+    paths.update({name: "/job/g8/" + name for name in ("run_lightgbm_g8.py", "run_lightgbm_g8_replacement.py")})
+    code = {name: (repo / ("backend/app/ml/lightgbm" if name.removesuffix(".py") in modules
+                           else "serverless/jobs") / name).read_bytes() for name in paths}
+    assert set(transport.build_archives(code, paths)) == set(transport.ARCHIVES)
 
 
 @pytest.fixture
