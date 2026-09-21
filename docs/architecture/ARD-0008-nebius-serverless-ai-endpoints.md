@@ -34,17 +34,7 @@ order-book alert scoring and report generation for the Nebius demo path.
 
 Use Nebius Serverless AI Endpoints for interactive AI requests:
 
-```mermaid
-graph TD
-    Endpoints["Nebius Serverless AI Endpoints"]
-    Judge["Real-time AI judge"]
-    Explain["Explanation generation"]
-    Narrator["Scenario narrator"]
-
-    Endpoints --> Judge
-    Endpoints --> Explain
-    Endpoints --> Narrator
-```
+See the [endpoint roles](ARD-0005-nebius-endpoint-contract.md#decision) in the endpoint contract.
 
 The FastAPI backend is the integration boundary. It reads endpoint URLs and
 optional tokens from environment variables, shapes request payloads, handles
@@ -53,23 +43,7 @@ configured.
 
 ## Endpoint Flow
 
-```mermaid
-graph TD
-    UI["1. React UI posts /api/incidents/id/explain"]
-    API["2. FastAPI backend receives request"]
-    Store["3. Incident store loads evidence"]
-    Nebius["4. Backend posts structured evidence to Nebius"]
-    Explanation["5. Nebius returns typed explanation JSON"]
-    Evidence["6. Backend archives response metadata and artifacts"]
-    Render["7. UI renders risk, summary, evidence bullets, action"]
-
-    UI --> API
-    API --> Store
-    Store --> Nebius
-    Nebius --> Explanation
-    Explanation --> Evidence
-    Evidence --> Render
-```
+See the [endpoint flow](ARD-0005-nebius-endpoint-contract.md#endpoint-flow) in the endpoint contract.
 
 ## Endpoint Responsibilities
 
