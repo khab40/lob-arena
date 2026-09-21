@@ -209,13 +209,16 @@ Remaining critical path:
 
 1. Verify the original 27 Java/C3 checkpoints and genuine dataset registration;
    complete frozen projection, C4 profile, comparison inventory and input bindings.
-   The original Jobs are located, but metadata GET is denied to the current reader;
-   the [bounded metadata grant](evidence/g8-comparison-metadata-access-proposal-20260921.json)
-   is prepared pending approval, with no access change applied.
+   The approved [89-object metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+   passed and all temporary access is removed. Original payload-byte verification
+   and live MLflow registration remain open; metadata bindings are prepared.
 2. Verify the changed production bootstrap, mounts and context handoff on Nebius
    without final scoring. Record resources, finite timeout, Job count and identities.
 3. Complete current credential/permission, image-alias, storage, MLflow and
    output/intent preflight; assemble the canonical request and complete v3 package.
+   The measured 2.451 GiB comparison inventory cannot fit the current 10 GiB
+   recovery contract. A [32 GiB expansion](evidence/g8-production-capacity-proposal-20260921.json)
+   is proposed; approval, actual free-space verification and new storage bindings remain.
 4. Obtain replacement-specific final-test approval and sign the reviewed package;
    bind actual Job context separately after create. Never reuse R4 authorization.
 5. Execute the one approved replacement, retain scored outputs before logging,

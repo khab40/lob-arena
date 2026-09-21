@@ -60,17 +60,35 @@ G9 remains blocked, and actual model quality is not established by this package.
 
 ## September 21 readiness continuation
 
-The [readiness receipt](evidence/g8-production-readiness-20260921.json) locates the
-completed original C3 test-date Job and C4 projection Job through fresh provider
-readback. Their completed states do not prove current checkpoint availability.
-The exact original `preparation.json` GET is denied to the development identity;
-its current bucket grant covers `releases/*`, not preparation metadata.
+Fresh provider readback located the completed original C3 test-date and C4 Jobs.
+The original preparation metadata initially returned AccessDenied; the
+[initial readiness receipt](evidence/g8-production-readiness-20260921.json) preserves
+that observation. The operator then approved the exact 89-key metadata scope.
 
-The [proposed metadata read grant](evidence/g8-comparison-metadata-access-proposal-20260921.json)
-adds `storage.viewer` for 89 exact metadata keys in the development bucket,
-preserving both existing rules. It requires explicit approval and a fresh baseline
-check; no policy change has been applied. The bounded audit reads no rows, Parquet,
-checkpoint payloads or final-bucket objects, submits no Jobs, and removes the
-appended rule afterward. Full original payload verification and live dataset
-registration remain separate gates. The native filesystem is READY (10 GiB),
-the MLflow VM is STOPPED and the production final key remains INACTIVE.
+The [completed metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+verified all 27 original checkpoint inventories, 30 replay domains and the unchanged
+final projection manifest: 89 objects / 273,680 bytes, with no row or payload reads.
+Nebius rejected the large single policy, so the same exact keys were granted in
+12 batches of at most eight. Every temporary rule was removed; the complete bucket
+spec was restored (resource version 34 → 58), and a fresh metadata GET was denied.
+No model Job, final-bucket access or object write occurred.
+
+The unsigned metadata supplement at
+`outputs/g8-production-readiness-20260921/production-metadata-bindings/` prepares
+`projection.json`, `profile.json`, `comparison-inventory.json`, `c4-inputs.json`
+and the comparison manifest. Its hashes are in the audit receipt. It does not
+assert full payload verification, live dataset registration or execution authority.
+Preserve the original v2 review rather than silently changing its hash.
+
+The original comparison inventory contains **2,632,277,460 bytes (2.451 GiB)**.
+Scored retention copies all 27 checkpoint trees. A 10 GiB filesystem permits a
+maximum 2 GiB checkpoint under the five-copy guard, so production cannot use the
+rehearsal's current capacity. The [capacity proposal](evidence/g8-production-capacity-proposal-20260921.json)
+expands the same filesystem to 32 GiB and proposes a 4 GiB checkpoint bound,
+requiring 20 GiB actual free space before final access. It is not applied; fresh
+mount/capacity evidence and updated production bindings are required after approval.
+The original rehearsal's 10 GiB receipt remains historical evidence.
+
+Remaining gates: full original comparison payload verification/staging, live C4
+registration, sufficient native capacity, production transport verification,
+current preflight and replacement-specific authorization. G8 remains open.

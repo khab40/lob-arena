@@ -595,9 +595,11 @@ Remaining work, in order:
    profile, comparison inventory and input-location metadata. Use retained metadata
    first; preserve the separate gate for protected final-data access. Missing
    original evidence is a blocker, not permission to regenerate rules or use fixtures.
-   September 21: original Jobs are located, but the exact preparation-metadata GET
-   is denied. The [89-key metadata-only proposal](evidence/g8-comparison-metadata-access-proposal-20260921.json)
-   is prepared and unapplied; see the [readiness receipt](evidence/g8-production-readiness-20260921.json).
+   September 21: the approved [metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+   verified all 27 checkpoint inventories, 30 replay domains and the frozen projection.
+   All 89 metadata reads passed; temporary permissions were removed and denial
+   reverified. Metadata bindings are prepared; full payload-byte verification and
+   live MLflow registration remain pending.
 2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
    imports, mount checks and signed-context handoff without production final scoring.
    Record exact package/image/source hashes and actual Job/filesystem identities.
@@ -606,8 +608,12 @@ Remaining work, in order:
    mount error against actual mount observations; retain its unresolved history.
 3. **Complete package and preflight.** Check current identity/permissions, versioned
    secrets, pinned image alias, MLflow readiness, native capacity and output/intent
-   state. Bind verified comparison inputs and canonical request to the complete v3
-   plan. Keep scored/recovery evidence durable. Follow the [validation policy](model-validation-execution-policy.md);
+   state. The original comparison payload is 2.451 GiB, exceeding the 2 GiB
+   checkpoint ceiling imposed by the current 10 GiB/five-copy capacity contract.
+   The [32 GiB capacity proposal](evidence/g8-production-capacity-proposal-20260921.json)
+   is prepared, not applied. Verify actual free space and rebind production storage
+   evidence after approved expansion. Bind comparison inputs and canonical request
+   to the complete v3 plan. Keep scored/recovery evidence durable. Follow the [validation policy](model-validation-execution-policy.md);
    do not reinstate historical billing-freshness, package-expiry or fixed-VM gates.
 4. **Obtain replacement-specific approval and sign.** Review the concrete package,
    run scope and resource bounds, then obtain the exception for at most one
