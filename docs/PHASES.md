@@ -522,20 +522,19 @@ Planned work:
   `SUCCESS`. Seven of the 20 development-job slots are consumed and 13 remain.
   Spend was reconciled at USD 8.57 including VAT; all 16 gates passed, MLflow
   is stopped and G5 is unlocked. No rerun is authorized or needed.
-- `[in progress]` Build the selective official-public-sample data foundation,
-  root corpus/split and fold-isolated tabular/sequence projections required for
-  G5-G8 and the later Transformer/cascade waves.
-- `[todo]` Run deterministic-repeat, tuning, calibration and one governed
-  evaluation workflow through CPU Serverless AI Jobs.
-- `[todo]` Store immutable inputs and outputs in Standard Object Storage and
-  index hashes, parameters, metrics and artifact pointers in shared MLflow.
-- `[todo]` Compare rules and LightGBM on identical rows, including per-family
-  recall, PR-AUC, clean-window false alerts, detection delay and calibration.
-- `[todo]` Measure wall-clock duration, rows/second, CPU utilization, peak
-  memory, active compute time and estimated cost per run and per million rows.
-- `[todo]` Publish a verified model bundle with candidate and rollback
-  identities. Promotion remains a governed decision, not an automatic result
-  of a single metric.
+- `[done]` Complete C0–C4: governed four-date corpus/split and fold-isolated
+  tabular/sequence projections, including C4 lineage and data boundaries.
+- `[done]` Complete G5 deterministic repeats and G6 validation-only tuning and
+  calibration. Freeze the selected candidate in G7; development usage is 20/20.
+- `[done for rehearsal]` Verify native scored-payload recovery, authenticated
+  MLflow round trips and independent S3 readback. These prove recovery mechanics,
+  not original Java comparison evidence or final model quality.
+- `[in progress]` Complete the production package, verify original comparison
+  and lineage inputs, and run the separately authorized G8 replacement once.
+- `[todo]` Publish independently verified final C4 comparison/calibration and
+  resource/throughput evidence under the contract's explicit research limitations.
+- `[blocked on G8]` Record G9's signed quality/resource/cost disposition and
+  verified model baseline. Promotion is not automatic from a successful Job.
 
 Why this is first:
 
@@ -551,7 +550,8 @@ Wave 1 exit criteria:
 
 - Three identical repeat runs produce matching governed identities and
   equivalent metrics within declared tolerances.
-- The final-test fold is opened once after operating modes are frozen.
+- Preserve the frozen operating modes and R4 test-access history; any replacement
+  final evaluation requires its own package-bound approval.
 - Cloud artifacts include job ID, image digest, Git SHA, input hashes,
   checksums, resource shape, timestamps, measured throughput and estimated
   cost.
@@ -560,77 +560,74 @@ Wave 1 exit criteria:
 
 #### G8 Recovery And Completion Plan
 
-Status reconciled against `main` at `157eacb` on 2026-09-14:
-`[G0-G7 complete; G8 open; G9 blocked]`. This status supersedes the older
-Wave 1 progress bullets above; historical run and spend receipts remain intact.
-R4 (`nasdaq-g8-final-r4-20260913`, Job `aijob-e00vtamgkr07mwzt4t`)
-downloaded the final release but failed before scoring. The final fold must no
-longer be described as unopened. See the
-[G8 recovery record](g8-completion-recovery.md) and
-[ARD-0035](architecture/ARD-0035-nebius-lightgbm-first.md).
+Status reconciled on 2026-09-21 against merged PRs #200 and #201:
+`[G0-G7 complete; G8 open; G9 blocked]`. The goal is one separately authorized
+final evaluation of the frozen LightGBM candidate on the governed C4 release,
+with independently verified comparison, quality, lineage and execution evidence.
+G9 then records the signed baseline/exit decision before Transformer work.
 
-Current `main` contains the corrected C4 `artifacts/tabular/test/...` loading
-path, the injected-runner C4 comparison and MLflow report integration, and the
-complete frozen-image synthetic rehearsal. Merged follow-ups through PR #176
-also provide [publication recovery](g8-publication-recovery.md) and
-[same-run MLflow recovery](g8-mlflow-recovery.md). These are engineering
-milestones, not live G8 qualification: the production path still needs durable
-integration and authenticated remote verification. PR #169 is closed without
-merging; subsequent delivery uses fresh branches from updated `main`.
+R4 (`nasdaq-g8-final-r4-20260913`, Job `aijob-e00vtamgkr07mwzt4t`) downloaded
+the final release but failed before scoring. Preserve its consumed approval and
+four prior submissions. The candidate, calibration, features and thresholds remain
+frozen; no replacement authorization follows from this plan.
 
-The plan, in order:
+Completed engineering evidence:
 
-1. **Resolve the retry rule — draft prepared; binding pending.** Document the
-   exception for at most one replacement execution after R4's test download and
-   pre-scoring failure. Preserve its receipts and consumed authorization. Keep
-   the candidate, calibration, features and thresholds frozen. Bind the exception
-   to a new run ID and the reviewed execution package before submission; the old
-   R4 approval cannot authorize the replacement.
-2. **Complete the implementation — core evaluation merged; integration pending.**
-   Retain the C4 layout correction and audit the entire evaluation path. Require
-   the approved [C4 evaluation contract](g8-c4-evaluation-contract.md), including
-   rules comparison, detection metrics, calibration assessment and uncertainty
-   evidence, in the replacement package and MLflow report. Verify availability
-   and immutable binding of the original C3 comparison checkpoints. The next
-   implementation task is checksum-bound retention of scored payloads **before
-   logging**, with provenance, the reserved MLflow run ID and logging context;
-   prove fresh-process log-only recovery after the original workspace is lost,
-   then finalize and publish without rescoring or creating another evaluation run.
-3. **Rehearse end to end — offline milestone complete; remote gates pending.**
-   Exercise the actual frozen runtime, injected runner and reviewed overlays with
-   synthetic fixtures matching the exact C4 directory structure. Verify loading,
-   scoring, comparisons, bundle verification, S3 publication and authenticated
-   MLflow artifact round trips. Existing offline receipts cover 27 checkpoints,
-   198 paired observations and one scoring call; recovery rehearsal verifies one
-   MLflow run, 24 metrics, 30 dataset inputs and four artifacts. Simulated S3 and
-   file-backed MLflow do not satisfy remote authentication or native durability.
-   Inject logging/publication failures and prove recovery without rescoring.
-4. **Review and deliver the fixes — follow-up delivery pending.** Reconcile the
-   useful work from closed PR #169 against current `main` and the merged recovery
-   changes. Follow the fresh-branch policy and pass relevant tests and CI for the
-   complete integration. Keep unfinished failure-audit work out of the successful
-   evaluation path, while preserving R4's history.
-5. **Prepare the live execution — pending.** Verify current spend, permissions,
-   pinned image, candidate and overlay hashes, MLflow credentials and an empty
-   output destination. Review and budget the
-   [persistent-storage exception](g8-persistent-storage-exception.md) before
-   provisioning; preparation approval alone is not provisioning authority.
-   Prove scored payloads and completed outputs survive Job/workspace loss so
-   publication or tracking recovery cannot require rescoring. Complete the
-   replacement-specific package, preflight and signed authorization.
-6. **Execute one approved replacement — pending readiness and authorization.**
-   Monitor within the agreed resource, time and spend limits. Score once,
-   publish the verified release with its success marker last, and record one
-   MLflow evaluation run containing dataset lineage, metrics, artifacts and
-   execution identities. Recover publication or tracking from retained evidence.
-7. **Close G8 against evidence — pending.** Independently download and verify S3
-   outputs; cross-check MLflow metrics, lineage and artifact hashes. Update the
-   roadmap, Issue #23 and ARD-0035 with production receipts and measured quality,
-   reconcile cost and disable temporary access. Only then proceed to G9.
+- Corrected C4 loading, original-format comparison and MLflow report integration;
+  scored-payload retention before logging, same-run recovery and marker-last
+  publication are implemented.
+- The [native recovery rehearsal](evidence/g8-native-recovery-20260917.json)
+  scored once, deliberately failed, and recovered after Job/workspace loss.
+  Independent authenticated MLflow readback verified 24 metrics, 30 dataset
+  inputs and four artifact hashes. The later [independent S3 readback](evidence/g8-independent-s3-readback-20260917.json)
+  verified all 64 objects and closes the earlier AccessDenied verification gap.
+- Merged PR #201 adds the native production bootstrap and v3 replacement binding.
+  The [production review package](g8-production-package.md) for
+  `nasdaq-g8-replacement-r5-20260917` is prepared but unsigned and not executable.
+  Synthetic comparison/lineage fixtures and transport checks do not establish
+  production model quality or execution of the changed production entrypoint.
 
-A successful execution must report the model's actual quality; it cannot
-guarantee that detection meets the acceptance thresholds. Synthetic rehearsal
-results do not establish production quality or authorize promotion.
+Remaining work, in order:
+
+1. **Verify original comparison and lineage evidence.** Locate and verify all
+   27 original Java/C3 checkpoints, their preparation binding and 30 replay domains;
+   verify genuine C4 dataset registration. Complete the frozen projection,
+   profile, comparison inventory and input-location metadata. Use retained metadata
+   first; preserve the separate gate for protected final-data access. Missing
+   original evidence is a blocker, not permission to regenerate rules or use fixtures.
+2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
+   imports, mount checks and signed-context handoff without production final scoring.
+   Record exact package/image/source hashes and actual Job/filesystem identities.
+   Run model and frozen-runtime work on Serverless only, with declared resources,
+   finite timeout and intended Job count. Assess the rehearsal's nonfatal provider
+   mount error against actual mount observations; retain its unresolved history.
+3. **Complete package and preflight.** Check current identity/permissions, versioned
+   secrets, pinned image alias, MLflow readiness, native capacity and output/intent
+   state. Bind verified comparison inputs and canonical request to the complete v3
+   plan. Keep scored/recovery evidence durable. Follow the [validation policy](model-validation-execution-policy.md);
+   do not reinstate historical billing-freshness, package-expiry or fixed-VM gates.
+4. **Obtain replacement-specific approval and sign.** Review the concrete package,
+   run scope and resource bounds, then obtain the exception for at most one
+   replacement. Bind fresh authorization files and sign the complete plan;
+   R4's consumed approval is unusable. Sign actual Job context separately from
+   provider readback after submission; preparation is not final-test authority.
+5. **Execute once and recover without rescoring.** Persist submission intent and
+   resolve ambiguous creates by readback. Seal scored payloads before logging,
+   retain one MLflow evaluation run and publish SUCCESS last. Post-scoring recovery
+   uses the retained seal; a failure without that seal requires explicit disposition.
+6. **Independently verify and close G8.** Download and verify S3 inventories/hashes;
+   cross-check MLflow metrics, original lineage and artifacts. Report actual C4
+   quality, uncertainty, coverage and resource/throughput evidence, including failed
+   thresholds. Update Issue #23, this plan, the roadmap and ARD-0035 with production
+   receipts. Stop idle compute and retire temporary access within approved scope;
+   retain evidence pending verified and approved cleanup. G9 then records the
+   signed quality/resource/cost disposition using the operator-managed policy.
+
+The [C4 contract](g8-c4-evaluation-contract.md) covers one test date and three
+symbol sessions, with row-level metrics and research/synthetic labels. It does not
+establish seven-date benchmark or production/client acceptance. Successful execution
+cannot guarantee acceptance thresholds. The September 23 G7–G9 exit is at risk;
+retain downstream baseline dates until an evidence-backed replan is approved.
 
 ### Wave 2: Add The Market-Sequence Transformer
 
