@@ -1,108 +1,50 @@
-# Documentation Guide
+# Documentation ownership
 
-This guide explains the documentation structure and conventions for LOB Arena.
+Start at the [documentation index](README.md). Each fact has one maintained
+owner; other documents summarize its purpose and link to it.
 
-## Documentation Structure
+| Information | Owner |
+| --- | --- |
+| Installation and first run | [Quickstart](deployment/QUICKSTART.md) |
+| Current system boundaries | [Architecture](architecture.md) |
+| Decision, alternatives and tradeoffs | Relevant [ARD](architecture/README.md) |
+| Capability and acceptance scope | [Functional overview](product/FUNCTIONAL_OVERVIEW.md) |
+| User workflow | [Use-case catalogue](use-cases/README.md) or focused ML guide |
+| Current gates, issue state and dated evidence | [Current status](roadmap/CURRENT_STATUS.md) |
+| Target dates and dependencies | [Main roadmap](roadmap/ROADMAP-MAIN.md) |
+| Forward feature requirements | [Phase scope](roadmap/PHASES.md) |
+| Exact contract, formula or command | Relevant data, ML, runtime or operations reference |
+| Historical attempts and review outcomes | [Archive](archive/README.md), linked receipts |
 
-The [documentation index](README.md) lists topic entry points. Only this guide,
-that index, the review ledger and the canonical overview live at the docs root.
+## Editing rules
 
-```mermaid
-flowchart LR
-    Docs["docs/README.md: navigation"]
-    Overview["architecture.md: canonical system overview"]
-    Decisions["architecture/: ARDs and decision index"]
-    Plans["roadmap/: current status, dates, execution history"]
-    Workflows["use-cases/: workflows and ML lifecycle"]
-    Contracts["data/ and ml/: data and model contracts"]
-    Runtime["runtime/: Java, events, determinism, metrics"]
-    Operations["deployment/ and operations/: setup and G8"]
-    Context["product/, research/, publication/, archive/"]
-    Docs --> Overview
-    Overview --> Decisions
-    Docs --> Plans
-    Docs --> Workflows
-    Docs --> Contracts
-    Docs --> Runtime
-    Docs --> Operations
-    Docs --> Context
-```
+1. Update the owning document. Update consumers only when their scope or link
+   changes; do not copy status, contracts or procedures into every overview.
+2. Preserve unique requirements, formulas, failure semantics and authorization
+   boundaries. Keep exact receipts and frozen `evidence/` snapshots unchanged.
+3. Distinguish design acceptance, implemented software, synthetic rehearsal and
+   production qualification. Baseline dates are not a revised forecast.
+4. Keep dated execution history outside current instructions. A historical
+   command or approval is not authority to run it again.
+5. Retain ARD identifiers. Mark superseded decisions and name their successors;
+   keep context, decision, alternatives and consequences. Add diagrams or
+   implementation detail only when needed to explain that decision.
+6. Use relative local links and HTTPS externally. When moving a page, update
+   its relative links and retain navigation for referenced old paths/anchors.
+7. Give each diagram one owner. Link to it elsewhere. Prefer diagrams for
+   ownership, state, branching, concurrency or trust boundaries; use prose or a
+   table for short linear lists. Label proposed/historical views explicitly.
+8. Do not require a diagram, status table, documentation map or generic
+   "business value" section in every document. Avoid another full-file review
+   ledger for routine edits; put validation evidence in the PR.
 
-## Key Documentation
+## Validation
 
-### Entry Points
-
-1. **For newcomers**: Start with [QUICKSTART.md](deployment/QUICKSTART.md)
-2. **For architecture understanding**: Start with [architecture.md](architecture.md)
-3. **For functional scope and status**: Read [FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md)
-4. **For workflows**: Read [USE_CASES.md](use-cases/README.md)
-5. **For deployment**: Read [mlflow-tracking-server.md](ml/mlflow-tracking-server.md) and [nebius-deployment.md](deployment/nebius-deployment.md)
-
-### Core References
-
-- **[README.md](../README.md)** — Master index and navigation guide
-- **[architecture.md](architecture.md)** — System design with component responsibilities and data flow
-- **[architecture/README.md](architecture/README.md)** — Index of all Architecture Records
-- **[FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md)** — Product actors, capability status, lifecycle, invariants, and Track A/Track B acceptance
-- **[USE_CASES.md](use-cases/README.md)** — Implemented and planned client/research workflows with business value
-
-### Specialized Topics
-
-- **[runtime-model.md](runtime/runtime-model.md)** — How the simulation engine works
-- **[kernel-observability.md](runtime/kernel-observability.md)** — Prometheus metric collection, Grafana dashboards, and bottleneck diagnosis
-- **[java-kernel-migration.md](runtime/history/java-kernel-migration.md)** — Parity-gated Python-reference to Java-kernel migration
-- **[architecture/ARD-0020-java-arena-websocket-agent-orchestration.md](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md)** — Java live arena, WebSocket, agent orchestration, and retained Python boundary
-- **[architecture/ARD-0022-historical-market-data-ingestion.md](architecture/ARD-0022-historical-market-data-ingestion.md)** — LOBSTER discovery, validation, normalized storage, and dataset registration
-- **[architecture/ARD-0023-hybrid-historical-replay.md](architecture/ARD-0023-hybrid-historical-replay.md)** — Deterministic historical/synthetic merge, provenance, labels, metrics, and replay artifacts
-- **[architecture/ARD-0024-versioned-causal-feature-engineering.md](architecture/ARD-0024-versioned-causal-feature-engineering.md)** — Stable causal feature schema, leakage boundary, artifacts, and grouped splits
-- **[hybrid-dataset-validation.md](data/hybrid-dataset-validation.md)** — LOBSTER invariants, causal-neighbourhood equivalence, signed validation reports, and verification
-- **[client-historical-dataset-validation-runbook.md](data/client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
-- **[feature-engineering-lightgbm.md](ml/feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and governed trainer rules
-- **[governed-corpus-benchmark-protocol.md](data/governed-corpus-benchmark-protocol.md)** — Pre-training corpus governance, independent negative labels, frozen split policy, statistical metrics, and release gates
-- **[mlflow-tracking-server.md](ml/mlflow-tracking-server.md)** — Shared tracking topology, security, roadmap namespaces, operations, and governance boundary
-- **[determinism-contract-v1.md](runtime/determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
-- **[canonical-hashing-v1.md](runtime/canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
-- **[benchmark-methodology.md](ml/benchmark-methodology.md)** — Evaluating detector performance
-- **[nebius-deployment.md](deployment/nebius-deployment.md)** — Setting up Nebius serverless components
-- **[challenge-submission.md](publication/challenge-submission.md)** — Submitting your work
-- **[research-notes.md](research/research-notes.md)** — Market microstructure background
-- **[safety-and-disclaimers.md](product/safety-and-disclaimers.md)** — Educational focus and limitations
-
-## Documentation Principles
-
-### 1. Consistency & Linking
-
-- **Internal cross-references use relative markdown links**; external
-  references use HTTPS
-- **Links are tested** to ensure they work (broken links indicate stale docs)
-- **ARDs are linked** from [architecture.md](architecture.md) and [USE_CASES.md](use-cases/README.md)
-- **Use cases are mapped** to architecture components in [USE_CASES.md](use-cases/README.md)
-
-### 2. Freshness
-
-- Gate/issue state is centralized in [current roadmap status](roadmap/CURRENT_STATUS.md),
-  with observation date, merged source revision and separately identified open-PR evidence.
-- Baseline target dates are not a promise or an automatically revised forecast.
-- Historical receipts are immutable. Add a dated stale/superseded banner to narrative
-  guidance instead of rewriting original Job counts, hashes, spend or outcomes.
-- Distinguish accepted design, implemented software, successful rehearsal and
-  production qualification. They are different evidence levels.
-- Root `ARCHITECTURE.md` links to `docs/architecture.md`; do not duplicate status there.
-- Topic moves must update inbound links, relative outbound links/images and active
-  script references. Keep frozen `evidence/` snapshots unchanged.
-
-- **Architecture is single-source-of-truth**: Changes to architecture.md must propagate to affected ARDs
-- **Use cases stay current**: If a workflow changes, update [USE_CASES.md](use-cases/README.md) and audit [architecture.md](architecture.md)
-- **ARDs are never deleted**: Superseded decisions are marked `Status: Superseded` with reference to replacement
-
-### 3. Mermaid Diagrams
-
-- **Mermaid diagrams use conservative `graph` or `flowchart` syntax** with
-  explicit `TD`/`LR` direction for broad GitHub and VS Code compatibility
-- **VS Code requires Mermaid preview support**: install the recommended `bierner.markdown-mermaid` extension if diagrams render as code blocks
-- **Diagrams are self-contained**: No external dependencies
-- **Diagrams include labels** for clarity
-
+- Run `python3 scripts/check_markdown_links.py` against active Markdown files
+  and any changed archives, excluding immutable evidence snapshots.
+- Render new/changed Mermaid blocks and visually inspect them. Unchanged
+  blocks can be checked by content hash against a previously rendered baseline.
+- Check moved-file consumers in scripts and packaging; run affected static
 Example (proper formatting):
 ```mermaid
 graph TD
