@@ -1,5 +1,10 @@
 # PR #171 C4 provenance finding — fix verification
 
+> **Status reconciliation — 2026-09-21:** This is the completed PR #171 provenance-fix record; later integration/recovery evidence lives in the production-package and roadmap links.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Outcome: fixed in the shared MLflow report intake; no live G8 execution.
 
 ## Boundary and strategy

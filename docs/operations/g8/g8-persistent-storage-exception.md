@@ -1,5 +1,10 @@
 # G8 replacement: persistent-storage exception proposal
 
+> **Status reconciliation — 2026-09-21:** This was a preparation proposal. Native storage was subsequently provisioned and recovery verified; PR #207 records expansion from 10 to 32 GiB. Do not reprovision from this proposal.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Current execution policy (2026-09-16): the
 [LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.

@@ -1,5 +1,10 @@
 # G8 native-storage and MLflow rehearsal package
 
+> **Status reconciliation — 2026-09-21:** The two native synthetic Jobs and all 64 independent S3 readbacks passed. Old KMS failures and 10 GiB bindings remain immutable rehearsal history.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Status: **native two-Job recovery completed on September 17; independent MLflow
 and S3 readbacks passed**.
 Runtime implementation: merged PR #190 at `cba03dad383e75ba8236699e0ea568cf97a3a00b`.

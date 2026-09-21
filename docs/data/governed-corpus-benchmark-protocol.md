@@ -1,6 +1,12 @@
 # Governed Corpus and ML Benchmark Protocol
 
-This protocol is a hard gate before training or comparing a learned detector.
+> **Scope:** The four-date Nasdaq research lane uses a separately hashed C4
+> contract and `research_control_assumption` negatives. It does not meet the
+> client coverage/review floors below. See [ML data preparation](../use-cases/ml-data-preparation.md)
+> and [ARD-0038](../architecture/ARD-0038-c4-specific-evaluation.md).
+
+This protocol is the client-qualified governance gate before training or
+comparing a learned detector under the governed benchmark contract.
 Its purpose is to prevent misleading performance from questionable historical
 negatives, adjacent-window leakage, duplicated sessions, or row-level
 uncertainty estimates.
@@ -56,7 +62,7 @@ train, validation, and test folds.
 
 The effective purge duration is the maximum of the longest feature window,
 alert matching horizon, causal tail, and label-boundary uncertainty. The
-default protocol also embargoes one complete session at fold boundaries. The
+default protocol also embargoes one complete session-date group at fold boundaries. The
 test split is frozen before training and may change only in a new protocol
 version.
 

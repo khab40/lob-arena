@@ -1,5 +1,10 @@
 # G8 completion recovery — 2026-09-14
 
+> **Status reconciliation — 2026-09-21:** Early remote/native pending statements are superseded: the two-Job native rehearsal and independent readback of all 64 objects passed. Production G8 remains open.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Current execution policy (2026-09-16): the
 [LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.
@@ -11,11 +16,11 @@ This is a recovery implementation record, not a final-test approval or G8 exit r
 
 Current status (2026-09-21): native recovery and authenticated MLflow/S3
 rehearsal passed on September 17; merged PR #201 prepared an unsigned production
-review package. The [approved original comparison audit](evidence/g8-original-payload-verification-20260921.json)
+review package. The [approved original comparison audit](../../evidence/g8-original-payload-verification-20260921.json)
 now verifies 294 payload objects and live C4 registration; the new unsigned review
 binds this evidence and 32 GiB storage. Production transport/comparison semantics,
 fresh preflight and replacement-specific approval remain open. Follow the
-[current G8 plan](PHASES.md#g8-recovery-and-completion-plan)
+[current G8 plan](../../roadmap/PHASES.md#g8-recovery-and-completion-plan)
 and [production package](g8-production-package.md). The implementation history and
 older gate descriptions below retain their dates; they are not the current backlog.
 

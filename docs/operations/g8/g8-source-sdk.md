@@ -1,5 +1,10 @@
 # Bounded synthetic source staging
 
+> **Status reconciliation — 2026-09-21:** The source-staging receipt is historical and complete. Retained grants/windows/SDK identities describe that operation and must not be assumed current execution access.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Current execution policy (2026-09-16): the
 [LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.

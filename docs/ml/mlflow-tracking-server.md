@@ -1,5 +1,10 @@
 # Shared MLflow Tracking Server
 
+Repository pin reviewed 2026-09-21 in `deployments/mlflow/Dockerfile`; this is
+not a claim that every existing VM has been upgraded. Namespace bootstrap is
+implemented; candidate artifacts do not automatically create registered model
+versions or champion aliases. See [training and selection](../use-cases/ml-training-selection.md).
+
 The `mlflow` Docker Compose profile provides a persistent shared tracking plane
 for the real-corpus and LightGBM roadmap tracks. It does not weaken the
 governed dataset, split, evaluation, or release contracts: MLflow records
@@ -11,7 +16,7 @@ manifests remain the release authority.
 ```mermaid
 flowchart LR
     Clients["Corpus and LightGBM jobs"]
-    MLflow["MLflow 3.13<br/>tracking + registry + auth"]
+    MLflow["MLflow 3.16.0<br/>tracking + registry + auth"]
     PostgreSQL["PostgreSQL 16<br/>metadata"]
     MinIO["MinIO<br/>S3-compatible artifacts"]
     Exporter["Read-only MLflow exporter<br/>bounded Prometheus metrics"]
@@ -119,14 +124,16 @@ metadata store, authentication bootstrap, exporter and smoke test. Its
 Nebius Object Storage at `https://storage.eu-north1.nebius.cloud` and requires
 all credentials explicitly; it has no local placeholder defaults for secrets.
 
-The deployed endpoint is private: `http://10.4.0.54:5500`. From the operator
+The August 16 deployment receipt records a private endpoint: `http://10.4.0.54:5500`. From the operator
 workstation, use an SSH tunnel rather than opening port 5500 publicly:
 
 ```bash
 ssh -L 5500:10.4.0.54:5500 aimada@89.169.102.236
 ```
 
-Then open <http://127.0.0.1:5500>. The VM security group permits MLflow only
+Revalidate the current VM address, key and security rules before using that
+historical tunnel example; the VM may be stopped. Then open
+<http://127.0.0.1:5500>. The recorded VM security group permitted MLflow only
 from `10.0.0.0/13` and SSH only from the recorded operator `/32`. The running
 application image is pinned to its Nebius Container Registry digest. A
 short-lived operator Registry token is used for an explicit pull and removed

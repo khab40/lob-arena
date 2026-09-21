@@ -1,5 +1,10 @@
 # G8 production native execution package
 
+> **Status reconciliation — 2026-09-21:** The unsigned review package remains the production starting point. PR #207 adds original metadata, capacity and live-registration evidence; it does not authorize final evaluation.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Status: **unsigned review package prepared; no production Job authorized or submitted**.
 This follows [PR #200](https://github.com/khab40/lob-arena/pull/200) and independent
 [readback of all 64 rehearsal S3 objects](../../evidence/g8-independent-s3-readback-20260917.json). Their sizes/hashes, SUCCESS inventory,

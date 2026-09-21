@@ -1,5 +1,10 @@
 # G8 same-run MLflow recovery — 2026-09-14
 
+> **Status reconciliation — 2026-09-21:** Same-run recovery is implemented and native synthetic recovery passed; old next-gate language is historical. It does not establish production model quality.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Current execution policy (2026-09-16): the
 [LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.

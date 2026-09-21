@@ -1,5 +1,9 @@
 # Benchmark Methodology
 
+> The separate four-date C4 research evaluation uses the approved
+> [C4 contract](../operations/g8/g8-c4-evaluation-contract.md); do not equate its
+> row metrics or assumed controls with client-qualified benchmark evidence.
+
 > Learned-model training and comparison must follow the stricter
 > [Governed Corpus and ML Benchmark Protocol](../data/governed-corpus-benchmark-protocol.md).
 > The synthetic tournament below remains the deterministic detector smoke and

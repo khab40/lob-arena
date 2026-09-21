@@ -1,6 +1,7 @@
 # Nasdaq Public Sample v1: Dataset and Processing Flow
 
-Status: C0-C4 and G5 are complete for the approved four-date corpus.
+Status (2026-09-21): C0–C4 and G0–G7 are complete for the four-date corpus.
+G8 remains open and G9 blocked; see [current status](../roadmap/CURRENT_STATUS.md).
 Development and final projections are separately published,
 development-to-final access denial is verified, and MLflow run
 `dc119d708cc4464e8fe1b82ba976bf3e` indexes the metadata-only release lineage.
@@ -68,8 +69,8 @@ symbol-hours of historical coverage:
 
 Exact ITCH message counts, accepted order events, executions, traded-share
 volume, per-symbol book updates, Parquet bytes, and supervised feature-row
-counts are intentionally not estimated. C1-C3 must measure and bind them after
-the real bodies are downloaded and parsed.
+counts are intentionally not estimated. Use the completed C1–C4 manifests for measured counts and byte sizes; do not
+substitute estimates or imply those completed preparations are still pending.
 
 ## Replay Corpus
 
@@ -150,14 +151,15 @@ emulation.
 6. **G5 — complete.** Three reproducibility Jobs used only the verified
    development tabular projection and passed the strict comparator.
 
-The preparation identity's Object Storage access is limited to
+The original preparation identity was scoped to
 `dev/data/public-sample-v1/*`; it uses a separate non-admin MLflow writer for
 metadata-only lineage. Current and noncurrent objects under the raw
 quarantine prefix expire after three days. The identity cannot access model
 releases, the final bucket, or results and expires on 2026-09-30 unless
-deactivated earlier after C4.
+deactivated earlier after C4. These are historical policy bindings, not a
+current access check; revalidate exact identity and permissions before any use.
 
-## Current Evidence
+## Historical acquisition evidence
 
 - C0 disposition: `c0_preflight_passed`.
 - Seven source responses: HTTP 200, no redirect, exact declared lengths.

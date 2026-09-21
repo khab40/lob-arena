@@ -1,10 +1,16 @@
 # G8 C4-specific evaluation contract
 
+> **Status reconciliation — 2026-09-21:** Durable replacement integration and native synthetic recovery are now implemented. Original comparison metadata is verified; full payload verification remains a separate gate at this snapshot.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Architecture decision: [ARD-0038](../../architecture/ARD-0038-c4-specific-evaluation.md).
 
 Status (2026-09-15): core evaluator/provenance merged in PR #171; injected-runner
 C4 integration and full synthetic rehearsal merged in PR #172. Recovery APIs
-subsequently merged in PRs #175 and #176; durable live integration remains open.
+subsequently merged in PRs #175 and #176. This paragraph records September 15;
+subsequent durable integration/native rehearsal completion is summarized above.
 Not live-execution authority or a G8 exit.
 The user approved this C4-specific contract on 2026-09-14. Candidate, calibration,
 features and operating thresholds remain frozen. The replacement execution still
@@ -37,7 +43,8 @@ exactly 27 distinct original C3 checkpoints. The preparation hash must equal
 the C4 root's test source. Each checkpoint must have a valid complete release,
 the frozen checkpoint identity, preparation binding and payload inventory.
 This resolves exactly 30 canonical replay domains; no rules regeneration occurs.
-Live availability of those checkpoints is **not yet verified**.
+Original metadata availability is verified in PR #207; full checkpoint payload
+availability/integrity remains unverified at the [dated snapshot](../../roadmap/CURRENT_STATUS.md).
 
 The evaluator verifies the existing model bundle and prediction release against
 the frozen candidate, and verifies C4 projection artifacts. It joins every

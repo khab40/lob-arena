@@ -1,5 +1,10 @@
 # G8 pre-logging checkpoint and workspace-loss recovery
 
+> **Status reconciliation — 2026-09-21:** Pre-logging checkpoints and native workspace-loss recovery are implemented. Local historical fixture commands do not override the Nebius-only model workload policy.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Current execution policy (2026-09-16): the
 [LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.

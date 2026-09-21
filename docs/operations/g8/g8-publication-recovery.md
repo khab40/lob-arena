@@ -1,5 +1,10 @@
 # G8 completed-release publication recovery
 
+> **Status reconciliation — 2026-09-21:** Publication recovery and marker-last verification are implemented and exercised natively with synthetic evidence. Old remaining-integration gates below are historical.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Architecture decision: [ARD-0040](../../architecture/ARD-0040-completed-release-publication-recovery.md).
 
 Status (2026-09-15): post-MLflow recovery primitive merged in PR #175. **Not a G8 exit,

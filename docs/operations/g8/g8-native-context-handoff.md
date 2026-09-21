@@ -1,5 +1,10 @@
 # G8 native context handoff
 
+> **Status reconciliation — 2026-09-21:** The 10 GiB filesystem binding is the historical rehearsal context. PR #207 records 32 GiB capacity; production bindings require a fresh package and preflight.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 This completes the operator procedure for the
 [native rehearsal package](g8-native-rehearsal-package.md). It creates no new
 final-test authorization and consumes no additional Jobs. Apply the

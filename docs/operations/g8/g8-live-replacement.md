@@ -1,5 +1,10 @@
 # G8 replacement integration and approval gates
 
+> **Status reconciliation — 2026-09-21:** The replacement entrypoint is implemented. Native synthetic proof is complete; production transport, bound package and replacement-specific authorization remain separate gates.
+> See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
+> [execution policy](../../ml/model-validation-execution-policy.md). Earlier
+> dated receipts retain their values; obsolete billing/expiry gates do not apply.
+
 Current implementation: [production native review package](g8-production-package.md).
 The native rehearsal completed and independent S3/MLflow readbacks passed.
 Production package preparation does not authorize final-test access or execution.

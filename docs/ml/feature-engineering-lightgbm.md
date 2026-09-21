@@ -295,7 +295,8 @@ See [ARD-0028](../architecture/ARD-0028-governed-lightgbm-feature-loading.md).
 
 ## Leakage-safe training rules
 
-A future trainer must:
+The implemented governed trainer enforces the applicable release/data contracts;
+new trainers must preserve these requirements:
 
 1. Require one supported `feature_schema_version` and
    `feature_config_hash` per training job.
@@ -313,7 +314,7 @@ A future trainer must:
 8. Report metrics by complete held-out sessions and attack family, not shuffled
    windows.
 
-The future trainer should fail closed when schema/config hashes differ unless an
+The trainer must fail closed when schema/config hashes differ unless an
 explicit migration has converted every input to one contract.
 
 ## Hybrid consistency
@@ -346,14 +347,13 @@ integrity and statistical equivalence.
   selected window; pre-window order ages are unknown.
 - The current artifact writer is local-filesystem based. Remote object-store
   publication should reuse the existing evidence-bundle transport.
-- Phase 2 adds deterministic binary training, training-only class/session
-  weighting, approved identity-preserving training-fitted scalers, bounded
-  float32 materialization and validation early stopping on top of the governed
-  Phase 1 loader. All 60 governed features remain in the v1 baseline; any
-  reduced feature set requires a separately versioned release. The next phase
-  should add
-  probability calibration, frozen operating points, explanations, MLflow
-  development-run logging and model-card/evidence artifacts.
+- Deterministic binary training, calibration, operating points, contributions
+  and MLflow development logging are implemented. The full schema has 60
+  features; G6 selected a hash-bound 31-feature ablation. Changing a selected
+  feature set requires new compatible experiment/model identities.
+- The low-level feature writer is separate from implemented C4 object-store
+  projection publication. See [training and selection](../use-cases/ml-training-selection.md)
+  for the generic governed loader versus C4 projection loader and current gates.
 
 ## Related documentation
 
