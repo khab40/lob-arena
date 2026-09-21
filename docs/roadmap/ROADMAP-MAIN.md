@@ -19,57 +19,10 @@ Critical path:
 
 ## Current Position
 
-G0–G7 are complete; **G8 is open and G9 blocked**. The September 23 exit target
-is at risk. Dates below remain the approved baseline, not a new completion forecast.
-G8's goal is one separately authorized evaluation of the frozen LightGBM candidate,
-with independently verified quality, rules comparison, lineage and runtime evidence.
-G9 uses that evidence for the signed baseline/exit decision before Transformer work.
-
-- C0-C4 are complete. The C4 MLflow dataset-release receipt binds the release
-  hashes to run `dc119d708cc4464e8fe1b82ba976bf3e`
-  (`c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b`);
-  G5 execution evidence verifies 240 metadata-only inputs and no raw-row upload.
-- G5 passed on 2026-09-07. Three sequential successful Jobs produced the same
-  reproducibility hash, best iteration, validation loss, governed identities,
-  model outputs, predictions, calibration, thresholds, and feature evidence.
-  All nine comparison gates and all 21 deterministic fields passed.
-- The G5 execution and comparison receipts are recorded under
-  `outputs/lightgbm-wave1/nasdaq-g5-repro-20260906/` with SHA-256 digests
-  `ac51f8d3a40210e40ab66c0bb5b766c7807176a5a497b2f1992c4a27f5b0bd38`
-  and `d6209d45027f376ac67d55fd8f1cdf7428b0e635d6f5fc011e45600051aedcb1`.
-- G6 passed on 2026-09-10. All nine predeclared Jobs completed with distinct
-  MLflow runs, all 12 completion gates passed, and the three seed results were
-  identical on F1, minimum family recall, and validation log loss. Isotonic
-  calibration was selected with candidate hash
-  `5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`.
-- The G6 final comparison receipt is
-  `outputs/lightgbm-wave1/nasdaq-g6-development-20260907/g6-comparison-final.json`
-  (SHA-256
-  `8baa904c5c8ccad4406d62b383999d0c294c9830869e1633aef71d3989b1aa40`).
-  It records `test_fold_accessed=false`, the full rejection set, and total
-  development consumption of 20/20. No additional development Job is allowed;
-  the temporary publisher grant is removed and MLflow is `STOPPED` between
-  experiment windows.
-- G7 passed on 2026-09-12. The validation-selected isotonic candidate
-  `5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`
-  was frozen without test access, and the operator supplied the exact-hash
-  final-test authorization. Verification reports `authorized`,
-  `signature_verified=true`, and `final_identity_available=true`.
-- The G7 freeze receipt SHA-256 is
-  `232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc`.
-  The outer authorization receipt SHA-256 is
-  `b0b6cee7fce8db3618cdaeb905ec7588d57a94985ef3823215664da4ce8ceed6`;
-  it binds signed-content SHA-256
-  `dcf056eba18cd95169f3caade2f7d1c2285e1b49b94e2a9ab353bb74f1233db0`,
-  signature SHA-256
-  `a012abb5948b3cf058c77fd9336f5a81eaaa0b2c2782aab653d9ba3dbf3005ea`,
-  and trusted public-key SHA-256
-  `a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
-- GitHub Project #3 contains 74 items. Seven dated repository milestones now
-  cover the active critical path from the corpus freeze through final CEO-demo
-  acceptance.
-- All new repository changes use dedicated branches and PRs created from a
-  refreshed `origin/main` baseline.
+Read [current status](CURRENT_STATUS.md) for gate outcomes, current blockers,
+candidate identity and receipts. This roadmap owns baseline dates and forward
+acceptance scope. A passed rehearsal or metadata check does not close a
+model-quality gate; old final-test approval cannot be reused.
 
 ## Milestones And Dates
 
