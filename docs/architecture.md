@@ -82,93 +82,26 @@ stores full events plus snapshot-only checkpoints.
 
 ### Historical And Hybrid Replay Path
 
-    Ingestion --> Parquet
-    Parquet --> Replay
-    Replay -->|"historical phase first"| Book
-    Attack -->|"synthetic phase second"| Book
-    Book --> Detectors
-    Attack --> Labels
-    Detectors --> Comparison
-    Labels --> Comparison
-    Comparison --> Corpus
-    Corpus -. "hashes + permitted artifacts" .-> MLflow
-```
-
-Historical-only control and hybrid runs reuse the same dataset window. LOBSTER
-visible depth is reconstructed as deterministic `HIST:` aggregate level orders;
-synthetic scenario orders use a disjoint `SYN:` namespace. Every source snapshot
-is recorded from the immutable historical payload, while attacks and detectors
-read the combined live book. Ground truth comes only from the launched synthetic
-scenario and is never part of detector input.
+Historical records enter Java before the synthetic phase. Source snapshots stay
+immutable, synthetic identities/labels remain separate, and attacks read only
+the current book. See [runtime ordering](runtime/runtime-model.md#historical-and-hybrid-runtime),
+[hybrid contract](architecture/ARD-0023-hybrid-historical-replay.md) and
+[replay commands](data/replay-quickstart.md).
 
 ### Offline Feature Engineering Path
 
-```mermaid
-graph LR
-    Canonical["Java canonical event stream"]
-    Feature["lob_features_v2 causal pipeline<br/>v1 compatible"]
-    Truth["Separate scenario ground truth"]
-    Parquet["Typed feature Parquet"]
-    Quality["Run + quality metadata"]
-    Trainer["Deterministic LightGBM v1<br/>train + calibrate + explain"]
-    Test["Isolated frozen-test scorer"]
-    Adapter["Verified detector adapter"]
-    MLflow["MLflow development run"]
-
-    Canonical --> Feature
-    Truth -->|"joined after numeric calculation"| Feature
-    Feature --> Parquet
-    Feature --> Quality
-    Parquet --> Trainer
-    Trainer --> Gate["Separate final-test authorization"]
-    Gate --> Test
-    Test --> Bundle["Verified evaluated bundle"]
-    Bundle --> Adapter
-    Quality -. "quality metadata" .-> MLflow
-    Trainer -. "parameters + metrics + artifacts" .-> MLflow
-```
-
-Python retains offline AI/ML feature engineering without becoming an exchange
-authority. One row is emitted at each simulation-source combined-book
-checkpoint from only the event prefix visible at that checkpoint. Immutable
-historical-source snapshots are validated but do not become prediction rows
-because they omit synthetic overlays. The same formulas apply to LOBSTER,
-synthetic, and hybrid origins. Labels remain separate, feature/config versions
-are hashed, and session-level split groups prohibit random separation of
-adjacent rolling windows.
+Python consumes the canonical Java stream. Causal numeric features are calculated
+before separate labels are joined; historical source-only snapshots do not become
+combined-book prediction rows. The [feature reference](ml/feature-engineering-lightgbm.md)
+owns the data-flow diagram, formulas, schemas and prefix-invariance guarantee.
 
 ### Governed LightGBM Release Boundary
 
-```mermaid
-graph LR
-    Protocol["Protocol + corpus + frozen split"]
-    Features["lob_features_v2 float32 artifacts<br/>v1 readable"]
-    Training["Training-run manifest"]
-    Calibration["Validation-only calibration<br/>and operating points"]
-    Bundle["Checksummed model bundle"]
-    Predictions["Fold-bound prediction manifest"]
-    MLflow["MLflow governed-evaluation index"]
-
-    Protocol --> Training
-    Features --> Training
-    Training --> Calibration
-    Training --> Bundle
-    Calibration --> Bundle
-    Bundle --> Predictions
-    Bundle -. "checksums + approved artifacts" .-> MLflow
-    Predictions -. "fold-bound metrics" .-> MLflow
-```
-
-Phase 0 established the identity and artifact boundary; training, calibration
-and the verified scorer subsequently landed under ARD-0029/0031. Every manifest binds the model and training-run IDs to the
-exact protocol, corpus, chronological assignment, feature schema, and feature
-configuration hashes. Calibration is validation-only, the test fold is
-explicitly inaccessible during fitting, and high-precision, balanced, and
-high-recall thresholds are frozen before prediction artifacts are accepted.
-The contracts are immutable and use typed finite parameters and metrics.
-Release verification resolves only safe relative paths and verifies every
-artifact's bytes, size, schema, SHA-256 value, canonical manifest binding, and
-checksum-inventory membership.
+Protocol, corpus, split, feature, model, calibration and prediction identities
+must agree before release verification or tracking. The
+[release decision](architecture/ARD-0026-governed-lightgbm-release-boundary.md)
+owns artifact relationships; the [ML lifecycle](use-cases/ml-lifecycle.md)
+owns development, validation reuse and planned promotion workflows.
 
 ### Frozen C4 Evaluation and Recovery
 
@@ -206,27 +139,11 @@ prove synthetic recovery, not production G8 acceptance. See
 
 ### Shared MLflow Tracking Plane
 
-The opt-in `mlflow` Compose profile provides an authenticated shared tracking
-server (checked-in image pinned to MLflow 3.16.0) backed by PostgreSQL metadata and private
-S3-compatible MinIO artifacts locally. The Nebius profile uses Object Storage
-and a Registry digest-pinned image on the CPU VM, without MinIO.
-It defines separate experiment namespaces for corpus releases, LightGBM
-development, and governed evaluation, plus the governed binary `attack_active`
-registered-model namespace. Training loggers save explicit artifacts; they do
-not yet create model versions or assign champion aliases. A deployment smoke test exercises authentication,
-registry bootstrap, database writes, and artifact upload/download.
-
-A non-admin, read-only exporter projects bounded experiment, run, and model
-aggregates into Prometheus. Grafana provisions a dedicated MLflow dashboard;
-high-cardinality run IDs, hashes, parameters, and tags remain exclusively in
-MLflow.
-
-MLflow indexes experiments and approved artifacts but is not a release
-authority. Protocol, corpus, split, feature, model, calibration, prediction,
-checksum, and signature compatibility continues to be enforced by the
-repository contracts. See
-[Shared MLflow Tracking Server](ml/mlflow-tracking-server.md) and
-[ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md).
+[MLflow operations](ml/mlflow-tracking-server.md) owns topology, version,
+namespaces, authentication, PostgreSQL/S3 storage and exporter configuration.
+MLflow indexes verified artifacts; repository hashes/signatures remain release
+authority. Artifact logging and a model namespace do not imply registered
+versions, aliases or serving deployment.
 
 ### Detector Tournament Observability
 
@@ -235,26 +152,7 @@ FastAPI, which already owns local child-process execution and Nebius Job
 submission, status refresh, and artifact collection. Prometheus does not scrape
 short-lived tournament processes or Nebius Jobs directly.
 
-```mermaid
-flowchart LR
-    UI["Command Center"]
-    API["FastAPI tournament orchestrator"]
-    Local["Local tournament process"]
-    Nebius["Nebius Serverless Job"]
-    Artifacts["Metrics CSV + leaderboard + evidence"]
-    Metrics["Backend /metrics<br/>bounded lifecycle telemetry"]
-    Prometheus["Prometheus"]
-    Grafana["Grafana<br/>Tournament Operations"]
 
-    UI -->|"start / refresh"| API
-    API -->|"launch"| Local
-    API -->|"submit / poll / collect"| Nebius
-    Local -->|"results"| Artifacts
-    Nebius -->|"results"| Artifacts
-    API -->|"update counters, gauges, histograms"| Metrics
-    Prometheus -->|"scrape"| Metrics
-    Grafana -->|"PromQL queries"| Prometheus
-```
 
 The implemented operational contract is deliberately bounded:
 
