@@ -39,7 +39,12 @@ The [September 21 audit](../evidence/g8-original-payload-verification-20260921.j
 verified/staged original payload bytes for all 27 checkpoints, verified live C4
 registration, and rebound metadata/storage in a new unsigned review. Permissions
 are restored and the VM stopped; no payload rows were parsed or models executed.
-Remaining gates: verify production transport and comparison semantics on Nebius; perform
+The [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
+verified all 12 runtime overlays, native mounts, signed actual-Job context and
+unsigned-entrypoint rejection. Independent readback verified all 25 staged files;
+no protected rows or model execution occurred. The recurring provider mount warning
+remains unexplained despite successful runtime verification and durable readback.
+Remaining gates: approve and verify protected comparison semantics on Nebius; perform
 current identity/storage/image/output preflight; obtain replacement-specific
 approval and sign; execute once; independently verify production S3/MLflow results.
 Native rehearsal success alone does not authorize production final-test access.

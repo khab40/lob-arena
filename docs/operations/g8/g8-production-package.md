@@ -52,8 +52,8 @@ neither a runnable signed manifest nor a submission command.
 1. Preserve the verified original checkpoint bytes and genuine registration now
    bound into the unsigned review. Validate production comparison semantics on
    Nebius; byte verification did not parse protected rows.
-2. Validate the production transport/entrypoint on Nebius, including package staging,
-   mounts and context handoff. Static checks do not establish runtime readiness.
+2. Preserve the completed [production transport verification](evidence/g8-production-transport-probe-20260921.json).
+   Recheck the finalized signed package and actual execution context at submission.
 3. Complete fresh permissions, pinned image alias, storage capacity, credentials
    and empty output/intent checks. Historical R4 selectors are review inputs only.
 4. Obtain replacement-specific final-test approval, bind its authorization files
@@ -117,6 +117,15 @@ now include verified payload bytes, live registration and 32 GiB capacity, with 
 verify. Historical Job-loss evidence is retained separately from fresh capacity
 and staged-byte verification. No authorization files or executable plan are emitted.
 
-Remaining gates: production transport and comparison semantic verification on
+The [non-final production transport probe](evidence/g8-production-transport-probe-20260921.json)
+completed on Job `aijob-e00samq5cpe1bysr4x` using the frozen image and exact reviewed
+runtime. All 12 overlays, read-only package/bootstrap, native filesystem and signed
+actual-Job context verified. The real unsigned entrypoint and wrong context failed
+closed. Independent readback verified all 25 package hashes before archiving the
+probe-created package and freeing the canonical production path. The VM is stopped
+and the final key inactive. No protected rows, model scoring or final access occurred.
+The provider mount warning recurred; successful runtime checks do not explain it.
+
+Remaining gates: separately approved protected-comparison semantic verification on
 Nebius, fresh preflight, canonical request and replacement-specific authorization.
 G8 remains open; the unsigned review is not execution authority.
