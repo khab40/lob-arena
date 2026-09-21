@@ -1,5 +1,11 @@
 # Changelog
 
+> **Historical record — reviewed 2026-09-21.** Implementation paths, endpoints,
+> resource values and completion claims below belong to the recorded revision.
+> They are not current deployment instructions. Google Auth was removed; secure
+> workspace restoration remains #91. Use the [current roadmap](../roadmap/CURRENT_STATUS.md)
+> and [deployment guide](../deployment/nebius-deployment.md) for active scope.
+
 This changelog lists significant commits in reverse chronological order.
 Update this file with each significant commit before pushing.
 

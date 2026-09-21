@@ -1,5 +1,11 @@
 # ARD-0011: Exchange Liquidity Invariant And Agent Quote Ownership
 
+> **Ownership/configuration reconciliation (2026-09-21):** Java now enforces
+> the live liquidity and quote-ownership invariant. The `ARENA_BASELINE_LIQUIDITY_*`
+> and `ARENA_MAX_AGENT_QUOTE_SIZE` settings below describe the original Python
+> implementation; they are not current Java environment controls. Consult
+> `LiveArenaService` and `ArenaConfiguration` for the implemented live settings.
+
 Status: Accepted
 
 Date: 2026-06-23

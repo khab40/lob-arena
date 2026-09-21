@@ -1,5 +1,11 @@
 # LOB Arena Nebius AI Serverless Demo Script
 
+> **Dated publication/demo material — reviewed 2026-09-21.** This preserves the
+> earlier challenge narrative and screenshots. Python-owned exchange diagrams,
+> old routes or future-data claims below may be stale and must be revalidated
+> before reuse. The [architecture](../architecture.md) and [current roadmap](../roadmap/CURRENT_STATUS.md)
+> describe the present system; this page is not production-readiness evidence.
+
 ## Goal
 
 Show LOB Arena as a Nebius AI Serverless-powered market surveillance command center in under five minutes. The demo works fully in local mock mode and keeps the same UI/API contracts for real Nebius execution.

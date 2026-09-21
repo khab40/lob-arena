@@ -1,5 +1,13 @@
 # LOB Arena Calculations and Workflow Explanations
 
+> **Scope reviewed 2026-09-21:** This is the legacy synthetic rules/tournament
+> calculation reference, including the retained Python batch implementation.
+> Its simulator-privileged features and coarse labels are not the causal
+> `lob_features_v2` ML contract. Java owns the live arena. The learned-model
+> lifecycle and current gates are documented [separately](../use-cases/ml-lifecycle.md).
+> Local tournament examples describe existing capability; agent model workloads
+> follow the [Nebius execution policy](../ml/model-validation-execution-policy.md).
+
 ## Table of Contents
 
 - [Overview](#overview)

@@ -2,7 +2,9 @@
 
 LOB Arena is an early-stage product demo for visualizing, testing, explaining, and benchmarking market-abuse detection workflows in synthetic order-book environments.
 
-The system combines a React visual arena, a FastAPI exchange simulator, synthetic normal and red-team agents, deterministic market microstructure detectors, and Nebius serverless infrastructure. It is designed to evolve from a controlled simulation into a practical experimentation layer for surveillance engineering teams.
+The system combines a React visual arena, a Java/Spring exchange and live runtime,
+Python data/ML/AI services, synthetic agents, deterministic detectors and Nebius
+Serverless Jobs. Historical LOBSTER/Nasdaq ingestion and hybrid replay already exist.
 
 ## What It Demonstrates
 
@@ -25,14 +27,20 @@ Market surveillance concepts are difficult to evaluate because order-book data i
 
 ## Product Direction
 
-The next product step is to add near-real-time detection features:
+The active sequence is governed LightGBM qualification, a standalone sequence
+Transformer, a Transformer-to-LightGBM cascade, integrated comparison evidence,
+then a secure CEO workflow. LightGBM training/calibration and both C4 projections
+exist; production G8 evaluation is open and G9 exit blocked. Transformer training,
+cascade and near-real-time learned-model integration remain planned.
 
-- streaming ingestion from market-data feeds or sanitized historical replay
-- low-latency feature calculation over rolling order-book windows
-- detector confidence timelines with alert thresholds
-- incident replay from real or replayed market intervals
-- benchmark comparisons between detector versions and market regimes
+Live rules already produce confidence timelines and incidents. Learned models
+will first be compared on historical/synthetic/hybrid replay, then considered
+for controlled shadow serving with causal features and a verified fallback.
+Customer feed/detector adapter productization remains parked.
 
 ## Next Step
 
-A practical pilot would connect the arena to sanitized historical replay data, validate detector definitions with domain experts, run Nebius benchmark jobs across controlled scenarios, and define how AI-generated explanations should support analyst review.
+Complete the gated LightGBM evaluation and signed exit before advancing the
+learned-detector sequence. See [current roadmap evidence](../roadmap/CURRENT_STATUS.md)
+and the [serving use cases](../use-cases/ml-model-serving.md). No production
+market-abuse detection or compliance acceptance is claimed.

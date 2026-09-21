@@ -21,7 +21,8 @@ Existing code to reuse:
 
 - `backend/app/nebius/client.py`: `RedTeamScenarioRequest`, `RedTeamScenarioResponse`, `NebiusClient.generate_red_team_scenario()`
 - `backend/app/api/routes_nebius.py`: `AttackScenarioInput`, `AttackScenario`, `POST /api/nebius/attack-scenario`, variants, list, template, and inject routes
-- `backend/app/arena/engine.py`: `SimulationEngine.launch_scenario()` and `start_scenario()`
+- Live injection: Java arena scenario APIs via `backend/app/arena/java_client.py`;
+  `backend/app/arena/engine.py` is retained for offline/serverless simulation.
 - `serverless/endpoint/app.py`: `ScenarioGenerationRequest`, `ScenarioGenerationResponse`, `POST /generate-scenario`, `POST /generate-smart-scenario`
 - `frontend/src/pages/AttackScenarioGeneratorPage.tsx`
 - `frontend/src/components/AttackBuilder.tsx`

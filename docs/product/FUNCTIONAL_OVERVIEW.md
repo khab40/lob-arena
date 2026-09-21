@@ -1,5 +1,8 @@
 # Functional Overview
 
+Reviewed 2026-09-21 against the [roadmap snapshot](../roadmap/CURRENT_STATUS.md).
+The end-to-end diagram below is the target workflow, not a claim that all stages ship.
+
 This document defines the user-visible capabilities, workflow boundaries, and
 acceptance rules for LOB Arena. The authoritative component topology is in the
 [High-Level Architecture](../architecture.md#system-high-level-design); detailed
@@ -41,7 +44,7 @@ CEO-facing UI.
 | Hybrid replay | Implemented | The same historical window plus a deterministic namespaced synthetic overlay |
 | Hybrid realism/equivalence validation | Implemented | Before/during/after locality evidence and signed validation bundle |
 | Governed corpus and split | Implemented as contracts/CLI | Reviewed negatives, family/seed coverage, chronological grouping and signed release |
-| Selective Nasdaq to Nebius data foundation | In progress, approximately 33% (4/12 scoped capabilities) | Allowlisted acquisition, bounded raw quarantine, selected normalized S3 data and one fold-isolated root for all learned detectors |
+| Selective Nasdaq to Nebius data foundation | C0–C4 complete for four-date research corpus | Allowlisted acquisition, bounded raw quarantine, selected normalized S3 data and one fold-isolated root for all learned detectors |
 | Multi-reviewer corpus API/UI | Planned Track B | Blind decisions, conflict resolution, freeze and signed corpus release workflow |
 | Causal feature pipeline | Implemented | Default `lob_features_v2` float32 Parquet, v1 compatibility, quality metadata and leakage checks |
 | LightGBM Phase 0 boundary | Implemented | Hash-bound training, calibration, prediction and model-bundle contracts |
@@ -118,9 +121,10 @@ flowchart TD
    Nebius cannot mutate the live book directly.
 2. **Historical source data is immutable.** Import writes a new normalized
    dataset and manifest; replay verifies them before use.
-3. **Historical activity is unlabeled by default.** A negative label requires
-   independent review/adjudication. Attack labels come only from controlled
-   synthetic scenarios.
+3. **Historical activity is unlabeled by default.** Client-grade negative labels require independent review/adjudication. The
+   separate public-sample lane explicitly uses `research_control_assumption`;
+   it must not be presented as reviewed clean data. Attack labels come only
+   from controlled synthetic scenarios.
 4. **No future information reaches a detector.** Historical replay and feature
    generation operate on the visible prefix at the prediction timestamp.
 5. **Adjacent observations stay grouped.** Complete sessions/base sessions and
@@ -146,8 +150,9 @@ The root publishes `tabular_projection_v1` for LightGBM and
 passes its feature-producer gate, Wave 3 emits
 `transformer_feature_release_v1` and exact-joins it to tabular rows by corpus,
 split, replay and row identities. Training and scoring programs reject
-incompatible hashes. Missing or stale Transformer features produce an explicit
-fallback to verified tabular LightGBM. Every model comparison uses identical
+incompatible hashes. The proposed cascade must use an explicit fallback to verified tabular
+LightGBM when Transformer features are missing or stale; this is not yet a
+deployed serving mechanism. Every model comparison uses identical
 test rows; any prediction improvement must be demonstrated on the frozen
 metrics rather than presumed from the architecture.
 
@@ -180,8 +185,9 @@ The implementation now satisfies this software boundary. Official Nasdaq ITCH
 samples plus the repository LOBSTER sample may support a research-only
 qualification and unlock Wave 2 engineering after the selective acquisition,
 public-sample quality, reproducibility, isolation, cost and operational gates
-pass. The governed cloud smoke G4 is complete and G5 is unlocked; the shared
-public-sample projections are the next data dependency. Production/client
+pass. C0–C4 and G0–G7 are complete; both public-sample projections exist. G8
+production evaluation is open and G9 exit is blocked. Native synthetic recovery
+passed but does not establish model quality or unlock Wave 2 by itself. Production/client
 performance acceptance still requires appropriately licensed data,
 independent clean-window reviews and a signed chronological test release
 suitable for that claim.
@@ -196,7 +202,10 @@ The client-facing corpus workflow must:
 - preserve original decisions while adjudicating conflicts;
 - keep unreviewed historical windows unlabeled;
 - freeze exact source, review, protocol and split hashes; and
-- issue a signed, immutable corpus release before Track A can train.
+- issue a signed, immutable corpus release before client-qualified Track A training.
+
+The separate four-date public-sample research lane does not satisfy these
+client-qualification floors and must keep its weaker label provenance visible.
 
 ## Shared MLflow Functional Contract
 
@@ -209,6 +218,10 @@ MLflow provides:
 - authenticated metadata and artifact access;
 - PostgreSQL persistence and S3-compatible artifact storage; and
 - a smoke test covering registry, metadata, artifact upload and download.
+
+The namespace does not imply registered model versions or champion aliases.
+Current training logs artifacts and manifests; governed promotion and live
+learned-model serving remain future work.
 
 MLflow must not contain raw licensed LOBSTER records unless a client-specific
 licence and access policy explicitly allow it.

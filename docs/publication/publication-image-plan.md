@@ -1,5 +1,11 @@
 # LOB Arena Publication Image Plan
 
+> **Dated publication/demo material — reviewed 2026-09-21.** This preserves the
+> earlier challenge narrative and screenshots. Python-owned exchange diagrams,
+> old routes or future-data claims below may be stale and must be revalidated
+> before reuse. The [architecture](../architecture.md) and [current roadmap](../roadmap/CURRENT_STATUS.md)
+> describe the present system; this page is not production-readiness evidence.
+
 ## Decision
 
 Do **not** create the GitHub social preview from fabricated UI content. The

@@ -1,6 +1,9 @@
 # Exchange Event Stream
 
-LOB Arena is migrating from direct synthetic order-book mutation to a canonical exchange event stream that can carry simulation events now and historical market data later.
+LOB Arena uses a canonical Java exchange event stream for synthetic, historical
+and hybrid replay. The original Python API names below describe the retained
+offline implementation; Java owns live REST/WebSocket delivery. Historical
+LOBSTER and Nasdaq ingestion are implemented, not future migration work.
 
 ## Canonical Event Contract
 
@@ -92,7 +95,9 @@ Consumers depend on the `ExchangeEventSource.read(after_sequence, limit)` contra
 - `CanonicalJsonlEventSource` replays an already-normalized and validated JSONL stream.
 - `HistoricalRecordEventSource` accepts raw records plus a venue/vendor normalizer. The normalizer must emit `source="historical"` events and preserve source sequence/timestamps; the source assigns independent contiguous canonical sequences.
 
-ARD-0018 is complete without selecting a vendor CSV layout. When a historical dataset is selected, its integration supplies a small `HistoricalRecordNormalizer` without changing matching, replay, API, detectors, or frontend consumers.
+ARD-0018 defines the vendor-neutral contract. LOBSTER and Nasdaq adapters now
+normalize selected inputs for Java replay; see [historical data preparation](../use-cases/ml-data-preparation.md).
+A general customer adapter framework remains parked roadmap work.
 
 ## Durable Streams
 

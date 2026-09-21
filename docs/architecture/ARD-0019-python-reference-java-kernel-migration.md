@@ -1,5 +1,10 @@
 # ARD-0019: Python Reference And Java Kernel Migration
 
+> **Historical implementation sequence:** Steps below retain the ownership at
+> each migration stage. Java now owns both the deterministic kernel and live
+> arena; Python shadow/authority/fallback controls are retired.
+> [ARD-0020](ARD-0020-java-arena-websocket-agent-orchestration.md) is the completed live cutover.
+
 Status: Accepted and Implemented
 
 Date: 2026-07-18

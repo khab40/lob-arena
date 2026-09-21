@@ -1,5 +1,11 @@
 # Building LOB Arena: An Adversarial Market-Surveillance Evaluation Platform with Nebius Serverless AI
 
+> **Dated publication/demo material — reviewed 2026-09-21.** This preserves the
+> earlier challenge narrative and screenshots. Python-owned exchange diagrams,
+> old routes or future-data claims below may be stale and must be revalidated
+> before reuse. The [architecture](../architecture.md) and [current roadmap](../roadmap/CURRENT_STATUS.md)
+> describe the present system; this page is not production-readiness evidence.
+
 ![LOB Arena concept showing the synthetic market-abuse evaluation arena](../../assets/img/03-lob-arena-red-vs-blue.jpg)
 *LOB Arena is a synthetic arena for evaluating market-abuse detectors and AI-assisted investigations on Nebius Serverless AI.*
 

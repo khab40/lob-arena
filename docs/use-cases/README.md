@@ -162,7 +162,7 @@ Purpose: demonstrate a live synthetic market with changing order-book state.
 graph TD
     Actor["Demo Operator"]
     UI["Arena UI"]
-    Backend["FastAPI Backend"]
+    Backend["Java Spring live arena"]
     Clock["Simulation Clock"]
     Agents["Normal Agents"]
     Exchange["Synthetic L2 Order Book"]
@@ -175,7 +175,7 @@ graph TD
     Agents --> Exchange
     Exchange --> Backend
     Backend --> Stream
-    Stream -->|"ArenaState every 500ms"| UI
+    Stream -->|"arena_state at configured cadence"| UI
 ```
 
 Business value:

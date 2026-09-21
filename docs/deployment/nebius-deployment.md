@@ -1,5 +1,12 @@
 # Nebius Deployment
 
+> **Deployment scope — reviewed 2026-09-21:** This guide includes legacy demo
+> endpoint/VM operations as well as current templates. Example resource IDs and
+> old receipts are not live-state assertions. Agent training, scoring, model
+> fixture generation and frozen-runtime tests use Nebius Serverless Jobs under
+> the [execution policy](../ml/model-validation-execution-policy.md); local work is orchestration,
+> editing, static checks and artifact inspection. The secure CEO UI remains planned.
+
 This project has two Nebius-oriented deployment surfaces:
 
 - a serverless AI endpoint for explanations and report generation

@@ -1,12 +1,17 @@
 # Quick Start - LOB Arena
 
-Get the system running locally in 5 minutes.
+> Agent-initiated training, scoring, model fixtures and frozen-runtime validation
+> run on Nebius Serverless Jobs under the [execution policy](../ml/model-validation-execution-policy.md).
+> Local setup commands here describe the application/demo capability.
+
+Start the local Java/rules demo and API services. Build time and available
+resources depend on the host; this is not a model-training quickstart.
 
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- 4GB+ RAM available
-- ~2GB disk space for dependencies and artifacts
+- Enough Docker memory/disk for Java, Python, agent-runner and frontend builds;
+  the former 4 GB RAM / 2 GB disk figures were not validated capacity guarantees
 
 ## 1. Clone and Configure
 
@@ -30,9 +35,8 @@ cp .env.example .env
 # Build and start all services
 docker compose up --build
 
-# First run takes 2-3 minutes. When ready, you'll see:
-# backend  | Application startup complete
-# frontend | Local:   http://localhost:5173/
+# Wait for service health; the frontend is served by Nginx on port 5173.
+# Check containers with: docker compose ps
 ```
 
 This CPU-safe local path builds all four services (`java-kernel`, `agent-runner`,

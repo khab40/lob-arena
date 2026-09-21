@@ -52,7 +52,7 @@ graph TD
     Browser["Browser Local State"]
     Theme["lob-arena.themePreference"]
     Shell["React Shell"]
-    Backend["FastAPI Backend"]
+    Backend["Java Spring live arena"]
     Arena["Arena State Stream"]
     Visuals["Stable Timeline Widgets"]
 

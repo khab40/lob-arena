@@ -2,7 +2,7 @@
 
 Python and Java compare deterministic simulation output using an explicit SHA-256 encoding. Raw JSON and Protobuf wire bytes are transport formats, not canonical hash inputs.
 
-The reference implementation is `backend/app/contracts/hashing.py`; the Java candidate implementation is `CanonicalHashes` in the framework-free simulation-kernel module. Both test suites verify every payload digest, canonical first-event bytes, book digest, initial digest, each rolling digest, and final stream digest against `contracts/golden/hashing-v1.json`.
+The reference implementation is `backend/app/contracts/hashing.py`; the authoritative Java implementation is `CanonicalHashes` in the framework-free simulation-kernel module. Both test suites verify every payload digest, canonical first-event bytes, book digest, initial digest, each rolling digest, and final stream digest against `contracts/golden/hashing-v1.json`.
 
 ## Primitive Encoding
 

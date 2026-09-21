@@ -1,6 +1,6 @@
 # Java Simulation Kernel
 
-`JavaSimulationKernel` is the framework-free Java 25 candidate runner for the version 1 `SimulationRequest`/`SimulationResult` contract. It executes requests rather than replaying fixture outputs.
+`JavaSimulationKernel` is the framework-free Java 25 authoritative runner for the version 1 `SimulationRequest`/`SimulationResult` contract. It executes requests rather than replaying fixture outputs.
 
 ## Tick Lifecycle
 
@@ -24,4 +24,5 @@ The implementation includes the reference market maker, deterministic noise trad
 - Metrics are sorted, represented as integer values at decimal scale six, and use the frozen half-even policy.
 - Java is authoritative and must continue to match every checked-in golden request for ordered events, books, hashes, and metrics.
 
-Reusable arbitrary-result divergence diagnostics are added in the differential parity harness step; the simulation tests in this step establish deterministic execution and golden-envelope acceptance.
+The migration-era differential harness is retired. Permanent regression checks
+compare this implementation with the immutable [golden corpus](golden-parity-corpus-v1.md).

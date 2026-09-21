@@ -1,5 +1,9 @@
 # Java Kernel Performance
 
+> The Step 14 macOS measurements below are a historical sanity baseline, not
+> current hardware capacity or a near-real-time learned-model latency claim.
+> Re-measure a declared deployment before making performance guarantees.
+
 The `kernel-benchmarks` module separates diagnostic measurement from portable regression gates. It uses [OpenJDK JMH](https://openjdk.org/projects/code-tools/jmh/) 1.37 for forked JVM benchmarks and Java thread-allocation accounting for broad CI smoke ceilings.
 
 ## JMH Benchmarks

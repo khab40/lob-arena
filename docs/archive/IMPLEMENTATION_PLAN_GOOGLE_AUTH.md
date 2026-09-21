@@ -1,5 +1,11 @@
 # Implementation Plan: Google Authentication for AI Market Abuse Detection Arena
 
+> **Historical record — reviewed 2026-09-21.** Implementation paths, endpoints,
+> resource values and completion claims below belong to the recorded revision.
+> They are not current deployment instructions. Google Auth was removed; secure
+> workspace restoration remains #91. Use the [current roadmap](../roadmap/CURRENT_STATUS.md)
+> and [deployment guide](../deployment/nebius-deployment.md) for active scope.
+
 ## Overview
 
 This document outlines the plan to re-implement Google OAuth authentication for the LOB Arena project. The authentication was previously implemented in commits `4af2ebe` through `22ffa3a` and `d27b52b`, but was removed in commit `68fb0c3` as part of archiving unused modules for the competition submission. This plan restores the authentication for the authorized user scenario requirements.
