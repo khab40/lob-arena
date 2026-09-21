@@ -1,7 +1,7 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
 > **Execution history and baseline plan — reviewed 2026-09-21.**
-> [Current status](CURRENT_STATUS.md) supersedes intermediate gate, remaining-Job,
+> [Current status](../roadmap/CURRENT_STATUS.md) supersedes intermediate gate, remaining-Job,
 > untouched-final-fold and deployment assertions below. C0–C4/G0–G7 are complete;
 > R4 accessed final data; native synthetic recovery passed; G8 is still open.
 > Seven-date/15-Job proposals, consumed-slot counters and spend receipts are
@@ -32,7 +32,7 @@ Waiting for a separately licensed corpus is no longer a Wave 1 or Wave 2
 engineering prerequisite. G4 was intentionally a fixture-only cloud smoke and
 is now complete. G5-G8 will use the official public Nasdaq ITCH samples and the
 repository's LOBSTER sample according to the
-[Nebius public market data plan](nebius-public-market-data-lightgbm-plan.md).
+[Nebius public market data plan](../roadmap/nebius-public-market-data-lightgbm-plan.md).
 
 The new `research_baseline_qualified` disposition may unlock Wave 2 engineering
 when the public-sample quality, reproducibility, isolation, cost and operational
@@ -1349,9 +1349,9 @@ signature alone is not sufficient to launch a replacement.
 
 ## Related Documentation
 
-- [Nebius Public Market Data Plan for LightGBM Wave 1](nebius-public-market-data-lightgbm-plan.md)
+- [Nebius Public Market Data Plan for LightGBM Wave 1](../roadmap/nebius-public-market-data-lightgbm-plan.md)
 - [ARD-0035: Nebius-First Qualification Of Governed LightGBM](../architecture/ARD-0035-nebius-lightgbm-first.md)
 - [Governed LightGBM v1 Runbook](../ml/lightgbm-v1-runbook.md)
 - [Shared MLflow Tracking](../ml/mlflow-tracking-server.md)
 - [Nebius Deployment](../deployment/nebius-deployment.md)
-- [Project phases](PHASES.md)
+- [Project phases](../roadmap/PHASES.md)
