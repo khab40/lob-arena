@@ -1,6 +1,8 @@
 # Java Candidate Kernel
 
-This Gradle build contains the Java 25 candidate implementation. Python remains authoritative until the parity and rollout gates in [ARD-0019](../docs/architecture/ARD-0019-python-reference-java-kernel-migration.md) pass.
+This Gradle build contains the authoritative Java 25 kernel and live arena.
+The migration in [ARD-0019](../docs/architecture/ARD-0019-python-reference-java-kernel-migration.md)
+and live cutover in [ARD-0020](../docs/architecture/ARD-0020-java-arena-websocket-agent-orchestration.md) are complete; Python runtime fallback is retired.
 
 Modules:
 
