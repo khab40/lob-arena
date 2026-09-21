@@ -1,130 +1,26 @@
-# Project Phases
+# Project phases
 
-> **Current versus historical:** The [current status](CURRENT_STATUS.md) owns
-> gate and milestone status. Early phase deliverable paths record their original
-> implementation; removed Python WebSocket/agent-manager files are historical.
-> Java owns the live arena under ARD-0020. Old G4/G5 “next” statements and spend
-> figures below are dated execution history, not new run instructions.
+[Current status](CURRENT_STATUS.md) owns dated progress; [main roadmap](ROADMAP-MAIN.md)
+owns milestone dates. This document owns forward feature scope and acceptance.
 
-LOB Arena is built as:
+## Completed demo foundation
 
-- React visual arena
-- Java 25/Spring live arena and WebSocket control plane
-- Java synthetic exchange and order book
-- normal and abuse-like agents
-- Java deterministic detectors
-- FastAPI AI/ML, experiments, evidence, and serverless adapters
-- Nebius Serverless AI Job benchmark
-- Nebius AI / LLM explanations
+The initial phases delivered the live arena, remote agents, liquidity invariant,
+rules/incidents, Nebius endpoint/job integration, experiment manager and challenge
+evidence. Java superseded the original Python live-runtime ownership.
+Detailed completed checklists remain in the
+[pre-compaction revision](https://github.com/khab40/lob-arena/blob/63fe41d277732875628d0e72449a1f8e992ae07b/docs/roadmap/PHASES.md).
+For today's boundaries see [architecture](../architecture.md); historical
+challenge results are linked from the [submission index](../publication/challenge-submission.md).
 
-This project is an educational simulation. The scenarios are synthetic abuse-like patterns for demonstrating order-book anomaly detection and AI Investigator explanations.
+## Retained demo follow-ups
 
-## Nebius AI Serverless Build Challenge Overlay
+These are historical follow-ups, not a current backlog; revalidate them against
+[current status](CURRENT_STATUS.md) and the original dated record before acting.
 
-Status: `[done]`
-
-Current product narrative: LOB Arena is a Nebius AI Serverless-powered market surveillance command center. The Arena generates suspicious market workloads; Nebius AI Serverless investigates, explains, generates scenarios, and runs detector benchmarks.
-
-Implementation phases:
-
-- `[done]` Phase 1, Nebius AI Investigation Team via Serverless Endpoint: `POST /api/nebius/investigation-team/analyze` forwards incident, detector, order-book, trade, and metric context to `/investigation-team`, with deterministic mock fallback.
-- `[done]` Phase 2, Nebius AI Scenario Generator via Serverless Endpoint: `POST /api/nebius/scenario-generator/generate` returns simulator-compatible scenario JSON with ground truth, replay metadata, expected detector behavior, and mock fallback.
-- `[done]` Phase 3, Nebius AI Detector Tournament via Serverless Jobs: `POST /api/nebius/tournament/start` queues detector benchmark work, submits configured Nebius jobs when available, or completes a local mock tournament with the same response schema.
-- `[done]` Challenge E2E smoke path: `POST /api/nebius/serverless-smoke/run` orchestrates one spoofing incident demo, labels missing cloud job templates as `real_nebius_pending`, and writes `outputs/serverless-smoke/` artifacts.
-
-Primary docs:
-
-- `docs/architecture/ARD-0015-nebius-ai-investigation-team.md`
-- `docs/architecture/ARD-0016-ai-scenario-generator.md`
-- `docs/architecture/ARD-0017-ai-detector-tournament.md`
-- `docs/use-cases/nebius-serverless-use-cases.md`
-- `docs/publication/demo-script.md`
-
-## Status Legend
-
-- `[done]` Implemented and committed.
-- `[partial]` Implemented enough for the current MVP, with known follow-up gaps.
-- `[in progress]` Active roadmap work with implementation or governed execution underway.
-- `[blocked]` Work cannot advance until its stated gate or external prerequisite passes.
-- `[parked]` First-class roadmap work intentionally deferred until the named active milestone exits.
-- `[todo]` Not implemented yet.
-
-## Phase 1: Core Live Arena
-
-Status: `[done]`
-
-Goal: build the minimum live simulator and visual order book loop.
-
-Scope:
-
-- order book
-- matching engine
-- normal agents
-- simulation clock
-- WebSocket state stream
-- basic UI ladder
-
-Deliverables:
-
-- `[done]` `backend/app/exchange/order_book.py`
-- `[done]` `backend/app/exchange/matching_engine.py`
-- `[done]` `backend/app/agents/runtime.py` in-process `AgentManager` with deterministic intent sorting and per-tick deadlines
-- `[done]` `backend/app/agents/market_maker.py`
-- `[done]` `backend/app/agents/noise_trader.py`
-- `[done]` `backend/app/agents/liquidity_taker.py`
-- `[done]` `backend/app/arena/clock.py`
-- `[done]` `backend/app/arena/engine.py`
-- `[done]` `backend/app/websocket/broadcaster.py`
-- `[done]` `backend/app/websocket/manager.py`
-- `[done]` `backend/app/websocket/routes.py`
-- `[done]` basic React order book ladder in the Arena screen
-
-Exit criteria:
-
-- `[done]` The simulator ticks continuously when started.
-- `[done]` Normal agents generate baseline activity.
-- `[done]` The backend can register hundreds of lightweight normal agents while keeping exchange mutation single-writer.
-- `[done]` The matching engine updates the synthetic book.
-- `[done]` Regression tests cover add/cancel/market flows, price-time priority, partial fills, modify-like quote updates, and L2 snapshots.
-- `[done]` The frontend receives or can display live state.
-- `[done]` The UI shows bids, asks, best levels, and basic market state.
-
-## Phase 2A: Out-of-Process Agent Runners
-
-Status: `[done]`
-
-Goal: let normal agents run outside the exchange/backend container while preserving one authoritative exchange writer.
-
-Deliverables:
-
-- `[done]` HTTP remote-agent protocol using `MarketSnapshot` requests and `AgentIntent` responses.
-- `[done]` backend `RemoteAgentClient` support through `ARENA_REMOTE_AGENT_URLS`.
-- `[done]` separate `agent-runner` service and Dockerfile.
-- `[done]` Docker Compose wiring for local backend + remote runner separation.
-- `[done]` tests for remote intent parsing and local/remote manager composition.
-
-Exit criteria:
-
-- `[done]` Agents can run in a separate container.
-- `[done]` Agent runners can be moved to another server by changing `ARENA_REMOTE_AGENT_URLS`.
-- `[done]` The exchange/order book remains single-writer in the backend.
-
-## Phase 2: Scenario Agents And Operator Controls
-
-Status: `[done]`
-
-Goal: add manually launched synthetic abuse-like scenarios and visible agent activity.
-
-Scope:
-
-- spoofing-like wall
-- layering-like pattern
-- Quote Stuffing Burst
-- scenario buttons
-- agent feed
-
-Deliverables:
-
+- **Phase 3B: Baseline Liquidity And Quote Ownership:** `[todo]` browser controls for ladder and quote-cap tuning.
+- **Phase 3B: Baseline Liquidity And Quote Ownership:** `[todo]` dynamic reference-price model for drifting market regimes.
+- **Phase 4: Nebius Benchmark And Explanation Runtime:** `[partial]` Four sanitized runtime/UI screenshots are committed under
 - `[done]` `SpoofingLikeAgent`
 - `[done]` `LayeringLikeAgent`
 - `[done]` `QuoteStuffingLikeAgent`
@@ -259,7 +155,7 @@ Deliverables:
 - `[partial]` Four sanitized runtime/UI screenshots are committed under
   `assets/screenshots/`; dedicated real Nebius console log/metric screenshots
   are still needed for the remaining review-evidence gap.
-
+- **Phase 4: Nebius Benchmark And Explanation Runtime:** `[partial]` Deployment documentation includes commands; real Nebius logs/metrics screenshots are still needed for final review.
 Benchmark outputs:
 
 - Detector tournament writes:
