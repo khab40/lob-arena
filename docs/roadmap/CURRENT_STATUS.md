@@ -8,10 +8,10 @@ software test, synthetic rehearsal or metadata audit does not close a model-qual
 
 - [Project #3](https://github.com/users/khab40/projects/3) and linked issue states
   were read on 2026-09-21, together with all seven dated milestone descriptions.
-- Merged implementation baseline: `origin/main` at `fb78b608d4e081cb32901f6b02cbca27574ff730`.
-- Readiness continuation: [open PR #207](https://github.com/khab40/lob-arena/pull/207),
-  observed at `ebf91a5e1b1de6228a585f0f1013aff1a79872c9`. Its receipts are evidence
-  of those operations; its documentation is not yet merged into the baseline.
+- Merged implementation baseline: `origin/main` at `1deaafe7144c78043af027b274eb660a75fe34cb`.
+- Readiness continuation: [merged PR #207](https://github.com/khab40/lob-arena/pull/207),
+  merged on 2026-09-21 at 11:01 UTC. Its original comparison, capacity, registration
+  and payload receipts are now part of the implementation baseline above.
 - Gate receipts establish outcomes. Issue/board states establish work status.
   Milestone dates establish targets. Historical narrative and milestone counters
   must not override more specific evidence. Revalidate before execution.
@@ -59,11 +59,11 @@ workspace-loss recovery into the same MLflow run; independent readback verified
 The [production review package](../operations/g8/g8-production-package.md) is unsigned.
 This is recovery engineering evidence, not a production G8 quality result.
 
-PR #207 separately records [89 original metadata objects](https://github.com/khab40/lob-arena/blob/ffbc2310ca9e40af5cd3c8fc86ba13eb13bbc380/docs/evidence/g8-original-comparison-metadata-20260921.json)
-and [32 GiB mounted capacity plus live C4 registration](https://github.com/khab40/lob-arena/blob/ffbc2310ca9e40af5cd3c8fc86ba13eb13bbc380/docs/evidence/g8-capacity-registration-20260921.json).
+Merged PR #207 records [89 original metadata objects](../evidence/g8-original-comparison-metadata-20260921.json)
+and [32 GiB mounted capacity plus live C4 registration](../evidence/g8-capacity-registration-20260921.json).
 The latter verifies 240 dataset inputs and 30 final-tabular entries without
 reading final payload rows. Earlier 10 GiB/registration-pending observations are
-historical. Its later [payload/readiness receipt](https://github.com/khab40/lob-arena/blob/ebf91a5e1b1de6228a585f0f1013aff1a79872c9/docs/evidence/g8-original-payload-verification-20260921.json)
+historical. Its later [payload/readiness receipt](../evidence/g8-original-payload-verification-20260921.json)
 records 294 original objects / 2,632,277,460 bytes staged and 377 files independently
 rehashed. A new 25-file unsigned review binds those bytes, live registration and
 32 GiB capacity. No rows were parsed, model Jobs submitted or final bucket accessed.

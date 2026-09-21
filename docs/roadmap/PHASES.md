@@ -569,7 +569,7 @@ Wave 1 exit criteria:
 See the [current roadmap snapshot](CURRENT_STATUS.md) for milestone dependencies
 and the source revision used by this documentation review.
 
-Status reconciled on 2026-09-21 against merged PRs #200 and #201:
+Status reconciled on 2026-09-21 against merged PRs #200, #201 and #207:
 `[G0-G7 complete; G8 open; G9 blocked]`. The goal is one separately authorized
 final evaluation of the frozen LightGBM candidate on the governed C4 release,
 with independently verified comparison, quality, lineage and execution evidence.

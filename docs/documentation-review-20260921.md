@@ -22,8 +22,8 @@ The [documentation index](README.md) is the navigation entry point.
 ## Roadmap findings
 
 The [dated status snapshot](roadmap/CURRENT_STATUS.md) links the exact issues,
-baseline dates, merged source revision and separately identified open PR #207
-receipts. It flags September 23 schedule risk. All seven stale milestone
+baseline dates, merged source revision and PR #207 readiness receipts, now
+merged into main. It flags September 23 schedule risk. All seven stale milestone
 descriptions were subsequently corrected and read back without changing dates,
 titles or states; remaining stale issue-body text is explicitly identified.
 Active guidance now records completed C0–C4/G0–G7, open G8 and blocked G9.
