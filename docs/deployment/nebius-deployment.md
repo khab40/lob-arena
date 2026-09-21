@@ -109,7 +109,7 @@ For the current project shape, deploy only the AI execution surfaces to Nebius:
   by default.
 
 Interactive investigation routes use the bounded request/response contracts in
-[professional surveillance prompting](surveillance-prompting.md). The endpoint
+[professional surveillance prompting](../ml/surveillance-prompting.md). The endpoint
 summarizes episode evidence, excludes raw LOB streams, and gates Qwen inference
 to high anomalies, detector disagreement, completed manipulation episodes, simulation
 summaries, and benchmark generation.
@@ -515,10 +515,10 @@ Keep run counts small for first deployment checks.
 The React `Nebius AI` page reads `/api/nebius/observatory` and displays measured
 request, latency, Job, and artifact data. Production Job and Endpoint records,
 including S3 upload state, are preserved in the committed
-[frozen benchmark evidence bundle](../evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md).
+[frozen benchmark evidence bundle](../../evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md).
 
 Before final review, add Nebius console screenshots and consolidated billing and
-runtime records to the [submission index](challenge-submission.md). Do not replace
+runtime records to the [submission index](../publication/challenge-submission.md). Do not replace
 or relabel the archived production evidence as mock output.
 
 The current Phase 4.5 Detection output evidence is synthetic educational benchmark output from the simulator. It is useful for reproducibility and demo review, but it is not real market surveillance and is not compliance evidence.
@@ -527,7 +527,7 @@ The current Phase 4.5 Detection output evidence is synthetic educational benchma
 
 Nebius implementation should follow the ARDs before adding runtime code:
 
-- [ARD-0005: Nebius Endpoint Contract](architecture/ARD-0005-nebius-endpoint-contract.md)
-- [ARD-0007: Nebius Serverless AI Jobs](architecture/ARD-0007-nebius-serverless-ai-jobs.md)
-- [ARD-0008: Nebius Serverless AI Endpoints](architecture/ARD-0008-nebius-serverless-ai-endpoints.md)
-- [ARD-0009: Judge Mode Investigation Reports](architecture/ARD-0009-judge-mode-investigation-reports.md)
+- [ARD-0005: Nebius Endpoint Contract](../architecture/ARD-0005-nebius-endpoint-contract.md)
+- [ARD-0007: Nebius Serverless AI Jobs](../architecture/ARD-0007-nebius-serverless-ai-jobs.md)
+- [ARD-0008: Nebius Serverless AI Endpoints](../architecture/ARD-0008-nebius-serverless-ai-endpoints.md)
+- [ARD-0009: Judge Mode Investigation Reports](../architecture/ARD-0009-judge-mode-investigation-reports.md)

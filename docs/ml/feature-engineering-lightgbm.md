@@ -76,8 +76,8 @@ row to be byte-for-value identical.
 ## Configuration
 
 The default checked-in configuration is
-[`configs/features/lightgbm-v2.json`](../configs/features/lightgbm-v2.json).
-[`configs/features/lightgbm-v1.json`](../configs/features/lightgbm-v1.json)
+[`configs/features/lightgbm-v2.json`](../../configs/features/lightgbm-v2.json).
+[`configs/features/lightgbm-v1.json`](../../configs/features/lightgbm-v1.json)
 remains available for existing releases.
 Its canonical sorted JSON SHA-256 is stored as `feature_config_hash` in every
 row and in the Parquet schema metadata.
@@ -125,7 +125,7 @@ null values. Non-finite values, invalid/crossed books, out-of-order sides, and
 tick/lot misalignment are reported through `row_valid` and `invalid_reason`.
 
 The authoritative ordered feature list is `FEATURE_COLUMNS` in
-[`backend/app/features/pipeline.py`](../backend/app/features/pipeline.py).
+[`backend/app/features/pipeline.py`](../../backend/app/features/pipeline.py).
 Changing a name, order, type, or formula requires a new schema version.
 
 ## Output contract
@@ -147,7 +147,7 @@ hashes distinguish the formats, and the governed loader rejects any
 protocol/config/manifest/Parquet mismatch. A v2 release therefore requires a
 new model, calibration, thresholds, predictions, and checksummed bundle; v1
 artifacts are never rewritten in place. See
-[ARD-0030](architecture/ARD-0030-float32-governed-feature-release.md).
+[ARD-0030](../architecture/ARD-0030-float32-governed-feature-release.md).
 
 The writer uses a per-output-directory lock and unique staging files so two
 processes cannot interleave one artifact bundle. A lock left by an interrupted
@@ -291,7 +291,7 @@ Run the Phase 0 and Phase 1 contract suite with:
 make lightgbm-phase1-test
 ```
 
-See [ARD-0028](architecture/ARD-0028-governed-lightgbm-feature-loading.md).
+See [ARD-0028](../architecture/ARD-0028-governed-lightgbm-feature-loading.md).
 
 ## Leakage-safe training rules
 
@@ -330,7 +330,7 @@ Automated tests compare a historical control and a hybrid stream at each tick:
 - misaligned price/quantity units fail row validation.
 
 These feature-level checks complement, rather than replace, the signed
-[hybrid dataset validation](hybrid-dataset-validation.md) for event/book
+[hybrid dataset validation](../data/hybrid-dataset-validation.md) for event/book
 integrity and statistical equivalence.
 
 ## Limitations and next steps
@@ -357,8 +357,8 @@ integrity and statistical equivalence.
 
 ## Related documentation
 
-- [ARD-0024: Versioned causal market-abuse features](architecture/ARD-0024-versioned-causal-feature-engineering.md)
-- [Canonical exchange event stream](exchange-event-stream.md)
-- [Determinism contract](determinism-contract-v1.md)
-- [Historical and hybrid replay](architecture/ARD-0023-hybrid-historical-replay.md)
-- [Client historical-data validation runbook](client-historical-dataset-validation-runbook.md)
+- [ARD-0024: Versioned causal market-abuse features](../architecture/ARD-0024-versioned-causal-feature-engineering.md)
+- [Canonical exchange event stream](../runtime/exchange-event-stream.md)
+- [Determinism contract](../runtime/determinism-contract-v1.md)
+- [Historical and hybrid replay](../architecture/ARD-0023-hybrid-historical-replay.md)
+- [Client historical-data validation runbook](../data/client-historical-dataset-validation-runbook.md)

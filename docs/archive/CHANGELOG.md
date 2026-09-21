@@ -561,7 +561,7 @@ Update this file with each significant commit before pushing.
 
 ### `2ad792d` - docs: add 3D market battlefield concept artifacts
 
-- Documented the 3D Market Battlefield simulator idea in `docs/DESIGN-IDEAS.md`.
+- Documented the 3D Market Battlefield simulator idea in `docs/product/DESIGN-IDEAS.md`.
 - Added the detailed 3D LOB terrain concept under `docs/3d-concept-lob.md`.
 - Added detached frontend prototype artifacts under `frontend/src/tabs/MarketBattlefield3D/`.
 - Added game-scenario visual concept artifacts under `assets/game-scenario/`.
@@ -578,7 +578,7 @@ Update this file with each significant commit before pushing.
 - Made Arena Start/Pause/Reset controls state-dependent to avoid duplicate starts and invalid resets.
 - Added a browser/site icon and web manifest for the AI Market Abuse Detection Arena UI.
 - Added a concise one-pager under `assets/` describing AI Market Abuse Detection Arena as an early-stage product demo and future near-real-time detection direction.
-- Updated `docs/PHASES.md` with status markers and aligned Phase 4 artifacts with the current serverless job outputs.
+- Updated `docs/roadmap/PHASES.md` with status markers and aligned Phase 4 artifacts with the current serverless job outputs.
 
 ### `0c1f58b` - fix: preserve labeled legacy scenario runtime
 
@@ -592,7 +592,7 @@ Update this file with each significant commit before pushing.
 - Expanded the root README with quick start, API examples, environment mapping, documentation index, and screenshot links.
 - Added architecture and use-case documentation, including Mermaid diagrams and ARD index updates.
 - Added ARD-0002 through ARD-0009 for WebSocket schema, detector evidence, benchmark artifacts, Nebius endpoint/jobs, scenario labeling, and judge mode.
-- Moved project phases from root `PHASES.md` to `docs/PHASES.md`.
+- Moved project phases from root `PHASES.md` to `docs/roadmap/PHASES.md`.
 - Added documentation guide, quickstart guide, design ideas, use cases, and SVG screenshot placeholders.
 - Updated `docker-compose.yml` and `Makefile` documentation/deployment helpers.
 

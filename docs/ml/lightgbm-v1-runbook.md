@@ -10,7 +10,7 @@ describe the original implementation interface. Agent-initiated training,
 scoring and frozen-runtime rehearsals now run on Nebius Serverless Jobs, including
 synthetic fixtures. Use local execution for orchestration, edits, static checks
 and artifact inspection only. See the [validation policy](model-validation-execution-policy.md)
-and [current ML lifecycle](use-cases/ml-lifecycle.md). Historical G4 budget and
+and [current ML lifecycle](../use-cases/ml-lifecycle.md). Historical G4 budget and
 attempt examples are receipts, not current permission to submit new Jobs.
 
 ## Required inputs

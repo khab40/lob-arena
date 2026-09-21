@@ -1,7 +1,7 @@
 # Benchmark Methodology
 
 > Learned-model training and comparison must follow the stricter
-> [Governed Corpus and ML Benchmark Protocol](governed-corpus-benchmark-protocol.md).
+> [Governed Corpus and ML Benchmark Protocol](../data/governed-corpus-benchmark-protocol.md).
 > The synthetic tournament below remains the deterministic detector smoke and
 > regression benchmark; it is not by itself a governed ML evaluation corpus.
 

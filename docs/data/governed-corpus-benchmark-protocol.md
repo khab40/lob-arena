@@ -8,9 +8,9 @@ uncertainty estimates.
 ## Versioned policy
 
 The machine-readable policy is
-[`governed-benchmark-v2-float32.json`](../configs/benchmark/governed-benchmark-v2-float32.json).
+[`governed-benchmark-v2-float32.json`](../../configs/benchmark/governed-benchmark-v2-float32.json).
 The original
-[`governed-benchmark-v1.json`](../configs/benchmark/governed-benchmark-v1.json)
+[`governed-benchmark-v1.json`](../../configs/benchmark/governed-benchmark-v1.json)
 remains available for legacy float64 feature releases.
 `backend.app.corpus.models.GovernedBenchmarkProtocol` validates it and computes
 a canonical SHA-256 hash. Every corpus, split, feature run, evaluation, and
@@ -198,5 +198,5 @@ campaigns, mismatched Java hashes, unverified negatives, unbound regime or
 streaming evidence, absent realized-benefit timestamps, and unsigned
 production releases fail closed.
 
-See [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) for
+See [ARD-0025](../architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) for
 the architecture decision.

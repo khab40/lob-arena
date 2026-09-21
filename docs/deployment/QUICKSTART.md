@@ -83,7 +83,7 @@ collection.
 The monitoring stack is read-only and optional: it is not part of exchange
 execution or detector decisions. Detector precision, recall, and F1 remain
 benchmark outputs rather than Prometheus runtime metrics. See
-[Kernel Observability](kernel-observability.md) for the scrape map and dashboard
+[Kernel Observability](../runtime/kernel-observability.md) for the scrape map and dashboard
 interpretation.
 
 For real Nebius Serverless plus dashboards, configure `.env`, then run:
@@ -109,7 +109,7 @@ Git-ignored `deployments/mlflow/.env`. The verification creates the corpus,
 LightGBM-development, governed-evaluation, and binary registered-model
 namespaces and tests PostgreSQL plus S3-compatible artifact persistence.
 PostgreSQL and MinIO are not published to the host. See
-[Shared MLflow Tracking](mlflow-tracking-server.md).
+[Shared MLflow Tracking](../ml/mlflow-tracking-server.md).
 
 ## 4. Quick Test
 
@@ -151,8 +151,8 @@ curl -X POST http://localhost:5173/api/scenarios/spoofing-like
 1. Open **Data Ingestion** and import either a paired LOBSTER message/order-book
    dataset or a bounded symbol window from a length-prefixed Nasdaq ITCH 5.x
    stream. The repository includes small synthetic fixtures under
-   [data/lobster/fixture](../data/lobster/README.md) and
-   [data/nasdaq-itch/fixture](../data/nasdaq-itch/README.md).
+   [data/lobster/fixture](../../data/lobster/README.md) and
+   [data/nasdaq-itch/fixture](../../data/nasdaq-itch/README.md).
 2. Open Arena, select **Historical control**, choose the imported dataset, and
    load it for an unlabeled control replay.
 3. Select **Hybrid + attacks**, load the same dataset, then launch spoofing-like
@@ -160,7 +160,7 @@ curl -X POST http://localhost:5173/api/scenarios/spoofing-like
 
 Historical data is never automatically labeled benign. Only the synthetic
 scenario creates ground truth. For API/config examples and comparison artifact
-generation, see [Historical and hybrid replay](../README.md#historical-and-hybrid-replay).
+generation, see [Historical and hybrid replay](../../README.md#historical-and-hybrid-replay).
 
 ### Command Center Demo
 - Open `/nebius`
@@ -176,7 +176,7 @@ generation, see [Historical and hybrid replay](../README.md#historical-and-hybri
 - WebSocket connection: `ws://localhost:5173/ws/arena`
 - Nebius AI: open `/nebius` in the frontend
 - Batch benchmark and smart attack/detect jobs: See [Nebius Deployment](nebius-deployment.md)
-- Red-team scenario generation: See [Use Cases](USE_CASES.md)
+- Red-team scenario generation: See [Use Cases](../use-cases/README.md)
 
 ### Phase 4 Reproducibility
 
@@ -189,14 +189,14 @@ python scripts/call_endpoint.py --base-url http://localhost:9000 --route orderbo
 
 ## Next Steps
 
-- **Understand the architecture**: Read [Architecture Overview](architecture.md)
-- **Review functional scope**: Read [Functional Overview](FUNCTIONAL_OVERVIEW.md)
-- **Learn the workflows**: Read [Use Cases](USE_CASES.md)
-- **Operate shared MLflow**: Read [Shared MLflow Tracking](mlflow-tracking-server.md)
+- **Understand the architecture**: Read [Architecture Overview](../architecture.md)
+- **Review functional scope**: Read [Functional Overview](../product/FUNCTIONAL_OVERVIEW.md)
+- **Learn the workflows**: Read [Use Cases](../use-cases/README.md)
+- **Operate shared MLflow**: Read [Shared MLflow Tracking](../ml/mlflow-tracking-server.md)
 - **Deploy to Nebius**: Read [Nebius Deployment](nebius-deployment.md)
-- **Run benchmarks**: Read [Benchmark Methodology](benchmark-methodology.md)
-- **Inspect runtime health**: Read [Kernel Observability](kernel-observability.md)
-- **Understand the design**: Read [Architecture Records](architecture/README.md)
+- **Run benchmarks**: Read [Benchmark Methodology](../ml/benchmark-methodology.md)
+- **Inspect runtime health**: Read [Kernel Observability](../runtime/kernel-observability.md)
+- **Understand the design**: Read [Architecture Records](../architecture/README.md)
 
 ## Troubleshooting
 
@@ -265,18 +265,18 @@ curl -X POST http://localhost:8000/api/red-team/generate-scenario \
 
 ## Documentation Index
 
-- [Full Documentation](../README.md)
-- [Architecture Overview](architecture.md)
-- [Use Cases](USE_CASES.md)
-- [Runtime Model](runtime-model.md)
-- [Kernel Observability](kernel-observability.md)
-- [Benchmark Methodology](benchmark-methodology.md)
+- [Full Documentation](../../README.md)
+- [Architecture Overview](../architecture.md)
+- [Use Cases](../use-cases/README.md)
+- [Runtime Model](../runtime/runtime-model.md)
+- [Kernel Observability](../runtime/kernel-observability.md)
+- [Benchmark Methodology](../ml/benchmark-methodology.md)
 - [Nebius Deployment](nebius-deployment.md)
-- [Safety & Disclaimers](safety-and-disclaimers.md)
+- [Safety & Disclaimers](../product/safety-and-disclaimers.md)
 
 ## Support
 
 For issues, check:
-- [Architecture Records](architecture/README.md) for design decisions
-- [Research Notes](research-notes.md) for detector design
-- [Use Cases](USE_CASES.md) for workflow documentation
+- [Architecture Records](../architecture/README.md) for design decisions
+- [Research Notes](../research/research-notes.md) for detector design
+- [Use Cases](../use-cases/README.md) for workflow documentation

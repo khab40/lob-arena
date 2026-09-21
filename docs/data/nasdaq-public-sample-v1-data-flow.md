@@ -14,9 +14,9 @@ replays, the later Transformer benchmark, and exact-row comparison between
 detectors. It is a research corpus, not a live production feed.
 
 The source contract is
-[`configs/data/nasdaq-public-sample-v1.json`](../configs/data/nasdaq-public-sample-v1.json).
+[`configs/data/nasdaq-public-sample-v1.json`](../../configs/data/nasdaq-public-sample-v1.json).
 The benchmark contract is
-[`configs/benchmark/nasdaq-public-sample-v1.json`](../configs/benchmark/nasdaq-public-sample-v1.json).
+[`configs/benchmark/nasdaq-public-sample-v1.json`](../../configs/benchmark/nasdaq-public-sample-v1.json).
 
 ## Exact Source Dataset
 

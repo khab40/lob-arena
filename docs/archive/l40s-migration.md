@@ -110,9 +110,9 @@ preserves that structure rather than introducing a second provisioning system.
 | `backend/tests/test_nebius_env_config.py` | Verifies the platform, preset, flags, and single-L40S memory bound. |
 | `deployments/modes/production-nebius.env` | Selects `local_vllm`, L40S, the 14B model, and tuned vLLM settings. |
 | `deployments/modes/nebius-cloud-demo.env` | Applies the same endpoint runtime defaults to the cloud demo profile. |
-| `docs/challenge-submission.md` | Preserves H100 as historical evidence while identifying the current L40S configuration. |
-| `docs/nebius-deployment.md` | Updates deployment, validation, and environment-reference instructions. |
-| `docs/l40s-migration.md` | Adds fit analysis, estimates, migration, rollback, and this inventory. |
+| `docs/publication/challenge-submission.md` | Preserves H100 as historical evidence while identifying the current L40S configuration. |
+| `docs/deployment/nebius-deployment.md` | Updates deployment, validation, and environment-reference instructions. |
+| `docs/archive/l40s-migration.md` | Adds fit analysis, estimates, migration, rollback, and this inventory. |
 | `scripts/create-nebius-ai-endpoint.sh` | Passes the new platform, model, and vLLM environment variables to the unchanged CLI flow. |
 | `scripts/deploy-nebius-partial.sh` | Changes only the default Endpoint platform used by the existing pipeline. |
 | `scripts/validate-local-vllm-endpoint.sh` | Expects the 14B model in deployed health evidence. |

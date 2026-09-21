@@ -125,7 +125,7 @@ public-key fingerprint through an independent organizational channel.
 ## Sample report
 
 The public fixture includes a
-[signed sample validation bundle](../data/lobster/fixture/validation/manifest.json).
+[signed sample validation bundle](../../data/lobster/fixture/validation/manifest.json).
 It is signed by a disposable sample key whose private half is not retained.
 The signature demonstrates the artifact format and verification flow; it does
 not represent an organizational production attestation.

@@ -367,6 +367,6 @@ backend/.venv/bin/python scripts/check_markdown_links.py README.md docs data/lob
 ## Related documentation
 
 - [Hybrid Dataset Validation](hybrid-dataset-validation.md)
-- [Historical Market Data Ingestion ARD](architecture/ARD-0022-historical-market-data-ingestion.md)
-- [Hybrid Historical Replay ARD](architecture/ARD-0023-hybrid-historical-replay.md)
-- [Root historical and hybrid replay instructions](../README.md#historical-and-hybrid-replay)
+- [Historical Market Data Ingestion ARD](../architecture/ARD-0022-historical-market-data-ingestion.md)
+- [Hybrid Historical Replay ARD](../architecture/ARD-0023-hybrid-historical-replay.md)
+- [Root historical and hybrid replay instructions](../../README.md#historical-and-hybrid-replay)

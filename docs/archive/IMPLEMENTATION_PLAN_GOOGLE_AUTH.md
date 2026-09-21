@@ -308,7 +308,7 @@ docker compose --env-file .env up --build
 git push origin feature/google-auth-restoration
 # Create PR via GitHub CLI
 gh pr create --title "feat(auth): restore Google OAuth authentication" \
-  --body-file docs/IMPLEMENTATION_PLAN_GOOGLE_AUTH.md
+  --body-file docs/archive/IMPLEMENTATION_PLAN_GOOGLE_AUTH.md
 ```
 
 ---

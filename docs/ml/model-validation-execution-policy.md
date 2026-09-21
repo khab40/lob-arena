@@ -52,7 +52,7 @@ Native package schema `g8_native_rehearsal_plan_v5` and replacement schema
 `g8_replacement_plan_v3` bind `lightgbm_transformers_validation_v1` and
 `operator_managed_alerts`. Neither carries billing or expiry fields. Native
 packages inject one bootstrap; bulk files use a read-only view of the existing
-native filesystem after [both KMS rejections](g8-native-rehearsal-package.md#kms-rejection-and-payload-headroom).
+native filesystem after [both KMS rejections](../operations/g8/g8-native-rehearsal-package.md#kms-rejection-and-payload-headroom).
 Rebuild capsule v2 from the retained frozen source tree, then sign from reviewed code;
 remove old expiry, cleanup, spend and billing fields from bindings. Do not reuse
 old signed packages, old submission intents or consumed final-test authorization.
