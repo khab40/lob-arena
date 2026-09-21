@@ -208,7 +208,7 @@ diagnostic is retained separately from the passing final receipt.
   for `nasdaq-g8-replacement-r5-20260917`; it remains unsigned and not executable.
   The [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
   now verifies the actual bootstrap/runtime, mounts and signed Job context on Nebius.
-  Protected comparison rows remain unparsed; model quality remains unmeasured.
+  The later approved comparison audit failed closed; model quality remains unmeasured.
 
 Completion evidence and remaining critical path:
 
@@ -219,18 +219,25 @@ Completion evidence and remaining critical path:
    four metadata artifacts and 30 final-tabular inputs. [Payload verification](../evidence/g8-original-payload-verification-20260921.json)
    is complete: 294 original objects staged; all 377 payload/metadata files rehashed.
    Temporary grants are removed and the VM stopped. Rows were not parsed; production
-   comparison semantics still require verification on Nebius.
+   comparison semantics still require verification on Nebius. The subsequently
+   [approved semantic Job](../evidence/g8-comparison-semantics-20260921.json) failed with
+   `ValidationError`. A required `preparation.logical_name` field is missing from
+   the generated comparison metadata; the exact failing call was not logged.
 2. Verify the changed production bootstrap, mounts and context handoff on Nebius
    without final scoring. Record resources, finite timeout, Job count and identities.
    Complete: one Job `aijob-e00samq5cpe1bysr4x`, all 12 overlays and 25 package files
    verified; unsigned entrypoint and wrong context rejected. The recurring provider
    mount warning remains unexplained despite valid mounts and durable readback.
-   Comparison semantic parsing requires its own protected-row access approval.
+   The semantic audit's one-Job approval is consumed, with no retry submitted.
+   Review the [corrected one-Job proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json):
+   preserve the original tree, rebind corrected metadata and add safe failure-stage
+   diagnostics. Snapshot row/schema consistency and prediction pairing remain unverified.
 3. Complete current credential/permission, image-alias, storage, MLflow and
    output/intent preflight; assemble the canonical request and complete v3 package.
    The approved [32 GiB expansion and live registration](../evidence/g8-capacity-registration-20260921.json)
    are verified. The September 21 unsigned review now binds the original comparison,
-   live registration and 32 GiB storage. Finish comparison/current preflight and recheck
+   live registration and 32 GiB storage, but must be rebound to the corrected comparison
+   path/hash after a successful audit. Finish comparison/current preflight and recheck
    the 20 GiB free-space requirement immediately before execution.
 4. Obtain replacement-specific final-test approval and sign the reviewed package;
    bind actual Job context separately after create. Never reuse R4 authorization.

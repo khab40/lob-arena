@@ -44,7 +44,15 @@ verified all 12 runtime overlays, native mounts, signed actual-Job context and
 unsigned-entrypoint rejection. Independent readback verified all 25 staged files;
 no protected rows or model execution occurred. The recurring provider mount warning
 remains unexplained despite successful runtime verification and durable readback.
-Remaining gates: approve and verify protected comparison semantics on Nebius; perform
+The subsequently approved [comparison audit](../evidence/g8-comparison-semantics-20260921.json)
+failed closed with `ValidationError` on Job `aijob-e00ezdakxbj7m0xxfy`.
+Generated comparison metadata omitted required `preparation.logical_name`; the
+exact failing call is unconfirmed because the original result redacted all details.
+The [retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
+preserves the original tree and adds corrected metadata plus safe stage diagnostics.
+No retry is authorized or submitted; VM stopped, Job compute released, final key inactive.
+Remaining gates: approve the corrected audit and verify comparison semantics on Nebius;
+rebind the unsigned production review to the corrected comparison; perform
 current identity/storage/image/output preflight; obtain replacement-specific
 approval and sign; execute once; independently verify production S3/MLflow results.
 Native rehearsal success alone does not authorize production final-test access.
