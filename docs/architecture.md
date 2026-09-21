@@ -174,16 +174,10 @@ Java 25 owns both the versioned deterministic kernel API and the stateful live a
 
 ### Runtime Flow
 
-1. The user starts from Demo or controls a scenario directly from the React / Vite UI.
-2. The UI sends a WebSocket command to `/ws/arena`.
-3. Spring starts or updates the Java arena and returns complete `arena_state` messages over the same stream.
-4. Each tick, Java concurrently sends read-only snapshots to configured Python agent runners and collects bounded `AgentIntent` responses.
-5. Java validates, sorts, and applies accepted intents as the only exchange writer; runtime `set_level` intents update that agent's own bounded quote.
-6. Java restores the baseline bid/ask ladder before publishing state, so the live book remains two-sided.
-7. The simulation emits order events, snapshots, agent actions, detector signals, and incidents.
-8. Java persists events and snapshots, then broadcasts live updates to connected UI clients over WebSocket.
-9. When AI Investigator or report generation is requested, FastAPI reads bounded Java evidence, calls Nebius AI or deterministic fallback adapters, and stores the generated result.
-10. The UI renders the latest market state, detector alerts, incident details, AI Investigator explanations, and AI cost/latency metrics. Day/night/system theme mode remains browser-side presentation state.
+The [runtime reference](runtime/runtime-model.md) owns lifecycle and transport.
+Java validates runner deadlines/intents, preserves baseline liquidity, persists
+events and broadcasts complete state. AI requests go through FastAPI after
+evidence collection; browser theme preferences do not affect simulation.
 
 ### Live Tick Sequence
 
@@ -209,49 +203,13 @@ sequenceDiagram
 
 ## Batch / Benchmark Path
 
-```mermaid
-graph LR
-    ExperimentAPI["Experiment Manager - /api/experiments"]
-    ExperimentManifest["Experiment Manifest - outputs/experiments/<id>/experiment.json"]
-    Config["job_config.yaml - runs, scenarios, seed"]
-    Job["Nebius Serverless Cloud - Managed Experiment Job"]
-    Simulation["Synthetic Simulation Runner"]
-    Labels["Scenario Labels - ground-truth windows"]
-    DetectorOutputs["Detector Outputs"]
-    Metrics["Precision / Recall / F1 - latency and false positives"]
-    Charts["Charts - F1, confidence, latency"]
-    Report["benchmark_report.md"]
-    Results["benchmark_results.json - detector_metrics.csv - incidents.jsonl"]
-    ObjectStorage["Object Storage - Job evidence archive"]
-    BackendEvidence["Backend evidence sync - UI download links"]
-
-    ExperimentAPI --> ExperimentManifest
-    ExperimentManifest --> Config
-    Config --> Job
-    Job --> Simulation
-    Simulation --> Labels
-    Simulation --> DetectorOutputs
-    Labels --> Metrics
-    DetectorOutputs --> Metrics
-    Metrics --> Charts
-    Metrics --> Report
-    Metrics --> Results
-    Results --> ObjectStorage
-    Report --> ObjectStorage
-    ObjectStorage --> BackendEvidence
-```
-
-The batch path is intended for repeatable detector evaluation rather than live interaction. A serverless job runs many synthetic simulations, injects labeled abuse-like patterns, collects detector outputs, and compares them against the known scenario labels.
-
-Phase 4.5 adds a Managed Experiment manifest control plane before execution. The manifest records the requested attack count, batch size, scenarios, seed, Nebius mode, status, optional smart-batch link, artifact directory, artifact paths, and metrics. `POST /api/experiments/{id}/generate-manifest` writes deterministic `attacks.jsonl` rows from that manifest without running simulation. `POST /api/experiments/{id}/run-local-batch` reuses the same local smart-batch runner used by `/api/nebius/smart-batches`, writes outputs under `outputs/experiments/<id>/local-batch/`, records `jobs.jsonl`, normalizes root-level experiment artifacts, and updates the experiment status. `POST /api/experiments/{id}/normalize-artifacts` can re-run that copy/index step without deleting original local-batch files. `POST /api/experiments/{id}/run-investigations` consumes persisted alerts only, selects a bounded top-confidence set, calls the existing Nebius investigation-report client, persists JSON/Markdown AI Investigator reports, and updates experiment metrics; it is intentionally not a per-tick LLM loop. `POST /api/experiments/{id}/aggregate` reuses existing `detector_metrics.csv` values to produce `experiment_summary.json`, `leaderboard.json`, and `benchmark_report.md` without recalculating detector metrics incorrectly. `/nebius` provides the Nebius AI operator flow for this lifecycle, while Detection provides the review flow: experiment list, selected summary, leaderboard, benchmark report preview, AI Investigator files, `artifact_index.json`, and original `local-batch` artifacts. `POST /api/experiments/{id}/submit-nebius` is the real orchestration boundary: it renders the experiment job config, records `real_nebius_pending` when no submit command template is configured, or executes `NEBIUS_JOB_SUBMIT_COMMAND_TEMPLATE` and records a queued real Nebius job id. Refresh uses optional status/log/artifact command templates and does not mark cloud execution completed until status plus artifact collection confirm it. `POST /api/experiments/{id}/collect-nebius-artifacts` collects only the expected job output files from mounted cloud output into the canonical experiment artifact layout; if files are unavailable, the experiment status is `cloud_artifacts_pending`. Nebius AI keeps owning its smart-batch UI/API while `/api/experiments` owns durable experiment intent, manifest lookup, and experiment-scoped local/Nebius submission.
-
-### Benchmark Outputs
-
-- detector metrics: precision, recall, F1, false positives, and false negatives
-- per-scenario summaries for Spoofing-like Wall, Layering-like Pattern, Quote Stuffing Burst, and Liquidity Evaporation
-- benchmark charts for report inclusion
-- generated benchmark report describing detector behavior and observed failure modes
-- persisted raw artifacts for later review and reproducibility
+FastAPI's experiment manager persists manifests, submits/polls configured Jobs,
+collects artifacts and aggregates reports. Cloud completion requires confirmed
+provider state and collected output; missing configuration is explicitly pending.
+See [Job integration](architecture/ARD-0007-nebius-serverless-ai-jobs.md),
+[tournament contracts](architecture/ARD-0017-ai-detector-tournament.md) and
+[benchmark methodology](ml/benchmark-methodology.md). Agent model workloads
+follow the [execution policy](ml/model-validation-execution-policy.md).
 
 ## Data Artifacts
 
@@ -282,30 +240,17 @@ Phase 4.5 adds a Managed Experiment manifest control plane before execution. The
 
 ### Artifact Relationships
 
-```mermaid
-graph TD
-    Events["events.jsonl - raw exchange and agent events"]
-    Snapshots["snapshots.parquet - order book state over time"]
-    Labels["scenario_labels.jsonl - synthetic ground truth"]
-    Incidents["incidents.json / incidents.jsonl - detector alerts and evidence"]
-    Reports["reports.md / benchmark_report.md - human-readable summaries"]
-    Metrics["detector_metrics.csv - benchmark metrics"]
-
-    Events --> Incidents
-    Snapshots --> Incidents
-    Labels --> Metrics
-    Incidents --> Metrics
-    Incidents --> Reports
-    Metrics --> Reports
-```
+See the [artifact contract diagram](architecture/ARD-0004-benchmark-artifact-format.md#artifact-relationships)
+for the legacy benchmark; governed learned releases have separate versioned
+[contracts](architecture/ARD-0026-governed-lightgbm-release-boundary.md).
 
 ## Architectural Boundaries
 
-- The UI should not directly call the simulation engine, Agent Runners Workspace, or Nebius AI endpoints. It should communicate through the FastAPI backend.
+- The UI uses Java REST/WebSocket for live arena controls and FastAPI for AI/ML operations; it never calls agent runners or Nebius endpoints directly.
 - UI shell theme preferences are local browser state.
 - The simulation engine should emit structured events and detector results without depending on UI concerns.
 - Agent runners may decide remotely, but they must return intents only; they must not mutate exchange state directly.
-- The backend should be the integration boundary for live transport, persistence, scenario orchestration, and AI calls.
+- Java owns live transport, arena persistence and scenario orchestration; FastAPI owns AI calls, experiments and their artifacts.
 - `/api/experiments` owns durable experiment manifests and report visibility; `/api/nebius/smart-batches` continues to own Nebius Control smart-batch execution.
 - Real Nebius Serverless Job submit, status, log, and artifact collection calls are isolated in `backend/app/experiments/nebius_orchestrator.py`; absent configuration records `real_nebius_pending`, while completion requires confirmed cloud status and collected artifacts.
 - Batch benchmark jobs should share simulation and detector code with the live path where practical, but should not depend on the interactive UI.
@@ -324,20 +269,10 @@ graph TD
 
 ## Related Documentation
 
-This architecture supports all workflows described in [Use Cases](use-cases/README.md):
-
-1. **Live Arena Mode** — Supported by WebSocket live commands and `arena_state` streaming
-2. **Manual Scenario Launch** — Scenario launcher through the WebSocket-backed Arena UI
-3. **Hybrid Historical Replay** — LOBSTER control and UI-launched synthetic overlay through the Java exchange
-4. **Incident Investigation** — Incident store and AI Investigator
-5. **Red-Team Scenario Generation** — Scenario Generator through backend Nebius AI adapters
-6. **Detector Tournament / Smart Batch Benchmark** — Batch / Benchmark Path with Managed Experiment jobs
-7. **Synthetic Dataset Generation** — Batch / Benchmark Path artifact outputs
-8. **Detection Outputs And Evidence Review** — Detection reads persisted benchmark, Managed Experiment, Nebius AI, AI Investigator, screenshot, and promoted evidence artifacts
-9. **UI Shell Personalization** — Local day/night/system preferences
-
-Detailed architecture decisions are recorded in [Architecture Records (ARDs)](architecture/README.md):
-
+Use the [ARD index](architecture/README.md) for decision history and the
+[workflow catalogue](use-cases/README.md) for user actions. The
+[documentation index](README.md) links deployment, contracts, operations and
+historical records without duplicating their contents here.
 - [ARD-0001: Overall Architecture](architecture/ARD-0001-overall-architecture.md) — This architecture
 - [ARD-0002: WebSocket State Schema](architecture/ARD-0002-websocket-state-schema.md) — Real-time state transport
 - [ARD-0003: Detector Evidence Model](architecture/ARD-0003-detector-evidence-model.md) — How detectors report findings
