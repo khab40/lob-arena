@@ -37,9 +37,9 @@ The pipeline:
 - writes Parquet plus checksummed run and feature-quality metadata; and
 - assigns a stable session-level split group.
 
-The current task establishes the feature contract only. It does not add a
-LightGBM dependency, trainer, model registry, inference endpoint, threshold, or
-surveillance claim.
+This record establishes the feature contract. Training, calibration, thresholds
+and a verified Python scoring adapter subsequently landed in ARD-0029/0031;
+a live feature consumer and inference service remain planned.
 
 ## Architecture
 
@@ -50,7 +50,7 @@ graph LR
     Pipeline["lob_features_v1/v2 single-pass pipeline"]
     Truth["External synthetic ground truth"]
     Dataset["Parquet + run/quality JSON"]
-    Future["Future LightGBM trainer"]
+    Future["Governed LightGBM trainer"]
     MLflow["Shared MLflow tracking"]
 
     Java --> Canonical
@@ -105,8 +105,9 @@ shared MLflow plane may index the feature schema/configuration hashes, row
 counts, quality metrics, and approved reports in the
 `lob-arena/lightgbm-development` experiment. It must not receive raw licensed
 LOBSTER records, infer labels, choose a fold, or make an incompatible dataset
-acceptable. A future trainer must first pass the ARD-0025 and ARD-0026
-compatibility checks.
+acceptable. The general trainer path must first pass ARD-0025/0026 compatibility checks.
+The separately hash-bound C4 research projection uses the explicit assumed-control
+policy described in [ARD-0038](ARD-0038-c4-specific-evaluation.md).
 
 ## Alternatives considered
 

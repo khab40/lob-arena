@@ -64,9 +64,10 @@ models, manifests, and predictions under the existing deterministic boundary.
   and calibrated thresholds differ from v1.
 - Float32 does not solve weak detector recall. In the audit, subtle-layering
   recall remained the limiting case under both dtypes.
-- A future reduction in feature count or quantized online inference requires a
-  separate evidence-backed contract; it is not bundled into this storage
-  migration.
+- Wave 1 later added hashed experiment-level feature exclusions while retaining
+  the complete 60-column source release; the model binds its ordered subset.
+  That ablation is distinct from changing this storage schema. Quantized online
+  inference still requires its own evidence-backed contract.
 
 ## Related documentation
 

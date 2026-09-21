@@ -58,8 +58,11 @@ full-session file.
 Historical ITCH replay remains immutable: recorded participants cannot respond
 to a counterfactual overlay. Controlled hybrid injection reuses the normalized
 stream, while fully interactive causal response remains a synthetic-simulation
-property. Cloud partitioning and multi-session ingestion remain future scaling
-work and must retain this manifest and Parquet contract.
+property. The later C0–C4 cloud pipeline now acquires four approved dates, normalizes
+three symbols per pass, and publishes isolated tabular/sequence projections.
+The local adapter itself still does not download source files. General-purpose
+feed-scale ingestion remains future work. See [data preparation](../use-cases/ml-data-preparation.md)
+and the [four-date data flow](../nasdaq-public-sample-v1-data-flow.md).
 
 ## References
 

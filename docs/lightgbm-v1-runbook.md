@@ -3,6 +3,16 @@
 LightGBM v1 is a binary `attack_active` challenger. It never trains on the
 frozen test fold and never converts unreviewed history into label zero.
 
+## Execution policy and current workflow
+
+The local training, fixture, local-e2e and model-runtime test examples below
+describe the original implementation interface. Agent-initiated training,
+scoring and frozen-runtime rehearsals now run on Nebius Serverless Jobs, including
+synthetic fixtures. Use local execution for orchestration, edits, static checks
+and artifact inspection only. See the [validation policy](model-validation-execution-policy.md)
+and [current ML lifecycle](use-cases/ml-lifecycle.md). Historical G4 budget and
+attempt examples are receipts, not current permission to submit new Jobs.
+
 ## Required inputs
 
 - passing locally verified corpus manifest and validation;

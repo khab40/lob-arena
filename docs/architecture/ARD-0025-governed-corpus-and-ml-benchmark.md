@@ -36,7 +36,9 @@ Adopt `governed_benchmark_protocol_v1` as a training prerequisite.
 - A complete venue/instrument/date/session is the split and bootstrap cluster.
 - A base session, its control replay, and every campaign/seed variant remain in
   one fold.
-- Splits are chronological, purged, embargoed, and frozen before training.
+- Splits are chronological, purged, frozen before training, and apply the
+  protocol-defined embargo (one date group per boundary in the general v2
+  policy; zero in the separate public-sample policy).
 - Historical windows remain unlabeled unless independently verified clean.
 - Synthetic attack labels remain separate ground truth.
 - ML evaluation consumes only provenance-bound canonical Java replay artifacts.

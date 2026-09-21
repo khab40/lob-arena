@@ -95,7 +95,17 @@ graph TD
     ObjectStorage --> BackendSync
 ```
 
-## Scope
+## Governed ML extension — 2026-09-21
+
+The original synthetic benchmark scope below is historical. Separate acquisition
+and preparation Jobs now ingest the approved public Nasdaq corpus, freeze
+tabular/sequence projections, and run governed LightGBM development/evaluation
+under [ARD-0035](ARD-0035-nebius-lightgbm-first.md). Transformer training remains
+proposed. Agent-initiated model workloads, including synthetic training/scoring
+rehearsals, run on Nebius; local mock tournament support is not an exception.
+See [ML lifecycle use cases](../use-cases/ml-lifecycle.md).
+
+## Original benchmark scope
 
 In scope:
 

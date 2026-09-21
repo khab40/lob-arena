@@ -8,6 +8,14 @@ Implementation Status: `[done]`
 
 Completion: All ten implementation steps are complete in commit `32dc799`.
 
+## Ownership update
+
+This record preserves the original Python implementation history. The current
+canonical stream is produced by the sole Java exchange under
+[ARD-0020](ARD-0020-java-arena-websocket-agent-orchestration.md); Python consumes
+its artifacts for causal features and ML. Do not build a second live exchange
+from the historical implementation steps below.
+
 ## Context
 
 Before this decision was implemented, the simulator mutated its in-memory book directly and passed loosely shaped dictionaries between the order book and matching engine. That was sufficient for synthetic UI state, but it did not provide a stable source contract for detector replay or future historical exchange data.

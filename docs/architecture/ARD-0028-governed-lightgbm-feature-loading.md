@@ -15,8 +15,13 @@ test fold during development.
 
 ## Decision
 
-All later LightGBM training, calibration and test commands must load features
-through `app.ml.lightgbm.data.load_governed_feature_dataset`.
+The general independently reviewed corpus path loads features through
+`app.ml.lightgbm.data.load_governed_feature_dataset`. The later frozen public
+C4 research path instead uses `load_tabular_projection_dataset` in
+[projections.py](../../backend/app/market_data/projections.py), preserving its
+root/hash/fold isolation and explicit `research_control_assumption` negatives.
+That path does not satisfy or weaken the independent-clean contract below.
+See [ARD-0038](ARD-0038-c4-specific-evaluation.md).
 
 The loader:
 
@@ -50,8 +55,8 @@ There is deliberately no mode that returns every fold together.
 
 The ML packages are isolated in the backend `ml` optional dependency set.
 LightGBM, scikit-learn and the MLflow client are available to governed ML jobs
-without enlarging the current online backend image before a verified inference
-adapter exists.
+without requiring them in the online backend image. A verified Python adapter
+now exists under ARD-0031; online service integration remains planned.
 
 ## Consequences
 
@@ -66,8 +71,7 @@ adapter exists.
   new explicitly frozen release digest; bundle-local checksum rewrites cannot
   preserve the previous release identity.
 
-The loader does not train, calibrate, score or release a model. Those remain
-later Track A phases.
+The loader does not train, calibrate, score or release a model. Those responsibilities are implemented separately under ARD-0029/0031.
 
 ## Related documentation
 

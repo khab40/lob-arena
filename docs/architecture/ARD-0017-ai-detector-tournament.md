@@ -15,6 +15,14 @@ Primary implementation:
 - Serverless job: `serverless/jobs/detector_tournament.py`
 - Frontend surface: AI Command Center detector tournament panel
 
+## Governed ML boundary — 2026-09-21
+
+The tournament and mock leaderboard described here do not train/select the
+governed LightGBM, Transformer or cascade. Governed development uses immutable
+projections, separate train/validation/test access, hash-bound candidates and
+independently verified comparisons. See [ML lifecycle use cases](../use-cases/ml-lifecycle.md).
+A demo leaderboard or successful Job is not a model qualification receipt.
+
 ## Context
 
 LOB Arena already has detector tournament pieces:
