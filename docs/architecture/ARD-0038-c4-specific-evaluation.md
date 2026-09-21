@@ -61,7 +61,11 @@ package must require and hash-bind it and the reviewed code overlays.
 The [complete synthetic rehearsal](../evidence/g8-complete-c4-rehearsal-20260914.json)
 verified 27 checkpoints, 30 replay domains and 198 paired observations in the
 pinned image. Features/rules alerts are fixtures; remote transport is simulated.
-Original production checkpoint availability and remote rehearsal remain gates.
+The later [native rehearsal](../evidence/g8-native-recovery-20260917.json)
+and [independent S3 readback](../evidence/g8-independent-s3-readback-20260917.json)
+verify synthetic remote recovery. Original production comparison/registration
+verification and the changed production transport remain separate gates;
+fixture comparisons do not become actual Java evidence.
 
 ## Alternatives and consequences
 

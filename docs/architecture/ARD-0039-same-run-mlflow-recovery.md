@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2026-09-15
 
-Implementation Status: `[recovery API implemented; live runner integration pending]`
+Implementation Status: `[replacement integration and native synthetic recovery verified; production qualification pending]`
 
 ## Validation execution policy — 2026-09-16
 

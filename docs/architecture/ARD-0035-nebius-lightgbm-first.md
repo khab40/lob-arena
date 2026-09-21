@@ -51,6 +51,9 @@ The September 23 exit remains at risk. Historical receipts and the R4 failure in
 [the recovery record](../g8-completion-recovery.md) remain intact; the final fold
 must not be described as unopened.
 
+The [ML lifecycle guide](../use-cases/ml-lifecycle.md) distinguishes completed
+development, data checkpoints, scored recovery checkpoints and planned serving.
+
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,
 runner, fixture lifecycle, evidence fields and fail-closed tests passed locally
@@ -293,13 +296,13 @@ candidate and release-authority boundary:
 - [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
 - [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
 
-The C4 evaluator is available in the injected runner. MLflow reservation/recovery
-and completed-release publication recovery are separate APIs, not live runner
-integration. The replacement must require/hash-bind C4 evidence and reviewed
-code, preserve R4's consumed authorization and test-access history, and complete
-pre-logging retention, native-storage and remote rehearsal gates. The
-[storage exception](../g8-persistent-storage-exception.md) remains a proposal.
-Earlier G7/R1–R3 status paragraphs below describe historical checkpoints.
+The signed replacement runner now binds C4 evidence, scored retention,
+reservation/recovery and completed-release publication. Native synthetic storage
+and remote recovery have been exercised; production qualification remains open.
+Every replacement must preserve R4's consumed authorization and test-access
+history and require its own reviewed, signed execution binding. See the current
+status above and [production package](../g8-production-package.md). Earlier
+G7/R1–R3 paragraphs are historical checkpoints, not current authorization.
 
 ## Context
 
