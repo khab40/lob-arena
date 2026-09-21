@@ -1,5 +1,11 @@
 # Project Phases
 
+> **Current versus historical:** The [current status](CURRENT_STATUS.md) owns
+> gate and milestone status. Early phase deliverable paths record their original
+> implementation; removed Python WebSocket/agent-manager files are historical.
+> Java owns the live arena under ARD-0020. Old G4/G5 “next” statements and spend
+> figures below are dated execution history, not new run instructions.
+
 LOB Arena is built as:
 
 - React visual arena
@@ -434,9 +440,9 @@ single campaign/release identity must connect source manifests, replay domains,
 model inputs, model bundles, comparison rows, metrics, cost and the final demo
 report.
 
-GitHub Project #3 currently contains 71 items: 50 `Done`, 12 `In Progress`
-and 9 `Todo`. Those counts include epics, features and child stories, so they
-describe workflow state rather than additive engineering effort. The active
+Use the dated [roadmap snapshot](CURRENT_STATUS.md) for live issue status.
+Older board counts are superseded; epics, features and stories overlap and
+are not additive engineering progress. The active
 detector sequence is GitHub Feature #16: Wave 1 / Story #23 is in progress;
 Wave 2 / Story #24, Wave 3 / Story #25, integrated evidence / Story #90 and
 secure demo UI / Story #91 remain Todo. No Transformer or
@@ -559,6 +565,9 @@ Wave 1 exit criteria:
   licensed data, as applicable.
 
 #### G8 Recovery And Completion Plan
+
+See the [current roadmap snapshot](CURRENT_STATUS.md) for milestone dependencies
+and the source revision used by this documentation review.
 
 Status reconciled on 2026-09-21 against merged PRs #200 and #201:
 `[G0-G7 complete; G8 open; G9 blocked]`. The goal is one separately authorized
