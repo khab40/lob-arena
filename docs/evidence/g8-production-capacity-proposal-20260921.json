@@ -1,0 +1,54 @@
+{
+  "schema_version": "g8_production_capacity_proposal_v1",
+  "status": "proposed_not_applied",
+  "filesystem_id": "computefilesystem-e00vy2fs9w2sm4bm3v",
+  "observed_resource_version": "1",
+  "existing_size_gib": 10,
+  "proposed_size_gib": 32,
+  "additional_size_gib": 22,
+  "provider_resize_documentation": "https://docs.nebius.com/compute/storage/manage#how-to-resize-a-shared-filesystem",
+  "resize_reversible": false,
+  "cost_effect": "Persistent billing increases by 22 GiB of NETWORK_SSD shared filesystem capacity; reducing size afterward is not supported",
+  "storage_type": "NETWORK_SSD",
+  "proposed_max_checkpoint_bytes": 4294967296,
+  "required_free_bytes_before_final_access": 21474836480,
+  "original_comparison_payload_bytes": 2632277460,
+  "declared_final_release_bytes": 10912451,
+  "minimum_existing_plus_five_copy_bytes": 24107113940,
+  "reason": "Scored retention copies all 27 original comparison checkpoints; the actual 2.451 GiB payload cannot fit any checkpoint bound accepted by a 10 GiB/five-copy plan",
+  "evidence": "docs/evidence/g8-original-comparison-metadata-20260921.json",
+  "preserve": [
+    "same filesystem ID and retained rehearsal evidence",
+    "current VM attachment and stopped state",
+    "native mount identity and read-only package alias",
+    "frozen candidate and final authorization gates"
+  ],
+  "preconditions": [
+    "Explicit approval for persistent capacity expansion",
+    "Fresh API readback must match filesystem identity/type/capacity/version and attachment owner",
+    "Confirm provider-supported expansion and preserve evidence before mutation"
+  ],
+  "after_expansion": [
+    "Verify API size and actual mounted capacity",
+    "Rebind production durability/capacity receipt and unsigned package; do not rewrite historical rehearsal receipts",
+    "Require at least 20 GiB actual free space before any production final access"
+  ],
+  "command": [
+    "nebius",
+    "compute",
+    "filesystem",
+    "update",
+    "--id",
+    "computefilesystem-e00vy2fs9w2sm4bm3v",
+    "--resource-version",
+    "1",
+    "--patch",
+    "--size-gibibytes",
+    "32",
+    "--format",
+    "json"
+  ],
+  "jobs_authorized": 0,
+  "final_test_authorized": false,
+  "retention": "Keep evidence until independent verification and separately approved cleanup; monitor storage spend under operator alerts"
+}

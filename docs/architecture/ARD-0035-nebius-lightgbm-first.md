@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-16
+Status reconciled: 2026-09-21
 
 ## Validation execution policy — 2026-09-16
 
@@ -20,39 +20,36 @@ change, not model-quality acceptance or a completed G8/G9 milestone.
 
 Status: `[g0-g7-complete; g8-open; g9-pending]`
 
-Current G8 recovery: R4 downloaded the final release but failed before scoring
-on the projection artifact root. The root correction and synthetic C4-shaped
-scoring/publication/local-MLflow round-trip now pass in the unchanged pinned
-image. The injected runner and reviewed evaluator overlays additionally pass the
-complete synthetic C4 comparison (27 checkpoints, 198 paired observations, one
-scoring call, one verified local MLflow run). This is not production qualification
-or Java execution evidence. Live original comparison availability, replacement
-package binding, durable recovery and replacement-specific authorization remain
-pending. Persistent-storage exception preparation is approved, not provisioning.
-Post-MLflow checkpoint/publication recovery also passes the frozen synthetic fault
-rehearsal. Pre-scoring MLflow reservation and same-run logging recovery now pass
-the frozen synthetic rehearsal too (one run, one scoring call, 24 metrics and 30
-dataset inputs, zero writes on completed recovery). Pre-logging payload retention
-and fresh-process log-only recovery now also pass after removal of the synthetic
-workspace, including a second interruption after an artifact upload. A separate
-[signed replacement entrypoint](../g8-live-replacement.md) now integrates these
-components and reconstructs the cloud result with the original scoring Job and
-resource evidence before marker-last publication. It preserves R4 history and
-requires a native mount and fresh package-bound approval; the ordinary Wave 1
-volume prohibition remains intact. Native durability, authenticated remote
-rehearsal and actual production package review remain required. The synthetic
-rehearsal's two-phase design is approved, subject to the reviewed execution
-package and the validation policy above. [Synthetic source staging](../g8-source-sdk.md) is complete: all 350
-objects were independently downloaded and verified after input writer revocation
-within 397 seconds. Future model/runtime rehearsals use Nebius Serverless. Native
-durability and remote MLflow proof still require execution; no production
-replacement authorization is implied.
-See [pre-logging checkpoints](../g8-prelogging-checkpoint.md),
-[publication recovery](../g8-publication-recovery.md) and
-[MLflow recovery](../g8-mlflow-recovery.md).
-The [recovery record](../g8-completion-recovery.md) supersedes
-the older "final fold remains unopened" status below without altering historical
-receipts or treating R4's failure as G8 completion.
+Current G8 recovery: R4 downloaded the final release but failed before scoring;
+its approval is consumed. The candidate/calibration/features/thresholds remain frozen.
+The C4 loader correction, comparison/report integration, scored retention before
+logging, same-run MLflow recovery and marker-last publication are implemented.
+
+The [native rehearsal](../evidence/g8-native-recovery-20260917.json) demonstrated
+one scoring call and completed recovery after Job/workspace loss. Authenticated
+MLflow readback verified 24 metrics, 30 inputs and four artifact hashes. The later
+[independent S3 receipt](../evidence/g8-independent-s3-readback-20260917.json)
+verified all 64 objects, resolving the earlier independent-reader AccessDenied gap.
+These are synthetic engineering results, not original Java comparison, genuine
+production registration or final model-quality evidence.
+
+Merged PR #201 prepares the [production native package](../g8-production-package.md)
+and v3 signed replacement contract. The retained review is unsigned and not executable.
+The [September 21 audit](../evidence/g8-original-payload-verification-20260921.json)
+verified/staged original payload bytes for all 27 checkpoints, verified live C4
+registration, and rebound metadata/storage in a new unsigned review. Permissions
+are restored and the VM stopped; no payload rows were parsed or models executed.
+Remaining gates: verify production transport and comparison semantics on Nebius; perform
+current identity/storage/image/output preflight; obtain replacement-specific
+approval and sign; execute once; independently verify production S3/MLflow results.
+Native rehearsal success alone does not authorize production final-test access.
+
+The [current G8 plan](../PHASES.md#g8-recovery-and-completion-plan) records the
+ordered work and evidence required for closure. G9 then records actual quality,
+resource/throughput and cost disposition under the operator-managed policy above.
+The September 23 exit remains at risk. Historical receipts and the R4 failure in
+[the recovery record](../g8-completion-recovery.md) remain intact; the final fold
+must not be described as unopened.
 
 Governed LightGBM v1 is implemented locally under ARD-0026 through ARD-0031.
 The Wave 1 request/run contracts, CPU Jobs-image profile, hardened transport,

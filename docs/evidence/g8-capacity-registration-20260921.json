@@ -1,0 +1,53 @@
+{
+  "schema_version": "g8_capacity_and_registration_evidence_v1",
+  "source_commit": "a5b2dc06dbccfb7ab0272bf987c036ae9e05f50b",
+  "verified_at": "2026-09-21T09:40:47.140585+00:00",
+  "operator_approved_expansion": true,
+  "proposal": "docs/evidence/g8-production-capacity-proposal-20260921.json",
+  "filesystem_id": "computefilesystem-e00vy2fs9w2sm4bm3v",
+  "filesystem_resource_version_before": "1",
+  "filesystem_resource_version_after": "2",
+  "resize_operation_id": "computeoperation-e00bnsyd1gyap528hw",
+  "previous_capacity_gib": 10,
+  "capacity_gib": 32,
+  "provider_state": "READY",
+  "mounted_size_bytes": 34359738368,
+  "observed_free_bytes": 34346348544,
+  "verification_mount_options": "ro,relatime",
+  "max_checkpoint_bytes": 4294967296,
+  "required_free_bytes_before_final_access": 21474836480,
+  "fresh_free_space_check_still_required": true,
+  "archive_files_verified": 828,
+  "archive_sha256": "868430ce93b473134b63ac4dfc9d46e75b30f9572def9c188f9e99025b3f568a",
+  "live_registration": {
+    "verified_at": "2026-09-21T09:39:28.328814+00:00",
+    "run_id": "dc119d708cc4464e8fe1b82ba976bf3e",
+    "registration_status": "FINISHED",
+    "total_registered_inputs": 240,
+    "verified_final_tabular_inputs": 30,
+    "all_final_tabular_sources_hashes_counts_and_root_match": true,
+    "metadata_artifact_hashes": {
+      "governed-data/frozen-root.json": "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9",
+      "governed-data/tabular-projection.json": "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7",
+      "governed-data/sequence-projection.json": "bd26a35b3042ec7afbf9c16f26a913a0f51a6389e17a48cbe8838f520094ebfb",
+      "governed-data/development-final-denial-evidence.json": "100278ccaa4aa82270314fa846ecd480cf4f56bce58f7b8a92cc960fadbce5bf"
+    },
+    "final_payload_read": false,
+    "cloud_writes": 0
+  },
+  "vm_final_state": "STOPPED",
+  "vm_resource_version": "67",
+  "model_jobs_submitted": 0,
+  "model_executions": 0,
+  "original_comparison_payload_verified": false,
+  "final_bucket_accessed": false,
+  "production_package_rebound": false,
+  "replacement_evaluation_authorized": false,
+  "evidence_sha256": {
+    "filesystem-expanded-readback.json": "16e401c5dc316ce2cf3471d685feac6fff417347f8587c966e788382e3bfda9a",
+    "mounted-capacity-after.json": "f659eb0c7dc14e1f90821534177bd83c35a1ce248f717366bd9e13de4b56029a",
+    "live-c4-registration-readback.json": "d70f509852ae65f9cc953f112fa18166fb32ab4575083e6de46a6e0fb0be281c",
+    "live-c4-registration-verification.json": "989b6d3436b66a2086ada19f241291a0a9ed3527d2a72c76b8cb40f56b9e4c1a",
+    "capacity-vm-stopped.json": "550bd75aa72ba1e651a1183cf98fae4e673e57d1310dfceb7007984ef11f3a43"
+  }
+}

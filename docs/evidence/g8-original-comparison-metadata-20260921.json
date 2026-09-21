@@ -1,0 +1,80 @@
+{
+  "schema_version": "g8_original_comparison_metadata_evidence_v1",
+  "source_commit": "892006f2155a46f9fd90c043289e04f7b4c428e2",
+  "verified_at": "2026-09-21T08:57:01.834059+00:00",
+  "status": "metadata_verified_payload_and_live_registration_pending",
+  "original_checkpoint_count": 27,
+  "original_replay_domains": 30,
+  "metadata_gets": 89,
+  "metadata_bytes": 273680,
+  "all_retained_metadata_rehashed": true,
+  "original_preparation_sha256": "d45f1bbaed6256904eb9d4862f279692e2d8b1fc5c22b761e62afdd77edc3ba8",
+  "frozen_final_projection_sha256": "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7",
+  "comparison_sha256": "c1e356f9106e86362d1167544cd1a755216115e2947128fd94513b503aba6f11",
+  "metadata_inventory_verified": true,
+  "original_payload_bytes_verified": false,
+  "live_dataset_registration_verified": false,
+  "approved_access_session": {
+    "batch_count": 12,
+    "maximum_keys_per_rule": 8,
+    "bucket_resource_version_before": "34",
+    "bucket_resource_version_after": "58",
+    "policy_updates": 24,
+    "baseline_spec_restored_after_every_batch": true,
+    "temporary_rules_remaining": 0,
+    "post_restoration_metadata_get": "AccessDenied",
+    "reason_for_batching": "Provider rejected the single 89-key policy; batches used only the exact approved keys"
+  },
+  "prepared_metadata_supplement": {
+    "directory": "outputs/g8-production-readiness-20260921/production-metadata-bindings",
+    "review_sha256": "876227f328c65f43407b0401972253d8506d91c1a71556199ffe8cfc5d33cc07",
+    "files": {
+      "c4-inputs.json": {
+        "sha256": "b4a0a51e9cd94adb43bc3bb1c1a90e55e48e0e43d9f3fdf345fc27a082277311",
+        "size_bytes": 305
+      },
+      "comparison-inventory.json": {
+        "sha256": "52b3cedeeb8ee17cdd3870594226a878c01cb6bc320036e59ac5db563dba11b4",
+        "size_bytes": 378
+      },
+      "comparison.review.json": {
+        "sha256": "c1e356f9106e86362d1167544cd1a755216115e2947128fd94513b503aba6f11",
+        "size_bytes": 6897
+      },
+      "profile.json": {
+        "sha256": "4c9864586a8ee42b8f191c96d340fbaa749a21b0ed02c1902e215f04885238ef",
+        "size_bytes": 736
+      },
+      "projection.json": {
+        "sha256": "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7",
+        "size_bytes": 24506
+      }
+    },
+    "profile_identity_sha256": "9e54246121f617d22d9bf76dd7a359b24d4de0c1f8f55cd894497ee5d68b1e8e",
+    "status": "unsigned_metadata_supplement_not_executable"
+  },
+  "capacity_blocker": {
+    "declared_comparison_payload_bytes": 2632277460,
+    "declared_payload_files": 294,
+    "current_filesystem_gib": 10,
+    "largest_checkpoint_bound_allowed_at_10_gib": 2147483648,
+    "comparison_payload_exceeds_that_bound": true,
+    "required_free_bytes_for_comparison_only": 13161387300,
+    "scope": "Lower bound only: excludes scored artifacts, checkpoint metadata and separately staged original evidence"
+  },
+  "object_writes": 0,
+  "jobs_submitted": 0,
+  "model_executions": 0,
+  "final_bucket_accessed": false,
+  "production_execution_authorized": false,
+  "production_g8_complete": false,
+  "evidence_sha256": {
+    "approved-metadata-batch-session.json": "c8931e66a504a2a1c6f5e933d0cb8e387d23b7d85f68fe4156cf9848e8b431d9",
+    "metadata-audit/verification.json": "ae3459a2e5a60e8070f9ebd6ff4136b1bd3c020b954aa51386f7669a2e40038b",
+    "metadata-fetch-ledger.json": "84d09f580515c1cb1caf564ad78d5383d8e2a2f828de1acef38843369ea156d0",
+    "metadata-batch-01-before.json": "aac01c769d4f321762f698b878d36d242a2b89a63dfcc23ad3d6ad199cb376e8",
+    "metadata-batch-12-after.json": "ef60bdda262206618d3eeb1aa3d10748e277b742a37b27c2cecbb7a20399af8c",
+    "restoration-denial.json": "256d333855a2b97191dafaeee5c5f13a233ea9a6aab02162d68dba84f5b10421",
+    "grant-attempt-2/metadata-cli-error.json": "a644d5635ab678edc26059944e6a7ce8441539209484071aee24da1d9da6b566"
+  }
+}

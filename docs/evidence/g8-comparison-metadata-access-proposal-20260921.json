@@ -1,0 +1,159 @@
+{
+  "schema_version": "g8_metadata_access_proposal_v1",
+  "status": "proposed_not_applied",
+  "observed_at": "2026-09-21T08:41:57.641097+00:00",
+  "bucket_id": "storagebucket-e001935725601413893009",
+  "bucket_name": "aimada-wave1-dev-e00g6zvxpr00",
+  "observed_resource_version": "34",
+  "purpose": "Verify original C3 checkpoint metadata and frozen C4 projection metadata without reading rows or scoring",
+  "baseline_policy": {
+    "rules": [
+      {
+        "paths": [
+          "releases/*"
+        ],
+        "roles": [
+          "storage.viewer"
+        ],
+        "group_id": "group-e00wb5ptvpq0q7dpaf"
+      },
+      {
+        "paths": [
+          "data/public-sample-v1/*"
+        ],
+        "roles": [
+          "storage.object-editor"
+        ],
+        "group_id": "group-e00whp6026c6q5sgnw"
+      }
+    ]
+  },
+  "proposed_appended_rule": {
+    "paths": [
+      "data/public-sample-v1/prepared/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/preparation.json",
+      "data/public-sample-v1/prepared/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/SUCCESS",
+      "data/public-sample-v1/prepared/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/001-aapl-spoofing-like-wall-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/001-aapl-spoofing-like-wall-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/001-aapl-spoofing-like-wall-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/002-aapl-spoofing-like-wall-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/002-aapl-spoofing-like-wall-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/002-aapl-spoofing-like-wall-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/003-aapl-spoofing-like-wall-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/003-aapl-spoofing-like-wall-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/003-aapl-spoofing-like-wall-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/004-aapl-layering-like-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/004-aapl-layering-like-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/004-aapl-layering-like-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/005-aapl-layering-like-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/005-aapl-layering-like-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/005-aapl-layering-like-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/006-aapl-layering-like-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/006-aapl-layering-like-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/006-aapl-layering-like-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/007-aapl-quote-stuffing-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/007-aapl-quote-stuffing-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/007-aapl-quote-stuffing-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/008-aapl-quote-stuffing-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/008-aapl-quote-stuffing-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/008-aapl-quote-stuffing-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/009-aapl-quote-stuffing-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/009-aapl-quote-stuffing-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/009-aapl-quote-stuffing-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/010-msft-spoofing-like-wall-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/010-msft-spoofing-like-wall-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/010-msft-spoofing-like-wall-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/011-msft-spoofing-like-wall-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/011-msft-spoofing-like-wall-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/011-msft-spoofing-like-wall-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/012-msft-spoofing-like-wall-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/012-msft-spoofing-like-wall-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/012-msft-spoofing-like-wall-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/013-msft-layering-like-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/013-msft-layering-like-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/013-msft-layering-like-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/014-msft-layering-like-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/014-msft-layering-like-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/014-msft-layering-like-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/015-msft-layering-like-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/015-msft-layering-like-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/015-msft-layering-like-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/016-msft-quote-stuffing-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/016-msft-quote-stuffing-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/016-msft-quote-stuffing-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/017-msft-quote-stuffing-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/017-msft-quote-stuffing-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/017-msft-quote-stuffing-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/018-msft-quote-stuffing-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/018-msft-quote-stuffing-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/018-msft-quote-stuffing-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/019-nvda-spoofing-like-wall-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/019-nvda-spoofing-like-wall-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/019-nvda-spoofing-like-wall-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/020-nvda-spoofing-like-wall-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/020-nvda-spoofing-like-wall-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/020-nvda-spoofing-like-wall-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/021-nvda-spoofing-like-wall-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/021-nvda-spoofing-like-wall-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/021-nvda-spoofing-like-wall-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/022-nvda-layering-like-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/022-nvda-layering-like-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/022-nvda-layering-like-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/023-nvda-layering-like-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/023-nvda-layering-like-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/023-nvda-layering-like-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/024-nvda-layering-like-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/024-nvda-layering-like-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/024-nvda-layering-like-s43/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/025-nvda-quote-stuffing-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/025-nvda-quote-stuffing-s41/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/025-nvda-quote-stuffing-s41/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/026-nvda-quote-stuffing-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/026-nvda-quote-stuffing-s42/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/026-nvda-quote-stuffing-s42/checksums.sha256",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/027-nvda-quote-stuffing-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/027-nvda-quote-stuffing-s43/SUCCESS",
+      "data/public-sample-v1/preparation-checkpoints/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/comparisons/027-nvda-quote-stuffing-s43/checksums.sha256",
+      "data/public-sample-v1/projection-candidates/nasdaq-c4-four-date-5c85182-20260905/SUCCESS",
+      "data/public-sample-v1/projection-candidates/nasdaq-c4-four-date-5c85182-20260905/checksums.sha256",
+      "data/public-sample-v1/projection-candidates/nasdaq-c4-four-date-5c85182-20260905/request.json",
+      "data/public-sample-v1/projection-candidates/nasdaq-c4-four-date-5c85182-20260905/projection-freeze.json",
+      "data/public-sample-v1/projection-candidates/nasdaq-c4-four-date-5c85182-20260905/final/manifests/tabular-projection.json"
+    ],
+    "roles": [
+      "storage.viewer"
+    ],
+    "group_id": "group-e00wb5ptvpq0q7dpaf"
+  },
+  "exact_object_keys": 89,
+  "limits": {
+    "max_gets": 89,
+    "max_object_bytes": 2097152,
+    "max_total_bytes": 16777216,
+    "jobs": 0,
+    "model_execution": false,
+    "object_writes": 0
+  },
+  "expected_preparation_sha256": "d45f1bbaed6256904eb9d4862f279692e2d8b1fc5c22b761e62afdd77edc3ba8",
+  "expected_final_projection_sha256": "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7",
+  "preconditions": [
+    "Explicit operator approval for this exact additive read-only rule",
+    "Fresh bucket GET equals retained baseline; otherwise stop and reconcile",
+    "No preparation or final key activation; use existing development identity"
+  ],
+  "cleanup": [
+    "After bounded metadata audit, fresh GET and remove only this appended rule",
+    "Preserve both baseline rules and any concurrent changes",
+    "Read back policy restoration and verify metadata GET is denied again"
+  ],
+  "not_authorized": [
+    "final-input bucket access",
+    "raw rows or Parquet payload reads",
+    "checkpoint payload reads",
+    "replay or model execution",
+    "final evaluation",
+    "bucket-wide reads",
+    "object writes or deletes"
+  ],
+  "evidence_directory": "outputs/g8-production-readiness-20260921"
+}

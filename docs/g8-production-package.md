@@ -21,8 +21,9 @@ checksum inventory and four MLflow artifact hashes match the retained checkpoint
   into review history. R4's approval is removed from the new draft request.
 
 See the [preparation receipt](evidence/g8-production-package-review-20260917.json).
-Full local review files and frozen metadata are retained under
-`outputs/g8-production-review-20260917-v2/`.
+The original local review is preserved under `outputs/g8-production-review-20260917-v2/`.
+The current unsigned review is `outputs/g8-production-review-20260921-v3/`, bound to
+the [verified original payload and updated readiness evidence](evidence/g8-original-payload-verification-20260921.json).
 
 ## Transport and preparation
 
@@ -43,11 +44,11 @@ neither a runnable signed manifest nor a submission command.
 
 ## Still required before production signing/submission
 
-1. Verify original Java comparison checkpoints and genuine dataset registration;
-   bind the final projection metadata, C4 profile, comparison inventory and input
-   locations. Rehearsal fixtures cannot stand in for this evidence.
-2. Validate the production transport/entrypoint on Nebius. Static checks use inert
-   code; they do not claim execution of this changed production package.
+1. Preserve the verified original checkpoint bytes and genuine registration now
+   bound into the unsigned review. Validate production comparison semantics on
+   Nebius; byte verification did not parse protected rows.
+2. Validate the production transport/entrypoint on Nebius, including package staging,
+   mounts and context handoff. Static checks do not establish runtime readiness.
 3. Complete fresh permissions, pinned image alias, storage capacity, credentials
    and empty output/intent checks. Historical R4 selectors are review inputs only.
 4. Obtain replacement-specific final-test approval, bind its authorization files
@@ -57,3 +58,60 @@ neither a runnable signed manifest nor a submission command.
 No billing check, package submission expiry or fixed VM window is introduced.
 Per-Job resource/time bounds and separate final-test approval remain. G8 is open;
 G9 remains blocked, and actual model quality is not established by this package.
+
+## September 21 readiness continuation
+
+Fresh provider readback located the completed original C3 test-date and C4 Jobs.
+The original preparation metadata initially returned AccessDenied; the
+[initial readiness receipt](evidence/g8-production-readiness-20260921.json) preserves
+that observation. The operator then approved the exact 89-key metadata scope.
+
+The [completed metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+verified all 27 original checkpoint inventories, 30 replay domains and the unchanged
+final projection manifest: 89 objects / 273,680 bytes, with no row or payload reads.
+Nebius rejected the large single policy, so the same exact keys were granted in
+12 batches of at most eight. Every temporary rule was removed; the complete bucket
+spec was restored (resource version 34 → 58), and a fresh metadata GET was denied.
+No model Job, final-bucket access or object write occurred.
+
+The unsigned metadata supplement at
+`outputs/g8-production-readiness-20260921/production-metadata-bindings/` prepares
+`projection.json`, `profile.json`, `comparison-inventory.json`, `c4-inputs.json`
+and the comparison manifest. Its hashes are in the audit receipt. It does not
+assert full payload verification, live dataset registration or execution authority.
+Preserve the original v2 review rather than silently changing its hash.
+
+The original comparison inventory contains **2,632,277,460 bytes (2.451 GiB)**.
+Scored retention copies all 27 checkpoint trees. A 10 GiB filesystem permits a
+maximum 2 GiB checkpoint under the five-copy guard, so production cannot use the
+rehearsal's original capacity. The [capacity proposal](evidence/g8-production-capacity-proposal-20260921.json)
+expands the same filesystem to 32 GiB and proposes a 4 GiB checkpoint bound,
+requiring 20 GiB actual free space before final access. The operator approved it,
+and [execution evidence](evidence/g8-capacity-registration-20260921.json) confirms
+32 GiB mounted capacity and 34,346,348,544 free bytes. The preserved 828-file
+archive hash verifies. The VM is stopped again; production storage bindings and
+a fresh free-space check at execution remain required.
+The original rehearsal's 10 GiB receipt remains historical evidence.
+
+Live C4 registration also verifies: the original FINISHED run contains 240 dataset
+inputs, with all 30 final-tabular entries matching frozen source URIs, hashes,
+counts and root identity; all four metadata artifact hashes match. No payload
+rows were accessed. The earlier unsigned supplement remains historical.
+
+The separately approved [payload audit](evidence/g8-original-payload-verification-20260921.json)
+then staged 294 original objects (2,632,277,460 bytes). All 377 staged payload/metadata
+files were independently rehashed. The complete bucket policy was restored after
+each of 37 exact-key batches (version 58 → 132); the final GET returned HTTP 403.
+The VM is STOPPED again and the final-access key remains INACTIVE. No rows were
+parsed, no model Job ran and no final bucket was accessed.
+
+The new 25-file unsigned review preserves the frozen candidate, prior R4 history
+and original v2 package. Its profile/input/comparison and native durability bindings
+now include verified payload bytes, live registration and 32 GiB capacity, with a
+4 GiB / 2,000-file checkpoint bound. Archive contents and all member hashes/sizes
+verify. Historical Job-loss evidence is retained separately from fresh capacity
+and staged-byte verification. No authorization files or executable plan are emitted.
+
+Remaining gates: production transport and comparison semantic verification on
+Nebius, fresh preflight, canonical request and replacement-specific authorization.
+G8 remains open; the unsigned review is not execution authority.
