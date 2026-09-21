@@ -71,141 +71,35 @@ product API/UI is not implied. See [data preparation](ml-data-preparation.md).
 Verify repository contracts before logging approved metadata/artifacts into
 corpus, development or governed-evaluation namespaces. Raw rows remain outside
 tracking. Namespace creation and artifact logging do not implement model-version
-```mermaid
-graph TD
-    Corpus["lob-arena/corpus-releases"]
-    Development["lob-arena/lightgbm-development"]
-    Evaluation["lob-arena/governed-evaluation"]
-    Model["lob-arena-lightgbm-attack-active"]
-    Server["Authenticated MLflow"]
-    Database["PostgreSQL metadata"]
-    Artifacts["S3-compatible artifacts"]
-    Contracts["Signed/checksummed<br/>repository contracts"]
-
-    Corpus --> Server
-    Development --> Server
-    Evaluation --> Server
-    Model --> Server
-    Server --> Database
-    Server --> Artifacts
-    Contracts -. "authorizes what may be logged/released" .-> Server
-```
-
-Main flow:
-
-1. A governed pipeline verifies compatible protocol, corpus, split, feature,
-   and release hashes locally.
-2. It logs parameters, metrics, manifests, and permitted artifacts to the
-   appropriate experiment.
-3. Development models remain in the development experiment.
-4. Final test results enter governed evaluation only after thresholds are
-   frozen.
-5. Planned registration/promotion will publish verified model versions and
-   aliases; current loggers and namespace bootstrap do not implement this step.
+promotion. [MLflow operations](../ml/mlflow-tracking-server.md) owns setup and
+[model serving](ml-model-serving.md) describes planned registration/retention.
 
 ## Governed LightGBM v1
 
-Status: implemented and verified locally through the complete governed v1
-software boundary. Wave 1 G0–G7 are complete; production G8 evaluation remains
-open and G9 disposition is blocked. C4 tabular and sequence projections exist.
-The market-sequence Transformer model and Transformer-to-LightGBM cascade
-remain proposed after the LightGBM exit decision. Native synthetic recovery
-verification is not production model qualification.
-
-Purpose: deliver an interpretable binary `attack_active` challenger and compare
-it with deterministic rules on identical governed observations.
-
-Main flow:
-
-1. Load only schema/protocol/corpus/split-compatible feature artifacts.
-2. Fit preprocessing and class weights on the training fold only.
-3. Use validation for early stopping, probability calibration, and threshold
-   selection.
-4. Freeze high-precision, balanced, and high-recall operating modes.
-5. Run one final paired test evaluation against rules.
-6. Persist feature contributions or SHAP evidence, manifests, checksums, and
-   MLflow run/model references.
-
-Primary challenge cases are liquidity evaporation and subtle layering, rather
-than only reproducing already-easy spoofing or quote-stuffing results.
+Follow [training and selection](ml-training-selection.md) for training-only
+fitting, validation reuse, calibration, candidate selection and checkpoints.
+Use the [LightGBM runbook](../ml/lightgbm-v1-runbook.md) for commands. Final scoring
+requires its own authorization; recovery rehearsal is not production quality.
+Transformer training, cascade and live learned serving remain planned.
 
 ## Incident Investigation
 
-Purpose: explain a detected synthetic incident using compact replay evidence.
-
-```mermaid
-graph TD
-    Operator["1. Operator selects incident and clicks Analyze"]
-    UI["2. Arena UI posts /api/incidents/id/explain"]
-    API["3. FastAPI backend receives request"]
-    Store["4. Incident store loads incident"]
-    Payload["5. Backend builds compact replay and evidence payload"]
-    Nebius["6. Backend posts /explain-event to Nebius"]
-    Explanation["7. Nebius returns explanation JSON"]
-    Panel["8. UI renders Nebius AI Investigator panel"]
-
-    Operator --> UI
-    UI --> API
-    API --> Store
-    Store --> Payload
-    Payload --> Nebius
-    Nebius --> Explanation
-    Explanation --> Panel
-```
-
-Business value:
-
-- Converts detector evidence into a readable investigation narrative.
-- Keeps Nebius credentials and endpoint details out of the browser.
-- Preserves safety framing with synthetic-only disclaimers.
-
-Nebius role:
-
-- Backend calls `NEBIUS_INCIDENT_EXPLAINER_URL`, deployed as `/explain-event`.
-- Request contains compact replay context, detector evidence, and incident metadata.
-- Response is typed explanation JSON for the UI's Nebius AI Investigator panel.
+Select an incident and Analyze. FastAPI loads bounded evidence and calls the
+configured endpoint; the UI displays typed results and real/fallback mode.
+Credentials stay on the server and the explanation does not change detector
+scores. See [endpoint flow](../architecture/ARD-0005-nebius-endpoint-contract.md#endpoint-flow).
 
 ## Red-Team Scenario Generation
 
-Purpose: generate a launchable synthetic scenario configuration from business
-constraints.
-
-```mermaid
-graph TD
-    Operator["Demo Operator"]
-    Control["Scenario Generator"]
-    Backend["POST /api/nebius/attack-scenario"]
-    NebiusClient["NebiusClient"]
-    Endpoint["Nebius scenario endpoint or typed fallback adapter"]
-    Config["AttackScenario"]
-    Batch["Scenario Batch Generator / Serverless Runner"]
-
-    Operator -->|"attack type, market condition, objective, stealth, duration"| Control
-    Control --> Backend
-    Backend --> NebiusClient
-    NebiusClient --> Endpoint
-    Endpoint -->|"bounded scenario draft or fallback mock"| NebiusClient
-    NebiusClient --> Config
-    Config -->|"selected ATTACK-* source context"| Batch
-```
-
-Business value:
-
-- Lets the demo create scenario variants without hardcoding every variant.
-- Keeps generated scenarios bounded, persisted, selectable, and usable as source context for scenario grids or Nebius Serverless batches.
-- Supports both Nebius endpoint mode and local mock fallback mode.
-
-Nebius role:
-
-- Backend calls the configured Nebius scenario endpoint when available and falls back to a typed local adapter.
-- Input includes attack type, market condition, objective, stealth level, attack duration, red-team agent count, and detector difficulty.
-- Output is normalized into `AttackScenario`; persisted scenarios can be selected later in the Control Panel and submitted to the Scenario Batch Generator or Serverless Batch Experiment Runner.
+Provide attack family, market condition, objective, stealth, duration, agent count
+and difficulty. The bounded output is persisted as an `AttackScenario`, selectable
+as `ATTACK-*` source context for scenario grids/batches. A typed mock fallback is
+explicit. [ARD-0016](../architecture/ARD-0016-ai-scenario-generator.md) owns payloads,
+canonical ground truth, injection and acceptance requirements.
 
 ## Detector Tournament Benchmark
 
-Purpose: evaluate deterministic detectors across labeled synthetic scenario
-families.
-
+The [tournament interface](../architecture/ARD-0017-ai-detector-tournament.md)
 ```mermaid
 graph LR
     Researcher["Research / Benchmark User"]
