@@ -20,7 +20,7 @@ The architecture supports interactive replay/investigation and offline governed
 corpus/training/evaluation paths. Both paths reuse the same canonical Java
 stream, scenario ground truth, hashes, and release contracts.
 
-## Current Design — 2026-09-15
+## Current Design — 2026-09-21
 
 Java remains the sole live exchange/replay authority; Python owns ingestion,
 features, ML and cloud orchestration. LOBSTER and Nasdaq ITCH feed the normalized
@@ -28,12 +28,26 @@ historical-data boundary. Governed LightGBM v1 is implemented; the Transformer
 and Transformer-to-LightGBM cascade remain proposed follow-on work.
 
 Wave 1 G0–G7 are complete. G8 remains open and G9 blocked: R4 downloaded the
-final release and failed before scoring. The frozen candidate remains unchanged.
-C4-specific evaluation, same-run MLflow recovery and completed-release publication
-recovery are implemented and synthetically rehearsed. Durable pre-logging payload
-retention and live recovery integration remain unfinished. Native storage is a
-proposal; original production C3 availability, remote rehearsal and a reviewed
-replacement execution package remain gates.
+final release and failed before scoring; its approval is consumed. The candidate
+remains frozen. The signed replacement path now integrates C4 comparison,
+pre-logging scored retention, same-run MLflow recovery and conditional publication.
+A native two-Job synthetic rehearsal and independent MLflow/S3 readback passed.
+Production comparison/registration verification, changed transport qualification,
+capacity/preflight and replacement-specific authorization remain separate work.
+See the [production package](g8-production-package.md) and
+[recovery record](g8-completion-recovery.md) for operational gates.
+
+C4 already supplies both tabular and 64-step feature-sequence projections.
+The Transformer model/trainer, cascade, automatic model-version promotion and
+near-real-time learned-detector integration are planned. The existing Python
+LightGBM scorer requires a verified bundle and exact feature mapping; it is not
+wired into the Java live stream.
+
+The [ML lifecycle use cases](use-cases/ml-lifecycle.md) explain data preparation,
+training/checkpoints, calibration, hyperparameter selection, MLflow retention,
+and planned historical/synthetic/hybrid/live scoring with data-model and process
+diagrams. The [review ledger](architecture/ml-documentation-review-20260921.md)
+links corrected claims to implementation evidence.
 
 ## System High-Level Design
 
@@ -127,7 +141,7 @@ flowchart LR
 | Historical replay adapter | Verifies normalized manifests and feeds immutable source records into the Java exchange before the synthetic phase without assigning historical labels. |
 | Agent Runners Workspace | Runs out-of-process normal, CPU-heavy, ML, and LangGraph-compatible agents behind the common intent protocol. Runners return intents and never mutate the exchange directly. |
 | Corpus and feature pipeline | Accepts independently adjudicated negatives and synthetic attack labels, freezes chronological session groups, and emits causal schema-locked features and signed evaluation inputs. |
-| Shared MLflow plane | Indexes corpus releases, LightGBM development, governed evaluations, model versions, metrics, and permitted artifacts in PostgreSQL/S3-compatible storage. It cannot approve a corpus or model release. |
+| Shared MLflow plane | Indexes corpus releases, LightGBM development, governed evaluations, metrics and permitted artifacts in PostgreSQL/S3-compatible storage. A registered-model namespace exists; automatic version publication/promotion is planned. It cannot approve a release. |
 | Experiment manager | Owns local/Nebius Managed Experiment manifests on `/api/experiments`, persists `outputs/experiments/<experiment_id>/experiment.json`, and exposes artifact paths without replacing MLflow or the governed release manifests. |
 | Nebius Serverless Cloud | Provides Nebius AI inference for Smart Detection and AI Investigator reports, plus Managed Experiment batch execution, GPU utilization, datasets, and artifacts. |
 | Prometheus | Opt-in operational telemetry store that scrapes Java Actuator, FastAPI, agent-runner, and its own health. It is outside the exchange and detector decision path. |
@@ -197,8 +211,10 @@ graph LR
     Feature --> Parquet
     Feature --> Quality
     Parquet --> Trainer
-    Trainer --> Test
-    Test --> Adapter
+    Trainer --> Gate["Separate final-test authorization"]
+    Gate --> Test
+    Test --> Bundle["Verified evaluated bundle"]
+    Bundle --> Adapter
     Quality -. "quality metadata" .-> MLflow
     Trainer -. "parameters + metrics + artifacts" .-> MLflow
 ```
@@ -234,8 +250,8 @@ graph LR
     Predictions -. "fold-bound metrics" .-> MLflow
 ```
 
-Phase 0 defines the fail-closed identity and artifact boundary before adding a
-LightGBM dependency. Every manifest binds the model and training-run IDs to the
+Phase 0 established the identity and artifact boundary; training, calibration
+and the verified scorer subsequently landed under ARD-0029/0031. Every manifest binds the model and training-run IDs to the
 exact protocol, corpus, chronological assignment, feature schema, and feature
 configuration hashes. Calibration is validation-only, the test fold is
 explicitly inaccessible during fitting, and high-precision, balanced, and
@@ -255,36 +271,40 @@ The logger independently recomputes the report before indexing `c4.test.*` metri
 
 ```mermaid
 flowchart LR
-    C4["Frozen candidate + C4 projection"] --> Score["Final scoring"]
+    C4["Authorized frozen candidate + C4 projection"] --> Reserve["Reserve one MLflow run; durable ledger"]
+    Reserve --> Score["Final scoring"]
     Score --> Eval["C4 report + original C3 evidence"]
-    Eval --> Log["Independent verification + MLflow logging"]
-    Reserve["Same-run reservation API"] -. "integration pending" .-> Score
-    Score -. "not implemented" .-> Durable["Durable pre-logging checkpoint"]
-    Durable -. "integration pending" .-> Log
-    Log --> Complete["Completed local release"]
-    Complete --> Retain["Sealed publication checkpoint API"]
-    Retain --> Publish["Exact-prefix conditional PUTs + SUCCESS last"]
+    Eval --> Durable["Seal scored checkpoint before logging"]
+    Durable --> Log["Verify and log to same MLflow run"]
+    Durable -. "after workspace loss; no rescoring" .-> Recovery["Log-only recovery"]
+    Recovery --> Log
+    Log --> Complete["Completed release"]
+    Complete --> Retain["Sealed publication checkpoint"]
+    Retain --> Publish["Conditional PUTs; SUCCESS last; readback"]
 ```
 
-The diagram connects the intended lifecycle; reservation and recovery helpers
-are implemented separately and are not wired into the live runner.
-[ARD-0039](architecture/ARD-0039-same-run-mlflow-recovery.md) reserves one MLflow
-identity before scoring and resumes verified logging without creating another run.
-[ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md) retains
-an already completed release and resumes publication without scoring or MLflow
-writes. Neither helper proves scored payloads survive Job loss before logging.
-See the [recovery gates](g8-completion-recovery.md) and
-[proposed native storage exception](g8-persistent-storage-exception.md).
+This lifecycle is implemented in the signed replacement path and exercised by
+synthetic native Jobs. [ARD-0039](architecture/ARD-0039-same-run-mlflow-recovery.md)
+reserves one MLflow identity and recovers verified logging without another run.
+[ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md)
+recovers publication of a completed release without scoring or MLflow writes.
+Separate pre-logging retention supplies the payload needed for log-only recovery.
+The [native receipt](evidence/g8-native-recovery-20260917.json) and later
+[independent S3 receipt](evidence/g8-independent-s3-readback-20260917.json)
+prove synthetic recovery, not production G8 acceptance. See
+[remaining recovery gates](g8-completion-recovery.md) and
+[the native storage exception](g8-persistent-storage-exception.md).
 
 ### Shared MLflow Tracking Plane
 
 The opt-in `mlflow` Compose profile provides an authenticated shared tracking
-server (image pinned to MLflow 3.15.2) backed by PostgreSQL metadata and private
+server (checked-in image pinned to MLflow 3.16.0) backed by PostgreSQL metadata and private
 S3-compatible MinIO artifacts locally. The Nebius profile uses Object Storage
 and a Registry digest-pinned image on the CPU VM, without MinIO.
 It defines separate experiment namespaces for corpus releases, LightGBM
 development, and governed evaluation, plus the governed binary `attack_active`
-registered-model namespace. A deployment smoke test exercises authentication,
+registered-model namespace. Training loggers save explicit artifacts; they do
+not yet create model versions or assign champion aliases. A deployment smoke test exercises authentication,
 registry bootstrap, database writes, and artifact upload/download.
 
 A non-admin, read-only exporter projects bounded experiment, run, and model

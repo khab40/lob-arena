@@ -406,21 +406,20 @@ Platt/isotonic calibration, frozen high-precision/balanced/high-recall modes,
 schema-locked test predictions, per-alert tree contributions, a fail-closed
 detector adapter, explicit MLflow development/evaluation logging, and a
 checksummed model bundle. Software completion is not a performance claim. The
-Nebius Wave 1 G4 cloud smoke is complete: after six bounded failures, attempt 7
-completed the governed workload in 38 seconds, published 25 result objects plus
-`SUCCESS`, passed all 16 gates and reconciled spend at USD 8.57 including VAT.
-Seven of the fixed 20 development slots are consumed, 13 remain, MLflow is
-stopped and G5 is unlocked.
+Wave 1 G0–G7 are complete: reproducibility passed, G6 selected the
+`ablate-state` feature subset and isotonic calibration, and G7 froze the
+candidate. Production G8 evaluation remains open and G9 disposition blocked.
+R4 downloaded the final release but failed before scoring; a replacement needs
+its own signed authorization. Native synthetic same-run MLflow recovery and
+independent S3 readback are recorded, without implying production qualification.
 
-The next data step is one selective governed foundation for every learned
-detector. Only the exact approved Nasdaq sample files are fetched; no website
-crawl or mirror is permitted. Full-market gzip packages may be transiently
-staged because ITCH extraction is sequential, but durable Nebius S3 releases
-retain the selected AAPL/MSFT/NVDA windows, provenance and immutable
-development/test projections. The same root corpus and split feed tabular
-LightGBM, the causal Transformer sequence projection and the later exact-joined
-Transformer-to-LightGBM cascade. See the
-[public market-data plan](docs/nebius-public-market-data-lightgbm-plan.md).
+The C0–C4 shared data foundation is implemented for the four-date research
+corpus. Only approved Nasdaq files are acquired; selected AAPL/MSFT/NVDA windows,
+source/replay provenance and immutable development/final projections are retained.
+Tabular and 64-step causal feature-sequence views share target identities and
+chronological assignments. Transformer training and the exact-joined cascade
+remain planned. See the [ML lifecycle](docs/use-cases/ml-lifecycle.md) and
+[four-date data flow](docs/nasdaq-public-sample-v1-data-flow.md).
 This research-only qualification does not replace appropriately licensed data,
 independent clean-window review or a signed governed test release for
 production/client performance claims.
@@ -431,8 +430,8 @@ Transformer, evaluate a separate Transformer-to-LightGBM cascade using
 versioned scores/embeddings, and package one identical-row comparison. Nasdaq
 is the primary governed benchmark; the frozen candidates then run against the
 repository LOBSTER sample as a separate no-retuning robustness challenge. The
-Transformer and cascade are specified but not implemented. The verified
-tabular LightGBM bundle remains the required rollback and missing-feature
+Transformer and cascade models are specified but not implemented. A separately
+qualified and verified tabular LightGBM bundle is the planned rollback and missing-feature
 fallback. The later secure demo UI is tracked by Story #91: selectively restore
 the archived Google Auth foundation, update ingestion and Nasdaq replay, add a
 campaign-wide experiment/results/report view, and provide a one-page management
@@ -713,3 +712,11 @@ make secrets-check
 - Do not commit credentials, private endpoints, signed URLs, or unredacted cloud logs.
 - Never print or attach `.env`; inspect only named non-secret keys and use `docker compose config --quiet` for validation.
 - Run `./scripts/check-secrets.sh` before publishing evidence.
+
+## ML architecture and workflow
+
+Start with [Architecture](ARCHITECTURE.md) and the [ML lifecycle guide](docs/use-cases/ml-lifecycle.md)
+for source data, chronological partitions, LightGBM/Transformer inputs, training,
+checkpoints, calibration, selection, MLflow retention and planned streaming use.
+The guide separates implemented LightGBM and sequence-data capabilities from
+proposed Transformer, cascade, registry-promotion and live-serving work.

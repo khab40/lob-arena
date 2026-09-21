@@ -10,6 +10,12 @@ provide trading signals or compliance decisions.
 
 **For architecture details**, see [High-Level Architecture](architecture.md) and [Architecture Records (ARDs)](architecture/README.md).
 
+For the detailed ML workflow, start with [ML lifecycle use cases](use-cases/ml-lifecycle.md):
+data selection/partition/storage, training/checkpoints, calibration, hyperparameter
+selection, MLflow candidates and planned near-real-time serving. LightGBM is
+implemented; Transformer sequence data exists, but the classifier and cascade
+remain planned. Diagrams below show the full intended lifecycle.
+
 ## What We Solve
 
 The project solves a detector-validation problem: how to make market
@@ -97,8 +103,8 @@ flowchart LR
     Freeze["Frozen corpus +<br/>chronological split"]
     Features["Causal features"]
     LightGBM["LightGBM<br/>reference baseline"]
-    Transformer["Standalone<br/>Transformer"]
-    Hybrid["Transformer → LightGBM<br/>hybrid"]
+    Transformer["Planned standalone<br/>Transformer"]
+    Hybrid["Planned Transformer → LightGBM<br/>hybrid"]
     Compare["Identical-row comparison<br/>+ LOBSTER robustness"]
     Track["MLflow experiments<br/>and approved artifacts"]
     Package["Verified E2E<br/>evidence package"]
@@ -138,7 +144,7 @@ flowchart LR
 | Hybrid Historical Replay | Demo Operator / Research User | Replay a LOBSTER window as an unlabeled control, then inject the same predefined synthetic attack over that window for reproducible comparison. |
 | Governed Corpus Release | Data Steward / Independent Reviewers | Admit sessions and clean windows only after coverage, provenance, blind review, conflict resolution, and signed release gates pass. |
 | Shared MLflow Tracking | ML Engineer / Reviewer | Keep corpus, LightGBM-development, governed-evaluation, and approved model metadata in one authenticated tracking plane. |
-| Governed LightGBM v1 | ML Engineer / Model Validator | Train deterministic binary `attack_active` candidates now; next freeze validation-selected operating modes and compare against rules without test leakage. |
+| Governed LightGBM v1 | ML Engineer / Model Validator | Train/calibrate binary `attack_active` candidates and freeze validation-selected modes; production Wave 1 evaluation remains gated. |
 | Incident Investigation | Demo Operator / Reviewer | Use AI Investigator to turn detector evidence into a clear explanation. |
 | Red-Team Scenario Generation | Demo Operator | Use Scenario Generator to create a launchable synthetic scenario configuration. |
 | Detector Tournament Benchmark | Research / Benchmark User | Use Managed Experiment jobs to compare detector precision, recall, F1, and latency. |
@@ -418,16 +424,17 @@ Main flow:
 3. Development models remain in the development experiment.
 4. Final test results enter governed evaluation only after thresholds are
    frozen.
-5. A registered model version or alias is created only after release
-   verification passes.
+5. Planned registration/promotion will publish verified model versions and
+   aliases; current loggers and namespace bootstrap do not implement this step.
 
 ## Governed LightGBM v1
 
 Status: implemented and verified locally through the complete governed v1
-software boundary. Nebius Wave 1 cloud qualification is in progress at G4;
-G5-G9 performance, reproducibility and release gates remain pending. The
-market-sequence Transformer and Transformer-to-LightGBM cascade are separate
-Todo waves after the LightGBM go/no-go decision.
+software boundary. Wave 1 G0–G7 are complete; production G8 evaluation remains
+open and G9 disposition is blocked. C4 tabular and sequence projections exist.
+The market-sequence Transformer model and Transformer-to-LightGBM cascade
+remain proposed after the LightGBM exit decision. Native synthetic recovery
+verification is not production model qualification.
 
 Purpose: deliver an interpretable binary `attack_active` challenger and compare
 it with deterministic rules on identical governed observations.

@@ -42,12 +42,12 @@ Status reconciled as of 2026-09-15 (historical implementation labels retained):
 | [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
 | [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
 | [ARD-0034](ARD-0034-itch-market-profile-calibration.md) | `[phase-3 done]` | Versioned ITCH distributions, deterministic parameter compilation, profile-bound Java simulation, dynamic reference path, and held-out realism reports |
-| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G0-G7 complete; G8 open]` | G0–G7 complete; R4 accessed the final release then failed before scoring; C4 evaluation and recovery primitives pass synthetic rehearsals, while durable live integration and replacement authorization remain open |
-| [ARD-0036](ARD-0036-market-sequence-transformer.md) | `[todo after ARD-0035 disposition]` | No Transformer implementation yet; train a causal challenger through bounded GPU Jobs only after the LightGBM baseline is frozen |
+| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G0-G7 complete; G8 open]` | G0–G7 complete; native synthetic recovery and independent readback verified; production qualification and replacement authorization remain open |
+| [ARD-0036](ARD-0036-market-sequence-transformer.md) | `[todo after ARD-0035 disposition]` | C4 sequence projection/materialization exists; classifier/training remain proposed after LightGBM exit disposition |
 | [ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) | `[todo after ARD-0036 disposition]` | No cascade implementation yet; feed versioned causal Transformer features into a new LightGBM family with ablation, fallback and promotion gates |
 | [ARD-0038](ARD-0038-c4-specific-evaluation.md) | `[implemented; live qualification pending]` | C4-Specific Frozen Evaluation; see record for recovery/integration limits |
-| [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) | `[implemented; live qualification pending]` | Same-Run MLflow Evaluation Recovery; see record for recovery/integration limits |
-| [ARD-0040](ARD-0040-completed-release-publication-recovery.md) | `[implemented; live qualification pending]` | Completed-Release Publication Recovery; see record for recovery/integration limits |
+| [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) | `[implemented; live qualification pending]` | Same-run recovery integrated and natively rehearsed on synthetic inputs; production qualification pending |
+| [ARD-0040](ARD-0040-completed-release-publication-recovery.md) | `[implemented; live qualification pending]` | Publication recovery integrated and independently read back; production qualification pending |
 
 Current UI architecture note: the product shell exposes Data Ingestion, Arena,
 Control Panel, and About in that order. Scenario setup, incidents,
@@ -117,6 +117,9 @@ diagrams document the execution boundaries.
 - [ARD-0017: AI Detector Tournament](ARD-0017-ai-detector-tournament.md) — Phase 3 build plan and implementation record for detector tournaments via Nebius Serverless Jobs
 
 ### Use Cases
+
+- [ML lifecycle use cases](../use-cases/ml-lifecycle.md) — Data, training, calibration, selection, MLflow retention and planned serving
+- [ML documentation review](ml-documentation-review-20260921.md) — Corrections, evidence and implementation gaps
 
 - [Nebius Serverless Use Cases](../use-cases/nebius-serverless-use-cases.md) — Product use cases and concrete API flows
 
