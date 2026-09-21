@@ -613,7 +613,13 @@ Completion evidence and remaining work, in order:
    is now complete: 294 objects / 2,632,277,460 bytes staged and all 377 payload/metadata
    files independently rehashed. All 37 temporary grants were removed; the original
    policy is restored and access denied again. The VM is stopped. Payload rows were
-   not parsed; production comparison semantics remain for the Nebius runtime check.
+   not parsed in that byte audit. The later approved semantic Job
+   `aijob-e00ezdakxbj7m0xxfy` [failed with ValidationError](../evidence/g8-comparison-semantics-20260921.json).
+   The local comparison metadata lacks required `preparation.logical_name`; the
+   redacted log cannot establish the exact failure stage or completed parsing.
+   Original evidence is preserved; the [retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
+   adds only that field in a new tree, rebinds its inventory and adds safe diagnostics.
+   One-Job approval was consumed; no retry has run. Semantics remain unverified.
 2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
    imports, mount checks and signed-context handoff without production final scoring.
    Record exact package/image/source hashes and actual Job/filesystem identities.
@@ -627,8 +633,10 @@ Completion evidence and remaining work, in order:
    files were independently rehashed and archived; VM stopped, final key inactive.
    The provider mount warning recurred despite successful runtime checks/readback;
    its root cause remains unresolved. No protected rows, training or scoring ran.
-   Transport verification is complete; protected comparison semantics still need
-   a separately scoped row-access approval before parsing on Nebius.
+   Transport verification is complete. The failed semantic audit's compute was
+   released; VM stopped and final key inactive. Approve the corrected one-Job retry
+   before further protected parsing. Snapshot Parquet scope remains hash/footer-only;
+   snapshot row/schema consistency and prediction joins are not verified by this audit.
 3. **Complete package and preflight.** Check current identity/permissions, versioned
    secrets, pinned image alias, MLflow readiness, native capacity and output/intent
    state. The approved [32 GiB expansion](../evidence/g8-capacity-registration-20260921.json)
@@ -636,7 +644,9 @@ Completion evidence and remaining work, in order:
    accommodate the 2.451 GiB comparison payload. The new unsigned September 21 review
    binds verified comparison/lineage evidence and the 4 GiB checkpoint bound to
    32 GiB storage. Recheck 20 GiB actual free space at execution; finish the canonical
-   request and complete v3 plan after runtime verification and approval. Keep
+   request and complete v3 plan after runtime verification and approval. Rebind the
+   production review to the corrected comparison path/hash after successful audit;
+   the retained unsigned review still points to the defective metadata. Keep
    scored/recovery evidence durable. Follow the [validation policy](../ml/model-validation-execution-policy.md);
    do not reinstate historical billing-freshness, package-expiry or fixed-VM gates.
 4. **Obtain replacement-specific approval and sign.** Review the concrete package,

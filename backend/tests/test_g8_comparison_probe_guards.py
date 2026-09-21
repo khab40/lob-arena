@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import runpy
 import subprocess
 import sys
 
@@ -94,4 +95,22 @@ def test_optimized_cli_rejects_missing_approval_without_exposing_input(tmp_path)
     result = subprocess.run([sys.executable, "-O", str(WORKER), str(proposal)],
                             env=env, capture_output=True, text=True, timeout=30)
     assert result.returncode == 1 and not result.stderr
-    assert json.loads(result.stdout) == {"audit_passed": False, "error_type": "ValueError"}
+    assert json.loads(result.stdout) == {
+        "audit_passed": False, "error_type": "ValueError", "stage": "approval",
+        "inventoried_files_rehashed": 0, "checkpoints_verified": 0,
+        "canonical_replays_exhausted": 0,
+    }
+
+
+def test_failure_diagnostics_never_serialize_exception_payload():
+    module = runpy.run_path(str(WORKER))
+    module['PROGRESS'].update(stage='canonical_events', inventoried_files_rehashed=377,
+                              checkpoints_verified=27, canonical_replays_exhausted=4)
+    error = ValueError({'protected_record': 'never log this', 'tick': 123456})
+    result = module['failure_result'](error)
+    assert result == {
+        'audit_passed': False, 'error_type': 'ValueError', 'stage': 'canonical_events',
+        'inventoried_files_rehashed': 377, 'checkpoints_verified': 27,
+        'canonical_replays_exhausted': 4,
+    }
+    assert 'protected_record' not in json.dumps(result)

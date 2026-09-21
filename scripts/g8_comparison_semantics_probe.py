@@ -9,6 +9,14 @@ from pathlib import Path
 import signal
 import sys
 
+PROGRESS = {'stage': 'approval', 'inventoried_files_rehashed': 0,
+            'checkpoints_verified': 0, 'canonical_replays_exhausted': 0}
+
+
+def failure_result(error):
+    # Fixed stage names and aggregate counts only; never serialize exception data.
+    return {'audit_passed': False, 'error_type': type(error).__name__, **PROGRESS}
+
 
 def sha(path):
     digest = hashlib.sha256()
@@ -29,6 +37,7 @@ def audit():
     require(sha(scope_path) == os.environ.get('G8_SEMANTIC_APPROVED_PROPOSAL_SHA256'))
     scope = json.loads(scope_path.read_bytes())
     require(sha(Path(__file__)) == scope['worker_sha256'])
+    PROGRESS['stage'] = 'package_integrity'
     signal.alarm(scope['internal_timeout_seconds'])
     require(not any(os.environ.get(k) for k in ('AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
                                               'AWS_SESSION_TOKEN', 'MLFLOW_TRACKING_PASSWORD')))
@@ -47,6 +56,7 @@ def audit():
     inventory = json.loads(inventory_path.read_bytes())
     comparison = mount / scope['comparison_relative_root']
     require(len(inventory) == 377)
+    PROGRESS['stage'] = 'comparison_integrity'
     allowed = set()
     for ref in inventory:
         path = comparison / ref['path']
@@ -54,6 +64,7 @@ def audit():
         require(path.stat().st_size == ref['size_bytes'] and sha(path) == ref['sha256'])
         require(os.statvfs(path).f_flag & os.ST_RDONLY)
         allowed.add(str(path))
+    PROGRESS['inventoried_files_rehashed'] = len(inventory)
 
     def guard(event, args):
         if event == 'socket.connect':
@@ -64,6 +75,7 @@ def audit():
                 raise PermissionError('Uninventoried comparison file')
 
     sys.addaudithook(guard)
+    PROGRESS['stage'] = 'runtime_bootstrap'
     spec = importlib.util.spec_from_file_location('reviewed_bootstrap', package / 'g8_native_bootstrap.py')
     bootstrap = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(bootstrap)
@@ -74,11 +86,16 @@ def audit():
     from app.ml.lightgbm.c4_replay_evidence import verified_replay_paths
     from app.evaluation.canonical_bundle import open_canonical_evaluation_stream
 
+    PROGRESS['stage'] = 'frozen_root_metadata'
     root = FrozenPublicSampleRoot.model_validate_json((package / 'frozen-root.json').read_bytes())
+    PROGRESS['stage'] = 'checkpoint_metadata'
     paths = verified_replay_paths(comparison / 'comparison.json', root=root)
+    PROGRESS['checkpoints_verified'] = 27
+    PROGRESS['stage'] = 'projection_metadata'
     shards = {s['run_id']: s for s in json.loads((package / 'projection.json').read_bytes())['shards']}
     require(len(paths) == len(shards) == 30 and set(paths) == set(shards))
     for run_id, path in sorted(paths.items()):
+        PROGRESS['stage'] = 'canonical_bundle'
         stream = open_canonical_evaluation_stream(path)
         expected = shards[run_id]
         require(stream.manifest.run_id == run_id)
@@ -91,10 +108,12 @@ def audit():
             require(isinstance(alert.get('detector'), str) and alert['detector'])
             alert_ticks.add(alert['tick'])
         count = 0
+        PROGRESS['stage'] = 'canonical_events'
         for event in stream.iter_events():
             count += 1
             alert_ticks.discard(event.tick)
         require(not alert_ticks and count == stream.manifest.event_count)
+        PROGRESS['canonical_replays_exhausted'] += 1
     print(json.dumps({'schema_version': 'g8_comparison_semantics_result_v1',
                       'proposal_sha256': sha(scope_path), 'checkpoints_verified': 27,
                       'canonical_replays_exhausted': 30, 'inventoried_files_rehashed': 377,
@@ -111,5 +130,5 @@ if __name__ == '__main__':
         audit()
     except BaseException as error:
         # Never put protected records or validation-error payloads into operator logs.
-        print(json.dumps({'audit_passed': False, 'error_type': type(error).__name__}), flush=True)
+        print(json.dumps(failure_result(error)), flush=True)
         sys.exit(1)

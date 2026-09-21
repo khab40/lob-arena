@@ -71,11 +71,20 @@ The [September 21 production transport probe](../evidence/g8-production-transpor
 completed on Job `aijob-e00samq5cpe1bysr4x`: exact runtime overlays, native mounts,
 signed actual-Job context and independent package readback verified without parsing
 protected rows or scoring. The recurring provider mount warning remains unexplained.
-The separately approval-gated [comparison audit proposal](../evidence/g8-comparison-semantics-proposal-20260921.json)
-covers event/alert/ground-truth semantics; snapshot Parquet checks are limited to
-hashes and footer counts, with row/schema consistency explicitly unverified.
-That audit, fresh preflight (including 20 GiB free space for the 4 GiB checkpoint bound),
-canonical request and replacement-specific authorization remain open.
+The operator approved the revised comparison audit, but Job
+`aijob-e00ezdakxbj7m0xxfy` [failed closed](../evidence/g8-comparison-semantics-20260921.json)
+with `ValidationError`. Its one-Job approval is consumed; no retry was submitted.
+The local comparison metadata omitted required `preparation.logical_name`.
+That defect is consistent with the failure; the original redacted result cannot
+identify the exact call or how far protected parsing progressed. No scoring ran.
+The [corrected retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
+preserves original bytes in place, prepares a separate corrected tree and adds
+safe aggregate failure diagnostics. It awaits approval for one new bounded Job.
+Snapshot checks remain limited to hashes/footer counts; snapshot row/schema
+consistency and prediction pairing remain unverified. The staging VM is stopped,
+Job compute released and final key inactive. Successful comparison verification,
+production-review rebinding, fresh preflight (including 20 GiB free space), canonical
+request and replacement-specific authorization remain open.
 
 G9 requires verified G8 evidence and a signed exit disposition; Transformer,
 cascade and live learned-model integration remain planned. Candidate artifacts

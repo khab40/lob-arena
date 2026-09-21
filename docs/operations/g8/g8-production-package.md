@@ -5,7 +5,7 @@
 > [execution policy](../../ml/model-validation-execution-policy.md). Earlier
 > dated receipts retain their values; obsolete billing/expiry gates do not apply.
 
-Status: **unsigned review package prepared; no production Job authorized or submitted**.
+Status: **unsigned review requires comparison-metadata correction; no final-evaluation Job authorized or submitted**.
 This follows [PR #200](https://github.com/khab40/lob-arena/pull/200) and independent
 [readback of all 64 rehearsal S3 objects](../../evidence/g8-independent-s3-readback-20260917.json). Their sizes/hashes, SUCCESS inventory,
 checksum inventory and four MLflow artifact hashes match the retained checkpoint.
@@ -51,7 +51,8 @@ neither a runnable signed manifest nor a submission command.
 
 1. Preserve the verified original checkpoint bytes and genuine registration now
    bound into the unsigned review. Validate production comparison semantics on
-   Nebius; byte verification did not parse protected rows.
+   Nebius after correcting the missing `preparation.logical_name` field in a separate
+   tree and rebinding the review. The approved audit failed; no retry has run.
 2. Preserve the completed [production transport verification](../../evidence/g8-production-transport-probe-20260921.json).
    Recheck the finalized signed package and actual execution context at submission.
 3. Complete fresh permissions, pinned image alias, storage capacity, credentials
@@ -126,8 +127,8 @@ probe-created package and freeing the canonical production path. The VM is stopp
 and the final key inactive. No protected rows, model scoring or final access occurred.
 The provider mount warning recurred; successful runtime checks do not explain it.
 
-Remaining gates: separately approved protected-comparison semantic verification on
-Nebius, fresh preflight, canonical request and replacement-specific authorization.
+Remaining gates: corrected comparison audit approval and verification on Nebius,
+production-review rebinding, fresh preflight, canonical request and replacement-specific authorization.
 G8 remains open; the unsigned review is not execution authority.
 
 The [comparison semantics proposal](../../evidence/g8-comparison-semantics-proposal-20260921.json)
@@ -137,5 +138,25 @@ test-date events, alerts and synthetic ground truth for structural checks. Snaps
 Parquet checks cover byte hashes and footer row counts only; snapshot rows, schemas
 and consistency with canonical snapshot events are not verified. The result records
 these limitations explicitly. Only aggregate pass/fail evidence is returned. This
-extends the earlier byte-only approval and awaits operator approval; it excludes final features and model scoring.
+extended the earlier byte-only scope and was approved; it excludes final features and model scoring.
 Prediction/feature pairing remains part of the separately authorized final evaluation.
+
+The approved [attempt receipt](../../evidence/g8-comparison-semantics-20260921.json)
+records Job `aijob-e00ezdakxbj7m0xxfy` failing closed with `ValidationError` after
+about five seconds. Provider settings matched the approved scope. The VM is stopped,
+Job compute released, final key inactive and original evidence preserved. No scoring
+or final-bucket access occurred. The result cannot establish the completed parsing
+stage, checkpoint count or replay count; semantic verification did not pass.
+
+Static metadata inspection found the generated comparison manifest omitted
+`preparation.logical_name`, required by `CloudArtifact`. This is consistent with the
+failure but the exact failing call was not recorded. The
+[retry proposal](../../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
+adds `logical_name: preparation`, changes only that inventory entry and proposes a
+separate native comparison tree. The worker adds fixed failure-stage names and
+aggregate completed counts without exception text or protected values. The proposal
+retains one Job, 4 vCPU / 16 GiB, 100 GiB disk, one-hour timeout and no restart/secrets.
+`scripts/prepare_g8_comparison_audit_revision.py` prepares these review artifacts
+without executing the frozen runtime. The corrected tree is not staged and the
+retry is not authorized. After successful verification, rebind the current unsigned
+production review's comparison path/hash; its existing binding remains defective.
