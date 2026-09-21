@@ -25,115 +25,34 @@ The architecture supports interactive replay/investigation and offline governed
 corpus/training/evaluation paths. Both paths reuse the same canonical Java
 stream, scenario ground truth, hashes, and release contracts.
 
-## Current Design — 2026-09-21
+## Implementation scope
 
-Java remains the sole live exchange/replay authority; Python owns ingestion,
-features, ML and cloud orchestration. LOBSTER and Nasdaq ITCH feed the normalized
-historical-data boundary. Governed LightGBM v1 is implemented; the Transformer
-and Transformer-to-LightGBM cascade remain proposed follow-on work.
-
-Wave 1 G0–G7 are complete. G8 remains open and G9 blocked: R4 downloaded the
-final release and failed before scoring; its approval is consumed. The candidate
-remains frozen. The signed replacement path now integrates C4 comparison,
-pre-logging scored retention, same-run MLflow recovery and conditional publication.
-A native two-Job synthetic rehearsal and independent MLflow/S3 readback passed.
-Production comparison/registration verification, changed transport qualification,
-capacity/preflight and replacement-specific authorization remain separate work.
-See the [production package](operations/g8/g8-production-package.md) and
-[recovery record](operations/g8/g8-completion-recovery.md) for operational gates.
-
-C4 already supplies both tabular and 64-step feature-sequence projections.
-The Transformer model/trainer, cascade, automatic model-version promotion and
-near-real-time learned-detector integration are planned. The existing Python
-LightGBM scorer requires a verified bundle and exact feature mapping; it is not
-wired into the Java live stream.
-
-The [ML lifecycle use cases](use-cases/ml-lifecycle.md) explain data preparation,
-training/checkpoints, calibration, hyperparameter selection, MLflow retention,
-and planned historical/synthetic/hybrid/live scoring with data-model and process
-diagrams. The [review ledger](architecture/ml-documentation-review-20260921.md)
-links corrected claims to implementation evidence.
+LightGBM training/calibration and C4 tabular/sequence preparation exist.
+Transformer training, cascade, model-version promotion and Java-stream learned
+serving remain planned. Use the [ML lifecycle](use-cases/ml-lifecycle.md) for
+implementation boundaries and [current status](roadmap/CURRENT_STATUS.md) for
+dated qualification, frozen candidate and authorization evidence.
 
 ## System High-Level Design
 
 ```mermaid
 flowchart LR
-    subgraph Users["Users and integrations"]
-        UI["React / Vite<br/>Data Ingestion + Arena + Control"]
-        Client["CLI / batch / external detector"]
-    end
-
-    subgraph Data["Data and scenario sources"]
-        LOBSTER["Licensed LOBSTER CSV"]
-        ITCH["Nasdaq TotalView-ITCH"]
-        Normalize["Validated immutable<br/>Parquet + manifest"]
-        Scenario["Synthetic agents<br/>and attack scenarios"]
-    end
-
-    subgraph Java["Java 25 authoritative execution"]
-        Control["Spring REST + WebSocket"]
-        Replay["Historical replay adapter"]
-        Exchange["Single-writer integer<br/>book + matching"]
-        Rules["Deterministic detectors"]
-        Canonical["Canonical events + snapshots"]
-        Labels["Separate synthetic labels"]
-    end
-
-    subgraph Python["Python AI / ML control plane"]
-        API["FastAPI ingestion + AI + jobs"]
-        Runner["agent-runner<br/>normal + heavy + LangGraph"]
-        Corpus["Reviewed corpus +<br/>frozen chronological split"]
-        Features["Causal feature pipeline"]
-        Models["Governed LightGBM v1<br/>sequence challengers proposed"]
-        Evaluate["Rules / model paired evaluation"]
-    end
-
-    subgraph Governance["Shared ML governance"]
-        MLflow["Authenticated MLflow<br/>tracking + registry"]
-        PostgreSQL["PostgreSQL metadata"]
-        ArtifactStore["S3-compatible artifacts"]
-    end
-
-    subgraph Outcomes["Evidence, AI and operations"]
-        Evidence["Checksummed / signed releases"]
-        Nebius["Nebius endpoint + jobs"]
-        Observability["Prometheus + Grafana"]
-    end
-
-    UI --> Control
-    UI --> API
-    Client --> API
-    LOBSTER --> API
-    ITCH --> API
-    API --> Normalize
-    Normalize --> Replay
-    Replay -->|"historical phase"| Exchange
-    Scenario -->|"synthetic phase"| Exchange
-    Scenario --> Labels
-    Control --> Exchange
-    Exchange -->|"MarketSnapshot"| Runner
-    Runner -->|"bounded AgentIntent"| Exchange
-    Exchange --> Rules
-    Exchange --> Canonical
-    Canonical --> Corpus
-    Labels --> Corpus
-    Corpus --> Features
-    Features --> Models
-    Rules --> Evaluate
-    Models --> Evaluate
-    Labels --> Evaluate
-    Corpus -. "release hashes" .-> MLflow
-    Models -. "runs + artifacts" .-> MLflow
-    Evaluate -. "metrics + manifests" .-> MLflow
-    MLflow --> PostgreSQL
-    MLflow --> ArtifactStore
-    Evaluate --> Evidence
-    Rules --> Nebius
-    API --> Nebius
-    Nebius --> Evidence
-    Observability -. "read-only telemetry" .-> Control
-    Observability -. "read-only telemetry" .-> API
-    Observability -. "read-only telemetry" .-> Runner
+    UI["React UI"] -->|"REST / WebSocket"| Java["Java: sole exchange writer"]
+    UI -->|"ingestion / AI / experiments"| API["Python FastAPI"]
+    Sources["LOBSTER / ITCH"] --> API
+    API --> Normal["Immutable normalized data"]
+    Normal --> Java
+    Java -->|"read-only snapshot"| Agents["Agent runners"]
+    Agents -->|"bounded intents"| Java
+    Java --> Rules["Rules + canonical events"]
+    Truth["Separate synthetic ground truth"] --> Corpus["Governed corpus / split"]
+    Rules --> Corpus
+    Corpus --> ML["Causal features / offline LightGBM"]
+    ML --> Release["Authorized evaluation / signed release"]
+    Release -. "verified metadata + artifacts" .-> Track["MLflow / PostgreSQL / S3"]
+    API --> Cloud["Nebius endpoints + Jobs"]
+    Java -. "telemetry" .-> Obs["Prometheus / Grafana"]
+    API -. "telemetry" .-> Obs
 ```
 
 ### Component Responsibilities
@@ -163,21 +82,6 @@ stores full events plus snapshot-only checkpoints.
 
 ### Historical And Hybrid Replay Path
 
-```mermaid
-graph LR
-    Raw["Paired LOBSTER CSV"]
-    Ingestion["FastAPI ingestion"]
-    Parquet["Immutable Parquet + manifest"]
-    Replay["Java historical adapter"]
-    Book["Combined integer book"]
-    Attack["UI-launched synthetic scenario"]
-    Detectors["Deterministic detectors"]
-    Labels["Separate synthetic labels"]
-    Comparison["Metrics + checksummed comparison"]
-    Corpus["Reviewed corpus candidate"]
-    MLflow["MLflow corpus-release index"]
-
-    Raw --> Ingestion
     Ingestion --> Parquet
     Parquet --> Replay
     Replay -->|"historical phase first"| Book
