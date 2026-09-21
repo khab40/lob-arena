@@ -95,63 +95,10 @@ This credential-free command installs locked dependencies when needed, launches 
 ## Demo and evidence
 
 [Video walkthrough](https://youtu.be/PZOrEwa4lqg) and
-### Approximate Runtime and Cost
-
-| Workflow | Runtime | Approximate Cost |
-|----------|--------:|-----------------:|
-| Local Docker demo | 3–5 min | $0 |
-| Local detector tournament (10 scenarios) | ~0.7 s | $0 |
-| Nebius Serverless Job (5 scenarios) | ~181 s | ~$0.005 |
-| Nebius Endpoint investigation (2 requests) | P50 24.2 s / P95 28.8 s | ~$0.023 |
-
-Measured on representative production runs. Actual runtime and billing depend on model, startup latency and current Nebius pricing.
-
-### Expected Outputs
-
-Running the end-to-end demo produces:
-
-**Interactive outputs**
-
-- Synthetic market abuse scenario
-- Order-book replay
-- Detector alerts
-- AI Investigation Team report
-- Detector Tournament leaderboard
-- Execution trace
-
-**Generated artifacts**
-
-Artifacts are written under `outputs/serverless-smoke/`, including:
-
-- `summary.json`
-- `scenario.json`
-- `simulation_events.json`
-- `detector_alerts.json`
-- `investigation_report.md`
-- `tournament_result.json`
-- `serverless_job.json`
-- `manifest.json`
-
-Benchmark execution additionally produces metrics, leaderboard reports, manifests and checksum-verified evidence bundles under `outputs/benchmark/` and `evidence/`.
-
-
-## Demo
-
-**Video walkthrough:** [LOB Arena — real Nebius cloud E2E demo](https://youtu.be/PZOrEwa4lqg)
-
-1. Open the AI Command Center.
-2. Run the Serverless E2E demo.
-3. Review the generated scenario and order-book events.
-4. Inspect detector alerts and incident evidence.
-5. Run the AI Investigation Team.
-6. Run or inspect the Detector Tournament.
-7. Open synchronized artifacts and evidence records.
-
-Generated local demo artifacts are written under `outputs/serverless-smoke/`.
-
-## Evidence
-
-The public evidence is sanitized and checksum-verified: credentials, bearer tokens, signed URLs, and private Endpoint hostnames are excluded.
+[demo script](docs/publication/demo-script.md) cover the historical challenge demo.
+The [submission index](docs/publication/challenge-submission.md) links measured
+runtime/cost and frozen evidence. Those observations are not current estimates
+or learned-model qualification.
 
 - [Challenge submission index](docs/publication/challenge-submission.md)
 - [Manual Nebius Control Panel evidence (100-workload Job + 12 real Endpoint calls)](evidence/manual-ui-2026-07-15/README.md)
@@ -161,47 +108,15 @@ The public evidence is sanitized and checksum-verified: credentials, bearer toke
 - [Frozen benchmark bundle](evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md)
 - [Frozen Nebius deployment bundle](evidence/deployment-2026-07-14-1412/README.md)
 
-The corrected production evidence records six completed Nebius Jobs with 1,200 disjoint-seed workloads plus 25 real L40S/vLLM Endpoint calls. A separate manual Control Panel session adds one completed 100-workload Job, 12,414 events, seven AI investigation reports, 12 real Endpoint calls, and synchronized Object Storage artifacts.
 
 Freeze a new local evidence snapshot with `./scripts/freeze-release.sh`; add `--offline` when Docker, the backend, or Nebius CLI is unavailable.
-
-## Nebius Cloud
-
-Real cloud execution is opt-in. Configure the variables below, confirm that `$HOME/.nebius` contains `config.yaml` and `credentials.yaml`, and review [docs/deployment/nebius-deployment.md](docs/deployment/nebius-deployment.md):
-
-```bash
-NEBIUS_SERVERLESS_ENABLED=true \
-NEBIUS_CLI_CONFIG_DIR="$HOME/.nebius" \
-docker compose up --build
-```
-
-Add `--profile prometheus` for metrics only or `--profile grafana` for the full dashboard stack. `make docker-up-serverless` and `make docker-up-all` are equivalent shortcuts.
-
-Core variables:
-
-```bash
-NEBIUS_SERVERLESS_ENABLED=true
-NEBIUS_CLI_CONFIG_DIR=/absolute/path/to/.nebius
-ENDPOINT_TOKEN=endpoint-auth-token
-NEBIUS_ENDPOINT_BASE_URL=https://your-nebius-endpoint
-NEBIUS_ENDPOINT_MODE=local_vllm
-NEBIUS_ENDPOINT_PLATFORM=gpu-l40s-d
-NEBIUS_ENDPOINT_PRESET=1gpu-16vcpu-96gb
-LOCAL_VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct
-NEBIUS_JOB_IMAGE=ghcr.io/khab40/lob-arena-jobs:<tag>
-NEBIUS_JOB_SUBMIT_COMMAND_TEMPLATE='...'
-NEBIUS_JOB_STATUS_COMMAND_TEMPLATE='...'
-NEBIUS_JOB_ARTIFACTS_COMMAND_TEMPLATE='...'
-NEBIUS_JOB_OUTPUT_URI=s3://...
-```
-
-If Job command templates are missing, the backend records `real_nebius_pending` instead of pretending a cloud run completed.
 
 ## Development
 
 CI validates retained Python tests and Ruff, frontend lint/build, the authoritative Java 25 kernel and live control plane, deterministic CPU evaluation, agent workspace contracts, Compose config, application Docker images, and Gitleaks. It intentionally does not build long-running Nebius Endpoint/Job images and does not run GPU/vLLM inference.
 
-Run the main checks locally:
+The commands below describe developer checks. Agents must apply the execution
+policy above before running tests that train, score or exercise model runtime:
 
 ```bash
 uv sync --project backend --dev --frozen
@@ -225,42 +140,9 @@ make secrets-plan
 make secrets-check
 ```
 
-## Documentation
+## Contributing
 
-| Topic | File |
-| --- | --- |
-| Quick start | [docs/deployment/QUICKSTART.md](docs/deployment/QUICKSTART.md) |
-| Architecture | [docs/architecture.md](docs/architecture.md) |
-| Architecture decisions | [docs/architecture/README.md](docs/architecture/README.md) |
-| Functional capability map | [docs/product/FUNCTIONAL_OVERVIEW.md](docs/product/FUNCTIONAL_OVERVIEW.md) |
-| Use cases | [docs/use-cases/README.md](docs/use-cases/README.md) |
-| Current phases and learned-detector roadmap | [docs/roadmap/PHASES.md](docs/roadmap/PHASES.md) |
-| Nebius LightGBM Wave 1 execution gates | [docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md](docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md) |
-| Runtime model | [docs/runtime/runtime-model.md](docs/runtime/runtime-model.md) |
-| Prometheus and Grafana observability | [docs/runtime/kernel-observability.md](docs/runtime/kernel-observability.md) |
-| Benchmark methodology | [docs/ml/benchmark-methodology.md](docs/ml/benchmark-methodology.md) |
-| Causal LightGBM feature engineering | [docs/ml/feature-engineering-lightgbm.md](docs/ml/feature-engineering-lightgbm.md) |
-| Governed corpus and ML benchmark protocol | [docs/data/governed-corpus-benchmark-protocol.md](docs/data/governed-corpus-benchmark-protocol.md) |
-| Shared MLflow tracking server | [docs/ml/mlflow-tracking-server.md](docs/ml/mlflow-tracking-server.md) |
-| Nebius deployment | [docs/deployment/nebius-deployment.md](docs/deployment/nebius-deployment.md) |
-| L40S migration | [docs/archive/l40s-migration.md](docs/archive/l40s-migration.md) |
-| Prompting layer | [docs/ml/surveillance-prompting.md](docs/ml/surveillance-prompting.md) |
-| Safety | [docs/product/safety-and-disclaimers.md](docs/product/safety-and-disclaimers.md) |
-| Challenge submission | [docs/publication/challenge-submission.md](docs/publication/challenge-submission.md) |
-| Documentation guide | [docs/DOCUMENTATION_GUIDE.md](docs/DOCUMENTATION_GUIDE.md) |
-
-## Maintainer Notes
-
-- Keep README concise; put detailed API examples in docs.
-- Keep local fallback honest and explicitly labeled.
-- Do not commit credentials, private endpoints, signed URLs, or unredacted cloud logs.
-- Never print or attach `.env`; inspect only named non-secret keys and use `docker compose config --quiet` for validation.
-- Run `./scripts/check-secrets.sh` before publishing evidence.
-
-## ML architecture and workflow
-
-Start with [Architecture](ARCHITECTURE.md) and the [ML lifecycle guide](docs/use-cases/ml-lifecycle.md)
-for source data, chronological partitions, LightGBM/Transformer inputs, training,
-checkpoints, calibration, selection, MLflow retention and planned streaming use.
-The guide separates implemented LightGBM and sequence-data capabilities from
-proposed Transformer, cascade, registry-promotion and live-serving work.
+Keep local fallback explicit. Never commit credentials, private endpoints,
+signed URLs or unredacted cloud logs; never print `.env`.
+Use `docker compose config --quiet` and `./scripts/check-secrets.sh`.
+Follow the [documentation ownership rules](docs/DOCUMENTATION_GUIDE.md).
