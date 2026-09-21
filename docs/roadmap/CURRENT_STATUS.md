@@ -78,8 +78,14 @@ The local comparison metadata omitted required `preparation.logical_name`.
 That defect is consistent with the failure; the original redacted result cannot
 identify the exact call or how far protected parsing progressed. No scoring ran.
 The [corrected retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
-preserves original bytes in place, prepares a separate corrected tree and adds
-safe aggregate failure diagnostics. It awaits approval for one new bounded Job.
+was approved as PR #210. The separate corrected tree and all 377 files were
+rehash-verified, preserving the original. R2 Job `aijob-e00v9yf6zxx3nkarn2`
+[was cancelled](../evidence/g8-comparison-semantics-r2-20260921.json) after the expected
+50-minute worker deadline with no worker result. Parsing progress and root cause
+are unknown; neither approval nor elapsed time establishes semantic verification.
+The [next proposal](../evidence/g8-comparison-supervised-proposal-20260921.json)
+adds an injected supervisor, flushed stages and a five-minute startup-output gate.
+It awaits approval for one new bounded Job; R2 approval is consumed.
 Snapshot checks remain limited to hashes/footer counts; snapshot row/schema
 consistency and prediction pairing remain unverified. The staging VM is stopped,
 Job compute released and final key inactive. Successful comparison verification,

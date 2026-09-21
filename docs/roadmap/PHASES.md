@@ -237,7 +237,12 @@ Completion evidence and remaining work, in order:
    redacted log cannot establish the exact failure stage or completed parsing.
    Original evidence is preserved; the [retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
    adds only that field in a new tree, rebinds its inventory and adds safe diagnostics.
-   One-Job approval was consumed; no retry has run. Semantics remain unverified.
+   PR #210's corrected retry was approved and staged; all 377 files were rehashed.
+   R2 Job `aijob-e00v9yf6zxx3nkarn2` [was cancelled](../evidence/g8-comparison-semantics-r2-20260921.json)
+   after the expected 50-minute worker deadline without a worker result. Its parsing
+   progress and root cause are unknown. Semantics remain unverified; both approvals
+   are consumed. The [supervised proposal](../evidence/g8-comparison-supervised-proposal-20260921.json)
+   adds flushed stages, independent child-process timeout and a startup-output gate.
 2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
    imports, mount checks and signed-context handoff without production final scoring.
    Record exact package/image/source hashes and actual Job/filesystem identities.
@@ -252,7 +257,8 @@ Completion evidence and remaining work, in order:
    The provider mount warning recurred despite successful runtime checks/readback;
    its root cause remains unresolved. No protected rows, training or scoring ran.
    Transport verification is complete. The failed semantic audit's compute was
-   released; VM stopped and final key inactive. Approve the corrected one-Job retry
+   released, including cancelled R2; VM stopped and final key inactive. Approve the
+   supervised one-Job proposal
    before further protected parsing. Snapshot Parquet scope remains hash/footer-only;
    snapshot row/schema consistency and prediction joins are not verified by this audit.
 3. **Complete package and preflight.** Check current identity/permissions, versioned
