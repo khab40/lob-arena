@@ -28,6 +28,12 @@ These are historical follow-ups, not a current backlog; revalidate them against
 - **Phase 5: Polish And Submission Assets:** `[partial]` demo narration scripts and captions under `assets/demo-video/`; rendered demo video is still missing.
 - **Future work:** `[partial]` The project includes research notes, a blog draft, GitHub banner, UI controls, demo narration, sanitized screenshots, and committed benchmark evidence; the rendered video and published article URL remain publication work.
 
+Additional retained future scope from the demo plan:
+
+- Durable backend organization/workspace, case assignment, and audit-log persistence APIs.
+- Formal benchmark artifact schema versioning and advanced Judge Mode timeline selectors.
+- Richer multi-user workflows and additional scenario families.
+
 ## Active Roadmap: Full Learned-Detector E2E Demonstration
 
 Status: `[in progress]`
