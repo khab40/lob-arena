@@ -8,9 +8,9 @@ This document describes business-style use cases. Historical activity is never
 automatically classified as benign or abusive, and the platform does not
 provide trading signals or compliance decisions.
 
-**For architecture details**, see [High-Level Architecture](architecture.md) and [Architecture Records (ARDs)](architecture/README.md).
+**For architecture details**, see [High-Level Architecture](../architecture.md) and [Architecture Records (ARDs)](../architecture/README.md).
 
-For the detailed ML workflow, start with [ML lifecycle use cases](use-cases/ml-lifecycle.md):
+For the detailed ML workflow, start with [ML lifecycle use cases](ml-lifecycle.md):
 data selection/partition/storage, training/checkpoints, calibration, hyperparameter
 selection, MLflow candidates and planned near-real-time serving. LightGBM is
 implemented; Transformer sequence data exists, but the classifier and cascade
@@ -679,27 +679,27 @@ Each use case is supported by specific architecture components:
 
 | Use Case | Primary Path | Key Components | ARDs |
 |----------|--------------|-----------------|------|
-| Live Arena Mode | Interactive | UI + Java Control Plane + Exchange + Agent Runner | [ARD-0001](architecture/ARD-0001-overall-architecture.md), [ARD-0002](architecture/ARD-0002-websocket-state-schema.md), [ARD-0020](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md) |
-| Manual Scenario Launch | Interactive | Scenario Launcher + Backend API | [ARD-0006](architecture/ARD-0006-scenario-labeling-and-reproducibility.md) |
-| Historical Session Registration | Data governance | FastAPI Ingestion + Local Registry + Immutable Parquet | [ARD-0018](architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](architecture/ARD-0022-historical-market-data-ingestion.md) |
-| Hybrid Historical Replay | Interactive / Evaluation | Data Ingestion + Java Replay Adapter + Integer Exchange + Scenario Launcher + Comparison Artifacts | [ARD-0018](architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](architecture/ARD-0022-historical-market-data-ingestion.md), [ARD-0023](architecture/ARD-0023-hybrid-historical-replay.md) |
-| Governed Corpus Release | Data governance | Review/Adjudication + Coverage Gates + Frozen Split + Signed Release | [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) |
-| Shared MLflow Tracking | ML governance | MLflow + PostgreSQL + S3-Compatible Artifacts | [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md) |
-| Governed LightGBM v1 | ML development / Evaluation | Causal Features + Governed Loader + Deterministic Trainer + MLflow + Paired Benchmark | [ARD-0024](architecture/ARD-0024-versioned-causal-feature-engineering.md), [ARD-0025](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md), [ARD-0026](architecture/ARD-0026-governed-lightgbm-release-boundary.md), [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md), [ARD-0028](architecture/ARD-0028-governed-lightgbm-feature-loading.md), [ARD-0029](architecture/ARD-0029-deterministic-lightgbm-binary-training.md) |
-| Incident Investigation | Interactive | Incident Store + Nebius Endpoint | [ARD-0005](architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0008](architecture/ARD-0008-nebius-serverless-ai-endpoints.md), [ARD-0015](architecture/ARD-0015-nebius-ai-investigation-team.md) |
-| Red-Team Scenario Generation | Interactive | Nebius Endpoint /generate-scenario | [ARD-0005](architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0016](architecture/ARD-0016-ai-scenario-generator.md) |
-| Detector Tournament Benchmark | Batch | Nebius Jobs + Simulation + Metrics | [ARD-0004](architecture/ARD-0004-benchmark-artifact-format.md), [ARD-0007](architecture/ARD-0007-nebius-serverless-ai-jobs.md), [ARD-0017](architecture/ARD-0017-ai-detector-tournament.md) |
-| Synthetic Dataset Generation | Batch | Nebius Jobs + Dataset Factory | [ARD-0004](architecture/ARD-0004-benchmark-artifact-format.md), [ARD-0007](architecture/ARD-0007-nebius-serverless-ai-jobs.md) |
-| UI Shell Personalization | Interactive | Themed Shell + Local Preferences + Arena Visual Stability | [ARD-0013](architecture/ARD-0013-ui-shell-preferences.md) |
+| Live Arena Mode | Interactive | UI + Java Control Plane + Exchange + Agent Runner | [ARD-0001](../architecture/ARD-0001-overall-architecture.md), [ARD-0002](../architecture/ARD-0002-websocket-state-schema.md), [ARD-0020](../architecture/ARD-0020-java-arena-websocket-agent-orchestration.md) |
+| Manual Scenario Launch | Interactive | Scenario Launcher + Backend API | [ARD-0006](../architecture/ARD-0006-scenario-labeling-and-reproducibility.md) |
+| Historical Session Registration | Data governance | FastAPI Ingestion + Local Registry + Immutable Parquet | [ARD-0018](../architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](../architecture/ARD-0022-historical-market-data-ingestion.md) |
+| Hybrid Historical Replay | Interactive / Evaluation | Data Ingestion + Java Replay Adapter + Integer Exchange + Scenario Launcher + Comparison Artifacts | [ARD-0018](../architecture/ARD-0018-canonical-exchange-event-stream.md), [ARD-0022](../architecture/ARD-0022-historical-market-data-ingestion.md), [ARD-0023](../architecture/ARD-0023-hybrid-historical-replay.md) |
+| Governed Corpus Release | Data governance | Review/Adjudication + Coverage Gates + Frozen Split + Signed Release | [ARD-0025](../architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) |
+| Shared MLflow Tracking | ML governance | MLflow + PostgreSQL + S3-Compatible Artifacts | [ARD-0027](../architecture/ARD-0027-shared-mlflow-tracking.md) |
+| Governed LightGBM v1 | ML development / Evaluation | Causal Features + Governed Loader + Deterministic Trainer + MLflow + Paired Benchmark | [ARD-0024](../architecture/ARD-0024-versioned-causal-feature-engineering.md), [ARD-0025](../architecture/ARD-0025-governed-corpus-and-ml-benchmark.md), [ARD-0026](../architecture/ARD-0026-governed-lightgbm-release-boundary.md), [ARD-0027](../architecture/ARD-0027-shared-mlflow-tracking.md), [ARD-0028](../architecture/ARD-0028-governed-lightgbm-feature-loading.md), [ARD-0029](../architecture/ARD-0029-deterministic-lightgbm-binary-training.md) |
+| Incident Investigation | Interactive | Incident Store + Nebius Endpoint | [ARD-0005](../architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0008](../architecture/ARD-0008-nebius-serverless-ai-endpoints.md), [ARD-0015](../architecture/ARD-0015-nebius-ai-investigation-team.md) |
+| Red-Team Scenario Generation | Interactive | Nebius Endpoint /generate-scenario | [ARD-0005](../architecture/ARD-0005-nebius-endpoint-contract.md), [ARD-0016](../architecture/ARD-0016-ai-scenario-generator.md) |
+| Detector Tournament Benchmark | Batch | Nebius Jobs + Simulation + Metrics | [ARD-0004](../architecture/ARD-0004-benchmark-artifact-format.md), [ARD-0007](../architecture/ARD-0007-nebius-serverless-ai-jobs.md), [ARD-0017](../architecture/ARD-0017-ai-detector-tournament.md) |
+| Synthetic Dataset Generation | Batch | Nebius Jobs + Dataset Factory | [ARD-0004](../architecture/ARD-0004-benchmark-artifact-format.md), [ARD-0007](../architecture/ARD-0007-nebius-serverless-ai-jobs.md) |
+| UI Shell Personalization | Interactive | Themed Shell + Local Preferences + Arena Visual Stability | [ARD-0013](../architecture/ARD-0013-ui-shell-preferences.md) |
 
 ## Related Documentation
 
-- [Architecture Overview](architecture.md) — System design and data flow
-- [Functional Overview](FUNCTIONAL_OVERVIEW.md) — Capability status, actors, lifecycle and acceptance rules
-- [Architecture Records (ARDs)](architecture/README.md) — Detailed design decisions
-- [Runtime Model](runtime-model.md) — Simulation engine execution
-- [Benchmark Methodology](benchmark-methodology.md) — How we measure detector quality
-- [Nebius Deployment](nebius-deployment.md) — Setup instructions
-- [Shared MLflow Tracking](mlflow-tracking-server.md) — Experiment/model tracking operations and governance boundary
-- [Quick Start](QUICKSTART.md) — Get running in 5 minutes
-- [Safety & Disclaimers](safety-and-disclaimers.md) — Educational focus and limitations
+- [Architecture Overview](../architecture.md) — System design and data flow
+- [Functional Overview](../product/FUNCTIONAL_OVERVIEW.md) — Capability status, actors, lifecycle and acceptance rules
+- [Architecture Records (ARDs)](../architecture/README.md) — Detailed design decisions
+- [Runtime Model](../runtime/runtime-model.md) — Simulation engine execution
+- [Benchmark Methodology](../ml/benchmark-methodology.md) — How we measure detector quality
+- [Nebius Deployment](../deployment/nebius-deployment.md) — Setup instructions
+- [Shared MLflow Tracking](../ml/mlflow-tracking-server.md) — Experiment/model tracking operations and governance boundary
+- [Quick Start](../deployment/QUICKSTART.md) — Get running in 5 minutes
+- [Safety & Disclaimers](../product/safety-and-disclaimers.md) — Educational focus and limitations

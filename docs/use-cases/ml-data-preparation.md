@@ -19,7 +19,7 @@ plain/gzip files; the separate acquisition Job downloads approved complete
 files because the feed multiplexes instruments. Normalize selected symbols in
 one pass, reconstruct visible order lifecycles, and publish only a verified
 completed directory. See [ITCH ingestion](../architecture/ARD-0032-nasdaq-itch-ingestion.md)
-and [the exact source inventory](../nasdaq-public-sample-v1-data-flow.md).
+and [the exact source inventory](../data/nasdaq-public-sample-v1-data-flow.md).
 
 The implemented C4 selection is AAPL, MSFT and NVDA, 10:00–10:30 Eastern,
 10-level reconstructed books. Each symbol/date has one control plus nine

@@ -57,7 +57,7 @@ The implemented entry points are [the cloud runner](../../backend/app/ml/lightgb
 [trainer](../../backend/app/ml/lightgbm/training.py),
 [Job entry point](../../serverless/jobs/run_lightgbm_wave1.py) and
 [orchestration CLI](../../scripts/lightgbm_wave1.py).
-The [v1 runbook](../lightgbm-v1-runbook.md) describes underlying commands;
+The [v1 runbook](../ml/lightgbm-v1-runbook.md) describes underlying commands;
 its legacy local model-execution examples are historical, not the current
 agent execution policy.
 

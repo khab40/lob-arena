@@ -65,7 +65,7 @@ Nebius Serverless Jobs. Local work covers orchestration, edits, static checks
 and artifact inspection. Declare resources, timeouts, Job count and applicable
 spend bounds before execution under the current operator instructions; preserve
 runtime identities and evidence. Historical campaign quotas are not new
-execution permission. The [validation policy](../model-validation-execution-policy.md)
+execution permission. The [validation policy](../ml/model-validation-execution-policy.md)
 records the standing policy; final-test and replacement authorization are separate.
 
 The [review ledger](../architecture/ml-documentation-review-20260921.md)
