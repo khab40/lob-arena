@@ -15,4 +15,7 @@ regexes = [
   # SHA-256 of production-key-after.json (inactive key metadata, no secret payload).
   # Recorded in docs/evidence/g8-native-recovery-20260917.json.
   '''^d2767929d188abcef2461848d2055aa1d4812ba602e69cbf33580d50c37fd288$''',
+  # SHA-256 of the September 21 inactive final-key metadata readback, no payload.
+  # Recorded in docs/evidence/g8-production-readiness-20260921.json.
+  '''^7b8ed849bd6bb128aee8cf2b864bae95c1fbd72c13c1b7143bf275480e3244e8$''',
 ]
