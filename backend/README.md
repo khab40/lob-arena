@@ -132,7 +132,7 @@ make generate-features FEATURE_OVERWRITE=1
 
 Labels are a separate optional input and are joined only after numeric feature
 calculation. No labels input leaves rows unlabeled. See
-[Causal Feature Engineering for a Future LightGBM Detector](../docs/feature-engineering-lightgbm.md)
+[Causal Feature Engineering for a Future LightGBM Detector](../docs/ml/feature-engineering-lightgbm.md)
 for direct CLI examples, formulas, Parquet types, and leakage-safe split rules.
 
 Coverage:

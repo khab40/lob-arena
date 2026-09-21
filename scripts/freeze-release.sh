@@ -273,7 +273,7 @@ copy_tracked "endpoint/config" \
   'scripts/create-nebius-ai-endpoint.sh'
 copy_tracked "prompts" \
   'serverless/endpoint/prompts.py' 'serverless/endpoint/surveillance.py' \
-  'serverless/endpoint/schemas/**' 'serverless/endpoint/examples/**' 'docs/surveillance-prompting.md'
+  'serverless/endpoint/schemas/**' 'serverless/endpoint/examples/**' 'docs/ml/surveillance-prompting.md'
 copy_tracked "architecture" 'docs/architecture.md' 'docs/architecture/**'
 copy_tracked "documentation" 'README.md'
 copy_tracked "screenshots" 'assets/screenshots/**' 'assets/social/**' 'docs/evidence/screenshots/**' 'frontend/public/img/**'

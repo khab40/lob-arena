@@ -222,5 +222,5 @@ Inline access-key values cause submission to fail before invoking the Nebius
 CLI. A Wave 1 submission also requires the staged request evidence, reconciled
 spend and Job count, plus the SHA-256 of the Operator-reviewed dry run. The G4
 monitor verifies the actual Job resources and cancels at 15 minutes. See the
-[LightGBM runbook](../../docs/lightgbm-v1-runbook.md) for the complete staged
+[LightGBM runbook](../../docs/ml/lightgbm-v1-runbook.md) for the complete staged
 submission, monitoring, S3 collection, and exit-gate commands.

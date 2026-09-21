@@ -25,9 +25,9 @@ Compatibility rules:
 
 The repository Gradle build generates Java messages and gRPC service stubs under `build/`. The Python generator checks in both message and gRPC bindings so backend packaging does not require `protoc`.
 
-The schema exposes the unary `SimulationKernel.RunSimulation` process boundary implemented by the Java kernel. See [gRPC Kernel Boundary](../docs/grpc-kernel-boundary.md).
+The schema exposes the unary `SimulationKernel.RunSimulation` process boundary implemented by the Java kernel. See [gRPC Kernel Boundary](../docs/runtime/grpc-kernel-boundary.md).
 
-`golden/parity-v1` contains immutable deterministic Protobuf request/result pairs. Replay them against Java with `scripts/run_java_golden_corpus.py`; see [Golden Parity Corpus V1](../docs/golden-parity-corpus-v1.md) for coverage and versioning rules.
+`golden/parity-v1` contains immutable deterministic Protobuf request/result pairs. Replay them against Java with `scripts/run_java_golden_corpus.py`; see [Golden Parity Corpus V1](../docs/runtime/golden-parity-corpus-v1.md) for coverage and versioning rules.
 
 The governed ML workflow adds fail-closed JSON contracts for:
 

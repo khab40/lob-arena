@@ -320,10 +320,10 @@ hashes, source/event counts, injected-order lifecycle, detector metrics, and
 before/during/after causal locality. Outside the labelled attack
 neighbourhood, paired books must match exactly and book/event-flow metrics must
 pass the documented statistical equivalence bounds. See
-[Hybrid Dataset Validation](docs/hybrid-dataset-validation.md) for the
+[Hybrid Dataset Validation](docs/data/hybrid-dataset-validation.md) for the
 methodology, signing trust boundary, verification commands, and limitations.
 For repeatable client deliveries, use the
-[Client Historical Dataset Validation Runbook](docs/client-historical-dataset-validation-runbook.md).
+[Client Historical Dataset Validation Runbook](docs/data/client-historical-dataset-validation-runbook.md).
 The public fixture includes a
 [signed sample report](data/lobster/fixture/validation/validation-report.json).
 
@@ -419,7 +419,7 @@ source/replay provenance and immutable development/final projections are retaine
 Tabular and 64-step causal feature-sequence views share target identities and
 chronological assignments. Transformer training and the exact-joined cascade
 remain planned. See the [ML lifecycle](docs/use-cases/ml-lifecycle.md) and
-[four-date data flow](docs/nasdaq-public-sample-v1-data-flow.md).
+[four-date data flow](docs/data/nasdaq-public-sample-v1-data-flow.md).
 This research-only qualification does not replace appropriately licensed data,
 independent clean-window review or a signed governed test release for
 production/client performance claims.
@@ -450,7 +450,7 @@ extensions on the same causal governed inputs and comparable tournament
 evidence. When resumed, the customer detector is the system under test and our
 models are reference comparators. Neither adapter may bypass provenance,
 fold/label isolation or the Java single-writer boundary. See the
-[active roadmap](docs/PHASES.md#feature-extensible-inbound-data-adapter-framework).
+[active roadmap](docs/roadmap/PHASES.md#feature-extensible-inbound-data-adapter-framework).
 
 Generate the checked-in reproducible fixture:
 
@@ -462,17 +462,17 @@ For governed historical or hybrid runs, `generate_features.py` can merge
 locally verified clean-window adjudications into the replay labels. Only
 explicit reviewed windows become label zero; every other historical row stays
 unlabeled. See the
-[governed corpus protocol](docs/governed-corpus-benchmark-protocol.md#commands)
+[governed corpus protocol](docs/data/governed-corpus-benchmark-protocol.md#commands)
 for the complete command and required artifact bindings.
 
 The formulas, configuration, label boundary, prefix-invariance guarantee, and
 session-grouped training rules are documented in
-[Causal Feature Engineering for LightGBM](docs/feature-engineering-lightgbm.md),
+[Causal Feature Engineering for LightGBM](docs/ml/feature-engineering-lightgbm.md),
 [ARD-0024](docs/architecture/ARD-0024-versioned-causal-feature-engineering.md),
 [ARD-0028](docs/architecture/ARD-0028-governed-lightgbm-feature-loading.md), and
 [ARD-0031](docs/architecture/ARD-0031-complete-lightgbm-v1.md).
 Operational commands and artifact boundaries are in the
-[Governed LightGBM v1 Runbook](docs/lightgbm-v1-runbook.md).
+[Governed LightGBM v1 Runbook](docs/ml/lightgbm-v1-runbook.md).
 
 Compose options can be combined:
 
@@ -504,7 +504,7 @@ Use `--profile prometheus` when raw metrics and PromQL are sufficient. Use
 `--profile grafana` when you also want dashboards; this profile starts both
 services. Both are opt-in local diagnostics and are not required for a valid
 simulation, AI investigation, or detector tournament. See
-[Kernel Observability](docs/kernel-observability.md) for the metric sources,
+[Kernel Observability](docs/runtime/kernel-observability.md) for the metric sources,
 dashboard workflow, and troubleshooting guidance.
 
 Detector-tournament orchestration exposes bounded lifecycle telemetry—runs,
@@ -609,7 +609,7 @@ Generated local demo artifacts are written under `outputs/serverless-smoke/`.
 
 The public evidence is sanitized and checksum-verified: credentials, bearer tokens, signed URLs, and private Endpoint hostnames are excluded.
 
-- [Challenge submission index](docs/challenge-submission.md)
+- [Challenge submission index](docs/publication/challenge-submission.md)
 - [Manual Nebius Control Panel evidence (100-workload Job + 12 real Endpoint calls)](evidence/manual-ui-2026-07-15/README.md)
 - [Six-job production E2E evidence (1,200 workloads)](evidence/production-e2e-2026-07-15/README.md)
 - [Production L40S/vLLM Endpoint evidence (25 real calls)](evidence/production-endpoint-2026-07-15/README.md)
@@ -623,7 +623,7 @@ Freeze a new local evidence snapshot with `./scripts/freeze-release.sh`; add `--
 
 ## Nebius Cloud
 
-Real cloud execution is opt-in. Configure the variables below, confirm that `$HOME/.nebius` contains `config.yaml` and `credentials.yaml`, and review [docs/nebius-deployment.md](docs/nebius-deployment.md):
+Real cloud execution is opt-in. Configure the variables below, confirm that `$HOME/.nebius` contains `config.yaml` and `credentials.yaml`, and review [docs/deployment/nebius-deployment.md](docs/deployment/nebius-deployment.md):
 
 ```bash
 NEBIUS_SERVERLESS_ENABLED=true \
@@ -685,24 +685,24 @@ make secrets-check
 
 | Topic | File |
 | --- | --- |
-| Quick start | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
+| Quick start | [docs/deployment/QUICKSTART.md](docs/deployment/QUICKSTART.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Architecture decisions | [docs/architecture/README.md](docs/architecture/README.md) |
-| Functional capability map | [docs/FUNCTIONAL_OVERVIEW.md](docs/FUNCTIONAL_OVERVIEW.md) |
-| Use cases | [docs/USE_CASES.md](docs/USE_CASES.md) |
-| Current phases and learned-detector roadmap | [docs/PHASES.md](docs/PHASES.md) |
-| Nebius LightGBM Wave 1 execution gates | [docs/nebius-lightgbm-wave1-implementation-plan.md](docs/nebius-lightgbm-wave1-implementation-plan.md) |
-| Runtime model | [docs/runtime-model.md](docs/runtime-model.md) |
-| Prometheus and Grafana observability | [docs/kernel-observability.md](docs/kernel-observability.md) |
-| Benchmark methodology | [docs/benchmark-methodology.md](docs/benchmark-methodology.md) |
-| Causal LightGBM feature engineering | [docs/feature-engineering-lightgbm.md](docs/feature-engineering-lightgbm.md) |
-| Governed corpus and ML benchmark protocol | [docs/governed-corpus-benchmark-protocol.md](docs/governed-corpus-benchmark-protocol.md) |
-| Shared MLflow tracking server | [docs/mlflow-tracking-server.md](docs/mlflow-tracking-server.md) |
-| Nebius deployment | [docs/nebius-deployment.md](docs/nebius-deployment.md) |
-| L40S migration | [docs/l40s-migration.md](docs/l40s-migration.md) |
-| Prompting layer | [docs/surveillance-prompting.md](docs/surveillance-prompting.md) |
-| Safety | [docs/safety-and-disclaimers.md](docs/safety-and-disclaimers.md) |
-| Challenge submission | [docs/challenge-submission.md](docs/challenge-submission.md) |
+| Functional capability map | [docs/product/FUNCTIONAL_OVERVIEW.md](docs/product/FUNCTIONAL_OVERVIEW.md) |
+| Use cases | [docs/use-cases/README.md](docs/use-cases/README.md) |
+| Current phases and learned-detector roadmap | [docs/roadmap/PHASES.md](docs/roadmap/PHASES.md) |
+| Nebius LightGBM Wave 1 execution gates | [docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md](docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md) |
+| Runtime model | [docs/runtime/runtime-model.md](docs/runtime/runtime-model.md) |
+| Prometheus and Grafana observability | [docs/runtime/kernel-observability.md](docs/runtime/kernel-observability.md) |
+| Benchmark methodology | [docs/ml/benchmark-methodology.md](docs/ml/benchmark-methodology.md) |
+| Causal LightGBM feature engineering | [docs/ml/feature-engineering-lightgbm.md](docs/ml/feature-engineering-lightgbm.md) |
+| Governed corpus and ML benchmark protocol | [docs/data/governed-corpus-benchmark-protocol.md](docs/data/governed-corpus-benchmark-protocol.md) |
+| Shared MLflow tracking server | [docs/ml/mlflow-tracking-server.md](docs/ml/mlflow-tracking-server.md) |
+| Nebius deployment | [docs/deployment/nebius-deployment.md](docs/deployment/nebius-deployment.md) |
+| L40S migration | [docs/archive/l40s-migration.md](docs/archive/l40s-migration.md) |
+| Prompting layer | [docs/ml/surveillance-prompting.md](docs/ml/surveillance-prompting.md) |
+| Safety | [docs/product/safety-and-disclaimers.md](docs/product/safety-and-disclaimers.md) |
+| Challenge submission | [docs/publication/challenge-submission.md](docs/publication/challenge-submission.md) |
 | Documentation guide | [docs/DOCUMENTATION_GUIDE.md](docs/DOCUMENTATION_GUIDE.md) |
 
 ## Maintainer Notes
