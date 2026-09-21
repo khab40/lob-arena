@@ -1,8 +1,13 @@
 # Main Roadmap
 
-Status date: 2026-09-21
+> **Schedule risk:** September 23 LightGBM exit is at risk; later dates remain
+> baseline targets, not a confirmed forecast. C0–C4 and G0–G7 are complete,
+> G8 is open and G9 blocked. See [current status](CURRENT_STATUS.md) for the
+> merged baseline, PR #207 receipts and GitHub milestone descriptions.
 
-Target completion for the current Nasdaq/LOBSTER learned-detector milestone:
+Status date: 2026-09-21. See [current status and evidence](CURRENT_STATUS.md).
+
+Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
 
 Baseline feature-complete date: **2026-11-13**, followed by one week for
@@ -100,15 +105,14 @@ Execution:
 
 1. ~~Finish and reconcile the `2019-01-30` preparation.~~ Complete.
 2. ~~Prepare the already-acquired `2019-03-27` source.~~ Complete.
-3. Acquire and prepare `2019-10-30`.
-4. Acquire and prepare `2019-12-30`.
-5. Run C4 to freeze the corpus, split, `tabular_projection_v1`, and
-   `sequence_projection_v1`.
-6. Prove that development credentials cannot read final projections.
+3. ~~Acquire and prepare `2019-10-30`.~~ Complete.
+4. ~~Acquire and prepare `2019-12-30`.~~ Complete.
+5. C4 corpus/split and both projections frozen. Complete.
+6. Development-to-final access denial proved. Complete.
 
-The public-data plan has an **18-Job cap**. Given the eleven Jobs already
-consumed, the reduced design should finish C4 around public-data Job 16,
-leaving two recovery slots.
+The completed public-data campaign used the amended **18-Job** planning envelope.
+Earlier eleven-Job consumption and projected recovery headroom were intermediate
+planning observations, not current execution authority.
 
 ## Phase 2 - G5 Through LightGBM Completion
 
@@ -244,7 +248,9 @@ Wave 2 starts only if the disposition is `qualified_for_wave2` or
 Dates: **2026-09-24 through 2026-10-09**  
 GitHub: [#24 Market-sequence Transformer](https://github.com/khab40/lob-arena/issues/24)
 
-This implementation has not started yet.
+Classifier/training implementation has not started. C4 sequence projection
+materialization is already implemented and frozen; Wave 2 must validate its
+consumer, causal sampling and cross-model row alignment.
 
 Deliverables:
 

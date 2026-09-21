@@ -1,5 +1,13 @@
 # Nebius LightGBM Wave 1 Implementation Plan
 
+> **Execution history and baseline plan — reviewed 2026-09-21.**
+> [Current status](CURRENT_STATUS.md) supersedes intermediate gate, remaining-Job,
+> untouched-final-fold and deployment assertions below. C0–C4/G0–G7 are complete;
+> R4 accessed final data; native synthetic recovery passed; G8 is still open.
+> Seven-date/15-Job proposals, consumed-slot counters and spend receipts are
+> historical. The [execution policy](../ml/model-validation-execution-policy.md) replaces
+> old billing/expiry/fixed-spend gates. None of these records authorizes a rerun.
+
 Status: G0-G7 complete; G8 open after R4's post-download, pre-scoring failure; synthetic recovery rehearsal passes; production completion gates remain pending
 
 Date: 2026-08-26
