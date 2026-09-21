@@ -209,6 +209,9 @@ Remaining critical path:
 
 1. Verify the original 27 Java/C3 checkpoints and genuine dataset registration;
    complete frozen projection, C4 profile, comparison inventory and input bindings.
+   The original Jobs are located, but metadata GET is denied to the current reader;
+   the [bounded metadata grant](evidence/g8-comparison-metadata-access-proposal-20260921.json)
+   is prepared pending approval, with no access change applied.
 2. Verify the changed production bootstrap, mounts and context handoff on Nebius
    without final scoring. Record resources, finite timeout, Job count and identities.
 3. Complete current credential/permission, image-alias, storage, MLflow and

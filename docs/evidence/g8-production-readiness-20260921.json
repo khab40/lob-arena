@@ -1,0 +1,58 @@
+{
+  "schema_version": "g8_production_readiness_v1",
+  "observed_at": "2026-09-21T08:41:57.642117+00:00",
+  "source_commit": "4e9ee74ffbc659231dae987d30dc9885eb3611ae",
+  "production_g8_complete": false,
+  "production_execution_authorized": false,
+  "jobs_submitted": 0,
+  "cloud_mutations": 0,
+  "final_bucket_accessed": false,
+  "original_c3_job": {
+    "id": "aijob-e00eyyymycfw7v5eb4",
+    "state": "COMPLETED",
+    "run_id": "nasdaq-c3-12302019-cf426c0-v2-20260904",
+    "metadata_uri": "s3://aimada-wave1-dev-e00g6zvxpr00/data/public-sample-v1/prepared/2019-12-30/nasdaq-c3-12302019-cf426c0-v2-20260904/preparation.json",
+    "expected_preparation_sha256": "d45f1bbaed6256904eb9d4862f279692e2d8b1fc5c22b761e62afdd77edc3ba8",
+    "object_read": "AccessDenied"
+  },
+  "original_c4_job": {
+    "id": "aijob-e00qqqzazpdbb8y4q5",
+    "state": "COMPLETED"
+  },
+  "local_lineage_receipt": {
+    "mlflow_run_id": "dc119d708cc4464e8fe1b82ba976bf3e",
+    "sha256": "c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b",
+    "live_registration_verified": false
+  },
+  "native_filesystem": {
+    "id": "computefilesystem-e00vy2fs9w2sm4bm3v",
+    "state": "READY",
+    "size_gib": 10,
+    "resource_version": "1"
+  },
+  "mlflow_vm": {
+    "id": "computeinstance-e00xq8hqrzks2pf3gn",
+    "state": "STOPPED",
+    "resource_version": "65"
+  },
+  "final_access_key": {
+    "id": "accesskey-e00gy66k4xybsdyxqj",
+    "state": "INACTIVE"
+  },
+  "blocker": "Existing development identity can read releases/* but cannot read original C3/C4 preparation metadata under data/public-sample-v1/*; no permission change applied",
+  "proposed_next_action": {
+    "proposal": "docs/evidence/g8-comparison-metadata-access-proposal-20260921.json",
+    "exact_metadata_keys": 89,
+    "requires_operator_approval": true,
+    "original_payload_availability_proven": false
+  },
+  "evidence_sha256": {
+    "source-location-probe.json": "e72588ffd427a084db73a45a896d57f238714b24d6483ce167b20c44e11c99e6",
+    "exact-metadata-probe.json": "68d11377c7e98fe58c8aece4f94138e4094ff756f95373b15ee82979c9af4dcb",
+    "original-source-jobs.json": "05c03f3a46b26f2e8cfc0922f3fffb0461e1b87980196fd270f765da142cf0b5",
+    "development-bucket-readback.json": "aac01c769d4f321762f698b878d36d242a2b89a63dfcc23ad3d6ad199cb376e8",
+    "filesystem-readback.json": "397473489d6ebbbe3d3b8a9026bb6b2a5fa338468bbe0d8b66c7edce22c7c427",
+    "vm-readback.json": "769a3e735e57b91d32e19235e00d5081eb3ff95e0e9883c1ccaa6720539c358f",
+    "final-key-readback.json": "7b8ed849bd6bb128aee8cf2b864bae95c1fbd72c13c1b7143bf275480e3244e8"
+  }
+}

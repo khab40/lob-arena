@@ -57,3 +57,20 @@ neither a runnable signed manifest nor a submission command.
 No billing check, package submission expiry or fixed VM window is introduced.
 Per-Job resource/time bounds and separate final-test approval remain. G8 is open;
 G9 remains blocked, and actual model quality is not established by this package.
+
+## September 21 readiness continuation
+
+The [readiness receipt](evidence/g8-production-readiness-20260921.json) locates the
+completed original C3 test-date Job and C4 projection Job through fresh provider
+readback. Their completed states do not prove current checkpoint availability.
+The exact original `preparation.json` GET is denied to the development identity;
+its current bucket grant covers `releases/*`, not preparation metadata.
+
+The [proposed metadata read grant](evidence/g8-comparison-metadata-access-proposal-20260921.json)
+adds `storage.viewer` for 89 exact metadata keys in the development bucket,
+preserving both existing rules. It requires explicit approval and a fresh baseline
+check; no policy change has been applied. The bounded audit reads no rows, Parquet,
+checkpoint payloads or final-bucket objects, submits no Jobs, and removes the
+appended rule afterward. Full original payload verification and live dataset
+registration remain separate gates. The native filesystem is READY (10 GiB),
+the MLflow VM is STOPPED and the production final key remains INACTIVE.

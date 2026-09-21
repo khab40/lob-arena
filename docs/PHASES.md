@@ -595,6 +595,9 @@ Remaining work, in order:
    profile, comparison inventory and input-location metadata. Use retained metadata
    first; preserve the separate gate for protected final-data access. Missing
    original evidence is a blocker, not permission to regenerate rules or use fixtures.
+   September 21: original Jobs are located, but the exact preparation-metadata GET
+   is denied. The [89-key metadata-only proposal](evidence/g8-comparison-metadata-access-proposal-20260921.json)
+   is prepared and unapplied; see the [readiness receipt](evidence/g8-production-readiness-20260921.json).
 2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
    imports, mount checks and signed-context handoff without production final scoring.
    Record exact package/image/source hashes and actual Job/filesystem identities.
