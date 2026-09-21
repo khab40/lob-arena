@@ -36,7 +36,7 @@ dated qualification, frozen candidate and authorization evidence.
 ## System High-Level Design
 
 ```mermaid
-flowchart LR
+flowchart TB
     UI["React UI"] -->|"REST / WebSocket"| Java["Java: sole exchange writer"]
     UI -->|"ingestion / AI / experiments"| API["Python FastAPI"]
     Sources["LOBSTER / ITCH"] --> API
