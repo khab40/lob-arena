@@ -47,8 +47,12 @@ before/during/after liquidity-evaporation response windows from the captured
 attack states rather than synthesizing them analytically.
 
 The tiny committed profile proves the contract only. A real completion report
-must be generated locally from licensed, bounded training and held-out ITCH
-windows; neither raw sessions nor derived real-market artifacts are committed.
+requires appropriately licensed, bounded training and held-out ITCH windows;
+neither raw sessions nor derived real-market artifacts are committed. Apply the
+current Nebius execution policy to agent-initiated model workloads; the original
+local workflow is not a requirement to run model validation on a laptop.
+This profile calibration adjusts simulator parameters, not model probabilities
+or LightGBM operating thresholds.
 
 ## Consequences
 

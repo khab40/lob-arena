@@ -1,0 +1,250 @@
+# Functional Overview
+
+Reviewed 2026-09-21 against the [roadmap snapshot](../roadmap/CURRENT_STATUS.md).
+The end-to-end diagram below is the target workflow, not a claim that all stages ship.
+
+This document defines the user-visible capabilities, workflow boundaries, and
+acceptance rules for LOB Arena. The authoritative component topology is in the
+[High-Level Architecture](../architecture.md#system-high-level-design); detailed
+decisions are in the [ARD index](../architecture/README.md).
+
+## Product Boundary
+
+LOB Arena is a market-surveillance detector validation and model-development
+platform. It can replay licensed historical order-book data and add controlled
+synthetic scenarios, but it does not label historical activity automatically,
+generate trading signals, or make compliance decisions.
+
+The commercial north star is BYO data plus BYO detector adapter: govern customer
+data, train LOB Arena reference detectors offline, certify a customer detector
+on replay, and later compare it in real-time shadow mode. That productization is
+parked for the active milestone: one verified Nasdaq/LOBSTER E2E demonstration
+covering LightGBM, standalone Transformer and hybrid, followed by a simplified
+CEO-facing UI.
+
+## Actors
+
+| Actor | Responsibilities |
+| --- | --- |
+| Data steward | Registers licensed sessions, verifies provenance, controls retention and freezes permitted corpus inputs. |
+| Independent reviewer | Reviews proposed clean windows without seeing another reviewer's decision and records a reasoned verdict. |
+| Adjudicator | Resolves reviewer conflicts without rewriting the original decisions. |
+| Research operator | Runs historical controls, hybrid attacks, feature generation and detector comparisons. |
+| ML engineer | Trains/calibrates challengers on governed folds and logs development records to MLflow. |
+| Model validator | Freezes operating modes, opens the final test once, verifies paired results and approves or rejects a release. |
+| Client reviewer | Inspects coverage, missed attacks, alert load, latency, replay and signed evidence. |
+
+## Capability Status
+
+| Capability | Status | Functional result |
+| --- | --- | --- |
+| Paired LOBSTER ingestion | Implemented | Validated immutable Parquet and checksummed source manifest |
+| Extensible inbound data adapter framework | Parked commercial Tier-1; partial foundation | Versioned adapter registry and conformance kit for future batch/streaming sources mapped to the canonical immutable dataset contract |
+| Historical control replay | Implemented | Unlabeled canonical Java stream over a selected source window |
+| Hybrid replay | Implemented | The same historical window plus a deterministic namespaced synthetic overlay |
+| Hybrid realism/equivalence validation | Implemented | Before/during/after locality evidence and signed validation bundle |
+| Governed corpus and split | Implemented as contracts/CLI | Reviewed negatives, family/seed coverage, chronological grouping and signed release |
+| Selective Nasdaq to Nebius data foundation | C0–C4 complete for four-date research corpus | Allowlisted acquisition, bounded raw quarantine, selected normalized S3 data and one fold-isolated root for all learned detectors |
+| Multi-reviewer corpus API/UI | Planned Track B | Blind decisions, conflict resolution, freeze and signed corpus release workflow |
+| Causal feature pipeline | Implemented | Default `lob_features_v2` float32 Parquet, v1 compatibility, quality metadata and leakage checks |
+| LightGBM Phase 0 boundary | Implemented | Hash-bound training, calibration, prediction and model-bundle contracts |
+| LightGBM Phase 1 data boundary | Implemented | Externally anchored feature release, reconstructed governed labels, replay-unit binding and isolated test access |
+| LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |
+| Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
+| LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
+| Market-sequence Transformer challenger | Planned Wave 2 | Causal sequence-aware attack state/phase model after the Nebius LightGBM baseline is frozen |
+| Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
+| Pluggable detector adapter and test harness | Parked commercial Tier-1; partial evaluation foundation | Customer detector as system under test; one causal contract and comparable evidence against LightGBM, Transformer, hybrid and future references |
+| Nasdaq/LOBSTER three-model E2E demonstration | Active milestone | One campaign identity from governed data through LightGBM, Transformer, hybrid, LOBSTER robustness and verified CEO-demo evidence |
+| Google Auth and secure workspace gate | Archived implementation available; planned Story #91 | Selectively restore Google sign-in/app sessions and add backend authorization before sensitive shared data is exposed |
+| Nasdaq/LOBSTER ingestion and replay UI | Planned Story #91 after backend contracts stabilize | Guided source/session/window selection, provenance/progress and historical-control versus synthetic-overlay replay |
+| Experiment results and report UI | Planned Story #91 after E2E backend | One verified campaign view for rules, LightGBM, Transformer and hybrid with MLflow identities, quality, calibration, latency and cost |
+| CEO/customer management summary | Planned Story #91 after E2E backend | One-page result, trade-offs, champion/rollback, limitations and parked BYO commercial next step |
+| RL adaptive red team | Future | Offline bounded search for realistic detector blind spots |
+
+## End-to-End Functional Flow
+
+```mermaid
+flowchart TD
+    Register["1. Register source session"]
+    Validate["2. Validate + normalize + hash"]
+    Control["3a. Historical control"]
+    Hybrid["3b. Hybrid + synthetic attack"]
+    Compare["4. Paired realism and detector evidence"]
+    Review["5. Independent clean-window review"]
+    Freeze["6. Freeze signed corpus and split"]
+    Features["7. Generate causal features"]
+    LightGBM["8a. LightGBM baseline"]
+    Transformer["8b. Standalone Transformer"]
+    Cascade["8c. Transformer → LightGBM"]
+    Test["9. Compare identical Nasdaq test rows"]
+    Lobster["10. LOBSTER robustness<br/>without retuning"]
+    Release["11. Verify one E2E evidence package"]
+    Auth["12. Secure workspace entry"]
+    Demo["13. Data → Replay → Experiments<br/>→ Management Summary"]
+    Track["MLflow index"]
+    Client["Client report / replay"]
+
+    Register --> Validate
+    Validate --> Control
+    Validate --> Hybrid
+    Control --> Compare
+    Hybrid --> Compare
+    Compare --> Review
+    Review --> Freeze
+    Freeze --> Features
+    Features --> LightGBM
+    Features --> Transformer
+    Transformer --> Cascade
+    Features --> Cascade
+    LightGBM --> Test
+    Transformer --> Test
+    Cascade --> Test
+    Test --> Release
+    LightGBM --> Lobster
+    Transformer --> Lobster
+    Cascade --> Lobster
+    Lobster --> Release
+    Release --> Auth
+    Auth --> Demo
+    Freeze -. "release metadata" .-> Track
+    LightGBM -. "development run" .-> Track
+    Transformer -. "development run" .-> Track
+    Cascade -. "development run" .-> Track
+    Test -. "governed metrics" .-> Track
+    Demo --> Client
+```
+
+## Functional Invariants
+
+1. **Java is the only exchange writer.** FastAPI, agents, models, MLflow and
+   Nebius cannot mutate the live book directly.
+2. **Historical source data is immutable.** Import writes a new normalized
+   dataset and manifest; replay verifies them before use.
+3. **Historical activity is unlabeled by default.** Client-grade negative labels require independent review/adjudication. The
+   separate public-sample lane explicitly uses `research_control_assumption`;
+   it must not be presented as reviewed clean data. Attack labels come only
+   from controlled synthetic scenarios.
+4. **No future information reaches a detector.** Historical replay and feature
+   generation operate on the visible prefix at the prediction timestamp.
+5. **Adjacent observations stay grouped.** Complete sessions/base sessions and
+   injection campaigns cannot be randomly split across folds.
+6. **Validation selects; test measures.** Early stopping, calibration and
+   thresholds use validation only. Test is opened after the three operating
+   modes are frozen.
+7. **MLflow is an index, not an authority.** Repository contracts, hashes,
+   checksums and signatures decide compatibility and release acceptance.
+8. **LLM output is explanatory.** Rules or learned detectors produce structured
+   evidence before an AI narrative is requested.
+
+## Shared Learned-Detector Data Contract
+
+The public-sample research lane creates one immutable corpus/split root, not a
+separate dataset per model. It selectively acquires only declared Nasdaq files,
+symbols and windows; a complete approved gzip may exist temporarily because
+ITCH is sequential, but durable S3 model releases contain only relevant
+normalized rows plus provenance and hashes.
+
+The root publishes `tabular_projection_v1` for LightGBM and
+`sequence_projection_v1` for the standalone Transformer. If the Transformer
+passes its feature-producer gate, Wave 3 emits
+`transformer_feature_release_v1` and exact-joins it to tabular rows by corpus,
+split, replay and row identities. Training and scoring programs reject
+incompatible hashes. The proposed cascade must use an explicit fallback to verified tabular
+LightGBM when Transformer features are missing or stale; this is not yet a
+deployed serving mechanism. Every model comparison uses identical
+test rows; any prediction improvement must be demonstrated on the frozen
+metrics rather than presumed from the architecture.
+
+## Operating Modes
+
+| Mode | Inputs | Labels | Main output |
+| --- | --- | --- | --- |
+| Synthetic arena | Generated normal/attack agents | Explicit synthetic ground truth | Live incidents and replayable synthetic artifacts |
+| Historical control | Validated LOBSTER or canonical CSV | None unless separately reviewed | Canonical control stream and detector observations |
+| Hybrid challenge | Historical source plus selected synthetic scenario | Synthetic overlay only | Paired control/hybrid evidence and attack metrics |
+| Governed corpus build | Validated sessions, hybrid campaigns, review decisions | Reviewed negatives plus synthetic positives | Signed corpus and frozen split |
+| Model development | Governed training/validation features | Fold-bound binary/multiclass targets | Model, calibration, explanations and MLflow development run |
+| Final evaluation | Frozen model and test fold | Test labels used only for measurement | Paired metrics, release manifests and signed evidence |
+
+## Track A: LightGBM v1 Acceptance
+
+The first learned detector is binary `attack_active`. Delivery is accepted only
+when it:
+
+- rejects incompatible schema, protocol, corpus and split hashes;
+- fits preprocessing and class weights on training only;
+- uses validation for early stopping, calibration and threshold selection;
+- freezes high-precision, balanced and high-recall modes before test;
+- emits feature contributions or SHAP-compatible evidence;
+- records model, calibration and prediction manifests with checksums;
+- compares rules and LightGBM on identical governed observations; and
+- reports liquidity evaporation and subtle layering challenge performance.
+
+The implementation now satisfies this software boundary. Official Nasdaq ITCH
+samples plus the repository LOBSTER sample may support a research-only
+qualification and unlock Wave 2 engineering after the selective acquisition,
+public-sample quality, reproducibility, isolation, cost and operational gates
+pass. C0–C4 and G0–G7 are complete; both public-sample projections exist. G8
+production evaluation is open and G9 exit is blocked. Native synthetic recovery
+passed but does not establish model quality or unlock Wave 2 by itself. Production/client
+performance acceptance still requires appropriately licensed data,
+independent clean-window reviews and a signed chronological test release
+suitable for that claim.
+
+## Track B: Corpus Operations Acceptance
+
+The client-facing corpus workflow must:
+
+- register at least 30 complete sessions across three instruments and ten dates;
+- cover every required attack family with at least three seeds per family;
+- hide reviewer identities/decisions from one another until both submit;
+- preserve original decisions while adjudicating conflicts;
+- keep unreviewed historical windows unlabeled;
+- freeze exact source, review, protocol and split hashes; and
+- issue a signed, immutable corpus release before client-qualified Track A training.
+
+The separate four-date public-sample research lane does not satisfy these
+client-qualification floors and must keep its weaker label provenance visible.
+
+## Shared MLflow Functional Contract
+
+MLflow provides:
+
+- experiments `lob-arena/corpus-releases`,
+  `lob-arena/lightgbm-development`, and
+  `lob-arena/governed-evaluation`;
+- registered-model namespace `lob-arena-lightgbm-attack-active`;
+- authenticated metadata and artifact access;
+- PostgreSQL persistence and S3-compatible artifact storage; and
+- a smoke test covering registry, metadata, artifact upload and download.
+
+The namespace does not imply registered model versions or champion aliases.
+Current training logs artifacts and manifests; governed promotion and live
+learned-model serving remain future work.
+
+MLflow must not contain raw licensed LOBSTER records unless a client-specific
+licence and access policy explicitly allow it.
+
+## Outputs
+
+Client-reviewable outputs include:
+
+- dataset and source manifests;
+- historical-control and hybrid replay artifacts;
+- signed hybrid validation reports;
+- review/adjudication and frozen corpus manifests;
+- causal feature schema, configuration and quality reports;
+- training, calibration, prediction and model-bundle manifests;
+- rules/model paired metrics, uncertainty and regime reports;
+- feature or sequence explanations; and
+- checksums, signatures, model cards and replay links.
+
+## Related Documentation
+
+- [Use Cases](../use-cases/README.md)
+- [Runtime Model](../runtime/runtime-model.md)
+- [Governed Corpus Protocol](../data/governed-corpus-benchmark-protocol.md)
+- [Feature Engineering](../ml/feature-engineering-lightgbm.md)
+- [Shared MLflow Tracking](../ml/mlflow-tracking-server.md)
+- [Hybrid Dataset Validation](../data/hybrid-dataset-validation.md)

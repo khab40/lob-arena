@@ -24,7 +24,7 @@ bounded summary (maximum 24,000 serialized characters), never sends raw LOB
 streams, and validates the model's JSON before adapting it to the existing route
 response. vLLM runs only for high anomalies, detector disagreement, completed
 manipulation episodes, simulation summaries, and benchmark generation; ordinary events keep
-the deterministic path. See [prompting contracts, budgets, and examples](../../docs/surveillance-prompting.md).
+the deterministic path. See [prompting contracts, budgets, and examples](../../docs/ml/surveillance-prompting.md).
 
 ## Modes
 

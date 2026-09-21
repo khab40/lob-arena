@@ -52,7 +52,7 @@ graph TD
     Browser["Browser Local State"]
     Theme["lob-arena.themePreference"]
     Shell["React Shell"]
-    Backend["FastAPI Backend"]
+    Backend["Java Spring live arena"]
     Arena["Arena State Stream"]
     Visuals["Stable Timeline Widgets"]
 
@@ -80,7 +80,7 @@ Tradeoffs:
 ## Related Documentation
 
 - `README.md`
-- `docs/DESIGN-IDEAS.md`
-- `docs/PHASES.md`
-- `docs/runtime-model.md`
+- `docs/product/DESIGN-IDEAS.md`
+- `docs/roadmap/PHASES.md`
+- `docs/runtime/runtime-model.md`
 - [ARD-0001: Overall Architecture](ARD-0001-overall-architecture.md)

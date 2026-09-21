@@ -19,6 +19,15 @@ Follow-up:
 
 - Threshold calibration against broader historical-style replay datasets remains future validation work.
 
+## Learned-detector clarification — 2026-09-21
+
+Rule confidence is a heuristic score, not a calibrated probability of abuse.
+The later LightGBM adapter returns separate raw/calibrated probabilities and
+model/calibration IDs under [ARD-0031](ARD-0031-complete-lightgbm-v1.md). Its
+binary target is synthetic `attack_active`; a scenario family is not a predicted
+class, and known ground-truth family/seed must never enter the input features.
+The AI Investigator explains evidence; it is not the sequence classifier.
+
 ## Context
 
 Detector alerts must be explainable without relying on AI-generated text. The project needs deterministic confidence scores and evidence items that can be shown in the UI, written to benchmark artifacts, and sent to the Nebius explanation endpoint.
@@ -115,6 +124,6 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/benchmark-methodology.md`
-- `docs/runtime-model.md`
+- `docs/ml/benchmark-methodology.md`
+- `docs/runtime/runtime-model.md`
 - [ARD-0005: Nebius Endpoint Contract](ARD-0005-nebius-endpoint-contract.md)

@@ -61,7 +61,11 @@ package must require and hash-bind it and the reviewed code overlays.
 The [complete synthetic rehearsal](../evidence/g8-complete-c4-rehearsal-20260914.json)
 verified 27 checkpoints, 30 replay domains and 198 paired observations in the
 pinned image. Features/rules alerts are fixtures; remote transport is simulated.
-Original production checkpoint availability and remote rehearsal remain gates.
+The later [native rehearsal](../evidence/g8-native-recovery-20260917.json)
+and [independent S3 readback](../evidence/g8-independent-s3-readback-20260917.json)
+verify synthetic remote recovery. Original production comparison/registration
+verification and the changed production transport remain separate gates;
+fixture comparisons do not become actual Java evidence.
 
 ## Alternatives and consequences
 
@@ -74,5 +78,5 @@ does not rescore the model. Existing no-report logging remains compatible.
 
 - [ARD-0035: Nebius qualification](ARD-0035-nebius-lightgbm-first.md) — execution and exit gates.
 - [ARD-0039: Same-run MLflow recovery](ARD-0039-same-run-mlflow-recovery.md) — consumes independently verified C4 evidence.
-- [C4 evaluation contract](../g8-c4-evaluation-contract.md) — detailed metrics and CLI contract.
-- [G8 completion recovery](../g8-completion-recovery.md) — incident history and remaining gates.
+- [C4 evaluation contract](../operations/g8/g8-c4-evaluation-contract.md) — detailed metrics and CLI contract.
+- [G8 completion recovery](../operations/g8/g8-completion-recovery.md) — incident history and remaining gates.

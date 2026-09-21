@@ -62,15 +62,19 @@ probabilities and training-manifest bytes.
 - Existing float64 v1 releases remain immutable. New float32 v2 releases bind
   the reduced-width storage explicitly into protocol/config/release hashes and
   still use the same bounded trainer representation.
-- All 60 governed features remain available for the v1 baseline and paired
-  evaluation. Feature selection is deferred to a separately versioned,
-  evidence-backed schema rather than being embedded in this trainer.
-- Model calibration, operating-point selection, MLflow logging, final test
-  evaluation and detector integration remain later phases.
+- The source release retains all 60 features. The later Wave 1 runner supports
+  explicit feature ablations through a hashed experiment specification; the
+  training manifest/model bind the retained ordered subset. G6 selected 31
+  columns after excluding 29 state features. This does not rewrite the source
+  feature schema or perform hidden selection inside this trainer.
+- The best-iteration booster is saved after fitting. Periodic training-state
+  checkpoints and interrupted-training resume are not implemented.
+- Calibration, operating points, MLflow logging, final scoring and the Python
+  detector adapter subsequently landed under ARD-0031. Live serving is separate.
 
 ## Related documentation
 
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md)
-- [Causal Feature Engineering for LightGBM](../feature-engineering-lightgbm.md)
+- [Causal Feature Engineering for LightGBM](../ml/feature-engineering-lightgbm.md)
 - [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)

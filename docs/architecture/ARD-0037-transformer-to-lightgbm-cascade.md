@@ -47,6 +47,15 @@ session and replay identities. Positional or timestamp-nearest joins are not
 allowed. Labels, post-cutoff events and final-test feedback cannot enter the
 feature producer.
 
+Event-time causality alone does not prevent supervised stacking leakage.
+Before implementation, predeclare grouped chronological cross-fitting or
+disjoint producer-training/downstream-training groups within development.
+Every downstream training row must bind a producer that did not fit on that
+row's base-session group (including its controls and seed variants); retain
+producer-to-row lineage and audit train/serve feature distribution changes. Fit preprocessing on training only. Freeze producer,
+join contract, downstream model, calibration and thresholds before final test.
+This proposed guard is not implemented by the existing sequence materializer.
+
 Train the cascade as a new model family. It must not overwrite the standalone
 LightGBM v1 artifacts or registry identities. The Wave 1 LightGBM bundle remains
 the required rollback and missing-feature fallback.
@@ -92,7 +101,8 @@ The cascade is promoted only when:
    auditable promotion record.
 
 If the gates fail, the negative result is retained and standalone LightGBM
-remains the champion or rollback candidate.
+remains the baseline candidate, or the champion/rollback only if separately
+qualified and promoted. G8/G9 being open does not establish a production champion.
 
 ## Alternatives Considered
 
@@ -126,4 +136,4 @@ assumed architectural benefit.
 - [ARD-0031: Complete Governed LightGBM v1](ARD-0031-complete-lightgbm-v1.md)
 - [ARD-0035: Nebius-First LightGBM](ARD-0035-nebius-lightgbm-first.md)
 - [ARD-0036: Market-Sequence Transformer](ARD-0036-market-sequence-transformer.md)
-- [Project phases](../PHASES.md)
+- [Project phases](../roadmap/PHASES.md)

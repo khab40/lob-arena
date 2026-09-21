@@ -1,5 +1,10 @@
 # ARD-0015: Nebius AI Investigation Team
 
+> **Scope clarification (2026-09-21):** `[done]` describes the existing bounded
+> endpoint/demo integration. Secure workspace access, investigator comparison
+> and learned-model evidence integration remain roadmap #91/#27/#28 work.
+> The unauthenticated demo acceptance below is historical, not the secure UI target.
+
 Status: Accepted
 
 Date: 2026-07-06

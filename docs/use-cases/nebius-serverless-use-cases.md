@@ -1,5 +1,11 @@
 # Nebius Serverless Use Cases
 
+> **Historical July demo design — reviewed 2026-09-21.** “Draft” and task boxes
+> below describe the original rollout. Endpoint/scenario/tournament demo paths
+> now exist (ARD-0015–0017); they do not imply that the learned-model comparison
+> or secure CEO workflow ships. See the [current catalogue](README.md) and
+> [roadmap](../roadmap/CURRENT_STATUS.md).
+
 Status: Draft
 
 Date: 2026-07-06

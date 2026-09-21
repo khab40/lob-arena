@@ -18,7 +18,10 @@ Implemented:
 Future work:
 
 - The canonical ARD path shape is run-specific (`outputs/benchmark/<run_id>/...`), while the current local detector tournament path still uses flatter files such as `outputs/benchmark/results.json`, `metrics.csv`, and `benchmark_report.md`.
-- Artifact schema versioning is not yet formalized.
+- The original tournament artifact set below lacks one complete versioned
+  contract. Later governed corpus, projection and model releases do have strict
+  versioned schemas under ARD-0025/0026/0031/0038. The legacy tournament output
+  is not a substitute for those releases.
 
 ## Context
 
@@ -110,6 +113,6 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/benchmark-methodology.md`
+- `docs/ml/benchmark-methodology.md`
 - `serverless/jobs/README.md`
 - [ARD-0006: Scenario Labeling and Reproducibility](ARD-0006-scenario-labeling-and-reproducibility.md)

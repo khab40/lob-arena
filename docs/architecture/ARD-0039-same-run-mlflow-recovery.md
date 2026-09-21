@@ -4,13 +4,13 @@ Status: Accepted
 
 Date: 2026-09-15
 
-Implementation Status: `[recovery API implemented; live runner integration pending]`
+Implementation Status: `[replacement integration and native synthetic recovery verified; production qualification pending]`
 
 ## Validation execution policy — 2026-09-16
 
 The operator removed administrative submission/retention windows, billing checks
 and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
 in preference to older operational bounds in this record. No billing queries or
 balance-refresh requests. Finite Job timeouts, execution identities, evidence
 integrity and separate final-test authorization remain. This is an execution-policy
@@ -58,7 +58,7 @@ The [reviewed synthetic receipt](../evidence/g8-mlflow-tag-review-20260914.json)
 records one run creation, one scoring call, 24 metrics, 30 dataset inputs and
 four verified artifacts, including reordered tag readback and zero writes on
 completed recovery. Lost create, metric, artifact and FINISHED responses are
-covered by the [recovery rehearsal](../g8-mlflow-recovery.md).
+covered by the [recovery rehearsal](../operations/g8/g8-mlflow-recovery.md).
 
 The production runner still needs a reviewed replacement execution package.
 The [September 17 native rehearsal](../evidence/g8-native-recovery-20260917.json)
@@ -70,7 +70,7 @@ subsequently verified all 64 objects with the already-authorized development
 identity, after the MLflow identity was denied. No access was widened. Production data,
 actual Java comparisons, quality acceptance and G8 completion remain separate.
 
-The [native rehearsal package](../g8-native-rehearsal-package.md) uses the existing
+The [native rehearsal package](../operations/g8/g8-native-rehearsal-package.md) uses the existing
 filesystem for hash-verified package staging and checkpoint retention. Its Job
 mounts that filesystem read-only for package loading and read-write for recovery
 evidence. Only the small bootstrap uses Job file injection; both earlier bulk
@@ -93,4 +93,4 @@ intentionally fail-closed response to ambiguous reservation state.
 - [ARD-0035: Nebius qualification](ARD-0035-nebius-lightgbm-first.md) — replacement execution gates.
 - [ARD-0038: C4 evaluation](ARD-0038-c4-specific-evaluation.md) — required provenance verification.
 - [ARD-0040: Publication recovery](ARD-0040-completed-release-publication-recovery.md) — subsequent completed-release publication.
-- [G8 MLflow recovery](../g8-mlflow-recovery.md) — operational contract and evidence.
+- [G8 MLflow recovery](../operations/g8/g8-mlflow-recovery.md) — operational contract and evidence.

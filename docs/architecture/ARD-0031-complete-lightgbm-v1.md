@@ -6,7 +6,7 @@ Date: 2026-07-31
 
 Implementation Status: `[lightgbm-v1 done]`
 
-## Wave 1 Evaluation Update — 2026-09-15
+## Wave 1 Evaluation Update — 2026-09-21
 
 Local v1 implementation is complete; cloud qualification remains open under
 [ARD-0035](ARD-0035-nebius-lightgbm-first.md). Wave 1 froze isotonic calibration
@@ -16,8 +16,9 @@ The frozen four-date C4 candidate uses the separate
 seven-date benchmark equivalence. Same-run logging and post-logging publication
 recovery extend the release lifecycle through
 [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) and
-[ARD-0040](ARD-0040-completed-release-publication-recovery.md). They do not yet
-provide durable pre-logging recovery in the live runner.
+[ARD-0040](ARD-0040-completed-release-publication-recovery.md). The signed replacement path now includes durable pre-logging retention and
+same-run recovery. A native two-Job synthetic rehearsal passed; production
+replacement qualification and authorization remain separate.
 
 ## Context
 
@@ -53,6 +54,14 @@ bins, and a deterministic reliability diagram. Threshold selection freezes:
 - balanced: maximum F1; and
 - high recall: maximum precision satisfying the configured recall floor.
 
+The current calibration metrics and operating points are unweighted row
+metrics. The same validation fold supplies early stopping, model selection,
+calibrator fitting and threshold selection; calibration is assessed on its own
+fitting rows. These are development-selection results, not an independent
+estimate of calibration quality. Future protocols should predeclare disjoint
+chronological calibration/selection groups or grouped out-of-fold predictions;
+do not modify the already frozen Wave 1 candidate.
+
 Deterministic secondary ordering resolves metric ties. An unattainable floor
 fails rather than silently changing the requested operating contract.
 
@@ -87,8 +96,12 @@ using governed feature names.
 MLflow receives explicit parameters, metrics, hashes and permitted artifacts
 only after local contract checks. Development runs use
 `lob-arena/lightgbm-development`; a verified frozen-test bundle uses
-`lob-arena/governed-evaluation`. Registry state and aliases remain deployment
-pointers, never release proof.
+`lob-arena/governed-evaluation`. The implementation logs model files and manifests explicitly; it does not
+publish model versions or assign deployment aliases. Registry namespace
+bootstrap exists, while verified registration/promotion is planned. The Python
+scoring adapter is not wired to Java streams or an inference service. See
+[retention and serving use cases](../use-cases/ml-model-serving.md). Registry
+state and aliases can be deployment pointers, never release proof.
 
 ## Artifact-root rule
 
@@ -121,4 +134,4 @@ or calibration.
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md)
 - [ARD-0029: Deterministic LightGBM Binary Training](ARD-0029-deterministic-lightgbm-binary-training.md)
 - [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)
-- [Shared MLflow Tracking](../mlflow-tracking-server.md)
+- [Shared MLflow Tracking](../ml/mlflow-tracking-server.md)

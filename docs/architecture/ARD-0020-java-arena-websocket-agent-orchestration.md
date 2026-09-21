@@ -8,7 +8,7 @@ Implementation Status: `[done]`
 
 ## Context
 
-After the deterministic-kernel cut-over, FastAPI still owns browser WebSocket sessions, agent scheduling, scenarios, detectors, incidents, persistence, and the live exchange writer. These are non-AI responsibilities with reusable Java order-book and determinism foundations.
+At the start of this completed migration, after the deterministic-kernel cut-over, FastAPI still owned browser WebSocket sessions, agent scheduling, scenarios, detectors, incidents, persistence, and the live exchange writer. These are non-AI responsibilities with reusable Java order-book and determinism foundations.
 
 Agent implementations are intentionally allowed to remain Python when they use LangGraph, ML/AI libraries, or process-pool analysis. Session management, timeouts, fan-out, response validation, deterministic intent ordering, and browser delivery do not require Python.
 
@@ -91,4 +91,4 @@ Tradeoffs:
 - [ARD-0002: WebSocket State Schema](ARD-0002-websocket-state-schema.md)
 - [ARD-0010: Agent Runner Execution Architecture](ARD-0010-agent-runner-execution.md)
 - [ARD-0019: Python Reference And Java Kernel Migration](ARD-0019-python-reference-java-kernel-migration.md)
-- [Runtime Model](../runtime-model.md)
+- [Runtime Model](../runtime/runtime-model.md)

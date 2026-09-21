@@ -4,81 +4,69 @@ This guide explains the documentation structure and conventions for LOB Arena.
 
 ## Documentation Structure
 
-```mermaid
-graph TD
-    Docs["docs"]
-    Quickstart["QUICKSTART.md - Get running in 5 minutes"]
-    Architecture["architecture.md - System overview"]
-    Functional["FUNCTIONAL_OVERVIEW.md - Capabilities and acceptance"]
-    ARDs["architecture - Architecture records"]
-    UseCases["USE_CASES.md - Workflow diagrams"]
-    Runtime["runtime-model.md - Simulation runtime"]
-    Observability["kernel-observability.md - Prometheus and Grafana"]
-    Benchmark["benchmark-methodology.md - Detector metrics"]
-    Nebius["nebius-deployment.md - Serverless setup"]
-    Submission["challenge-submission.md - Submission guide"]
-    Ideas["DESIGN-IDEAS.md - Design exploration"]
-    Research["research-notes.md - Research background"]
-    Safety["safety-and-disclaimers.md - Educational limits"]
-    Phases["PHASES.md - Development phases"]
+The [documentation index](README.md) lists topic entry points. Only this guide,
+that index, the review ledger and the canonical overview live at the docs root.
 
-    Docs --> Quickstart
-    Docs --> Architecture
-    Docs --> Functional
-    Docs --> ARDs
-    Docs --> UseCases
+```mermaid
+flowchart LR
+    Docs["docs/README.md: navigation"]
+    Overview["architecture.md: canonical system overview"]
+    Decisions["architecture/: ARDs and decision index"]
+    Plans["roadmap/: current status, dates, execution history"]
+    Workflows["use-cases/: workflows and ML lifecycle"]
+    Contracts["data/ and ml/: data and model contracts"]
+    Runtime["runtime/: Java, events, determinism, metrics"]
+    Operations["deployment/ and operations/: setup and G8"]
+    Context["product/, research/, publication/, archive/"]
+    Docs --> Overview
+    Overview --> Decisions
+    Docs --> Plans
+    Docs --> Workflows
+    Docs --> Contracts
     Docs --> Runtime
-    Docs --> Observability
-    Docs --> Benchmark
-    Docs --> Nebius
-    Docs --> Submission
-    Docs --> Ideas
-    Docs --> Research
-    Docs --> Safety
-    Docs --> Phases
-    ARDs --> ARDIndex["README.md - ARD index"]
-    ARDs --> ARDFiles["ARD-NNNN files - Decisions"]
+    Docs --> Operations
+    Docs --> Context
 ```
 
 ## Key Documentation
 
 ### Entry Points
 
-1. **For newcomers**: Start with [QUICKSTART.md](QUICKSTART.md)
+1. **For newcomers**: Start with [QUICKSTART.md](deployment/QUICKSTART.md)
 2. **For architecture understanding**: Start with [architecture.md](architecture.md)
-3. **For functional scope and status**: Read [FUNCTIONAL_OVERVIEW.md](FUNCTIONAL_OVERVIEW.md)
-4. **For workflows**: Read [USE_CASES.md](USE_CASES.md)
-5. **For deployment**: Read [mlflow-tracking-server.md](mlflow-tracking-server.md) and [nebius-deployment.md](nebius-deployment.md)
+3. **For functional scope and status**: Read [FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md)
+4. **For workflows**: Read [USE_CASES.md](use-cases/README.md)
+5. **For deployment**: Read [mlflow-tracking-server.md](ml/mlflow-tracking-server.md) and [nebius-deployment.md](deployment/nebius-deployment.md)
 
 ### Core References
 
 - **[README.md](../README.md)** — Master index and navigation guide
 - **[architecture.md](architecture.md)** — System design with component responsibilities and data flow
 - **[architecture/README.md](architecture/README.md)** — Index of all Architecture Records
-- **[FUNCTIONAL_OVERVIEW.md](FUNCTIONAL_OVERVIEW.md)** — Product actors, capability status, lifecycle, invariants, and Track A/Track B acceptance
-- **[USE_CASES.md](USE_CASES.md)** — Implemented and planned client/research workflows with business value
+- **[FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md)** — Product actors, capability status, lifecycle, invariants, and Track A/Track B acceptance
+- **[USE_CASES.md](use-cases/README.md)** — Implemented and planned client/research workflows with business value
 
 ### Specialized Topics
 
-- **[runtime-model.md](runtime-model.md)** — How the simulation engine works
-- **[kernel-observability.md](kernel-observability.md)** — Prometheus metric collection, Grafana dashboards, and bottleneck diagnosis
-- **[java-kernel-migration.md](java-kernel-migration.md)** — Parity-gated Python-reference to Java-kernel migration
+- **[runtime-model.md](runtime/runtime-model.md)** — How the simulation engine works
+- **[kernel-observability.md](runtime/kernel-observability.md)** — Prometheus metric collection, Grafana dashboards, and bottleneck diagnosis
+- **[java-kernel-migration.md](runtime/history/java-kernel-migration.md)** — Parity-gated Python-reference to Java-kernel migration
 - **[architecture/ARD-0020-java-arena-websocket-agent-orchestration.md](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md)** — Java live arena, WebSocket, agent orchestration, and retained Python boundary
 - **[architecture/ARD-0022-historical-market-data-ingestion.md](architecture/ARD-0022-historical-market-data-ingestion.md)** — LOBSTER discovery, validation, normalized storage, and dataset registration
 - **[architecture/ARD-0023-hybrid-historical-replay.md](architecture/ARD-0023-hybrid-historical-replay.md)** — Deterministic historical/synthetic merge, provenance, labels, metrics, and replay artifacts
 - **[architecture/ARD-0024-versioned-causal-feature-engineering.md](architecture/ARD-0024-versioned-causal-feature-engineering.md)** — Stable causal feature schema, leakage boundary, artifacts, and grouped splits
-- **[hybrid-dataset-validation.md](hybrid-dataset-validation.md)** — LOBSTER invariants, causal-neighbourhood equivalence, signed validation reports, and verification
-- **[client-historical-dataset-validation-runbook.md](client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
-- **[feature-engineering-lightgbm.md](feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and governed trainer rules
-- **[governed-corpus-benchmark-protocol.md](governed-corpus-benchmark-protocol.md)** — Pre-training corpus governance, independent negative labels, frozen split policy, statistical metrics, and release gates
-- **[mlflow-tracking-server.md](mlflow-tracking-server.md)** — Shared tracking topology, security, roadmap namespaces, operations, and governance boundary
-- **[determinism-contract-v1.md](determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
-- **[canonical-hashing-v1.md](canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
-- **[benchmark-methodology.md](benchmark-methodology.md)** — Evaluating detector performance
-- **[nebius-deployment.md](nebius-deployment.md)** — Setting up Nebius serverless components
-- **[challenge-submission.md](challenge-submission.md)** — Submitting your work
-- **[research-notes.md](research-notes.md)** — Market microstructure background
-- **[safety-and-disclaimers.md](safety-and-disclaimers.md)** — Educational focus and limitations
+- **[hybrid-dataset-validation.md](data/hybrid-dataset-validation.md)** — LOBSTER invariants, causal-neighbourhood equivalence, signed validation reports, and verification
+- **[client-historical-dataset-validation-runbook.md](data/client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
+- **[feature-engineering-lightgbm.md](ml/feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and governed trainer rules
+- **[governed-corpus-benchmark-protocol.md](data/governed-corpus-benchmark-protocol.md)** — Pre-training corpus governance, independent negative labels, frozen split policy, statistical metrics, and release gates
+- **[mlflow-tracking-server.md](ml/mlflow-tracking-server.md)** — Shared tracking topology, security, roadmap namespaces, operations, and governance boundary
+- **[determinism-contract-v1.md](runtime/determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
+- **[canonical-hashing-v1.md](runtime/canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
+- **[benchmark-methodology.md](ml/benchmark-methodology.md)** — Evaluating detector performance
+- **[nebius-deployment.md](deployment/nebius-deployment.md)** — Setting up Nebius serverless components
+- **[challenge-submission.md](publication/challenge-submission.md)** — Submitting your work
+- **[research-notes.md](research/research-notes.md)** — Market microstructure background
+- **[safety-and-disclaimers.md](product/safety-and-disclaimers.md)** — Educational focus and limitations
 
 ## Documentation Principles
 
@@ -87,13 +75,24 @@ graph TD
 - **Internal cross-references use relative markdown links**; external
   references use HTTPS
 - **Links are tested** to ensure they work (broken links indicate stale docs)
-- **ARDs are linked** from [architecture.md](architecture.md) and [USE_CASES.md](USE_CASES.md)
-- **Use cases are mapped** to architecture components in [USE_CASES.md](USE_CASES.md)
+- **ARDs are linked** from [architecture.md](architecture.md) and [USE_CASES.md](use-cases/README.md)
+- **Use cases are mapped** to architecture components in [USE_CASES.md](use-cases/README.md)
 
 ### 2. Freshness
 
+- Gate/issue state is centralized in [current roadmap status](roadmap/CURRENT_STATUS.md),
+  with observation date, merged source revision and separately identified open-PR evidence.
+- Baseline target dates are not a promise or an automatically revised forecast.
+- Historical receipts are immutable. Add a dated stale/superseded banner to narrative
+  guidance instead of rewriting original Job counts, hashes, spend or outcomes.
+- Distinguish accepted design, implemented software, successful rehearsal and
+  production qualification. They are different evidence levels.
+- Root `ARCHITECTURE.md` links to `docs/architecture.md`; do not duplicate status there.
+- Topic moves must update inbound links, relative outbound links/images and active
+  script references. Keep frozen `evidence/` snapshots unchanged.
+
 - **Architecture is single-source-of-truth**: Changes to architecture.md must propagate to affected ARDs
-- **Use cases stay current**: If a workflow changes, update [USE_CASES.md](USE_CASES.md) and audit [architecture.md](architecture.md)
+- **Use cases stay current**: If a workflow changes, update [USE_CASES.md](use-cases/README.md) and audit [architecture.md](architecture.md)
 - **ARDs are never deleted**: Superseded decisions are marked `Status: Superseded` with reference to replacement
 
 ### 3. Mermaid Diagrams
@@ -125,20 +124,20 @@ graph TD
 
 | Change | Documents to Update |
 |--------|---------------------|
-| Architecture changes | [architecture.md](architecture.md), affected ARDs, [USE_CASES.md](USE_CASES.md) |
-| New workflow added | [USE_CASES.md](USE_CASES.md), [architecture.md](architecture.md), [README.md](../README.md) |
-| API changes | [backend/README.md](../backend/README.md), [QUICKSTART.md](QUICKSTART.md), affected ARDs |
-| New ARD created | [architecture/README.md](architecture/README.md), [architecture.md](architecture.md), [USE_CASES.md](USE_CASES.md) |
-| UI shell or presentation behavior changes | [DESIGN-IDEAS.md](DESIGN-IDEAS.md), [architecture.md](architecture.md), [USE_CASES.md](USE_CASES.md), affected ARDs |
-| Deployment changes | Relevant deployment guide, [QUICKSTART.md](QUICKSTART.md), [architecture.md](architecture.md), affected ARD |
-| Functional capability/status changes | [FUNCTIONAL_OVERVIEW.md](FUNCTIONAL_OVERVIEW.md), [USE_CASES.md](USE_CASES.md), [README.md](../README.md) |
-| Safety/legal implications | [safety-and-disclaimers.md](safety-and-disclaimers.md) |
+| Architecture changes | [architecture.md](architecture.md), affected ARDs, [USE_CASES.md](use-cases/README.md) |
+| New workflow added | [USE_CASES.md](use-cases/README.md), [architecture.md](architecture.md), [README.md](../README.md) |
+| API changes | [backend/README.md](../backend/README.md), [QUICKSTART.md](deployment/QUICKSTART.md), affected ARDs |
+| New ARD created | [architecture/README.md](architecture/README.md), [architecture.md](architecture.md), [USE_CASES.md](use-cases/README.md) |
+| UI shell or presentation behavior changes | [DESIGN-IDEAS.md](product/DESIGN-IDEAS.md), [architecture.md](architecture.md), [USE_CASES.md](use-cases/README.md), affected ARDs |
+| Deployment changes | Relevant deployment guide, [QUICKSTART.md](deployment/QUICKSTART.md), [architecture.md](architecture.md), affected ARD |
+| Functional capability/status changes | [FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md), [USE_CASES.md](use-cases/README.md), [README.md](../README.md) |
+| Safety/legal implications | [safety-and-disclaimers.md](product/safety-and-disclaimers.md) |
 
 ### How to Update
 
 1. **Identify the primary document** that owns the change
 2. **Update that document first**
-3. **Update all dependent documents** (use grep to find references)
+3. **Update all dependent documents** (use `rg` to find references)
 4. **Test all markdown links** (VS Code should show link validation)
 5. **Verify Mermaid diagrams render** (they appear visually in VS Code)
 
@@ -160,11 +159,11 @@ Use this checklist when making documentation changes:
 - [ ] No backticks around file names or links
 - [ ] Mermaid diagrams render without errors (check in VS Code preview)
 - [ ] Architecture-related changes update [architecture.md](architecture.md)
-- [ ] Workflow changes update [USE_CASES.md](USE_CASES.md)
+- [ ] Workflow changes update [USE_CASES.md](use-cases/README.md)
 - [ ] New sections added to [README.md](../README.md) index
 - [ ] "Related Documentation" sections are current
 - [ ] No references to files that don't exist
-- [ ] No outdated version numbers or dates
+- [ ] Current version/status claims match evidence; historical values are dated and flagged
 
 ## Common Issues & Fixes
 
@@ -181,9 +180,9 @@ Use this checklist when making documentation changes:
 - Invalid node references (typos)
 
 ### Issue: Documentation doesn't match code
-**Fix**: Find the right section using grep:
+**Fix**: Find the right section using `rg`:
 ```bash
-grep -r "old_component_name" docs/
+rg "old_component_name" docs/
 ```
 Then update all occurrences.
 
@@ -199,19 +198,19 @@ Then update all occurrences.
 
 ### Check Links
 - **VS Code**: Markdown link validator (built-in)
-- **Terminal**: `grep -r "\[.*\](" docs/` to find all links
+- **Terminal**: `rg -n '\]\(' docs/` to find inline link destinations
 - **Manual**: Click each link in VS Code preview
 
 ### Search Across Docs
 ```bash
 # Find all references to a file
-grep -r "USE_CASES.md" docs/
+rg 'use-cases/README.md' docs/
 
 # Find all links in a file
-grep -o "\[.*\](.*)" docs/file.md
+rg -o "\[.*\](.*)" docs/file.md
 
 # Find stale references
-grep -r "ARD-0010" docs/  # (if ARD-0010 doesn't exist, this is stale)
+rg "ARD-0010" docs/  # (if ARD-0010 doesn't exist, this is stale)
 ```
 
 ## Responsibilities
@@ -225,5 +224,5 @@ grep -r "ARD-0010" docs/  # (if ARD-0010 doesn't exist, this is stale)
 If documentation is unclear or missing:
 1. Check the index in [README.md](../README.md)
 2. Follow the breadcrumb links in "Related Documentation"
-3. Check [QUICKSTART.md](QUICKSTART.md) for common tasks
-4. Review [USE_CASES.md](USE_CASES.md) for workflows
+3. Check [QUICKSTART.md](deployment/QUICKSTART.md) for common tasks
+4. Review [USE_CASES.md](use-cases/README.md) for workflows

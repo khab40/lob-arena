@@ -27,7 +27,7 @@ Actuator, FastAPI, and agent-runner endpoints. Grafana queries that Prometheus
 instance and renders the pre-provisioned LOB Arena dashboards. Both profiles are
 optional, local, and read-only; they do not deploy a production monitoring
 platform to Nebius or participate in simulation and detector decisions. See
-[Kernel Observability](../docs/kernel-observability.md) for the scrape targets,
+[Kernel Observability](../docs/runtime/kernel-observability.md) for the scrape targets,
 dashboard roles, and profile commands.
 
 For a small Nebius VM app host, use:

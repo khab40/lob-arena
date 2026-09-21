@@ -30,7 +30,13 @@ Historical inputs may be:
 
 - strict `canonical_csv_v1` lifecycle events; or
 - normalized LOBSTER `events.parquet` and `book_snapshots.parquet` produced by
-  the existing FastAPI ingestion adapter.
+  the existing FastAPI ingestion adapter; or
+- normalized Nasdaq ITCH Parquet under
+  [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md).
+
+Batch campaigns can also bind exact injection triggers through
+[ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md); the manual UI launch
+below describes the interactive path.
 
 For LOBSTER, each aligned source record updates deterministic aggregate
 historical orders for the visible price levels in that record. The source
@@ -268,6 +274,6 @@ Tradeoffs:
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [Architecture Overview](../architecture.md)
-- [Use Cases](../USE_CASES.md)
+- [Use Cases](../use-cases/README.md)
 - [Historical replay README](../../README.md#historical-and-hybrid-replay)
 - [Public LOBSTER-compatible fixture](../../data/lobster/README.md)

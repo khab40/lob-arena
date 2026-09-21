@@ -28,4 +28,4 @@ visible-volume, sequence, timestamp, session, and crossed-book tests. Its
 historical control with a layering injection, proves exact equivalence outside
 the attack window, and demonstrates Ed25519 verification. The sample signer is
 not a production organizational identity; see
-[Hybrid Dataset Validation](../../docs/hybrid-dataset-validation.md).
+[Hybrid Dataset Validation](../../docs/data/hybrid-dataset-validation.md).

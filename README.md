@@ -1,5 +1,9 @@
 # LOB Arena
 
+Documentation is grouped by topic in the [docs index](docs/README.md).
+See the [dated roadmap status](docs/roadmap/CURRENT_STATUS.md) for actual gate
+outcomes, baseline target risks and explicitly flagged stale planning text.
+
 **Governed Historical + Synthetic Order-Book Validation for Market Surveillance**
 
 ![LOB Arena GitHub banner](assets/img/01-lob-arena-banner.jpg)
@@ -320,10 +324,10 @@ hashes, source/event counts, injected-order lifecycle, detector metrics, and
 before/during/after causal locality. Outside the labelled attack
 neighbourhood, paired books must match exactly and book/event-flow metrics must
 pass the documented statistical equivalence bounds. See
-[Hybrid Dataset Validation](docs/hybrid-dataset-validation.md) for the
+[Hybrid Dataset Validation](docs/data/hybrid-dataset-validation.md) for the
 methodology, signing trust boundary, verification commands, and limitations.
 For repeatable client deliveries, use the
-[Client Historical Dataset Validation Runbook](docs/client-historical-dataset-validation-runbook.md).
+[Client Historical Dataset Validation Runbook](docs/data/client-historical-dataset-validation-runbook.md).
 The public fixture includes a
 [signed sample report](data/lobster/fixture/validation/validation-report.json).
 
@@ -406,21 +410,20 @@ Platt/isotonic calibration, frozen high-precision/balanced/high-recall modes,
 schema-locked test predictions, per-alert tree contributions, a fail-closed
 detector adapter, explicit MLflow development/evaluation logging, and a
 checksummed model bundle. Software completion is not a performance claim. The
-Nebius Wave 1 G4 cloud smoke is complete: after six bounded failures, attempt 7
-completed the governed workload in 38 seconds, published 25 result objects plus
-`SUCCESS`, passed all 16 gates and reconciled spend at USD 8.57 including VAT.
-Seven of the fixed 20 development slots are consumed, 13 remain, MLflow is
-stopped and G5 is unlocked.
+Wave 1 G0–G7 are complete: reproducibility passed, G6 selected the
+`ablate-state` feature subset and isotonic calibration, and G7 froze the
+candidate. Production G8 evaluation remains open and G9 disposition blocked.
+R4 downloaded the final release but failed before scoring; a replacement needs
+its own signed authorization. Native synthetic same-run MLflow recovery and
+independent S3 readback are recorded, without implying production qualification.
 
-The next data step is one selective governed foundation for every learned
-detector. Only the exact approved Nasdaq sample files are fetched; no website
-crawl or mirror is permitted. Full-market gzip packages may be transiently
-staged because ITCH extraction is sequential, but durable Nebius S3 releases
-retain the selected AAPL/MSFT/NVDA windows, provenance and immutable
-development/test projections. The same root corpus and split feed tabular
-LightGBM, the causal Transformer sequence projection and the later exact-joined
-Transformer-to-LightGBM cascade. See the
-[public market-data plan](docs/nebius-public-market-data-lightgbm-plan.md).
+The C0–C4 shared data foundation is implemented for the four-date research
+corpus. Only approved Nasdaq files are acquired; selected AAPL/MSFT/NVDA windows,
+source/replay provenance and immutable development/final projections are retained.
+Tabular and 64-step causal feature-sequence views share target identities and
+chronological assignments. Transformer training and the exact-joined cascade
+remain planned. See the [ML lifecycle](docs/use-cases/ml-lifecycle.md) and
+[four-date data flow](docs/data/nasdaq-public-sample-v1-data-flow.md).
 This research-only qualification does not replace appropriately licensed data,
 independent clean-window review or a signed governed test release for
 production/client performance claims.
@@ -431,8 +434,8 @@ Transformer, evaluate a separate Transformer-to-LightGBM cascade using
 versioned scores/embeddings, and package one identical-row comparison. Nasdaq
 is the primary governed benchmark; the frozen candidates then run against the
 repository LOBSTER sample as a separate no-retuning robustness challenge. The
-Transformer and cascade are specified but not implemented. The verified
-tabular LightGBM bundle remains the required rollback and missing-feature
+Transformer and cascade models are specified but not implemented. A separately
+qualified and verified tabular LightGBM bundle is the planned rollback and missing-feature
 fallback. The later secure demo UI is tracked by Story #91: selectively restore
 the archived Google Auth foundation, update ingestion and Nasdaq replay, add a
 campaign-wide experiment/results/report view, and provide a one-page management
@@ -451,7 +454,7 @@ extensions on the same causal governed inputs and comparable tournament
 evidence. When resumed, the customer detector is the system under test and our
 models are reference comparators. Neither adapter may bypass provenance,
 fold/label isolation or the Java single-writer boundary. See the
-[active roadmap](docs/PHASES.md#feature-extensible-inbound-data-adapter-framework).
+[active roadmap](docs/roadmap/PHASES.md#feature-extensible-inbound-data-adapter-framework).
 
 Generate the checked-in reproducible fixture:
 
@@ -463,17 +466,17 @@ For governed historical or hybrid runs, `generate_features.py` can merge
 locally verified clean-window adjudications into the replay labels. Only
 explicit reviewed windows become label zero; every other historical row stays
 unlabeled. See the
-[governed corpus protocol](docs/governed-corpus-benchmark-protocol.md#commands)
+[governed corpus protocol](docs/data/governed-corpus-benchmark-protocol.md#commands)
 for the complete command and required artifact bindings.
 
 The formulas, configuration, label boundary, prefix-invariance guarantee, and
 session-grouped training rules are documented in
-[Causal Feature Engineering for LightGBM](docs/feature-engineering-lightgbm.md),
+[Causal Feature Engineering for LightGBM](docs/ml/feature-engineering-lightgbm.md),
 [ARD-0024](docs/architecture/ARD-0024-versioned-causal-feature-engineering.md),
 [ARD-0028](docs/architecture/ARD-0028-governed-lightgbm-feature-loading.md), and
 [ARD-0031](docs/architecture/ARD-0031-complete-lightgbm-v1.md).
 Operational commands and artifact boundaries are in the
-[Governed LightGBM v1 Runbook](docs/lightgbm-v1-runbook.md).
+[Governed LightGBM v1 Runbook](docs/ml/lightgbm-v1-runbook.md).
 
 Compose options can be combined:
 
@@ -505,7 +508,7 @@ Use `--profile prometheus` when raw metrics and PromQL are sufficient. Use
 `--profile grafana` when you also want dashboards; this profile starts both
 services. Both are opt-in local diagnostics and are not required for a valid
 simulation, AI investigation, or detector tournament. See
-[Kernel Observability](docs/kernel-observability.md) for the metric sources,
+[Kernel Observability](docs/runtime/kernel-observability.md) for the metric sources,
 dashboard workflow, and troubleshooting guidance.
 
 Detector-tournament orchestration exposes bounded lifecycle telemetry—runs,
@@ -610,7 +613,7 @@ Generated local demo artifacts are written under `outputs/serverless-smoke/`.
 
 The public evidence is sanitized and checksum-verified: credentials, bearer tokens, signed URLs, and private Endpoint hostnames are excluded.
 
-- [Challenge submission index](docs/challenge-submission.md)
+- [Challenge submission index](docs/publication/challenge-submission.md)
 - [Manual Nebius Control Panel evidence (100-workload Job + 12 real Endpoint calls)](evidence/manual-ui-2026-07-15/README.md)
 - [Six-job production E2E evidence (1,200 workloads)](evidence/production-e2e-2026-07-15/README.md)
 - [Production L40S/vLLM Endpoint evidence (25 real calls)](evidence/production-endpoint-2026-07-15/README.md)
@@ -624,7 +627,7 @@ Freeze a new local evidence snapshot with `./scripts/freeze-release.sh`; add `--
 
 ## Nebius Cloud
 
-Real cloud execution is opt-in. Configure the variables below, confirm that `$HOME/.nebius` contains `config.yaml` and `credentials.yaml`, and review [docs/nebius-deployment.md](docs/nebius-deployment.md):
+Real cloud execution is opt-in. Configure the variables below, confirm that `$HOME/.nebius` contains `config.yaml` and `credentials.yaml`, and review [docs/deployment/nebius-deployment.md](docs/deployment/nebius-deployment.md):
 
 ```bash
 NEBIUS_SERVERLESS_ENABLED=true \
@@ -686,24 +689,24 @@ make secrets-check
 
 | Topic | File |
 | --- | --- |
-| Quick start | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
+| Quick start | [docs/deployment/QUICKSTART.md](docs/deployment/QUICKSTART.md) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 | Architecture decisions | [docs/architecture/README.md](docs/architecture/README.md) |
-| Functional capability map | [docs/FUNCTIONAL_OVERVIEW.md](docs/FUNCTIONAL_OVERVIEW.md) |
-| Use cases | [docs/USE_CASES.md](docs/USE_CASES.md) |
-| Current phases and learned-detector roadmap | [docs/PHASES.md](docs/PHASES.md) |
-| Nebius LightGBM Wave 1 execution gates | [docs/nebius-lightgbm-wave1-implementation-plan.md](docs/nebius-lightgbm-wave1-implementation-plan.md) |
-| Runtime model | [docs/runtime-model.md](docs/runtime-model.md) |
-| Prometheus and Grafana observability | [docs/kernel-observability.md](docs/kernel-observability.md) |
-| Benchmark methodology | [docs/benchmark-methodology.md](docs/benchmark-methodology.md) |
-| Causal LightGBM feature engineering | [docs/feature-engineering-lightgbm.md](docs/feature-engineering-lightgbm.md) |
-| Governed corpus and ML benchmark protocol | [docs/governed-corpus-benchmark-protocol.md](docs/governed-corpus-benchmark-protocol.md) |
-| Shared MLflow tracking server | [docs/mlflow-tracking-server.md](docs/mlflow-tracking-server.md) |
-| Nebius deployment | [docs/nebius-deployment.md](docs/nebius-deployment.md) |
-| L40S migration | [docs/l40s-migration.md](docs/l40s-migration.md) |
-| Prompting layer | [docs/surveillance-prompting.md](docs/surveillance-prompting.md) |
-| Safety | [docs/safety-and-disclaimers.md](docs/safety-and-disclaimers.md) |
-| Challenge submission | [docs/challenge-submission.md](docs/challenge-submission.md) |
+| Functional capability map | [docs/product/FUNCTIONAL_OVERVIEW.md](docs/product/FUNCTIONAL_OVERVIEW.md) |
+| Use cases | [docs/use-cases/README.md](docs/use-cases/README.md) |
+| Current phases and learned-detector roadmap | [docs/roadmap/PHASES.md](docs/roadmap/PHASES.md) |
+| Nebius LightGBM Wave 1 execution gates | [docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md](docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md) |
+| Runtime model | [docs/runtime/runtime-model.md](docs/runtime/runtime-model.md) |
+| Prometheus and Grafana observability | [docs/runtime/kernel-observability.md](docs/runtime/kernel-observability.md) |
+| Benchmark methodology | [docs/ml/benchmark-methodology.md](docs/ml/benchmark-methodology.md) |
+| Causal LightGBM feature engineering | [docs/ml/feature-engineering-lightgbm.md](docs/ml/feature-engineering-lightgbm.md) |
+| Governed corpus and ML benchmark protocol | [docs/data/governed-corpus-benchmark-protocol.md](docs/data/governed-corpus-benchmark-protocol.md) |
+| Shared MLflow tracking server | [docs/ml/mlflow-tracking-server.md](docs/ml/mlflow-tracking-server.md) |
+| Nebius deployment | [docs/deployment/nebius-deployment.md](docs/deployment/nebius-deployment.md) |
+| L40S migration | [docs/archive/l40s-migration.md](docs/archive/l40s-migration.md) |
+| Prompting layer | [docs/ml/surveillance-prompting.md](docs/ml/surveillance-prompting.md) |
+| Safety | [docs/product/safety-and-disclaimers.md](docs/product/safety-and-disclaimers.md) |
+| Challenge submission | [docs/publication/challenge-submission.md](docs/publication/challenge-submission.md) |
 | Documentation guide | [docs/DOCUMENTATION_GUIDE.md](docs/DOCUMENTATION_GUIDE.md) |
 
 ## Maintainer Notes
@@ -713,3 +716,11 @@ make secrets-check
 - Do not commit credentials, private endpoints, signed URLs, or unredacted cloud logs.
 - Never print or attach `.env`; inspect only named non-secret keys and use `docker compose config --quiet` for validation.
 - Run `./scripts/check-secrets.sh` before publishing evidence.
+
+## ML architecture and workflow
+
+Start with [Architecture](ARCHITECTURE.md) and the [ML lifecycle guide](docs/use-cases/ml-lifecycle.md)
+for source data, chronological partitions, LightGBM/Transformer inputs, training,
+checkpoints, calibration, selection, MLflow retention and planned streaming use.
+The guide separates implemented LightGBM and sequence-data capabilities from
+proposed Transformer, cascade, registry-promotion and live-serving work.

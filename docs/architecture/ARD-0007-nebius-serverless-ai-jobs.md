@@ -8,7 +8,7 @@ Date: 2026-06-02
 
 The operator removed administrative submission/retention windows, billing checks
 and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
 in preference to older operational bounds in this record. No billing queries or
 balance-refresh requests. Finite Job timeouts, execution identities, evidence
 integrity and separate final-test authorization remain. This is an execution-policy
@@ -95,7 +95,17 @@ graph TD
     ObjectStorage --> BackendSync
 ```
 
-## Scope
+## Governed ML extension — 2026-09-21
+
+The original synthetic benchmark scope below is historical. Separate acquisition
+and preparation Jobs now ingest the approved public Nasdaq corpus, freeze
+tabular/sequence projections, and run governed LightGBM development/evaluation
+under [ARD-0035](ARD-0035-nebius-lightgbm-first.md). Transformer training remains
+proposed. Agent-initiated model workloads, including synthetic training/scoring
+rehearsals, run on Nebius; local mock tournament support is not an exception.
+See [ML lifecycle use cases](../use-cases/ml-lifecycle.md).
+
+## Original benchmark scope
 
 In scope:
 
@@ -166,8 +176,8 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/nebius-deployment.md`
-- `docs/benchmark-methodology.md`
+- `docs/deployment/nebius-deployment.md`
+- `docs/ml/benchmark-methodology.md`
 - `serverless/jobs/README.md`
 - [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md)
 - [ARD-0006: Scenario Labeling and Reproducibility](ARD-0006-scenario-labeling-and-reproducibility.md)

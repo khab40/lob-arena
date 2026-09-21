@@ -17,5 +17,5 @@ root:
 make generate-features FEATURE_OVERWRITE=1
 ```
 
-See [Feature engineering for LightGBM](../../docs/feature-engineering-lightgbm.md)
+See [Feature engineering for LightGBM](../../docs/ml/feature-engineering-lightgbm.md)
 for the schema, formulas, and train/validation split rules.
