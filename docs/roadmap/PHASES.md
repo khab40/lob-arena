@@ -620,7 +620,7 @@ Completion evidence and remaining work, in order:
    Run model and frozen-runtime work on Serverless only, with declared resources,
    finite timeout and intended Job count. Assess the rehearsal's nonfatal provider
    mount error against actual mount observations; retain its unresolved history.
-   September 21: the [production transport probe](evidence/g8-production-transport-probe-20260921.json)
+   September 21: the [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
    passed on Job `aijob-e00samq5cpe1bysr4x`: 12 exact runtime overlays, read-only
    package/bootstrap, native mount identity and signed actual-Job context verified.
    The unsigned entrypoint and wrong context both failed closed. All 25 package

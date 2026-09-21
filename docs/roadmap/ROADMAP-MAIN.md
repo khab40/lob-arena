@@ -206,7 +206,7 @@ diagnostic is retained separately from the passing final receipt.
   checked all 64 objects and resolves the earlier reader AccessDenied gap.
 - Merged PR #201 prepares the [production native package](../operations/g8/g8-production-package.md)
   for `nasdaq-g8-replacement-r5-20260917`; it remains unsigned and not executable.
-  The [production transport probe](evidence/g8-production-transport-probe-20260921.json)
+  The [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
   now verifies the actual bootstrap/runtime, mounts and signed Job context on Nebius.
   Protected comparison rows remain unparsed; model quality remains unmeasured.
 

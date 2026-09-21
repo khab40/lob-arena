@@ -52,7 +52,7 @@ neither a runnable signed manifest nor a submission command.
 1. Preserve the verified original checkpoint bytes and genuine registration now
    bound into the unsigned review. Validate production comparison semantics on
    Nebius; byte verification did not parse protected rows.
-2. Preserve the completed [production transport verification](evidence/g8-production-transport-probe-20260921.json).
+2. Preserve the completed [production transport verification](../../evidence/g8-production-transport-probe-20260921.json).
    Recheck the finalized signed package and actual execution context at submission.
 3. Complete fresh permissions, pinned image alias, storage capacity, credentials
    and empty output/intent checks. Historical R4 selectors are review inputs only.
@@ -117,7 +117,7 @@ now include verified payload bytes, live registration and 32 GiB capacity, with 
 verify. Historical Job-loss evidence is retained separately from fresh capacity
 and staged-byte verification. No authorization files or executable plan are emitted.
 
-The [non-final production transport probe](evidence/g8-production-transport-probe-20260921.json)
+The [non-final production transport probe](../../evidence/g8-production-transport-probe-20260921.json)
 completed on Job `aijob-e00samq5cpe1bysr4x` using the frozen image and exact reviewed
 runtime. All 12 overlays, read-only package/bootstrap, native filesystem and signed
 actual-Job context verified. The real unsigned entrypoint and wrong context failed
@@ -130,10 +130,12 @@ Remaining gates: separately approved protected-comparison semantic verification 
 Nebius, fresh preflight, canonical request and replacement-specific authorization.
 G8 remains open; the unsigned review is not execution authority.
 
-The [comparison semantics proposal](evidence/g8-comparison-semantics-proposal-20260921.json)
+The [comparison semantics proposal](../../evidence/g8-comparison-semantics-proposal-20260921.json)
 binds the prepared audit worker and original inventory to one credential-free,
 read-only Nebius Job (4 vCPU, 16 GiB, at most one hour). It requests parsing original
-test-date events, snapshots, alerts and synthetic ground truth for structural checks.
-Only aggregate pass/fail evidence is returned. This extends the earlier byte-only
-approval and awaits operator approval; it excludes final features and model scoring.
+test-date events, alerts and synthetic ground truth for structural checks. Snapshot
+Parquet checks cover byte hashes and footer row counts only; snapshot rows, schemas
+and consistency with canonical snapshot events are not verified. The result records
+these limitations explicitly. Only aggregate pass/fail evidence is returned. This
+extends the earlier byte-only approval and awaits operator approval; it excludes final features and model scoring.
 Prediction/feature pairing remains part of the separately authorized final evaluation.
