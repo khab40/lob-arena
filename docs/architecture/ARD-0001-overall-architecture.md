@@ -4,108 +4,30 @@ Status: Superseded in part by [ARD-0020](ARD-0020-java-arena-websocket-agent-orc
 
 Date: 2026-05-31
 
-## Design Reconciliation — 2026-09-21
+## Scope and successors
 
-This is a historical record. The current overview is [architecture.md](../architecture.md).
-Nasdaq ITCH ingestion and deterministic injection/profile calibration extend the
-historical plane under [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md),
-[ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) and
-[ARD-0034](ARD-0034-itch-market-profile-calibration.md). LightGBM v1 is implemented;
-[ARD-0035](ARD-0035-nebius-lightgbm-first.md) cloud qualification has G8 open and
-G9 blocked after R4 accessed the final release and failed before scoring.
-Transformer/cascade records ARD-0036/0037 remain proposals. The new evaluation
-and recovery boundaries below are integrated in the signed replacement path.
-Native two-Job synthetic recovery and independent MLflow/S3 readback are recorded;
-production qualification remains open. The [ML lifecycle guide](../use-cases/ml-lifecycle.md)
-explains implemented data/training paths and proposed registration/serving.
+This records the original separation of the UI, simulation, detectors, AI
+explanations and batch jobs. Its FastAPI-owned live runtime was superseded by
+Java ownership in ARD-0020. Current design lives in the
+[system overview](../architecture.md), progress in [current status](../roadmap/CURRENT_STATUS.md),
+and product positioning in the [one-pager](../product/lob-arena-one-pager.md).
 
-- [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
-- [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
-- [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
-
-## Implementation Status
-
-Status as of 2026-07-28: `[historical decision; current ownership documented in ARD-0020 through ARD-0027]`
-
-Implemented:
-
-- React/Vite routed UI with primary navigation ordered as Data Ingestion,
-  Arena, Control Panel, and About.
-- Old standalone demo, blue-team, report, experiment, and deployment pages have been removed or folded into current Command Center and Arena surfaces.
-- Java/Spring live arena with simulation lifecycle APIs, WebSocket state, scenario launch, deterministic incidents, canonical replay, and JSONL journals.
-- FastAPI retained for AI/ML, Nebius, experiments, evidence, and serverless APIs through a thin Java arena client.
-- Validated LOBSTER ingestion, immutable normalized Parquet, historical control
-  replay, deterministic hybrid streams, and signed causal-locality evidence.
-- Governed negative-window review contracts, chronological corpus splits,
-  causal feature Parquet, statistical evaluation, and signed releases.
-- Authenticated shared MLflow tracking with PostgreSQL metadata,
-  S3-compatible artifacts, roadmap experiments, and a governed
-  `attack_active` model namespace.
-- Java runner orchestration with remote Python HTTP `MarketSnapshot` / `AgentIntent` services, heavy-agent worker pools, and LangGraph-compatible agents.
-- Baseline liquidity invariant with additive per-agent quote ownership and quote-size guardrails.
-- UI shell with compact navigation, persisted day/night/system theme, Command Center orchestration, and paused-state-stable Liquidity Map behavior.
-- Serverless endpoint/job scaffolds, Dockerfiles, configs, scripts, and local mock/cloud-adapter paths.
-- Production Serverless Job and Endpoint evidence archived in the compact frozen [benchmark bundle](../../evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md).
-- Measured runtime/cost records are linked from the submission index; sanitized UI screenshots are committed under `assets/screenshots/`.
-
-Production surveillance integrations, automated compliance workflows, and
-trading signals remain intentionally out of scope. Historical ingestion is
-implemented as a local licensed-data validation path, not a production market
-feed or assertion that real activity is benign.
-
-## Current Architecture Addendum
-
-The original FastAPI-owned simulator decision below is retained as history. The
-current high-level design is maintained in
-[High-Level Architecture](../architecture.md#system-high-level-design):
-
-- Java is the sole exchange, matching, replay, scenario, deterministic detector,
-  incident, REST, and WebSocket authority.
-- FastAPI owns ingestion, corpus/features/ML, Nebius and evidence tooling.
-- Historical records enter the Java book before the synthetic phase; only the
-  synthetic overlay creates attack labels.
-- Governed corpus, split, feature and model contracts remain the approval
-  authority.
-- MLflow indexes release hashes, runs, metrics and permitted artifacts but
-  cannot approve a corpus or model release.
+The original component diagrams and delivery checklists are retained in
+[the pre-compaction revision](https://github.com/khab40/lob-arena/blob/63fe41d277732875628d0e72449a1f8e992ae07b/docs/architecture/ARD-0001-overall-architecture.md).
+They are historical, not a second current architecture.
 
 ## Context
 
-LOB Arena is an educational simulation for demonstrating synthetic order-book anomaly detection and AI-generated explanations. It is not a production market surveillance system, does not detect real market manipulation, does not provide trading signals, and must not be used for compliance decisions.
-
-The project needs to support two complementary workflows:
-
-- a live visual arena where users can start a synthetic exchange, launch abuse-like scenarios, inspect detector confidence, and read generated incident explanations
-- a deterministic 3-minute Demo page that launches Arena in Real Nebius AI Run, Two-Model Pipeline, or Streaming Explanation mode
-- an offline benchmark path where many labeled synthetic simulations are run to measure deterministic detector behavior
-
-The implementation should be easy to run locally, clear enough for reviewers to inspect, and structured so Nebius serverless components can be demonstrated without coupling the UI directly to AI services.
+The initial educational simulator needed interactive replay/investigation and
+offline labeled benchmarks, with reproducible artifacts and a UI independent
+of AI services. It was not a production surveillance or compliance system.
 
 ## Decision
 
-Build the system as a React visual arena backed by a FastAPI simulator, with a local synthetic exchange/order book, normal and abuse-like agents, deterministic detectors, and separate Nebius serverless components for benchmarks and explanations.
-
-The main architecture has four execution areas:
-
-```mermaid
-graph TD
-    Front["Front - React / Vite UI - Data Ingestion, Arena, Control Panel, About"]
-    Back["Back - FastAPI backend - REST, WebSocket, orchestration, persistence"]
-    Runners["Agent Runners Workspace - normal, heavy, and LangGraph agents"]
-    Nebius["Nebius Serverless Cloud - model selection, inference, batch jobs, GPU runtime, datasets, artifacts"]
-    Store["Artifacts - events, snapshots, incidents, reports, benchmark outputs"]
-    ObjectStore["Object Storage - S3-compatible evidence archive"]
-
-    Front -->|REST and WebSocket| Back
-    Back -->|read-only MarketSnapshot| Runners
-    Runners -->|bounded AgentIntent| Back
-    Back -->|LLM calls and managed jobs| Nebius
-    Nebius -->|explanations, metrics, artifacts| Back
-    Nebius -->|Job and Endpoint evidence| ObjectStore
-    ObjectStore -->|sync to backend-local evidence| Back
-    Back --> Store
-```
-
+Separate presentation, exchange execution, deterministic detection, AI
+explanation and offline benchmarking. The original implementation selected
+React and a FastAPI simulator; ARD-0020 later transferred live authority to Java.
+The rationale and consequences below retain their original decision scope.
 ```mermaid
 graph TD
     Demo["Demo Page - real, two-model, streaming"]
@@ -592,35 +514,9 @@ Tradeoffs:
 - benchmark and live runtime may diverge if shared logic is not kept aligned
 - serverless deployment requires separate configuration and observability artifacts
 
-## Follow-Up ARDs
+## Related decisions
 
-Architecture records that refine this decision:
-
-- [ARD-0002: WebSocket State Schema](ARD-0002-websocket-state-schema.md)
-- [ARD-0003: Detector Evidence Model](ARD-0003-detector-evidence-model.md)
-- [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md)
-- [ARD-0005: Nebius Endpoint Contract](ARD-0005-nebius-endpoint-contract.md)
-- [ARD-0006: Scenario Labeling and Reproducibility](ARD-0006-scenario-labeling-and-reproducibility.md)
-- [ARD-0010: Agent Runner Execution Architecture](ARD-0010-agent-runner-execution.md)
-- [ARD-0011: Exchange Liquidity Invariant And Agent Quote Ownership](ARD-0011-exchange-liquidity-invariant.md)
-- [ARD-0013: UI Shell Preferences And Demo Presentation](ARD-0013-ui-shell-preferences.md)
-
-
-
-## CEO One-Pager: What The Project Does And Where It Can Go
-
-### What It Is Today
-
-LOB Arena is a visual AI demo and research prototype for showing how synthetic market abuse patterns can appear inside a live limit-order-book simulation. It is intentionally framed as an educational simulator, not a production surveillance product, trading system, or compliance decision engine.
-
-The current architecture combines three things in one coherent demo:
-
-1. A live synthetic exchange that simulates a limit order book, matching engine, normal market agents, and abuse-like scenario agents.
-2. A deterministic detection layer that converts order-book behavior into measurable evidence, confidence scores, and incident cards.
-3. A Nebius-backed AI explanation layer that turns structured detector evidence into readable incident summaries and simulation reports.
-
-In the UI, a reviewer can start the arena, watch the order book change in real time, launch Spoofing-like Wall, Layering-like Pattern, Quote Stuffing Burst, or Liquidity Evaporation, and then inspect detector confidence and incident explanations. The important design choice is that AI does not decide whether abuse happened. The deterministic detector creates the evidence first; the AI endpoint explains that evidence in plain English.
-
+Use the [ARD index](README.md) for schema, detector, artifact, agent, data and
 ### Why It Matters
 
 The project demonstrates a practical pattern for AI systems in regulated or high-risk domains: keep the core decision logic deterministic, reproducible, and measurable, while using generative AI for explanation, reporting, and operator support.
