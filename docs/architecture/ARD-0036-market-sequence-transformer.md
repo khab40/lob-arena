@@ -18,9 +18,12 @@ change, not model-quality acceptance or a completed G8/G9 milestone.
 
 Status: `[todo; GitHub Story #24; gated by ARD-0035 exit disposition]`
 
-No Transformer detector implementation is claimed by this record. The
-sequence contract, materialization code, classifier package and GPU campaign
-have not started.
+No Transformer detector implementation is claimed. The shared data foundation
+already implements `sequence_projection_v1` and `causal_feature_sequences_v1`
+in [projections.py](../../backend/app/market_data/projections.py), and C4 freezes
+64-step windows alongside tabular shards. These are histories of retained
+supervised feature rows, not raw ITCH event tokens. The classifier, trainer,
+GPU campaign, checkpoint/resume loop and serving package have not started.
 
 ## Context
 
@@ -50,7 +53,13 @@ The sequence contract consumes `sequence_projection_v1` from the selective
 Nasdaq-to-Nebius shared data foundation. It must bind the same root corpus,
 chronological split, replay domains and evaluation-row identities used by the
 Wave 1 `tabular_projection_v1`; the Transformer may not reacquire, resplit or
-relabel Nasdaq data independently.
+relabel Nasdaq data independently. Existing sequences use left zero padding,
+attention masks and NaN feature missingness, with one target per retained row
+and no cross-shard history. The current materializer expands a complete shard
+in memory. The trainer must define train-only normalization, missingness,
+temporal encoding and label-independent sampling parity with serving. A changed
+representation/length requires a new versioned projection. See
+[data preparation](../use-cases/ml-data-preparation.md).
 
 Use CPU Jobs for sequence materialization and evaluation. Use time-boxed GPU
 Serverless AI Jobs for training and batch inference. Do not serve or train this
@@ -87,7 +96,8 @@ Transformer-derived features may be consumed by LightGBM only after:
   full runs.
 - Prefer ephemeral Job execution; no interactive GPU endpoint is required for
   training.
-- Record actual active GPU time and remaining credit after every campaign.
+- Record actual active GPU time and resource evidence. Follow the validation
+  policy above for cost reporting; do not query billing or remaining credit.
 - Stop unused GPU endpoints immediately and delete them when fast restart is
   unnecessary because retained disks may still incur storage cost. Completed
   Jobs remove their associated VM and disk; retain governed checkpoints and

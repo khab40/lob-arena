@@ -4,15 +4,17 @@ Status: Accepted and Implemented
 
 Date: 2026-07-28
 
-## Evaluation and Recovery Update — 2026-09-15
+## Evaluation and Recovery Update — 2026-09-21
 
 C4 reports now require independent recomputation from original evidence before
 MLflow indexing, as specified in [ARD-0038](ARD-0038-c4-specific-evaluation.md).
 [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) adds pre-scoring reservation and
 same-run, readback-verified log-only recovery through the shared logger API.
-The live runner still uses legacy logging; durable pre-logging retention and
-remote recovery rehearsal remain pending. These changes preserve MLflow's role
-as an index and do not make a reserved run a completed evaluation receipt.
+The signed replacement runner integrates scored retention and same-run recovery.
+The [native synthetic rehearsal](../evidence/g8-native-recovery-20260917.json)
+verified authenticated remote logging and recovery after Job workspace loss;
+production qualification remains pending. A reserved run is not a completed
+evaluation receipt.
 
 ## Context
 
@@ -24,7 +26,7 @@ validation-only selection, release checksums, corpus review, or signatures.
 
 ## Decision
 
-Deploy pinned MLflow 3.15.2 in an opt-in Docker Compose profile with:
+Deploy pinned MLflow (currently 3.16.0 in the checked-in Dockerfile) in an opt-in Docker Compose profile with:
 
 - PostgreSQL as the metadata and registry backend;
 - private MinIO as the default local S3-compatible artifact store, with Nebius
@@ -82,7 +84,11 @@ The three stable experiment namespaces are:
 - `lob-arena/governed-evaluation`.
 
 The initial registered-model namespace is
-`lob-arena-lightgbm-attack-active`.
+`lob-arena-lightgbm-attack-active`. Bootstrap creates this namespace only.
+Current training/evaluation loggers upload explicit artifacts and metadata;
+they do not create model versions, log a deployable MLflow Model flavor, assign
+aliases or serve models. Those integration steps remain planned in the
+[model-retention use case](../use-cases/ml-model-serving.md).
 
 ## Security and data boundary
 
