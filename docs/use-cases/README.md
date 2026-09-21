@@ -1,138 +1,14 @@
-# Use Cases
+# Use cases
 
-LOB Arena is a research and validation platform for historical order-book
-replay, controlled synthetic attack injection, governed detector evaluation,
-shared ML experiments, and AI-assisted investigation.
+LOB Arena supports synthetic demos, historical/hybrid replay, governed model
+development and AI-assisted evidence review. Historical activity is not
+automatically benign or abusive; outputs are not trading or compliance decisions.
+Use [current status](../roadmap/CURRENT_STATUS.md) for qualification and
+[functional scope](../product/FUNCTIONAL_OVERVIEW.md) for acceptance boundaries.
 
-This document describes business-style use cases. Historical activity is never
-automatically classified as benign or abusive, and the platform does not
-provide trading signals or compliance decisions.
+## Workflow catalogue
 
-**For architecture details**, see [High-Level Architecture](../architecture.md) and [Architecture Records (ARDs)](../architecture/README.md).
-
-For the detailed ML workflow, start with [ML lifecycle use cases](ml-lifecycle.md):
-data selection/partition/storage, training/checkpoints, calibration, hyperparameter
-selection, MLflow candidates and planned near-real-time serving. LightGBM is
-implemented; Transformer sequence data exists, but the classifier and cascade
-remain planned. Diagrams below show the full intended lifecycle.
-
-## What We Solve
-
-The project solves a detector-validation problem: how to make market
-microstructure anomaly detection understandable, inspectable, and measurable
-using either synthetic streams or locally licensed historical backgrounds
-without inventing labels for real activity.
-
-We provide:
-
-- a live visual arena where synthetic normal and abuse-like agents act in real time
-- validated, immutable LOBSTER ingestion and historical control replay
-- deterministic hybrid streams containing a separate namespaced attack overlay
-- deterministic detectors that convert order-book behavior into confidence scores and evidence
-- AI Investigator explanations that make detector evidence understandable to a reviewer
-- governed corpora, causal features, chronological splits, and signed benchmark releases
-- shared authenticated MLflow tracking for corpus, model-development, and governed-evaluation records
-- batch benchmarks that measure detector quality, latency, alert load, regimes, and uncertainty
-- local UI shell preferences for day/night/system display and compact navigation
-- safety framing that keeps the project educational and non-compliance-oriented
-
-The core business value is detector testing and model-development evidence:
-register, validate, replay, inject, label, review, feature, train, compare,
-explain, and release.
-
-The commercial north star is BYO data/BYO detector adapter: onboard customer
-data, train LOB Arena reference detectors offline, certify the customer detector
-on replay, and later shadow-test it in real time. Those adapter products are
-parked while the active milestone proves one full Nasdaq + LOBSTER E2E flow for
-LightGBM, standalone Transformer and hybrid. Story #91 then delivers a secure
-CEO/customer path: Sign in → Data → Replay → Experiments → Management Summary.
-Presentation panels wait for verified backend evidence; authentication and
-backend authorization must arrive sooner if a shared deployment exposes
-sensitive data.
-
-## How We Use Nebius Serverless
-
-Nebius is used for two distinct serverless surfaces:
-
-```mermaid
-graph TD
-    Backend["FastAPI Backend"]
-    Endpoint["Nebius AI / LLM Inference"]
-    Jobs["Nebius Serverless Cloud - Managed Experiment Jobs"]
-    Explain["Incident explanation - /explain-event"]
-    Scenario["Scenario generation - /generate-scenario"]
-    Judge["Judge Mode report - timeline explanation"]
-    Tournament["Detector tournament - detector_tournament.py"]
-    Dataset["Synthetic dataset factory - synthetic_dataset_factory.py"]
-    Artifacts["Benchmark reports, metrics, JSONL datasets"]
-
-    Backend --> Endpoint
-    Endpoint --> Explain
-    Endpoint --> Scenario
-    Endpoint --> Judge
-    Jobs --> Tournament
-    Jobs --> Dataset
-    Tournament --> Artifacts
-    Dataset --> Artifacts
-```
-
-Nebius AI / LLM inference:
-
-- receives compact evidence from the backend
-- generates AI Investigator explanations for the Arena UI
-- generates bounded red-team scenario drafts for Scenario Generator
-- supports Judge Mode timeline explanations
-- runs in deterministic mock mode for first wiring and AI mode after deployment
-
-Nebius Serverless Cloud - Managed Experiment jobs:
-
-- run detector tournament benchmarks outside the interactive UI
-- generate labeled synthetic datasets
-- produce benchmark reports and metrics artifacts
-- keep long-running experiment work separate from live demo latency
-
-## Full Functional Lifecycle
-
-```mermaid
-flowchart LR
-    Register["Register and validate<br/>historical session"]
-    Replay["Historical control replay"]
-    Inject["Hybrid replay +<br/>synthetic attack"]
-    Evidence["Signed comparison<br/>and locality evidence"]
-    Review["Blind clean-window<br/>review / adjudication"]
-    Freeze["Frozen corpus +<br/>chronological split"]
-    Features["Causal features"]
-    LightGBM["LightGBM<br/>reference baseline"]
-    Transformer["Planned standalone<br/>Transformer"]
-    Hybrid["Planned Transformer → LightGBM<br/>hybrid"]
-    Compare["Identical-row comparison<br/>+ LOBSTER robustness"]
-    Track["MLflow experiments<br/>and approved artifacts"]
-    Package["Verified E2E<br/>evidence package"]
-    Client["Simple CEO demo<br/>then commercial BYO step"]
-
-    Register --> Replay
-    Register --> Inject
-    Replay --> Evidence
-    Inject --> Evidence
-    Evidence --> Review
-    Review --> Freeze
-    Freeze --> Features
-    Features --> LightGBM
-    Features --> Transformer
-    Transformer --> Hybrid
-    Features --> Hybrid
-    LightGBM --> Compare
-    Transformer --> Compare
-    Hybrid --> Compare
-    Compare --> Package
-    Package --> Client
-    Freeze -. "release hash" .-> Track
-    LightGBM -. "development run" .-> Track
-    Transformer -. "development run" .-> Track
-    Hybrid -. "development run" .-> Track
-    Compare -. "metrics + manifest" .-> Track
-```
-
+| Actor and task | Action and result | Detailed owner |
 ## Use Case Summary
 
 | Use case | Primary actor | Business outcome |
