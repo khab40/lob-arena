@@ -32,7 +32,7 @@ Primary docs:
 - `docs/architecture/ARD-0016-ai-scenario-generator.md`
 - `docs/architecture/ARD-0017-ai-detector-tournament.md`
 - `docs/use-cases/nebius-serverless-use-cases.md`
-- `docs/demo-script.md`
+- `docs/publication/demo-script.md`
 
 ## Status Legend
 
@@ -249,7 +249,7 @@ Deliverables:
 - `[done]` `serverless/endpoint/endpoint_config.yaml`
 - `[done]` reproducibility scripts under `scripts/`
 - `[done]` `AI Command Center` UI destination with model selection, inference, batch execution, GPU utilization, datasets, Managed Experiment operations, and artifact access to benchmark outputs
-- `[done]` `docs/nebius-deployment.md`
+- `[done]` `docs/deployment/nebius-deployment.md`
 - `[partial]` Four sanitized runtime/UI screenshots are committed under
   `assets/screenshots/`; dedicated real Nebius console log/metric screenshots
   are still needed for the remaining review-evidence gap.
@@ -353,9 +353,9 @@ Deliverables:
 - `[done]` polished root `README.md` with `assets/img/ai-mada.jpg` GitHub banner
 - `[done]` `docs/architecture.md`
 - `[partial]` architecture diagrams exist in Mermaid docs; standalone assets under `assets/diagrams/` are still optional/future work.
-- `[done]` blog post draft in `docs/linkedin-technical-blog-post.md`
+- `[done]` blog post draft in `docs/publication/linkedin-technical-blog-post.md`
 - `[partial]` demo narration scripts and captions under `assets/demo-video/`; rendered demo video is still missing.
-- `[done]` `docs/research-notes.md`
+- `[done]` `docs/research/research-notes.md`
 - `[done]` committed benchmark report and production evidence under `outputs/benchmark/`
 - `[done]` final disclaimer and safety language in README/docs/UI
 - `[done]` professional UI shell controls: compact sidebar toggle, day/night/system theme selector, and paused-state-stable Liquidity Map
@@ -576,13 +576,13 @@ Completed engineering evidence:
 - Corrected C4 loading, original-format comparison and MLflow report integration;
   scored-payload retention before logging, same-run recovery and marker-last
   publication are implemented.
-- The [native recovery rehearsal](evidence/g8-native-recovery-20260917.json)
+- The [native recovery rehearsal](../evidence/g8-native-recovery-20260917.json)
   scored once, deliberately failed, and recovered after Job/workspace loss.
   Independent authenticated MLflow readback verified 24 metrics, 30 dataset
-  inputs and four artifact hashes. The later [independent S3 readback](evidence/g8-independent-s3-readback-20260917.json)
+  inputs and four artifact hashes. The later [independent S3 readback](../evidence/g8-independent-s3-readback-20260917.json)
   verified all 64 objects and closes the earlier AccessDenied verification gap.
 - Merged PR #201 adds the native production bootstrap and v3 replacement binding.
-  The [production review package](g8-production-package.md) for
+  The [production review package](../operations/g8/g8-production-package.md) for
   `nasdaq-g8-replacement-r5-20260917` is prepared but unsigned and not executable.
   Synthetic comparison/lineage fixtures and transport checks do not establish
   production model quality or execution of the changed production entrypoint.
@@ -595,12 +595,12 @@ Completion evidence and remaining work, in order:
    profile, comparison inventory and input-location metadata. Use retained metadata
    first; preserve the separate gate for protected final-data access. Missing
    original evidence is a blocker, not permission to regenerate rules or use fixtures.
-   September 21: the approved [metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+   September 21: the approved [metadata audit](../evidence/g8-original-comparison-metadata-20260921.json)
    verified all 27 checkpoint inventories, 30 replay domains and the frozen projection.
    All 89 metadata reads passed; temporary permissions were removed and denial
-   reverified. Metadata bindings are prepared. The [live C4 registration](evidence/g8-capacity-registration-20260921.json)
+   reverified. Metadata bindings are prepared. The [live C4 registration](../evidence/g8-capacity-registration-20260921.json)
    now verifies four metadata artifacts and all 30 final-tabular lineage entries;
-   [Original payload verification](evidence/g8-original-payload-verification-20260921.json)
+   [Original payload verification](../evidence/g8-original-payload-verification-20260921.json)
    is now complete: 294 objects / 2,632,277,460 bytes staged and all 377 payload/metadata
    files independently rehashed. All 37 temporary grants were removed; the original
    policy is restored and access denied again. The VM is stopped. Payload rows were
@@ -613,13 +613,13 @@ Completion evidence and remaining work, in order:
    mount error against actual mount observations; retain its unresolved history.
 3. **Complete package and preflight.** Check current identity/permissions, versioned
    secrets, pinned image alias, MLflow readiness, native capacity and output/intent
-   state. The approved [32 GiB expansion](evidence/g8-capacity-registration-20260921.json)
+   state. The approved [32 GiB expansion](../evidence/g8-capacity-registration-20260921.json)
    is applied and mounted capacity verified; the original 10 GiB limit could not
    accommodate the 2.451 GiB comparison payload. The new unsigned September 21 review
    binds verified comparison/lineage evidence and the 4 GiB checkpoint bound to
    32 GiB storage. Recheck 20 GiB actual free space at execution; finish the canonical
    request and complete v3 plan after runtime verification and approval. Keep
-   scored/recovery evidence durable. Follow the [validation policy](model-validation-execution-policy.md);
+   scored/recovery evidence durable. Follow the [validation policy](../ml/model-validation-execution-policy.md);
    do not reinstate historical billing-freshness, package-expiry or fixed-VM gates.
 4. **Obtain replacement-specific approval and sign.** Review the concrete package,
    run scope and resource bounds, then obtain the exception for at most one
@@ -638,7 +638,7 @@ Completion evidence and remaining work, in order:
    retain evidence pending verified and approved cleanup. G9 then records the
    signed quality/resource/cost disposition using the operator-managed policy.
 
-The [C4 contract](g8-c4-evaluation-contract.md) covers one test date and three
+The [C4 contract](../operations/g8/g8-c4-evaluation-contract.md) covers one test date and three
 symbol sessions, with row-level metrics and research/synthetic labels. It does not
 establish seven-date benchmark or production/client acceptance. Successful execution
 cannot guarantee acceptance thresholds. The September 23 G7–G9 exit is at risk;
@@ -917,7 +917,7 @@ rules, LightGBM, Transformer and hybrid are reference comparators.
 
 Primary architecture records:
 
-- `docs/nebius-lightgbm-wave1-implementation-plan.md`
+- `docs/roadmap/nebius-lightgbm-wave1-implementation-plan.md`
 - `docs/architecture/ARD-0035-nebius-lightgbm-first.md`
 - `docs/architecture/ARD-0036-market-sequence-transformer.md`
 - `docs/architecture/ARD-0037-transformer-to-lightgbm-cascade.md`

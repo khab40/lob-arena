@@ -280,8 +280,8 @@ current contract.
 
 ## Related Documentation
 
-- [High-Level Architecture](architecture.md)
-- [Functional Overview](FUNCTIONAL_OVERVIEW.md)
-- [Use Cases](USE_CASES.md)
-- [Hybrid Dataset Validation](hybrid-dataset-validation.md)
-- [Shared MLflow Tracking Server](mlflow-tracking-server.md)
+- [High-Level Architecture](../architecture.md)
+- [Functional Overview](../product/FUNCTIONAL_OVERVIEW.md)
+- [Use Cases](../use-cases/README.md)
+- [Hybrid Dataset Validation](../data/hybrid-dataset-validation.md)
+- [Shared MLflow Tracking Server](../ml/mlflow-tracking-server.md)

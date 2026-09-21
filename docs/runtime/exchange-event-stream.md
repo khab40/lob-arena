@@ -33,7 +33,7 @@ Canonical `sequence` belongs to the normalized LOB Arena stream. `source_sequenc
 | 9 | Done | Common source reader, live simulation adapter, canonical JSONL replay, and historical record-normalizer boundary |
 | 10 | Done | Append-only canonical and snapshot history streams with stream-scoped replay and end-to-end coverage |
 
-See [ARD-0018](architecture/ARD-0018-canonical-exchange-event-stream.md) for the architecture decision and compatibility rules.
+See [ARD-0018](../architecture/ARD-0018-canonical-exchange-event-stream.md) for the architecture decision and compatibility rules.
 
 ## Event Log And Replay
 

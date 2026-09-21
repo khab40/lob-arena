@@ -1083,7 +1083,7 @@ Independent replay returned `authorized`, `signature_verified=true`, and
 Current recovery status (2026-09-14): R4 downloaded the final release but failed
 before scoring. The input root is corrected; real C4-shaped synthetic scoring,
 release verification and local MLflow readback pass in the pinned image. The
-[G8 recovery record](g8-completion-recovery.md) defines the remaining benchmark,
+[G8 recovery record](../operations/g8/g8-completion-recovery.md) defines the remaining benchmark,
 durability and replacement-authorization gates. Earlier statements that the
 final fold remains unopened are historical. No production G8 pass is claimed.
 The follow-up complete synthetic C4 comparison passes in the pinned image with
@@ -1289,14 +1289,14 @@ production/client performance claim.
 - [x] Pre-scoring MLflow reservation and same-run logging recovery pass the frozen
   synthetic fault rehearsal; 24 metric histories, 30 dataset inputs and four
   artifacts verify with one run/one scoring call. See
-  [MLflow recovery](g8-mlflow-recovery.md).
+  [MLflow recovery](../operations/g8/g8-mlflow-recovery.md).
 - [x] Pre-logging scored checkpoints and fresh-process log-only recovery pass
   after removal of the original synthetic workspace, with no rescoring or new
-  MLflow run. See [checkpoint proof](g8-prelogging-checkpoint.md).
+  MLflow run. See [checkpoint proof](../operations/g8/g8-prelogging-checkpoint.md).
 - [x] Implement separate signed replacement preflight and live lifecycle wiring:
   scored seal, same-run logging, original scoring execution identities and
   marker-last publication; synthetic workspace-loss/MLflow/marker-failure tests.
-  See [live integration and budget proposal](g8-live-replacement.md).
+  See [live integration and budget proposal](../operations/g8/g8-live-replacement.md).
 - [ ] Review/merge the integration and verify native Job-loss/reattachment plus
   authenticated remote MLflow/S3 rehearsal (proposed $2 cap; approval pending).
 - [ ] Replacement-specific exception, signed package and live preflight verify.
@@ -1342,8 +1342,8 @@ signature alone is not sufficient to launch a replacement.
 ## Related Documentation
 
 - [Nebius Public Market Data Plan for LightGBM Wave 1](nebius-public-market-data-lightgbm-plan.md)
-- [ARD-0035: Nebius-First Qualification Of Governed LightGBM](architecture/ARD-0035-nebius-lightgbm-first.md)
-- [Governed LightGBM v1 Runbook](lightgbm-v1-runbook.md)
-- [Shared MLflow Tracking](mlflow-tracking-server.md)
-- [Nebius Deployment](nebius-deployment.md)
+- [ARD-0035: Nebius-First Qualification Of Governed LightGBM](../architecture/ARD-0035-nebius-lightgbm-first.md)
+- [Governed LightGBM v1 Runbook](../ml/lightgbm-v1-runbook.md)
+- [Shared MLflow Tracking](../ml/mlflow-tracking-server.md)
+- [Nebius Deployment](../deployment/nebius-deployment.md)
 - [Project phases](PHASES.md)

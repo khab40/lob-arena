@@ -59,7 +59,7 @@ Raw JSON and raw Protobuf serialization are not canonical hash encodings. Step 4
 
 ## Related Documentation
 
-- [Java Kernel Migration](java-kernel-migration.md)
+- [Java Kernel Migration](history/java-kernel-migration.md)
 - [Java Integer Order Book](java-order-book.md)
-- [ARD-0018: Canonical Exchange Event Stream](architecture/ARD-0018-canonical-exchange-event-stream.md)
-- [ARD-0019: Python Reference And Java Kernel Migration](architecture/ARD-0019-python-reference-java-kernel-migration.md)
+- [ARD-0018: Canonical Exchange Event Stream](../architecture/ARD-0018-canonical-exchange-event-stream.md)
+- [ARD-0019: Python Reference And Java Kernel Migration](../architecture/ARD-0019-python-reference-java-kernel-migration.md)

@@ -112,7 +112,7 @@ The provisioned Grafana `LOB Arena Detector Tournaments` view answers:
 No metric label will contain a tournament ID, Nebius Job ID, random seed,
 scenario ID, or artifact path. Detailed quality results remain in CSV/JSON
 artifacts and benchmark reports. See the
-[architecture overview](architecture.md#detector-tournament-observability)
+[architecture overview](../architecture.md#detector-tournament-observability)
 for the metric families and data flow.
 
 Use the bottleneck dashboard first when the arena slows down. If agent decision p95 rises before Java HTTP/kernel latency, the runner is likely saturated. If backend-to-Java latency rises while Java HTTP latency stays flat, the proxy path or network is suspect. If Java heap/GC and Java HTTP latency rise together, inspect Java allocation and scenario load.
@@ -141,6 +141,6 @@ Grafana is a visualization consumer, never a kernel dependency. Prometheus scrap
 
 ## Related Documentation
 
-- [README observability overview](../README.md#role-of-prometheus-and-grafana)
-- [Quick Start](QUICKSTART.md)
-- [ARD-0021: Local Observability With Prometheus And Grafana](architecture/ARD-0021-local-observability-grafana.md)
+- [README observability overview](../../README.md#role-of-prometheus-and-grafana)
+- [Quick Start](../deployment/QUICKSTART.md)
+- [ARD-0021: Local Observability With Prometheus And Grafana](../architecture/ARD-0021-local-observability-grafana.md)

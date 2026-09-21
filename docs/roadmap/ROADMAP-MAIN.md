@@ -195,12 +195,12 @@ diagnostic is retained separately from the passing final receipt.
   Corrected C4 loading, comparison/report integration, pre-logging scored retention,
   same-run MLflow recovery and marker-last publication are implemented.
 - Native recovery and authenticated remote rehearsal are complete for synthetic
-  inputs: the [September 17 evidence](evidence/g8-native-recovery-20260917.json)
+  inputs: the [September 17 evidence](../evidence/g8-native-recovery-20260917.json)
   records one scoring call, native reattachment and completed recovery, with
   independent readback of 24 MLflow metrics, 30 inputs and four artifact hashes.
-  The subsequent [independent S3 verification](evidence/g8-independent-s3-readback-20260917.json)
+  The subsequent [independent S3 verification](../evidence/g8-independent-s3-readback-20260917.json)
   checked all 64 objects and resolves the earlier reader AccessDenied gap.
-- Merged PR #201 prepares the [production native package](g8-production-package.md)
+- Merged PR #201 prepares the [production native package](../operations/g8/g8-production-package.md)
   for `nasdaq-g8-replacement-r5-20260917`; it remains unsigned and not executable.
   The changed production entrypoint still needs Nebius runtime verification;
   synthetic Java-comparison/lineage placeholders cannot qualify production inputs.
@@ -209,9 +209,9 @@ Completion evidence and remaining critical path:
 
 1. Verify the original 27 Java/C3 checkpoints and genuine dataset registration;
    complete frozen projection, C4 profile, comparison inventory and input bindings.
-   The approved [89-object metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+   The approved [89-object metadata audit](../evidence/g8-original-comparison-metadata-20260921.json)
    passed and all temporary access is removed. Live registration now verifies
-   four metadata artifacts and 30 final-tabular inputs. [Payload verification](evidence/g8-original-payload-verification-20260921.json)
+   four metadata artifacts and 30 final-tabular inputs. [Payload verification](../evidence/g8-original-payload-verification-20260921.json)
    is complete: 294 original objects staged; all 377 payload/metadata files rehashed.
    Temporary grants are removed and the VM stopped. Rows were not parsed; production
    comparison semantics still require verification on Nebius.
@@ -219,7 +219,7 @@ Completion evidence and remaining critical path:
    without final scoring. Record resources, finite timeout, Job count and identities.
 3. Complete current credential/permission, image-alias, storage, MLflow and
    output/intent preflight; assemble the canonical request and complete v3 package.
-   The approved [32 GiB expansion and live registration](evidence/g8-capacity-registration-20260921.json)
+   The approved [32 GiB expansion and live registration](../evidence/g8-capacity-registration-20260921.json)
    are verified. The September 21 unsigned review now binds the original comparison,
    live registration and 32 GiB storage. Finish runtime/current preflight and recheck
    the 20 GiB free-space requirement immediately before execution.
@@ -232,7 +232,7 @@ Completion evidence and remaining critical path:
    and signs the go/no-go decision. Rehearsal success is not an exit decision.
 
 See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
-[validation execution policy](model-validation-execution-policy.md): model/runtime
+[validation execution policy](../ml/model-validation-execution-policy.md): model/runtime
 work runs on Nebius Serverless; historical billing-freshness, submission-expiry and
 fixed VM windows are not current prerequisites. Final-test approval remains separate.
 

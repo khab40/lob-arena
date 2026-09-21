@@ -45,5 +45,5 @@ Events must have matching schema version and contiguous sequence beginning at 1.
 ## Related Documentation
 
 - [Determinism Contract V1](determinism-contract-v1.md)
-- [Java Kernel Migration](java-kernel-migration.md)
-- [ARD-0019](architecture/ARD-0019-python-reference-java-kernel-migration.md)
+- [Java Kernel Migration](history/java-kernel-migration.md)
+- [ARD-0019](../architecture/ARD-0019-python-reference-java-kernel-migration.md)
