@@ -67,7 +67,7 @@ def main():
         retry_authorized=False,
     )
     args.output.mkdir(parents=True, exist_ok=False)
-    proposal = (json.dumps(scope, indent=2) + '\n').encode()
+    proposal = (json.dumps(scope, sort_keys=True, indent=2) + '\n').encode()
     for name, raw in {'comparison.json': corrected, 'expected-inventory.json': inventory,
                       'worker.py': worker, 'proposal.json': proposal}.items():
         (args.output / name).write_bytes(raw)
