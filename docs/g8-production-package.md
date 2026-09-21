@@ -83,12 +83,20 @@ Preserve the original v2 review rather than silently changing its hash.
 The original comparison inventory contains **2,632,277,460 bytes (2.451 GiB)**.
 Scored retention copies all 27 checkpoint trees. A 10 GiB filesystem permits a
 maximum 2 GiB checkpoint under the five-copy guard, so production cannot use the
-rehearsal's current capacity. The [capacity proposal](evidence/g8-production-capacity-proposal-20260921.json)
+rehearsal's original capacity. The [capacity proposal](evidence/g8-production-capacity-proposal-20260921.json)
 expands the same filesystem to 32 GiB and proposes a 4 GiB checkpoint bound,
-requiring 20 GiB actual free space before final access. It is not applied; fresh
-mount/capacity evidence and updated production bindings are required after approval.
+requiring 20 GiB actual free space before final access. The operator approved it,
+and [execution evidence](evidence/g8-capacity-registration-20260921.json) confirms
+32 GiB mounted capacity and 34,346,348,544 free bytes. The preserved 828-file
+archive hash verifies. The VM is stopped again; production storage bindings and
+a fresh free-space check at execution remain required.
 The original rehearsal's 10 GiB receipt remains historical evidence.
 
-Remaining gates: full original comparison payload verification/staging, live C4
-registration, sufficient native capacity, production transport verification,
-current preflight and replacement-specific authorization. G8 remains open.
+Live C4 registration also verifies: the original FINISHED run contains 240 dataset
+inputs, with all 30 final-tabular entries matching frozen source URIs, hashes,
+counts and root identity; all four metadata artifact hashes match. No payload
+rows were accessed. The earlier unsigned supplement remains historical.
+
+Remaining gates: full original comparison payload verification/staging, production
+transport verification, updated package bindings, current preflight and
+replacement-specific authorization. G8 remains open.
