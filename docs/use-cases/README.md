@@ -100,140 +100,34 @@ canonical ground truth, injection and acceptance requirements.
 ## Detector Tournament Benchmark
 
 The [tournament interface](../architecture/ARD-0017-ai-detector-tournament.md)
-```mermaid
-graph LR
-    Researcher["Research / Benchmark User"]
-    Job["Nebius Serverless AI Job"]
-    Runner["detector_tournament.py"]
-    Simulations["Synthetic Simulation Runs"]
-    Labels["Ground-Truth Scenario Labels"]
-    DetectorOutputs["Detector Outputs"]
-    Metrics["Precision / Recall / F1 / Latency"]
-    Report["benchmark_report.md"]
-
-    Researcher -->|"runs, scenarios, detectors"| Job
-    Job --> Runner
-    Runner --> Simulations
-    Simulations --> Labels
-    Simulations --> DetectorOutputs
-    Labels --> Metrics
-    DetectorOutputs --> Metrics
-    Metrics --> Report
-```
-
-Business value:
-
-- Provides measurable evidence beyond a visual demo.
-- Shows detector performance by scenario family.
-- Produces artifacts suitable for challenge review and iteration.
-
-Nebius role:
-
-- Runs as a Nebius Serverless AI Job using `serverless/jobs/detector_tournament.py`.
-- Accepts `--runs`, `--scenarios`, `--detectors`, and `--output`.
-- Writes `benchmark_report.md`, `metrics.csv`, and `results.json`.
+owns run/status/artifact APIs. The Job CLI accepts `--runs`, `--scenarios`,
+`--detectors` and `--output`, producing `benchmark_report.md`, `metrics.csv`
+and `results.json`. [Benchmark methodology](../ml/benchmark-methodology.md)
+and [calculation limitations](../runtime/calculations-explanations.md) define
+what these legacy synthetic metrics measure. Apply the execution policy below.
 
 ## Synthetic Dataset Generation
 
-Purpose: create labeled synthetic artifacts for demos, tests, and analysis.
-
-```mermaid
-graph TD
-    User["Research / Benchmark User"]
-    Job["Nebius Serverless AI Job"]
-    Factory["synthetic_dataset_factory.py"]
-    Simulator["Synthetic Exchange Simulator"]
-    Events["events.jsonl"]
-    Snapshots["snapshots.parquet or snapshots.parquet.jsonl"]
-    Incidents["incidents.jsonl"]
-    Labels["labels.jsonl"]
-    Manifest["manifest.json"]
-
-    User -->|"samples, output"| Job
-    Job --> Factory
-    Factory --> Simulator
-    Simulator --> Events
-    Simulator --> Snapshots
-    Simulator --> Incidents
-    Simulator --> Labels
-    Factory --> Manifest
-```
-
-Business value:
-
-- Produces repeatable labeled synthetic data without external market feeds.
-- Supports offline analysis and regression tests.
-- Falls back to JSONL when Parquet dependencies are unavailable.
-
-Nebius role:
-
-- Runs as a Nebius Serverless AI Job using `serverless/jobs/synthetic_dataset_factory.py`.
-- Accepts `--samples` and `--output`.
-- Writes JSONL artifacts and Parquet or Parquet-like JSON fallback snapshots.
+`serverless/jobs/synthetic_dataset_factory.py` accepts `--samples` and `--output`.
+It emits events, incidents, labels, manifest and Parquet snapshots, with
+`snapshots.parquet.jsonl` fallback when Parquet support is absent. Preserve the
+format distinction; see [job artifacts](../../serverless/jobs/README.md).
 
 ## Judge Mode Investigation Report
 
-Purpose: explain a selected timeline window, not only a pre-created incident.
-
-```mermaid
-graph LR
-    Idle["Idle"]
-    SegmentSelected["Segment selected - user selects replay window"]
-    EvidenceBundled["Evidence bundled - backend gathers compact context"]
-    Analyzing["Analyzing - call Nebius AI judge"]
-    Completed["Completed - structured report returned"]
-    MockFallback["Mock fallback - endpoint unavailable"]
-    Done["Done"]
-
-    Idle --> SegmentSelected
-    SegmentSelected --> EvidenceBundled
-    EvidenceBundled --> Analyzing
-    Analyzing --> Completed
-    Analyzing --> MockFallback
-    Completed --> Done
-    MockFallback --> Done
-```
-
-Business value:
-
-- Supports a more exploratory review workflow.
-- Connects charts, order-book state, events, and detector signals.
-- Produces an investigation-style report while preserving educational framing.
-
-Nebius AI role:
-
-- Uses the same Nebius AI / LLM inference family as AI Investigator.
-- Sends bounded timeline context rather than full raw event logs.
-- Returns a structured investigation report for reviewer-facing analysis.
+The proposed selection flow bundles a bounded timeline window, requests a
+structured investigation and exposes completion or mock fallback. Do not infer
+a completed dedicated selector from the report API. See
+[ARD-0009](../architecture/ARD-0009-judge-mode-investigation-reports.md).
 
 ## Challenge Submission Evidence
 
-Purpose: package the project story for technical review.
+Use the [submission index](../publication/challenge-submission.md) for endpoint,
+Job and deployment receipts, screenshots and video. Frozen challenge evidence
+is historical; it does not qualify later learned models.
 
-```mermaid
-graph LR
-    Builder["Project Builder"]
-    Architecture["Architecture Docs + ARDs"]
-    UIArtifacts["Screenshots / Demo Video"]
-    Benchmarks["Benchmark Reports + Metrics"]
-    Safety["Safety + Disclaimer Docs"]
-    Submission["Challenge Submission"]
-    Reviewer["Technical Reviewer"]
+## Execution and planned scope
 
-    Builder --> Architecture
-    Builder --> UIArtifacts
-    Builder --> Benchmarks
-    Builder --> Safety
-    Architecture --> Submission
-    UIArtifacts --> Submission
-    Benchmarks --> Submission
-    Safety --> Submission
-    Submission --> Reviewer
-```
-
-Business value:
-
-- Shows both the visual demo and engineering rigor.
 - Makes Nebius usage explicit through endpoint and job workflows.
 - Provides a reviewable path from architecture decisions to runnable artifacts.
 
