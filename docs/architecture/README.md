@@ -4,62 +4,18 @@ This folder contains Architecture Record Documents (ARDs) for LOB Arena.
 
 ARDs capture architecture decisions, context, tradeoffs, implementation phases, and links to supporting documentation. They are meant to complement the higher-level architecture overview in [../architecture.md](../architecture.md).
 
-## Implementation Summary
+## Reading decisions
 
-Status reconciled as of 2026-09-15 (historical implementation labels retained):
-
-| ARD | Implementation | Notes |
-|-----|----------------|-------|
-| [ARD-0001](ARD-0001-overall-architecture.md) | `[partial]` | Production execution evidence, runtime/cost notes, and screenshots are archived; roadmap features remain |
-| [ARD-0002](ARD-0002-websocket-state-schema.md) | `[done]` | Optional exported JSON schema and load-test throttling |
-| [ARD-0003](ARD-0003-detector-evidence-model.md) | `[done]` | Broader threshold calibration against historical-style replay datasets |
-| [ARD-0004](ARD-0004-benchmark-artifact-format.md) | `[partial]` | A committed evidence bundle exists; canonical schema versioning remains incomplete |
-| [ARD-0005](ARD-0005-nebius-endpoint-contract.md) | `[partial]` | Real endpoint execution is archived; production hardening remains |
-| [ARD-0006](ARD-0006-scenario-labeling-and-reproducibility.md) | `[partial]` | Live label finalization and full event/order ID linkage remain incomplete |
-| [ARD-0007](ARD-0007-nebius-serverless-ai-jobs.md) | `[partial]` | Completed Job records, S3 evidence, and runtime/cost notes are archived; remote policy guardrails remain future work |
-| [ARD-0008](ARD-0008-nebius-serverless-ai-endpoints.md) | `[partial]` | Endpoint investigations, latency evidence, and sanitized screenshots are archived |
-| [ARD-0009](ARD-0009-judge-mode-investigation-reports.md) | `[partial]` | Dedicated Judge Mode timeline selector is not fully implemented |
-| [ARD-0010](ARD-0010-agent-runner-execution.md) | `[done]` | Auth/signing and durable transport for remote runners are future work |
-| [ARD-0011](ARD-0011-exchange-liquidity-invariant.md) | `[done]` | Dynamic reference-price tracking and UI tuning are future work |
-| [ARD-0013](ARD-0013-ui-shell-preferences.md) | `[done]` | Screenshot capture and broader light-mode chart tuning are future work |
-| [ARD-0015](ARD-0015-nebius-ai-investigation-team.md) | `[done]` | Investigation endpoint is the primary interactive Nebius AI Serverless workflow |
-| [ARD-0016](ARD-0016-ai-scenario-generator.md) | `[done]` | Scenario generation endpoint produces simulator-compatible AI Scenario Generator workloads |
-| [ARD-0017](ARD-0017-ai-detector-tournament.md) | `[done]` | Serverless Jobs contract and local fallback power the AI Detector Tournament workflow |
-| [ARD-0018](ARD-0018-canonical-exchange-event-stream.md) | `[done]` | All ten canonical exchange-stream steps are implemented and verified; future dataset mappings use the completed adapter boundary |
-| [ARD-0019](ARD-0019-python-reference-java-kernel-migration.md) | `[done]` | All 18 parity and sole-Java-kernel migration steps are implemented |
-| [ARD-0020](ARD-0020-java-arena-websocket-agent-orchestration.md) | `[done]` | Java owns the live arena, WebSocket, agent orchestration, scenarios, detectors, incidents, and journals |
-| [ARD-0021](ARD-0021-local-observability-grafana.md) | `[done]` | Prometheus/Grafana observability includes bounded detector-tournament lifecycle telemetry and a provisioned operations dashboard |
-| [ARD-0022](ARD-0022-historical-market-data-ingestion.md) | `[done]` | FastAPI validates paired LOBSTER CSV files and atomically registers normalized Parquet datasets |
-| [ARD-0023](ARD-0023-hybrid-historical-replay.md) | `[done]` | Java deterministically merges immutable LOBSTER history with UI-launched synthetic attacks while isolating labels and provenance |
-| [ARD-0024](ARD-0024-versioned-causal-feature-engineering.md) | `[done]` | Source-agnostic causal snapshot features, typed Parquet, quality metadata, leakage checks, and session-grouped split contract |
-| [ARD-0025](ARD-0025-governed-corpus-and-ml-benchmark.md) | `[done]` | Governed corpus/adjudication, frozen splits, Java-bound evaluation, streaming features, clustered statistics, regime/worst-decile analysis, and signed releases |
-| [ARD-0026](ARD-0026-governed-lightgbm-release-boundary.md) | `[phase-0 done]` | Stable LightGBM training/release identity, validation-only calibration, operating modes, predictions, and checksummed artifact contracts |
-| [ARD-0027](ARD-0027-shared-mlflow-tracking.md) | `[done]` | Authenticated shared MLflow tracking with PostgreSQL metadata, S3-compatible artifacts, and governed experiment/model namespaces |
-| [ARD-0028](ARD-0028-governed-lightgbm-feature-loading.md) | `[phase-1 done]` | Externally anchored feature release, reconstructed labels, replay-unit binding, exact fold inventory, and separate development/test access |
-| [ARD-0029](ARD-0029-deterministic-lightgbm-binary-training.md) | `[phase-2 done]` | Deterministic binary training with training-only class/session weighting, native missing values, validation early stopping, and atomic model/training manifests |
-| [ARD-0030](ARD-0030-float32-governed-feature-release.md) | `[done]` | Backward-compatible `lob_features_v2` float32 release with governed schema binding, bounded precision gates, and v2 trainer determinism |
-| [ARD-0031](ARD-0031-complete-lightgbm-v1.md) | `[lightgbm-v1 done]` | Validation-only calibration, frozen operating modes, test predictions, feature contributions, detector adapter, MLflow indexing, paired evaluation and verified bundle |
-| [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md) | `[phase-1 done]` | Streaming ITCH 5.x parsing, visible-book reconstruction, source-neutral manifests, deterministic Parquet, fixture, UI/API, and Java replay provenance |
-| [ARD-0033](ARD-0033-deterministic-hybrid-scheduling.md) | `[phase-2 done]` | Exact source-sequence/timestamp scheduling, historical tie precedence, deferred future rows, additive ground truth, and signed evidence provenance |
-| [ARD-0034](ARD-0034-itch-market-profile-calibration.md) | `[phase-3 done]` | Versioned ITCH distributions, deterministic parameter compilation, profile-bound Java simulation, dynamic reference path, and held-out realism reports |
-| [ARD-0035](ARD-0035-nebius-lightgbm-first.md) | `[in progress; G0-G7 complete; G8 open]` | G0–G7 complete; native synthetic recovery and independent readback verified; production qualification and replacement authorization remain open |
-| [ARD-0036](ARD-0036-market-sequence-transformer.md) | `[todo after ARD-0035 disposition]` | C4 sequence projection/materialization exists; classifier/training remain proposed after LightGBM exit disposition |
-| [ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) | `[todo after ARD-0036 disposition]` | No cascade implementation yet; feed versioned causal Transformer features into a new LightGBM family with ablation, fallback and promotion gates |
-| [ARD-0038](ARD-0038-c4-specific-evaluation.md) | `[implemented; live qualification pending]` | C4-Specific Frozen Evaluation; see record for recovery/integration limits |
-| [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) | `[implemented; live qualification pending]` | Same-run recovery integrated and natively rehearsed on synthetic inputs; production qualification pending |
-| [ARD-0040](ARD-0040-completed-release-publication-recovery.md) | `[implemented; live qualification pending]` | Publication recovery integrated and independently read back; production qualification pending |
-
-Current UI architecture note: the product shell exposes Data Ingestion, Arena,
-Control Panel, and About in that order. Scenario setup, incidents,
-investigations, detector tournaments, deployment status, and experiment
-artifacts are folded into Arena or Control Panel. The About and ARD-0001
-diagrams document the execution boundaries.
+Accepted design is not proof of implementation or qualification. Read
+[current status](../roadmap/CURRENT_STATUS.md) for progress and the
+[architecture overview](../architecture.md) for current ownership.
+Each record retains its own decision context and supersession status.
 
 ## Records
 
 ### Core System Design
 
-- [ARD-0001: Overall Architecture](ARD-0001-overall-architecture.md) — System-wide architecture: interactive path, batch path, and component responsibilities
+- [ARD-0001: Overall Architecture](ARD-0001-overall-architecture.md) — Original separation decision; live ownership later superseded by ARD-0020
 - [ARD-0002: WebSocket State Schema](ARD-0002-websocket-state-schema.md) — Real-time state messaging format for live arena updates
 
 ### Detector & Evidence Design
@@ -121,37 +77,11 @@ diagrams document the execution boundaries.
 - [ML lifecycle use cases](../use-cases/ml-lifecycle.md) — Data, training, calibration, selection, MLflow retention and planned serving
 - [ML documentation review](ml-documentation-review-20260921.md) — Corrections, evidence and implementation gaps
 
-- [Nebius Serverless Use Cases](../use-cases/nebius-serverless-use-cases.md) — Product use cases and concrete API flows
+- [Nebius Serverless Use Cases](../use-cases/nebius-serverless-use-cases.md) — Historical July payload/acceptance examples
 
-## ARD Format
+## Writing records
 
-Each ARD includes:
-
-| Section | Purpose |
-|---------|---------|
-| **Status** | Accepted, Proposed, Rejected, Superseded |
-| **Date** | When the record was written |
-| **Implementation Status** | What has landed and what is still missing |
-| **Context** | Business and technical background |
-| **Decision** | What was decided and why |
-| **Architecture** | Diagrams and component overview |
-| **Implementation Impact** | How the decision affects development |
-| **Alternatives Considered** | Rejected approaches and rationale |
-| **Consequences** | Tradeoffs and implications |
-| **Related Documentation** | Links to supporting docs and other ARDs |
-
-## How to Use ARDs
-
-1. **Understand a design decision**: Find the relevant ARD and read the Context → Decision → Consequences sections
-2. **Implement a feature**: Check which ARDs apply, review implementation impact
-3. **Make a new decision**: Use an ARD as a template (copy an existing one and follow the format)
-4. **Trace architecture lineage**: Links in "Related Documentation" connect ARDs and other documents
-
-## Workflow & Traceability
-
-All ARDs are indexed here and linked from the main [Architecture](../architecture.md) document. [Use Cases](../use-cases/README.md) provides product workflow context; each record links its design dependencies and supporting implementation evidence.
-
-This ensures:
-- ✓ No stale decisions (ARDs are always referenced)
-- ✓ Clear traceability (decisions → implementation → workflows)
-- ✓ Single source of truth (decisions recorded in ARDs, not scattered in comments)
+Keep status/date, context, decision, alternatives and consequences. Add detail
+or a diagram only where it explains a unique requirement or boundary.
+Follow [documentation ownership](../DOCUMENTATION_GUIDE.md); link to current
+status and operational procedures rather than copying them into each record.
