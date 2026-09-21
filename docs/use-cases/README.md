@@ -9,132 +9,46 @@ Use [current status](../roadmap/CURRENT_STATUS.md) for qualification and
 ## Workflow catalogue
 
 | Actor and task | Action and result | Detailed owner |
-## Use Case Summary
-
-| Use case | Primary actor | Business outcome |
 | --- | --- | --- |
-| Command Center Demo | Demo Operator | Run the Serverless E2E demo, inspect endpoint/job status, and show AI investigation plus detector tournament evidence. |
-| Live Arena Mode | Demo Operator | Show a changing synthetic order book with normal and red-team activity. |
-| Manual Scenario Launch | Demo Operator | Inject a bounded abuse-like pattern and observe visible market effects. |
-| Historical Session Registration | Data Steward / Research User | Validate a licensed LOBSTER pair and freeze immutable normalized provenance. |
-| Hybrid Historical Replay | Demo Operator / Research User | Replay a LOBSTER window as an unlabeled control, then inject the same predefined synthetic attack over that window for reproducible comparison. |
-| Governed Corpus Release | Data Steward / Independent Reviewers | Admit sessions and clean windows only after coverage, provenance, blind review, conflict resolution, and signed release gates pass. |
-| Shared MLflow Tracking | ML Engineer / Reviewer | Keep corpus, LightGBM-development, governed-evaluation, and approved model metadata in one authenticated tracking plane. |
-| Governed LightGBM v1 | ML Engineer / Model Validator | Train/calibrate binary `attack_active` candidates and freeze validation-selected modes; production Wave 1 evaluation remains gated. |
-| Incident Investigation | Demo Operator / Reviewer | Use AI Investigator to turn detector evidence into a clear explanation. |
-| Red-Team Scenario Generation | Demo Operator | Use Scenario Generator to create a launchable synthetic scenario configuration. |
-| Detector Tournament Benchmark | Research / Benchmark User | Use Managed Experiment jobs to compare detector precision, recall, F1, and latency. |
-| Secure CEO/Customer Demo UI | CEO / Product Sponsor / Technical Reviewer | Sign in, inspect governed Nasdaq/LOBSTER ingestion, replay a frozen campaign, compare rules/LightGBM/Transformer/hybrid, inspect MLflow-linked results and read/export a one-page management summary. |
-| BYO Data + BYO Detector Adapter | Future Client / Data Steward / Detector Team | Commercial north star, parked until the E2E demo exits: onboard client data and validate the client detector offline, then in real-time shadow mode. |
-| Synthetic Dataset Generation | Research / Benchmark User | Use Managed Experiment jobs to produce labeled synthetic event/snapshot/incident artifacts. |
-| Challenge Submission Evidence | Technical Reviewer | Review architecture, metrics, screenshots, and safety framing. |
-| UI Shell Personalization | Demo Operator / Reviewer | Use compact navigation and switch day/night/system display without changing backend state. |
+| Operator: run a demo | Start Local Mock, launch a bounded scenario, inspect incidents and explicit real/fallback mode | [Quickstart](../deployment/QUICKSTART.md), [demo script](../publication/demo-script.md) |
+| Operator: use live arena | Start/pause/reset Java replay and observe complete state over WebSocket | [Runtime model](../runtime/runtime-model.md) |
+| Data steward: register history | Validate a licensed pair or ITCH window, write immutable normalized files, register verified hashes/counts | [Client runbook](../data/client-historical-dataset-validation-runbook.md), [ITCH decision](../architecture/ARD-0032-nasdaq-itch-ingestion.md) |
+| Researcher: compare hybrid replay | Run historical control and a namespaced attack over the same source; preserve separate truth and signed comparison | [Replay quickstart](../data/replay-quickstart.md), [validation contract](../data/hybrid-dataset-validation.md) |
+| Reviewers: freeze a corpus | Review clean windows independently, adjudicate conflicts, verify coverage and chronological splits, sign release | [Corpus protocol](../data/governed-corpus-benchmark-protocol.md) |
+| ML engineer: develop a detector | Prepare causal features, train, calibrate/select using validation, freeze candidate and request separate final evaluation | [ML lifecycle](ml-lifecycle.md) |
+| Reviewer: inspect MLflow | Inspect permitted lineage, metrics and artifacts after repository verification | [MLflow operations](../ml/mlflow-tracking-server.md) |
+| Reviewer: investigate an incident | Select incident, submit bounded evidence through FastAPI, inspect typed AI report or explicit fallback | [Investigation decision](../architecture/ARD-0015-nebius-ai-investigation-team.md) |
+| Scenario designer: generate variants | Provide bounded constraints, persist canonical ground truth and launchable scenario projection | [Generator decision](../architecture/ARD-0016-ai-scenario-generator.md) |
+| Detector engineer: run tournament | Submit labeled scenario families and compare durable metrics, leaderboard and reports | [Tournament decision](../architecture/ARD-0017-ai-detector-tournament.md) |
+| Researcher: generate fixtures | Generate labeled event/snapshot/incident artifacts and a manifest | [Job contract](../../serverless/jobs/README.md) |
+| Reviewer: inspect timeline window | Request bounded timeline investigation; dedicated Judge Mode selection remains a separate UI gap | [Judge Mode decision](../architecture/ARD-0009-judge-mode-investigation-reports.md) |
+| Builder: publish evidence | Package sanitized screenshots, demo, deployment and benchmark receipts | [Submission index](../publication/challenge-submission.md) |
 
 ## Live Arena Mode
 
-Purpose: demonstrate a live synthetic market with changing order-book state.
-
-```mermaid
-graph TD
-    Actor["Demo Operator"]
-    UI["Arena UI"]
-    Backend["Java Spring live arena"]
-    Clock["Simulation Clock"]
-    Agents["Normal Agents"]
-    Exchange["Synthetic L2 Order Book"]
-    Stream["WebSocket State Stream"]
-
-    Actor -->|"Start / Pause / Reset"| UI
-    UI -->|"WebSocket arena_control commands"| Backend
-    Backend --> Clock
-    Clock --> Agents
-    Agents --> Exchange
-    Exchange --> Backend
-    Backend --> Stream
-    Stream -->|"arena_state at configured cadence"| UI
-```
-
-Business value:
-
-- Gives reviewers an immediate visual understanding of the system.
-- Shows that detector and AI features are grounded in live synthetic state.
-- Provides a demo cockpit before any batch or Nebius workflow is introduced.
-
-Nebius role:
-
-- No direct Nebius call is needed for the baseline live loop.
-- The live arena creates the state and incidents later sent to Nebius AI / LLM inference.
-
+Java owns the exchange and broadcasts arena state. Agent runners receive
+read-only snapshots and return bounded intents. UI preferences remain browser
+state. See the [live tick sequence](../architecture.md#live-tick-sequence).
 
 ## UI Shell Personalization
 
-Purpose: make the arena usable in repeated demos, recordings, and reviews without changing simulation state.
-
-```mermaid
-graph LR
-    Operator["Operator"]
-    Theme["Day / Night / System"]
-    Nav["Compact Vertical Navigation"]
-    Arena["Arena Visuals"]
-
-    Operator --> Theme
-    Operator --> Nav
-    Theme --> Arena
-    Nav --> Arena
-```
-
-Business value:
-
-- Makes the UI cleaner for screenshots and demos.
-- Supports dark rooms, light rooms, and system-following display behavior.
-- Keeps visual preferences local to the browser, separate from backend runtime and detector behavior.
-
-Nebius role:
-
-- No Nebius call is required.
-- Cleaner UI state improves review of Nebius-generated reports and benchmark artifacts.
+Choose day/night/system theme and compact navigation. Preferences stay local to
+the browser and do not change simulation or detector state; no Nebius call is
+needed. See [UI preferences](../architecture/ARD-0013-ui-shell-preferences.md).
 
 ## Manual Scenario Launch
 
-Purpose: let an operator inject bounded synthetic abuse-like patterns.
-
-```mermaid
-graph LR
-    Operator["Demo Operator"]
-    Launcher["Arena Scenario Launcher"]
-    API["WebSocket launch_scenario command"]
-    Controller["Scenario Controller"]
-    ScenarioAgents["Scenario Agents"]
-    OrderBook["Synthetic Order Book"]
-    Feed["Agent Event Feed"]
-
-    Operator --> Launcher
-    Launcher -->|"spoofing / layering / quote stuffing / liquidity evaporation"| API
-    API --> Controller
-    Controller --> ScenarioAgents
-    ScenarioAgents --> OrderBook
-    ScenarioAgents --> Feed
-    Feed --> Operator
-```
-
-Business value:
-
-- Creates a controlled, repeatable demo moment.
-- Separates synthetic red-team behavior from normal market agents.
-- Makes scenario labels available for detector and benchmark evaluation.
-
-Nebius role:
-
-- Manually launched scenarios can be generated or narrated by Nebius AI.
-- Scenario labels become inputs for Managed Experiment benchmark runs.
+Use Scenario Setup to launch spoofing-like walls, layering-like patterns,
+quote-stuffing bursts or liquidity evaporation. Only synthetic scenarios create
+attack labels. The [scenario decision](../architecture/ARD-0006-scenario-labeling-and-reproducibility.md)
+owns lifecycle/reproducibility; generated variants use the same bounded launch path.
 
 ## Historical Session Registration
 
-Status: implemented for local/UI ingestion and manifest validation.
-
-Purpose: convert one licensed LOBSTER message/book pair into an immutable,
-locally governed replay dataset without uploading the raw source to MLflow.
-
+Import a complete session or bounded window. Validate schema, alignment,
+book invariants and provenance; atomically publish normalized files and manifest
+before registration. Keep licensed raw records out of MLflow by default.
+Follow the [client runbook](../data/client-historical-dataset-validation-runbook.md).
 ```mermaid
 graph LR
     Steward["Data Steward"]
