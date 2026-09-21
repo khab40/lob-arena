@@ -1,9 +1,9 @@
 {
   "schema_version": "g8_comparison_semantics_proposal_v1",
   "status": "awaiting_operator_approval_not_executable_authority",
-  "base_source_commit": "1deaafe7144c78043af027b274eb660a75fe34cb",
+  "base_source_commit": "ae678f547a7f20527e67c48d7ac8b1ee9b5b9fa3",
   "worker": "scripts/g8_comparison_semantics_probe.py",
-  "worker_sha256": "320a04cc89c1e340b74e7eab8234d144703641b5a910be178151e2535789f99f",
+  "worker_sha256": "a70ddc93925c978a145e174929f4c109ed629ba9d7258c1ca64e2dca98af4b5c",
   "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
   "deployment_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee",
   "filesystem_id": "computefilesystem-e00vy2fs9w2sm4bm3v",
@@ -27,17 +27,18 @@
     "existing_staging_vm": "cpu-e2/2vcpu-8gb; stop after staging/readback",
     "monitoring": "operator_managed_alerts"
   },
-  "requested_access": "Parse already-staged original protected test-date comparison events, snapshots, alerts, validation reports and synthetic ground truth for structural/identity verification only. No raw records or quality metrics leave the Job.",
+  "requested_access": "Parse already-staged original protected test-date comparison events, alerts, validation reports and synthetic ground truth for structural/identity verification only. Snapshot Parquet files receive byte-hash and footer-row-count checks only; their rows are not parsed. No raw records or quality metrics leave the Job.",
   "approved_byte_inventory_files": 377,
   "checks": [
     "Rehash all inventoried files before parsing",
     "Use frozen image and exact transport-verified overlays",
     "Resolve 27 original checkpoints and 30 replay domains against frozen preparation",
     "Verify replay identities against frozen projection metadata",
-    "Validate snapshot/alert/ground-truth structure and exhaust canonical streams for hashes/counts/chronology",
+    "Validate alert/ground-truth structure and exhaust canonical event streams for hashes/counts/chronology; verify snapshot Parquet hashes and footer row counts only",
     "Reject rule alerts whose ticks never occur in canonical events"
   ],
   "not_in_scope": [
+    "Snapshot Parquet row/schema validation or consistency with canonical snapshot events",
     "Final-bucket access or final tabular feature reads",
     "Training, candidate loading, scoring, calibration or rule regeneration",
     "Prediction/feature-row pairing or model quality metrics",

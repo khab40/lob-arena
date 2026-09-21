@@ -18,36 +18,41 @@ def sha(path):
     return digest.hexdigest()
 
 
+def require(condition):
+    if not condition:
+        raise ValueError("Comparison audit check failed")
+
+
 def audit():
     # This digest is an operator approval assertion, not final-evaluation authority.
     scope_path = Path(sys.argv[1])
-    assert sha(scope_path) == os.environ['G8_SEMANTIC_APPROVED_PROPOSAL_SHA256']
+    require(sha(scope_path) == os.environ.get('G8_SEMANTIC_APPROVED_PROPOSAL_SHA256'))
     scope = json.loads(scope_path.read_bytes())
-    assert sha(Path(__file__)) == scope['worker_sha256']
+    require(sha(Path(__file__)) == scope['worker_sha256'])
     signal.alarm(scope['internal_timeout_seconds'])
-    assert not any(os.environ.get(k) for k in ('AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
-                                              'AWS_SESSION_TOKEN', 'MLFLOW_TRACKING_PASSWORD'))
+    require(not any(os.environ.get(k) for k in ('AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY',
+                                              'AWS_SESSION_TOKEN', 'MLFLOW_TRACKING_PASSWORD')))
     mount = Path('/g8-package')
-    assert os.statvfs(mount).f_flag & os.ST_RDONLY
+    require(os.statvfs(mount).f_flag & os.ST_RDONLY)
     manifest_path = mount / 'transport-probes/g8-production-probe-20260921/manifest.json'
-    assert sha(manifest_path) == scope['transport_manifest_sha256']
+    require(sha(manifest_path) == scope['transport_manifest_sha256'])
     manifest = json.loads(manifest_path.read_bytes())
     package = manifest_path.parent / 'unsigned-production'
     for name, ref in manifest['files'].items():
         path = package / name
-        assert path.resolve() == path.absolute() and path.stat().st_size == ref['size_bytes']
-        assert sha(path) == ref['sha256'] and os.statvfs(path).f_flag & os.ST_RDONLY
+        require(path.resolve() == path.absolute() and path.stat().st_size == ref['size_bytes'])
+        require(sha(path) == ref['sha256'] and os.statvfs(path).f_flag & os.ST_RDONLY)
     inventory_path = scope_path.parent / 'expected-inventory.json'
-    assert sha(inventory_path) == scope['inventory_sha256']
+    require(sha(inventory_path) == scope['inventory_sha256'])
     inventory = json.loads(inventory_path.read_bytes())
     comparison = mount / scope['comparison_relative_root']
-    assert len(inventory) == 377
+    require(len(inventory) == 377)
     allowed = set()
     for ref in inventory:
         path = comparison / ref['path']
-        assert comparison in path.parents and path.resolve() == path.absolute()
-        assert path.stat().st_size == ref['size_bytes'] and sha(path) == ref['sha256']
-        assert os.statvfs(path).f_flag & os.ST_RDONLY
+        require(comparison in path.parents and path.resolve() == path.absolute())
+        require(path.stat().st_size == ref['size_bytes'] and sha(path) == ref['sha256'])
+        require(os.statvfs(path).f_flag & os.ST_RDONLY)
         allowed.add(str(path))
 
     def guard(event, args):
@@ -72,29 +77,31 @@ def audit():
     root = FrozenPublicSampleRoot.model_validate_json((package / 'frozen-root.json').read_bytes())
     paths = verified_replay_paths(comparison / 'comparison.json', root=root)
     shards = {s['run_id']: s for s in json.loads((package / 'projection.json').read_bytes())['shards']}
-    assert len(paths) == len(shards) == 30 and set(paths) == set(shards)
+    require(len(paths) == len(shards) == 30 and set(paths) == set(shards))
     for run_id, path in sorted(paths.items()):
         stream = open_canonical_evaluation_stream(path)
         expected = shards[run_id]
-        assert stream.manifest.run_id == run_id
-        assert stream.manifest.base_session_id == expected['base_session_id']
-        assert stream.manifest.campaign_id == expected['campaign_id']
-        assert stream.manifest.canonical_event_stream_hash == expected['replay_manifest_sha256']
+        require(stream.manifest.run_id == run_id)
+        require(stream.manifest.base_session_id == expected['base_session_id'])
+        require(stream.manifest.campaign_id == expected['campaign_id'])
+        require(stream.manifest.canonical_event_stream_hash == expected['replay_manifest_sha256'])
         alert_ticks = set()
         for alert in stream.alerts:
-            assert type(alert.get('tick')) is int and alert['tick'] >= 0
-            assert isinstance(alert.get('detector'), str) and alert['detector']
+            require(type(alert.get('tick')) is int and alert['tick'] >= 0)
+            require(isinstance(alert.get('detector'), str) and alert['detector'])
             alert_ticks.add(alert['tick'])
         count = 0
         for event in stream.iter_events():
             count += 1
             alert_ticks.discard(event.tick)
-        assert not alert_ticks and count == stream.manifest.event_count
+        require(not alert_ticks and count == stream.manifest.event_count)
     print(json.dumps({'schema_version': 'g8_comparison_semantics_result_v1',
                       'proposal_sha256': sha(scope_path), 'checkpoints_verified': 27,
                       'canonical_replays_exhausted': 30, 'inventoried_files_rehashed': 377,
                       'protected_comparison_rows_parsed': True, 'model_execution': False,
                       'final_bucket_access': False, 'prediction_join_verified': False,
+                      'snapshot_validation': 'sha256_and_parquet_footer_row_count_only',
+                      'snapshot_rows_parsed': False, 'snapshot_event_consistency_verified': False,
                       'replacement_execution_authorized': False}), flush=True)
 
 
