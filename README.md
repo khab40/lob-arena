@@ -1,16 +1,24 @@
 # LOB Arena
 
-**Historical and synthetic order-book validation for market surveillance research.**
+**Governed Historical + Synthetic Order-Book Validation for Market Surveillance**
 
 ![LOB Arena banner](assets/img/01-lob-arena-banner.jpg)
 
-LOB Arena validates licensed historical data, replays it through a Java exchange,
-injects bounded synthetic attacks, and compares detectors using reproducible
-evidence. Deterministic rules produce incidents; AI explains their evidence.
-Historical activity is never automatically labeled benign or abusive. The
-platform provides neither trading signals nor compliance decisions.
+A research and validation platform that replays licensed historical order-book
+data, injects controlled synthetic attacks, and benchmarks surveillance
+detectors against reproducible ground truth.
 
-## Start here
+## Problem
+
+Historical order flow rarely supplies reliable manipulation labels. Detector
+validation needs repeatable scenarios, separate ground truth and inspectable evidence.
+
+## Solution
+
+LOB Arena combines immutable historical replay, bounded synthetic overlays and
+verified detector comparisons. Rules produce incidents; AI explains their evidence.
+Historical activity is never automatically labeled benign or abusive. Outputs
+are neither trading signals nor compliance decisions.
 
 | Task | Guide |
 | --- | --- |
@@ -20,6 +28,22 @@ platform provides neither trading signals nor compliance decisions.
 | Choose a workflow | [Use cases](docs/use-cases/README.md) |
 | Train, evaluate or inspect learned models | [ML lifecycle](docs/use-cases/ml-lifecycle.md) |
 | Find a detailed specification | [Documentation index](docs/README.md) |
+
+## Architecture
+
+Java owns the exchange, live REST/WebSocket controls, replay and agent
+orchestration. Python owns ingestion, offline ML, AI and cloud integration.
+Agents return bounded intents; they cannot mutate the exchange. MLflow indexes
+verified artifacts and never grants release approval. Prometheus/Grafana are
+optional read-only diagnostics.
+
+The [canonical architecture diagram](docs/architecture.md#system-high-level-design)
+shows these boundaries. Historical publication posters are not current design references.
+
+## Screenshots
+
+See the [sanitized screenshot gallery](assets/screenshots/README.md) for
+historical demo captures; use the architecture above for current ownership.
 
 ## Quick start
 
@@ -42,17 +66,6 @@ See the quickstart for prerequisites, configuration and troubleshooting.
 Agent-initiated training, scoring, model fixtures and frozen-runtime validation
 run on Nebius Serverless Jobs under the [execution policy](docs/ml/model-validation-execution-policy.md).
 Local orchestration, static checks and artifact inspection remain available.
-
-## Architecture
-
-Java owns the exchange, live REST/WebSocket controls, replay and agent
-orchestration. Python owns ingestion, offline ML, AI and cloud integration.
-Agents return bounded intents; they cannot mutate the exchange. MLflow indexes
-verified artifacts and never grants release approval. Prometheus/Grafana are
-optional read-only diagnostics.
-
-The [canonical architecture diagram](docs/architecture.md#system-high-level-design)
-shows these boundaries. Historical publication posters are not current design references.
 
 ## Historical and hybrid replay
 
@@ -92,10 +105,13 @@ make grader-smoke
 This credential-free command installs locked dependencies when needed, launches the backend and frontend on local ephemeral ports, submits one fixed-seed Local Mock scenario, and validates backend health, the rendered frontend, detector output, results metrics, event data, and all eight artifacts. It uses temporary output and prints `GRADER_OK` only after every check succeeds. It does not require Docker, cloud credentials, a GPU, or access to Nebius services.
 
 
-## Demo and evidence
+## Demo
 
 [Video walkthrough](https://youtu.be/PZOrEwa4lqg) and
 [demo script](docs/publication/demo-script.md) cover the historical challenge demo.
+
+## Evidence
+
 The [submission index](docs/publication/challenge-submission.md) links measured
 runtime/cost and frozen evidence. Those observations are not current estimates
 or learned-model qualification.
