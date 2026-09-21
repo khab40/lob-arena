@@ -7,7 +7,7 @@ This follows the completed
 [source staging window](g8-source-sdk.md#approved-input-staging-completed).
 The [existing synthetic rehearsal authorization](g8-live-replacement.md#approved-scope-synthetic-nativeremote-rehearsal-only)
 uses two phases/Jobs; its input-writer window is closed. The
-[2026-09-16 validation policy](model-validation-execution-policy.md) removes
+[2026-09-16 validation policy](../../ml/model-validation-execution-policy.md) removes
 administrative expiry, billing gates and fixed VM/filesystem windows.
 The [September 15–16 preflight](g8-native-context-handoff.md#september-1516-preflight-outcome)
 exceeded the VM uptime limit during an overnight approval wait. The VM is stopped
@@ -17,13 +17,13 @@ Job was submitted in that attempt. On September 16 the
 operator reported $33.25 and renewed the VM window. The provider then rejected the
 44-file package: a container may inject at most 16 files. The independently guarded
 VM was stopped and restored, and the empty filesystem deleted. No Job was created.
-See the [rejection receipt](evidence/g8-native-injection-rejection-20260916.json).
+See the [rejection receipt](../../evidence/g8-native-injection-rejection-20260916.json).
 
 ## Bootstrap injection and native package transport
 
 ### September 17 execution evidence
 
-The [native execution receipt](evidence/g8-native-recovery-20260917.json) records
+The [native execution receipt](../../evidence/g8-native-recovery-20260917.json) records
 the v5 package from commit `5b735de3d5a7d458aa4033fb1180495137b60fd5`.
 The score Job `aijob-e00rqsnbarhxt04s15` scored once, sealed its checkpoint and
 exited deliberately with code 73. The recovery Job `aijob-e00w8srejmj1jz44w4`
@@ -42,7 +42,7 @@ Independent authenticated readback through the separate MLflow VM verified
 24 metrics (including single-value histories), 30 dataset inputs, identity tags
 and all four artifact hashes. The Job verified all 64 published S3 objects;
 the separate verifier received AccessDenied using the MLflow service identity.
-The subsequent [authorized-reader verification](evidence/g8-independent-s3-readback-20260917.json)
+The subsequent [authorized-reader verification](../../evidence/g8-independent-s3-readback-20260917.json)
 downloaded all 64 objects and verified every size/hash, both inventories and all
 four MLflow artifact hashes. It used the existing development identity without
 widening permissions. The earlier AccessDenied remains preserved history. The native
@@ -73,7 +73,7 @@ Packaging tests exercise inert source only; the frozen runtime still runs on Neb
 The v3 package met the 16-file and 64 KiB raw-file limits, but actual creation
 failed with `plaintext must not exceed 65536 bytes` from KMS. No Job was created.
 The identical request subsequently passed the provider's `--dry-run` validation.
-The [rejection receipt](evidence/g8-native-kms-rejection-20260916.json) preserves
+The [rejection receipt](../../evidence/g8-native-kms-rejection-20260916.json) preserves
 both outcomes. The MLflow VM was stopped; its empty native filesystem is retained.
 
 The [Job schema](https://github.com/nebius/api/blob/main/nebius/ai/v1/job.proto)
@@ -84,7 +84,7 @@ unconfirmed cause, not a diagnosed provider implementation detail.
 
 The subsequent v4 attempt capped all 16 injections at 40 KiB. It also passed
 dry-run and failed with the same KMS error. The
-[second rejection](evidence/g8-native-kms-headroom-rejection-20260916.json)
+[second rejection](../../evidence/g8-native-kms-headroom-rejection-20260916.json)
 disproves per-file headroom as a sufficient fix; it still does not establish the
 provider's internal serialization. No Job or evaluation was created.
 
@@ -108,10 +108,10 @@ establishes native acceptance and recovery for the unchanged synthetic sources.
 
 The next submission passed the injection-count gate but was rejected before Job
 creation because Nebius copied the 131-character image reference into a 64-character
-Compute label. This is the [existing approved provider workaround](nebius-lightgbm-wave1-implementation-plan.md#2026-08-26-g4-submission-reconciliation),
+Compute label. This is the [existing approved provider workaround](../../roadmap/nebius-lightgbm-wave1-implementation-plan.md#2026-08-26-g4-submission-reconciliation),
 tracked in [Issue #84](https://github.com/khab40/lob-arena/issues/84).
 The VM was stopped/restored at version 52 and the empty filesystem deleted;
-the [rejection receipt](evidence/g8-native-image-label-rejection-20260916.json) preserves this attempt.
+the [rejection receipt](../../evidence/g8-native-image-label-rejection-20260916.json) preserves this attempt.
 
 Keep `plan.image` at the full frozen digest. Submit only the existing
 `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee` alias.
@@ -140,7 +140,7 @@ the documented [Job file limit](https://docs.nebius.com/serverless/jobs/manage).
 40,960-byte and 33,784-byte parts. Six additional parts carry the unchanged request,
 C4 profile/paths and synthetic authorization. No checkpoint or data is injected.
 
-The [original capsule receipt](evidence/g8-native-source-capsule-20260915.json)
+The [original capsule receipt](../../evidence/g8-native-source-capsule-20260915.json)
 preserves the old split. Rebuild capsule v2 from the retained verified source tree;
 do not overwrite the old capsule. Its new part hashes belong in the signed v5
 package. Reassembly must preserve source SHA-256
@@ -320,5 +320,5 @@ availability, production quality, replacement authorization or G8 completion.
 - Before provisioning: complete the unresolved execution bindings above. Use the
   reviewed package under the validation policy; approval delays do not expire it.
 - After rehearsal: preserve evidence and reconcile
-  [ARD-0035](architecture/ARD-0035-nebius-lightgbm-first.md), Issue #23 and the roadmap.
+  [ARD-0035](../../architecture/ARD-0035-nebius-lightgbm-first.md), Issue #23 and the roadmap.
   G8 remains open and G9 blocked until the separately approved production work passes.

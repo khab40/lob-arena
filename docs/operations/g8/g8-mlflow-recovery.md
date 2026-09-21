@@ -1,12 +1,12 @@
 # G8 same-run MLflow recovery — 2026-09-14
 
 Current execution policy (2026-09-16): the
-[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+[LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.
 No billing queries or balance refreshes. Identity/integrity checks and separate
 final-test authorization remain; historical receipts keep their original context.
 
-Architecture decision: [ARD-0039](architecture/ARD-0039-same-run-mlflow-recovery.md).
+Architecture decision: [ARD-0039](../../architecture/ARD-0039-same-run-mlflow-recovery.md).
 
 Engineering milestone only. G8 remains open and G9 blocked. This extends the
 merged [post-MLflow publication recovery](g8-publication-recovery.md); it does not
@@ -70,8 +70,8 @@ MLflow writes complete and then loses their responses.
   observations. This is not production model quality or Java execution evidence.
 - Repeating completed logging performed zero writes.
 
-Portable [recovery receipt](evidence/g8-mlflow-recovery-rehearsal-20260914.json)
-and [underlying scoring/publication receipt](evidence/g8-mlflow-recovery-scoring-20260914.json)
+Portable [recovery receipt](../../evidence/g8-mlflow-recovery-rehearsal-20260914.json)
+and [underlying scoring/publication receipt](../../evidence/g8-mlflow-recovery-scoring-20260914.json)
 bind the imported code, report, reservation and completion record hashes. The
 full local tree is `/tmp/g8-mlflow-resume.xgP2xd/rehearsal`; it is temporary
 engineering evidence, not a durable production archive. Remote authentication,
@@ -98,8 +98,8 @@ The pinned-image rehearsal was repeated with reversed tag lists on remote
 readback: 210 dataset-input readbacks exercised the ordering boundary. Synthetic
 run `6c945617cba74a4695fd74a86c237481` finished with one creation, one scoring
 call, 24 metrics, 30 inputs, four verified artifacts and zero completed-recovery
-writes. The [review-fix receipt](evidence/g8-mlflow-tag-review-20260914.json) and
-[source receipt](evidence/g8-mlflow-tag-review-scoring-20260914.json) bind the
+writes. The [review-fix receipt](../../evidence/g8-mlflow-tag-review-20260914.json) and
+[source receipt](../../evidence/g8-mlflow-tag-review-scoring-20260914.json) bind the
 updated code. The original receipts above are preserved as history. Full local
 outputs: `/tmp/g8-mlflow-tag-review.zL7Z46/rehearsal`. This remains an offline
 file-store rehearsal with reordered responses, not a live PostgreSQL test.

@@ -10,7 +10,7 @@ G8 remains open and G9 blocked. This follows merged PR #177, from updated main
 
 ## Current validation policy (2026-09-16)
 
-Apply the [operator-managed validation policy](model-validation-execution-policy.md)
+Apply the [operator-managed validation policy](../../ml/model-validation-execution-policy.md)
 until LightGBM and Transformers validation outcomes are recorded. It supersedes
 older dollar caps, billing-refresh instructions and VM/filesystem/package windows
 in the historical execution notes below. Do not query billing or request balances.
@@ -141,7 +141,7 @@ test of native attachment or authenticated remote writes, and uses no production
 test rows. The CLI signature/mount/expiry/allowlist checks have separate negative
 tests. The G8 Make target runs all of these tests and Ruff.
 
-The [post-review pinned-image receipt](evidence/g8-live-integration-review-rehearsal-20260914.json)
+The [post-review pinned-image receipt](../../evidence/g8-live-integration-review-rehearsal-20260914.json)
 records one scoring call, local MLflow run `dd651d71090044a5924600d0410ce763`,
 64 byte-verified published objects, original Job identity preservation and a
 zero-write completed repeat. Its publication checkpoint SHA-256 is
@@ -150,7 +150,7 @@ Full temporary engineering evidence remains at
 `/tmp/g8-live-review.0GVJP0/rehearsal`. Networking was disabled for this run.
 This receipt binds the delivered lifecycle code and CLI hashes; CLI policy checks
 were tested separately, not bypassed and then reported as live approval.
-The [pre-review receipt](evidence/g8-live-integration-rehearsal-20260914.json)
+The [pre-review receipt](../../evidence/g8-live-integration-rehearsal-20260914.json)
 is preserved as historical evidence. Eleven additional CLI regression cases cover
 recovery rendering, distinct execution/retention deadlines and mount detachment,
 replacement or source change during the signed-context wait on both live paths.
@@ -215,7 +215,7 @@ the actual production package and request its distinct signed exception.
 
 PR #178 merged as `0742225b00f185bc9f98980a947e7ec29d5ec378`; all its checks
 passed. The new rehearsal branch starts at that commit. The
-[preflight record](evidence/g8-native-rehearsal-preflight-20260914.json)
+[preflight record](../../evidence/g8-native-rehearsal-preflight-20260914.json)
 records the approved bounds, observed project billing of **$33.49 including VAT**,
 healthy MLflow containers, no native filesystems and the inactive final-read key.
 After finding the operator-action gate, MLflow VM
@@ -228,7 +228,7 @@ refresh it and reconcile accrued charges immediately before submission.
 
 No rehearsal Job, filesystem, MLflow run or S3 object was created during this
 preflight. The operator applied the output policy, and independent
-[readback](evidence/g8-native-rehearsal-output-access-readback-20260914.json)
+[readback](../../evidence/g8-native-rehearsal-output-access-readback-20260914.json)
 confirmed bucket version **6** and exactly the eight expected rules. This closes
 only the output-permission gate, not the synthetic-input or submission gates.
 Do not activate the production final key or put rehearsal outputs inside an
@@ -240,7 +240,7 @@ The operator subsequently explicitly requested execution of the two source-read
 CLI commands and approved each exact update through terminal escalation. Only
 those two commands were executed under that separate authorization; the connector
 configuration was not changed and no broader mutation authority was inferred. The
-[prepared policy patch](evidence/g8-native-rehearsal-policy-grant-20260914.json)
+[prepared policy patch](../../evidence/g8-native-rehearsal-policy-grant-20260914.json)
 preserves all seven existing rules and adds only the existing development
 group's object-editor access to:
 
@@ -279,12 +279,12 @@ does not grant the development group `releases/*`, access to the real C4 release
 or any write permission. The pre-existing final-identity rule remains unchanged.
 The production final-read key must remain inactive throughout rehearsal.
 
-The [candidate-read patch](evidence/g8-native-rehearsal-candidate-read-20260914.json)
+The [candidate-read patch](../../evidence/g8-native-rehearsal-candidate-read-20260914.json)
 preserves the eight current results rules and is guarded by version **6**.
-The [synthetic-input-read patch](evidence/g8-native-rehearsal-input-read-20260914.json)
+The [synthetic-input-read patch](../../evidence/g8-native-rehearsal-input-read-20260914.json)
 preserves the final bucket's existing rule and is guarded by version **3**.
 Both source-reader grants were applied on 2026-09-14 under explicit user/terminal
-approval. Independent [readback](evidence/g8-native-rehearsal-source-access-readback-20260914.json)
+approval. Independent [readback](../../evidence/g8-native-rehearsal-source-access-readback-20260914.json)
 verified results bucket version **7** (nine rules) and final-input bucket version
 **4** (two rules), with exact policy matches and all other bucket settings
 preserved. The original output grant was not rerun.
@@ -345,7 +345,7 @@ receipt deliberately remains a contract placeholder, **not a remotely registered
 MLflow dataset**. Its ephemeral authorization key cannot approve the production
 candidate. Production execution policy and its runner are unchanged.
 
-The [pinned-runtime execution receipt](evidence/g8-native-source-preparation-20260915.json)
+The [pinned-runtime execution receipt](../../evidence/g8-native-source-preparation-20260915.json)
 records successful preparation and fresh-container verification with networking
 disabled. The second container mounted only the package read-only at a different
 path; the original build workspace was unavailable. It verified 356 payload
@@ -445,7 +445,7 @@ retain emitted receipts independently. Neither command starts the evaluation.
 #### Proposed temporary staging-writer permission — not applied
 
 Fresh Nebius readbacks still show results bucket version **7** and final-input
-bucket version **4**. The [proposal](evidence/g8-source-staging-access-proposal-20260915.json)
+bucket version **4**. The [proposal](../../evidence/g8-source-staging-access-proposal-20260915.json)
 preserves those entire existing policies and adds one `storage.object-editor`
 rule per bucket, for development group `group-e00wb5ptvpq0q7dpaf`, on exactly:
 
@@ -480,7 +480,7 @@ staging failure requires reconciliation/cleanup, never a broader grant.
 No new grant, S3 upload, remote MLflow run or paid resource was created while
 preparing this change. Review and grant approval remain the next live gate.
 
-The [pinned-runtime protocol receipt](evidence/g8-source-staging-frozen-rehearsal-20260915.json)
+The [pinned-runtime protocol receipt](../../evidence/g8-source-staging-frozen-rehearsal-20260915.json)
 records 350 verified synthetic source objects, 349 retained through an injected
 top-level marker failure, 30 reverified comparison domains and zero PUTs on a
 completed repeat. `g8_source_staging_rehearsal.py` uses the same retained package
@@ -517,7 +517,7 @@ window was **445.857 seconds (7 minutes 26 seconds)**, from
 `2026-09-15T04:19:40.264690+00:00`. No cloud Job was created. The historical
 version-7/version-4 staging grant commands above must **not** be rerun.
 
-The [closed-session receipt](evidence/g8-source-staging-session-20260915.json)
+The [closed-session receipt](../../evidence/g8-source-staging-session-20260915.json)
 contains the actual post-grant GET snapshots (`policy_checks[].independent_granted`)
 retained from the session audit, the post-revocation GET snapshots
 (`independent_after`), and subsequent authenticated, read-only candidate
@@ -545,7 +545,7 @@ obtain fresh approval and current resource-version-guarded policy readbacks.
 ### Synthetic source staging closed (2026-09-15)
 
 Following merged PR #187, the operator approved one input-only writer window.
-The [completed session](evidence/g8-input-staging-session-20260915.json) records
+The [completed session](../../evidence/g8-input-staging-session-20260915.json) records
 325 conditional input PUTs, zero candidate PUTs, and verified policy restoration
 within 397.215 seconds (input bucket **6 → 7 → 8**). A fresh container independently
 downloaded and verified all 350 source objects after revocation, checked 30 replay

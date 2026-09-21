@@ -1,6 +1,6 @@
 # Building LOB Arena: An Adversarial Market-Surveillance Evaluation Platform with Nebius Serverless AI
 
-![LOB Arena concept showing the synthetic market-abuse evaluation arena](../assets/img/03-lob-arena-red-vs-blue.jpg)
+![LOB Arena concept showing the synthetic market-abuse evaluation arena](../../assets/img/03-lob-arena-red-vs-blue.jpg)
 *LOB Arena is a synthetic arena for evaluating market-abuse detectors and AI-assisted investigations on Nebius Serverless AI.*
 
 Market-surveillance teams can purchase historical order-book data from exchanges and specialist market-data vendors. The harder problem is obtaining complete, reliable ground-truth labels that identify which sequences represent manipulation, which reflect legitimate trading behaviour, and how a surveillance system should respond.
@@ -19,7 +19,7 @@ I built the project for the **#NebiusServerlessChallenge** as an engineering env
 
 The goal is to create a controlled, reproducible arena in which the ground truth is known because the scenarios are generated deliberately.
 
-![LOB Arena functional diagram showing simulation, detection, incidents, AI investigation, and detector benchmarking](../assets/img/02-lob-arena-functional-diagram-improved.jpg)
+![LOB Arena functional diagram showing simulation, detection, incidents, AI investigation, and detector benchmarking](../../assets/img/02-lob-arena-functional-diagram-improved.jpg)
 
 *LOB Arena’s functional flow: simulate bounded market-abuse scenarios, detect suspicious behaviour, create incidents, investigate with AI, and benchmark detector performance.*
 
@@ -29,7 +29,7 @@ The architecture has two main execution paths.
 
 The interactive path uses a React and Vite frontend, a FastAPI control plane, a separate agents workspace, and a Nebius Serverless AI Endpoint. The batch path uses Nebius Serverless AI Jobs for repeatable synthetic workloads, detector evaluation, aggregation, and artifact generation.
 
-![Architecture diagram connecting the frontend, backend, agent-runner workspace, Nebius Serverless Endpoint and Jobs, Object Storage, and evidence UI](../assets/img/04-lob-arena-architecture-improved.jpg)
+![Architecture diagram connecting the frontend, backend, agent-runner workspace, Nebius Serverless Endpoint and Jobs, Object Storage, and evidence UI](../../assets/img/04-lob-arena-architecture-improved.jpg)
 
 *LOB Arena separates the React interface, authoritative FastAPI runtime, agents workspace, and Nebius Endpoint and Job execution paths.*
 
@@ -67,7 +67,7 @@ The backend then sends a compact incident payload to the Endpoint. The Endpoint 
 
 This split matters because it keeps the workflow auditable. AI is used for explanation, narration, investigation assistance, and bounded scenario generation. Structured detector evidence remains the source of truth.
 
-![Structured JSON contract for surveillance-style LLM output](../assets/img/07-structured-json-output.jpg)
+![Structured JSON contract for surveillance-style LLM output](../../assets/img/07-structured-json-output.jpg)
 
 *Endpoint responses are parsed as structured JSON so the UI can separate classification, confidence, evidence, counter-evidence, and recommended actions.*
 
@@ -75,7 +75,7 @@ This split matters because it keeps the workflow auditable. AI is used for expla
 
 Nebius Serverless AI Jobs fit the offline evaluation path naturally. Instead of asking a live request to run dozens or hundreds of simulations, a Job can execute repeatable synthetic workloads, evaluate detector output against labels, aggregate metrics, and persist reports and artifacts before terminating.
 
-![Nebius deployment and evidence flow from production execution to synchronized review artifacts](../assets/img/05-nebius-deployment-evidence-flow.jpg)
+![Nebius deployment and evidence flow from production execution to synchronized review artifacts](../../assets/img/05-nebius-deployment-evidence-flow.jpg)
 
 *Production Job and Endpoint evidence is archived to Object Storage, synchronized by the backend, and exposed as reviewable UI records and downloads.*
 
@@ -125,7 +125,7 @@ The **Representative Production Run** is the compact, sanitized evidence sample 
 
 The public bundle intentionally excludes credentials, authorization headers, private Endpoint hostnames, signed URLs, and raw environment-specific logs. It also reconciles the benchmark denominator explicitly: the representative 100-workload run contains 80 labeled attack rows and 20 normal-market control rows. A judge can inspect the evidence without access to the private Nebius account or Object Storage bucket.
 
-![LOB Arena detection pipeline connecting labeled workloads to metrics, reports, and production evidence](../assets/img/06-detector-tournament-pipeline.jpg)
+![LOB Arena detection pipeline connecting labeled workloads to metrics, reports, and production evidence](../../assets/img/06-detector-tournament-pipeline.jpg)
 
 *Detector Tournament results connect labeled synthetic workloads to metrics, leaderboards, reports, and sanitized production-execution evidence.*
 
@@ -186,7 +186,7 @@ The initial six-Job production set had exposed an evidence-quality bug: differen
 
 The production Endpoint evidence adds 25 completed L40S/vLLM calls: 17 Investigation Team requests, four investigation reports, and four scenario generations. All 25 completed without fallback and were uploaded to S3. They used 25,084 prompt tokens and 13,345 completion tokens, 38,429 tokens total; all 17 Investigation Team responses preserved the validated structured assessment, and P50 latency was 27.141 seconds.
 
-I then ran the workflow manually through the Control Panel. That session completed a separate 100-workload Nebius Job with 100 unique derived seeds and 12,414 events. Its matched confusion counts were TP 60, FN 20, FP 0, and TN 20: precision 1.000, recall 0.750, and F1 0.857. The same session made 12 real Endpoint calls (16,279 tokens), including two schema-validated Investigation Team responses and seven JSON investigation reports; all 12 evidence records were uploaded to S3. The [sanitized manual UI bundle](../evidence/manual-ui-2026-07-15/README.md) preserves the metrics and execution boundary.
+I then ran the workflow manually through the Control Panel. That session completed a separate 100-workload Nebius Job with 100 unique derived seeds and 12,414 events. Its matched confusion counts were TP 60, FN 20, FP 0, and TN 20: precision 1.000, recall 0.750, and F1 0.857. The same session made 12 real Endpoint calls (16,279 tokens), including two schema-validated Investigation Team responses and seven JSON investigation reports; all 12 evidence records were uploaded to S3. The [sanitized manual UI bundle](../../evidence/manual-ui-2026-07-15/README.md) preserves the metrics and execution boundary.
 
 The manual result reinforced the main detector finding: Spoofing-like Wall, Layering-like Pattern, and Quote Stuffing Burst were detected in all 20 matched workloads, while Liquidity Evaporation was missed in all 20. The Polished E2E local stages also completed, but its cloud child lookup returned `NotFound`; I do not count that child as a completed Job. The independently submitted 100-workload managed experiment is the cloud-completion evidence.
 

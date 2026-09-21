@@ -8,15 +8,15 @@ steps. It receives summaries only—never raw order-book streams.
 ## Contracts and implementation
 
 - System prompt, request builder, invocation policy, and strict parser:
-  [`serverless/endpoint/surveillance.py`](../serverless/endpoint/surveillance.py)
+  [`serverless/endpoint/surveillance.py`](../../serverless/endpoint/surveillance.py)
 - Request schema:
-  [`surveillance-request.schema.json`](../serverless/endpoint/schemas/surveillance-request.schema.json)
+  [`surveillance-request.schema.json`](../../serverless/endpoint/schemas/surveillance-request.schema.json)
 - Response schema:
-  [`surveillance-response.schema.json`](../serverless/endpoint/schemas/surveillance-response.schema.json)
-- Examples: [spoofing](../serverless/endpoint/examples/spoofing.json),
-  [layering](../serverless/endpoint/examples/layering.json),
-  [benign market making](../serverless/endpoint/examples/benign-market-making.json),
-  and [uncertain](../serverless/endpoint/examples/uncertain.json).
+  [`surveillance-response.schema.json`](../../serverless/endpoint/schemas/surveillance-response.schema.json)
+- Examples: [spoofing](../../serverless/endpoint/examples/spoofing.json),
+  [layering](../../serverless/endpoint/examples/layering.json),
+  [benign market making](../../serverless/endpoint/examples/benign-market-making.json),
+  and [uncertain](../../serverless/endpoint/examples/uncertain.json).
 
 The request contract covers simulation metadata, regime, instrument, episode
 duration, suspected participant, order/trade statistics, derived features,

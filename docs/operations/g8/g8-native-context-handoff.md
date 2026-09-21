@@ -3,7 +3,7 @@
 This completes the operator procedure for the
 [native rehearsal package](g8-native-rehearsal-package.md). It creates no new
 final-test authorization and consumes no additional Jobs. Apply the
-[validation execution policy](model-validation-execution-policy.md): no billing
+[validation execution policy](../../ml/model-validation-execution-policy.md): no billing
 checks, mandatory session/retention windows or package-age rejection. All training/scoring and runtime
 rehearsals remain on Nebius Serverless.
 
@@ -96,7 +96,7 @@ Provider references: [attachment and mounting](https://docs.nebius.com/compute/s
 
 ## September 15–16 preflight outcome
 
-The [retained receipt](evidence/g8-native-handoff-preflight-20260916.json) records
+The [retained receipt](../../evidence/g8-native-handoff-preflight-20260916.json) records
 an actual native VM mount and authenticated MLflow read (200), with unauthenticated
 access denied (401). No Job context or evaluation was submitted. An overnight
 tool-approval wait left the VM running for approximately 10h43m, exceeding its

@@ -2,8 +2,8 @@
 
 This document defines the user-visible capabilities, workflow boundaries, and
 acceptance rules for LOB Arena. The authoritative component topology is in the
-[High-Level Architecture](architecture.md#system-high-level-design); detailed
-decisions are in the [ARD index](architecture/README.md).
+[High-Level Architecture](../architecture.md#system-high-level-design); detailed
+decisions are in the [ARD index](../architecture/README.md).
 
 ## Product Boundary
 
@@ -229,9 +229,9 @@ Client-reviewable outputs include:
 
 ## Related Documentation
 
-- [Use Cases](USE_CASES.md)
-- [Runtime Model](runtime-model.md)
-- [Governed Corpus Protocol](governed-corpus-benchmark-protocol.md)
-- [Feature Engineering](feature-engineering-lightgbm.md)
-- [Shared MLflow Tracking](mlflow-tracking-server.md)
-- [Hybrid Dataset Validation](hybrid-dataset-validation.md)
+- [Use Cases](../use-cases/README.md)
+- [Runtime Model](../runtime/runtime-model.md)
+- [Governed Corpus Protocol](../data/governed-corpus-benchmark-protocol.md)
+- [Feature Engineering](../ml/feature-engineering-lightgbm.md)
+- [Shared MLflow Tracking](../ml/mlflow-tracking-server.md)
+- [Hybrid Dataset Validation](../data/hybrid-dataset-validation.md)

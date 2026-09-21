@@ -1,6 +1,6 @@
 # G8 completed-release publication recovery
 
-Architecture decision: [ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md).
+Architecture decision: [ARD-0040](../../architecture/ARD-0040-completed-release-publication-recovery.md).
 
 Status (2026-09-15): post-MLflow recovery primitive merged in PR #175. **Not a G8 exit,
 pre-MLflow checkpoint, native-storage durability proof or execution approval.**
@@ -76,8 +76,8 @@ checking the original run's status, metrics and artifact hashes remains required
 ## Verified synthetic evidence
 
 Review-fix update: the
-[new frozen-runtime receipt](evidence/g8-publication-recovery-review-fix-20260914.json)
-and [source scoring receipt](evidence/g8-publication-recovery-review-scoring-20260914.json)
+[new frozen-runtime receipt](../../evidence/g8-publication-recovery-review-fix-20260914.json)
+and [source scoring receipt](../../evidence/g8-publication-recovery-review-scoring-20260914.json)
 bind the reviewed code changes. They supersede the implementation coverage of the
 original receipts below without replacing that history. All four fault scenarios,
 including checkpoint mutation during PUT, passed with 60 correct result objects,
@@ -97,8 +97,8 @@ MLflow-interruption recovery remain unverified.
 
 ### Original publication-recovery rehearsal
 
-The [publication recovery receipt](evidence/g8-publication-recovery-rehearsal-20260914.json)
-and its [source scoring receipt](evidence/g8-publication-recovery-scoring-20260914.json)
+The [publication recovery receipt](../../evidence/g8-publication-recovery-rehearsal-20260914.json)
+and its [source scoring receipt](../../evidence/g8-publication-recovery-scoring-20260914.json)
 record the exact pinned runtime, injected code hashes and synthetic C4 report hash.
 The source rehearsal uses the real C4 evaluator, canonical join and local MLflow,
 with synthetic features/rules alerts and simulated remote transport as described

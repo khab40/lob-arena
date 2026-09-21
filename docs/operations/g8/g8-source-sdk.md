@@ -1,7 +1,7 @@
 # Bounded synthetic source staging
 
 Current execution policy (2026-09-16): the
-[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+[LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.
 No billing queries or balance refreshes. Identity/integrity checks and separate
 final-test authorization remain; historical receipts keep their original context.
@@ -29,7 +29,7 @@ does **not** revoke IAM permissions; cleanup remains an operator responsibility.
 See the SDK [configuration](https://docs.aws.amazon.com/botocore/latest/reference/config.html)
 and [conditional PUT contract](https://docs.aws.amazon.com/botocore/latest/reference/services/s3/client/put_object.html).
 
-The [execution receipt](evidence/g8-sdk-source-transport-20260915.json) records:
+The [execution receipt](../../evidence/g8-sdk-source-transport-20260915.json) records:
 
 - 17 tests passing in the pinned image with networking disabled, covering SDK
   request models, failed marker publication, lost PUT responses, preserved
@@ -51,7 +51,7 @@ The original 350-object package and completed candidate release remain frozen.
 reapply its version-6 patch.** See the completed-session evidence below.
 
 The previous staging authorization ended with verified revocation. The new
-[unapplied proposal](evidence/g8-input-only-staging-proposal-20260915.json)
+[unapplied proposal](../../evidence/g8-input-only-staging-proposal-20260915.json)
 requests only development-group writes to
 `releases/g8-native-rehearsal-20260914/staging/*` in
 `aimada-wave1-final-e00g6zvxpr00`. Its observed resource version is **6**.
@@ -82,7 +82,7 @@ production replacement requires its separate signed exception afterward.
 ## Approved input staging completed
 
 After PR #187 merged as `9190c98`, the operator approved the proposed 30-minute
-input-only window. The [session receipt](evidence/g8-input-staging-session-20260915.json)
+input-only window. The [session receipt](../../evidence/g8-input-staging-session-20260915.json)
 binds separate complete GET snapshots for the applied and revoked policies,
 the publication receipt and the independent readback receipt by SHA-256.
 The full bucket spec changed only by the reviewed input writer rule: **6 → 7 → 8**.

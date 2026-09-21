@@ -1,7 +1,7 @@
 # G8 pre-logging checkpoint and workspace-loss recovery
 
 Current execution policy (2026-09-16): the
-[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+[LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.
 No billing queries or balance refreshes. Identity/integrity checks and separate
 final-test authorization remain; historical receipts keep their original context.
@@ -96,8 +96,8 @@ is involved.
 ## Reproduce and remaining gates
 
 Pinned-image execution receipt:
-[workspace-loss proof](evidence/g8-prelogging-checkpoint-rehearsal-20260914.json)
-and [verified logging completion](evidence/g8-prelogging-checkpoint-logging-20260914.json).
+[workspace-loss proof](../../evidence/g8-prelogging-checkpoint-rehearsal-20260914.json)
+and [verified logging completion](../../evidence/g8-prelogging-checkpoint-logging-20260914.json).
 Local synthetic MLflow run `390b4074515741f899ee0dcfb21266c8` is FINISHED:
 one scoring call, 24 metrics, 30 dataset inputs, four byte-verified artifacts,
 and zero writes on completed replay. The checkpoint retains 348 files

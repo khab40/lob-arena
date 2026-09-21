@@ -32,7 +32,7 @@ Implementation: `[done]` through the main Arena, scenario controls, detector pan
 
 Batch simulations using Nebius Serverless AI Jobs.
 
-Implementation: `[done]` through local and production Job paths, the Phase 4.5 Managed Experiment manager, S3 artifact collection, backend synchronization, Detection output integration, and the frozen [benchmark evidence bundle](../evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md).
+Implementation: `[done]` through local and production Job paths, the Phase 4.5 Managed Experiment manager, S3 artifact collection, backend synchronization, Detection output integration, and the frozen [benchmark evidence bundle](../../evidence/deployment-2026-07-14-1412/benchmarks/outputs/benchmark/EXP-390EFAC2/README.md).
 
 Phase 4.5 adds `POST/GET/DELETE /api/experiments` as the durable experiment intent layer. It persists manifests, generates deterministic attack rows, runs or submits batches, normalizes local or S3-synchronized Job artifacts, aggregates metrics, and writes bounded AI Investigator reports. `backend/app/experiments/nebius_orchestrator.py` owns production submit/status/log/artifact collection; missing cloud configuration remains explicit as `real_nebius_pending` rather than simulated success.
 

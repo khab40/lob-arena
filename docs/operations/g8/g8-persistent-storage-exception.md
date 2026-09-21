@@ -1,12 +1,12 @@
 # G8 replacement: persistent-storage exception proposal
 
 Current execution policy (2026-09-16): the
-[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+[LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.
 No billing queries or balance refreshes. Identity/integrity checks and separate
 final-test authorization remain; historical receipts keep their original context.
 
-Architecture decision: [ARD-0040](architecture/ARD-0040-completed-release-publication-recovery.md).
+Architecture decision: [ARD-0040](../../architecture/ARD-0040-completed-release-publication-recovery.md).
 
 Status (2026-09-14): **preparation approved; not provisioned or executable**.
 The user approved preparing a narrowly scoped persistent-storage exception for
@@ -21,7 +21,7 @@ predictions before S3 publication. Its existing publication rollback and fresh-r
 MLflow logger are not resumable. Exactly-once submission alone cannot recover
 those outputs. No successful G8 may rely on rescoring after that loss.
 
-The [G3 runbook](lightgbm-v1-runbook.md) forbids volumes in governed Wave 1 Jobs.
+The [G3 runbook](../../ml/lightgbm-v1-runbook.md) forbids volumes in governed Wave 1 Jobs.
 Keep that default, the existing submission guard, and the S3 filesystem-mount
 prohibition unchanged. Propose one exception for **one native Nebius Compute
 shared filesystem**, one dedicated writable mount (`/g8-durable`), and one

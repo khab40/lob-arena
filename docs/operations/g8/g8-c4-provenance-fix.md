@@ -55,7 +55,7 @@ The pinned `linux/amd64` image also passed the existing synthetic no-report
 rehearsal with networking disabled and the four C4 modules mounted read-only.
 It produced one FINISHED local MLflow run, verified artifact/metric read-backs,
 36 synthetic scored rows and 33 simulated publication objects. Exact image,
-overlay hashes and receipt are [recorded here](evidence/g8-c4-provenance-fix-20260914.json).
+overlay hashes and receipt are [recorded here](../../evidence/g8-c4-provenance-fix-20260914.json).
 
 ## Limits
 

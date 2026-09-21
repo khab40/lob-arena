@@ -2,7 +2,7 @@
 
 Status: **unsigned review package prepared; no production Job authorized or submitted**.
 This follows [PR #200](https://github.com/khab40/lob-arena/pull/200) and independent
-[readback of all 64 rehearsal S3 objects](evidence/g8-independent-s3-readback-20260917.json). Their sizes/hashes, SUCCESS inventory,
+[readback of all 64 rehearsal S3 objects](../../evidence/g8-independent-s3-readback-20260917.json). Their sizes/hashes, SUCCESS inventory,
 checksum inventory and four MLflow artifact hashes match the retained checkpoint.
 
 ## Frozen review bindings
@@ -20,10 +20,10 @@ checksum inventory and four MLflow artifact hashes match the retained checkpoint
   bytes are checked against the hashes required by `ReplacementPlan` and copied
   into review history. R4's approval is removed from the new draft request.
 
-See the [preparation receipt](evidence/g8-production-package-review-20260917.json).
+See the [preparation receipt](../../evidence/g8-production-package-review-20260917.json).
 The original local review is preserved under `outputs/g8-production-review-20260917-v2/`.
 The current unsigned review is `outputs/g8-production-review-20260921-v3/`, bound to
-the [verified original payload and updated readiness evidence](evidence/g8-original-payload-verification-20260921.json).
+the [verified original payload and updated readiness evidence](../../evidence/g8-original-payload-verification-20260921.json).
 
 ## Transport and preparation
 
@@ -63,10 +63,10 @@ G9 remains blocked, and actual model quality is not established by this package.
 
 Fresh provider readback located the completed original C3 test-date and C4 Jobs.
 The original preparation metadata initially returned AccessDenied; the
-[initial readiness receipt](evidence/g8-production-readiness-20260921.json) preserves
+[initial readiness receipt](../../evidence/g8-production-readiness-20260921.json) preserves
 that observation. The operator then approved the exact 89-key metadata scope.
 
-The [completed metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
+The [completed metadata audit](../../evidence/g8-original-comparison-metadata-20260921.json)
 verified all 27 original checkpoint inventories, 30 replay domains and the unchanged
 final projection manifest: 89 objects / 273,680 bytes, with no row or payload reads.
 Nebius rejected the large single policy, so the same exact keys were granted in
@@ -84,10 +84,10 @@ Preserve the original v2 review rather than silently changing its hash.
 The original comparison inventory contains **2,632,277,460 bytes (2.451 GiB)**.
 Scored retention copies all 27 checkpoint trees. A 10 GiB filesystem permits a
 maximum 2 GiB checkpoint under the five-copy guard, so production cannot use the
-rehearsal's original capacity. The [capacity proposal](evidence/g8-production-capacity-proposal-20260921.json)
+rehearsal's original capacity. The [capacity proposal](../../evidence/g8-production-capacity-proposal-20260921.json)
 expands the same filesystem to 32 GiB and proposes a 4 GiB checkpoint bound,
 requiring 20 GiB actual free space before final access. The operator approved it,
-and [execution evidence](evidence/g8-capacity-registration-20260921.json) confirms
+and [execution evidence](../../evidence/g8-capacity-registration-20260921.json) confirms
 32 GiB mounted capacity and 34,346,348,544 free bytes. The preserved 828-file
 archive hash verifies. The VM is stopped again; production storage bindings and
 a fresh free-space check at execution remain required.
@@ -98,7 +98,7 @@ inputs, with all 30 final-tabular entries matching frozen source URIs, hashes,
 counts and root identity; all four metadata artifact hashes match. No payload
 rows were accessed. The earlier unsigned supplement remains historical.
 
-The separately approved [payload audit](evidence/g8-original-payload-verification-20260921.json)
+The separately approved [payload audit](../../evidence/g8-original-payload-verification-20260921.json)
 then staged 294 original objects (2,632,277,460 bytes). All 377 staged payload/metadata
 files were independently rehashed. The complete bucket policy was restored after
 each of 37 exact-key batches (version 58 → 132); the final GET returned HTTP 403.

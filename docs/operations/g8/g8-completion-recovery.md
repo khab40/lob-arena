@@ -1,7 +1,7 @@
 # G8 completion recovery — 2026-09-14
 
 Current execution policy (2026-09-16): the
-[LightGBM/Transformers validation policy](model-validation-execution-policy.md)
+[LightGBM/Transformers validation policy](../../ml/model-validation-execution-policy.md)
 supersedes older billing, dollar-ceiling and package/VM/retention windows below.
 No billing queries or balance refreshes. Identity/integrity checks and separate
 final-test authorization remain; historical receipts keep their original context.
@@ -40,7 +40,7 @@ The pinned `linux/amd64` image ran the rehearsal with `--network none` on
 2026-09-14. Local MLflow run `f8ff022f79404e8fa5c44f3a048ee790` finished;
 36 synthetic test rows and 33 published objects passed verification.
 Receipt: `outputs/g8-rehearsals/verified-scoring/rehearsal.json` in the recovery
-worktree. A portable copy is [recorded here](evidence/g8-synthetic-rehearsal-20260914.json).
+worktree. A portable copy is [recorded here](../../evidence/g8-synthetic-rehearsal-20260914.json).
 These are **synthetic engineering results**, not production detection quality.
 The local file-backed MLflow store is explicitly enabled only in the rehearsal;
 it does not replace or reconfigure the governed remote tracking server.
@@ -97,9 +97,9 @@ replay domains, 198 paired observations, one final scoring invocation and one lo
 MLflow run. It verifies detection metrics, calibration assessment, session-cluster
 uncertainty, rules comparison, conditional publication of 60 objects and artifact/
 metric read-back. Local run `a221a294cf0847eabb80fc2a602c7b59` is `FINISHED`;
-the [portable receipt](evidence/g8-complete-c4-rehearsal-20260914.json) binds the
+the [portable receipt](../../evidence/g8-complete-c4-rehearsal-20260914.json) binds the
 runner, rehearsal, all five overlays and report bytes. The matching
-[synthetic report](evidence/g8-complete-c4-synthetic-report-20260914.json) is retained
+[synthetic report](../../evidence/g8-complete-c4-synthetic-report-20260914.json) is retained
 byte-for-byte, not as a production quality claim. The complete local artifact
 tree was retained at `/tmp/g8-complete-c4-final.oTEwDb/rehearsal`; it is temporary
 engineering evidence, not a durable production archive.

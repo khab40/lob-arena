@@ -1,6 +1,6 @@
 # G8 C4-specific evaluation contract
 
-Architecture decision: [ARD-0038](architecture/ARD-0038-c4-specific-evaluation.md).
+Architecture decision: [ARD-0038](../../architecture/ARD-0038-c4-specific-evaluation.md).
 
 Status (2026-09-15): core evaluator/provenance merged in PR #171; injected-runner
 C4 integration and full synthetic rehearsal merged in PR #172. Recovery APIs
@@ -19,7 +19,7 @@ four dates: two training, one validation and one test date (2019-12-30). Its tes
 fold has AAPL, MSFT and NVDA, with 30 replay domains: three controls and 27
 family/seed comparisons. It does not satisfy the seven-date benchmark contract.
 
-The [metadata-only audit](evidence/g8-benchmark-compatibility-20260914.json)
+The [metadata-only audit](../../evidence/g8-benchmark-compatibility-20260914.json)
 verifies the candidate's C4 binding and records that incompatibility without
 reading test rows. Exit code 2 from `g8-benchmark-readiness` is intentional for
 these inputs, not permission to change the frozen hashes. The approved contract
@@ -146,7 +146,7 @@ verifies one local MLflow run, report bytes/hash and all indexed point metrics.
 The rules alerts and numeric features are fixture-generated, not Java execution
 or production results. The exact frozen-image run with reviewed module overlays
 passed on 2026-09-14; see the
-[hash-bound receipt](evidence/g8-complete-c4-rehearsal-20260914.json) and
+[hash-bound receipt](../../evidence/g8-complete-c4-rehearsal-20260914.json) and
 [reproduction instructions](g8-completion-recovery.md#reproduce-offline).
 Follow-up local validation passed 121 G8 tests plus Ruff/CLI checks and the same
 18 release/canonical-bundle/dataset-lineage regressions. Remote transport and
