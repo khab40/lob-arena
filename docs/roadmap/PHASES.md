@@ -108,34 +108,6 @@ evidence is in [status](CURRENT_STATUS.md); the original seven-date proposal,
 amendments and execution gates remain in the
 [public-data history](../archive/nebius-public-market-data-lightgbm-plan.md).
 Do not interpret its old task counts or Job budget as new execution authority.
-- `[todo]` Freeze an exact source allowlist for the seven approved public
-  Nasdaq sample files, AAPL/MSFT/NVDA, the 10:00-10:30 ET windows, depth 10 and
-  chronological fold assignments.
-- `[todo]` Add a Nebius acquisition/preparation runner that never crawls or
-  mirrors Nasdaq and rejects undeclared hosts, redirects, files and byte counts.
-- `[todo]` Download each approved full-market gzip only when sequential ITCH
-  extraction requires it; use ephemeral Job scratch or private lifecycle-bound
-  quarantine and retain only selected rows in durable S3 releases.
-- `[todo]` Normalize all three selected instruments in one pass per source and
-  publish immutable provenance, quality, replay and feature inventories.
-- `[todo]` Freeze one root corpus/split identity and publish development/test
-  `tabular_projection_v1` artifacts for governed LightGBM training and scoring.
-- `[todo]` Publish fold-isolated `sequence_projection_v1` artifacts with causal
-  cutoffs, masks and deterministic row-to-sequence identities for Wave 2.
-- `[todo]` Adapt the Transformer training/scoring programs to consume that
-  sequence projection, then materialize `transformer_feature_release_v1` only
-  from a verified standalone checkpoint.
-- `[todo]` Exact-join Transformer scores/embeddings to the tabular rows for the
-  Wave 3 cascade; reject stale/incompatible features and fall back visibly to
-  the verified tabular LightGBM model.
-
-All four candidates—rules, tabular LightGBM, standalone Transformer and the
-Transformer-to-LightGBM cascade—must use identical immutable evaluation rows.
-The purpose is to test whether relevant historical microstructure and causal
-temporal context improve predictions; improvement is an acceptance result to
-measure, not a roadmap claim. The detailed transfer, retention, split and
-consumer contracts are in the
-[public market-data plan](nebius-public-market-data-lightgbm-plan.md).
 
 ### Execution Order And Gates
 
