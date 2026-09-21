@@ -25,115 +25,34 @@ The architecture supports interactive replay/investigation and offline governed
 corpus/training/evaluation paths. Both paths reuse the same canonical Java
 stream, scenario ground truth, hashes, and release contracts.
 
-## Current Design — 2026-09-21
+## Implementation scope
 
-Java remains the sole live exchange/replay authority; Python owns ingestion,
-features, ML and cloud orchestration. LOBSTER and Nasdaq ITCH feed the normalized
-historical-data boundary. Governed LightGBM v1 is implemented; the Transformer
-and Transformer-to-LightGBM cascade remain proposed follow-on work.
-
-Wave 1 G0–G7 are complete. G8 remains open and G9 blocked: R4 downloaded the
-final release and failed before scoring; its approval is consumed. The candidate
-remains frozen. The signed replacement path now integrates C4 comparison,
-pre-logging scored retention, same-run MLflow recovery and conditional publication.
-A native two-Job synthetic rehearsal and independent MLflow/S3 readback passed.
-Production comparison/registration verification, changed transport qualification,
-capacity/preflight and replacement-specific authorization remain separate work.
-See the [production package](operations/g8/g8-production-package.md) and
-[recovery record](operations/g8/g8-completion-recovery.md) for operational gates.
-
-C4 already supplies both tabular and 64-step feature-sequence projections.
-The Transformer model/trainer, cascade, automatic model-version promotion and
-near-real-time learned-detector integration are planned. The existing Python
-LightGBM scorer requires a verified bundle and exact feature mapping; it is not
-wired into the Java live stream.
-
-The [ML lifecycle use cases](use-cases/ml-lifecycle.md) explain data preparation,
-training/checkpoints, calibration, hyperparameter selection, MLflow retention,
-and planned historical/synthetic/hybrid/live scoring with data-model and process
-diagrams. The [review ledger](architecture/ml-documentation-review-20260921.md)
-links corrected claims to implementation evidence.
+LightGBM training/calibration and C4 tabular/sequence preparation exist.
+Transformer training, cascade, model-version promotion and Java-stream learned
+serving remain planned. Use the [ML lifecycle](use-cases/ml-lifecycle.md) for
+implementation boundaries and [current status](roadmap/CURRENT_STATUS.md) for
+dated qualification, frozen candidate and authorization evidence.
 
 ## System High-Level Design
 
 ```mermaid
-flowchart LR
-    subgraph Users["Users and integrations"]
-        UI["React / Vite<br/>Data Ingestion + Arena + Control"]
-        Client["CLI / batch / external detector"]
-    end
-
-    subgraph Data["Data and scenario sources"]
-        LOBSTER["Licensed LOBSTER CSV"]
-        ITCH["Nasdaq TotalView-ITCH"]
-        Normalize["Validated immutable<br/>Parquet + manifest"]
-        Scenario["Synthetic agents<br/>and attack scenarios"]
-    end
-
-    subgraph Java["Java 25 authoritative execution"]
-        Control["Spring REST + WebSocket"]
-        Replay["Historical replay adapter"]
-        Exchange["Single-writer integer<br/>book + matching"]
-        Rules["Deterministic detectors"]
-        Canonical["Canonical events + snapshots"]
-        Labels["Separate synthetic labels"]
-    end
-
-    subgraph Python["Python AI / ML control plane"]
-        API["FastAPI ingestion + AI + jobs"]
-        Runner["agent-runner<br/>normal + heavy + LangGraph"]
-        Corpus["Reviewed corpus +<br/>frozen chronological split"]
-        Features["Causal feature pipeline"]
-        Models["Governed LightGBM v1<br/>sequence challengers proposed"]
-        Evaluate["Rules / model paired evaluation"]
-    end
-
-    subgraph Governance["Shared ML governance"]
-        MLflow["Authenticated MLflow<br/>tracking + registry"]
-        PostgreSQL["PostgreSQL metadata"]
-        ArtifactStore["S3-compatible artifacts"]
-    end
-
-    subgraph Outcomes["Evidence, AI and operations"]
-        Evidence["Checksummed / signed releases"]
-        Nebius["Nebius endpoint + jobs"]
-        Observability["Prometheus + Grafana"]
-    end
-
-    UI --> Control
-    UI --> API
-    Client --> API
-    LOBSTER --> API
-    ITCH --> API
-    API --> Normalize
-    Normalize --> Replay
-    Replay -->|"historical phase"| Exchange
-    Scenario -->|"synthetic phase"| Exchange
-    Scenario --> Labels
-    Control --> Exchange
-    Exchange -->|"MarketSnapshot"| Runner
-    Runner -->|"bounded AgentIntent"| Exchange
-    Exchange --> Rules
-    Exchange --> Canonical
-    Canonical --> Corpus
-    Labels --> Corpus
-    Corpus --> Features
-    Features --> Models
-    Rules --> Evaluate
-    Models --> Evaluate
-    Labels --> Evaluate
-    Corpus -. "release hashes" .-> MLflow
-    Models -. "runs + artifacts" .-> MLflow
-    Evaluate -. "metrics + manifests" .-> MLflow
-    MLflow --> PostgreSQL
-    MLflow --> ArtifactStore
-    Evaluate --> Evidence
-    Rules --> Nebius
-    API --> Nebius
-    Nebius --> Evidence
-    Observability -. "read-only telemetry" .-> Control
-    Observability -. "read-only telemetry" .-> API
-    Observability -. "read-only telemetry" .-> Runner
+flowchart TB
+    UI["React UI"] -->|"REST / WebSocket"| Java["Java: sole exchange writer"]
+    UI -->|"ingestion / AI / experiments"| API["Python FastAPI"]
+    Sources["LOBSTER / ITCH"] --> API
+    API --> Normal["Immutable normalized data"]
+    Normal --> Java
+    Java -->|"read-only snapshot"| Agents["Agent runners"]
+    Agents -->|"bounded intents"| Java
+    Java --> Rules["Rules + canonical events"]
+    Truth["Separate synthetic ground truth"] --> Corpus["Governed corpus / split"]
+    Rules --> Corpus
+    Corpus --> ML["Causal features / offline LightGBM"]
+    ML --> Release["Authorized evaluation / signed release"]
+    Release -. "verified metadata + artifacts" .-> Track["MLflow / PostgreSQL / S3"]
+    API --> Cloud["Nebius endpoints + Jobs"]
+    Java -. "telemetry" .-> Obs["Prometheus / Grafana"]
+    API -. "telemetry" .-> Obs
 ```
 
 ### Component Responsibilities
@@ -163,108 +82,26 @@ stores full events plus snapshot-only checkpoints.
 
 ### Historical And Hybrid Replay Path
 
-```mermaid
-graph LR
-    Raw["Paired LOBSTER CSV"]
-    Ingestion["FastAPI ingestion"]
-    Parquet["Immutable Parquet + manifest"]
-    Replay["Java historical adapter"]
-    Book["Combined integer book"]
-    Attack["UI-launched synthetic scenario"]
-    Detectors["Deterministic detectors"]
-    Labels["Separate synthetic labels"]
-    Comparison["Metrics + checksummed comparison"]
-    Corpus["Reviewed corpus candidate"]
-    MLflow["MLflow corpus-release index"]
-
-    Raw --> Ingestion
-    Ingestion --> Parquet
-    Parquet --> Replay
-    Replay -->|"historical phase first"| Book
-    Attack -->|"synthetic phase second"| Book
-    Book --> Detectors
-    Attack --> Labels
-    Detectors --> Comparison
-    Labels --> Comparison
-    Comparison --> Corpus
-    Corpus -. "hashes + permitted artifacts" .-> MLflow
-```
-
-Historical-only control and hybrid runs reuse the same dataset window. LOBSTER
-visible depth is reconstructed as deterministic `HIST:` aggregate level orders;
-synthetic scenario orders use a disjoint `SYN:` namespace. Every source snapshot
-is recorded from the immutable historical payload, while attacks and detectors
-read the combined live book. Ground truth comes only from the launched synthetic
-scenario and is never part of detector input.
+Historical records enter Java before the synthetic phase. Source snapshots stay
+immutable, synthetic identities/labels remain separate, and attacks read only
+the current book. See [runtime ordering](runtime/runtime-model.md#historical-and-hybrid-runtime),
+[hybrid contract](architecture/ARD-0023-hybrid-historical-replay.md) and
+[replay commands](data/replay-quickstart.md).
 
 ### Offline Feature Engineering Path
 
-```mermaid
-graph LR
-    Canonical["Java canonical event stream"]
-    Feature["lob_features_v2 causal pipeline<br/>v1 compatible"]
-    Truth["Separate scenario ground truth"]
-    Parquet["Typed feature Parquet"]
-    Quality["Run + quality metadata"]
-    Trainer["Deterministic LightGBM v1<br/>train + calibrate + explain"]
-    Test["Isolated frozen-test scorer"]
-    Adapter["Verified detector adapter"]
-    MLflow["MLflow development run"]
-
-    Canonical --> Feature
-    Truth -->|"joined after numeric calculation"| Feature
-    Feature --> Parquet
-    Feature --> Quality
-    Parquet --> Trainer
-    Trainer --> Gate["Separate final-test authorization"]
-    Gate --> Test
-    Test --> Bundle["Verified evaluated bundle"]
-    Bundle --> Adapter
-    Quality -. "quality metadata" .-> MLflow
-    Trainer -. "parameters + metrics + artifacts" .-> MLflow
-```
-
-Python retains offline AI/ML feature engineering without becoming an exchange
-authority. One row is emitted at each simulation-source combined-book
-checkpoint from only the event prefix visible at that checkpoint. Immutable
-historical-source snapshots are validated but do not become prediction rows
-because they omit synthetic overlays. The same formulas apply to LOBSTER,
-synthetic, and hybrid origins. Labels remain separate, feature/config versions
-are hashed, and session-level split groups prohibit random separation of
-adjacent rolling windows.
+Python consumes the canonical Java stream. Causal numeric features are calculated
+before separate labels are joined; historical source-only snapshots do not become
+combined-book prediction rows. The [feature reference](ml/feature-engineering-lightgbm.md)
+owns the data-flow diagram, formulas, schemas and prefix-invariance guarantee.
 
 ### Governed LightGBM Release Boundary
 
-```mermaid
-graph LR
-    Protocol["Protocol + corpus + frozen split"]
-    Features["lob_features_v2 float32 artifacts<br/>v1 readable"]
-    Training["Training-run manifest"]
-    Calibration["Validation-only calibration<br/>and operating points"]
-    Bundle["Checksummed model bundle"]
-    Predictions["Fold-bound prediction manifest"]
-    MLflow["MLflow governed-evaluation index"]
-
-    Protocol --> Training
-    Features --> Training
-    Training --> Calibration
-    Training --> Bundle
-    Calibration --> Bundle
-    Bundle --> Predictions
-    Bundle -. "checksums + approved artifacts" .-> MLflow
-    Predictions -. "fold-bound metrics" .-> MLflow
-```
-
-Phase 0 established the identity and artifact boundary; training, calibration
-and the verified scorer subsequently landed under ARD-0029/0031. Every manifest binds the model and training-run IDs to the
-exact protocol, corpus, chronological assignment, feature schema, and feature
-configuration hashes. Calibration is validation-only, the test fold is
-explicitly inaccessible during fitting, and high-precision, balanced, and
-high-recall thresholds are frozen before prediction artifacts are accepted.
-The contracts are immutable and use typed finite parameters and metrics.
-Release verification resolves only safe relative paths and verifies every
-artifact's bytes, size, schema, SHA-256 value, canonical manifest binding, and
-checksum-inventory membership.
+Protocol, corpus, split, feature, model, calibration and prediction identities
+must agree before release verification or tracking. The
+[release decision](architecture/ARD-0026-governed-lightgbm-release-boundary.md)
+owns artifact relationships; the [ML lifecycle](use-cases/ml-lifecycle.md)
+owns development, validation reuse and planned promotion workflows.
 
 ### Frozen C4 Evaluation and Recovery
 
@@ -302,27 +139,11 @@ prove synthetic recovery, not production G8 acceptance. See
 
 ### Shared MLflow Tracking Plane
 
-The opt-in `mlflow` Compose profile provides an authenticated shared tracking
-server (checked-in image pinned to MLflow 3.16.0) backed by PostgreSQL metadata and private
-S3-compatible MinIO artifacts locally. The Nebius profile uses Object Storage
-and a Registry digest-pinned image on the CPU VM, without MinIO.
-It defines separate experiment namespaces for corpus releases, LightGBM
-development, and governed evaluation, plus the governed binary `attack_active`
-registered-model namespace. Training loggers save explicit artifacts; they do
-not yet create model versions or assign champion aliases. A deployment smoke test exercises authentication,
-registry bootstrap, database writes, and artifact upload/download.
-
-A non-admin, read-only exporter projects bounded experiment, run, and model
-aggregates into Prometheus. Grafana provisions a dedicated MLflow dashboard;
-high-cardinality run IDs, hashes, parameters, and tags remain exclusively in
-MLflow.
-
-MLflow indexes experiments and approved artifacts but is not a release
-authority. Protocol, corpus, split, feature, model, calibration, prediction,
-checksum, and signature compatibility continues to be enforced by the
-repository contracts. See
-[Shared MLflow Tracking Server](ml/mlflow-tracking-server.md) and
-[ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md).
+[MLflow operations](ml/mlflow-tracking-server.md) owns topology, version,
+namespaces, authentication, PostgreSQL/S3 storage and exporter configuration.
+MLflow indexes verified artifacts; repository hashes/signatures remain release
+authority. Artifact logging and a model namespace do not imply registered
+versions, aliases or serving deployment.
 
 ### Detector Tournament Observability
 
@@ -331,26 +152,7 @@ FastAPI, which already owns local child-process execution and Nebius Job
 submission, status refresh, and artifact collection. Prometheus does not scrape
 short-lived tournament processes or Nebius Jobs directly.
 
-```mermaid
-flowchart LR
-    UI["Command Center"]
-    API["FastAPI tournament orchestrator"]
-    Local["Local tournament process"]
-    Nebius["Nebius Serverless Job"]
-    Artifacts["Metrics CSV + leaderboard + evidence"]
-    Metrics["Backend /metrics<br/>bounded lifecycle telemetry"]
-    Prometheus["Prometheus"]
-    Grafana["Grafana<br/>Tournament Operations"]
 
-    UI -->|"start / refresh"| API
-    API -->|"launch"| Local
-    API -->|"submit / poll / collect"| Nebius
-    Local -->|"results"| Artifacts
-    Nebius -->|"results"| Artifacts
-    API -->|"update counters, gauges, histograms"| Metrics
-    Prometheus -->|"scrape"| Metrics
-    Grafana -->|"PromQL queries"| Prometheus
-```
 
 The implemented operational contract is deliberately bounded:
 
@@ -372,16 +174,10 @@ Java 25 owns both the versioned deterministic kernel API and the stateful live a
 
 ### Runtime Flow
 
-1. The user starts from Demo or controls a scenario directly from the React / Vite UI.
-2. The UI sends a WebSocket command to `/ws/arena`.
-3. Spring starts or updates the Java arena and returns complete `arena_state` messages over the same stream.
-4. Each tick, Java concurrently sends read-only snapshots to configured Python agent runners and collects bounded `AgentIntent` responses.
-5. Java validates, sorts, and applies accepted intents as the only exchange writer; runtime `set_level` intents update that agent's own bounded quote.
-6. Java restores the baseline bid/ask ladder before publishing state, so the live book remains two-sided.
-7. The simulation emits order events, snapshots, agent actions, detector signals, and incidents.
-8. Java persists events and snapshots, then broadcasts live updates to connected UI clients over WebSocket.
-9. When AI Investigator or report generation is requested, FastAPI reads bounded Java evidence, calls Nebius AI or deterministic fallback adapters, and stores the generated result.
-10. The UI renders the latest market state, detector alerts, incident details, AI Investigator explanations, and AI cost/latency metrics. Day/night/system theme mode remains browser-side presentation state.
+The [runtime reference](runtime/runtime-model.md) owns lifecycle and transport.
+Java validates runner deadlines/intents, preserves baseline liquidity, persists
+events and broadcasts complete state. AI requests go through FastAPI after
+evidence collection; browser theme preferences do not affect simulation.
 
 ### Live Tick Sequence
 
@@ -407,49 +203,13 @@ sequenceDiagram
 
 ## Batch / Benchmark Path
 
-```mermaid
-graph LR
-    ExperimentAPI["Experiment Manager - /api/experiments"]
-    ExperimentManifest["Experiment Manifest - outputs/experiments/<id>/experiment.json"]
-    Config["job_config.yaml - runs, scenarios, seed"]
-    Job["Nebius Serverless Cloud - Managed Experiment Job"]
-    Simulation["Synthetic Simulation Runner"]
-    Labels["Scenario Labels - ground-truth windows"]
-    DetectorOutputs["Detector Outputs"]
-    Metrics["Precision / Recall / F1 - latency and false positives"]
-    Charts["Charts - F1, confidence, latency"]
-    Report["benchmark_report.md"]
-    Results["benchmark_results.json - detector_metrics.csv - incidents.jsonl"]
-    ObjectStorage["Object Storage - Job evidence archive"]
-    BackendEvidence["Backend evidence sync - UI download links"]
-
-    ExperimentAPI --> ExperimentManifest
-    ExperimentManifest --> Config
-    Config --> Job
-    Job --> Simulation
-    Simulation --> Labels
-    Simulation --> DetectorOutputs
-    Labels --> Metrics
-    DetectorOutputs --> Metrics
-    Metrics --> Charts
-    Metrics --> Report
-    Metrics --> Results
-    Results --> ObjectStorage
-    Report --> ObjectStorage
-    ObjectStorage --> BackendEvidence
-```
-
-The batch path is intended for repeatable detector evaluation rather than live interaction. A serverless job runs many synthetic simulations, injects labeled abuse-like patterns, collects detector outputs, and compares them against the known scenario labels.
-
-Phase 4.5 adds a Managed Experiment manifest control plane before execution. The manifest records the requested attack count, batch size, scenarios, seed, Nebius mode, status, optional smart-batch link, artifact directory, artifact paths, and metrics. `POST /api/experiments/{id}/generate-manifest` writes deterministic `attacks.jsonl` rows from that manifest without running simulation. `POST /api/experiments/{id}/run-local-batch` reuses the same local smart-batch runner used by `/api/nebius/smart-batches`, writes outputs under `outputs/experiments/<id>/local-batch/`, records `jobs.jsonl`, normalizes root-level experiment artifacts, and updates the experiment status. `POST /api/experiments/{id}/normalize-artifacts` can re-run that copy/index step without deleting original local-batch files. `POST /api/experiments/{id}/run-investigations` consumes persisted alerts only, selects a bounded top-confidence set, calls the existing Nebius investigation-report client, persists JSON/Markdown AI Investigator reports, and updates experiment metrics; it is intentionally not a per-tick LLM loop. `POST /api/experiments/{id}/aggregate` reuses existing `detector_metrics.csv` values to produce `experiment_summary.json`, `leaderboard.json`, and `benchmark_report.md` without recalculating detector metrics incorrectly. `/nebius` provides the Nebius AI operator flow for this lifecycle, while Detection provides the review flow: experiment list, selected summary, leaderboard, benchmark report preview, AI Investigator files, `artifact_index.json`, and original `local-batch` artifacts. `POST /api/experiments/{id}/submit-nebius` is the real orchestration boundary: it renders the experiment job config, records `real_nebius_pending` when no submit command template is configured, or executes `NEBIUS_JOB_SUBMIT_COMMAND_TEMPLATE` and records a queued real Nebius job id. Refresh uses optional status/log/artifact command templates and does not mark cloud execution completed until status plus artifact collection confirm it. `POST /api/experiments/{id}/collect-nebius-artifacts` collects only the expected job output files from mounted cloud output into the canonical experiment artifact layout; if files are unavailable, the experiment status is `cloud_artifacts_pending`. Nebius AI keeps owning its smart-batch UI/API while `/api/experiments` owns durable experiment intent, manifest lookup, and experiment-scoped local/Nebius submission.
-
-### Benchmark Outputs
-
-- detector metrics: precision, recall, F1, false positives, and false negatives
-- per-scenario summaries for Spoofing-like Wall, Layering-like Pattern, Quote Stuffing Burst, and Liquidity Evaporation
-- benchmark charts for report inclusion
-- generated benchmark report describing detector behavior and observed failure modes
-- persisted raw artifacts for later review and reproducibility
+FastAPI's experiment manager persists manifests, submits/polls configured Jobs,
+collects artifacts and aggregates reports. Cloud completion requires confirmed
+provider state and collected output; missing configuration is explicitly pending.
+See [Job integration](architecture/ARD-0007-nebius-serverless-ai-jobs.md),
+[tournament contracts](architecture/ARD-0017-ai-detector-tournament.md) and
+[benchmark methodology](ml/benchmark-methodology.md). Agent model workloads
+follow the [execution policy](ml/model-validation-execution-policy.md).
 
 ## Data Artifacts
 
@@ -480,30 +240,17 @@ Phase 4.5 adds a Managed Experiment manifest control plane before execution. The
 
 ### Artifact Relationships
 
-```mermaid
-graph TD
-    Events["events.jsonl - raw exchange and agent events"]
-    Snapshots["snapshots.parquet - order book state over time"]
-    Labels["scenario_labels.jsonl - synthetic ground truth"]
-    Incidents["incidents.json / incidents.jsonl - detector alerts and evidence"]
-    Reports["reports.md / benchmark_report.md - human-readable summaries"]
-    Metrics["detector_metrics.csv - benchmark metrics"]
-
-    Events --> Incidents
-    Snapshots --> Incidents
-    Labels --> Metrics
-    Incidents --> Metrics
-    Incidents --> Reports
-    Metrics --> Reports
-```
+See the [artifact contract diagram](architecture/ARD-0004-benchmark-artifact-format.md#artifact-relationships)
+for the legacy benchmark; governed learned releases have separate versioned
+[contracts](architecture/ARD-0026-governed-lightgbm-release-boundary.md).
 
 ## Architectural Boundaries
 
-- The UI should not directly call the simulation engine, Agent Runners Workspace, or Nebius AI endpoints. It should communicate through the FastAPI backend.
+- The UI uses Java REST/WebSocket for live arena controls and FastAPI for AI/ML operations; it never calls agent runners or Nebius endpoints directly.
 - UI shell theme preferences are local browser state.
 - The simulation engine should emit structured events and detector results without depending on UI concerns.
 - Agent runners may decide remotely, but they must return intents only; they must not mutate exchange state directly.
-- The backend should be the integration boundary for live transport, persistence, scenario orchestration, and AI calls.
+- Java owns live transport, arena persistence and scenario orchestration; FastAPI owns AI calls, experiments and their artifacts.
 - `/api/experiments` owns durable experiment manifests and report visibility; `/api/nebius/smart-batches` continues to own Nebius Control smart-batch execution.
 - Real Nebius Serverless Job submit, status, log, and artifact collection calls are isolated in `backend/app/experiments/nebius_orchestrator.py`; absent configuration records `real_nebius_pending`, while completion requires confirmed cloud status and collected artifacts.
 - Batch benchmark jobs should share simulation and detector code with the live path where practical, but should not depend on the interactive UI.
@@ -522,57 +269,7 @@ graph TD
 
 ## Related Documentation
 
-This architecture supports all workflows described in [Use Cases](use-cases/README.md):
-
-1. **Live Arena Mode** — Supported by WebSocket live commands and `arena_state` streaming
-2. **Manual Scenario Launch** — Scenario launcher through the WebSocket-backed Arena UI
-3. **Hybrid Historical Replay** — LOBSTER control and UI-launched synthetic overlay through the Java exchange
-4. **Incident Investigation** — Incident store and AI Investigator
-5. **Red-Team Scenario Generation** — Scenario Generator through backend Nebius AI adapters
-6. **Detector Tournament / Smart Batch Benchmark** — Batch / Benchmark Path with Managed Experiment jobs
-7. **Synthetic Dataset Generation** — Batch / Benchmark Path artifact outputs
-8. **Detection Outputs And Evidence Review** — Detection reads persisted benchmark, Managed Experiment, Nebius AI, AI Investigator, screenshot, and promoted evidence artifacts
-9. **UI Shell Personalization** — Local day/night/system preferences
-
-Detailed architecture decisions are recorded in [Architecture Records (ARDs)](architecture/README.md):
-
-- [ARD-0001: Overall Architecture](architecture/ARD-0001-overall-architecture.md) — This architecture
-- [ARD-0002: WebSocket State Schema](architecture/ARD-0002-websocket-state-schema.md) — Real-time state transport
-- [ARD-0003: Detector Evidence Model](architecture/ARD-0003-detector-evidence-model.md) — How detectors report findings
-- [ARD-0004: Benchmark Artifact Format](architecture/ARD-0004-benchmark-artifact-format.md) — Persisted data formats
-- [ARD-0005: Nebius Endpoint Contract](architecture/ARD-0005-nebius-endpoint-contract.md) — AI service API contracts
-- [ARD-0006: Scenario Labeling and Reproducibility](architecture/ARD-0006-scenario-labeling-and-reproducibility.md) — Ground truth labels and deterministic replay
-- [ARD-0007: Nebius Serverless AI Jobs](architecture/ARD-0007-nebius-serverless-ai-jobs.md) — Batch execution
-- [ARD-0008: Nebius Serverless AI Endpoints](architecture/ARD-0008-nebius-serverless-ai-endpoints.md) — Interactive AI service
-- [ARD-0009: Judge Mode Investigation Reports](architecture/ARD-0009-judge-mode-investigation-reports.md) — Investigation mode
-- [ARD-0010: Agent Runner Execution Architecture](architecture/ARD-0010-agent-runner-execution.md) — Local, remote, heavy, and LangGraph-compatible agents
-- [ARD-0011: Exchange Liquidity Invariant And Agent Quote Ownership](architecture/ARD-0011-exchange-liquidity-invariant.md) — Baseline ladder and per-agent quote ownership
-- [ARD-0013: UI Shell Preferences And Demo Presentation](architecture/ARD-0013-ui-shell-preferences.md) — Banner asset, theme preference, compact navigation, and paused visualizations
-- [ARD-0015: Nebius AI Investigation Team](architecture/ARD-0015-nebius-ai-investigation-team.md) — Interactive multi-agent investigation via Nebius AI Serverless Endpoint
-- [ARD-0016: AI Scenario Generator](architecture/ARD-0016-ai-scenario-generator.md) — Simulator-compatible AI scenario generation via Nebius AI Serverless Endpoint
-- [ARD-0017: AI Detector Tournament](architecture/ARD-0017-ai-detector-tournament.md) — Detector tournament facade and Serverless Jobs execution contract
-- [ARD-0018: Canonical Exchange Event Stream](architecture/ARD-0018-canonical-exchange-event-stream.md) — Simulation and historical-ready exchange events, replay, delivery, and persistence
-- [ARD-0019: Python Reference And Java Kernel Migration](architecture/ARD-0019-python-reference-java-kernel-migration.md) — Completed parity-gated Java kernel cut-over and retained Python ownership boundary
-- [ARD-0020: Java Arena WebSocket And Agent Orchestration](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md) — Java live-arena ownership and Python AI/ML/serverless boundary
-- [ARD-0021: Local Observability With Prometheus And Grafana](architecture/ARD-0021-local-observability-grafana.md) — Optional local monitoring profile and bottleneck dashboards
-- [ARD-0022: Historical Market Data Ingestion And Replay](architecture/ARD-0022-historical-market-data-ingestion.md) — LOBSTER discovery, validation, Parquet normalization, and registry contract
-- [ARD-0023: Deterministic Hybrid Historical Replay](architecture/ARD-0023-hybrid-historical-replay.md) — Java historical/synthetic merge ordering, provenance, seed, labels, metrics, and artifacts
-- [ARD-0024: Versioned Causal Market-Abuse Feature Engineering](architecture/ARD-0024-versioned-causal-feature-engineering.md) — Source-agnostic causal features, typed artifacts, label isolation, and leakage-safe grouped splits
-- [ARD-0025: Governed Corpus and ML Benchmark Protocol](architecture/ARD-0025-governed-corpus-and-ml-benchmark.md) — Independently verified negatives, frozen chronological splits, canonical Java evaluation, session confidence intervals, regime/worst-decile results, and signed releases
-- [ARD-0026: Governed LightGBM Release Boundary](architecture/ARD-0026-governed-lightgbm-release-boundary.md) — Phase 0 identity, provenance, validation-only calibration, frozen operating points, predictions, and checksummed model bundles
-- [ARD-0027: Shared MLflow Tracking Plane](architecture/ARD-0027-shared-mlflow-tracking.md) — Authenticated shared tracking, PostgreSQL metadata, private S3-compatible artifacts, and governed namespaces
-- [ARD-0028: Governed LightGBM Feature Loading](architecture/ARD-0028-governed-lightgbm-feature-loading.md) — Externally anchored feature release, reconstructed labels, replay-unit binding, exact fold inventory, and separate development/final-test access
-- [ARD-0029: Deterministic LightGBM Binary Training](architecture/ARD-0029-deterministic-lightgbm-binary-training.md) — Training-only weighting, deterministic settings, validation early stopping, and reproducible artifacts
-- [ARD-0030: Float32 Governed Feature Release](architecture/ARD-0030-float32-governed-feature-release.md) — Versioned float32 features, compatibility and bounded precision gates
-- [ARD-0031: Complete Governed LightGBM v1](architecture/ARD-0031-complete-lightgbm-v1.md) — Calibration, frozen thresholds, isolated test scoring, explanations, paired evaluation and release verification
-- [ARD-0032: Nasdaq TotalView-ITCH Ingestion](architecture/ARD-0032-nasdaq-itch-ingestion.md) — Streaming ITCH parsing, visible-book reconstruction, source-neutral artifacts and replay provenance
-- [ARD-0033: Deterministic Hybrid Injection Scheduling](architecture/ARD-0033-deterministic-hybrid-scheduling.md) — Exact historical triggers, synthetic schedule identity, ground truth and evidence bindings
-- [ARD-0034: ITCH Market-Profile Calibration](architecture/ARD-0034-itch-market-profile-calibration.md) — Versioned ITCH distributions, profile-bound simulation and held-out realism gates
-- [ARD-0035: Nebius-First Qualification Of Governed LightGBM](architecture/ARD-0035-nebius-lightgbm-first.md) — CPU-first cloud execution, reproducibility, performance, cost and exit gates
-- [ARD-0036: Governed Market-Sequence Transformer Challenger](architecture/ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training and standalone evaluation
-- [ARD-0037: Transformer-Derived Features Into LightGBM](architecture/ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned temporal features, exact joins, CPU decision layer, fallback and promotion gates
-- [ARD-0038: C4-Specific Frozen Evaluation](architecture/ARD-0038-c4-specific-evaluation.md)
-- [ARD-0039: Same-Run MLflow Evaluation Recovery](architecture/ARD-0039-same-run-mlflow-recovery.md)
-- [ARD-0040: Completed-Release Publication Recovery](architecture/ARD-0040-completed-release-publication-recovery.md)
-- [Hybrid Dataset Validation](data/hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
-- [Causal Feature Engineering for LightGBM](ml/feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and governed trainer consumption contract
+Use the [ARD index](architecture/README.md) for decision history and the
+[workflow catalogue](use-cases/README.md) for user actions. The
+[documentation index](README.md) links deployment, contracts, operations and
+historical records without duplicating their contents here.

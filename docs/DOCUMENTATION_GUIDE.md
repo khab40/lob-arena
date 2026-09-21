@@ -1,228 +1,52 @@
-# Documentation Guide
+# Documentation ownership
 
-This guide explains the documentation structure and conventions for LOB Arena.
+Start at the [documentation index](README.md). Each fact has one maintained
+owner; other documents summarize its purpose and link to it.
 
-## Documentation Structure
+| Information | Owner |
+| --- | --- |
+| Installation and first run | [Quickstart](deployment/QUICKSTART.md) |
+| Current system boundaries | [Architecture](architecture.md) |
+| Decision, alternatives and tradeoffs | Relevant [ARD](architecture/README.md) |
+| Capability and acceptance scope | [Functional overview](product/FUNCTIONAL_OVERVIEW.md) |
+| User workflow | [Use-case catalogue](use-cases/README.md) or focused ML guide |
+| Current gates, issue state and dated evidence | [Current status](roadmap/CURRENT_STATUS.md) |
+| Target dates and dependencies | [Main roadmap](roadmap/ROADMAP-MAIN.md) |
+| Forward feature requirements | [Phase scope](roadmap/PHASES.md) |
+| Exact contract, formula or command | Relevant data, ML, runtime or operations reference |
+| Historical attempts and review outcomes | [Archive](archive/README.md), linked receipts |
 
-The [documentation index](README.md) lists topic entry points. Only this guide,
-that index, the review ledger and the canonical overview live at the docs root.
+## Editing rules
 
-```mermaid
-flowchart LR
-    Docs["docs/README.md: navigation"]
-    Overview["architecture.md: canonical system overview"]
-    Decisions["architecture/: ARDs and decision index"]
-    Plans["roadmap/: current status, dates, execution history"]
-    Workflows["use-cases/: workflows and ML lifecycle"]
-    Contracts["data/ and ml/: data and model contracts"]
-    Runtime["runtime/: Java, events, determinism, metrics"]
-    Operations["deployment/ and operations/: setup and G8"]
-    Context["product/, research/, publication/, archive/"]
-    Docs --> Overview
-    Overview --> Decisions
-    Docs --> Plans
-    Docs --> Workflows
-    Docs --> Contracts
-    Docs --> Runtime
-    Docs --> Operations
-    Docs --> Context
-```
+1. Update the owning document. Update consumers only when their scope or link
+   changes; do not copy status, contracts or procedures into every overview.
+2. Preserve unique requirements, formulas, failure semantics and authorization
+   boundaries. Keep exact receipts and frozen `evidence/` snapshots unchanged.
+3. Distinguish design acceptance, implemented software, synthetic rehearsal and
+   production qualification. Baseline dates are not a revised forecast.
+4. Keep dated execution history outside current instructions. A historical
+   command or approval is not authority to run it again.
+5. Retain ARD identifiers. Mark superseded decisions and name their successors;
+   keep context, decision, alternatives and consequences. Add diagrams or
+   implementation detail only when needed to explain that decision.
+6. Use relative local links and HTTPS externally. When moving a page, update
+   its relative links and retain navigation for referenced old paths/anchors.
+7. Give each diagram one owner. Link to it elsewhere. Prefer diagrams for
+   ownership, state, branching, concurrency or trust boundaries; use prose or a
+   table for short linear lists. Label proposed/historical views explicitly.
+8. Do not require a diagram, status table, documentation map or generic
+   "business value" section in every document. Avoid another full-file review
+   ledger for routine edits; put validation evidence in the PR.
 
-## Key Documentation
+## Validation
 
-### Entry Points
-
-1. **For newcomers**: Start with [QUICKSTART.md](deployment/QUICKSTART.md)
-2. **For architecture understanding**: Start with [architecture.md](architecture.md)
-3. **For functional scope and status**: Read [FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md)
-4. **For workflows**: Read [USE_CASES.md](use-cases/README.md)
-5. **For deployment**: Read [mlflow-tracking-server.md](ml/mlflow-tracking-server.md) and [nebius-deployment.md](deployment/nebius-deployment.md)
-
-### Core References
-
-- **[README.md](../README.md)** — Master index and navigation guide
-- **[architecture.md](architecture.md)** — System design with component responsibilities and data flow
-- **[architecture/README.md](architecture/README.md)** — Index of all Architecture Records
-- **[FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md)** — Product actors, capability status, lifecycle, invariants, and Track A/Track B acceptance
-- **[USE_CASES.md](use-cases/README.md)** — Implemented and planned client/research workflows with business value
-
-### Specialized Topics
-
-- **[runtime-model.md](runtime/runtime-model.md)** — How the simulation engine works
-- **[kernel-observability.md](runtime/kernel-observability.md)** — Prometheus metric collection, Grafana dashboards, and bottleneck diagnosis
-- **[java-kernel-migration.md](runtime/history/java-kernel-migration.md)** — Parity-gated Python-reference to Java-kernel migration
-- **[architecture/ARD-0020-java-arena-websocket-agent-orchestration.md](architecture/ARD-0020-java-arena-websocket-agent-orchestration.md)** — Java live arena, WebSocket, agent orchestration, and retained Python boundary
-- **[architecture/ARD-0022-historical-market-data-ingestion.md](architecture/ARD-0022-historical-market-data-ingestion.md)** — LOBSTER discovery, validation, normalized storage, and dataset registration
-- **[architecture/ARD-0023-hybrid-historical-replay.md](architecture/ARD-0023-hybrid-historical-replay.md)** — Deterministic historical/synthetic merge, provenance, labels, metrics, and replay artifacts
-- **[architecture/ARD-0024-versioned-causal-feature-engineering.md](architecture/ARD-0024-versioned-causal-feature-engineering.md)** — Stable causal feature schema, leakage boundary, artifacts, and grouped splits
-- **[hybrid-dataset-validation.md](data/hybrid-dataset-validation.md)** — LOBSTER invariants, causal-neighbourhood equivalence, signed validation reports, and verification
-- **[client-historical-dataset-validation-runbook.md](data/client-historical-dataset-validation-runbook.md)** — Operational client-data ingestion, signed evidence generation, acceptance gates, and delivery checklist
-- **[feature-engineering-lightgbm.md](ml/feature-engineering-lightgbm.md)** — Feature formulas, configuration, Parquet contract, quality report, CLI, and governed trainer rules
-- **[governed-corpus-benchmark-protocol.md](data/governed-corpus-benchmark-protocol.md)** — Pre-training corpus governance, independent negative labels, frozen split policy, statistical metrics, and release gates
-- **[mlflow-tracking-server.md](ml/mlflow-tracking-server.md)** — Shared tracking topology, security, roadmap namespaces, operations, and governance boundary
-- **[determinism-contract-v1.md](runtime/determinism-contract-v1.md)** — Cross-language numeric, ordering, PRNG, identifier, and exchange rules
-- **[canonical-hashing-v1.md](runtime/canonical-hashing-v1.md)** — Cross-language canonical bytes and event/book/stream SHA-256 rules
-- **[benchmark-methodology.md](ml/benchmark-methodology.md)** — Evaluating detector performance
-- **[nebius-deployment.md](deployment/nebius-deployment.md)** — Setting up Nebius serverless components
-- **[challenge-submission.md](publication/challenge-submission.md)** — Submitting your work
-- **[research-notes.md](research/research-notes.md)** — Market microstructure background
-- **[safety-and-disclaimers.md](product/safety-and-disclaimers.md)** — Educational focus and limitations
-
-## Documentation Principles
-
-### 1. Consistency & Linking
-
-- **Internal cross-references use relative markdown links**; external
-  references use HTTPS
-- **Links are tested** to ensure they work (broken links indicate stale docs)
-- **ARDs are linked** from [architecture.md](architecture.md) and [USE_CASES.md](use-cases/README.md)
-- **Use cases are mapped** to architecture components in [USE_CASES.md](use-cases/README.md)
-
-### 2. Freshness
-
-- Gate/issue state is centralized in [current roadmap status](roadmap/CURRENT_STATUS.md),
-  with observation date, merged source revision and separately identified open-PR evidence.
-- Baseline target dates are not a promise or an automatically revised forecast.
-- Historical receipts are immutable. Add a dated stale/superseded banner to narrative
-  guidance instead of rewriting original Job counts, hashes, spend or outcomes.
-- Distinguish accepted design, implemented software, successful rehearsal and
-  production qualification. They are different evidence levels.
-- Root `ARCHITECTURE.md` links to `docs/architecture.md`; do not duplicate status there.
-- Topic moves must update inbound links, relative outbound links/images and active
-  script references. Keep frozen `evidence/` snapshots unchanged.
-
-- **Architecture is single-source-of-truth**: Changes to architecture.md must propagate to affected ARDs
-- **Use cases stay current**: If a workflow changes, update [USE_CASES.md](use-cases/README.md) and audit [architecture.md](architecture.md)
-- **ARDs are never deleted**: Superseded decisions are marked `Status: Superseded` with reference to replacement
-
-### 3. Mermaid Diagrams
-
-- **Mermaid diagrams use conservative `graph` or `flowchart` syntax** with
-  explicit `TD`/`LR` direction for broad GitHub and VS Code compatibility
-- **VS Code requires Mermaid preview support**: install the recommended `bierner.markdown-mermaid` extension if diagrams render as code blocks
-- **Diagrams are self-contained**: No external dependencies
-- **Diagrams include labels** for clarity
-
-Example (proper formatting):
-```mermaid
-graph TD
-    A["Component A"]
-    B["Component B"]
-    A --> B
-```
-
-### 4. Navigability
-
-- **Each document links to related documents** at the end
-- **README.md is the master index** — it links to all major sections
-- **Breadcrumbs**: Use "Related Documentation" sections to show context
-- **Visual hierarchy**: Use headings (H1, H2, H3) consistently
-
-## Updating Documentation
-
-### When to Update
-
-| Change | Documents to Update |
-|--------|---------------------|
-| Architecture changes | [architecture.md](architecture.md), affected ARDs, [USE_CASES.md](use-cases/README.md) |
-| New workflow added | [USE_CASES.md](use-cases/README.md), [architecture.md](architecture.md), [README.md](../README.md) |
-| API changes | [backend/README.md](../backend/README.md), [QUICKSTART.md](deployment/QUICKSTART.md), affected ARDs |
-| New ARD created | [architecture/README.md](architecture/README.md), [architecture.md](architecture.md), [USE_CASES.md](use-cases/README.md) |
-| UI shell or presentation behavior changes | [DESIGN-IDEAS.md](product/DESIGN-IDEAS.md), [architecture.md](architecture.md), [USE_CASES.md](use-cases/README.md), affected ARDs |
-| Deployment changes | Relevant deployment guide, [QUICKSTART.md](deployment/QUICKSTART.md), [architecture.md](architecture.md), affected ARD |
-| Functional capability/status changes | [FUNCTIONAL_OVERVIEW.md](product/FUNCTIONAL_OVERVIEW.md), [USE_CASES.md](use-cases/README.md), [README.md](../README.md) |
-| Safety/legal implications | [safety-and-disclaimers.md](product/safety-and-disclaimers.md) |
-
-### How to Update
-
-1. **Identify the primary document** that owns the change
-2. **Update that document first**
-3. **Update all dependent documents** (use `rg` to find references)
-4. **Test all markdown links** (VS Code should show link validation)
-5. **Verify Mermaid diagrams render** (they appear visually in VS Code)
-
-### Creating a New ARD
-
-1. Copy an existing ARD as a template
-2. Follow the format in [architecture/README.md](architecture/README.md)
-3. Add to [architecture/README.md](architecture/README.md) index
-4. Link from [architecture.md](architecture.md)
-5. Add "Related Documentation" linking back to main docs
-
-## Validation Checklist
-
-Use this checklist when making documentation changes:
-
-- [ ] Internal links are relative, external links use HTTPS, and no link uses
-      `file://`
-- [ ] All links use proper markdown syntax: `[text](path#section)`
-- [ ] No backticks around file names or links
-- [ ] Mermaid diagrams render without errors (check in VS Code preview)
-- [ ] Architecture-related changes update [architecture.md](architecture.md)
-- [ ] Workflow changes update [USE_CASES.md](use-cases/README.md)
-- [ ] New sections added to [README.md](../README.md) index
-- [ ] "Related Documentation" sections are current
-- [ ] No references to files that don't exist
-- [ ] Current version/status claims match evidence; historical values are dated and flagged
-
-## Common Issues & Fixes
-
-### Issue: Broken links in VS Code
-**Fix**: Ensure relative paths are correct. Paths should be:
-- From current file to target: `../path/file.md`
-- Same directory: `file.md`
-- Subdirectory: `subdir/file.md`
-
-### Issue: Mermaid diagram not rendering
-**Fix**: Check syntax in VS Code markdown preview. Common issues:
-- Missing space after `flowchart` keyword
-- Unclosed quotes in node labels
-- Invalid node references (typos)
-
-### Issue: Documentation doesn't match code
-**Fix**: Find the right section using `rg`:
-```bash
-rg "old_component_name" docs/
-```
-Then update all occurrences.
-
-### Issue: Stale API endpoints
-**Fix**: Compare with `backend/README.md` — if it differs, update both docs.
-
-## Documentation Tools
-
-### View Mermaid Diagrams
-- **VS Code**: Built-in markdown preview (Cmd+Shift+V)
-- **GitHub**: Automatic rendering in .md files
-- **Online**: https://mermaid.live
-
-### Check Links
-- **VS Code**: Markdown link validator (built-in)
-- **Terminal**: `rg -n '\]\(' docs/` to find inline link destinations
-- **Manual**: Click each link in VS Code preview
-
-### Search Across Docs
-```bash
-# Find all references to a file
-rg 'use-cases/README.md' docs/
-
-# Find all links in a file
-rg -o "\[.*\](.*)" docs/file.md
-
-# Find stale references
-rg "ARD-0010" docs/  # (if ARD-0010 doesn't exist, this is stale)
-```
-
-## Responsibilities
-
-- **Maintainers**: Keep docs current with code changes
-- **Contributors**: Update docs when submitting PRs that affect architecture/workflows
-- **Reviewers**: Check that docs are updated before approving PRs
-
-## Questions?
-
-If documentation is unclear or missing:
-1. Check the index in [README.md](../README.md)
-2. Follow the breadcrumb links in "Related Documentation"
-3. Check [QUICKSTART.md](deployment/QUICKSTART.md) for common tasks
-4. Review [USE_CASES.md](use-cases/README.md) for workflows
+- Run `python3 scripts/check_markdown_links.py` against active Markdown files
+  and any changed archives, excluding immutable evidence snapshots.
+- Render new/changed Mermaid blocks and visually inspect them. Unchanged
+  blocks can be checked by content hash against a previously rendered baseline.
+- Check moved-file consumers in scripts and packaging; run affected static
+  packaging checks where applicable.
+- Run `git diff --check`; compare protected file/section hashes before and after
+  compaction. Report net text reduction separately from archiving.
+- Apply [model execution policy](ml/model-validation-execution-policy.md);
+  documentation checks do not require training, scoring or cloud workloads.
