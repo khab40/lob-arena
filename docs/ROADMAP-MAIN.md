@@ -1,11 +1,11 @@
 # Main Roadmap
 
-Status date: 2026-09-13
+Status date: 2026-09-21
 
 Target completion for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
 
-Expected feature-complete date: **2026-11-13**, followed by one week for
+Baseline feature-complete date: **2026-11-13**, followed by one week for
 deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
@@ -13,6 +13,12 @@ Critical path:
 `G8-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
+
+G0–G7 are complete; **G8 is open and G9 blocked**. The September 23 exit target
+is at risk. Dates below remain the approved baseline, not a new completion forecast.
+G8's goal is one separately authorized evaluation of the frozen LightGBM candidate,
+with independently verified quality, rules comparison, lineage and runtime evidence.
+G9 uses that evidence for the signed baseline/exit decision before Transformer work.
 
 - C0-C4 are complete. The C4 MLflow dataset-release receipt binds the release
   hashes to run `dc119d708cc4464e8fe1b82ba976bf3e`
@@ -183,36 +189,42 @@ diagnostic is retained separately from the passing final receipt.
 - G7: complete. The validation-selected candidate is checksum-frozen, the
   exact-hash operator statement is signed, and independent verification exposes
   the final identity without reading the test fold.
-- G8: open. After three pre-test failures, R4 (`aijob-e00vtamgkr07mwzt4t`)
-  downloaded the test release but failed before scoring on the projection-root
-  path. That path is fixed and a real synthetic scoring/release/MLflow rehearsal
-  passes inside the pinned image. Full synthetic C4 comparison now also passes
-  through the injected runner and reviewed overlays: 27 checkpoints, 198 paired
-  observations and verified local MLflow report/metrics. This is not a production
-  G8 result. Original live comparison availability, replacement package binding,
-  durable recovery, live preflight and replacement-specific authorization remain
-  required. A persistent-storage exception is approved for preparation only; see the
-  [G8 recovery record](g8-completion-recovery.md).
-  Post-MLflow checkpoint/publication recovery now passes synthetic fault tests;
-  same-run MLflow reservation/logging recovery also passes the frozen synthetic
-  fault rehearsal (one run, one scoring call, 24 metrics, 30 dataset inputs).
-  Pre-logging checkpoints now pass synthetic fresh-process recovery after the
-  original workspace is removed, without rescoring or creating another run.
-  A separate [replacement entrypoint/preflight](g8-live-replacement.md) now wires
-  scored checkpoints, same-run logging, truthful execution-result finalization
-  and marker-last publication together. Native durability, authenticated remote
-  rehearsal, actual package review/binding and replacement approval remain open.
-  The synthetic native/remote rehearsal has an approved $2 cap and two-Job limit;
-  the reviewed live package and fresh billing remain prerequisites. Synthetic
-  [source staging and authenticated readback](g8-source-sdk.md) are complete:
-  350 source objects verified, with input writer access revoked after 397 seconds.
-  Future rehearsals and pre-production model/runtime tests use Nebius Serverless.
-  No paid rehearsal Job has started; native durability and remote MLflow proof
-  remain outstanding.
-  See [pre-logging checkpoints](g8-prelogging-checkpoint.md),
-  [publication recovery](g8-publication-recovery.md) and [MLflow recovery](g8-mlflow-recovery.md).
-- G9: reconcile quality, throughput, memory, and cost; sign the go/no-go
-  record.
+- G8: open. R4 (`aijob-e00vtamgkr07mwzt4t`) downloaded the final release
+  and failed before scoring. Preserve four prior submissions and the consumed
+  approval; candidate, calibration, features and thresholds remain frozen.
+  Corrected C4 loading, comparison/report integration, pre-logging scored retention,
+  same-run MLflow recovery and marker-last publication are implemented.
+- Native recovery and authenticated remote rehearsal are complete for synthetic
+  inputs: the [September 17 evidence](evidence/g8-native-recovery-20260917.json)
+  records one scoring call, native reattachment and completed recovery, with
+  independent readback of 24 MLflow metrics, 30 inputs and four artifact hashes.
+  The subsequent [independent S3 verification](evidence/g8-independent-s3-readback-20260917.json)
+  checked all 64 objects and resolves the earlier reader AccessDenied gap.
+- Merged PR #201 prepares the [production native package](g8-production-package.md)
+  for `nasdaq-g8-replacement-r5-20260917`; it remains unsigned and not executable.
+  The changed production entrypoint still needs Nebius runtime verification;
+  synthetic Java-comparison/lineage placeholders cannot qualify production inputs.
+
+Remaining critical path:
+
+1. Verify the original 27 Java/C3 checkpoints and genuine dataset registration;
+   complete frozen projection, C4 profile, comparison inventory and input bindings.
+2. Verify the changed production bootstrap, mounts and context handoff on Nebius
+   without final scoring. Record resources, finite timeout, Job count and identities.
+3. Complete current credential/permission, image-alias, storage, MLflow and
+   output/intent preflight; assemble the canonical request and complete v3 package.
+4. Obtain replacement-specific final-test approval and sign the reviewed package;
+   bind actual Job context separately after create. Never reuse R4 authorization.
+5. Execute the one approved replacement, retain scored outputs before logging,
+   recover tracking/publication without rescoring and verify S3/MLflow independently.
+6. Close G8 with actual C4 quality and execution evidence, including failed gates.
+   G9 then records quality, throughput, memory and operator-provided cost disposition
+   and signs the go/no-go decision. Rehearsal success is not an exit decision.
+
+See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
+[validation execution policy](model-validation-execution-policy.md): model/runtime
+work runs on Nebius Serverless; historical billing-freshness, submission-expiry and
+fixed VM windows are not current prerequisites. Final-test approval remains separate.
 
 Wave 2 starts only if the disposition is `qualified_for_wave2` or
 `research_baseline_qualified`.

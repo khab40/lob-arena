@@ -9,12 +9,13 @@ final-test authorization remain; historical receipts keep their original context
 Status: G0–G7 complete; G8 open; G9 blocked on a successful, fully evaluated G8.
 This is a recovery implementation record, not a final-test approval or G8 exit receipt.
 
-Current follow-up: [live replacement integration and preflight](g8-live-replacement.md)
-wires the scored checkpoint, same-run logging and completed-release publisher
-into a separate package-bound entrypoint. It preserves four prior submissions
-and R4 test access, requires a signed exception and native mount, and leaves the
-ordinary no-volume submitter unchanged. Native/remote rehearsal is proposed with
-a $2 cap but is not yet approved; no production execution readiness is claimed.
+Current status (2026-09-21): native recovery and authenticated MLflow/S3
+rehearsal passed on September 17; merged PR #201 prepared an unsigned production
+review package. Original Java comparison/registration verification, production
+transport verification, final metadata/preflight and replacement-specific approval
+remain open. Follow the [current G8 plan](PHASES.md#g8-recovery-and-completion-plan)
+and [production package](g8-production-package.md). The implementation history and
+older gate descriptions below retain their dates; they are not the current backlog.
 
 ## What is fixed and verified
 
