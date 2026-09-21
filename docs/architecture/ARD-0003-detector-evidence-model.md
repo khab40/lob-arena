@@ -124,6 +124,6 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/benchmark-methodology.md`
-- `docs/runtime-model.md`
+- `docs/ml/benchmark-methodology.md`
+- `docs/runtime/runtime-model.md`
 - [ARD-0005: Nebius Endpoint Contract](ARD-0005-nebius-endpoint-contract.md)

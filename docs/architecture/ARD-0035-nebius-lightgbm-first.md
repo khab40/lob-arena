@@ -10,7 +10,7 @@ Status reconciled: 2026-09-21
 
 The operator removed administrative submission/retention windows, billing checks
 and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
 in preference to older operational bounds in this record. No billing queries or
 balance-refresh requests. Finite Job timeouts, execution identities, evidence
 integrity and separate final-test authorization remain. This is an execution-policy
@@ -33,7 +33,7 @@ verified all 64 objects, resolving the earlier independent-reader AccessDenied g
 These are synthetic engineering results, not original Java comparison, genuine
 production registration or final model-quality evidence.
 
-Merged PR #201 prepares the [production native package](../g8-production-package.md)
+Merged PR #201 prepares the [production native package](../operations/g8/g8-production-package.md)
 and v3 signed replacement contract. The retained review is unsigned and not executable.
 The [September 21 audit](../evidence/g8-original-payload-verification-20260921.json)
 verified/staged original payload bytes for all 27 checkpoints, verified live C4
@@ -44,11 +44,11 @@ current identity/storage/image/output preflight; obtain replacement-specific
 approval and sign; execute once; independently verify production S3/MLflow results.
 Native rehearsal success alone does not authorize production final-test access.
 
-The [current G8 plan](../PHASES.md#g8-recovery-and-completion-plan) records the
+The [current G8 plan](../roadmap/PHASES.md#g8-recovery-and-completion-plan) records the
 ordered work and evidence required for closure. G9 then records actual quality,
 resource/throughput and cost disposition under the operator-managed policy above.
 The September 23 exit remains at risk. Historical receipts and the R4 failure in
-[the recovery record](../g8-completion-recovery.md) remain intact; the final fold
+[the recovery record](../operations/g8/g8-completion-recovery.md) remain intact; the final fold
 must not be described as unopened.
 
 The [ML lifecycle guide](../use-cases/ml-lifecycle.md) distinguishes completed
@@ -301,7 +301,7 @@ reservation/recovery and completed-release publication. Native synthetic storage
 and remote recovery have been exercised; production qualification remains open.
 Every replacement must preserve R4's consumed authorization and test-access
 history and require its own reviewed, signed execution binding. See the current
-status above and [production package](../g8-production-package.md). Earlier
+status above and [production package](../operations/g8/g8-production-package.md). Earlier
 G7/R1–R3 paragraphs are historical checkpoints, not current authorization.
 
 ## Context
@@ -418,10 +418,10 @@ simple.
 
 ## Related Records
 
-- [Wave 1 implementation plan](../nebius-lightgbm-wave1-implementation-plan.md)
+- [Wave 1 implementation plan](../roadmap/nebius-lightgbm-wave1-implementation-plan.md)
 - [ARD-0007: Nebius Serverless AI Jobs](ARD-0007-nebius-serverless-ai-jobs.md)
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [ARD-0031: Complete Governed LightGBM v1](ARD-0031-complete-lightgbm-v1.md)
 - [ARD-0036: Market-Sequence Transformer](ARD-0036-market-sequence-transformer.md)
-- [Project phases](../PHASES.md)
+- [Project phases](../roadmap/PHASES.md)

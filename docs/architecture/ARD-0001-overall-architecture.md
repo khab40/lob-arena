@@ -372,12 +372,12 @@ Core documentation:
 - `README.md` - project entry point, setup, disclaimer, documentation links
 - `PHASES.md` - phased implementation plan
 - `docs/architecture.md` - high-level architecture diagram and component responsibilities
-- `docs/runtime-model.md` - ticking runtime model, UI screens, APIs, and module responsibilities
-- `docs/benchmark-methodology.md` - benchmark design and metrics
-- `docs/nebius-deployment.md` - Nebius endpoint and job deployment notes
-- `docs/research-notes.md` - research positioning and references
-- `docs/safety-and-disclaimers.md` - safety language and non-production framing
-- `docs/challenge-submission.md` - submission framing and assets
+- `docs/runtime/runtime-model.md` - ticking runtime model, UI screens, APIs, and module responsibilities
+- `docs/ml/benchmark-methodology.md` - benchmark design and metrics
+- `docs/deployment/nebius-deployment.md` - Nebius endpoint and job deployment notes
+- `docs/research/research-notes.md` - research positioning and references
+- `docs/product/safety-and-disclaimers.md` - safety language and non-production framing
+- `docs/publication/challenge-submission.md` - submission framing and assets
 
 Architecture records:
 

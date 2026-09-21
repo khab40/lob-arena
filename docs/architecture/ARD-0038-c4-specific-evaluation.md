@@ -78,5 +78,5 @@ does not rescore the model. Existing no-report logging remains compatible.
 
 - [ARD-0035: Nebius qualification](ARD-0035-nebius-lightgbm-first.md) — execution and exit gates.
 - [ARD-0039: Same-run MLflow recovery](ARD-0039-same-run-mlflow-recovery.md) — consumes independently verified C4 evidence.
-- [C4 evaluation contract](../g8-c4-evaluation-contract.md) — detailed metrics and CLI contract.
-- [G8 completion recovery](../g8-completion-recovery.md) — incident history and remaining gates.
+- [C4 evaluation contract](../operations/g8/g8-c4-evaluation-contract.md) — detailed metrics and CLI contract.
+- [G8 completion recovery](../operations/g8/g8-completion-recovery.md) — incident history and remaining gates.

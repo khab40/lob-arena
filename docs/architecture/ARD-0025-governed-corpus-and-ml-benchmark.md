@@ -127,10 +127,10 @@ Tradeoffs:
 
 ## Related documentation
 
-- [Governed Corpus and Benchmark Protocol](../governed-corpus-benchmark-protocol.md)
+- [Governed Corpus and Benchmark Protocol](../data/governed-corpus-benchmark-protocol.md)
 - [ARD-0018: Canonical Exchange Event Stream](ARD-0018-canonical-exchange-event-stream.md)
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
 - [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
-- [Hybrid Dataset Validation](../hybrid-dataset-validation.md)
+- [Hybrid Dataset Validation](../data/hybrid-dataset-validation.md)

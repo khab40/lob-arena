@@ -84,7 +84,7 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/runtime-model.md`
+- `docs/runtime/runtime-model.md`
 - `docs/architecture.md`
 - [ARD-0001: Overall Architecture](ARD-0001-overall-architecture.md)
 - [ARD-0010: Agent Runner Execution Architecture](ARD-0010-agent-runner-execution.md)

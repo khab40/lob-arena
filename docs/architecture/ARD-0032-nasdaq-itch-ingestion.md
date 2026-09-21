@@ -62,7 +62,7 @@ property. The later C0–C4 cloud pipeline now acquires four approved dates, nor
 three symbols per pass, and publishes isolated tabular/sequence projections.
 The local adapter itself still does not download source files. General-purpose
 feed-scale ingestion remains future work. See [data preparation](../use-cases/ml-data-preparation.md)
-and the [four-date data flow](../nasdaq-public-sample-v1-data-flow.md).
+and the [four-date data flow](../data/nasdaq-public-sample-v1-data-flow.md).
 
 ## References
 

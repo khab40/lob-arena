@@ -34,8 +34,8 @@ pre-logging scored retention, same-run MLflow recovery and conditional publicati
 A native two-Job synthetic rehearsal and independent MLflow/S3 readback passed.
 Production comparison/registration verification, changed transport qualification,
 capacity/preflight and replacement-specific authorization remain separate work.
-See the [production package](g8-production-package.md) and
-[recovery record](g8-completion-recovery.md) for operational gates.
+See the [production package](operations/g8/g8-production-package.md) and
+[recovery record](operations/g8/g8-completion-recovery.md) for operational gates.
 
 C4 already supplies both tabular and 64-step feature-sequence projections.
 The Transformer model/trainer, cascade, automatic model-version promotion and
@@ -292,8 +292,8 @@ Separate pre-logging retention supplies the payload needed for log-only recovery
 The [native receipt](evidence/g8-native-recovery-20260917.json) and later
 [independent S3 receipt](evidence/g8-independent-s3-readback-20260917.json)
 prove synthetic recovery, not production G8 acceptance. See
-[remaining recovery gates](g8-completion-recovery.md) and
-[the native storage exception](g8-persistent-storage-exception.md).
+[remaining recovery gates](operations/g8/g8-completion-recovery.md) and
+[the native storage exception](operations/g8/g8-persistent-storage-exception.md).
 
 ### Shared MLflow Tracking Plane
 
@@ -316,7 +316,7 @@ MLflow indexes experiments and approved artifacts but is not a release
 authority. Protocol, corpus, split, feature, model, calibration, prediction,
 checksum, and signature compatibility continues to be enforced by the
 repository contracts. See
-[Shared MLflow Tracking Server](mlflow-tracking-server.md) and
+[Shared MLflow Tracking Server](ml/mlflow-tracking-server.md) and
 [ARD-0027](architecture/ARD-0027-shared-mlflow-tracking.md).
 
 ### Detector Tournament Observability
@@ -517,7 +517,7 @@ graph TD
 
 ## Related Documentation
 
-This architecture supports all workflows described in [Use Cases](USE_CASES.md):
+This architecture supports all workflows described in [Use Cases](use-cases/README.md):
 
 1. **Live Arena Mode** — Supported by WebSocket live commands and `arena_state` streaming
 2. **Manual Scenario Launch** — Scenario launcher through the WebSocket-backed Arena UI
@@ -569,5 +569,5 @@ Detailed architecture decisions are recorded in [Architecture Records (ARDs)](ar
 - [ARD-0038: C4-Specific Frozen Evaluation](architecture/ARD-0038-c4-specific-evaluation.md)
 - [ARD-0039: Same-Run MLflow Evaluation Recovery](architecture/ARD-0039-same-run-mlflow-recovery.md)
 - [ARD-0040: Completed-Release Publication Recovery](architecture/ARD-0040-completed-release-publication-recovery.md)
-- [Hybrid Dataset Validation](hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
-- [Causal Feature Engineering for LightGBM](feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and governed trainer consumption contract
+- [Hybrid Dataset Validation](data/hybrid-dataset-validation.md) — Data-quality invariants, causal-neighbourhood equivalence, report signing, verification, and trust boundaries
+- [Causal Feature Engineering for LightGBM](ml/feature-engineering-lightgbm.md) — Formulas, configuration, CLI, quality checks, and governed trainer consumption contract

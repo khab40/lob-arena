@@ -180,7 +180,7 @@ versioned event schema:
 
 ## Related Documentation
 
-- [Exchange Event Stream](../exchange-event-stream.md)
+- [Exchange Event Stream](../runtime/exchange-event-stream.md)
 - [ARD-0002: WebSocket State Schema](ARD-0002-websocket-state-schema.md)
 - [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md)
 - [ARD-0011: Exchange Liquidity Invariant](ARD-0011-exchange-liquidity-invariant.md)

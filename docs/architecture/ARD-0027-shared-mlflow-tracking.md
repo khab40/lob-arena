@@ -130,11 +130,11 @@ Tradeoffs:
 
 ## Related documentation
 
-- [Shared MLflow Tracking Server](../mlflow-tracking-server.md)
+- [Shared MLflow Tracking Server](../ml/mlflow-tracking-server.md)
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0022: Historical Market Data Ingestion](ARD-0022-historical-market-data-ingestion.md)
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
-- [Governed Corpus and ML Benchmark Protocol](../governed-corpus-benchmark-protocol.md)
-- [Functional Overview](../FUNCTIONAL_OVERVIEW.md)
-- [Use Cases](../USE_CASES.md)
+- [Governed Corpus and ML Benchmark Protocol](../data/governed-corpus-benchmark-protocol.md)
+- [Functional Overview](../product/FUNCTIONAL_OVERVIEW.md)
+- [Use Cases](../use-cases/README.md)

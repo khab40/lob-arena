@@ -274,6 +274,6 @@ Tradeoffs:
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [Architecture Overview](../architecture.md)
-- [Use Cases](../USE_CASES.md)
+- [Use Cases](../use-cases/README.md)
 - [Historical replay README](../../README.md#historical-and-hybrid-replay)
 - [Public LOBSTER-compatible fixture](../../data/lobster/README.md)

@@ -80,4 +80,4 @@ The loader does not train, calibrate, score or release a model. Those responsibi
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)
-- [Causal Feature Engineering for LightGBM](../feature-engineering-lightgbm.md)
+- [Causal Feature Engineering for LightGBM](../ml/feature-engineering-lightgbm.md)

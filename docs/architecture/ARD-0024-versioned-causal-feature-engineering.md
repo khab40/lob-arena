@@ -151,11 +151,11 @@ Tradeoffs:
 
 ## Related documentation
 
-- [Feature engineering for LightGBM](../feature-engineering-lightgbm.md)
+- [Feature engineering for LightGBM](../ml/feature-engineering-lightgbm.md)
 - [ARD-0018: Canonical Exchange Event Stream](ARD-0018-canonical-exchange-event-stream.md)
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
 - [ARD-0025: Governed Corpus and ML Benchmark Protocol](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0027: Shared MLflow Tracking Plane](ARD-0027-shared-mlflow-tracking.md)
 - [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)
-- [Hybrid Dataset Validation](../hybrid-dataset-validation.md)
+- [Hybrid Dataset Validation](../data/hybrid-dataset-validation.md)
 - [Architecture Overview](../architecture.md)

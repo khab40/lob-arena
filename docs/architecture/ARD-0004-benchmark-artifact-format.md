@@ -113,6 +113,6 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/benchmark-methodology.md`
+- `docs/ml/benchmark-methodology.md`
 - `serverless/jobs/README.md`
 - [ARD-0006: Scenario Labeling and Reproducibility](ARD-0006-scenario-labeling-and-reproducibility.md)

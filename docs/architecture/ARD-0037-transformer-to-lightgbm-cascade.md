@@ -136,4 +136,4 @@ assumed architectural benefit.
 - [ARD-0031: Complete Governed LightGBM v1](ARD-0031-complete-lightgbm-v1.md)
 - [ARD-0035: Nebius-First LightGBM](ARD-0035-nebius-lightgbm-first.md)
 - [ARD-0036: Market-Sequence Transformer](ARD-0036-market-sequence-transformer.md)
-- [Project phases](../PHASES.md)
+- [Project phases](../roadmap/PHASES.md)

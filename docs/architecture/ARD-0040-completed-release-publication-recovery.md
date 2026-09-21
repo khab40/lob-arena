@@ -44,11 +44,11 @@ false; verify that service independently using
 This primitive starts **after MLflow logging**. Pre-logging scored retention is
 implemented separately in
 [g8_scored_checkpoint.py](../../backend/app/ml/lightgbm/g8_scored_checkpoint.py).
-The [signed replacement runner](../g8-live-replacement.md) integrates both
+The [signed replacement runner](../operations/g8/g8-live-replacement.md) integrates both
 boundaries. Neither can recover a scoring process that failed before sealing
 its payload by pretending scoring completed.
 
-The [native storage exception](../g8-persistent-storage-exception.md) has been
+The [native storage exception](../operations/g8/g8-persistent-storage-exception.md) has been
 exercised by the [two-Job synthetic rehearsal](../evidence/g8-native-recovery-20260917.json).
 A second Job recovered after loss of the original workspace; authenticated
 MLflow readback and later [independent S3 readback](../evidence/g8-independent-s3-readback-20260917.json)
@@ -56,7 +56,7 @@ verified the result. The ordinary no-volume guard and S3/FUSE prohibition remain
 Original production comparison/registration evidence, storage capacity, changed
 production transport validation, current preflight and replacement-specific
 signed authorization remain separate requirements; synthetic success is not G8
-completion. See the [production package](../g8-production-package.md).
+completion. See the [production package](../operations/g8/g8-production-package.md).
 
 ## Implementation and verification
 
@@ -84,5 +84,5 @@ these costs without extending the approved runtime ceiling.
 - [ARD-0035: Nebius qualification](ARD-0035-nebius-lightgbm-first.md) — execution and authorization boundary.
 - [ARD-0038: C4 evaluation](ARD-0038-c4-specific-evaluation.md) — completed report provenance.
 - [ARD-0039: Same-run MLflow recovery](ARD-0039-same-run-mlflow-recovery.md) — preceding logging completion.
-- [G8 publication recovery](../g8-publication-recovery.md) — detailed CLI, limits and rehearsal history.
-- [G8 completion recovery](../g8-completion-recovery.md) — remaining end-to-end gates.
+- [G8 publication recovery](../operations/g8/g8-publication-recovery.md) — detailed CLI, limits and rehearsal history.
+- [G8 completion recovery](../operations/g8/g8-completion-recovery.md) — remaining end-to-end gates.

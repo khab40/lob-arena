@@ -91,4 +91,4 @@ Tradeoffs:
 - [ARD-0002: WebSocket State Schema](ARD-0002-websocket-state-schema.md)
 - [ARD-0010: Agent Runner Execution Architecture](ARD-0010-agent-runner-execution.md)
 - [ARD-0019: Python Reference And Java Kernel Migration](ARD-0019-python-reference-java-kernel-migration.md)
-- [Runtime Model](../runtime-model.md)
+- [Runtime Model](../runtime/runtime-model.md)

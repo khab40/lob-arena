@@ -76,5 +76,5 @@ probabilities and training-manifest bytes.
 
 - [ARD-0026: Governed LightGBM Release Boundary](ARD-0026-governed-lightgbm-release-boundary.md)
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md)
-- [Causal Feature Engineering for LightGBM](../feature-engineering-lightgbm.md)
+- [Causal Feature Engineering for LightGBM](../ml/feature-engineering-lightgbm.md)
 - [ARD-0030: Float32 Governed Feature Release](ARD-0030-float32-governed-feature-release.md)

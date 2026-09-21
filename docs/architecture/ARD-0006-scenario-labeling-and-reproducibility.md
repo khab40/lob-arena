@@ -133,6 +133,6 @@ Tradeoffs:
 ## Related Documentation
 
 - `PHASES.md`
-- `docs/benchmark-methodology.md`
+- `docs/ml/benchmark-methodology.md`
 - [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md)
 - [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)

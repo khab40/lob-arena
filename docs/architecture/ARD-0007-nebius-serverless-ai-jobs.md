@@ -8,7 +8,7 @@ Date: 2026-06-02
 
 The operator removed administrative submission/retention windows, billing checks
 and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
 in preference to older operational bounds in this record. No billing queries or
 balance-refresh requests. Finite Job timeouts, execution identities, evidence
 integrity and separate final-test authorization remain. This is an execution-policy
@@ -176,8 +176,8 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/nebius-deployment.md`
-- `docs/benchmark-methodology.md`
+- `docs/deployment/nebius-deployment.md`
+- `docs/ml/benchmark-methodology.md`
 - `serverless/jobs/README.md`
 - [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md)
 - [ARD-0006: Scenario Labeling and Reproducibility](ARD-0006-scenario-labeling-and-reproducibility.md)

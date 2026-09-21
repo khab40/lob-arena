@@ -124,7 +124,7 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/nebius-deployment.md`
-- `docs/runtime-model.md`
+- `docs/deployment/nebius-deployment.md`
+- `docs/runtime/runtime-model.md`
 - [ARD-0003: Detector Evidence Model](ARD-0003-detector-evidence-model.md)
 - [ARD-0008: Nebius Serverless AI Endpoints](ARD-0008-nebius-serverless-ai-endpoints.md)

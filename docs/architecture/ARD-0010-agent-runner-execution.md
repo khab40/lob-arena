@@ -126,7 +126,7 @@ Tradeoffs:
 
 ## Related Documentation
 
-- `docs/runtime-model.md`
+- `docs/runtime/runtime-model.md`
 - `docs/architecture.md`
 - [ARD-0001: Overall Architecture](ARD-0001-overall-architecture.md)
 - [ARD-0003: Detector Evidence Model](ARD-0003-detector-evidence-model.md)

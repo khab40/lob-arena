@@ -149,7 +149,7 @@ Each ARD includes:
 
 ## Workflow & Traceability
 
-All ARDs are indexed here and linked from the main [Architecture](../architecture.md) document. [Use Cases](../USE_CASES.md) provides product workflow context; each record links its design dependencies and supporting implementation evidence.
+All ARDs are indexed here and linked from the main [Architecture](../architecture.md) document. [Use Cases](../use-cases/README.md) provides product workflow context; each record links its design dependencies and supporting implementation evidence.
 
 This ensures:
 - ✓ No stale decisions (ARDs are always referenced)

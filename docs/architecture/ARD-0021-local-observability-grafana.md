@@ -123,8 +123,8 @@ Tradeoffs:
 
 ## Related Documentation
 
-- [Kernel Observability](../kernel-observability.md)
+- [Kernel Observability](../runtime/kernel-observability.md)
 - [High-Level Architecture](../architecture.md#detector-tournament-observability)
-- [Quickstart](../QUICKSTART.md)
+- [Quickstart](../deployment/QUICKSTART.md)
 - [ARD-0010: Agent Runner Execution Architecture](ARD-0010-agent-runner-execution.md)
 - [ARD-0020: Java Arena WebSocket And Agent Orchestration](ARD-0020-java-arena-websocket-agent-orchestration.md)

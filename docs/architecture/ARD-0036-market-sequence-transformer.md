@@ -8,7 +8,7 @@ Date: 2026-08-16
 
 The operator removed administrative submission/retention windows, billing checks
 and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../model-validation-execution-policy.md)
+have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
 in preference to older operational bounds in this record. No billing queries or
 balance-refresh requests. Finite Job timeouts, execution identities, evidence
 integrity and separate final-test authorization remain. This is an execution-policy
@@ -134,4 +134,4 @@ reversible.
 - [ARD-0025: Governed Corpus And ML Benchmark](ARD-0025-governed-corpus-and-ml-benchmark.md)
 - [ARD-0035: Nebius-First LightGBM](ARD-0035-nebius-lightgbm-first.md)
 - [ARD-0037: Transformer-To-LightGBM Cascade](ARD-0037-transformer-to-lightgbm-cascade.md)
-- [Project phases](../PHASES.md)
+- [Project phases](../roadmap/PHASES.md)

@@ -74,4 +74,4 @@ models, manifests, and predictions under the existing deterministic boundary.
 - [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
 - [ARD-0028: Governed LightGBM Feature Loading](ARD-0028-governed-lightgbm-feature-loading.md)
 - [ARD-0029: Deterministic LightGBM Binary Training](ARD-0029-deterministic-lightgbm-binary-training.md)
-- [Causal Feature Engineering for LightGBM](../feature-engineering-lightgbm.md)
+- [Causal Feature Engineering for LightGBM](../ml/feature-engineering-lightgbm.md)
