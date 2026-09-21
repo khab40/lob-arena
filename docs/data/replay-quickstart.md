@@ -131,3 +131,40 @@ ordering, provenance, seed derivation, label isolation, metrics, and artifacts.
 
 ### ITCH-calibrated interactive simulation
 
+`market_profile_v1` compiles a normalized ITCH training window into versioned
+empirical distributions for arrival intensity, inter-event time, order size,
+distance from touch, lifetime, cancellation/execution mix, spread, top depth,
+imbalance, volatility, refill, and resilience. The compiled parameters select
+the synthetic reference price, ladder spacing, level quantities, depth slope,
+and seeded reference-price update cadence. The existing hardcoded BTCUSDT
+configuration remains the regression control.
+
+Build a profile and evaluate it against a distinct held-out ITCH window:
+
+```bash
+backend/.venv/bin/python scripts/build_market_profile.py \
+  --dataset-dir data/processed/lobster/itch-aapl-training \
+  --profile-id aapl-2026-01-02-v1 \
+  --output configs/market-profiles/aapl-2026-01-02-v1.json \
+  --held-out-dataset-dir data/processed/lobster/itch-aapl-held-out \
+  --report-output outputs/calibration/aapl-2026-01-02-v1-realism.json \
+  --arena-base-url http://localhost:8080
+```
+
+For held-out evaluation, the selected profile must be visible to the running
+Java control plane at the output path. The evaluator captures calibrated and
+hardcoded Java runs twice with the same seed, rejects trace mismatches, computes
+six pre-registered quantile distances from the observed simulator states,
+includes actual before/during/after liquidity-evaporation response metrics, and
+emits a canonical report SHA-256. It rejects reuse of the training dataset as
+holdout. The Arena's **Calibrated synthetic** source loads profiles
+from `configs/market-profiles`; Java validates the canonical profile checksum,
+binds the profile SHA and master seed to each run, stays the single writer, and
+updates the reference path deterministically. The committed
+[`fixture-aapl-itch-v1`](../../configs/market-profiles/fixture-aapl-itch-v1.json) is
+derived only from the synthetic binary fixture and is a contract example, not
+evidence of real-market realism. Real Nasdaq session files and derived bounded
+windows remain local/licensed artifacts and are never committed.
+
+See [ARD-0034](../architecture/ARD-0034-itch-market-profile-calibration.md)
+for the profile, runtime, evaluation, and trust-boundary decision.
