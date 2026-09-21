@@ -1,7 +1,7 @@
 # Nebius Public Market Data Plan for the Learned-Detector Roadmap
 
 > **Execution history and baseline plan — reviewed 2026-09-21.**
-> [Current status](CURRENT_STATUS.md) supersedes intermediate gate, remaining-Job,
+> [Current status](../roadmap/CURRENT_STATUS.md) supersedes intermediate gate, remaining-Job,
 > untouched-final-fold and deployment assertions below. C0–C4/G0–G7 are complete;
 > R4 accessed final data; native synthetic recovery passed; G8 is still open.
 > Seven-date/15-Job proposals, consumed-slot counters and spend receipts are
