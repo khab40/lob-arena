@@ -98,8 +98,10 @@ The [native rehearsal receipt](../evidence/g8-native-recovery-20260917.json)
 records one scoring call and same-run recovery; the later
 [independent S3 receipt](../evidence/g8-independent-s3-readback-20260917.json)
 verified 64 objects. These prove synthetic recovery engineering. Production
-transport, original comparison/registration verification, storage capacity,
-preflight and replacement-specific authorization remain separate G8 work.
+transport, comparison semantic verification, fresh preflight and replacement-specific
+authorization remain separate G8 work. The [dated readiness snapshot](../roadmap/CURRENT_STATUS.md)
+records PR #207's original payload hashes, live registration, capacity and unsigned
+review; those audits do not establish production comparison semantics or quality.
 Publication-only recovery starts after logging and cannot write MLflow or
 rescore; log-only recovery requires the pre-logging scored checkpoint.
 

@@ -23,7 +23,9 @@ The [documentation index](README.md) is the navigation entry point.
 
 The [dated status snapshot](roadmap/CURRENT_STATUS.md) links the exact issues,
 baseline dates, merged source revision and separately identified open PR #207
-receipts. It flags September 23 schedule risk and stale external milestone text.
+receipts. It flags September 23 schedule risk. All seven stale milestone
+descriptions were subsequently corrected and read back without changing dates,
+titles or states; remaining stale issue-body text is explicitly identified.
 Active guidance now records completed C0–C4/G0–G7, open G8 and blocked G9.
 Transformer/cascade/secure UI remain planned. Historical execution records keep
 their original counts, hashes and outcomes with explicit stale/superseded banners.
@@ -148,7 +150,7 @@ All links below use the final topic location.
 ## Validation
 
 The final tree contains 110 docs Markdown files, including the new index, status
-snapshot and this ledger. Static checks covered 1,160 local links and 76 heading
+snapshot and this ledger. Static checks covered 1,162 local links and 76 heading
 anchors across 120 active documents, with no unresolved targets or moved paths.
 All 87 Mermaid diagrams rendered; the four substantively changed diagrams were
 visually inspected. Both existing offline release-packaging tests passed.

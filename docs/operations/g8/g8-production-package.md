@@ -1,6 +1,6 @@
 # G8 production native execution package
 
-> **Status reconciliation — 2026-09-21:** The unsigned review package remains the production starting point. PR #207 adds original metadata, capacity and live-registration evidence; it does not authorize final evaluation.
+> **Status reconciliation — 2026-09-21:** The unsigned review package remains the production starting point. PR #207 adds original metadata/payload verification, capacity, live registration and a new unsigned review; it does not authorize final evaluation.
 > See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
 > [execution policy](../../ml/model-validation-execution-policy.md). Earlier
 > dated receipts retain their values; obsolete billing/expiry gates do not apply.

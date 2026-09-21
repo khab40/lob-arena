@@ -1,6 +1,6 @@
 # G8 C4-specific evaluation contract
 
-> **Status reconciliation — 2026-09-21:** Durable replacement integration and native synthetic recovery are now implemented. Original comparison metadata is verified; full payload verification remains a separate gate at this snapshot.
+> **Status reconciliation — 2026-09-21:** Durable replacement integration and native synthetic recovery are now implemented. Original metadata and payload bytes are verified in PR #207; comparison semantic verification remains a separate gate.
 > See [current roadmap evidence](../../roadmap/CURRENT_STATUS.md) and the
 > [execution policy](../../ml/model-validation-execution-policy.md). Earlier
 > dated receipts retain their values; obsolete billing/expiry gates do not apply.
@@ -43,8 +43,9 @@ exactly 27 distinct original C3 checkpoints. The preparation hash must equal
 the C4 root's test source. Each checkpoint must have a valid complete release,
 the frozen checkpoint identity, preparation binding and payload inventory.
 This resolves exactly 30 canonical replay domains; no rules regeneration occurs.
-Original metadata availability is verified in PR #207; full checkpoint payload
-availability/integrity remains unverified at the [dated snapshot](../../roadmap/CURRENT_STATUS.md).
+Original metadata and full checkpoint payload bytes are verified in PR #207.
+Those audits did not parse protected rows; production comparison semantic
+verification remains open at the [dated snapshot](../../roadmap/CURRENT_STATUS.md).
 
 The evaluator verifies the existing model bundle and prediction release against
 the frozen candidate, and verifies C4 projection artifacts. It joins every
