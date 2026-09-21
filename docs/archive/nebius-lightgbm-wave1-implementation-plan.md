@@ -277,41 +277,18 @@ still required before generating and authorizing the replacement dry run; USD
   development slot, leaving 13/20; no retry is authorized or necessary. G4 is
   complete and G5 is unlocked.
 
-### 2026-08-26 G4 Attempt 7
+<a id="2026-08-26-g4-attempt-7"></a>
 
-- The Operator reconciled spend at USD 8.55 including VAT and explicitly
-  authorized attempt 7. Reviewed dry-run evidence SHA-256 is
-  `b9a5586ad7ded3334f352d2fbba111f26f2d76b5457b818ea7dfee8d9f6e41aa`.
-- Job `aijob-e00k3nj3402wrdvbnz` was created once. Pre-submit registry
-  resolution, live Job image read-back and post-submit registry resolution all
-  matched governed digest
-  `sha256:3e54fbe1c1ba7e5955a13565dc623cce4542b0df038c5f0b78b0f107e79c95e5`.
-  Submission-evidence SHA-256 is
-  `d1f84ffad8c8df74124a817427972b7ce21dc0a61a5eb6929380a61e240a1302`.
-- Nebius reports the Job `COMPLETED`; its live resource context matches
-  `cpu-d3`, `4vcpu-16gb`, 100 GiB and 3,600 seconds. It started at
-  17:01:05 UTC and finished at 17:01:43 UTC. MLflow was stopped after the
-  terminal state and independently verified `STOPPED`.
-- The first fail-closed monitor record was preserved after it classified the
-  terminal Job as `RESOURCE_EVIDENCE_MISSING`. The cause was local evidence
-  parsing: Nebius returns disk size as `spec.disk.size_bytes`, while the parser
-  accepted only display-form disk-size fields. The parser now accepts the live
-  response shape, has a regression test, and the 40-test Wave 1 suite passes.
-  Reconciled monitor-evidence SHA-256 is
-  `bd7f84723c64ac33ec1212f5b8d74cee15bdbeb84c221df8529fa566b5de2502`;
-  it records `COMPLETED`, matched resources, collected logs and no
-  cancellation inside the fixed 900-second watchdog.
-- The 22-line redacted Job log contains one non-fatal MLflow/GitPython warning
-  block because the slim runtime has no `git` executable. No training,
-  Object Storage, MLflow HTTP, traceback or container error is present. Source
-  provenance is not lost: the governed request, training manifest and explicit
-  MLflow binding tags carry commit `690a9e9f4767c7893bb56ed04be001d66cab773f`.
-  Log SHA-256 is
-  `1ff80e0493da705b6e41c7c8753aaf1fb297a214adc7bfb98589afb76fa7170d`.
-- The result prefix contains 25 objects and a `SUCCESS` marker. A later fresh
-  post-run observation reconciled spend at USD 8.57 including VAT; governed
-  collection completed and all 16 final G4 gates passed. Attempt 7 consumed one
-  slot; the development count is 7/20. No rerun is authorized or needed.
+Additional retained submission context:
+
+- Governed image digest: `sha256:3e54fbe1c1ba7e5955a13565dc623cce4542b0df038c5f0b78b0f107e79c95e5`.
+- Submission-evidence SHA-256: `d1f84ffad8c8df74124a817427972b7ce21dc0a61a5eb6929380a61e240a1302`.
+- The initial monitor classification was `RESOURCE_EVIDENCE_MISSING`; it accepted
+  only display-form disk fields before the `spec.disk.size_bytes` correction.
+  The regression and 40-test Wave 1 suite passed.
+- Runtime source provenance: `690a9e9f4767c7893bb56ed04be001d66cab773f`.
+- The result prefix contained 25 objects and a `SUCCESS` marker; all 16 final
+  G4 gates passed. The later USD 8.57 observation was a fresh post-run readback.
 
 ## Prior Decisions Preserved
 
