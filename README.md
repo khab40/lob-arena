@@ -1,5 +1,9 @@
 # LOB Arena
 
+Documentation is grouped by topic in the [docs index](docs/README.md).
+See the [dated roadmap status](docs/roadmap/CURRENT_STATUS.md) for actual gate
+outcomes, baseline target risks and explicitly flagged stale planning text.
+
 **Governed Historical + Synthetic Order-Book Validation for Market Surveillance**
 
 ![LOB Arena GitHub banner](assets/img/01-lob-arena-banner.jpg)

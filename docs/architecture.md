@@ -1,5 +1,10 @@
 # High-Level Architecture
 
+The [documentation index](README.md) explains the topic layout. For dated gates,
+issues, baseline targets and pending readiness evidence, use the
+[current roadmap snapshot](roadmap/CURRENT_STATUS.md). This is the canonical
+system overview; ARD-0001 retains the original decision history.
+
 LOB Arena separates six concerns:
 
 - **User and integration surfaces**: React/Vite UI, CLIs, batch jobs, and future
