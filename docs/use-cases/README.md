@@ -49,142 +49,28 @@ Import a complete session or bounded window. Validate schema, alignment,
 book invariants and provenance; atomically publish normalized files and manifest
 before registration. Keep licensed raw records out of MLflow by default.
 Follow the [client runbook](../data/client-historical-dataset-validation-runbook.md).
-```mermaid
-graph LR
-    Steward["Data Steward"]
-    Pair["LOBSTER message + book CSV"]
-    Validate["Schema, synchronization,<br/>book and provenance validation"]
-    Normalize["Aligned Parquet"]
-    Manifest["Checksummed dataset manifest"]
-    Registry["Local dataset registry"]
-
-    Steward --> Pair
-    Pair --> Validate
-    Validate --> Normalize
-    Validate --> Manifest
-    Normalize --> Registry
-    Manifest --> Registry
-```
-
-Main flow:
-
-1. Select a complete session or bounded time window in Data Ingestion.
-2. Validate message/book alignment, price units, timestamps, lifecycle,
-   crossed-book state, visible volume, and source provenance.
-3. Write events, snapshots, and the manifest atomically.
-4. Register the dataset only after all hashes and row counts agree.
-5. Record only permitted manifest/release metadata in downstream tracking.
-
-Business value:
-
-- Creates a reproducible client-data onboarding boundary.
-- Prevents malformed or modified source material from entering Java replay.
-- Keeps licensed raw records local and out of experiment metadata by default.
 
 ## Hybrid Historical Replay
 
-Purpose: compare detector behavior on an immutable LOBSTER window with and
-without an existing synthetic attack overlay.
-
-```mermaid
-graph TD
-    Operator["Demo Operator / Research User"]
-    Ingestion["Data Ingestion UI"]
-    Dataset["Normalized LOBSTER dataset"]
-    Control["Historical control replay"]
-    Hybrid["Hybrid replay"]
-    Launcher["Existing Scenario Setup"]
-    Kernel["Java integer exchange"]
-    Detectors["Deterministic detectors"]
-    Artifacts["Comparison metrics + checksums"]
-
-    Operator --> Ingestion
-    Ingestion --> Dataset
-    Dataset --> Control
-    Dataset --> Hybrid
-    Operator --> Launcher
-    Launcher -->|"spoofing-like / layering-like"| Hybrid
-    Control --> Kernel
-    Hybrid --> Kernel
-    Kernel --> Detectors
-    Detectors --> Artifacts
-```
-
-Main flow:
-
-1. Import a paired LOBSTER message/order-book dataset.
-2. Select **Historical control**, load the dataset, and replay the window
-   without assigning benign or attack ground truth.
-3. Select **Hybrid + attacks** and load the same dataset.
-4. Launch a predefined scenario from the existing Scenario Setup UI.
-5. Compare source/event counts, detector alerts, TP/FN/FP/TN, precision,
-   recall, F1, and final-book realism deltas.
-
-Business value:
-
-- Tests existing detectors against genuine visible-depth market conditions.
-- Preserves reproducibility without creating another simulator.
-- Separates synthetic ground truth from potentially suspicious historical
-  activity.
-- Demonstrates that attack behavior responds only to the reconstructed current
-  book, never future data.
-
-Nebius role:
-
-- No Nebius call is required for deterministic replay or detector scoring.
-- Persisted comparison evidence may later be summarized by AI Investigator,
-  without moving labels or AI output into the detector decision path.
+Load the same dataset for **Historical control** and **Hybrid + attacks**;
+launch an existing scenario only after loading the replay source. Compare
+detector metrics and causal-locality evidence without labeling the historical
+control clean. [Hybrid validation](../data/hybrid-dataset-validation.md)
+defines the signed evidence and statistical acceptance rules.
 
 ## Governed Corpus Release
 
-Status: implemented as typed manifests, CLIs, validation gates, chronological
-splits, and signed releases. The multi-reviewer API/UI workflow remains the next
-Track B product delivery.
-
-Purpose: freeze a scientifically defensible corpus instead of treating all
-historical windows as clean negatives.
-
-```mermaid
-graph LR
-    Sessions["Validated complete sessions"]
-    Attacks["Hybrid attack campaigns"]
-    Proposals["Candidate clean windows"]
-    ReviewA["Blind reviewer A"]
-    ReviewB["Blind reviewer B"]
-    Resolve["Conflict adjudication"]
-    Coverage["30 sessions / 3 instruments /<br/>10 dates / families / seeds"]
-    Release["Signed corpus release"]
-
-    Sessions --> Proposals
-    Attacks --> Coverage
-    Proposals --> ReviewA
-    Proposals --> ReviewB
-    ReviewA --> Resolve
-    ReviewB --> Resolve
-    Resolve --> Coverage
-    Coverage --> Release
-```
-
-Acceptance boundary:
-
-- at least 30 complete sessions, three instruments, and ten dates;
-- every protocol-required attack family and at least three seeds per family;
-- two independent blinded decisions or explicit adjudication for every clean
-  window;
-- frozen session-grouped chronological assignments, boundary embargo, and
-  duplicate-source rejection; and
-- exact protocol, corpus, split, feature, signature, and checksum bindings.
-
-MLflow may index the frozen release hash and permitted reports only after these
-repository gates pass.
+The [corpus protocol](../data/governed-corpus-benchmark-protocol.md) owns coverage,
+independent blinded review, adjudication, embargo and exact artifact bindings.
+Its client-governance requirements are distinct from the four-date C4
+research-control assumption. Typed contracts and CLIs exist; a multi-reviewer
+product API/UI is not implied. See [data preparation](ml-data-preparation.md).
 
 ## Shared MLflow Tracking
 
-Status: implemented and deployed through the opt-in `mlflow` Compose profile.
-
-Purpose: give Track A and Track B one authenticated experiment, artifact, and
-model-registry index without making MLflow the approval authority.
-
+Verify repository contracts before logging approved metadata/artifacts into
+corpus, development or governed-evaluation namespaces. Raw rows remain outside
+tracking. Namespace creation and artifact logging do not implement model-version
 ```mermaid
 graph TD
     Corpus["lob-arena/corpus-releases"]
