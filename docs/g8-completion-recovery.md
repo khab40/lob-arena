@@ -11,9 +11,11 @@ This is a recovery implementation record, not a final-test approval or G8 exit r
 
 Current status (2026-09-21): native recovery and authenticated MLflow/S3
 rehearsal passed on September 17; merged PR #201 prepared an unsigned production
-review package. Original Java comparison/registration verification, production
-transport verification, final metadata/preflight and replacement-specific approval
-remain open. Follow the [current G8 plan](PHASES.md#g8-recovery-and-completion-plan)
+review package. The [approved original comparison audit](evidence/g8-original-payload-verification-20260921.json)
+now verifies 294 payload objects and live C4 registration; the new unsigned review
+binds this evidence and 32 GiB storage. Production transport/comparison semantics,
+fresh preflight and replacement-specific approval remain open. Follow the
+[current G8 plan](PHASES.md#g8-recovery-and-completion-plan)
 and [production package](g8-production-package.md). The implementation history and
 older gate descriptions below retain their dates; they are not the current backlog.
 

@@ -587,7 +587,7 @@ Completed engineering evidence:
   Synthetic comparison/lineage fixtures and transport checks do not establish
   production model quality or execution of the changed production entrypoint.
 
-Remaining work, in order:
+Completion evidence and remaining work, in order:
 
 1. **Verify original comparison and lineage evidence.** Locate and verify all
    27 original Java/C3 checkpoints, their preparation binding and 30 replay domains;
@@ -600,7 +600,11 @@ Remaining work, in order:
    All 89 metadata reads passed; temporary permissions were removed and denial
    reverified. Metadata bindings are prepared. The [live C4 registration](evidence/g8-capacity-registration-20260921.json)
    now verifies four metadata artifacts and all 30 final-tabular lineage entries;
-   full original payload-byte verification remains pending.
+   [Original payload verification](evidence/g8-original-payload-verification-20260921.json)
+   is now complete: 294 objects / 2,632,277,460 bytes staged and all 377 payload/metadata
+   files independently rehashed. All 37 temporary grants were removed; the original
+   policy is restored and access denied again. The VM is stopped. Payload rows were
+   not parsed; production comparison semantics remain for the Nebius runtime check.
 2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
    imports, mount checks and signed-context handoff without production final scoring.
    Record exact package/image/source hashes and actual Job/filesystem identities.
@@ -611,10 +615,11 @@ Remaining work, in order:
    secrets, pinned image alias, MLflow readiness, native capacity and output/intent
    state. The approved [32 GiB expansion](evidence/g8-capacity-registration-20260921.json)
    is applied and mounted capacity verified; the original 10 GiB limit could not
-   accommodate the 2.451 GiB comparison payload. Rebind production storage evidence
-   to the 4 GiB checkpoint bound and require 20 GiB actual free space at execution.
-   Bind comparison inputs and canonical request
-   to the complete v3 plan. Keep scored/recovery evidence durable. Follow the [validation policy](model-validation-execution-policy.md);
+   accommodate the 2.451 GiB comparison payload. The new unsigned September 21 review
+   binds verified comparison/lineage evidence and the 4 GiB checkpoint bound to
+   32 GiB storage. Recheck 20 GiB actual free space at execution; finish the canonical
+   request and complete v3 plan after runtime verification and approval. Keep
+   scored/recovery evidence durable. Follow the [validation policy](model-validation-execution-policy.md);
    do not reinstate historical billing-freshness, package-expiry or fixed-VM gates.
 4. **Obtain replacement-specific approval and sign.** Review the concrete package,
    run scope and resource bounds, then obtain the exception for at most one

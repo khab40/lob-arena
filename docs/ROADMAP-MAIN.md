@@ -205,21 +205,24 @@ diagnostic is retained separately from the passing final receipt.
   The changed production entrypoint still needs Nebius runtime verification;
   synthetic Java-comparison/lineage placeholders cannot qualify production inputs.
 
-Remaining critical path:
+Completion evidence and remaining critical path:
 
 1. Verify the original 27 Java/C3 checkpoints and genuine dataset registration;
    complete frozen projection, C4 profile, comparison inventory and input bindings.
    The approved [89-object metadata audit](evidence/g8-original-comparison-metadata-20260921.json)
    passed and all temporary access is removed. Live registration now verifies
-   four metadata artifacts and 30 final-tabular inputs; original payload-byte
-   verification remains open. Metadata bindings are prepared.
+   four metadata artifacts and 30 final-tabular inputs. [Payload verification](evidence/g8-original-payload-verification-20260921.json)
+   is complete: 294 original objects staged; all 377 payload/metadata files rehashed.
+   Temporary grants are removed and the VM stopped. Rows were not parsed; production
+   comparison semantics still require verification on Nebius.
 2. Verify the changed production bootstrap, mounts and context handoff on Nebius
    without final scoring. Record resources, finite timeout, Job count and identities.
 3. Complete current credential/permission, image-alias, storage, MLflow and
    output/intent preflight; assemble the canonical request and complete v3 package.
    The approved [32 GiB expansion and live registration](evidence/g8-capacity-registration-20260921.json)
-   are verified; the VM is stopped again. Rebind storage in the production package
-   and recheck the 20 GiB free-space requirement immediately before execution.
+   are verified. The September 21 unsigned review now binds the original comparison,
+   live registration and 32 GiB storage. Finish runtime/current preflight and recheck
+   the 20 GiB free-space requirement immediately before execution.
 4. Obtain replacement-specific final-test approval and sign the reviewed package;
    bind actual Job context separately after create. Never reuse R4 authorization.
 5. Execute the one approved replacement, retain scored outputs before logging,

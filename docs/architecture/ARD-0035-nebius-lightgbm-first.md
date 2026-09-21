@@ -35,8 +35,11 @@ production registration or final model-quality evidence.
 
 Merged PR #201 prepares the [production native package](../g8-production-package.md)
 and v3 signed replacement contract. The retained review is unsigned and not executable.
-Remaining gates: verify original 27-checkpoint comparison/registration evidence;
-complete C4 metadata; verify the changed production transport on Nebius; perform
+The [September 21 audit](../evidence/g8-original-payload-verification-20260921.json)
+verified/staged original payload bytes for all 27 checkpoints, verified live C4
+registration, and rebound metadata/storage in a new unsigned review. Permissions
+are restored and the VM stopped; no payload rows were parsed or models executed.
+Remaining gates: verify production transport and comparison semantics on Nebius; perform
 current identity/storage/image/output preflight; obtain replacement-specific
 approval and sign; execute once; independently verify production S3/MLflow results.
 Native rehearsal success alone does not authorize production final-test access.
