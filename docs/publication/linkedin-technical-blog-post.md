@@ -1,11 +1,9 @@
 # LinkedIn article history
 
-The next research steps are to increase benchmark and scenario diversity, develop adaptive adversarial agents, and measure detector degradation as market regimes change. I also want to calibrate synthetic behavior using publicly available market distributions, build richer incident replay tools, and compare deterministic and learned detectors under the same labels and evaluation contracts.
-
-That comparison matters. A learned detector should not receive a more forgiving evaluation path because its internals are more complex. Deterministic and learned approaches should consume compatible evidence, preserve the same ground truth, report the same metric families, and produce artifacts another practitioner can inspect.
-
-Public repository: [https://github.com/khab40/lob-arena](https://github.com/khab40/lob-arena)
-
-Safety disclaimer: LOB Arena is synthetic and educational. It uses no real trading data, does not detect real market manipulation, does not provide trading signals, and is not suitable for compliance decisions.
-
-#NebiusServerlessChallenge
+The maintained historical challenge narrative is the
+[archived article](../archive/linkedin-technical-blog-post.md).
+The earlier draft is preserved at [revision 63fe41d](https://github.com/khab40/lob-arena/blob/63fe41d277732875628d0e72449a1f8e992ae07b/docs/publication/linkedin-technical-blog-post.md).
+It differs in introduction, image selection and earlier execution-count wording;
+use the [submission evidence](challenge-submission.md) for measured outcomes.
+Neither draft nor its FastAPI-era posters describe current runtime ownership.
+Use the [architecture overview](../architecture.md) before preparing a new publication.
