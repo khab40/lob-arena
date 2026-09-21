@@ -1,6 +1,8 @@
 import re
 from pathlib import Path
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -11,7 +13,7 @@ def locked_version(package: str, path: Path = ROOT / "backend" / "uv.lock") -> t
         rf'\[\[package\]\]\nname = "{re.escape(package)}"\nversion = "([0-9.]+)"',
         lockfile,
     )
-    assert match is not None, f"{package} is missing from backend/uv.lock"
+    assert match is not None, f"{package} is missing from {path}"
     return tuple(int(part) for part in match.group(1).split("."))
 
 
@@ -20,7 +22,13 @@ def test_active_lock_uses_patched_framework_versions() -> None:
     assert locked_version("pydantic-settings") >= (2, 14, 2)
 
 
-def test_every_backend_lock_uses_patched_cryptography() -> None:
+@pytest.mark.parametrize(
+    ("package", "minimum_version"),
+    [("cryptography", (50, 0, 0)), ("anyio", (4, 14, 2))],
+)
+def test_every_backend_lock_uses_patched_dependencies(
+    package: str, minimum_version: tuple[int, ...]
+) -> None:
     lockfiles = [
         ROOT / "backend" / "uv.lock",
         ROOT
@@ -33,7 +41,7 @@ def test_every_backend_lock_uses_patched_cryptography() -> None:
     ]
 
     for path in lockfiles:
-        assert locked_version("cryptography", path) >= (50, 0, 0), path
+        assert locked_version(package, path) >= minimum_version, path
 
 
 def test_every_python_install_surface_enforces_security_floors() -> None:
