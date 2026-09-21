@@ -18,7 +18,9 @@ Current status (2026-09-21): native recovery and authenticated MLflow/S3
 rehearsal passed on September 17; merged PR #201 prepared an unsigned production
 review package. The [approved original comparison audit](../../evidence/g8-original-payload-verification-20260921.json)
 now verifies 294 payload objects and live C4 registration; the new unsigned review
-binds this evidence and 32 GiB storage. Production transport/comparison semantics,
+binds this evidence and 32 GiB storage. The [production transport probe](../../evidence/g8-production-transport-probe-20260921.json)
+now passes with signed actual-Job context and independent durable readback.
+Protected comparison semantics,
 fresh preflight and replacement-specific approval remain open. Follow the
 [current G8 plan](../../roadmap/PHASES.md#g8-recovery-and-completion-plan)
 and [production package](g8-production-package.md). The implementation history and

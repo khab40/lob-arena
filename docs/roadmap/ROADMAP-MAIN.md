@@ -206,8 +206,9 @@ diagnostic is retained separately from the passing final receipt.
   checked all 64 objects and resolves the earlier reader AccessDenied gap.
 - Merged PR #201 prepares the [production native package](../operations/g8/g8-production-package.md)
   for `nasdaq-g8-replacement-r5-20260917`; it remains unsigned and not executable.
-  The changed production entrypoint still needs Nebius runtime verification;
-  synthetic Java-comparison/lineage placeholders cannot qualify production inputs.
+  The [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
+  now verifies the actual bootstrap/runtime, mounts and signed Job context on Nebius.
+  Protected comparison rows remain unparsed; model quality remains unmeasured.
 
 Completion evidence and remaining critical path:
 
@@ -221,11 +222,15 @@ Completion evidence and remaining critical path:
    comparison semantics still require verification on Nebius.
 2. Verify the changed production bootstrap, mounts and context handoff on Nebius
    without final scoring. Record resources, finite timeout, Job count and identities.
+   Complete: one Job `aijob-e00samq5cpe1bysr4x`, all 12 overlays and 25 package files
+   verified; unsigned entrypoint and wrong context rejected. The recurring provider
+   mount warning remains unexplained despite valid mounts and durable readback.
+   Comparison semantic parsing requires its own protected-row access approval.
 3. Complete current credential/permission, image-alias, storage, MLflow and
    output/intent preflight; assemble the canonical request and complete v3 package.
    The approved [32 GiB expansion and live registration](../evidence/g8-capacity-registration-20260921.json)
    are verified. The September 21 unsigned review now binds the original comparison,
-   live registration and 32 GiB storage. Finish runtime/current preflight and recheck
+   live registration and 32 GiB storage. Finish comparison/current preflight and recheck
    the 20 GiB free-space requirement immediately before execution.
 4. Obtain replacement-specific final-test approval and sign the reviewed package;
    bind actual Job context separately after create. Never reuse R4 authorization.

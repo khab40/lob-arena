@@ -620,6 +620,15 @@ Completion evidence and remaining work, in order:
    Run model and frozen-runtime work on Serverless only, with declared resources,
    finite timeout and intended Job count. Assess the rehearsal's nonfatal provider
    mount error against actual mount observations; retain its unresolved history.
+   September 21: the [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
+   passed on Job `aijob-e00samq5cpe1bysr4x`: 12 exact runtime overlays, read-only
+   package/bootstrap, native mount identity and signed actual-Job context verified.
+   The unsigned entrypoint and wrong context both failed closed. All 25 package
+   files were independently rehashed and archived; VM stopped, final key inactive.
+   The provider mount warning recurred despite successful runtime checks/readback;
+   its root cause remains unresolved. No protected rows, training or scoring ran.
+   Transport verification is complete; protected comparison semantics still need
+   a separately scoped row-access approval before parsing on Nebius.
 3. **Complete package and preflight.** Check current identity/permissions, versioned
    secrets, pinned image alias, MLflow readiness, native capacity and output/intent
    state. The approved [32 GiB expansion](../evidence/g8-capacity-registration-20260921.json)

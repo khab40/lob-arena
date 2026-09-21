@@ -18,4 +18,7 @@ regexes = [
   # SHA-256 of the September 21 inactive final-key metadata readback, no payload.
   # Recorded in docs/evidence/g8-production-readiness-20260921.json.
   '''^7b8ed849bd6bb128aee8cf2b864bae95c1fbd72c13c1b7143bf275480e3244e8$''',
+  # SHA-256 of the transport probe's inactive final-key metadata, no credential payload.
+  # Recorded in docs/evidence/g8-production-transport-probe-20260921.json.
+  '''^aa065207725aea9e0134cd762ff16c41770a67b575e6a9394d4a0d7340cf9d25$''',
 ]

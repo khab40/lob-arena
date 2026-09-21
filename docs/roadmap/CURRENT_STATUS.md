@@ -67,8 +67,14 @@ historical. Its later [payload/readiness receipt](../evidence/g8-original-payloa
 records 294 original objects / 2,632,277,460 bytes staged and 377 files independently
 rehashed. A new 25-file unsigned review binds those bytes, live registration and
 32 GiB capacity. No rows were parsed, model Jobs submitted or final bucket accessed.
-Production transport/context handoff and comparison semantic verification on
-Nebius, fresh preflight (including 20 GiB free space for the 4 GiB checkpoint bound),
+The [September 21 production transport probe](../evidence/g8-production-transport-probe-20260921.json)
+completed on Job `aijob-e00samq5cpe1bysr4x`: exact runtime overlays, native mounts,
+signed actual-Job context and independent package readback verified without parsing
+protected rows or scoring. The recurring provider mount warning remains unexplained.
+The separately approval-gated [comparison audit proposal](../evidence/g8-comparison-semantics-proposal-20260921.json)
+covers event/alert/ground-truth semantics; snapshot Parquet checks are limited to
+hashes and footer counts, with row/schema consistency explicitly unverified.
+That audit, fresh preflight (including 20 GiB free space for the 4 GiB checkpoint bound),
 canonical request and replacement-specific authorization remain open.
 
 G9 requires verified G8 evidence and a signed exit disposition; Transformer,
