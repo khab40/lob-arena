@@ -27,128 +27,6 @@ These are historical follow-ups, not a current backlog; revalidate them against
 - **Phase 5: Polish And Submission Assets:** `[partial]` architecture diagrams exist in Mermaid docs; standalone assets under `assets/diagrams/` are still optional/future work.
 - **Phase 5: Polish And Submission Assets:** `[partial]` demo narration scripts and captions under `assets/demo-video/`; rendered demo video is still missing.
 - **Future work:** `[partial]` The project includes research notes, a blog draft, GitHub banner, UI controls, demo narration, sanitized screenshots, and committed benchmark evidence; the rendered video and published article URL remain publication work.
-- Detector tournament writes:
-  - `outputs/benchmark/benchmark_report.md`
-  - `outputs/benchmark/metrics.csv`
-  - `outputs/benchmark/results.json`
-- Synthetic dataset factory writes:
-  - `outputs/synthetic-dataset/events.jsonl`
-  - `outputs/synthetic-dataset/incidents.jsonl`
-  - `outputs/synthetic-dataset/labels.jsonl`
-  - `outputs/synthetic-dataset/snapshots.parquet` when Parquet dependencies are available
-  - `outputs/synthetic-dataset/snapshots.parquet.jsonl` when Parquet dependencies are unavailable
-  - `outputs/synthetic-dataset/manifest.json`
-- `[done]` Optional chart artifacts:
-  - `outputs/benchmark/charts/f1_by_scenario.png`
-  - `outputs/benchmark/charts/confidence_distribution.png`
-  - `outputs/benchmark/charts/detection_latency.png`
-
-Exit criteria:
-
-- `[done]` The benchmark job can run multiple synthetic scenarios.
-- `[done]` Precision, recall, and F1 are reported by scenario family.
-- `[done]` The explanation endpoint returns structured summaries for incidents.
-- `[partial]` Deployment documentation includes commands; real Nebius logs/metrics screenshots are still needed for final review.
-- `[done]` Real Nebius Endpoint and Job execution is archived in the committed jury evidence bundle with S3 evidence metadata and checksums.
-
-## Phase 4.5: Experiment Manager
-
-Status: `[done]`
-
-Goal: add a first-class experiment manifest layer that coordinates benchmark intent, persisted artifacts, and report visibility without duplicating Nebius Control smart-batch execution.
-
-Deliverables:
-
-- `[done]` `backend/app/experiments/models.py` typed experiment request, status, mode, manifest, and delete response models.
-- `[done]` `backend/app/experiments/repository.py` manifest persistence under `outputs/experiments/<experiment_id>/experiment.json`.
-- `[done]` `backend/app/experiments/manager.py` experiment creation, listing, lookup, deletion, deterministic attack manifest generation, local batch submission, smart-batch-compatible artifact paths, and report history indexing.
-- `[done]` `backend/app/experiments/attack_manifest.py` writes deterministic attack manifests to `outputs/experiments/<experiment_id>/attacks.jsonl` without running the simulator.
-- `[done]` `backend/app/experiments/artifact_normalizer.py` copies local-batch outputs into canonical experiment-root artifact names and writes `artifact_index.json` without deleting originals.
-- `[done]` `backend/app/experiments/investigation_pipeline.py` runs bounded AI investigation reports over top persisted batch alerts only.
-- `[done]` `backend/app/experiments/aggregator.py` writes `experiment_summary.json`, `leaderboard.json`, and `benchmark_report.md` from normalized batch artifacts.
-- `[done]` `backend/app/experiments/nebius_orchestrator.py` is the only boundary for real Nebius Serverless Job command-template submission/status/log/artifact adapters.
-- `[done]` REST routes on the existing experiment API: `POST /api/experiments`, `GET /api/experiments`, `GET /api/experiments/{id}`, `DELETE /api/experiments/{id}`, `POST /api/experiments/{id}/generate-manifest`, `POST /api/experiments/{id}/run-local-batch`, `POST /api/experiments/{id}/normalize-artifacts`, `POST /api/experiments/{id}/run-investigations`, `GET /api/experiments/{id}/investigations`, `POST /api/experiments/{id}/aggregate`, `GET /api/experiments/{id}/summary`, `GET /api/experiments/{id}/leaderboard`, `GET /api/experiments/{id}/report`, `POST /api/experiments/{id}/render-nebius-job-config`, `POST /api/experiments/{id}/submit-nebius`, `GET /api/experiments/{id}/jobs`, `POST /api/experiments/{id}/refresh-jobs`, and `POST /api/experiments/{id}/collect-nebius-artifacts`.
-- `[done]` experiment local batches reuse the same `serverless/jobs/run_batch_experiments.py` execution path as `/api/nebius/smart-batches`.
-- `[done]` local batch outputs write to `outputs/experiments/<experiment_id>/local-batch/`, with one `local_parallel_batch` job record in `outputs/experiments/<experiment_id>/jobs.jsonl`.
-- `[done]` when real Nebius job execution is not configured, `submit-nebius` writes a `real_nebius_pending` job record instead of pretending cloud execution happened.
-- `[done]` when `NEBIUS_JOB_SUBMIT_COMMAND_TEMPLATE` is configured, `submit-nebius` executes the command, parses the job id, writes a queued `nebius_serverless_job`, and redacts persisted command output.
-- `[done]` `refresh-jobs` can use optional status/log/artifact command templates and only marks a job completed after status and artifact collection both confirm completion.
-- `[done]` `collect-nebius-artifacts` collects the existing Nebius job output file format from mounted output or `NEBIUS_JOB_ARTIFACTS_COMMAND_TEMPLATE` into the canonical experiment artifact layout without fabricating missing files.
-- `[done]` `/api/nebius/observatory` includes experiment job summary counts when experiment jobs exist.
-- `[done]` Reports summary includes managed experiment manifests alongside older attack-builder experiments.
-- `[done]` `/nebius` Managed Experiment Lab drives the lifecycle through FastAPI: create, generate manifest, run local or production Jobs, synchronize S3 artifacts, aggregate, run bounded AI Investigator reports, and expose evidence to the UI.
-- `[done]` `/nebius` Real Nebius Deployment panel exposes endpoint health checks, route smoke calls, rendered job config, submit-template readiness, latest cloud job status, and cloud artifact collection state without treating pending jobs as successful real-cloud runs.
-- `[done]` Detection shows managed experiments with selected summary, scenario leaderboard, markdown benchmark report viewer, AI Investigator reports, `artifact_index.json` links, and original `local-batch` artifacts.
-- `[done]` `/api/nebius/smart-batches` remains unchanged for Nebius AI smart-batch execution.
-- `[done]` tests for create, list, get, report visibility, delete, deterministic attack manifests, attack counts, expected labels, a 3-run local batch, fake local-batch artifact normalization, mocked Nebius investigations, sample-CSV aggregation, and missing real Nebius config.
-- `[done]` local HTTP verification created a 10-row mixed-scenario experiment in mock mode and confirmed manifest rows, normalized artifacts, original local-batch files, summary, leaderboard, benchmark report, and investigation artifacts under `outputs/experiments/<experiment_id>/`.
-- `[done]` more than ten production Nebius Serverless AI Job runs validated container execution, scenario generation, detector evaluation, metric aggregation, reporting, logging, and artifact persistence.
-- `[done]` the compact artifact bundle is committed and the judge-facing submission index includes measured runtime/cost records plus sanitized UI screenshot evidence.
-
-Current behavior:
-
-- New experiments start in `manifest_generated` status.
-- Attack manifests use the experiment's `attack_count`, `scenarios`, and `seed`, preserve the requested scenario mix, and support 10, 100, and 1000-row experiments.
-- Expected detector labels are generated for `normal_market`, `spoofing_like_wall`, `layering_like`, `quote_stuffing`, and `liquidity_evaporation`.
-- `run-local-batch` ensures `attacks.jsonl` exists, runs the local parallel batch with experiment `attack_count`, `batch_size`, and `scenarios`, then updates status to `completed` or `failed`.
-- `normalize-artifacts` maps `order_book_events.jsonl`, `trades.jsonl`, `attack_labels.jsonl`, `blue_team_alerts.jsonl`, `detector_metrics.csv`, `generated_report.md`, and `manifest.json` into `events.jsonl`, `trades.jsonl`, `labels.jsonl`, `alerts.jsonl`, `detector_metrics.csv`, `benchmark_report.md`, `batch_manifest.json`, and `artifact_index.json`.
-- `run-investigations` reads `alerts.jsonl` or `local-batch/blue_team_alerts.jsonl`, selects the top alerts by confidence, calls the existing Nebius investigation-report client once per selected alert, and persists JSON/Markdown reports under `investigations/`.
-- The investigation path is batch-only and never calls an LLM for every simulation tick.
-- `aggregate` reads `detector_metrics.csv`, alerts, labels, and investigations, reuses CSV metrics as the source of truth, and writes `experiment_summary.json`, `leaderboard.json`, and `benchmark_report.md`.
-- `render-nebius-job-config` renders `nebius_job_config.rendered.yaml` for the current experiment without submitting a cloud job.
-- `submit-nebius` ensures `attacks.jsonl` exists, renders `nebius_job_config.rendered.yaml`, and records either `real_nebius_pending` when no submit template is configured or a queued `nebius_serverless_job` when the configured submit command returns a job id.
-- `collect-nebius-artifacts` maps Nebius job output files into the same canonical artifacts as `normalize-artifacts`; when no mounted output or artifact command output is available, the experiment status becomes `cloud_artifacts_pending`.
-- `nebius_mode` supports `mock`, `local_parallel_batch`, and `real_nebius_pending`.
-- `smart_batch_id` is optional and is set to the local batch id after `run-local-batch` completes.
-- Reports distinguish requested manifest row count from labeled attack rows because mixed experiments can include `normal_market` rows with `expected_has_attack=false`.
-
-## Phase 5: Polish And Submission Assets
-
-Status: `[partial]`
-
-Goal: package the project so it is easy to understand, review, and present.
-
-Scope:
-
-- README
-- GitHub banner and visual identity assets
-- architecture diagram
-- blog post
-- short video
-- research notes
-- sample benchmark report
-- UI shell presentation controls
-
-Deliverables:
-
-- `[done]` polished root `README.md` with `assets/img/ai-mada.jpg` GitHub banner
-- `[done]` `docs/architecture.md`
-- `[partial]` architecture diagrams exist in Mermaid docs; standalone assets under `assets/diagrams/` are still optional/future work.
-- `[done]` blog post draft in `docs/publication/linkedin-technical-blog-post.md`
-- `[partial]` demo narration scripts and captions under `assets/demo-video/`; rendered demo video is still missing.
-- `[done]` `docs/research/research-notes.md`
-- `[done]` committed benchmark report and production evidence under `outputs/benchmark/`
-- `[done]` final disclaimer and safety language in README/docs/UI
-- `[done]` professional UI shell controls: compact sidebar toggle, day/night/system theme selector, and paused-state-stable Liquidity Map
-- `[done]` multiuser platform foundation with demo fallback user/workspace, global workspace/user menu, case ownership metadata, report attribution, and audit trail records.
-- `[done]` compact primary navigation ordered as Data Ingestion, Arena, Control Panel, and About
-- `[done]` Command Center orchestrates endpoint status, scenario generation, AI investigation, detector tournaments, jobs, and artifacts
-- `[done]` Arena three-section layout: Scenario / Attack Configuration, Market, and Detection
-- `[done]` About and ARD-0001 architecture diagrams show Front, Back, Agent Runners Workspace, and Nebius Serverless Cloud
-
-### Future work
-
-- Durable backend organization/workspace, case assignment, and audit-log persistence APIs.
-- Formal benchmark artifact schema versioning and advanced Judge Mode timeline selectors.
-- Richer multi-user workflows and additional scenario families.
-
-Exit criteria:
-
-- `[done]` A reviewer can understand the system from the README and docs.
-- `[done]` The demo can be started with documented commands.
-- `[done]` The architecture and runtime model are documented.
-- `[partial]` The project includes research notes, a blog draft, GitHub banner, UI controls, demo narration, sanitized screenshots, and committed benchmark evidence; the rendered video and published article URL remain publication work.
-- `[done]` The submission avoids claims about real market manipulation detection, trading signals, or compliance use.
 
 ## Active Roadmap: Full Learned-Detector E2E Demonstration
 
@@ -225,13 +103,11 @@ model/data/evidence path can be run without manual artifact repair.
 ### Shared Data Foundation: Selective Nasdaq To Nebius S3
 
 The [four-date data flow](../data/nasdaq-public-sample-v1-data-flow.md) owns
-This percentage describes this data-foundation feature only, not total project
-completion or model quality. The repository already has four required building
-blocks: a bounded streaming Nasdaq ITCH 5.x parser; checksummed normalized
-Parquet; deterministic historical/hybrid replay with causal feature generation;
-and governed corpus/split plus LightGBM loading contracts. The remaining eight
-capabilities are roadmap work:
-
+the delivered source, normalization and projection path. Current completion
+evidence is in [status](CURRENT_STATUS.md); the original seven-date proposal,
+amendments and execution gates remain in the
+[public-data history](../archive/nebius-public-market-data-lightgbm-plan.md).
+Do not interpret its old task counts or Job budget as new execution authority.
 - `[todo]` Freeze an exact source allowlist for the seven approved public
   Nasdaq sample files, AAPL/MSFT/NVDA, the 10:00-10:30 ET windows, depth 10 and
   chronological fold assignments.
