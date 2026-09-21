@@ -129,3 +129,11 @@ The provider mount warning recurred; successful runtime checks do not explain it
 Remaining gates: separately approved protected-comparison semantic verification on
 Nebius, fresh preflight, canonical request and replacement-specific authorization.
 G8 remains open; the unsigned review is not execution authority.
+
+The [comparison semantics proposal](evidence/g8-comparison-semantics-proposal-20260921.json)
+binds the prepared audit worker and original inventory to one credential-free,
+read-only Nebius Job (4 vCPU, 16 GiB, at most one hour). It requests parsing original
+test-date events, snapshots, alerts and synthetic ground truth for structural checks.
+Only aggregate pass/fail evidence is returned. This extends the earlier byte-only
+approval and awaits operator approval; it excludes final features and model scoring.
+Prediction/feature pairing remains part of the separately authorized final evaluation.

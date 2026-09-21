@@ -1,0 +1,54 @@
+{
+  "schema_version": "g8_comparison_semantics_proposal_v1",
+  "status": "awaiting_operator_approval_not_executable_authority",
+  "base_source_commit": "1deaafe7144c78043af027b274eb660a75fe34cb",
+  "worker": "scripts/g8_comparison_semantics_probe.py",
+  "worker_sha256": "320a04cc89c1e340b74e7eab8234d144703641b5a910be178151e2535789f99f",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "deployment_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/g:dc32b12d7216bfee",
+  "filesystem_id": "computefilesystem-e00vy2fs9w2sm4bm3v",
+  "filesystem_mount": "/g8-package:ro",
+  "comparison_relative_root": "comparison/nasdaq-c3-12302019-cf426c0-v2-20260904",
+  "inventory_sha256": "3f96287aa68c5e6e578e893b2762bee88565c1a51d78d6eca21f932bafc2c1bc",
+  "transport_manifest_sha256": "543e173d9fe7a52e4c8294a25f38b0bb1e16ccc14fd12726b749eae7d02c9979",
+  "maximum_jobs": 1,
+  "platform": "cpu-d3",
+  "preset": "4vcpu-16gb",
+  "disk_size_gib": 100,
+  "provider_timeout_seconds": 3600,
+  "internal_timeout_seconds": 3000,
+  "restart_policy": "never",
+  "injected_secrets": 0,
+  "new_filesystems": 0,
+  "new_vms": 0,
+  "spend_bounds": {
+    "job_vcpu_hours_max": 4,
+    "job_memory_gib_hours_max": 16,
+    "existing_staging_vm": "cpu-e2/2vcpu-8gb; stop after staging/readback",
+    "monitoring": "operator_managed_alerts"
+  },
+  "requested_access": "Parse already-staged original protected test-date comparison events, snapshots, alerts, validation reports and synthetic ground truth for structural/identity verification only. No raw records or quality metrics leave the Job.",
+  "approved_byte_inventory_files": 377,
+  "checks": [
+    "Rehash all inventoried files before parsing",
+    "Use frozen image and exact transport-verified overlays",
+    "Resolve 27 original checkpoints and 30 replay domains against frozen preparation",
+    "Verify replay identities against frozen projection metadata",
+    "Validate snapshot/alert/ground-truth structure and exhaust canonical streams for hashes/counts/chronology",
+    "Reject rule alerts whose ticks never occur in canonical events"
+  ],
+  "not_in_scope": [
+    "Final-bucket access or final tabular feature reads",
+    "Training, candidate loading, scoring, calibration or rule regeneration",
+    "Prediction/feature-row pairing or model quality metrics",
+    "MLflow or S3 publication, new IAM permissions, replacement authorization"
+  ],
+  "operator_sequence": [
+    "Record approval against this exact proposal and worker hashes",
+    "Revalidate pinned image/source, inactive final key, read-only mount and package/inventory hashes",
+    "Stage proposal/worker/inventory through existing VM without overwriting evidence",
+    "Persist submission intent; create one Job; bind actual provider Job ID and resource readback",
+    "Collect aggregate pass/fail receipt and provider logs, independently verify hashes; do not retry on failure",
+    "Stop existing VM, preserve evidence and retain separate replacement-final approval gate"
+  ]
+}
