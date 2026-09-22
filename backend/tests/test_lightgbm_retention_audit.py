@@ -36,6 +36,7 @@ def inventory():
             "selection": {"campaign_id": "campaign"}, "candidate_sha256": "d" * 64,
             "freeze_sha256": "e" * 64,
             "lineage": {"mlflow_run_id": "1" * 32, "binding": {"model_id": "fixture"},
+                        "input_references": {"kind": "tabular-projection", "projection_artifact_root": "projection-artifacts"},
                         "input_release_uri": "s3://inputs/releases/run/staging", "feature_inputs": inputs,
                         "feature_release_id": "release", "feature_release_sha256": "f" * 64,
                         "training_git_commit": "2" * 40, "run_id": "run"},
@@ -67,6 +68,17 @@ def test_anchor_and_development_boundary(inventory):
     assert load_inventory(raw, hashlib.sha256(raw).hexdigest(), "results", "inputs") == inventory
     with pytest.raises(ValueError, match="anchor mismatch"):
         load_inventory(raw, "0" * 64, "results", "inputs")
+
+
+def test_dataset_sources_include_the_cloud_runner_artifact_root(inventory):
+    expected = expected_tracking(inventory)[3]
+    assert expected[0]["source"] == "s3://inputs/releases/run/staging/projection-artifacts/train/fixture.parquet"
+    run = run_fixture(inventory)
+    run["inputs"]["dataset_inputs"][0]["dataset"]["source"] = json.dumps(
+        {"uri": "s3://inputs/releases/run/staging/train/fixture.parquet"})
+    assert tracking_mismatches(inventory, run)
+    inventory["lineage"]["input_references"] = {"kind": "governed-feature-release", "feature_artifact_root": "features"}
+    assert expected_tracking(inventory)[3][0]["source"] == "s3://inputs/releases/run/staging/features/train/fixture.parquet"
 
 
 @pytest.mark.parametrize("mutation", ["bucket", "traversal", "duplicate", "size", "final", "markers"])
