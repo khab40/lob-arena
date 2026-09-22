@@ -72,3 +72,8 @@ separate gates.
 The read endpoints follow the [MLflow REST API](https://mlflow.org/docs/latest/api_reference/rest-api.html).
 See the [dated readback evidence](../evidence/lightgbm-retention-audit-20260922.json)
 for actual outcomes; tests and plan mode are not live verification.
+
+The audit process deadline does not stop a hosting VM. September 22's operator-managed
+VM window exceeded its proposed 15-minute bound; the VM was then stopped, with no
+further startup retry. A future bounded startup must have an independent automatic
+stop watchdog installed before it begins, including during operator approval waits.

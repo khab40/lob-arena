@@ -1,5 +1,17 @@
 # Roadmap status — 2026-09-22
 
+## LightGBM retention chunk — 2026-09-22
+
+The [independent audit](../ml/lightgbm-retention-audit.md) re-read and hash-verified
+all **107 exact development result objects (12,551,368 bytes)** with the existing
+reader identity. The frozen model and calibration were unchanged. The tool checks
+MLflow parameters, metrics, per-shard lineage and seven artifacts, but the live
+MLflow check remains **incomplete**: the restarted service was not verifiably ready
+and its read connection reset. The VM is confirmed stopped. The operator-managed
+window exceeded its proposed 15-minute bound; require an independent stop watchdog
+before another startup. See the [receipt](../evidence/lightgbm-retention-audit-20260922.json).
+G8 comparison, production package and final-authorization gates remain open.
+
 ## LightGBM remaining work plan — 2026-09-22
 
 The current LightGBM candidate is already trained, selected, calibrated and frozen.

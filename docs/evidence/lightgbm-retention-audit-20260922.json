@@ -1,0 +1,77 @@
+{
+  "schema_version": "lightgbm_retention_audit_receipt_v1",
+  "date": "2026-09-22",
+  "source_commit": "3d7ed8b5c6c9a888dcde04b366c3e6452c85da90",
+  "inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "freeze_sha256": "232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc",
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/development/nasdaq-g6-calibration-isotonic-20260907",
+  "mlflow_run_id": "1bd94569914748db8bbde21b13e83d05",
+  "tool_sha256": {
+    "audit_lightgbm_retention.py": "e88ccc4155ebcbfd2aed023c44efb3e846d19b4363dffcb5c83edecece976e2a",
+    "lightgbm_retention_contract.py": "8b356895d79a7b3752cdadcbaa5160951874c14bb5a0a5e858f4b7343c09278a",
+    "lightgbm_retention_transport.py": "d31cb2ff4e3b993cc2c68538d4d0919ba8db62b216f5650faf7c3c2c2230ca19"
+  },
+  "storage": {
+    "verified": true,
+    "exact_objects": 107,
+    "total_bytes": 12551368,
+    "reader_access_id_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d"
+  },
+  "mlflow": {
+    "error": "ConnectionResetError",
+    "verified": false
+  },
+  "vm_lifecycle": {
+    "recorded_at": "2026-09-22 10:40:02 UTC",
+    "vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+    "before": "STOPPED",
+    "after": "STOPPED",
+    "planned_maximum_seconds": 900,
+    "window_exceeded": true,
+    "exception": "Operator-managed stop did not enforce the promised 15-minute limit. Stop issued immediately on detecting overrun. No further startup retry.",
+    "future_requirement": "Independent automatic stop watchdog before another bounded VM startup.",
+    "model_jobs": 0,
+    "final_access": false
+  },
+  "attempts": [
+    {
+      "receipt": "live-readback-initial.json",
+      "sha256": "8d70fc2ae20692de48e8f69c19360ad7f907d368b1cfd53cf08efbae7d1e99d0"
+    },
+    {
+      "receipt": "live-readback-s3.json",
+      "sha256": "c2999f90caaac678ae6afb7908a16fe4ef5ce0c623a9b0e779351db2be3182d3"
+    },
+    {
+      "receipt": "live-readback-final.json",
+      "sha256": "61d366fc68f2431479949905ca7e35497f6317409ad29a05b7bb9ae48cd7940c"
+    },
+    {
+      "receipt": "execution-scope.json",
+      "sha256": "63101112a7adf71d751bf7bc41ee90450f6b300e84401e062dd7982b6a4a66f8"
+    },
+    {
+      "receipt": "vm-lifecycle.json",
+      "sha256": "46005ae0c9f8ef7583bf784f7f74dc54bb420685d36aaef6a6d8715b0e10c2bb"
+    }
+  ],
+  "scope": {
+    "final_access": false,
+    "final_evaluation_authorized": false,
+    "model_loaded": false,
+    "remote_writes": false,
+    "rows_parsed": false
+  },
+  "local_validation": {
+    "inert_tests_passed": 30,
+    "ruff_passed": true
+  },
+  "remaining": [
+    "Diagnose MLflow service readiness; live metadata and seven-artifact verification remain incomplete.",
+    "Use an independent stop watchdog before any further bounded VM startup.",
+    "External input manifest readback and other trial audits remain separate.",
+    "G8 comparison audit, reviewed package and replacement-specific final authorization remain open."
+  ],
+  "durable_evidence_directory": "outputs/lightgbm-retention-audit-20260922"
+}
