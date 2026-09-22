@@ -125,8 +125,10 @@ def test_storage_hashes_and_size_bound(inventory):
         def object(self, obj): return fingerprint(io.BytesIO(b"abc"), obj["size_bytes"])
     assert audit_storage(inventory, Reader())["count"] == 9
     inventory["result_objects"][-1]["sha256"] = "0" * 64
-    with pytest.raises(ValueError, match="hash mismatch"):
-        audit_storage(inventory, Reader())
+    result = audit_storage(inventory, Reader())
+    assert result["verified"] is False
+    assert result["count"] == 8
+    assert result["failed_path"] == "checksums.sha256"
     with pytest.raises(ValueError, match="exceeds"):
         fingerprint(io.BytesIO(b"abcd"), 3)
 

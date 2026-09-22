@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+import json
 import os
 import signal
 from contextlib import contextmanager
@@ -117,8 +118,14 @@ class StorageReader:
 def audit_storage(inv, reader):
     checked = []
     for obj in inv["result_objects"]:
-        actual = reader.object(obj)
-        require(actual == {k: obj[k] for k in ("sha256", "size_bytes")}, "remote hash mismatch")
+        try:
+            actual = reader.object(obj)
+            require(actual == {k: obj[k] for k in ("sha256", "size_bytes")}, "remote hash mismatch")
+        except TimeoutError:
+            raise
+        except Exception as exc:
+            return {"verified": False, "objects": checked, "count": len(checked),
+                    "failed_path": obj["path"], "error": error_code(exc)}
         checked.append({"path": obj["path"], **actual})
     return {"verified": True, "objects": checked, "count": len(checked)}
 
@@ -162,4 +169,4 @@ def audit_tracking(inv, reader):
     return {"verified": True, "artifacts": checked, "artifacts_checked": len(checked),
             "dataset_inputs_checked": len(inv["lineage"]["feature_inputs"]),
             "extra_governed_artifacts": sorted(set(files) - {x["path"] for x in checked}),
-            "metadata_response_sha256": hashlib.sha256(__import__("json").dumps(run, sort_keys=True).encode()).hexdigest()}
+            "metadata_response_sha256": hashlib.sha256(json.dumps(run, sort_keys=True).encode()).hexdigest()}
