@@ -37,8 +37,8 @@ class AgentOrchestratorTest {
         assertThat(result.get("agent_ids")).isEqualTo(List.of("B", "A"));
         @SuppressWarnings("unchecked")
         List<JsonNode> intents = (List<JsonNode>) result.get("intents");
-        assertThat(intents).extracting(node -> node.path("agent_id").textValue()).containsExactly("A", "B");
-        assertThat(intents).allSatisfy(node -> assertThat(node.path("runtime_source").textValue())
+        assertThat(intents).extracting(node -> node.path("agent_id").stringValue()).containsExactly("A", "B");
+        assertThat(intents).allSatisfy(node -> assertThat(node.path("runtime_source").stringValue())
                 .isEqualTo("agent_runner"));
     }
 
@@ -65,6 +65,6 @@ class AgentOrchestratorTest {
         @SuppressWarnings("unchecked")
         List<JsonNode> intents = (List<JsonNode>) result.get("intents");
         assertThat(intents).hasSize(1);
-        assertThat(intents.getFirst().path("agent_id").textValue()).isEqualTo("VALID");
+        assertThat(intents.getFirst().path("agent_id").stringValue()).isEqualTo("VALID");
     }
 }

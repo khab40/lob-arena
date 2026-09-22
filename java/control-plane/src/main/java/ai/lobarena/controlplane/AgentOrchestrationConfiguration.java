@@ -23,7 +23,7 @@ class AgentOrchestrationConfiguration {
             AgentRunnerClient client,
             @Value("${lob.agents.runner-urls:http://agent-runner:9100}") String runnerUrls) {
         List<URI> runners = Arrays.stream(runnerUrls.split(","))
-                .map(String::trim)
+                .map(value -> value.trim())
                 .filter(value -> !value.isEmpty())
                 .map(value -> URI.create(value.endsWith("/") ? value : value + "/"))
                 .toList();

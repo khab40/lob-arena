@@ -15,6 +15,7 @@ final class JavaKernelGrpcServerTest {
     void acceptsValidNetworkPort() {
         try (JavaKernelGrpcServer server = new JavaKernelGrpcServer(50_051)) {
             // Construction validates configuration without binding a shared test port.
+            assertThrows(IllegalStateException.class, server::port);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new AssertionError(exception);

@@ -75,7 +75,7 @@ public final class IntegerMatchingEngine {
                     List<Execution> executions = book.match(order, order.priceTicks());
                     recordExecutions(order, executions);
                     long filled = executions.stream()
-                            .mapToLong(Execution::quantityLots)
+                            .mapToLong(execution -> execution.quantityLots())
                             .reduce(0, Math::addExact);
                     long remaining = order.quantityLots() - filled;
                     if (remaining > 0) {

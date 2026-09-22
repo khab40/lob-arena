@@ -53,7 +53,9 @@ public final class JavaKernelGrpcServer implements AutoCloseable {
 
     public static void main(String[] args) throws Exception {
         int port = args.length == 0 ? 50_051 : Integer.parseInt(args[0]);
-        JavaKernelGrpcServer server = new JavaKernelGrpcServer(port).start();
+        // Keep ownership visible: the shutdown hook closes this same instance.
+        JavaKernelGrpcServer server = new JavaKernelGrpcServer(port);
+        server.start();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 server.close();

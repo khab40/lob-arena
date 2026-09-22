@@ -27,9 +27,9 @@ class HistoricalCsvMarketDataSourceTest {
         var first = source.nextBatch();
         var second = source.nextBatch();
 
-        assertThat(context.path("format").textValue()).isEqualTo("canonical_csv_v1");
+        assertThat(context.path("format").stringValue()).isEqualTo("canonical_csv_v1");
         assertThat(first).hasSize(5);
-        assertThat(first).extracting(HistoricalCsvMarketDataSource.HistoricalCsvRecord::sourceSequence)
+        assertThat(first).extracting(record -> record.sourceSequence())
                 .containsExactly(1L, 2L, 3L, 4L, 5L);
         assertThat(second.getFirst().sourceSequence()).isEqualTo(6);
         assertThatThrownBy(() -> first.set(0, first.getFirst()))
@@ -42,7 +42,7 @@ class HistoricalCsvMarketDataSourceTest {
                 new HistoricalCsvMarketDataSource(mapper, fixtures, 5);
 
         assertThat(source.datasets()).hasSize(1);
-        assertThat(source.datasets().get(0).path("dataset_id").textValue())
+        assertThat(source.datasets().get(0).path("dataset_id").stringValue())
                 .isEqualTo("sample-btcusdt-0945");
         assertThat(source.supports("../sample-btcusdt-0945")).isFalse();
         assertThatThrownBy(() -> source.load("../sample-btcusdt-0945"))

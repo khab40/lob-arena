@@ -38,7 +38,7 @@ final class KernelRunControllerTest {
                 .build();
 
         assertStatus(HttpStatus.BAD_REQUEST, () -> controller.run(new byte[] {(byte) 0x80}));
-        assertStatus(HttpStatus.PAYLOAD_TOO_LARGE, () -> controller.run(oversized));
+        assertStatus(HttpStatus.CONTENT_TOO_LARGE, () -> controller.run(oversized));
         assertStatus(HttpStatus.BAD_REQUEST, () -> controller.run(invalid.toByteArray()));
     }
 

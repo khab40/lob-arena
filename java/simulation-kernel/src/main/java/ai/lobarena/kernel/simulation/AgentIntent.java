@@ -15,10 +15,10 @@ record AgentIntent(
         long quantityLots,
         String message) implements Comparable<AgentIntent> {
     private static final Comparator<AgentIntent> ORDER = Comparator
-            .comparingLong(AgentIntent::tick)
-            .thenComparingInt(AgentIntent::latencyBucket)
-            .thenComparing(AgentIntent::agentId)
-            .thenComparingInt(AgentIntent::sequence)
+            .comparingLong((AgentIntent intent) -> intent.tick())
+            .thenComparingInt(intent -> intent.latencyBucket())
+            .thenComparing(intent -> intent.agentId())
+            .thenComparingInt(intent -> intent.sequence())
             .thenComparing(intent -> intent.kind().wireName);
 
     enum Kind {
