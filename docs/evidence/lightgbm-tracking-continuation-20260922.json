@@ -1,0 +1,75 @@
+{
+  "schema_version": "lightgbm_tracking_continuation_v1",
+  "date": "2026-09-22",
+  "execution_source_commit": "e3c4e144276c100364c0f86151491cf1821b6aff",
+  "execution_scope_sha256": "f1fab6dfad9f9914e1b7765742df0811d26bab294a5c6f67ffec81c6efdfed50",
+  "controller_sha256": "31b9d3fa826510c843edf097a8962c74e83c7617542f5a85ac8971d29aa2cbe0",
+  "watchdog_sha256": "f7052748987c758fcea470b79726f3ea5eed35f9573cfc1d00be477203b7a59d",
+  "candidate_inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+  "vm_initial_state": "STOPPED",
+  "vm_final_state": "STOPPED",
+  "vm_start_request_to_verified_stop_seconds": 122.109,
+  "watchdog_armed_before_start": true,
+  "automatic_cleanup_verified": true,
+  "stop_reason": "requested",
+  "within_900_second_target": true,
+  "readiness_outcome": "SSH readiness subprocess timed out before MLflow health or run queries",
+  "live_mlflow_verified": false,
+  "result_object_reads": 0,
+  "model_jobs": 0,
+  "new_resources": 0,
+  "iam_changes": false,
+  "final_access": false,
+  "earlier_s3_verification_preserved": true,
+  "source_mapping_fix": "Expected dataset source now includes the artifact root selected by cloud_runner._dataset_source_root; frozen lineage and runs are unchanged.",
+  "remaining": [
+    "Existing SSH rule inspected with the operator-provided parent ID; current Mac public IP matches. No permission change needed.",
+    "Diagnose bounded SSH/service readiness before another startup.",
+    "Verify selected-run MLflow metadata and seven governed artifacts.",
+    "G8 comparison audit, execution package and final authorization remain separate."
+  ],
+  "artifacts": [
+    {
+      "path": "execution-scope.json",
+      "sha256": "f1fab6dfad9f9914e1b7765742df0811d26bab294a5c6f67ffec81c6efdfed50"
+    },
+    {
+      "path": "session-error.json",
+      "sha256": "e64e01196bbe8b7d5316b519b55cb129fb0476cf755bcb483ebfbb74c68efbd5"
+    },
+    {
+      "path": "vm-session/vm-before.json",
+      "sha256": "d5c2370c514b8be67e694340ae09116655185616c77ea77790a34023afa0cfc1"
+    },
+    {
+      "path": "vm-session/vm-start-request.json",
+      "sha256": "54061802e92839eccaf68b6f72838ee0d40a6b34a3cc0781e1806408c5891b4a"
+    },
+    {
+      "path": "vm-session/vm-started.json",
+      "sha256": "9358289ea3e6ffed2d4ee1acc731b6a341e39f830e80e7eebad4f8f2b6600938"
+    },
+    {
+      "path": "vm-session/watchdog-ready.json",
+      "sha256": "e1c28347fc78dd1d41065e53c5c7b865c6908a0bcc5c325f6ff6aeba38422b48"
+    },
+    {
+      "path": "vm-session/watchdog-result.json",
+      "sha256": "1592aa47fdbdbf9487d721dcdf4cad97c1e1bb36c1a75d907c760ef6adf2f64b"
+    }
+  ],
+  "network_preflight": {
+    "parent_security_group": "vpcsecuritygroup-e00yz1akcnmb6zrk1h",
+    "ssh_rule": "vpcsecurityrule-e00qb7wqrhxnvman1s",
+    "operator_supplied_parent_id": true,
+    "current_mac_ip_matches_existing_rule": true,
+    "permissions_changed": false
+  },
+  "source_preservation": {
+    "path": "outputs/lightgbm-retention-audit-20260922/continuation/pre-transplant.bundle",
+    "sha256": "2ec6c1f390459762e19a64cdc4191bb183257aaeb6fe38b4c356cc8392222ad0",
+    "git_bundle_verified": true,
+    "transferred_patch_tree_identical": true
+  }
+}

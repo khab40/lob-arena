@@ -132,8 +132,14 @@ inventory's private tracking URI is historical metadata, not an automatic target
   objects, 16 MiB each, 64 MiB total. MLflow metadata responses: 4 MiB each; artifact
   listing: at most ten pages. Every artifact body is bounded by its expected size.
 
-Exit `0` means plan generated or both live audits verified. Exit `2` means a live
-audit is incomplete. Inspect `status` to distinguish planning from verification.
+Use `--component mlflow` to resume tracking verification without repeating an
+already verified storage pass; it needs only the tracking credentials. The default
+`--component both` checks both systems; `--component storage` checks storage only.
+Unrequested components remain `not_attempted` and `verified: false` in the receipt.
+
+Exit `0` means plan generated or all requested live components verified. Exit `2`
+means a requested live audit is incomplete. Inspect `status` and
+`requested_components` to distinguish planning, partial scope and verification.
 Receipts preserve exact inventory/tool hashes, timestamps, scope, successful object
 checks and the first failed storage path. Errors omit server bodies and credentials.
 Output creation is exclusive/private; reruns cannot overwrite prior evidence.
@@ -154,6 +160,21 @@ See the [dated readback evidence](../evidence/lightgbm-retention-audit-20260922.
 for actual outcomes; tests and plan mode are not live verification.
 
 The audit process deadline does not stop a hosting VM. September 22's operator-managed
-VM window exceeded its proposed 15-minute bound; the VM was then stopped, with no
-further startup retry. A future bounded startup must have an independent automatic
-stop watchdog installed before it begins, including during operator approval waits.
+VM window exceeded its proposed 15-minute bound; the VM was then stopped. The
+continuation uses `scripts/nebius_mlflow_watchdog.py`: a detached local process
+arms before startup, requests stop by ten minutes and verifies provider `STOPPED`.
+It stops early when work finishes or fails and survives controller exit. CLI
+timeouts terminate the subprocess group. It refuses to adopt a running VM or a
+different resource preset. macOS idle sleep is inhibited while it is active.
+
+The watchdog requires the Mac, network and provider API to remain available; it
+is not a provider-side billing cap. Use a fresh canonical evidence directory with
+`bounded_vm(directory)`, keep work within 420 seconds, and inspect the shutdown
+receipt. The first live continuation failed at SSH readiness but independently
+verified shutdown in 122.109 seconds. See the
+[continuation receipt](../evidence/lightgbm-tracking-continuation-20260922.json).
+
+Dataset-source verification includes the input's `projection_artifact_root` or
+`feature_artifact_root` between the release URI and shard path, matching the
+historical producer contract. This corrects the independent checker; frozen
+datasets, model bytes and historical MLflow records remain unchanged.
