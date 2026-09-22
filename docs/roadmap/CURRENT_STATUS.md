@@ -1,4 +1,81 @@
-# Roadmap status — 2026-09-21
+# Roadmap status — 2026-09-22
+
+## LightGBM remaining work plan — 2026-09-22
+
+The current LightGBM candidate is already trained, selected, calibrated and frozen.
+The immediate goal is **one authorized evaluation of the frozen C4 candidate, with
+independently verified results and lineage**. Further tuning belongs to a separate
+campaign. This analysis checks repository code, configs and retained artifacts,
+including model and calibration hashes; MLflow findings reflect implementation and
+saved receipts, not a fresh live-server audit.
+
+1. **Preserve the completed experiment selection.** G6 completed nine Jobs: four
+   search/ablation trials, two seed confirmations and three calibration comparisons.
+   The selected `ablate-state` model uses 31 features, learning rate `0.1`, eight
+   leaves, minimum leaf size two and 32 selected boosting iterations from a maximum
+   of 60. No additional hyperparameter search is required for G8. Preserve the
+   [campaign plan](../../configs/experiments/lightgbm-wave1/g6-campaign-20260907.json)
+   and all trial/selection receipts, including rejected trials.
+
+2. **Keep calibration and thresholds frozen; record their limitations.** Raw,
+   Platt and isotonic were compared; isotonic won. The balanced threshold is
+   `0.5769230769230769`, with validation F1 `0.6931407942`. The same validation fold
+   supported early stopping, selection, calibrator fitting and threshold selection.
+   Near-zero validation ECE therefore does not establish out-of-sample calibration.
+   A future campaign should separate these stages using chronological groups or
+   grouped out-of-fold predictions. See the [calibration evidence boundary](../use-cases/ml-training-selection.md#uc-ml-03-calibrate-and-freeze-operating-points)
+   and [calibration guidance](https://scikit-learn.org/stable/modules/calibration.html).
+
+3. **Retain the existing model freeze.** G7 is complete. The retained candidate,
+   model, calibration and seven referenced evidence artifacts passed hash checks.
+   Preserve weights, ordered features, preprocessing, calibration mapping, thresholds,
+   data identities and image digest unchanged. Final-evaluation authorization is
+   separate; earlier consumed approvals cannot authorize the replacement. Exact
+   candidate and freeze identities are recorded in [ARD-0035](../architecture/ARD-0035-nebius-lightgbm-first.md).
+
+4. **Complete one auditable configuration and artifact inventory.** Most material
+   already exists across the campaign plan, request, candidate, training manifest,
+   environment record and result storage. Consolidate an index linking resolved
+   hyperparameters, feature exclusions/order, seeds, class weighting, early-stopping
+   settings, calibration parameters, thresholds, data/split hashes, Git/image
+   identities, Job IDs, MLflow IDs and checksums. Verify retrieval from durable
+   storage so recovery does not depend on local `outputs/`.
+
+5. **Audit MLflow completeness and close tracking gaps.** Development logging
+   already saves parameters, summary metrics, lineage, model weights, calibration
+   manifests, importance and reliability evidence. Independently read back the
+   selected run and trial records against their receipts, and make the configuration
+   inventory and complete-release location discoverable. Current logging lacks
+   per-iteration learning curves and does not explicitly upload every configuration
+   or schema artifact. Add those capabilities for future experiments while preserving
+   frozen evidence. See [tracking.py](../../backend/app/ml/lightgbm/tracking.py) and
+   [retention and tracking](../use-cases/ml-model-serving.md#implemented-retention-and-tracking).
+
+6. **Resolve G8's remaining execution prerequisites.** Complete the supervised
+   comparison audit, then bind the unsigned production package to the corrected
+   comparison evidence. Finish current storage, identity, image, MLflow and output
+   checks; obtain replacement-specific final authorization. R2's cancelled attempt
+   established no semantic pass. The [supervised audit proposal](../evidence/g8-comparison-supervised-proposal-20260921.json)
+   remains a separate approval gate; this plan authorizes no workload.
+
+7. **Run the authorized evaluation once and verify everything saved.** Retain
+   scored outputs before logging; complete the C4 comparison, raw/calibrated Brier
+   and ECE, classification metrics, uncertainty and resource evidence. Finish one
+   MLflow evaluation run and the complete checksum-bound result release. Independently
+   verify MLflow artifacts, dataset lineage, S3 contents and publication markers;
+   use retained-output recovery without rescoring. Follow the
+   [G8 completion procedure](../operations/g8/g8-completion-recovery.md).
+
+8. **Close G9, then decide the next ML campaign and deployment work.** Record an
+   explicit accept/reject/research-only disposition. If more development is justified,
+   predeclare broader chronological validation, bounded hyperparameter trials,
+   calibration separation, learning-curve logging and acceptance criteria before
+   running Nebius Jobs. Model Registry version publication and promotion remain
+   unimplemented: the existing namespace and logged model file are insufficient.
+   Verified model packaging, version registration, promotion and rollback are
+   subsequent delivery work under the [registration plan](../use-cases/ml-model-serving.md#planned-registration-and-promotion-procedure).
+
+## Retained status snapshot — 2026-09-21
 
 This is the dated status snapshot for the [main roadmap](ROADMAP-MAIN.md).
 Dates are approved baseline targets, not a revised delivery forecast. A passed
