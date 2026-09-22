@@ -48,8 +48,8 @@ final class AgentOrchestrator {
             JsonNode ids = response.path("agent_ids");
             if (ids.isArray()) {
                 ids.forEach(id -> {
-                    if (id.isTextual() && !id.textValue().isBlank()) {
-                        agentIds.add(id.textValue());
+                    if (id.isString() && !id.stringValue().isBlank()) {
+                        agentIds.add(id.stringValue());
                     }
                 });
             }
@@ -61,7 +61,7 @@ final class AgentOrchestrator {
                 JsonNode validated = validateIntent(intent, tick);
                 if (validated != null) {
                     intents.add(validated);
-                    agentIds.add(validated.path("agent_id").textValue());
+                    agentIds.add(validated.path("agent_id").stringValue());
                 }
             });
         }
@@ -107,6 +107,6 @@ final class AgentOrchestrator {
 
     private static String textValue(JsonNode node, String field) {
         JsonNode value = node.path(field);
-        return value.isTextual() ? value.textValue() : "";
+        return value.isString() ? value.stringValue() : "";
     }
 }

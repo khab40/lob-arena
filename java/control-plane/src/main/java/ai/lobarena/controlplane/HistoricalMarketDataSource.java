@@ -106,8 +106,8 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         }
         try {
             manifest = mapper.readTree(Files.readString(manifestPath));
-            if (!"ready".equals(manifest.path("status").asText())
-                    || !requestedDatasetId.equals(manifest.path("dataset_id").asText())) {
+            if (!"ready".equals(manifest.path("status").asString())
+                    || !requestedDatasetId.equals(manifest.path("dataset_id").asString())) {
                 throw new IllegalArgumentException("historical manifest is not ready");
             }
             datasetId = requestedDatasetId;
@@ -241,22 +241,22 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
 
     synchronized String symbol() {
         requireLoaded();
-        return manifest.path("symbol").asText();
+        return manifest.path("symbol").asString();
     }
 
     synchronized String venue() {
         requireLoaded();
-        return manifest.path("venue").asText("LOBSTER");
+        return manifest.path("venue").asString("LOBSTER");
     }
 
     synchronized String format() {
         requireLoaded();
-        return manifest.path("format").asText("lobster_parquet_v1");
+        return manifest.path("format").asString("lobster_parquet_v1");
     }
 
     synchronized String historicalSourceType() {
         requireLoaded();
-        return manifest.path("source_type").asText("lobster");
+        return manifest.path("source_type").asString("lobster");
     }
 
     synchronized long priceTickSizeNanos() {
@@ -276,7 +276,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
             throw new IllegalStateException("SHA-256 must be available", exception);
         }
         manifest.path("source_files").forEach(file ->
-                digest.update(file.path("sha256").asText().getBytes(StandardCharsets.US_ASCII)));
+                digest.update(file.path("sha256").asString().getBytes(StandardCharsets.US_ASCII)));
         return HexFormat.of().formatHex(digest.digest());
     }
 
@@ -312,7 +312,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
                 .put("format", format())
                 .put("symbol", symbol())
                 .put("venue", venue())
-                .put("trade_date", manifest.path("trade_date").asText())
+                .put("trade_date", manifest.path("trade_date").asString())
                 .put("depth", manifest.path("depth").intValue())
                 .put("source_sequence", sourceSequence)
                 .put("replay_position", replayPosition)
@@ -334,14 +334,14 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
                         || !Files.isRegularFile(path.resolve("book_snapshots.parquet"))) return;
                 try {
                     JsonNode candidate = mapper.readTree(Files.readString(manifestPath));
-                    if (!"ready".equals(candidate.path("status").asText())) return;
+                    if (!"ready".equals(candidate.path("status").asString())) return;
                     result.add(mapper.createObjectNode()
-                            .put("dataset_id", candidate.path("dataset_id").asText())
-                            .put("source_type", candidate.path("source_type").asText("lobster"))
-                            .put("symbol", candidate.path("symbol").asText())
-                            .put("venue", candidate.path("venue").asText("LOBSTER"))
-                            .put("format", candidate.path("format").asText("lobster_parquet_v1"))
-                            .put("trade_date", candidate.path("trade_date").asText())
+                            .put("dataset_id", candidate.path("dataset_id").asString())
+                            .put("source_type", candidate.path("source_type").asString("lobster"))
+                            .put("symbol", candidate.path("symbol").asString())
+                            .put("venue", candidate.path("venue").asString("LOBSTER"))
+                            .put("format", candidate.path("format").asString("lobster_parquet_v1"))
+                            .put("trade_date", candidate.path("trade_date").asString())
                             .put("start_time", formatMilliseconds(candidate.path("start_time_ms").longValue()))
                             .put("end_time", formatMilliseconds(candidate.path("end_time_ms").longValue()))
                             .put("depth", candidate.path("depth").intValue())
@@ -385,8 +385,8 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         context.put("dataset_id", datasetId);
         context.put("format", format());
         context.put("venue", venue());
-        context.put("symbol", manifest.path("symbol").asText());
-        context.put("trade_date", manifest.path("trade_date").asText());
+        context.put("symbol", manifest.path("symbol").asString());
+        context.put("trade_date", manifest.path("trade_date").asString());
         context.put("depth", manifest.path("depth").intValue());
         context.put("source_sequence", sourceSequence);
         context.put("replay_position", replayPosition);
@@ -430,7 +430,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
                     .put("order_id", Long.toString(rows.getLong("source_order_id")))
                     .put("quantity", rows.getLong("size"))
                     .put("price_x10000", rows.getLong("price_x10000"))
-                    .put("symbol", manifest.path("symbol").asText())
+                    .put("symbol", manifest.path("symbol").asString())
                     .put("source", "historical");
             putNullable(event, "side", rows.getString("book_side"), true);
             putNullable(event, "aggressor_side", rows.getString("aggressor_side"), true);
@@ -532,7 +532,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
     private String verifyOutputFile(Path path, String name) throws IOException {
         JsonNode expected = null;
         for (JsonNode output : manifest.path("output_files")) {
-            if (name.equals(output.path("name").asText())) {
+            if (name.equals(output.path("name").asString())) {
                 expected = output;
                 break;
             }
@@ -540,7 +540,7 @@ final class HistoricalMarketDataSource implements ReplayMarketDataSource {
         if (expected == null) {
             throw new IllegalArgumentException("historical manifest is missing output metadata for " + name);
         }
-        String expectedHash = expected.path("sha256").asText();
+        String expectedHash = expected.path("sha256").asString();
         if (!expectedHash.matches("[0-9a-f]{64}")) {
             throw new IllegalArgumentException("historical manifest has an invalid SHA-256 for " + name);
         }
