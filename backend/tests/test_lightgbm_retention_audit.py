@@ -205,3 +205,25 @@ def test_redirects_and_untrusted_artifact_root(monkeypatch):
         reader.artifact("mlflow-artifacts://elsewhere/path", "model", 1)
     with pytest.raises(ValueError, match="unsafe"):
         reader.artifact("mlflow-artifacts:/../path", "model", 1)
+
+
+@pytest.mark.parametrize("verified", [True, False])
+def test_tracking_only_execution_never_reads_storage(inventory, tmp_path, monkeypatch, verified):
+    import audit_lightgbm_retention as cli
+    source = tmp_path / "inventory.json"
+    source.write_text(json.dumps(inventory))
+    target = tmp_path / "tracking.json"
+    monkeypatch.setattr(sys, "argv", [str(SCRIPTS / "audit_lightgbm_retention.py"),
+        "--inventory", str(source), "--inventory-sha256", hashlib.sha256(source.read_bytes()).hexdigest(),
+        "--results-bucket", "results", "--input-bucket", "inputs", "--output", str(target),
+        "--execute", "--component", "mlflow"])
+    def forbidden_storage():
+        pytest.fail("tracking-only execution must not construct a storage client")
+    monkeypatch.setattr(cli, "StorageReader", forbidden_storage)
+    monkeypatch.setattr(cli, "TrackingReader", lambda _: object())
+    monkeypatch.setattr(cli, "audit_tracking", lambda *a: {"verified": verified})
+    assert cli.main() == (0 if verified else 2)
+    report = json.loads(target.read_text())
+    assert report["storage"] == {"status": "not_attempted", "verified": False}
+    assert report["requested_components"] == ["mlflow"]
+    assert report["status"] == ("verified" if verified else "incomplete")
