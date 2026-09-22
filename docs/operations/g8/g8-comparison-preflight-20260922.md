@@ -93,3 +93,46 @@ The development S3 reader cannot inspect the production result prefix or intent:
 both metadata checks were denied. Denial is retained as unverified, never empty.
 The final-access key remains inactive; current access policy must establish the
 appropriate read-only preflight path before that check can pass.
+
+## Production verification runtime repair
+
+As a validation engineer,
+I want repeated verification to reuse an independently recomputed comparison only after rechecking its input bytes,
+So that checkpoint and logging checks fit a measured execution window without weakening evidence integrity.
+
+Static review found at least ten full C4 passes before publication: initial report
+(one), retention validation (one), first recovery (three), finalization's seal
+validation (one), recovery (three), and snapshot validation (one). Every pass
+exhausts 30 replay streams; the current Job contract permits only 3600 seconds.
+The operator selected verification optimization followed by a Nebius benchmark.
+
+```gherkin
+Feature: Reuse an independently recomputed C4 comparison
+  Scenario: First independent verification
+    Given the scorer produced a C4 report
+    When its first independent verification runs
+    Then the original comparison is recomputed in full
+
+  Scenario: Verify another copy of unchanged evidence
+    Given this process independently recomputed the same comparison
+    When another checkpoint copy passes all existing artifact and comparison hash checks
+    Then verification may reuse the independently computed metrics
+    And returned report mutations cannot change the retained metrics
+
+  Scenario: Reject changed evidence before reuse
+    Given an independently computed comparison is retained in memory
+    When any bound input bytes change
+    Then existing integrity validation fails before reuse
+
+  Scenario: Verify in a fresh process
+    Given a different process opens the retained checkpoint
+    When it verifies the comparison
+    Then it recomputes the comparison in full
+```
+
+Plan: retain one process-local entry keyed by the canonical profile and prediction
+manifest, after unchanged release, projection and original-checkpoint validation.
+Initial report generation never populates this entry. No disk cache, signed
+success shortcut or cross-process reuse is introduced. Run a synthetic frozen
+runtime rehearsal on Nebius, including changed-input and fresh-process checks;
+measure full recomputation counts and elapsed time before declaring readiness.
