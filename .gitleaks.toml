@@ -21,4 +21,7 @@ regexes = [
   # SHA-256 of the transport probe's inactive final-key metadata, no credential payload.
   # Recorded in docs/evidence/g8-production-transport-probe-20260921.json.
   '''^aa065207725aea9e0134cd762ff16c41770a67b575e6a9394d4a0d7340cf9d25$''',
+  # SHA-256 of R2's inactive final-key metadata receipt, independently rehashed.
+  # Recorded in docs/evidence/g8-comparison-semantics-r2-20260921.json; no secret payload.
+  '''^e2abf815f17ae88f28b0d9d1d7c2f5f1f2d6008ab9c7d8f0a1f6105a065fb0fe$''',
 ]

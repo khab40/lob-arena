@@ -84,7 +84,7 @@ def test_integrity_gates_survive_optimization(tmp_path, optimization, case):
     result = subprocess.run([sys.executable, *flags, "-c", HARNESS, str(WORKER), str(tmp_path), case],
                             env=env, capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == ("RuntimeBoundary" if case == "valid" else "ValueError")
+    assert result.stdout.splitlines()[-1] == ("RuntimeBoundary" if case == "valid" else "ValueError")
 
 
 def test_optimized_cli_rejects_missing_approval_without_exposing_input(tmp_path):
@@ -95,7 +95,10 @@ def test_optimized_cli_rejects_missing_approval_without_exposing_input(tmp_path)
     result = subprocess.run([sys.executable, "-O", str(WORKER), str(proposal)],
                             env=env, capture_output=True, text=True, timeout=30)
     assert result.returncode == 1 and not result.stderr
-    assert json.loads(result.stdout) == {
+    records = [json.loads(line) for line in result.stdout.splitlines()]
+    assert records[0]['schema_version'] == 'g8_comparison_progress_v1'
+    assert records[0]['stage'] == 'approval'
+    assert records[-1] == {
         "audit_passed": False, "error_type": "ValueError", "stage": "approval",
         "inventoried_files_rehashed": 0, "checkpoints_verified": 0,
         "canonical_replays_exhausted": 0,

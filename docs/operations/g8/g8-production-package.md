@@ -5,7 +5,7 @@
 > [execution policy](../../ml/model-validation-execution-policy.md). Earlier
 > dated receipts retain their values; obsolete billing/expiry gates do not apply.
 
-Status: **unsigned review requires comparison-metadata correction; no final-evaluation Job authorized or submitted**.
+Status: **corrected comparison staged; semantic verification incomplete after cancelled R2; no final-evaluation Job authorized or submitted**.
 This follows [PR #200](https://github.com/khab40/lob-arena/pull/200) and independent
 [readback of all 64 rehearsal S3 objects](../../evidence/g8-independent-s3-readback-20260917.json). Their sizes/hashes, SUCCESS inventory,
 checksum inventory and four MLflow artifact hashes match the retained checkpoint.
@@ -51,8 +51,9 @@ neither a runnable signed manifest nor a submission command.
 
 1. Preserve the verified original checkpoint bytes and genuine registration now
    bound into the unsigned review. Validate production comparison semantics on
-   Nebius after correcting the missing `preparation.logical_name` field in a separate
-   tree and rebinding the review. The approved audit failed; no retry has run.
+   Nebius. The missing `preparation.logical_name` field is corrected in a separate
+   verified tree, but the approved R2 was cancelled without a worker result. Complete
+   the supervised audit and then rebind the unsigned review.
 2. Preserve the completed [production transport verification](../../evidence/g8-production-transport-probe-20260921.json).
    Recheck the finalized signed package and actual execution context at submission.
 3. Complete fresh permissions, pinned image alias, storage capacity, credentials
@@ -127,7 +128,7 @@ probe-created package and freeing the canonical production path. The VM is stopp
 and the final key inactive. No protected rows, model scoring or final access occurred.
 The provider mount warning recurred; successful runtime checks do not explain it.
 
-Remaining gates: corrected comparison audit approval and verification on Nebius,
+Remaining gates: supervised comparison audit approval and verification on Nebius,
 production-review rebinding, fresh preflight, canonical request and replacement-specific authorization.
 G8 remains open; the unsigned review is not execution authority.
 
@@ -157,6 +158,25 @@ separate native comparison tree. The worker adds fixed failure-stage names and
 aggregate completed counts without exception text or protected values. The proposal
 retains one Job, 4 vCPU / 16 GiB, 100 GiB disk, one-hour timeout and no restart/secrets.
 `scripts/prepare_g8_comparison_audit_revision.py` prepares these review artifacts
-without executing the frozen runtime. The corrected tree is not staged and the
-retry is not authorized. After successful verification, rebind the current unsigned
-production review's comparison path/hash; its existing binding remains defective.
+without executing the frozen runtime. PR #210's retry was approved and the separate
+corrected tree staged: all 377 files and 25 package files were independently rehashed,
+with 29,078,982,656 bytes free. Original comparison bytes remain preserved.
+
+R2 Job `aijob-e00v9yf6zxx3nkarn2` [was cancelled](../../evidence/g8-comparison-semantics-r2-20260921.json)
+after the expected 50-minute internal deadline. Only provider startup logs were
+returned; worker startup, completed checks and parsing progress cannot be established.
+The final provider response omits start/finish times; the pre-cancellation readback
+retains its reported start. Compute and its filesystem attachment were released,
+the staging VM is stopped and the final key inactive. The one-Job approval is consumed.
+
+The [supervised proposal](../../evidence/g8-comparison-supervised-proposal-20260921.json)
+retains the same frozen code, corrected comparison, parsing scope and one-hour provider
+resource bound. A separately injected, hash-bound launcher emits before native mount
+I/O and supervises the child for at most 3,000 seconds; a 2,940-second worker alarm
+reports redacted progress. The operator cancels if launcher output is absent five
+minutes after provider start. Flushed fixed stages distinguish startup, hashing,
+bootstrap and replay completion without exposing rows. These changes improve
+observability and timeout enforcement; they do not establish R2's root cause or
+prove that full parsing fits the existing bound. No new Job is authorized or staged.
+After successful verification, rebind the current unsigned production review's
+comparison path/hash; its existing binding remains defective.

@@ -50,8 +50,12 @@ Generated comparison metadata omitted required `preparation.logical_name`; the
 exact failing call is unconfirmed because the original result redacted all details.
 The [retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
 preserves the original tree and adds corrected metadata plus safe stage diagnostics.
-No retry is authorized or submitted; VM stopped, Job compute released, final key inactive.
-Remaining gates: approve the corrected audit and verify comparison semantics on Nebius;
+PR #210's corrected R2 was approved and submitted once, then
+[cancelled without a worker result](../evidence/g8-comparison-semantics-r2-20260921.json)
+after its expected internal deadline. Parsing progress and root cause are unknown.
+VM stopped, Job compute released, final key inactive; no final evaluation ran.
+Remaining gates: approve the [supervised audit](../evidence/g8-comparison-supervised-proposal-20260921.json)
+and verify comparison semantics on Nebius;
 rebind the unsigned production review to the corrected comparison; perform
 current identity/storage/image/output preflight; obtain replacement-specific
 approval and sign; execute once; independently verify production S3/MLflow results.
