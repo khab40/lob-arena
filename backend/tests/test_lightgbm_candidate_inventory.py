@@ -104,6 +104,10 @@ def test_cli_needs_no_ml_dependencies_and_never_overwrites_evidence(tmp_path, fl
     output = tmp_path / 'inventory.json'
     command = [sys.executable, '-S', *flags, str(SCRIPT), '--freeze-root', str(root),
                '--freeze-sha256', anchor, '--output', str(output)]
+    wrong_anchor = list(command)
+    wrong_anchor[wrong_anchor.index('--freeze-sha256') + 1] = '0' * 64
+    rejected_anchor = subprocess.run(wrong_anchor, capture_output=True, text=True, timeout=10)
+    assert rejected_anchor.returncode != 0 and not output.exists()
     passed = subprocess.run(command, capture_output=True, text=True, timeout=10)
     assert passed.returncode == 0, passed.stderr
     before = output.read_bytes()

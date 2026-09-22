@@ -29,6 +29,10 @@ creates the namespace. A model file logged to a run is not by itself a complete
 serving package, and the evaluation run's four artifacts do not contain all
 bytes needed by the current release verifier.
 
+The [candidate inventory command](../ml/lightgbm-candidate-inventory.md) provides a
+portable, hash-verified local index of settings, artifacts and remote references.
+It does not query MLflow or establish remote storage availability.
+
 To retrieve today's selected candidate, use the G6 comparison and G7 freeze
 receipt to resolve its development run/result URI. Verify the candidate, source
 release and artifact hashes; recover the complete root-relative bundle from
