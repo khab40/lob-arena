@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -21,14 +22,23 @@ def save(path, value):
 def provider(action, timeout=45):
     if action not in {"get", "start", "stop"}:
         raise ValueError("unsupported VM action")
-    result = subprocess.run(
+    child = subprocess.Popen(
         ["rtk", "proxy", "nebius", "compute", "instance", action,
-         "--id", VM_ID, "--format", "json"],
-        capture_output=True, text=True, timeout=timeout,
+         "--id", VM_ID, "--format", "json", "--no-browser", "--retries", "1"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, start_new_session=True,
     )
-    if result.returncode:
+    try:
+        stdout, _ = child.communicate(timeout=timeout)
+    except BaseException:
+        try:
+            os.killpg(child.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        child.communicate()
+        raise
+    if child.returncode:
         raise RuntimeError("provider command failed; output redacted")
-    value = json.loads(result.stdout)
+    value = json.loads(stdout)
     if value["metadata"]["id"] != VM_ID:
         raise ValueError("unexpected VM identity")
     return {"id": VM_ID, "state": value["status"]["state"],

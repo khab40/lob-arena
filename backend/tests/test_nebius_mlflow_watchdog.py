@@ -102,3 +102,22 @@ def test_dead_watchdog_prevents_start(tmp_path):
             return 1
     with pytest.raises(RuntimeError, match="exited"):
         watchdog.await_ready(tmp_path, Child(), time.monotonic() + 600)
+
+
+def test_provider_timeout_kills_the_entire_cli_process_group(monkeypatch):
+    class Child:
+        pid = 456
+        calls = 0
+        def communicate(self, timeout=None):
+            self.calls += 1
+            if self.calls == 1:
+                raise subprocess.TimeoutExpired("inert", timeout)
+            return "", ""
+    child = Child()
+    killed = []
+    monkeypatch.setattr(watchdog.subprocess, "Popen", lambda *a, **k: child)
+    monkeypatch.setattr(watchdog.os, "killpg", lambda *args: killed.append(args))
+    with pytest.raises(subprocess.TimeoutExpired):
+        watchdog.provider("get", timeout=1)
+    assert killed == [(456, watchdog.signal.SIGKILL)]
+    assert child.calls == 2
