@@ -77,3 +77,20 @@ seven artifact GETs. Combined ceiling: two starts, 1 vCPU-hour / 4 GiB-hours at
 the nominal 15-minute targets; actual duration and verified shutdown are retained.
 Regression coverage rejects missing/incorrect anchors, different input records,
 feature-release identity, buckets and final paths, and retains full-hash checks.
+
+
+## Review and live result
+
+The corrected live audit verified all **90 dataset inputs and seven artifacts**
+(90,458 bytes), including model, training manifest, calibration, metrics, feature
+importance and reliability evidence. The run metadata response hash is identical
+before and after the checker correction. The existing historical run and frozen
+candidate were unchanged. The independent receipt comparison rechecked every
+artifact size/hash against the frozen inventory and the executed tool hashes.
+See the [final receipt](../evidence/lightgbm-lineage-verification-20260922.json).
+
+Review checked exact proof/inventory binding, full-hash rejection despite the
+alternate URI, bucket/final-path rejection, unchanged transport bounds and no
+remote writes. All 73 inert tests, Ruff, Markdown links and secret scanning pass.
+The VM is independently confirmed stopped. This closes the selected-run tracking
+step; comparison semantics, production preflight and final evaluation remain.
