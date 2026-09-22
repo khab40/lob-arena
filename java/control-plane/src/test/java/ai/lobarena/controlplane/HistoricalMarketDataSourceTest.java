@@ -135,12 +135,12 @@ class HistoricalMarketDataSourceTest {
         assertThat(source.venue()).isEqualTo("XNAS");
         assertThat(source.format()).isEqualTo("itch_parquet_v1");
         assertThat(source.historicalSourceType()).isEqualTo("nasdaq_itch");
-        assertThat(loaded.path("market_data").path("historical_source_type").textValue())
+        assertThat(loaded.path("market_data").path("historical_source_type").stringValue())
                 .isEqualTo("nasdaq_itch");
-        assertThat(source.datasets().get(0).path("venue").textValue()).isEqualTo("XNAS");
-        assertThat(source.datasets().get(0).path("format").textValue()).isEqualTo("itch_parquet_v1");
-        assertThat(source.integrity().path("source_stream_sha256").textValue()).hasSize(64);
-        assertThat(source.integrity().path("parser_config_sha256").textValue()).hasSize(64);
+        assertThat(source.datasets().get(0).path("venue").stringValue()).isEqualTo("XNAS");
+        assertThat(source.datasets().get(0).path("format").stringValue()).isEqualTo("itch_parquet_v1");
+        assertThat(source.integrity().path("source_stream_sha256").stringValue()).hasSize(64);
+        assertThat(source.integrity().path("parser_config_sha256").stringValue()).hasSize(64);
         assertThat(source.integrity().path("message_counts").path("A").intValue()).isEqualTo(1);
         source.close();
     }

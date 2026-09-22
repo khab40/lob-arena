@@ -38,11 +38,11 @@ class LiveArenaServiceTest {
 
         assertThat(state.path("tick").longValue()).isEqualTo(1);
         assertThat(state.path("running").booleanValue()).isTrue();
-        assertThat(state.path("active_agents").get(0).textValue()).isEqualTo("REMOTE_MM_001");
+        assertThat(state.path("active_agents").get(0).stringValue()).isEqualTo("REMOTE_MM_001");
         assertThat(state.path("book").path("bids")).isNotEmpty();
         assertThat(state.path("book").path("asks")).isNotEmpty();
         assertThat(state.path("exchange_events").get(state.path("exchange_events").size() - 1)
-                .path("event_type").textValue()).isEqualTo("snapshot");
+                .path("event_type").stringValue()).isEqualTo("snapshot");
         assertThat(Files.exists(output.resolve("snapshots/ticks.jsonl"))).isTrue();
     }
 
@@ -57,9 +57,9 @@ class LiveArenaServiceTest {
         JsonNode state = arena.stepForTest();
 
         assertThat(state.path("tick").longValue()).isEqualTo(1);
-        assertThat(state.path("events").get(0).path("agent_id").textValue()).isEqualTo("REMOTE_TAKER_001");
+        assertThat(state.path("events").get(0).path("agent_id").stringValue()).isEqualTo("REMOTE_TAKER_001");
         assertThat(state.path("exchange_events")).anyMatch(
-                event -> event.path("event_type").textValue().equals("execute"));
+                event -> event.path("event_type").stringValue().equals("execute"));
     }
 
     @Test
@@ -72,11 +72,11 @@ class LiveArenaServiceTest {
             state = arena.stepForTest();
         }
 
-        assertThat(state.path("active_scenario").path("scenario_family").textValue())
+        assertThat(state.path("active_scenario").path("scenario_family").stringValue())
                 .isEqualTo("spoofing_like_wall");
         assertThat(state.path("detectors").path("alerts")).isNotEmpty();
         assertThat(state.path("incidents")).hasSize(1);
-        assertThat(state.path("incidents").get(0).path("type").textValue())
+        assertThat(state.path("incidents").get(0).path("type").stringValue())
                 .isEqualTo("spoofing_like_detector");
         assertThat(Files.exists(output.resolve("incidents/incidents.jsonl"))).isTrue();
 
@@ -126,7 +126,7 @@ class LiveArenaServiceTest {
         assertThat(replay.path("events"))
                 .extracting(event -> event.path("sequence").longValue())
                 .containsExactly(1L, 2L, 3L, 4L);
-        assertThat(replay.path("stream_id").textValue()).isEqualTo(state.path("stream_id").textValue());
+        assertThat(replay.path("stream_id").stringValue()).isEqualTo(state.path("stream_id").stringValue());
     }
 
     @Test
@@ -134,7 +134,7 @@ class LiveArenaServiceTest {
         LiveArenaService arena = historicalArena(output, 4);
         JsonNode loaded = arena.loadDataSource("historical", "sample-btcusdt-0945");
 
-        assertThat(loaded.path("market_data").path("source_type").textValue()).isEqualTo("historical");
+        assertThat(loaded.path("market_data").path("source_type").stringValue()).isEqualTo("historical");
         JsonNode state = null;
         for (int index = 0; index < 3; index++) {
             state = arena.stepForTest();
@@ -143,12 +143,12 @@ class LiveArenaServiceTest {
         assertThat(state.path("active_scenario").isNull()).isTrue();
         assertThat(state.path("historical_events")).isNotEmpty();
         assertThat(state.path("exchange_events"))
-                .filteredOn(event -> "historical".equals(event.path("source").textValue()))
+                .filteredOn(event -> "historical".equals(event.path("source").stringValue()))
                 .allMatch(event -> event.path("source_sequence").isIntegralNumber())
                 .allMatch(event -> event.path("scenario_id").isNull());
         assertThat(state.path("exchange_events"))
                 .filteredOn(event -> event.hasNonNull("order_id"))
-                .allMatch(event -> event.path("order_id").textValue().startsWith("HIST:"));
+                .allMatch(event -> event.path("order_id").stringValue().startsWith("HIST:"));
         assertThat(state.path("detectors").toString()).doesNotContain("scenario");
     }
 
@@ -182,23 +182,23 @@ class LiveArenaServiceTest {
         JsonNode label = arena.launchScenario("spoofing_like_wall");
         JsonNode state = arena.stepForTest();
 
-        assertThat(label.path("agent_id").textValue()).startsWith("SYN:");
+        assertThat(label.path("agent_id").stringValue()).startsWith("SYN:");
         assertThat(state.path("exchange_events"))
-                .filteredOn(event -> "historical".equals(event.path("source").textValue()))
+                .filteredOn(event -> "historical".equals(event.path("source").stringValue()))
                 .allMatch(event -> {
                     String participant = event.hasNonNull("agent_id")
-                            ? event.path("agent_id").textValue()
-                            : event.path("aggressor_agent_id").asText("");
+                            ? event.path("agent_id").stringValue()
+                            : event.path("aggressor_agent_id").asString("");
                     return participant.startsWith("HIST:");
                 });
         assertThat(state.path("exchange_events"))
                 .filteredOn(event -> event.hasNonNull("scenario_id"))
-                .allMatch(event -> event.path("order_id").asText("").startsWith("SYN:"));
+                .allMatch(event -> event.path("order_id").asString("").startsWith("SYN:"));
         int firstSynthetic = -1;
         int lastHistorical = -1;
         for (int index = 0; index < state.path("exchange_events").size(); index++) {
             JsonNode event = state.path("exchange_events").get(index);
-            if ("historical".equals(event.path("source").textValue())) {
+            if ("historical".equals(event.path("source").stringValue())) {
                 lastHistorical = index;
             } else if (event.hasNonNull("scenario_id") && firstSynthetic < 0) {
                 firstSynthetic = index;
@@ -206,7 +206,7 @@ class LiveArenaServiceTest {
         }
         assertThat(firstSynthetic).isGreaterThan(lastHistorical);
         assertThat(state.path("detectors").path("alerts"))
-                .anyMatch(alert -> "spoofing_like_detector".equals(alert.path("name").textValue()));
+                .anyMatch(alert -> "spoofing_like_detector".equals(alert.path("name").stringValue()));
     }
 
     @Test
@@ -218,15 +218,15 @@ class LiveArenaServiceTest {
 
         assertThat(comparison.path("control").path("source_row_count").longValue()).isEqualTo(12);
         assertThat(comparison.path("hybrid").path("source_row_count").longValue()).isEqualTo(12);
-        assertThat(comparison.path("control").path("stream_id").textValue()).isNotBlank();
-        assertThat(comparison.path("hybrid").path("stream_id").textValue())
+        assertThat(comparison.path("control").path("stream_id").stringValue()).isNotBlank();
+        assertThat(comparison.path("hybrid").path("stream_id").stringValue())
                 .isNotBlank()
-                .isNotEqualTo(comparison.path("control").path("stream_id").textValue());
+                .isNotEqualTo(comparison.path("control").path("stream_id").stringValue());
         assertThat(comparison.path("control").path("ground_truth").isNull()).isTrue();
         assertThat(comparison.path("hybrid").path("ground_truth").path("has_attack").booleanValue())
                 .isTrue();
         assertThat(comparison.path("hybrid").path("ground_truth").path("order_ids"))
-                .allMatch(id -> id.textValue().startsWith("SYN:"));
+                .allMatch(id -> id.stringValue().startsWith("SYN:"));
         assertThat(comparison.path("control").path("detector_alert_ticks")
                         .path("quote_stuffing_detector").isMissingNode())
                 .isTrue();
@@ -234,15 +234,15 @@ class LiveArenaServiceTest {
                         .path("quote_stuffing_detector"))
                 .as(comparison.toPrettyString())
                 .isNotEmpty();
-        assertThat(comparison.path("events_sha256").textValue()).isNotBlank();
+        assertThat(comparison.path("events_sha256").stringValue()).isNotBlank();
         assertThat(Files.exists(output.resolve("historical-replay/comparisons.jsonl"))).isTrue();
 
         JsonNode repeated =
                 arena.runReplayComparison("sample-btcusdt-0945", "quote_stuffing", 10);
-        assertThat(repeated.path("control").path("stream_hash").textValue())
-                .isEqualTo(comparison.path("control").path("stream_hash").textValue());
-        assertThat(repeated.path("hybrid").path("stream_hash").textValue())
-                .isEqualTo(comparison.path("hybrid").path("stream_hash").textValue());
+        assertThat(repeated.path("control").path("stream_hash").stringValue())
+                .isEqualTo(comparison.path("control").path("stream_hash").stringValue());
+        assertThat(repeated.path("hybrid").path("stream_hash").stringValue())
+                .isEqualTo(comparison.path("hybrid").path("stream_hash").stringValue());
         assertThat(comparison.path("determinism").path("control_stream_match").booleanValue())
                 .isTrue();
         assertThat(comparison.path("determinism").path("hybrid_stream_match").booleanValue())
@@ -253,8 +253,8 @@ class LiveArenaServiceTest {
                 .isTrue();
         JsonNode controlAttackTick = comparison.path("control").path("validation_trace").get(1);
         JsonNode hybridAttackTick = comparison.path("hybrid").path("validation_trace").get(1);
-        assertThat(hybridAttackTick.path("book_hash").textValue())
-                .isEqualTo(controlAttackTick.path("book_hash").textValue());
+        assertThat(hybridAttackTick.path("book_hash").stringValue())
+                .isEqualTo(controlAttackTick.path("book_hash").stringValue());
         assertThat(hybridAttackTick.path("message_count").longValue())
                 .isGreaterThan(controlAttackTick.path("message_count").longValue());
         assertThat(hybridAttackTick.path("cancel_count").longValue())
@@ -328,18 +328,18 @@ class LiveArenaServiceTest {
                 .isEqualTo(8);
         assertThat(first.path("control").path("source_integrity").path("output_sha256"))
                 .isEqualTo(first.path("hybrid").path("source_integrity").path("output_sha256"));
-        assertThat(repeated.path("control").path("stream_hash").textValue())
-                .isEqualTo(first.path("control").path("stream_hash").textValue());
-        assertThat(repeated.path("hybrid").path("stream_hash").textValue())
-                .isEqualTo(first.path("hybrid").path("stream_hash").textValue());
-        assertThat(differentSeed.path("control").path("historical_event_hash").textValue())
-                .isEqualTo(first.path("control").path("historical_event_hash").textValue());
-        assertThat(differentSeed.path("hybrid").path("historical_event_hash").textValue())
-                .isEqualTo(first.path("hybrid").path("historical_event_hash").textValue());
-        assertThat(differentSeed.path("hybrid").path("synthetic_event_hash").textValue())
-                .isNotEqualTo(first.path("hybrid").path("synthetic_event_hash").textValue());
-        assertThat(first.path("control").path("historical_snapshot_stream_hash").textValue())
-                .isEqualTo(first.path("hybrid").path("historical_snapshot_stream_hash").textValue());
+        assertThat(repeated.path("control").path("stream_hash").stringValue())
+                .isEqualTo(first.path("control").path("stream_hash").stringValue());
+        assertThat(repeated.path("hybrid").path("stream_hash").stringValue())
+                .isEqualTo(first.path("hybrid").path("stream_hash").stringValue());
+        assertThat(differentSeed.path("control").path("historical_event_hash").stringValue())
+                .isEqualTo(first.path("control").path("historical_event_hash").stringValue());
+        assertThat(differentSeed.path("hybrid").path("historical_event_hash").stringValue())
+                .isEqualTo(first.path("hybrid").path("historical_event_hash").stringValue());
+        assertThat(differentSeed.path("hybrid").path("synthetic_event_hash").stringValue())
+                .isNotEqualTo(first.path("hybrid").path("synthetic_event_hash").stringValue());
+        assertThat(first.path("control").path("historical_snapshot_stream_hash").stringValue())
+                .isEqualTo(first.path("hybrid").path("historical_snapshot_stream_hash").stringValue());
         assertThat(repeated.path("control").path("validation_trace"))
                 .isEqualTo(first.path("control").path("validation_trace"));
         assertThat(repeated.path("hybrid").path("validation_trace"))
@@ -350,24 +350,24 @@ class LiveArenaServiceTest {
             long observationTick = controlObservation.path("tick").longValue();
             assertThat(hybridObservation.path("tick").longValue()).isEqualTo(observationTick);
             if (observationTick == 0 || observationTick >= 5) {
-                assertThat(hybridObservation.path("book_hash").textValue())
+                assertThat(hybridObservation.path("book_hash").stringValue())
                         .as(
                                 "book outside the layering causal neighbourhood at tick %s%ncontrol=%s%nhybrid=%s",
                                 observationTick,
                                 controlObservation,
                                 hybridObservation)
-                        .isEqualTo(controlObservation.path("book_hash").textValue());
+                        .isEqualTo(controlObservation.path("book_hash").stringValue());
             } else {
-                assertThat(hybridObservation.path("book_hash").textValue())
+                assertThat(hybridObservation.path("book_hash").stringValue())
                         .as("intended layering impact at tick %s", observationTick)
-                        .isNotEqualTo(controlObservation.path("book_hash").textValue());
+                        .isNotEqualTo(controlObservation.path("book_hash").stringValue());
             }
         }
         assertThat(first.path("hybrid").path("synthetic_events"))
                 .allMatch(event -> event.path("tick").longValue() >= 1
                         && event.path("tick").longValue() <= 5);
         assertThat(first.path("control").path("ground_truth").isNull()).isTrue();
-        assertThat(first.path("hybrid").path("ground_truth").path("source").textValue())
+        assertThat(first.path("hybrid").path("ground_truth").path("source").stringValue())
                 .isEqualTo("synthetic_scenario");
 
         arena.loadDataSource("hybrid", "lobster-spy-fixture", 7);
@@ -382,7 +382,7 @@ class LiveArenaServiceTest {
         int firstSynthetic = -1;
         for (int index = 0; index < live.path("exchange_events").size(); index++) {
             JsonNode event = live.path("exchange_events").get(index);
-            if ("historical".equals(event.path("source").textValue())) {
+            if ("historical".equals(event.path("source").stringValue())) {
                 lastHistorical = index;
             } else if (event.hasNonNull("scenario_id") && firstSynthetic < 0) {
                 firstSynthetic = index;
@@ -407,11 +407,11 @@ class LiveArenaServiceTest {
         JsonNode loaded = arena.loadDataSource("historical", "lobster-spy-fixture");
         JsonNode state = arena.stepForTest();
 
-        assertThat(loaded.path("market_data").path("historical_source_type").textValue())
+        assertThat(loaded.path("market_data").path("historical_source_type").stringValue())
                 .isEqualTo("nasdaq_itch");
         assertThat(state.path("exchange_events"))
-                .filteredOn(event -> "historical".equals(event.path("source").textValue()))
-                .anyMatch(event -> event.path("agent_id").asText("").contains(":P:NASDAQ_ITCH"));
+                .filteredOn(event -> "historical".equals(event.path("source").stringValue()))
+                .anyMatch(event -> event.path("agent_id").asString("").contains(":P:NASDAQ_ITCH"));
     }
 
     @Test
@@ -442,8 +442,8 @@ class LiveArenaServiceTest {
         assertThat(label.path("start_exchange_timestamp_ns").longValue())
                 .isEqualTo(34_200_000_000_003L);
         assertThat(label.path("end_exchange_timestamp_ns").isIntegralNumber()).isTrue();
-        assertThat(label.path("schedule_sha256").textValue())
-                .isEqualTo(hybridSchedule.path("schedule_sha256").textValue());
+        assertThat(label.path("schedule_sha256").stringValue())
+                .isEqualTo(hybridSchedule.path("schedule_sha256").stringValue());
         assertThat(comparison.path("determinism").path("hybrid_trace_match").booleanValue())
                 .isTrue();
 
@@ -454,7 +454,7 @@ class LiveArenaServiceTest {
             if (event.path("exchange_timestamp_ns").longValue() != 34_200_000_000_003L) {
                 continue;
             }
-            if ("historical".equals(event.path("source").textValue())) {
+            if ("historical".equals(event.path("source").stringValue())) {
                 lastHistoricalAtTrigger = Math.max(lastHistoricalAtTrigger, event.path("sequence").longValue());
             } else if (event.hasNonNull("scenario_id")) {
                 firstSyntheticAtTrigger = Math.min(firstSyntheticAtTrigger, event.path("sequence").longValue());
@@ -465,7 +465,7 @@ class LiveArenaServiceTest {
         assertThat(lastHistoricalAtTrigger).isLessThan(firstSyntheticAtTrigger);
         assertThat(events)
                 .filteredOn(event -> event.hasNonNull("scenario_id"))
-                .allMatch(event -> "simulation".equals(event.path("source").textValue()));
+                .allMatch(event -> "simulation".equals(event.path("source").stringValue()));
     }
 
     @Test

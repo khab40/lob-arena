@@ -26,7 +26,7 @@ class ArenaControllerTest {
 
         assertThat(controller.state().path("running").booleanValue()).isFalse();
         assertThat(controller.start().path("running").booleanValue()).isTrue();
-        assertThat(controller.launchScenario("spoofing-like").path("scenario_family").textValue())
+        assertThat(controller.launchScenario("spoofing-like").path("scenario_family").stringValue())
                 .isEqualTo("spoofing_like_wall");
         controller.internalStep();
         controller.internalStep();
@@ -34,8 +34,8 @@ class ArenaControllerTest {
 
         JsonNode incidents = controller.incidents();
         assertThat(incidents).hasSize(1);
-        String incidentId = incidents.get(0).path("id").textValue();
-        assertThat(controller.incident(incidentId).path("scenario_family").textValue())
+        String incidentId = incidents.get(0).path("id").stringValue();
+        assertThat(controller.incident(incidentId).path("scenario_family").stringValue())
                 .isEqualTo("spoofing_like_wall");
         assertThat(controller.exchangeEvents(0, 10).path("events")).isNotEmpty();
         assertThat(controller.metricsState().path("tick").longValue()).isEqualTo(3);
