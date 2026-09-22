@@ -1,5 +1,85 @@
 # Independent LightGBM retention audit
 
+## User story and readiness
+
+As a validation engineer,
+I want to retrieve the frozen candidate's stored evidence and verify its MLflow lineage,
+So that I can establish retention and traceability before requesting final evaluation.
+
+- **Actor:** validation engineer, with the platform operator controlling the existing MLflow VM.
+- **Goal:** verify exact stored development artifacts and the selected MLflow run.
+- **Value:** detect missing, corrupted or mismatched evidence before final authorization.
+- **Acceptance scenarios:** exact retrieval, lineage mismatch, component resumption,
+  automatic shutdown and unavailable-service reporting below.
+- **Out of scope:** retraining, scoring, historical-run repair, new IAM grants,
+  registry promotion and final-test access.
+- **Verification method:** inert automated tests plus checksum-bound live receipts;
+  successful test fixtures alone cannot satisfy the live retrieval scenario.
+- **Assumptions:** the reviewed inventory hash is trusted, approved credentials
+  remain valid, and the operator's Mac and provider API remain available. The
+  local watchdog prevents idle sleep but cannot guarantee a cloud stop after
+  host power loss or a provider/network outage.
+
+## Acceptance criteria
+
+```gherkin
+Feature: Verify frozen LightGBM retention and lineage
+
+  Scenario: Verify stored development evidence
+    Given the reviewed inventory of the frozen candidate
+    When the validation engineer retrieves its exact development result objects
+    Then every retrieved object's size and hash match the inventory
+    And the receipt identifies the candidate and inventory used
+
+  Scenario: Verify the selected MLflow run
+    Given the selected development run is available
+    When the validation engineer audits its metadata and seven governed artifacts
+    Then its parameters, thresholds and per-shard lineage match the inventory
+    And all seven artifacts match their recorded sizes and hashes
+
+  Scenario: Reject mismatched lineage
+    Given a run refers to a different feature release or shard hash
+    When the validation engineer audits that run
+    Then the receipt reports the mismatch without marking tracking as verified
+    And the historical run remains unchanged
+
+  Scenario: Resume incomplete tracking verification
+    Given exact storage retrieval has already been verified
+    When the validation engineer requests only MLflow verification
+    Then the audit makes no new result-object reads
+    And its receipt identifies only MLflow as the requested component
+
+  Scenario: Stop the temporary tracking session after completion
+    Given the existing MLflow VM was stopped before the audit
+    When the temporary tracking session completes or fails
+    Then the operator receives a verified stopped-state receipt
+
+  Scenario: Stop when the audit controller disappears
+    Given an independent stop watchdog was armed before VM startup
+    And the operator host and provider API remain available
+    When the audit controller disappears
+    Then the watchdog initiates shutdown by the ten-minute deadline
+    And it verifies the provider reports the VM stopped
+
+  Scenario: Report an unavailable tracking service
+    Given the tracking service does not become ready within the session allowance
+    When the readiness deadline expires
+    Then tracking remains unverified
+    And the temporary VM session is stopped without another startup retry
+```
+
+## Implementation plan and verification mapping
+
+1. Validate the anchored inventory and compare exact object bytes and run lineage.
+   `test_lightgbm_retention_audit.py` covers hash/lineage mismatch and component plans.
+2. Arm a detached watchdog before startup; verify shutdown after normal completion,
+   startup failure and controller loss. `test_nebius_mlflow_watchdog.py` covers these
+   paths with inert processes and provider doubles; it never starts a cloud resource.
+3. Resolve approved credentials before startup, allow a bounded readiness wait,
+   and run the MLflow-only audit through a loopback SSH tunnel.
+4. Retain live readback, diagnostic and shutdown receipts, update current status,
+   and mark each live criterion satisfied only when those receipts demonstrate it.
+
 The read-only audit compares an externally anchored `lightgbm_candidate_inventory_v1`
 with exact development result objects and the existing MLflow development run.
 It consumes the inventory produced by [PR #216](https://github.com/khab40/lob-arena/pull/216)
