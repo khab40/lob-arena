@@ -1,0 +1,18 @@
+{
+  "schema_version": "lightgbm_dataset_source_equivalence_v1",
+  "inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+  "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+  "feature_inputs_sha256": "6e4a24f4b9251ae007c71cd838b5cec94b7259b82a9a67c93e21333602aca582",
+  "source_root_uri": "s3://aimada-wave1-dev-e00g6zvxpr00/releases/nasdaq-g5-repeat-1-20260906/staging/projection-artifacts",
+  "source_request_sha256": "8f2c3391daf7ecd3393fe3ee126db1313de41c46afa8c1335274c4676b30087b",
+  "source_training_manifest_sha256": "ea6491cebd0d7a892010079638853cf36125089a6db5bb74afbbf0435aa978c6",
+  "source_result_checksums_sha256": "4d94e3631211649a807263d1fb3fad0a2b679a35425f2944b2af8b07f2f0ad86",
+  "source_collection_sha256": "0690fbd652103a49031c223d902655a2f6257a4785bd4e7729f6d1a70058bba3",
+  "source_run_id": "nasdaq-g5-repeat-1-20260906",
+  "source_mlflow_run_id": "e3dd3db46d9741d89b3ed230df109c09",
+  "source_job_id": "aijob-e00qe81x3p8td0sgmj",
+  "input_count": 90,
+  "proof_method": "G5 retained result checksums verified; request hash equals collection; all 90 full FoldFeatureInput records exactly equal frozen inventory. MLflow reuses datasets by name and digest, retaining the first logged source.",
+  "source_availability_scope": "Alias identity verified from retained governed metadata; no claim of fresh G5 source-object retrieval."
+}
