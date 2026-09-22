@@ -79,6 +79,14 @@ def load_inventory(raw, anchor, results_bucket, input_bucket):
 
 def expected_tracking(inv):
     lineage, config = inv["lineage"], inv["configuration"]
+    references = lineage["input_references"]
+    if references["kind"] == "tabular-projection":
+        suffix = references["projection_artifact_root"]
+    elif references["kind"] == "governed-feature-release":
+        suffix = references["feature_artifact_root"]
+    else:
+        raise ValueError("unsupported development input kind")
+    source_root = lineage["input_release_uri"].rstrip("/") + "/" + relative(suffix)
     tags = {**lineage["binding"], "feature_release_id": lineage["feature_release_id"],
             "feature_release_sha256": lineage["feature_release_sha256"],
             "git_commit": lineage["training_git_commit"], "governance_state": "validation_frozen",
@@ -108,7 +116,7 @@ def expected_tracking(inv):
         if len(name) > 255:
             name = name[:230] + "-" + hashlib.sha256(name.encode()).hexdigest()[:24]
         inputs.append({"name": name, "digest": "sha256:" + art["sha256"][:29],
-                       "source": lineage["input_release_uri"] + "/" + art["uri"],
+                       "source": source_root + "/" + relative(art["uri"]),
                        "tags": {"fold": item["fold"], "row_count": str(item["row_count"]),
                                 "session_count": str(item["session_count"]),
                                 "fold_membership_sha256": item["fold_membership_hash"],
@@ -152,8 +160,12 @@ def tracking_mismatches(inv, run):
         ds = item["dataset"]
         actual_tags = pairs((x["key"], x["value"]) for x in item.get("tags", []))
         source = decode(ds["source"])
-        if (ds.get("digest") != expected["digest"] or ds.get("source_type") != "s3"
-                or source.get("uri") != expected["source"]
-                or any(actual_tags.get(k) != v for k, v in expected["tags"].items())):
-            failures.append("inputs." + expected["name"])
+        checks = {"digest": ds.get("digest") == expected["digest"],
+                  "source_type": ds.get("source_type") == "s3",
+                  "source_uri": source.get("uri") == expected["source"],
+                  **{"tags." + k: actual_tags.get(k) == v for k, v in expected["tags"].items()}}
+        for field, matches in checks.items():
+            if not matches:
+                # Emit field names only, never remote values or source URIs.
+                failures.append("inputs." + expected["name"] + "." + field)
     return failures

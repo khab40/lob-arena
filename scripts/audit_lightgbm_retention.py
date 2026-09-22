@@ -24,7 +24,10 @@ def main():
     parser.add_argument("--tracking-endpoint", default="http://127.0.0.1:5500")
     parser.add_argument("--timeout-seconds", type=int, default=300)
     parser.add_argument("--execute", action="store_true", help="perform bounded remote GETs; default is plan only")
+    parser.add_argument("--component", choices=("both", "storage", "mlflow"), default="both",
+                        help="resume only an incomplete component without repeating successful reads")
     args = parser.parse_args()
+    components = ("storage", "mlflow") if args.component == "both" else (args.component,)
     raw = args.inventory.read_bytes()
     inv = load_inventory(raw, args.inventory_sha256, args.results_bucket, args.input_bucket)
     require(1 <= args.timeout_seconds <= 600, "invalid timeout")
@@ -38,13 +41,15 @@ def main():
         "candidate_sha256": inv["candidate_sha256"], "freeze_sha256": inv["freeze_sha256"],
         "mlflow_run_id": inv["lineage"]["mlflow_run_id"],
         "result_uri": inv["result_uri"],
+        "requested_components": components,
         "tool_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (
             Path(__file__), Path(__file__).with_name("lightgbm_retention_contract.py"),
             Path(__file__).with_name("lightgbm_retention_transport.py"))},
         "bounds": {"timeout_seconds": args.timeout_seconds, "jobs": 0,
-                   "result_objects": len(inv["result_objects"]),
-                   "result_bytes": sum(x["size_bytes"] for x in inv["result_objects"]),
-                   "mlflow_artifacts": 7, "mlflow_list_pages": 10, "retries": 0},
+                   "result_objects": len(inv["result_objects"]) if "storage" in components else 0,
+                   "result_bytes": sum(x["size_bytes"] for x in inv["result_objects"]) if "storage" in components else 0,
+                   "mlflow_artifacts": 7 if "mlflow" in components else 0,
+                   "mlflow_list_pages": 10 if "mlflow" in components else 0, "retries": 0},
         "scope": {"remote_writes": False, "model_loaded": False, "rows_parsed": False,
                   "final_access": False, "final_evaluation_authorized": False},
         "storage": {"verified": False, "status": "not_attempted"},
@@ -64,6 +69,8 @@ def main():
                         ("storage", lambda: audit_storage(inv, StorageReader())),
                         ("mlflow", lambda: audit_tracking(inv, TrackingReader(args.tracking_endpoint))),
                     ):
+                        if name not in components:
+                            continue
                         try:
                             report[name] = action()
                         except TimeoutError:
@@ -75,7 +82,7 @@ def main():
             report["deadline_exceeded"] = True
         finally:
             report["completed_at"] = datetime.now(timezone.utc).isoformat()
-            report["status"] = ("verified" if all(report[k]["verified"] for k in ("storage", "mlflow"))
+            report["status"] = ("verified" if all(report[k]["verified"] for k in components)
                                 else "incomplete" if args.execute else "planned")
             json.dump(report, handle, indent=2, sort_keys=True)
             handle.write("\n")

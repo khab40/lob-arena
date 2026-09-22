@@ -1,6 +1,28 @@
 # Roadmap status — 2026-09-22
 
-## LightGBM retention chunk — 2026-09-22
+## G8 tracking continuation — 2026-09-22
+
+**G8 remains open.** The selected development run is reachable again through the
+existing SSH rule; no permission change was needed. The live audit matched run
+status, expected top-level parameters/metrics/tags and the dataset-name set, then
+reported mismatches for all **90 dataset inputs**. It stopped before downloading
+MLflow artifacts. The cause is unresolved: inspect individual mismatched fields
+before deciding whether the checker or historical lineage needs correction.
+Field-specific diagnostics now have local test coverage; that refinement has not
+had a live readback. See the [tracking receipt](../evidence/lightgbm-tracking-readiness-20260922.json).
+
+Both continuation attempts verified automatic VM shutdown. The second completed
+within its 15-minute target, including recovery from a timed-out stop command.
+The 107-object S3 verification remains valid; frozen model/calibration/configs
+were unchanged. No model Jobs or final access occurred.
+
+The shortest path to closure is: resolve selected-run lineage and verify its seven
+artifacts; obtain and execute the supervised comparison-audit approval; bind the
+production package and pass preflight; obtain replacement-specific final approval;
+run once and independently verify the complete result. G9 disposition follows.
+Additional hyperparameter search or recalibration is not required for G8.
+
+## Earlier LightGBM retention chunk — 2026-09-22
 
 The [independent audit](../ml/lightgbm-retention-audit.md) re-read and hash-verified
 all **107 exact development result objects (12,551,368 bytes)** with the existing
@@ -55,7 +77,8 @@ saved receipts, not a fresh live-server audit.
    chunk adds a [read-only candidate inventory](../ml/lightgbm-candidate-inventory.md):
    all 107 retained candidate-result objects are locally rehashed, and the index
    links resolved settings, artifacts, lineage and remote locations. Independent
-   remote retrieval and live MLflow verification remain open.
+   remote result retrieval passed for all 107 objects; live MLflow verification
+   remains open on the dataset-input discrepancies above.
 
 5. **Audit MLflow completeness and close tracking gaps.** Development logging
    already saves parameters, summary metrics, lineage, model weights, calibration

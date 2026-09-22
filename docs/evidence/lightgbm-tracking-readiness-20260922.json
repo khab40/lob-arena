@@ -1,0 +1,102 @@
+{
+  "schema_version": "lightgbm_tracking_readiness_v1",
+  "date": "2026-09-22",
+  "execution_source_commit": "4a3cb990bf57e230f4b568aa8991151f64489184",
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "mlflow_run_id": "1bd94569914748db8bbde21b13e83d05",
+  "status": "incomplete",
+  "ssh_ready_on_attempt": 6,
+  "mlflow_health_http_status": 200,
+  "run_state_and_expected_top_level_metadata_matched": true,
+  "dataset_name_set_matched": true,
+  "dataset_input_mismatch_count": 90,
+  "mismatch_fields_available": false,
+  "mismatch_cause": "Unresolved: checker expectations versus historical dataset metadata. No stored values changed.",
+  "mlflow_artifacts_checked": 0,
+  "live_mlflow_verified": false,
+  "vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+  "vm_final_state": "STOPPED",
+  "automatic_cleanup_verified": true,
+  "vm_start_request_to_verified_stop_seconds": 218.552,
+  "within_900_second_target": true,
+  "stop_attempts": 2,
+  "first_stop_attempt": "TimeoutExpired; subprocess group terminated; second stop and readback succeeded",
+  "model_jobs": 0,
+  "new_resources": 0,
+  "iam_changes": false,
+  "final_access": false,
+  "storage_result_gets": 0,
+  "next_action": "Read selected-run dataset metadata with field-specific mismatch diagnostics; establish cause before artifact verification.",
+  "subsequent_code_change": "Field-name-only mismatch diagnostics and failed-response hash now covered by inert tests; not live-verified in this attempt.",
+  "artifacts": [
+    {
+      "path": "execution-scope.json",
+      "sha256": "919cc6ea574c202ef3e2868b2a8568fbb184c698989dbe31128ba43791dd37b0"
+    },
+    {
+      "path": "resume_tracking.py",
+      "sha256": "a553fbaafcd985c3103b6c3eb29d37f7a5cdf4ffe9effcab336a46420edbb05d"
+    },
+    {
+      "path": "executed-watchdog.py",
+      "sha256": "40f9e0171cf2c8528560460919a52c2b535fc348dfcfb5ce3f62298b68e235f7"
+    },
+    {
+      "path": "tracking-readback.json",
+      "sha256": "071589fa6ac6264b6ad3e60e825982bf116d1868b8ae28f13073590afa38ba2a"
+    },
+    {
+      "path": "health.json",
+      "sha256": "313a48d416949e277946891f7461d19e62e217f687467a6115b1dd55e0bfe2d6"
+    },
+    {
+      "path": "diagnostics.json",
+      "sha256": "099ba80f597c655cce53e5b32a5ccde7a35c56634783804798d4f0f6a89bc15c"
+    },
+    {
+      "path": "vm-session/vm-before.json",
+      "sha256": "1feb611c905a3b5eac15c51738b9e0741fcb66d935aa2dec01953fbaf2ab8d93"
+    },
+    {
+      "path": "vm-session/vm-start-request.json",
+      "sha256": "5f9ea0e3d24f59fb59c948976a46a8ea5beca690d0d755b7229d063280adc27d"
+    },
+    {
+      "path": "vm-session/watchdog-ready.json",
+      "sha256": "ce33947752e475f4a9cbc9470de5a057047c5db38b30b107ab29c54960c081c3"
+    },
+    {
+      "path": "vm-session/vm-started.json",
+      "sha256": "5777d186355c58443115586f0d509ba2cbf0d76b510aecd5f6c4f1824dacfb1c"
+    },
+    {
+      "path": "vm-session/watchdog-result.json",
+      "sha256": "763e81f4546f8ecff2e12516141fdd3a64d26dd56f7a2666237a9c2c6dd48476"
+    },
+    {
+      "path": "ssh-attempt-1.json",
+      "sha256": "c1b1b1d6d5a7ae10ec364bb213e6d523a0e5d85a111d4eaea7384aca679f7ca1"
+    },
+    {
+      "path": "ssh-attempt-2.json",
+      "sha256": "9364883bd3d8ecb698e0c288bb69c33d43f3b17fd98863afae125b79abb769e1"
+    },
+    {
+      "path": "ssh-attempt-3.json",
+      "sha256": "9b7ea9caf89c9cd7c9bf930388094b7408271127d67e129ceb4bf357142e95da"
+    },
+    {
+      "path": "ssh-attempt-4.json",
+      "sha256": "f72347e2ff5ee22d3773e1f702555a720631bfa5b84a19164c822b4b5868c2be"
+    },
+    {
+      "path": "ssh-attempt-5.json",
+      "sha256": "0e86636929b4c791214a7bf52c6aad129419fb0fb9af897b7d4871fe8d4aac24"
+    },
+    {
+      "path": "ssh-attempt-6.json",
+      "sha256": "a9efb7e0f97cc1234849100bd9215b9b41839126c9b63195546550373156c802"
+    }
+  ]
+}

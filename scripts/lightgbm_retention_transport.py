@@ -137,8 +137,10 @@ def audit_tracking(inv, reader):
     experiment = reader.metadata("mlflow/experiments/get", {"experiment_id": run["info"]["experiment_id"]})
     require(experiment["experiment"]["name"] == "lob-arena/lightgbm-development", "wrong experiment")
     failures = tracking_mismatches(inv, run)
+    metadata_hash = hashlib.sha256(json.dumps(run, sort_keys=True).encode()).hexdigest()
     if failures:
-        return {"verified": False, "mismatches": failures, "artifacts_checked": 0}
+        return {"verified": False, "mismatches": failures, "artifacts_checked": 0,
+                "metadata_response_sha256": metadata_hash}
     files, token, tokens = {}, None, set()
     for _ in range(10):
         query = {"run_id": run_id, "path": "governed"}
@@ -169,4 +171,4 @@ def audit_tracking(inv, reader):
     return {"verified": True, "artifacts": checked, "artifacts_checked": len(checked),
             "dataset_inputs_checked": len(inv["lineage"]["feature_inputs"]),
             "extra_governed_artifacts": sorted(set(files) - {x["path"] for x in checked}),
-            "metadata_response_sha256": hashlib.sha256(json.dumps(run, sort_keys=True).encode()).hexdigest()}
+            "metadata_response_sha256": metadata_hash}

@@ -36,6 +36,7 @@ def inventory():
             "selection": {"campaign_id": "campaign"}, "candidate_sha256": "d" * 64,
             "freeze_sha256": "e" * 64,
             "lineage": {"mlflow_run_id": "1" * 32, "binding": {"model_id": "fixture"},
+                        "input_references": {"kind": "tabular-projection", "projection_artifact_root": "projection-artifacts"},
                         "input_release_uri": "s3://inputs/releases/run/staging", "feature_inputs": inputs,
                         "feature_release_id": "release", "feature_release_sha256": "f" * 64,
                         "training_git_commit": "2" * 40, "run_id": "run"},
@@ -67,6 +68,17 @@ def test_anchor_and_development_boundary(inventory):
     assert load_inventory(raw, hashlib.sha256(raw).hexdigest(), "results", "inputs") == inventory
     with pytest.raises(ValueError, match="anchor mismatch"):
         load_inventory(raw, "0" * 64, "results", "inputs")
+
+
+def test_dataset_sources_include_the_cloud_runner_artifact_root(inventory):
+    expected = expected_tracking(inventory)[3]
+    assert expected[0]["source"] == "s3://inputs/releases/run/staging/projection-artifacts/train/fixture.parquet"
+    run = run_fixture(inventory)
+    run["inputs"]["dataset_inputs"][0]["dataset"]["source"] = json.dumps(
+        {"uri": "s3://inputs/releases/run/staging/train/fixture.parquet"})
+    assert tracking_mismatches(inventory, run)
+    inventory["lineage"]["input_references"] = {"kind": "governed-feature-release", "feature_artifact_root": "features"}
+    assert expected_tracking(inventory)[3][0]["source"] == "s3://inputs/releases/run/staging/features/train/fixture.parquet"
 
 
 @pytest.mark.parametrize("mutation", ["bucket", "traversal", "duplicate", "size", "final", "markers"])
@@ -133,6 +145,23 @@ def test_storage_hashes_and_size_bound(inventory):
         fingerprint(io.BytesIO(b"abcd"), 3)
 
 
+def test_lineage_failure_identifies_field_without_remote_values(inventory):
+    run = run_fixture(inventory)
+    dataset = run["inputs"]["dataset_inputs"][0]["dataset"]
+    dataset["source"] = '{"uri":"s3://private/do-not-print"}'
+    class Reader:
+        def metadata(self, route, query):
+            if route == "mlflow/runs/get":
+                return {"run": run}
+            assert route == "mlflow/experiments/get"
+            return {"experiment": {"name": "lob-arena/lightgbm-development"}}
+    result = audit_tracking(inventory, Reader())
+    assert result["mismatches"] == ["inputs." + dataset["name"] + ".source_uri"]
+    assert result["verified"] is False and result["artifacts_checked"] == 0
+    assert result["metadata_response_sha256"] == hashlib.sha256(json.dumps(run, sort_keys=True).encode()).hexdigest()
+    assert "do-not-print" not in json.dumps(result)
+
+
 def test_tracking_artifacts_and_pagination(inventory):
     class Reader:
         def metadata(self, route, query):
@@ -183,6 +212,14 @@ def test_plan_and_no_overwrite_without_dependencies(inventory, tmp_path, optimiz
     original = target.read_bytes()
     assert subprocess.run(command, capture_output=True).returncode != 0
     assert target.read_bytes() == original
+    component_target = tmp_path / "mlflow-plan.json"
+    component_command = [*command, "--component", "mlflow"]
+    component_command[component_command.index("--output") + 1] = str(component_target)
+    assert subprocess.run(component_command, capture_output=True).returncode == 0
+    component_plan = json.loads(component_target.read_text())
+    assert component_plan["requested_components"] == ["mlflow"]
+    assert component_plan["bounds"]["result_objects"] == 0
+    assert component_plan["storage"]["verified"] is False
     command[command.index("--inventory-sha256") + 1] = "0" * 64
     assert subprocess.run(command, capture_output=True).returncode != 0
 
@@ -197,3 +234,25 @@ def test_redirects_and_untrusted_artifact_root(monkeypatch):
         reader.artifact("mlflow-artifacts://elsewhere/path", "model", 1)
     with pytest.raises(ValueError, match="unsafe"):
         reader.artifact("mlflow-artifacts:/../path", "model", 1)
+
+
+@pytest.mark.parametrize("verified", [True, False])
+def test_tracking_only_execution_never_reads_storage(inventory, tmp_path, monkeypatch, verified):
+    import audit_lightgbm_retention as cli
+    source = tmp_path / "inventory.json"
+    source.write_text(json.dumps(inventory))
+    target = tmp_path / "tracking.json"
+    monkeypatch.setattr(sys, "argv", [str(SCRIPTS / "audit_lightgbm_retention.py"),
+        "--inventory", str(source), "--inventory-sha256", hashlib.sha256(source.read_bytes()).hexdigest(),
+        "--results-bucket", "results", "--input-bucket", "inputs", "--output", str(target),
+        "--execute", "--component", "mlflow"])
+    def forbidden_storage():
+        pytest.fail("tracking-only execution must not construct a storage client")
+    monkeypatch.setattr(cli, "StorageReader", forbidden_storage)
+    monkeypatch.setattr(cli, "TrackingReader", lambda _: object())
+    monkeypatch.setattr(cli, "audit_tracking", lambda *a: {"verified": verified})
+    assert cli.main() == (0 if verified else 2)
+    report = json.loads(target.read_text())
+    assert report["storage"] == {"status": "not_attempted", "verified": False}
+    assert report["requested_components"] == ["mlflow"]
+    assert report["status"] == ("verified" if verified else "incomplete")
