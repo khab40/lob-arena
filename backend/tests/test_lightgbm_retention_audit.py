@@ -145,6 +145,23 @@ def test_storage_hashes_and_size_bound(inventory):
         fingerprint(io.BytesIO(b"abcd"), 3)
 
 
+def test_lineage_failure_identifies_field_without_remote_values(inventory):
+    run = run_fixture(inventory)
+    dataset = run["inputs"]["dataset_inputs"][0]["dataset"]
+    dataset["source"] = '{"uri":"s3://private/do-not-print"}'
+    class Reader:
+        def metadata(self, route, query):
+            if route == "mlflow/runs/get":
+                return {"run": run}
+            assert route == "mlflow/experiments/get"
+            return {"experiment": {"name": "lob-arena/lightgbm-development"}}
+    result = audit_tracking(inventory, Reader())
+    assert result["mismatches"] == ["inputs." + dataset["name"] + ".source_uri"]
+    assert result["verified"] is False and result["artifacts_checked"] == 0
+    assert result["metadata_response_sha256"] == hashlib.sha256(json.dumps(run, sort_keys=True).encode()).hexdigest()
+    assert "do-not-print" not in json.dumps(result)
+
+
 def test_tracking_artifacts_and_pagination(inventory):
     class Reader:
         def metadata(self, route, query):

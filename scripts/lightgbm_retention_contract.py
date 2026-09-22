@@ -160,8 +160,12 @@ def tracking_mismatches(inv, run):
         ds = item["dataset"]
         actual_tags = pairs((x["key"], x["value"]) for x in item.get("tags", []))
         source = decode(ds["source"])
-        if (ds.get("digest") != expected["digest"] or ds.get("source_type") != "s3"
-                or source.get("uri") != expected["source"]
-                or any(actual_tags.get(k) != v for k, v in expected["tags"].items())):
-            failures.append("inputs." + expected["name"])
+        checks = {"digest": ds.get("digest") == expected["digest"],
+                  "source_type": ds.get("source_type") == "s3",
+                  "source_uri": source.get("uri") == expected["source"],
+                  **{"tags." + k: actual_tags.get(k) == v for k, v in expected["tags"].items()}}
+        for field, matches in checks.items():
+            if not matches:
+                # Emit field names only, never remote values or source URIs.
+                failures.append("inputs." + expected["name"] + "." + field)
     return failures
