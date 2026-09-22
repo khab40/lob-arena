@@ -72,12 +72,18 @@ def test_anchor_and_development_boundary(inventory):
 @pytest.mark.parametrize("mutation", ["bucket", "traversal", "duplicate", "size", "final", "markers"])
 def test_invalid_inventory_rejected_before_transport(inventory, mutation):
     obj = inventory["result_objects"][0]
-    if mutation == "bucket": obj["uri"] = "s3://other/a"
-    if mutation == "traversal": obj["path"] = "../a"
-    if mutation == "duplicate": inventory["result_objects"].append(copy.deepcopy(obj))
-    if mutation == "size": obj["size_bytes"] = 100 * 1024**2
-    if mutation == "final": inventory["lineage"]["feature_inputs"][0]["fold"] = "test"
-    if mutation == "markers": inventory["result_objects"].pop()
+    if mutation == "bucket":
+        obj["uri"] = "s3://other/a"
+    if mutation == "traversal":
+        obj["path"] = "../a"
+    if mutation == "duplicate":
+        inventory["result_objects"].append(copy.deepcopy(obj))
+    if mutation == "size":
+        obj["size_bytes"] = 100 * 1024**2
+    if mutation == "final":
+        inventory["lineage"]["feature_inputs"][0]["fold"] = "test"
+    if mutation == "markers":
+        inventory["result_objects"].pop()
     raw = json.dumps(inventory).encode()
     with pytest.raises(ValueError):
         load_inventory(raw, hashlib.sha256(raw).hexdigest(), "results", "inputs")
@@ -99,11 +105,14 @@ def test_dataset_lineage_drift(inventory, mutation):
     if mutation in {"hash", "context"}:
         key = "artifact_sha256" if mutation == "hash" else "mlflow.data.context"
         next(x for x in inputs[0]["tags"] if x["key"] == key)["value"] = "wrong"
-    if mutation == "source": inputs[0]["dataset"]["source"] = '{"uri":"s3://other/wrong"}'
-    if mutation == "missing": inputs.pop()
+    if mutation == "source":
+        inputs[0]["dataset"]["source"] = '{"uri":"s3://other/wrong"}'
+    if mutation == "missing":
+        inputs.pop()
     if mutation in {"extra", "duplicate"}:
         inputs.append(copy.deepcopy(inputs[0]))
-        if mutation == "extra": inputs[-1]["dataset"]["name"] = "unexpected"
+        if mutation == "extra":
+            inputs[-1]["dataset"]["name"] = "unexpected"
     if mutation == "duplicate":
         with pytest.raises(ValueError, match="duplicate dataset"):
             tracking_mismatches(inventory, run)
@@ -125,15 +134,18 @@ def test_storage_hashes_and_size_bound(inventory):
 def test_tracking_artifacts_and_pagination(inventory):
     class Reader:
         def metadata(self, route, query):
-            if route.endswith("runs/get"): return {"run": run_fixture(inventory)}
-            if route.endswith("experiments/get"): return {"experiment": {"name": "lob-arena/lightgbm-development"}}
+            if route.endswith("runs/get"):
+                return {"run": run_fixture(inventory)}
+            if route.endswith("experiments/get"):
+                return {"experiment": {"name": "lob-arena/lightgbm-development"}}
             return {"files": [{"path": "governed/" + role, "is_dir": False, "file_size": 3}
                               for role in inventory["artifact_roles"]]}
         def artifact(self, root, path, size): return fingerprint(io.BytesIO(b"abc"), size)
     assert audit_tracking(inventory, Reader())["artifacts_checked"] == 7
     class Repeating(Reader):
         def metadata(self, route, query):
-            if route.endswith("artifacts/list"): return {"next_page_token": "same"}
+            if route.endswith("artifacts/list"):
+                return {"next_page_token": "same"}
             return super().metadata(route, query)
     with pytest.raises(ValueError, match="repeated pagination"):
         audit_tracking(inventory, Repeating())
@@ -147,4 +159,39 @@ def test_only_loopback_tracking_transport(uri):
 
 def test_duplicate_json_and_nonfinite():
     for raw in ('{"a":1,"a":2}', '{"x":NaN}'):
-        with pytest.raises(ValueError): decode(raw)
+        with pytest.raises(ValueError):
+            decode(raw)
+
+
+@pytest.mark.parametrize("optimization", ["", "-O", "-OO"])
+def test_plan_and_no_overwrite_without_dependencies(inventory, tmp_path, optimization):
+    import subprocess
+    source = tmp_path / "inventory.json"
+    source.write_text(json.dumps(inventory))
+    target = tmp_path / "receipt.json"
+    command = [sys.executable, "-S", *([optimization] if optimization else []),
+               str(SCRIPTS / "audit_lightgbm_retention.py"), "--inventory", str(source),
+               "--inventory-sha256", hashlib.sha256(source.read_bytes()).hexdigest(),
+               "--results-bucket", "results", "--input-bucket", "inputs", "--output", str(target)]
+    result = subprocess.run(command, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    report = json.loads(target.read_text())
+    assert report["status"] == "planned"
+    assert report["storage"]["verified"] is False
+    original = target.read_bytes()
+    assert subprocess.run(command, capture_output=True).returncode != 0
+    assert target.read_bytes() == original
+    command[command.index("--inventory-sha256") + 1] = "0" * 64
+    assert subprocess.run(command, capture_output=True).returncode != 0
+
+
+def test_redirects_and_untrusted_artifact_root(monkeypatch):
+    from lightgbm_retention_transport import NoRedirect
+    monkeypatch.setenv("MLFLOW_TRACKING_USERNAME", "fixture")
+    monkeypatch.setenv("MLFLOW_TRACKING_PASSWORD", "fixture")
+    reader = TrackingReader("http://127.0.0.1:5500")
+    assert NoRedirect().redirect_request(None) is None
+    with pytest.raises(ValueError, match="proxy root"):
+        reader.artifact("mlflow-artifacts://elsewhere/path", "model", 1)
+    with pytest.raises(ValueError, match="unsafe"):
+        reader.artifact("mlflow-artifacts:/../path", "model", 1)
