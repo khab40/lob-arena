@@ -39,7 +39,7 @@ def main():
     digest = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     if digest != os.environ.get('G8_AUDIT_SUPERVISOR_SHA256'):
         raise ValueError('Unapproved supervisor')
-    if len(sys.argv) != 2 or sys.argv[1] != 'g8-comparison-audit-r4-20260922':
+    if len(sys.argv) != 2 or sys.argv[1] != 'g8-comparison-audit-r5-20260922':
         raise ValueError('Unapproved audit path')
     base = '/g8-package/comparison-audits/' + sys.argv[1]
     return supervise([sys.executable, '-u', base + '/worker.py', base + '/proposal.json'], 3000)
