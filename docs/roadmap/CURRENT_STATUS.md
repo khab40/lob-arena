@@ -22,7 +22,7 @@ production package and pass preflight; obtain replacement-specific final approva
 run once and independently verify the complete result. G9 disposition follows.
 Additional hyperparameter search or recalibration is not required for G8.
 
-## LightGBM retention chunk — 2026-09-22
+## Earlier LightGBM retention chunk — 2026-09-22
 
 The [independent audit](../ml/lightgbm-retention-audit.md) re-read and hash-verified
 all **107 exact development result objects (12,551,368 bytes)** with the existing

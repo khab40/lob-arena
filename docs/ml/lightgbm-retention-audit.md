@@ -178,3 +178,11 @@ Dataset-source verification includes the input's `projection_artifact_root` or
 `feature_artifact_root` between the release URI and shard path, matching the
 historical producer contract. This corrects the independent checker; frozen
 datasets, model bytes and historical MLflow records remain unchanged.
+
+The [second continuation](../evidence/lightgbm-tracking-readiness-20260922.json)
+reached SSH and HTTP health, matched the expected top-level run metadata and
+dataset-name set, but reported discrepancies for 90 dataset inputs. No artifact
+downloads followed. The cause remains unresolved; subsequent diagnostics identify
+failed field names without exposing remote values and hash failed run responses.
+Those diagnostics have inert test coverage, not another live readback. Automatic
+shutdown was verified in 218.552 seconds, including one stop-command timeout.
