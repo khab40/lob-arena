@@ -63,3 +63,33 @@ Staging VM: existing `cpu-e2/2vcpu-8gb`, 420-second work deadline, detached stop
 watchdog armed before startup (stop begins by 600 seconds), nominal 900-second
 total / 0.5 vCPU-hours / 2 GiB-hours. No new VM/filesystem or permission changes.
 The local watchdog requires host/network/provider availability.
+
+## Throughput correction within this PR
+
+R3 verified all 377 files and 27 checkpoints and reached six completed replays,
+but serial replay throughput projected beyond its 2940-second worker limit.
+It was cancelled and compute released; all progress and original bytes remain.
+This is a throughput finding, not a semantic pass or a reuse of R3's one-Job intent.
+
+The next bounded attempt uses a new R4 audit identity and exactly three child
+processes within the same four-vCPU / 16-GiB Job. Each child applies the unchanged
+per-replay checks; the parent counts only successful completions. Linux fork
+inherits the already verified in-memory bootstrap and filesystem/network guard.
+Pool failure terminates children; the injected supervisor still bounds the entire
+process group. One-hour provider, 2940-second worker and 3000-second supervisor
+limits remain. The operator's advance cloud approval covers this planned repair;
+declare one additional Job, at most four vCPU-hours / 16 GiB-hours, before submission.
+
+```gherkin
+  Scenario: Validate independent replays within the existing CPU allocation
+    Given serial replay throughput cannot fit the declared audit deadline
+    When a separately bound attempt validates replays with three child processes
+    Then every replay receives the same complete checks
+    And only successful replay completions contribute to the final count
+    And child failure prevents a semantic pass
+```
+
+The development S3 reader cannot inspect the production result prefix or intent:
+both metadata checks were denied. Denial is retained as unverified, never empty.
+The final-access key remains inactive; current access policy must establish the
+appropriate read-only preflight path before that check can pass.
