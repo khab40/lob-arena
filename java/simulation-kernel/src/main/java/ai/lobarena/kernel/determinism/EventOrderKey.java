@@ -10,12 +10,12 @@ public record EventOrderKey(
         long sourceSequence,
         long insertionSequence) implements Comparable<EventOrderKey> {
     private static final Comparator<EventOrderKey> ORDER = Comparator
-            .comparingLong(EventOrderKey::logicalTime)
-            .thenComparingInt(EventOrderKey::phase)
-            .thenComparingInt(EventOrderKey::sourcePriority)
-            .thenComparing(EventOrderKey::actorId)
-            .thenComparingLong(EventOrderKey::sourceSequence)
-            .thenComparingLong(EventOrderKey::insertionSequence);
+            .comparingLong((EventOrderKey key) -> key.logicalTime())
+            .thenComparingInt(key -> key.phase())
+            .thenComparingInt(key -> key.sourcePriority())
+            .thenComparing(key -> key.actorId())
+            .thenComparingLong(key -> key.sourceSequence())
+            .thenComparingLong(key -> key.insertionSequence());
 
     public EventOrderKey {
         if (logicalTime < 0) {

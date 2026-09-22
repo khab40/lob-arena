@@ -49,7 +49,7 @@ final class DeterminismContractTest {
 
         assertEquals(
                 List.of("earlier", "agent-a-first", "agent-a-second", "agent-b", "scenario", "snapshot"),
-                items.stream().map(IdentifiedKey::id).toList());
+                items.stream().map(item -> item.id()).toList());
         assertThrows(
                 IllegalArgumentException.class,
                 () -> DeterministicValues.decimalToUnits("1.0000005", 1_000));

@@ -29,7 +29,7 @@ class HistoricalCsvMarketDataSourceTest {
 
         assertThat(context.path("format").stringValue()).isEqualTo("canonical_csv_v1");
         assertThat(first).hasSize(5);
-        assertThat(first).extracting(HistoricalCsvMarketDataSource.HistoricalCsvRecord::sourceSequence)
+        assertThat(first).extracting(record -> record.sourceSequence())
                 .containsExactly(1L, 2L, 3L, 4L, 5L);
         assertThat(second.getFirst().sourceSequence()).isEqualTo(6);
         assertThatThrownBy(() -> first.set(0, first.getFirst()))

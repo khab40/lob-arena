@@ -385,7 +385,7 @@ final class LiveArenaService {
         return incidents.stream()
                 .filter(item -> incidentId.equals(item.path("id").stringValue()))
                 .findFirst()
-                .map(ObjectNode::deepCopy)
+                .map(item -> item.deepCopy())
                 .orElse(null);
     }
 

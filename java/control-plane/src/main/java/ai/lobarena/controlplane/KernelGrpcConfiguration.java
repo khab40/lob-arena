@@ -22,6 +22,9 @@ class KernelGrpcConfiguration {
             JavaSimulationKernel kernel,
             MicrometerKernelGrpcTelemetry telemetry,
             @Value("${lob.kernel.grpc.port:50051}") int port) throws IOException {
-        return new JavaKernelGrpcServer(port, new JavaKernelGrpcService(kernel, telemetry)).start();
+        // Spring owns this instance through destroyMethod; start() returns the same instance.
+        JavaKernelGrpcServer server = new JavaKernelGrpcServer(port, new JavaKernelGrpcService(kernel, telemetry));
+        server.start();
+        return server;
     }
 }

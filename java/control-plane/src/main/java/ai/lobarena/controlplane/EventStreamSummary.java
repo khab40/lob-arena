@@ -51,8 +51,8 @@ final class EventStreamSummary {
         byte[] eventHash = CanonicalHashes.eventHash(event);
         streamHash = CanonicalHashes.advanceStreamHash(streamHash, eventHash);
         EventSource source = event.getMetadata().getSource();
-        sourceCounts.merge(source, 1L, Long::sum);
-        typeCounts.merge(event.getPayloadCase(), 1L, Long::sum);
+        sourceCounts.merge(source, 1L, (left, right) -> left + right);
+        typeCounts.merge(event.getPayloadCase(), 1L, (left, right) -> left + right);
         sourceDigests.computeIfAbsent(source, ignored -> sha256()).update(eventHash);
 
         long tick = event.getMetadata().getTick();

@@ -270,7 +270,7 @@ public final class IntegerOrderBook {
         String orderId = agentLevelOrderId(side, priceTicks, agentId);
         long quantityWithoutAgent = levels(side).getOrDefault(priceTicks, List.of()).stream()
                 .filter(order -> !order.orderId().equals(orderId))
-                .mapToLong(KernelOrder::quantityLots)
+                .mapToLong(order -> order.quantityLots())
                 .reduce(0, Math::addExact);
         long agentLots = Math.max(0, minimumLots - quantityWithoutAgent);
         updateAgentLevel(side, priceTicks, agentLots, agentId, owner, orderId, 0, null, null, null);
@@ -322,12 +322,12 @@ public final class IntegerOrderBook {
     }
 
     public List<String> orderIdsAt(Side side, long priceTicks) {
-        return levels(side).getOrDefault(priceTicks, List.of()).stream().map(KernelOrder::orderId).toList();
+        return levels(side).getOrDefault(priceTicks, List.of()).stream().map(order -> order.orderId()).toList();
     }
 
     public long levelQuantity(Side side, long priceTicks) {
         return levels(side).getOrDefault(priceTicks, List.of()).stream()
-                .mapToLong(KernelOrder::quantityLots)
+                .mapToLong(order -> order.quantityLots())
                 .reduce(0, Math::addExact);
     }
 
@@ -385,10 +385,10 @@ public final class IntegerOrderBook {
 
     private PriceLevel priceLevel(Map.Entry<Long, List<KernelOrder>> entry) {
         long quantity = entry.getValue().stream()
-                .mapToLong(KernelOrder::quantityLots)
+                .mapToLong(order -> order.quantityLots())
                 .reduce(0, Math::addExact);
         String owner = entry.getValue().stream()
-                .map(KernelOrder::owner)
+                .map(order -> order.owner())
                 .filter(candidate -> !NORMAL_OWNER.equals(candidate))
                 .findFirst()
                 .orElse(NORMAL_OWNER);

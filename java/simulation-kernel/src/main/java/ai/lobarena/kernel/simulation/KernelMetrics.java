@@ -34,8 +34,8 @@ final class KernelMetrics {
             Double previousDepthTopN) {
         List<VisibleLevel> bids = visible(book.getBidsList(), Side.SIDE_BUY, 5);
         List<VisibleLevel> asks = visible(book.getAsksList(), Side.SIDE_SELL, 5);
-        double bidDepth = round4(bids.stream().mapToDouble(VisibleLevel::quantity).sum());
-        double askDepth = round4(asks.stream().mapToDouble(VisibleLevel::quantity).sum());
+        double bidDepth = round4(bids.stream().mapToDouble(level -> level.quantity()).sum());
+        double askDepth = round4(asks.stream().mapToDouble(level -> level.quantity()).sum());
         double totalDepth = bidDepth + askDepth;
         double imbalance = totalDepth == 0 ? 0 : round4((bidDepth - askDepth) / totalDepth);
         double spreadBps = 0;
@@ -51,7 +51,7 @@ final class KernelMetrics {
         List<VisibleLevel> visible = new ArrayList<>(bids);
         visible.addAll(asks);
         VisibleLevel largest = visible.stream()
-                .max(Comparator.comparingDouble(VisibleLevel::quantity))
+                .max(Comparator.comparingDouble(level -> level.quantity()))
                 .orElse(null);
         double wallSizeRatio = 1;
         double distanceFromTouchBps = 0;
@@ -59,7 +59,7 @@ final class KernelMetrics {
         if (largest != null) {
             List<Double> nearby = visible.stream()
                     .filter(level -> level.side() == largest.side() && level != largest)
-                    .map(VisibleLevel::quantity)
+                    .map(level -> level.quantity())
                     .sorted()
                     .toList();
             double nearbySize = median(nearby);
@@ -95,7 +95,7 @@ final class KernelMetrics {
                 orderFirstSeenTicks.putIfAbsent(activity.orderId(), tick);
             }
         }
-        double orderLifetimeMs = completedLifetimes.stream().mapToDouble(Double::doubleValue).max().orElse(0);
+        double orderLifetimeMs = completedLifetimes.stream().mapToDouble(value -> value.doubleValue()).max().orElse(0);
         for (long firstTick : orderFirstSeenTicks.values()) {
             orderLifetimeMs = Math.max(orderLifetimeMs, (tick - firstTick) * tickIntervalSeconds * 1_000);
         }
@@ -195,8 +195,8 @@ final class KernelMetrics {
 
     double topDepth(BookSnapshot book) {
         return round4(
-                visible(book.getBidsList(), Side.SIDE_BUY, 5).stream().mapToDouble(VisibleLevel::quantity).sum()
-                        + visible(book.getAsksList(), Side.SIDE_SELL, 5).stream().mapToDouble(VisibleLevel::quantity).sum());
+                visible(book.getBidsList(), Side.SIDE_BUY, 5).stream().mapToDouble(level -> level.quantity()).sum()
+                        + visible(book.getAsksList(), Side.SIDE_SELL, 5).stream().mapToDouble(level -> level.quantity()).sum());
     }
 
     record FeatureResult(Map<String, Double> features, Map<String, Double> detectors) {}

@@ -84,11 +84,12 @@ class HistoricalMarketDataSourceTest {
         assertThat(source.resourcesOpen()).isFalse();
 
         Files.write(events, new byte[] {0}, StandardOpenOption.APPEND);
-        HistoricalMarketDataSource tampered = new HistoricalMarketDataSource(mapper, root, 1);
-        assertThatThrownBy(() -> tampered.load(datasetId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("output size does not match manifest");
-        assertThat(tampered.loaded()).isFalse();
+        try (HistoricalMarketDataSource tampered = new HistoricalMarketDataSource(mapper, root, 1)) {
+            assertThatThrownBy(() -> tampered.load(datasetId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("output size does not match manifest");
+            assertThat(tampered.loaded()).isFalse();
+        }
     }
 
     @Test
@@ -178,11 +179,12 @@ class HistoricalMarketDataSourceTest {
         }
         writeManifest(dataset, datasetId, events, books, 1);
 
-        HistoricalMarketDataSource source = new HistoricalMarketDataSource(mapper, root, 1);
-        assertThatThrownBy(() -> source.load(datasetId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("not synchronized");
-        assertThat(source.loaded()).isFalse();
+        try (HistoricalMarketDataSource source = new HistoricalMarketDataSource(mapper, root, 1)) {
+            assertThatThrownBy(() -> source.load(datasetId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("not synchronized");
+            assertThat(source.loaded()).isFalse();
+        }
     }
 
     @Test

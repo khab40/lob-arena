@@ -19,31 +19,34 @@ class CanonicalEventArchiveTest {
 
     @Test
     void rotatesSegmentsAndReplaysAcrossTheirBoundary(@TempDir Path output) throws Exception {
-        CanonicalEventArchive archive =
-                new CanonicalEventArchive(output, mapper, 2, 1_000_000, this::json);
-        String streamId = archive.beginStream();
-        archive.append(event(1));
-        archive.append(event(2));
-        archive.append(event(3));
-        archive.flushCompletedTick();
+        try (CanonicalEventArchive archive =
+                new CanonicalEventArchive(output, mapper, 2, 1_000_000, this::json)) {
+            String streamId = archive.beginStream();
+            archive.append(event(1));
+            archive.append(event(2));
+            archive.append(event(3));
+            archive.flushCompletedTick();
 
-        assertThat(archive.readAfter(streamId, 1, 10))
-                .extracting(item -> item.path("sequence").longValue())
-                .containsExactly(2L, 3L);
-        assertThat(Files.readString(
-                        output.resolve("history/exchange-events")
-                                .resolve(streamId)
-                                .resolve("manifest.json")))
-                .contains("\"latest_sequence\":3");
-        assertThat(Files.isRegularFile(
-                        output.resolve("history/exchange-events")
-                                .resolve(streamId)
-                                .resolve("segment-000000000001.jsonl")))
-                .isTrue();
+            assertThat(archive.readAfter(streamId, 1, 10))
+                    .extracting(item -> item.path("sequence").longValue())
+                    .containsExactly(2L, 3L);
+            assertThat(Files.readString(
+                            output.resolve("history/exchange-events")
+                                    .resolve(streamId)
+                                    .resolve("manifest.json")))
+                    .contains("\"latest_sequence\":3");
+            assertThat(Files.isRegularFile(
+                            output.resolve("history/exchange-events")
+                                    .resolve(streamId)
+                                    .resolve("segment-000000000001.jsonl")))
+                    .isTrue();
+        }
     }
 
     @Test
     void rejectsACompletedTickThatExceedsTheStreamQuota(@TempDir Path output) {
+        // Only a pending in-memory batch remains; close() would retry the rejected flush.
+        @SuppressWarnings("resource")
         CanonicalEventArchive archive =
                 new CanonicalEventArchive(output, mapper, 2, 1, this::json);
         archive.beginStream();
@@ -56,28 +59,29 @@ class CanonicalEventArchiveTest {
 
     @Test
     void deletesACompletedStreamWithoutAffectingAnother(@TempDir Path output) {
-        CanonicalEventArchive archive =
-                new CanonicalEventArchive(output, mapper, 2, 1_000_000, this::json);
-        String first = archive.beginStream();
-        archive.append(event(1));
-        archive.flushCompletedTick();
-        String second = archive.beginStream();
-        archive.append(event(1));
-        archive.flushCompletedTick();
+        try (CanonicalEventArchive archive =
+                new CanonicalEventArchive(output, mapper, 2, 1_000_000, this::json)) {
+            String first = archive.beginStream();
+            archive.append(event(1));
+            archive.flushCompletedTick();
+            String second = archive.beginStream();
+            archive.append(event(1));
+            archive.flushCompletedTick();
 
-        archive.deleteStream(first);
+            archive.deleteStream(first);
 
-        assertThat(output.resolve("history/exchange-events").resolve(first)).doesNotExist();
-        assertThat(archive.readAfter(second, 0, 10)).hasSize(1);
-        assertThatThrownBy(() -> archive.readAfter(first, 0, 10))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("unknown canonical stream id");
+            assertThat(output.resolve("history/exchange-events").resolve(first)).doesNotExist();
+            assertThat(archive.readAfter(second, 0, 10)).hasSize(1);
+            assertThatThrownBy(() -> archive.readAfter(first, 0, 10))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("unknown canonical stream id");
 
-        archive.deleteStream(second);
-        String replacement = archive.beginStream();
-        archive.append(event(1));
-        archive.flushCompletedTick();
-        assertThat(archive.readAfter(replacement, 0, 10)).hasSize(1);
+            archive.deleteStream(second);
+            String replacement = archive.beginStream();
+            archive.append(event(1));
+            archive.flushCompletedTick();
+            assertThat(archive.readAfter(replacement, 0, 10)).hasSize(1);
+        }
     }
 
     private ObjectNode json(ExchangeEvent event) {

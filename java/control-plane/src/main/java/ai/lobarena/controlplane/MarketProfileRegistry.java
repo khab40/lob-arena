@@ -61,7 +61,7 @@ final class MarketProfileRegistry {
                     .map(path -> path.getFileName().toString())
                     .map(name -> name.substring(0, name.length() - 5))
                     .map(this::load)
-                    .map(MarketProfile::summary)
+                    .map(profile -> profile.summary())
                     .forEach(result::add);
         } catch (IOException exception) {
             throw new IllegalStateException("cannot list market profiles", exception);

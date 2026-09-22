@@ -95,7 +95,7 @@ class MarketProfileRuntimeTest {
                         working.resolve("../configs/market-profiles"),
                         working.resolve("../../configs/market-profiles"))
                 .stream()
-                .map(Path::normalize)
+                .map(path -> path.normalize())
                 .filter(path -> Files.isRegularFile(path.resolve("fixture-aapl-itch-v1.json")))
                 .findFirst()
                 .orElseThrow();

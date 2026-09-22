@@ -67,8 +67,8 @@ class LiveArenaServiceTest {
         LiveArenaService arena = arena(output, mapper.readTree("{\"agent_ids\":[],\"intents\":[]}"));
         arena.launchScenario("spoofing_like_wall");
 
-        JsonNode state = null;
-        for (int index = 0; index < 3; index++) {
+        JsonNode state = arena.stepForTest();
+        for (int index = 1; index < 3; index++) {
             state = arena.stepForTest();
         }
 
@@ -135,8 +135,8 @@ class LiveArenaServiceTest {
         JsonNode loaded = arena.loadDataSource("historical", "sample-btcusdt-0945");
 
         assertThat(loaded.path("market_data").path("source_type").stringValue()).isEqualTo("historical");
-        JsonNode state = null;
-        for (int index = 0; index < 3; index++) {
+        JsonNode state = arena.stepForTest();
+        for (int index = 1; index < 3; index++) {
             state = arena.stepForTest();
         }
 
