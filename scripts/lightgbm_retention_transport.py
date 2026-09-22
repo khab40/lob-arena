@@ -130,13 +130,13 @@ def audit_storage(inv, reader):
     return {"verified": True, "objects": checked, "count": len(checked)}
 
 
-def audit_tracking(inv, reader):
+def audit_tracking(inv, reader, source_equivalence=None):
     from lightgbm_retention_contract import tracking_mismatches
     run_id = inv["lineage"]["mlflow_run_id"]
     run = reader.metadata("mlflow/runs/get", {"run_id": run_id})["run"]
     experiment = reader.metadata("mlflow/experiments/get", {"experiment_id": run["info"]["experiment_id"]})
     require(experiment["experiment"]["name"] == "lob-arena/lightgbm-development", "wrong experiment")
-    failures = tracking_mismatches(inv, run)
+    failures = tracking_mismatches(inv, run, source_equivalence)
     metadata_hash = hashlib.sha256(json.dumps(run, sort_keys=True).encode()).hexdigest()
     if failures:
         return {"verified": False, "mismatches": failures, "artifacts_checked": 0,

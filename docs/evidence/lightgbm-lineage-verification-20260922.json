@@ -1,0 +1,75 @@
+{
+  "schema_version": "lightgbm_lineage_verification_v1",
+  "date": "2026-09-22",
+  "status": "verified",
+  "execution_source_commit": "f895edeec22a59001634c7db03a559485673640e",
+  "inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "freeze_sha256": "232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc",
+  "mlflow_run_id": "1bd94569914748db8bbde21b13e83d05",
+  "dataset_source_proof_sha256": "c735a7b72fab9eaed9979883e09fa0ac3364e7c8867a089b1310e4090a6f8a91",
+  "dataset_inputs_verified": 90,
+  "mlflow_artifacts_verified": 7,
+  "mlflow_artifact_bytes": 90458,
+  "artifacts": [
+    {
+      "path": "governed/training-run.json",
+      "sha256": "fa528a8660d0a687940bd1df9ce4d5fe2a1e21ca2d6be3ca823aafbd543e037b",
+      "size_bytes": 40004
+    },
+    {
+      "path": "governed/calibration-manifest.json",
+      "sha256": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30",
+      "size_bytes": 3329
+    },
+    {
+      "path": "governed/validation-metrics.json",
+      "sha256": "36563ff349990b474d5c1a123b08b358d46afd1daef4f18a06185e99d0e7abf7",
+      "size_bytes": 2765
+    },
+    {
+      "path": "governed/feature-importance.json",
+      "sha256": "67c80bf536fe1e60b8114f7e5d2dc6fb35472ac25689d42d4cee6ba1e8fb1a04",
+      "size_bytes": 4366
+    },
+    {
+      "path": "governed/reliability-bins.json",
+      "sha256": "7692b4da4fac3e8eca851d5b7da20e43254ff66e03670ef232792baaa67d9a5e",
+      "size_bytes": 2499
+    },
+    {
+      "path": "governed/reliability-diagram.svg",
+      "sha256": "de072cff9e8c08899cae443b0f33b7fe8d373598789fc092190f8a6c3bef0f05",
+      "size_bytes": 869
+    },
+    {
+      "path": "governed/model.txt",
+      "sha256": "e8c4134063bcb346d17b4839cfa21e458ad2d65bab1d2f240a15267d0dc7f2f3",
+      "size_bytes": 36626
+    }
+  ],
+  "metadata_response_sha256": "de4cf21b084cb77d02f685e1e7bd84f3599a5ea041aad65a0c99355ecd929ea7",
+  "same_run_metadata_before_and_after_checker_fix": true,
+  "root_cause": "MLflow reused dataset identities by name/digest and retained G5 source URIs for the identical 90 full input records.",
+  "historical_run_modified": false,
+  "frozen_candidate_modified": false,
+  "vm_final_state": "STOPPED",
+  "vm_start_request_to_verified_stop_seconds": 249.501,
+  "automatic_shutdown_verified": true,
+  "model_jobs": 0,
+  "final_access": false,
+  "new_resources": 0,
+  "iam_changes": false,
+  "g8_closed": false,
+  "next_step": "Supervised comparison audit and production preflight in a separate PR.",
+  "evidence_directory": "outputs/lightgbm-lineage-verification-20260922",
+  "evidence_sha256": {
+    "execution-scope.json": "5fc64e63067360765c55b3c9dc64ee7ac9586a2781e20997d91f3bcfcb9fcf4f",
+    "diagnosis.json": "08249a32465d3225aeb6bf179c9aa16ffab1dce056f7d957aac32abd81a2e08a",
+    "vm-session/watchdog-result.json": "c5629ed35577e1d12b5ffefde1c109cdec7f0bed9fa4531c710b27effc692122",
+    "verification/execution-scope.json": "7b0a881edd3aeae32a56d0d88253c616027a4e6f4a274c52c99a1b8125acd27a",
+    "verification/tracking-readback.json": "ed8bad22423698d34c30ca14ddd6e2d962bd1dc1d5355a8386816b0e76b3f7f0",
+    "verification/vm-session/vm-start-request.json": "ab27a2f5d02f9d7638b89be87a586c09254ac228f1bcb4e07d539d288f22b821",
+    "verification/vm-session/watchdog-result.json": "6eb331e735ee41d11d0eb7e402ee42980d278bd2632347d9c6bcb89433b276f3"
+  }
+}

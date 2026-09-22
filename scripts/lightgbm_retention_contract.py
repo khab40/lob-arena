@@ -128,7 +128,30 @@ def expected_tracking(inv):
     return tags, {k: str(v) for k, v in params.items()}, metrics, inputs
 
 
-def tracking_mismatches(inv, run):
+def load_source_equivalence(raw, anchor, inv, inventory_anchor, input_bucket):
+    """Accept only an externally anchored proof for this exact input inventory."""
+    require(len(raw) <= 65536, "source equivalence proof too large")
+    require(re.fullmatch(r"[0-9a-f]{64}", anchor), "invalid source proof anchor")
+    require(hashlib.sha256(raw).hexdigest() == anchor, "source proof anchor mismatch")
+    proof = decode(raw)
+    require(proof["schema_version"] == "lightgbm_dataset_source_equivalence_v1", "source proof schema")
+    require(proof["inventory_sha256"] == inventory_anchor, "source proof inventory mismatch")
+    lineage = inv["lineage"]
+    for key in ("feature_release_id", "feature_release_sha256"):
+        require(proof[key] == lineage[key], "source proof feature identity mismatch")
+    inputs = json.dumps(lineage["feature_inputs"], sort_keys=True, separators=(",", ":")).encode()
+    require(proof["feature_inputs_sha256"] == hashlib.sha256(inputs).hexdigest(), "source proof input mismatch")
+    root = proof["source_root_uri"]
+    require(not root.endswith("/"), "noncanonical source root")
+    s3_uri(root, input_bucket)
+    require("/staging/" in root, "development staging source required")
+    for key in ("source_request_sha256", "source_training_manifest_sha256"):
+        require(re.fullmatch(r"[0-9a-f]{64}", proof[key]), "source evidence hash required")
+    return {item["name"]: root + "/" + relative(feature["artifact"]["uri"])
+            for item, feature in zip(expected_tracking(inv)[3], lineage["feature_inputs"], strict=True)}
+
+
+def tracking_mismatches(inv, run, source_equivalence=None):
     import math
     tags, params, metrics, inputs = expected_tracking(inv)
     failures = []
@@ -162,7 +185,10 @@ def tracking_mismatches(inv, run):
         source = decode(ds["source"])
         checks = {"digest": ds.get("digest") == expected["digest"],
                   "source_type": ds.get("source_type") == "s3",
-                  "source_uri": source.get("uri") == expected["source"],
+                  "source_uri": source.get("uri") == expected["source"] or (
+                      source_equivalence is not None
+                      and expected["name"] in source_equivalence
+                      and source.get("uri") == source_equivalence[expected["name"]]),
                   **{"tags." + k: actual_tags.get(k) == v for k, v in expected["tags"].items()}}
         for field, matches in checks.items():
             if not matches:

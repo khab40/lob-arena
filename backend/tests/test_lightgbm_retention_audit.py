@@ -11,7 +11,7 @@ import pytest
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 from lightgbm_retention_contract import (  # noqa: E402
-    decode, expected_tracking, load_inventory, tracking_mismatches,
+    decode, expected_tracking, load_inventory, load_source_equivalence, tracking_mismatches,
 )
 from lightgbm_retention_transport import (  # noqa: E402
     TrackingReader, audit_storage, audit_tracking, fingerprint,
@@ -79,6 +79,49 @@ def test_dataset_sources_include_the_cloud_runner_artifact_root(inventory):
     assert tracking_mismatches(inventory, run)
     inventory["lineage"]["input_references"] = {"kind": "governed-feature-release", "feature_artifact_root": "features"}
     assert expected_tracking(inventory)[3][0]["source"] == "s3://inputs/releases/run/staging/features/train/fixture.parquet"
+
+
+def source_proof(inv):
+    return {"schema_version": "lightgbm_dataset_source_equivalence_v1", "inventory_sha256": "c" * 64,
+            "feature_release_id": inv["lineage"]["feature_release_id"],
+            "feature_release_sha256": inv["lineage"]["feature_release_sha256"],
+            "feature_inputs_sha256": hashlib.sha256(json.dumps(inv["lineage"]["feature_inputs"],
+                sort_keys=True, separators=(",", ":")).encode()).hexdigest(),
+            "source_root_uri": "s3://inputs/releases/earlier/staging/projection-artifacts",
+            "source_request_sha256": "d" * 64, "source_training_manifest_sha256": "e" * 64}
+
+
+def test_anchored_shared_dataset_source_keeps_full_hash_checks(inventory):
+    raw = json.dumps(source_proof(inventory)).encode()
+    equivalence = load_source_equivalence(raw, hashlib.sha256(raw).hexdigest(), inventory, "c" * 64, "inputs")
+    run = run_fixture(inventory)
+    item = run["inputs"]["dataset_inputs"][0]
+    item["dataset"]["source"] = '{"uri":"s3://inputs/releases/earlier/staging/projection-artifacts/train/fixture.parquet"}'
+    assert tracking_mismatches(inventory, run)  # No implicit alias allowance.
+    assert tracking_mismatches(inventory, run, equivalence) == []
+    next(t for t in item["tags"] if t["key"] == "artifact_sha256")["value"] = "0" * 64
+    assert tracking_mismatches(inventory, run, equivalence)[0].endswith(".tags.artifact_sha256")
+
+
+@pytest.mark.parametrize("mutation", ["anchor", "inventory", "inputs", "release", "bucket", "final", "suffix"])
+def test_source_equivalence_rejects_unbound_or_unsafe_proof(inventory, mutation):
+    proof = source_proof(inventory)
+    if mutation == "inventory":
+        proof["inventory_sha256"] = "0" * 64
+    if mutation == "inputs":
+        proof["feature_inputs_sha256"] = "0" * 64
+    if mutation == "release":
+        proof["feature_release_sha256"] = "0" * 64
+    if mutation == "bucket":
+        proof["source_root_uri"] = "s3://other/releases/x/staging/artifacts"
+    if mutation == "final":
+        proof["source_root_uri"] = "s3://inputs/final/staging/artifacts"
+    if mutation == "suffix":
+        proof["source_root_uri"] += "/"
+    raw = json.dumps(proof).encode()
+    anchor = "0" * 64 if mutation == "anchor" else hashlib.sha256(raw).hexdigest()
+    with pytest.raises(ValueError):
+        load_source_equivalence(raw, anchor, inventory, "c" * 64, "inputs")
 
 
 @pytest.mark.parametrize("mutation", ["bucket", "traversal", "duplicate", "size", "final", "markers"])

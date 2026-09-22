@@ -8,7 +8,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from lightgbm_retention_contract import load_inventory, require
+from lightgbm_retention_contract import load_inventory, load_source_equivalence, require
 from lightgbm_retention_transport import (
     StorageReader, TrackingReader, audit_storage, audit_tracking, deadline, error_code,
 )
@@ -26,10 +26,19 @@ def main():
     parser.add_argument("--execute", action="store_true", help="perform bounded remote GETs; default is plan only")
     parser.add_argument("--component", choices=("both", "storage", "mlflow"), default="both",
                         help="resume only an incomplete component without repeating successful reads")
+    parser.add_argument("--dataset-source-proof", type=Path)
+    parser.add_argument("--dataset-source-proof-sha256")
     args = parser.parse_args()
     components = ("storage", "mlflow") if args.component == "both" else (args.component,)
     raw = args.inventory.read_bytes()
     inv = load_inventory(raw, args.inventory_sha256, args.results_bucket, args.input_bucket)
+    require(bool(args.dataset_source_proof) == bool(args.dataset_source_proof_sha256),
+            "source proof and external anchor must be supplied together")
+    source_equivalence = None
+    if args.dataset_source_proof:
+        source_equivalence = load_source_equivalence(
+            args.dataset_source_proof.read_bytes(), args.dataset_source_proof_sha256,
+            inv, args.inventory_sha256, args.input_bucket)
     require(1 <= args.timeout_seconds <= 600, "invalid timeout")
     output = args.output.absolute()
     require(output.parent.resolve() == output.parent and not output.is_symlink(), "noncanonical output")
@@ -42,6 +51,7 @@ def main():
         "mlflow_run_id": inv["lineage"]["mlflow_run_id"],
         "result_uri": inv["result_uri"],
         "requested_components": components,
+        "dataset_source_proof_sha256": args.dataset_source_proof_sha256,
         "tool_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (
             Path(__file__), Path(__file__).with_name("lightgbm_retention_contract.py"),
             Path(__file__).with_name("lightgbm_retention_transport.py"))},
@@ -67,7 +77,7 @@ def main():
                 with deadline(args.timeout_seconds):
                     for name, action in (
                         ("storage", lambda: audit_storage(inv, StorageReader())),
-                        ("mlflow", lambda: audit_tracking(inv, TrackingReader(args.tracking_endpoint))),
+                        ("mlflow", lambda: audit_tracking(inv, TrackingReader(args.tracking_endpoint), source_equivalence)),
                     ):
                         if name not in components:
                             continue

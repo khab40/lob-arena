@@ -1,5 +1,21 @@
 # Roadmap status — 2026-09-22
 
+## G8 step 1 complete — 2026-09-22
+
+**Selected-run lineage and all seven MLflow artifacts now verify.** The 90 apparent
+mismatches were source URIs retained from G5 for shared name/digest identities.
+The G5 and frozen G6 manifests contain exactly the same 90 full input records.
+An externally anchored equivalence proof binds those exact alternate paths while
+preserving all full-hash, feature-release, fold and context checks. No historical
+run, model, calibration or threshold was changed. The prior 107-object durable
+result readback remains valid. See [verification and evidence](../ml/lightgbm-lineage-verification.md).
+
+The operator requested three separate PRs with analyse/plan/code/review/push
+cycles and approved cloud operations in advance. Next is the existing supervised
+comparison audit and production preflight. Then prepare replacement-specific
+final authorization, evaluate once and independently verify the complete result.
+**G8 remains open until those steps pass; G9 follows the verified result.**
+
 ## G8 tracking continuation — 2026-09-22
 
 **G8 remains open.** The selected development run is reachable again through the
