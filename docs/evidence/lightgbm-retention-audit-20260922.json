@@ -16,7 +16,9 @@
     "verified": true,
     "exact_objects": 107,
     "total_bytes": 12551368,
-    "reader_access_id_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d"
+    "reader_access_id_sha256": "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d",
+    "completed_readback_passes": 2,
+    "total_object_gets_across_completed_passes": 214
   },
   "mlflow": {
     "error": "ConnectionResetError",
@@ -73,5 +75,10 @@
     "External input manifest readback and other trial audits remain separate.",
     "G8 comparison audit, reviewed package and replacement-specific final authorization remain open."
   ],
-  "durable_evidence_directory": "outputs/lightgbm-retention-audit-20260922"
+  "durable_evidence_directory": "outputs/lightgbm-retention-audit-20260922",
+  "source_commit_preservation": {
+    "bundle": "outputs/lightgbm-retention-audit-20260922/pre-rebase.bundle",
+    "sha256": "befa0361fd5472e9426e5ef49ae9c3e75da227986c66e7399c08f3fd3576d884",
+    "verified": true
+  }
 }
