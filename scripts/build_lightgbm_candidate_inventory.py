@@ -129,6 +129,8 @@ def build_inventory(root, freeze_sha256):
                           'preprocessing': training['preprocessing'], 'early_stopping': training['early_stopping'],
                           'calibration': calibration['parameters'], 'operating_points': calibration['operating_points']},
         'lineage': {'binding': training['binding'], 'input_identity_hash': freeze['input_identity_hash'],
+                    'feature_release_id': training['feature_release_id'],
+                    'feature_release_sha256': training['feature_release_sha256'],
                     'input_references': request['input'], 'input_release_uri': request['input_release_uri'],
                     'feature_inputs': training['input_features'], 'request_git_commit': request['git_commit'],
                     'training_git_commit': training['git_commit'], 'image': freeze['image'],

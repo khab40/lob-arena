@@ -23,6 +23,8 @@ def test_inventory_is_portable_complete_and_explicit_about_limits(tmp_path):
     assert report == build(right, anchor)
     assert report['configuration']['ordered_features'] == ['rate']
     assert report['lineage']['mlflow_run_id'] == 'mlflow-selected'
+    assert report['lineage']['feature_release_id'] == 'fixture-release'
+    assert report['lineage']['feature_release_sha256'] == 'f' * 64
     assert report['verification'] == {
         'result_objects_verified': 17, 'model_loaded': False, 'rows_parsed': False,
         'live_mlflow_verified': False, 'remote_storage_verified': False,

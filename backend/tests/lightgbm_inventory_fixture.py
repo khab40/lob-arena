@@ -29,6 +29,7 @@ def make_freeze(root, change=None):
         'data_policy': {'test_fold_accessed': False}, 'binding': {'feature_config_hash': 'b' * 64},
         'ordered_feature_columns': ['rate'], 'input_features': features,
         'hyperparameters': {'num_leaves': 8}, 'training_seed': 42, 'git_commit': 'c' * 40,
+        'feature_release_id': 'fixture-release', 'feature_release_sha256': 'f' * 64,
         'class_weights': {'negative': 1, 'positive': 2}, 'early_stopping': {'best_iteration': 2},
     }
     calibration = {
