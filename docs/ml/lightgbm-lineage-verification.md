@@ -52,3 +52,28 @@ existing `cpu-e2/2vcpu-8gb` VM session with the prearmed watchdog: stop begins b
 model Jobs, new resources, permission changes or final access. If diagnosis
 cannot finish in that window, retain it and stop rather than extend the session.
 The local watchdog requires host/network/provider availability.
+
+
+## Diagnosis and correction
+
+All 90 discrepancies were source URIs. The exact G5 repeat-1 source location
+remained registered while the selected G6 run reused identical name/digest pairs.
+MLflow's [dataset store](https://github.com/mlflow/mlflow/blob/v3.3.2/mlflow/store/tracking/sqlalchemy_store.py)
+reuses an existing dataset UUID by name and digest. Full artifact hashes, tags,
+feature-release identity and all 90 retained input records are identical.
+
+The [equivalence proof](../evidence/lightgbm-dataset-source-equivalence-20260922.json)
+records the G5 request/training/checksum identities and canonical input-record hash.
+The G5 retained result checksum inventory and collection-bound request were checked.
+Supply it with `--dataset-source-proof` and `--dataset-source-proof-sha256`; the
+checker binds it to the exact frozen inventory and permits only those exact source
+paths. Full hashes, counts, fold membership, contexts and all other checks remain
+mandatory. No historical MLflow record or frozen artifact is rewritten. Fresh
+retrieval of the G5 input objects is outside this proof's availability claim.
+
+The diagnosis session was stopped after collecting evidence. One additional
+verification session uses the same per-session bounds, one metadata audit and
+seven artifact GETs. Combined ceiling: two starts, 1 vCPU-hour / 4 GiB-hours at
+the nominal 15-minute targets; actual duration and verified shutdown are retained.
+Regression coverage rejects missing/incorrect anchors, different input records,
+feature-release identity, buckets and final paths, and retains full-hash checks.
