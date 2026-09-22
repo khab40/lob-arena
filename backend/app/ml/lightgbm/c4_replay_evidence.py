@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from copy import deepcopy
 import sqlite3
 import tempfile
 from contextlib import closing
@@ -29,6 +30,18 @@ from app.ml.lightgbm.contracts import (
 from app.ml.lightgbm.release import verify_complete_lightgbm_v1_release
 from app.ml.lightgbm.scoring import validate_prediction_parquet
 from app.nebius.object_storage import verify_complete_result
+
+
+# One process-local, independently recomputed result. Never populated by scoring.
+_VERIFIED_COMPARISON = None
+
+
+def _reuse_comparison(key, compute):
+    global _VERIFIED_COMPARISON
+    if _VERIFIED_COMPARISON is None or _VERIFIED_COMPARISON[0] != key:
+        result = compute()  # Exceptions never populate the cache.
+        _VERIFIED_COMPARISON = (key, deepcopy(result))
+    return deepcopy(_VERIFIED_COMPARISON[1])
 
 
 class C4CheckpointLocation(BaseModel):
@@ -271,6 +284,7 @@ def evaluate_c4_release(
     artifact_root: Path,
     candidate_path: Path,
     predictions: DetectorPredictionsManifest,
+    reuse_verified_comparison: bool = False,
 ) -> dict:
     if sha256_file(candidate_path) != profile.candidate_sha256:
         raise ValueError("C4 evaluation profile does not bind the frozen candidate")
@@ -312,18 +326,25 @@ def evaluate_c4_release(
     )
     if projection.access_scope != "final_test":
         raise ValueError("C4 comparison requires the isolated test projection")
-    coverage = {}
-    rows = paired_observations(
-        projection=projection,
-        artifact_root=artifact_root,
-        predictions=predictions,
-        replay_paths=verified_replay_paths(comparison_path, root=root),
-        coverage=coverage,
-    )
-    with closing(rows):
-        result = evaluate_c4_observations(rows, profile=profile, frozen_threshold=predictions.threshold)
-    result["coverage"] = coverage
-    result["same_observations_verified"] = True
-    result["prediction_manifest_sha256"] = predictions.manifest_hash()
-    result["model_binding"] = predictions.binding.model_dump(mode="json")
-    return result
+    # Every call rehashes the complete original checkpoint inventories, including
+    # canonical streams, before reuse. Release/projection checks above likewise
+    # revalidate actual artifact bytes, rather than trusting manifest assertions.
+    replay_paths = verified_replay_paths(comparison_path, root=root)
+
+    def compute():
+        coverage = {}
+        rows = paired_observations(
+            projection=projection, artifact_root=artifact_root, predictions=predictions,
+            replay_paths=replay_paths, coverage=coverage,
+        )
+        with closing(rows):
+            result = evaluate_c4_observations(rows, profile=profile, frozen_threshold=predictions.threshold)
+        result["coverage"] = coverage
+        result["same_observations_verified"] = True
+        result["prediction_manifest_sha256"] = predictions.manifest_hash()
+        result["model_binding"] = predictions.binding.model_dump(mode="json")
+        return result
+
+    if not reuse_verified_comparison:
+        return compute()  # Initial scoring cannot prepopulate independent verification.
+    return _reuse_comparison((profile.canonical_hash(), predictions.manifest_hash()), compute)
