@@ -39,7 +39,11 @@ saved receipts, not a fresh live-server audit.
    hyperparameters, feature exclusions/order, seeds, class weighting, early-stopping
    settings, calibration parameters, thresholds, data/split hashes, Git/image
    identities, Job IDs, MLflow IDs and checksums. Verify retrieval from durable
-   storage so recovery does not depend on local `outputs/`.
+   storage so recovery does not depend on local `outputs/`. The first implementation
+   chunk adds a [read-only candidate inventory](../ml/lightgbm-candidate-inventory.md):
+   all 107 retained candidate-result objects are locally rehashed, and the index
+   links resolved settings, artifacts, lineage and remote locations. Independent
+   remote retrieval and live MLflow verification remain open.
 
 5. **Audit MLflow completeness and close tracking gaps.** Development logging
    already saves parameters, summary metrics, lineage, model weights, calibration
@@ -74,6 +78,20 @@ saved receipts, not a fresh live-server audit.
    unimplemented: the existing namespace and logged model file are insufficient.
    Verified model packaging, version registration, promotion and rollback are
    subsequent delivery work under the [registration plan](../use-cases/ml-model-serving.md#planned-registration-and-promotion-procedure).
+
+### Delivery chunks
+
+- **Chunk 1 — frozen candidate inventory:** local byte verification, portable
+  configuration/artifact index, inert tests and an execution receipt in one PR.
+- **Chunk 2 — independent retention/tracking readback:** use exact inventory keys
+  to verify durable storage and live MLflow metadata/artifacts; record missing
+  evidence and make complete-release/configuration locations discoverable.
+- **Chunk 3 — G8 completion:** separately approve the supervised comparison audit,
+  finish package/preflight, obtain replacement-final approval, evaluate once and
+  independently verify the published result. G9 follows that verified result.
+- **Later campaign/delivery PRs:** learning curves and fuller config logging,
+  improved calibration/selection protocol, then verified registry publication and
+  promotion when justified by G9. Preserve the current frozen model throughout G8.
 
 ## Retained status snapshot — 2026-09-21
 

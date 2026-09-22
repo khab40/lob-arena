@@ -1,0 +1,46 @@
+{
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "date": "2026-09-22",
+  "experiment_sha256": "d27749655e6411be62f5c704e100a4dbf2961fd3d764dfd8b4ec3bc3ed28ce79",
+  "freeze_sha256": "232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc",
+  "frozen_evidence_modified": false,
+  "input_freeze_directory": "outputs/lightgbm-wave1/nasdaq-g7-freeze-20260912",
+  "inventory_path": "outputs/lightgbm-candidate-inventory-20260922/inventory-final.json",
+  "inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "inventory_size_bytes": 106873,
+  "jobs_submitted": 0,
+  "mlflow_run_id": "1bd94569914748db8bbde21b13e83d05",
+  "model_sha256": "e8c4134063bcb346d17b4839cfa21e458ad2d65bab1d2f240a15267d0dc7f2f3",
+  "nebius_job_id": "aijob-e00thg45rv7g7r1nyj",
+  "remaining": [
+    "Verify exact remote objects and live MLflow evidence independently",
+    "Verify external input metadata referenced by the request",
+    "Complete separately authorized G8 evaluation and G9 disposition"
+  ],
+  "repeat_output_identical": true,
+  "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/development/nasdaq-g6-calibration-isotonic-20260907",
+  "schema_version": "lightgbm_candidate_inventory_receipt_v1",
+  "selected_trial_id": "calibration-isotonic",
+  "source_commit": "cf8c1c4f288493e255764f67f0ff57b36a691338",
+  "source_files_sha256": {
+    "scripts/build_lightgbm_candidate_inventory.py": "480cdb8315087735f177cfb9fdd02f8ec5b29e44adae29138f3f964575b46d65",
+    "scripts/lightgbm_inventory_io.py": "097582e4c5c9564677796834ea9e7d6f32bdf6b93e86de4c5fb51ea316baad8f"
+  },
+  "validation": {
+    "inert_tests_passed": 21,
+    "ml_dependencies_required": false,
+    "optimization_modes": [
+      "normal",
+      "-O",
+      "-OO"
+    ]
+  },
+  "verification": {
+    "final_evaluation_authorized": false,
+    "live_mlflow_verified": false,
+    "model_loaded": false,
+    "remote_storage_verified": false,
+    "result_objects_verified": 107,
+    "rows_parsed": false
+  }
+}
