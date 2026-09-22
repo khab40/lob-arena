@@ -183,6 +183,14 @@ def test_plan_and_no_overwrite_without_dependencies(inventory, tmp_path, optimiz
     original = target.read_bytes()
     assert subprocess.run(command, capture_output=True).returncode != 0
     assert target.read_bytes() == original
+    component_target = tmp_path / "mlflow-plan.json"
+    component_command = [*command, "--component", "mlflow"]
+    component_command[component_command.index("--output") + 1] = str(component_target)
+    assert subprocess.run(component_command, capture_output=True).returncode == 0
+    component_plan = json.loads(component_target.read_text())
+    assert component_plan["requested_components"] == ["mlflow"]
+    assert component_plan["bounds"]["result_objects"] == 0
+    assert component_plan["storage"]["verified"] is False
     command[command.index("--inventory-sha256") + 1] = "0" * 64
     assert subprocess.run(command, capture_output=True).returncode != 0
 
