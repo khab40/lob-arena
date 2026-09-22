@@ -383,9 +383,9 @@ final class LiveArenaService {
 
     synchronized JsonNode incident(String incidentId) {
         return incidents.stream()
-                .filter(item -> incidentId.equals(item.path("id").textValue()))
+                .filter(item -> incidentId.equals(item.path("id").stringValue()))
                 .findFirst()
-                .map(ObjectNode::deepCopy)
+                .map(item -> item.deepCopy())
                 .orElse(null);
     }
 
@@ -636,10 +636,10 @@ final class LiveArenaService {
                                 .equals(repeatedControl.path("historical_snapshot_stream_hash"))
                         && hybrid.path("historical_snapshot_stream_hash")
                                 .equals(repeatedHybrid.path("historical_snapshot_stream_hash")));
-        determinism.put("control_repeat_stream_hash", repeatedControl.path("stream_hash").asText());
-        determinism.put("hybrid_repeat_stream_hash", repeatedHybrid.path("stream_hash").asText());
-        determinism.put("control_repeat_stream_id", repeatedControl.path("stream_id").textValue());
-        determinism.put("hybrid_repeat_stream_id", repeatedHybrid.path("stream_id").textValue());
+        determinism.put("control_repeat_stream_hash", repeatedControl.path("stream_hash").asString());
+        determinism.put("hybrid_repeat_stream_hash", repeatedHybrid.path("stream_hash").asString());
+        determinism.put("control_repeat_stream_id", repeatedControl.path("stream_id").stringValue());
+        determinism.put("hybrid_repeat_stream_id", repeatedHybrid.path("stream_id").stringValue());
         ObjectNode impact = result.putObject("realism_impact");
         impact.put(
                 "canonical_event_count_delta",
@@ -1036,10 +1036,10 @@ final class LiveArenaService {
     }
 
     private void applyIntent(JsonNode intent) {
-        String kind = intent.path("kind").textValue();
-        String agentId = intent.path("agent_id").textValue();
+        String kind = intent.path("kind").stringValue();
+        String agentId = intent.path("agent_id").stringValue();
         try {
-            Side side = side(intent.path("side").asText(""));
+            Side side = side(intent.path("side").asString(""));
             long quantity = lots(intent.path("quantity").asDouble(0.0));
             long price = switch (kind) {
                 case "set_level", "limit" -> ticks(intent.path("price").asDouble(0.0));
@@ -1063,13 +1063,13 @@ final class LiveArenaService {
                 case "limit" -> matching.submit(KernelOrder.limit(
                         orderId(intent, agentId, sequence), agentId, side, quantity, price, tick));
                 case "cancel" -> matching.submit(KernelOrder.cancel(
-                        intent.path("order_id").asText(), agentId, side, tick));
+                        intent.path("order_id").asString(), agentId, side, tick));
                 default -> {
                     return;
                 }
             }
-            ObjectNode event = event(intent.path("event_type").asText("normal"), agentId,
-                    intent.path("message").asText("agent intent applied"));
+            ObjectNode event = event(intent.path("event_type").asString("normal"), agentId,
+                    intent.path("message").asString("agent intent applied"));
             event.put("runtime_source", "agent_runner");
             event.put("side", side == Side.SIDE_BUY ? "buy" : "sell");
             if (price > 0) {
@@ -2178,7 +2178,7 @@ final class LiveArenaService {
     }
 
     private static String orderId(JsonNode intent, String agentId, int sequence) {
-        String provided = intent.path("order_id").asText("");
+        String provided = intent.path("order_id").asString("");
         return provided.isBlank() ? agentId + "-" + intent.path("tick").longValue() + "-" + sequence : provided;
     }
 

@@ -84,11 +84,12 @@ class HistoricalMarketDataSourceTest {
         assertThat(source.resourcesOpen()).isFalse();
 
         Files.write(events, new byte[] {0}, StandardOpenOption.APPEND);
-        HistoricalMarketDataSource tampered = new HistoricalMarketDataSource(mapper, root, 1);
-        assertThatThrownBy(() -> tampered.load(datasetId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("output size does not match manifest");
-        assertThat(tampered.loaded()).isFalse();
+        try (HistoricalMarketDataSource tampered = new HistoricalMarketDataSource(mapper, root, 1)) {
+            assertThatThrownBy(() -> tampered.load(datasetId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("output size does not match manifest");
+            assertThat(tampered.loaded()).isFalse();
+        }
     }
 
     @Test
@@ -135,12 +136,12 @@ class HistoricalMarketDataSourceTest {
         assertThat(source.venue()).isEqualTo("XNAS");
         assertThat(source.format()).isEqualTo("itch_parquet_v1");
         assertThat(source.historicalSourceType()).isEqualTo("nasdaq_itch");
-        assertThat(loaded.path("market_data").path("historical_source_type").textValue())
+        assertThat(loaded.path("market_data").path("historical_source_type").stringValue())
                 .isEqualTo("nasdaq_itch");
-        assertThat(source.datasets().get(0).path("venue").textValue()).isEqualTo("XNAS");
-        assertThat(source.datasets().get(0).path("format").textValue()).isEqualTo("itch_parquet_v1");
-        assertThat(source.integrity().path("source_stream_sha256").textValue()).hasSize(64);
-        assertThat(source.integrity().path("parser_config_sha256").textValue()).hasSize(64);
+        assertThat(source.datasets().get(0).path("venue").stringValue()).isEqualTo("XNAS");
+        assertThat(source.datasets().get(0).path("format").stringValue()).isEqualTo("itch_parquet_v1");
+        assertThat(source.integrity().path("source_stream_sha256").stringValue()).hasSize(64);
+        assertThat(source.integrity().path("parser_config_sha256").stringValue()).hasSize(64);
         assertThat(source.integrity().path("message_counts").path("A").intValue()).isEqualTo(1);
         source.close();
     }
@@ -178,11 +179,12 @@ class HistoricalMarketDataSourceTest {
         }
         writeManifest(dataset, datasetId, events, books, 1);
 
-        HistoricalMarketDataSource source = new HistoricalMarketDataSource(mapper, root, 1);
-        assertThatThrownBy(() -> source.load(datasetId))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("not synchronized");
-        assertThat(source.loaded()).isFalse();
+        try (HistoricalMarketDataSource source = new HistoricalMarketDataSource(mapper, root, 1)) {
+            assertThatThrownBy(() -> source.load(datasetId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("not synchronized");
+            assertThat(source.loaded()).isFalse();
+        }
     }
 
     @Test

@@ -22,8 +22,8 @@ final class IntegerOrderBookTest {
         List<Execution> executions = book.match(
                 KernelOrder.market("buy", "taker", Side.SIDE_BUY, 5, 3), null);
 
-        assertEquals(List.of("old", "new"), executions.stream().map(Execution::restingOrderId).toList());
-        assertEquals(List.of(3L, 2L), executions.stream().map(Execution::quantityLots).toList());
+        assertEquals(List.of("old", "new"), executions.stream().map(execution -> execution.restingOrderId()).toList());
+        assertEquals(List.of(3L, 2L), executions.stream().map(execution -> execution.quantityLots()).toList());
         assertEquals(2, book.orders().get("new").quantityLots());
         assertEquals(100, book.bestAsk());
         assertEquals(List.of("new"), book.orderIdsAt(Side.SIDE_SELL, 100));
@@ -38,7 +38,7 @@ final class IntegerOrderBookTest {
         List<Execution> executions = book.match(
                 KernelOrder.limit("sell", "taker", Side.SIDE_SELL, 5, 99, 3), 99L);
 
-        assertEquals(List.of("best"), executions.stream().map(Execution::restingOrderId).toList());
+        assertEquals(List.of("best"), executions.stream().map(execution -> execution.restingOrderId()).toList());
         assertEquals(3, executions.getFirst().quantityLots());
         assertEquals(98, book.bestBid());
     }

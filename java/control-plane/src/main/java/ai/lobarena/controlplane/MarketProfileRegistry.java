@@ -61,7 +61,7 @@ final class MarketProfileRegistry {
                     .map(path -> path.getFileName().toString())
                     .map(name -> name.substring(0, name.length() - 5))
                     .map(this::load)
-                    .map(MarketProfile::summary)
+                    .map(profile -> profile.summary())
                     .forEach(result::add);
         } catch (IOException exception) {
             throw new IllegalStateException("cannot list market profiles", exception);
@@ -70,13 +70,13 @@ final class MarketProfileRegistry {
     }
 
     private MarketProfile parse(String requestedId, JsonNode document) {
-        if (!"market_profile_v1".equals(document.path("schema_version").asText())) {
+        if (!"market_profile_v1".equals(document.path("schema_version").asString())) {
             throw new IllegalArgumentException("unsupported market profile schema");
         }
-        if (!requestedId.equals(document.path("profile_id").asText())) {
+        if (!requestedId.equals(document.path("profile_id").asString())) {
             throw new IllegalArgumentException("market profile id does not match its filename");
         }
-        String sha = document.path("profile_sha256").asText();
+        String sha = document.path("profile_sha256").asString();
         if (!SHA256.matcher(sha).matches()) {
             throw new IllegalArgumentException("market profile SHA-256 is invalid");
         }
@@ -124,7 +124,7 @@ final class MarketProfileRegistry {
     }
 
     private static String requiredText(JsonNode parameters, String field, int minimum, int maximum) {
-        String value = parameters.path(field).asText("").strip();
+        String value = parameters.path(field).asString("").strip();
         if (value.length() < minimum
                 || value.length() > maximum
                 || !SIMULATION_TOKEN.matcher(value).matches()) {
@@ -190,8 +190,8 @@ final class MarketProfileRegistry {
                     .put("venue", venue);
             JsonNode source = document.path("source");
             result.put("dataset_id", id);
-            result.put("training_dataset_id", source.path("dataset_id").asText());
-            result.put("trade_date", source.path("trade_date").asText());
+            result.put("training_dataset_id", source.path("dataset_id").asString());
+            result.put("trade_date", source.path("trade_date").asString());
             result.set("simulation_parameters", document.path("simulation_parameters").deepCopy());
             return result;
         }

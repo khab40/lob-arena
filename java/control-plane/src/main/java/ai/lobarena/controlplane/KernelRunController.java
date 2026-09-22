@@ -33,7 +33,7 @@ final class KernelRunController {
     ResponseEntity<byte[]> run(@RequestBody byte[] body) {
         if (body.length > MAX_REQUEST_BYTES) {
             throw new ResponseStatusException(
-                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    HttpStatus.CONTENT_TOO_LARGE,
                     "Protobuf kernel request exceeds 8 MiB");
         }
 

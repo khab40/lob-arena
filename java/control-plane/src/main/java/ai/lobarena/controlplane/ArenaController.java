@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -75,7 +74,7 @@ final class ArenaController {
             return arena.start();
         } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
+                    HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), exception);
         }
     }
 
@@ -97,7 +96,7 @@ final class ArenaController {
                     String.valueOf(body.getOrDefault("dataset_id", "")),
                     longValue(body.get("master_seed"), arena.defaultMasterSeed()));
         } catch (IllegalArgumentException exception) {
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), exception);
         }
     }
 
@@ -124,10 +123,10 @@ final class ArenaController {
                     stringObjectMap(body.get("scenario_parameters")));
         } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
+                    HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), exception);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
+                    HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), exception);
         }
     }
 
@@ -142,7 +141,7 @@ final class ArenaController {
             return arena.launchScenario(scenario);
         } catch (CanonicalEventArchive.ArchiveCapacityExceededException exception) {
             throw new ResponseStatusException(
-                    HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), exception);
+                    HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), exception);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception);
         }

@@ -35,7 +35,7 @@ class ArenaWebSocketHandlerTest {
         ArgumentCaptor<TextMessage> messages = ArgumentCaptor.forClass(TextMessage.class);
         verify(session).sendMessage(messages.capture());
         JsonNode envelope = mapper.readTree(messages.getValue().getPayload());
-        assertThat(envelope.path("type").textValue()).isEqualTo("arena_state");
+        assertThat(envelope.path("type").stringValue()).isEqualTo("arena_state");
         assertThat(envelope.path("version").intValue()).isEqualTo(1);
         assertThat(envelope.path("payload").path("tick").longValue()).isZero();
 
@@ -44,7 +44,7 @@ class ArenaWebSocketHandlerTest {
         assertThat(started.path("running").booleanValue()).isTrue();
         JsonNode scenario = handler.dispatch(mapper.readTree(
                 "{\"type\":\"launch_scenario\",\"scenario\":\"layering_like\"}"));
-        assertThat(scenario.path("scenario_family").textValue()).isEqualTo("layering_like");
+        assertThat(scenario.path("scenario_family").stringValue()).isEqualTo("layering_like");
 
         handler.afterConnectionClosed(session, CloseStatus.NORMAL);
         assertThat(handler.clientCount()).isZero();
@@ -63,7 +63,7 @@ class ArenaWebSocketHandlerTest {
         ArgumentCaptor<TextMessage> messages = ArgumentCaptor.forClass(TextMessage.class);
         verify(session, org.mockito.Mockito.times(2)).sendMessage(messages.capture());
         JsonNode envelope = mapper.readTree(messages.getAllValues().get(1).getPayload());
-        assertThat(envelope.path("type").textValue()).isEqualTo("arena_error");
+        assertThat(envelope.path("type").stringValue()).isEqualTo("arena_error");
         assertThat(envelope.path("version").intValue()).isEqualTo(1);
         assertThat(handler.clientCount()).isEqualTo(1);
     }

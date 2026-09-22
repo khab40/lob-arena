@@ -69,9 +69,9 @@ final class ArenaWebSocketHandler extends TextWebSocketHandler {
     }
 
     JsonNode dispatch(JsonNode command) {
-        String type = command.path("type").asText("");
+        String type = command.path("type").asString("");
         if ("arena_control".equals(type)) {
-            return switch (command.path("action").asText("")) {
+            return switch (command.path("action").asString("")) {
                 case "start" -> arena.start();
                 case "pause" -> arena.pause();
                 case "reset" -> arena.reset();
@@ -79,12 +79,12 @@ final class ArenaWebSocketHandler extends TextWebSocketHandler {
             };
         }
         if ("launch_scenario".equals(type)) {
-            return arena.launchScenario(command.path("scenario").asText());
+            return arena.launchScenario(command.path("scenario").asString());
         }
         if ("load_market_data_source".equals(type)) {
             return arena.loadDataSource(
-                    command.path("source_type").asText(),
-                    command.path("dataset_id").asText());
+                    command.path("source_type").asString(),
+                    command.path("dataset_id").asString());
         }
         throw new IllegalArgumentException("unknown arena command type");
     }

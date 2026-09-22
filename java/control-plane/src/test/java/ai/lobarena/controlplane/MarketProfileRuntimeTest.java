@@ -30,11 +30,11 @@ class MarketProfileRuntimeTest {
         JsonNode loaded = arena.loadDataSource("synthetic_profile", "fixture-profile", 99);
 
         assertThat(arena.marketProfileSummaries()).hasSize(1);
-        assertThat(loaded.path("market_data").path("source_type").textValue())
+        assertThat(loaded.path("market_data").path("source_type").stringValue())
                 .isEqualTo("synthetic_profile");
-        assertThat(loaded.path("market_data").path("profile_sha256").textValue())
+        assertThat(loaded.path("market_data").path("profile_sha256").stringValue())
                 .isEqualTo(PROFILE_SHA);
-        assertThat(loaded.path("market_data").path("run_binding_sha256").textValue())
+        assertThat(loaded.path("market_data").path("run_binding_sha256").stringValue())
                 .matches("[0-9a-f]{64}");
         assertThat(loaded.path("book").path("best_bid").doubleValue()).isEqualTo(99.995);
         assertThat(loaded.path("book").path("bids").get(0).path("quantity").doubleValue())
@@ -42,7 +42,7 @@ class MarketProfileRuntimeTest {
 
         arena.start();
         JsonNode advanced = arena.stepForTest();
-        assertThat(agentObservation.get().path("market_profile").path("profile_sha256").textValue())
+        assertThat(agentObservation.get().path("market_profile").path("profile_sha256").stringValue())
                 .isEqualTo(PROFILE_SHA);
         assertThat(agentObservation.get()
                         .path("market_profile")
@@ -95,7 +95,7 @@ class MarketProfileRuntimeTest {
                         working.resolve("../configs/market-profiles"),
                         working.resolve("../../configs/market-profiles"))
                 .stream()
-                .map(Path::normalize)
+                .map(path -> path.normalize())
                 .filter(path -> Files.isRegularFile(path.resolve("fixture-aapl-itch-v1.json")))
                 .findFirst()
                 .orElseThrow();

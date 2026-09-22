@@ -212,9 +212,9 @@ final class HistoricalCsvMarketDataSource {
         }
         try {
             JsonNode manifest = mapper.readTree(Files.readString(manifestPath, StandardCharsets.UTF_8));
-            if (!"ready".equals(manifest.path("status").asText())
-                    || !"canonical_csv_v1".equals(manifest.path("format").asText())
-                    || !requestedDatasetId.equals(manifest.path("dataset_id").asText())) {
+            if (!"ready".equals(manifest.path("status").asString())
+                    || !"canonical_csv_v1".equals(manifest.path("format").asString())
+                    || !requestedDatasetId.equals(manifest.path("dataset_id").asString())) {
                 throw new IllegalArgumentException("historical CSV manifest is not ready");
             }
             String symbol = requiredText(manifest, "symbol");
@@ -391,7 +391,7 @@ final class HistoricalCsvMarketDataSource {
     }
 
     private static String requiredText(JsonNode node, String field) {
-        String value = node.path(field).asText("");
+        String value = node.path(field).asString("");
         if (value.isBlank()) {
             throw new IllegalArgumentException("historical CSV manifest requires " + field);
         }
