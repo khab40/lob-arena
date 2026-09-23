@@ -1,5 +1,23 @@
 # Roadmap status — 2026-09-23
 
+## G8 authorized final evaluation running — 2026-09-23
+
+The exact one-run proposal and operator key-deactivation handoff are approved.
+Nebius Job `aijob-e00kd6g7vaqtngwv9r` started at 07:15:36 UTC with the unchanged
+frozen C4 candidate. All 32 signed package files, actual Job resources, image,
+secret-version references and mounts were checked before releasing its signed
+context. Authenticated MLflow readiness and the conditional output reservation
+passed before final access. The single scoring invocation has started.
+
+MLflow run `e4e5d9ff757a4587bcd6d01bcd33df06` was reserved before final reads.
+See the [execution receipt](../evidence/g8-final-execution-20260923.json) in
+[PR #223](https://github.com/khab40/lob-arena/pull/223), linked to
+[story #23](https://github.com/khab40/lob-arena/issues/23). The Job has a three-hour
+limit and no automatic retry. Final access and the existing MLflow VM remain
+active for execution and verification; operator deactivation and idle VM stop
+follow completion or abort. **G8 is open:** publication, independent result and
+lineage verification, actual quality assessment and G9 disposition remain.
+
 ## G8 final authorization preparation — 2026-09-23
 
 **PR #220 is merged; all 22 checks passed.** The comparison audit, optimization

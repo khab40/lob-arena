@@ -10,6 +10,19 @@ I want one authorized evaluation of the frozen C4 candidate with independent
 result and lineage verification,
 So that G8 records measured quality and an evidence-backed G9 disposition.
 
+## Current execution
+
+The operator approved the exact proposal and confirmed the manual deactivation
+handoff. The [execution receipt](../../evidence/g8-final-execution-20260923.json)
+records Job `aijob-e00kd6g7vaqtngwv9r`, started at 07:15:36 UTC, and reserved
+MLflow run `e4e5d9ff757a4587bcd6d01bcd33df06`. The signed 32-file package retains
+the reviewed runtime and frozen candidate. Actual provider context, authenticated
+MLflow readiness and conditional output intent passed; final access and the one
+scoring invocation have started. Publication and independent verification remain
+pending. The final key and existing MLflow VM remain active until cleanup.
+
+## Preparation record
+
 PR #219 verified the 90 dataset inputs and seven selected-run MLflow artifacts.
 PR #220 is merged with all 22 checks passing. It completed the comparison audit,
 verification reuse benchmark and unsigned production transport probe. These
