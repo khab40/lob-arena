@@ -323,6 +323,7 @@ def _verified_benchmark_snapshot(
             root=FrozenPublicSampleRoot.model_validate_json(c4_inputs.frozen_root.read_bytes()),
             projection_path=c4_inputs.projection, comparison_path=c4_inputs.comparison,
             candidate_path=c4_inputs.candidate, artifact_root=artifact_root, predictions=predictions,
+            reuse_verified_comparison=True,
         )
         source_fields = {"source_result_inventory_sha256", "source_request_sha256", "source_mlflow_run_id"}
         if source_fields & payload.keys():

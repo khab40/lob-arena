@@ -1,4 +1,31 @@
-# Roadmap status — 2026-09-22
+# Roadmap status — 2026-09-23
+
+## G8 comparison verified; production runtime preflight — 2026-09-23
+
+**The comparison audit passed independently:** 377 files rehashed, 27 original
+checkpoints verified and all 30 canonical replays exhausted. Nebius Job
+`aijob-e00p01kcjvxcb53g7e` completed in 28 minutes 49 seconds, its supervisor exited
+zero and compute was released. The VM is stopped and final key inactive. See the
+[independent receipt](../evidence/g8-comparison-verification-20260923.json) and
+[execution plan](../operations/g8/g8-comparison-preflight-20260922.md).
+
+Production preflight found at least ten full comparison passes before publication.
+[PR #220](https://github.com/khab40/lob-arena/pull/220), linked to
+[Bug #221](https://github.com/khab40/lob-arena/issues/221) under
+[LightGBM story #23](https://github.com/khab40/lob-arena/issues/23), now retains two
+full comparisons and rechecks all bound input bytes before reuse. The
+[Nebius benchmark](../evidence/g8-verification-reuse-verification-20260923.json)
+passed eight repeated-copy checks, five changed-input rejections and fresh-process
+recomputation. The [updated production transport probe](../evidence/g8-production-transport-probe-20260923.json)
+verified 26 package files, 13 runtime overlays and the signed three-hour Job context.
+Its compute is released, VM stopped and final key inactive. Synthetic timings do
+not establish full production duration; three hours is a finite sizing proposal.
+
+Step 1 is merged in PR #219. Step 2's comparison, optimization and unsigned package
+are verified and in PR #220 for review. Step 3 still requires replacement-specific
+final authorization, live authorized output-intent/MLflow preflight, one evaluation
+and independent results/lineage verification. The development reader's denied
+output-prefix check remains unverified. **G8 is not closed; no final scoring ran.**
 
 ## G8 step 1 complete — 2026-09-22
 
