@@ -2,6 +2,7 @@
 
 Tracking: [story #23](https://github.com/khab40/lob-arena/issues/23),
 [Bug #222](https://github.com/khab40/lob-arena/issues/222),
+[checksum scan Bug #224](https://github.com/khab40/lob-arena/issues/224),
 [Project #3](https://github.com/users/khab40/projects/3).
 
 As a validation engineer,
@@ -27,6 +28,12 @@ The [exact approval proposal](../../evidence/g8-final-approval-proposal-20260923
 binds this review and evidence to one final evaluation. Four version-pinned secret
 metadata readbacks are ACTIVE; no secret payload was retrieved. Fresh authorized
 output/MLflow checks still precede final access. No final authorization is signed.
+
+The public-key and inactive-key metadata checksum alerts were independently
+recomputed as non-secrets. GitGuardian's public-key incident is ignored as a false
+positive; Gitleaks excludes only the exact metadata digest, following existing
+configuration. The full PR scan passes and an unrelated synthetic credential
+remains detectable. Evidence bytes, history and runtime verification are unchanged.
 
 ## Acceptance scenarios
 
