@@ -1,5 +1,8 @@
 # G8 comparison and production preflight — 2026-09-22
 
+Project #3 story: [LightGBM qualification #23](https://github.com/khab40/lob-arena/issues/23).
+Runtime defect: [Bug #221](https://github.com/khab40/lob-arena/issues/221), a child of #23.
+
 **September 23 readback:** comparison audit R5 completed successfully and passed
 [independent verification](../../evidence/g8-comparison-verification-20260923.json).
 Job `aijob-e00p01kcjvxcb53g7e` verified all 377 files, 27 checkpoints and 30 replays
@@ -11,7 +14,7 @@ R4 was cancelled after 19 replay completions when the old monitor confused a
 temporary log-fetch network error with absent startup. The corrected monitor
 retains observed startup across outages; four inert regression tests pass. R4
 is incomplete evidence, not a semantic failure or success. R5 provides the pass.
-Production runtime verification and package rebinding remain separate below.
+The verified runtime and package results are recorded below; final execution remains separately gated.
 
 As a validation engineer,
 I want the original comparison evidence verified and bound into a reviewed production package,
@@ -116,7 +119,7 @@ So that checkpoint and logging checks fit a measured execution window without we
 Static review found at least ten full C4 passes before publication: initial report
 (one), retention validation (one), first recovery (three), finalization's seal
 validation (one), recovery (three), and snapshot validation (one). Every pass
-exhausts 30 replay streams; the current Job contract permits only 3600 seconds.
+exhausted 30 replay streams; the previous Job contract permitted only 3600 seconds.
 The operator selected verification optimization followed by a Nebius benchmark.
 
 ```gherkin
@@ -183,3 +186,49 @@ Feature: Bound the replacement verification window
     When its resource contract is validated
     Then validation fails
 ```
+
+## Verified optimization and production transport — September 23
+
+The [Nebius synthetic benchmark receipt](../../evidence/g8-verification-reuse-verification-20260923.json)
+verifies Job `aijob-e00ydpcb1xh4ksafd5`: two full comparisons, eight unchanged
+checkpoint-copy verifications without recomputation, five changed-input rejections,
+and one fresh-process recomputation. Initial and independent comparison took
+2.227 and 2.239 seconds; all eight repeated checks took 1.639 seconds together.
+These synthetic timings establish behavior, not full production duration.
+
+The [new unsigned review](../../evidence/g8-production-review-20260923.json)
+binds the passed comparison audit and verified runtime at source `450c715`.
+Its SHA-256 is `80214132f645b78818f7f6fa3f28416502c75b9d8ad4dd49eb37419696d595a2`.
+It contains 26 files / 13 runtime overlays, including the extended timeout contract;
+the candidate, model, calibration and threshold remain frozen. Its `new_runtime_transport_verified=false`
+records preparation-time state; the subsequent receipt below establishes the probe outcome
+without rewriting that immutable review.
+
+The [independently verified transport probe](../../evidence/g8-production-transport-probe-20260923.json)
+completed on `aijob-e00x2v709xdvz0vb8y`. It verified all 26 package files, 13 actual
+in-memory modules, the injected read-only bootstrap, native mount identity and
+32-GiB capacity with 29,077,970,944 free bytes, and the signed actual-Job context
+with a three-hour timeout. The unsigned entrypoint rejected execution, and a
+wrong context identity was rejected. The provider emitted its recurring mount
+warning, but the actual runtime and independent readback verified both mounts.
+
+This probe used one `cpu-d3/4vcpu-16gb` Job, 100-GiB disk, a three-hour provider
+cap and 600-second probe alarm, without credentials or protected-row/model access.
+The existing VM's detached watchdog was armed before startup and verified its stop.
+All Job compute was released; the final key remained inactive. The exact unsigned
+package was hash-verified and moved to `transport-probes/g8-production-probe-20260923/unsigned-production`,
+preserving evidence and leaving the canonical production path absent.
+
+Step 2 now supplies comparison, runtime and package evidence for review. The
+remaining live output-prefix/intent and authenticated MLflow checks must run under
+the final-authorized identity before data access: development-reader AccessDenied
+is not an empty-prefix result. Step 3 must obtain replacement-specific approval
+for exactly one three-hour evaluation, preserve consumed R4 history, sign the
+actual request/package/context, execute once, and independently verify published
+results and lineage. Neither this probe nor CI establishes G8 model quality.
+
+Durable evidence is in the project-root `outputs/g8-comparison-monitor-fix-20260922/`,
+`outputs/g8-verification-reuse-benchmark-20260923-r2/`,
+`outputs/g8-production-review-20260923-v1/` and
+`outputs/g8-production-transport-probe-20260923/` directories. Earlier failed or
+cancelled attempts remain retained with their distinct identities and outcomes.
