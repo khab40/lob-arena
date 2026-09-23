@@ -2,6 +2,7 @@
 import ast
 from datetime import datetime, timezone
 import hashlib
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -39,10 +40,19 @@ def test_other_modes_retain_one_hour_ceiling(mode):
     assert request(mode, 3600).resource.timeout_seconds == 3600
 
 
-@pytest.mark.parametrize("timeout", [3601, 7200, 10801, 14400])
-def test_unreviewed_extended_windows_are_rejected(timeout):
+@pytest.mark.parametrize("timeout", [59, 60, 1800, 3599, 3601, 7200, 10801, 14400])
+def test_unsupported_windows_are_rejected_before_signing(timeout):
     with pytest.raises(ValueError):
         Wave1ResourceRequest(timeout_seconds=timeout)
+
+
+def test_published_resource_schema_matches_context_windows():
+    root = Path(__file__).resolve().parents[2]
+    schema = json.loads((root / "contracts/lightgbm-cloud-job-v1.schema.json").read_text())
+    timeout = schema["$defs"]["Wave1ResourceRequest"]["properties"]["timeout_seconds"]
+    context = Wave1ExecutionContext.model_json_schema()["properties"]["timeout_seconds"]
+    assert timeout["enum"] == context["enum"] == [3600, 10800]
+    assert timeout["default"] == context["default"] == 3600
 
 
 def renderer():

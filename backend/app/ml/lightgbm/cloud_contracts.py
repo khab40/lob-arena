@@ -76,14 +76,8 @@ class Wave1ResourceRequest(_StrictCanonicalModel):
     cpu_count: Literal[4] = 4
     memory_gib: Literal[16] = 16
     disk_size_gib: Literal[100] = 100
-    timeout_seconds: int = Field(default=3600, ge=60, le=10800)
+    timeout_seconds: Literal[3600, 10800] = 3600
     gpu_count: Literal[0] = 0
-
-    @model_validator(mode="after")
-    def bounded_window(self) -> "Wave1ResourceRequest":
-        if self.timeout_seconds > 3600 and self.timeout_seconds != 10800:
-            raise ValueError("extended final verification window must be exactly three hours")
-        return self
 
 
 class Wave1ExecutionContext(_StrictCanonicalModel):
