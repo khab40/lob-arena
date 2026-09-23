@@ -14,6 +14,20 @@ PR #220 is merged with all 22 checks passing. It completed the comparison audit,
 verification reuse benchmark and unsigned production transport probe. These
 establish preparation evidence, not final model quality or final authorization.
 
+The [refreshed review](../../evidence/g8-final-review-20260923.json) binds source
+`14a4d1a6b0931c822995224d2a5e8d657538e1e6`. Its
+[independently verified transport probe](../../evidence/g8-final-transport-verification-20260923.json)
+completed as `aijob-e00b762dxhnvtj2qk9`: 26 files, 13 overlays and the signed
+three-hour context verified. Compute is released, the VM stopped and final key
+inactive. The unsigned package was preserved by verified rename, leaving the
+canonical production path free. The recurring provider mount warning remains
+unexplained; actual mounts and hash readback passed.
+
+The [exact approval proposal](../../evidence/g8-final-approval-proposal-20260923.json)
+binds this review and evidence to one final evaluation. Four version-pinned secret
+metadata readbacks are ACTIVE; no secret payload was retrieved. Fresh authorized
+output/MLflow checks still precede final access. No final authorization is signed.
+
 ## Acceptance scenarios
 
 ```gherkin

@@ -11,6 +11,10 @@ Requests, schema, signed context and renderer now agree on one or three hours;
 
 The [refreshed unsigned review](../evidence/g8-final-review-20260923.json) binds
 the repaired source commit. See the [final execution plan](../operations/g8/g8-final-authorization-20260923.md).
+The [fresh probe receipt](../evidence/g8-final-transport-verification-20260923.json)
+verifies the repaired package on Nebius; compute is released, VM stopped and final
+key inactive. The [exact final proposal](../evidence/g8-final-approval-proposal-20260923.json)
+is ready for separate replacement approval.
 Remaining: fresh replacement-final approval, authenticated MLflow/output-intent
 checks, one final evaluation, independent S3/MLflow verification and G9 disposition.
 Nebius MCP safe mode requires an operator handoff for final-key deactivation.
