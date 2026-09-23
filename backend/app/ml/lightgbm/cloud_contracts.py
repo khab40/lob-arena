@@ -76,8 +76,14 @@ class Wave1ResourceRequest(_StrictCanonicalModel):
     cpu_count: Literal[4] = 4
     memory_gib: Literal[16] = 16
     disk_size_gib: Literal[100] = 100
-    timeout_seconds: int = Field(default=3600, ge=60, le=3600)
+    timeout_seconds: int = Field(default=3600, ge=60, le=10800)
     gpu_count: Literal[0] = 0
+
+    @model_validator(mode="after")
+    def bounded_window(self) -> "Wave1ResourceRequest":
+        if self.timeout_seconds > 3600 and self.timeout_seconds != 10800:
+            raise ValueError("extended final verification window must be exactly three hours")
+        return self
 
 
 class Wave1ExecutionContext(_StrictCanonicalModel):
@@ -86,7 +92,7 @@ class Wave1ExecutionContext(_StrictCanonicalModel):
     platform: Literal["cpu-d3"] = "cpu-d3"
     preset: Literal["4vcpu-16gb"] = "4vcpu-16gb"
     disk_size_gib: Literal[100] = 100
-    timeout_seconds: Literal[3600] = 3600
+    timeout_seconds: Literal[3600, 10800] = 3600
     nebius_job_id: str | None = Field(default=None, pattern=IDENTIFIER_PATTERN)
     estimated_cost_usd: float | None = Field(default=None, ge=0, allow_inf_nan=False)
 
@@ -204,6 +210,8 @@ class LightGbmCloudJobRequest(_StrictCanonicalModel):
     @model_validator(mode="after")
     def validate_governance(self) -> "LightGbmCloudJobRequest":
         _reject_secrets(self.model_dump(mode="json"))
+        if self.resource.timeout_seconds > 3600 and self.mode != "final-evaluation":
+            raise ValueError("only authorized final evaluation may use the extended verification window")
         if (
             self.input.kind == "approved-research-fixture"
             and self.input.feature_release_sha256 != APPROVED_FIXTURE_FEATURE_RELEASE_SHA256

@@ -21,7 +21,7 @@ CANDIDATE = "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff"
 FINAL_RELEASE = "s3://aimada-wave1-final-e00g6zvxpr00/releases/nasdaq-public-sample-v1-c4-5c85182-20260905/staging"
 FROZEN_ROOT = "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9"
 FINAL_PROJECTION = "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7"
-MODULES = ("g8_replacement", "g8_live_recovery", "g8_scored_checkpoint", "g8_mlflow_recovery",
+MODULES = ("cloud_contracts", "g8_replacement", "g8_live_recovery", "g8_scored_checkpoint", "g8_mlflow_recovery",
            "g8_publication_recovery", "tracking", "c4_evaluation", "c4_replay_evidence", "g8_benchmark_readiness",
            "g8_production_transport")
 CODE_PATHS = {f"{name}.py": f"/job/backend/app/ml/lightgbm/{name}.py" for name in MODULES}
@@ -268,11 +268,18 @@ def job_command(plan: ReplacementPlan, root: Path, trusted_key: str, *, recovery
     import re
     if re.fullmatch(SHA, trusted_key) is None:
         raise ValueError("trusted public-key hash required")
+    request_path = root / "request.json"
+    request = LightGbmCloudJobRequest.model_validate_json(request_path.read_bytes())
+    if (sha256_file(request_path) != plan.files["request.json"].sha256
+            or request.canonical_hash() != plan.request_sha256
+            or request.resource.timeout_seconds not in {3600, 10800}):
+        raise ValueError("rendered timeout requires the exact package-bound request")
     operation = "--recover" if recovery else "--execute"
     job_name = plan.run_id + "-recovery" if recovery else plan.run_id
     command = ["nebius", "ai", "job", "create", "--name", job_name, "--image", DEPLOYMENT_IMAGE,
         "--parent-id", "project-e00g6zvxpr00waz8t3y51k", "--subnet-id", plan.subnet_id,
-        "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi", "--timeout", "1h",
+        "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi",
+        "--timeout", f"{request.resource.timeout_seconds // 3600}h",
         "--restart-policy", "never", "--volume", f"{plan.filesystem_id}:{plan.mount_path}:rw",
         "--volume", f"{plan.filesystem_id}:/g8-package:ro",
         "--container-command", "python", "--args", f"/job/g8/{BOOTSTRAP} {operation} --package {PACKAGE}",
