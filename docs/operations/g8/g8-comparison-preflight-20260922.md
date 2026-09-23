@@ -1,5 +1,18 @@
 # G8 comparison and production preflight — 2026-09-22
 
+**September 23 readback:** comparison audit R5 completed successfully and passed
+[independent verification](../../evidence/g8-comparison-verification-20260923.json).
+Job `aijob-e00p01kcjvxcb53g7e` verified all 377 files, 27 checkpoints and 30 replays
+in 1728.511 provider seconds. Final access stayed inactive and compute was released.
+The [R5 proposal](../../evidence/g8-comparison-monitor-fix-proposal-20260922.json)
+preserves the exact executed hashes.
+
+R4 was cancelled after 19 replay completions when the old monitor confused a
+temporary log-fetch network error with absent startup. The corrected monitor
+retains observed startup across outages; four inert regression tests pass. R4
+is incomplete evidence, not a semantic failure or success. R5 provides the pass.
+Production runtime verification and package rebinding remain separate below.
+
 As a validation engineer,
 I want the original comparison evidence verified and bound into a reviewed production package,
 So that the frozen evaluation can be authorized against known inputs and runtime identities.

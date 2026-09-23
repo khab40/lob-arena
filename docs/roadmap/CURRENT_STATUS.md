@@ -1,4 +1,25 @@
-# Roadmap status — 2026-09-22
+# Roadmap status — 2026-09-23
+
+## G8 comparison verified; production runtime preflight — 2026-09-23
+
+**The comparison audit passed independently:** 377 files rehashed, 27 original
+checkpoints verified and all 30 canonical replays exhausted. Nebius Job
+`aijob-e00p01kcjvxcb53g7e` completed in 28 minutes 49 seconds, its supervisor exited
+zero and compute was released. The VM is stopped and final key inactive. See the
+[independent receipt](../evidence/g8-comparison-verification-20260923.json) and
+[execution plan](../operations/g8/g8-comparison-preflight-20260922.md).
+
+Production preflight found at least ten full comparison recomputations before
+publication, against a fixed one-hour Job timeout. The operator selected
+verification reuse with unchanged byte-integrity checks, followed by a Nebius
+benchmark. That repair is implemented in draft PR #220; its cloud benchmark and
+updated production package are still pending. An earlier audit was cancelled by
+a monitor bug after a log-fetch outage; the corrected startup latch is tested,
+and that incomplete run is retained rather than counted as a pass.
+
+Step 1 is merged in PR #219. Step 2 remains open until runtime preflight and the
+updated package verify. Step 3 requires replacement-specific final authorization,
+one evaluation and independent results/lineage verification. **G8 is not closed.**
 
 ## G8 step 1 complete — 2026-09-22
 
