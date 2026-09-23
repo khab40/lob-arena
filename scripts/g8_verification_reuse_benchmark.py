@@ -134,7 +134,12 @@ def main():
             path = copy / relative
             raw = path.read_bytes()
             path.chmod(0o600)
-            path.write_bytes(raw + b"\n")
+            if relative == "metadata/profile.json":
+                changed = json.loads(raw)
+                changed["candidate_sha256"] = "0" * 64
+                path.write_text(json.dumps(changed))
+            else:
+                path.write_bytes(raw + b"\n")
             try:
                 verify(copy)
             except (ValueError, RuntimeError):
@@ -163,5 +168,10 @@ if __name__ == "__main__":
     try:
         main()
     except BaseException as error:
-        print(json.dumps({"benchmark_passed": False, "error_type": type(error).__name__}), flush=True)
+        trace = error.__traceback__
+        while trace.tb_next:
+            trace = trace.tb_next
+        print(json.dumps({"benchmark_passed": False, "error_type": type(error).__name__,
+                          "failure_function": trace.tb_frame.f_code.co_name,
+                          "failure_line": trace.tb_lineno}), flush=True)
         sys.exit(1)
