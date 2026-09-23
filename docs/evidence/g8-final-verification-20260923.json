@@ -1,0 +1,96 @@
+{
+  "schema_version": "g8_final_independent_verification_v1",
+  "story": "https://github.com/khab40/lob-arena/issues/23",
+  "run_id": "nasdaq-g8-replacement-r5-20260917",
+  "job_id": "aijob-e00kd6g7vaqtngwv9r",
+  "source_commit": "14a4d1a6b0931c822995224d2a5e8d657538e1e6",
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "execution_package_sha256": "762abf260a6ef14693584e200d224dd6a90508c36ad69a4b34f78f25f00affe2",
+  "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/final/nasdaq-g8-replacement-r5-20260917",
+  "report_sha256": "50f9ac6d5dbfa731cdcad48571d12965ebddb15298559b69d498967c315716d2",
+  "s3": {
+    "verified_at": "2026-09-23T10:07:35.806901+00:00",
+    "publication_checkpoint_sha256": "509feda66582c168cad32e477619701ab4af3663a62114cfb409658a390f2ad0",
+    "native_readback_sha256": "3eeb1e0a4d6df0016e7a8a281ece6076709675a5cba91f83eda38a563466592d",
+    "object_count": 176,
+    "total_bytes": 24463251,
+    "all_object_bytes_and_hashes_verified": true,
+    "success_and_checksum_inventories_verified": true,
+    "scored_to_published_artifacts_exact": true,
+    "request_candidate_job_mlflow_and_profile_bound": true,
+    "cloud_writes": 0,
+    "model_execution": false
+  },
+  "s3_receipt_sha256": "36b06bd0e07b18a536ee929d655fc36becb44ceff5ee202e00ca4d25943c8304",
+  "mlflow": {
+    "run_id": "e4e5d9ff757a4587bcd6d01bcd33df06",
+    "status": "FINISHED",
+    "verified_at": "2026-09-23T10:22:08.083617+00:00",
+    "dataset_inputs": 30,
+    "full_dataset_identities_verified": true,
+    "artifact_hashes_and_sizes": {
+      "governed-evaluation/c4-evaluation.json": {
+        "sha256": "50f9ac6d5dbfa731cdcad48571d12965ebddb15298559b69d498967c315716d2",
+        "size_bytes": 8876
+      },
+      "governed/checksums.sha256": {
+        "sha256": "08a08c3aa1d1015ddb810adf7593fa457991cb831211ca3ce29189d554b010f8",
+        "size_bytes": 1201
+      },
+      "governed/model-bundle.json": {
+        "sha256": "8eaa8c8f00bfee6c78727a7272a4dcd8e056c9331572470ad1f1d019eb968bc5",
+        "size_bytes": 3672
+      },
+      "governed/prediction-manifest.json": {
+        "sha256": "7909c017ff2f0bbbbf5fbaf821b550047ccdefcbb9f0359f370818bbb5d3736d",
+        "size_bytes": 13416
+      }
+    },
+    "logging_plan_sha256": "6f5513881f47677da17e2fbb801493b225bc475b0295fead409588106cddf3dc",
+    "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+    "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+    "cloud_writes": 0,
+    "model_execution": false
+  },
+  "mlflow_metric_count": 24,
+  "mlflow_every_metric_has_one_step_zero_observation": true,
+  "mlflow_receipt_sha256": "8765c344e8f82fabe72c11ee1ee3e0b4d123d4ca08e324f48dd2efa4b4330c81",
+  "arithmetic_receipt_sha256": "fd681c0995167025ec551b033c249fdd373aaa53ae79eeab3d675740658570ea",
+  "aggregate_metric_arithmetic_verified": true,
+  "family_recall_arithmetic_verified": true,
+  "row_count": 15160,
+  "session_count": 3,
+  "frozen_threshold": 0.5769230769230769,
+  "metrics": {
+    "delta.lightgbm_minus_rules.false_alerts_per_million_observations": -987467.018469657,
+    "delta.lightgbm_minus_rules.observed_campaign_recall": 0.0,
+    "delta.lightgbm_minus_rules.row_f1": 0.7270707594327396,
+    "delta.lightgbm_minus_rules.row_precision": 0.8468406593406593,
+    "delta.lightgbm_minus_rules.row_recall": -0.3407407407407408,
+    "lightgbm.calibrated_brier": 0.004401389092171725,
+    "lightgbm.calibrated_ece": 0.004505990143858652,
+    "lightgbm.false_alerts_per_million_observations": 989.4459102902375,
+    "lightgbm.negative_row_false_positive_rate": 0.0009983361064891847,
+    "lightgbm.observed_campaign_recall": 1.0,
+    "lightgbm.raw_brier": 0.01385154706838906,
+    "lightgbm.raw_ece": 0.05817292396588418,
+    "lightgbm.row_f1": 0.7447698744769874,
+    "lightgbm.row_precision": 0.8557692307692307,
+    "lightgbm.row_recall": 0.6592592592592592,
+    "rules.false_alerts_per_million_observations": 988456.4643799473,
+    "rules.negative_row_false_positive_rate": 0.9973377703826956,
+    "rules.observed_campaign_recall": 1.0,
+    "rules.row_f1": 0.017699115044247787,
+    "rules.row_precision": 0.008928571428571428,
+    "rules.row_recall": 1.0
+  },
+  "qualification_limit": "Three symbol sessions on one test date; research C4 row metrics, not seven-date or production qualification.",
+  "verification_method": "Independent GET-only byte/hash and REST readback; aggregate arithmetic without model execution.",
+  "local_verifier_repairs": [
+    "CPU-compatible isolated AWS CLI",
+    "SSH script quoting",
+    "Explicit metric-history page size",
+    "Normalize omitted optional dataset profile/schema to null"
+  ],
+  "durable_evidence": "outputs/g8-final-execution-20260923/"
+}

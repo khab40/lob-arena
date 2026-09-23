@@ -1,5 +1,54 @@
 # Roadmap status — 2026-09-23
 
+## G8 complete; G9 exit decision pending — 2026-09-23
+
+**The approved frozen C4 evaluation, independent verification and cloud cleanup
+are complete.** Job `aijob-e00kd6g7vaqtngwv9r` finished at 09:41:25 UTC after
+2h25m49.50s, within its three-hour limit. Exactly one replacement Job and one
+scoring invocation ran; the frozen candidate and threshold were unchanged.
+
+LightGBM measured **85.58% precision, 65.93% recall and 74.48% F1**, with 15 false
+positives and 46 missed positive observations. Rules measured 0.89% precision and
+100% recall, with 14,985 false positives. Both detected activity in all 27 observed
+campaigns. Scope: 15,160 retained observations, three symbol sessions, one date;
+research labels and row metrics do not establish production qualification.
+
+Independent readers verified all 176 S3 objects, four final MLflow artifacts,
+30 full dataset identities and 24 metrics with one recorded value each. The final
+key is INACTIVE, temporary SSH rule absent, Job worker released and MLflow VM
+STOPPED. See [results and G9 handoff](../operations/g8/g8-final-results-20260923.md),
+[execution](../evidence/g8-final-execution-20260923.json) and
+[verification](../evidence/g8-final-verification-20260923.json) in
+[PR #223](https://github.com/khab40/lob-arena/pull/223), for
+[story #23](https://github.com/khab40/lob-arena/issues/23).
+
+**Next: review the closure PR, record operator cost disposition and obtain G9's
+signed exit decision.** Story #23 remains open through G9; Wave 2 is still gated.
+No further G8 training, calibration, threshold selection or final scoring is needed.
+
+The dated entries below retain historical snapshots; their then-pending gates
+are superseded by this completion record.
+
+## G8 final authorization preparation — 2026-09-23
+
+**PR #220 is merged; all 22 checks passed.** The comparison audit, optimization
+benchmark and production transport preparation are complete. The remaining
+timeout review finding is fixed in [PR #223](https://github.com/khab40/lob-arena/pull/223),
+linked to [Bug #222](https://github.com/khab40/lob-arena/issues/222) under story #23.
+Requests, schema, signed context and renderer now agree on one or three hours;
+28 inert contract tests pass. The frozen candidate and its lineage are unchanged.
+
+The [refreshed unsigned review](../evidence/g8-final-review-20260923.json) binds
+the repaired source commit. See the [final execution plan](../operations/g8/g8-final-authorization-20260923.md).
+The [fresh probe receipt](../evidence/g8-final-transport-verification-20260923.json)
+verifies the repaired package on Nebius; compute is released, VM stopped and final
+key inactive. The [exact final proposal](../evidence/g8-final-approval-proposal-20260923.json)
+is ready for separate replacement approval.
+Remaining: fresh replacement-final approval, authenticated MLflow/output-intent
+checks, one final evaluation, independent S3/MLflow verification and G9 disposition.
+Nebius MCP safe mode requires an operator handoff for final-key deactivation.
+**G8 remains open; the unsigned package does not authorize final access.**
+
 ## G8 comparison verified; production runtime preflight — 2026-09-23
 
 **The comparison audit passed independently:** 377 files rehashed, 27 original
@@ -22,7 +71,7 @@ Its compute is released, VM stopped and final key inactive. Synthetic timings do
 not establish full production duration; three hours is a finite sizing proposal.
 
 Step 1 is merged in PR #219. Step 2's comparison, optimization and unsigned package
-are verified and in PR #220 for review. Step 3 still requires replacement-specific
+are verified and merged in PR #220. Step 3 still requires replacement-specific
 final authorization, live authorized output-intent/MLflow preflight, one evaluation
 and independent results/lineage verification. The development reader's denied
 output-prefix check remains unverified. **G8 is not closed; no final scoring ran.**
@@ -194,7 +243,7 @@ software test, synthetic rehearsal or metadata audit does not close a model-qual
 | Milestone | Baseline target | Verified position and remaining dependency |
 | --- | --- | --- |
 | M1 corpus/infrastructure | 2026-09-11 | Corpus [#22](https://github.com/khab40/lob-arena/issues/22) closed; infrastructure [#20](https://github.com/khab40/lob-arena/issues/20) open/In Progress. Partially overdue. |
-| M2 LightGBM | 2026-09-23 | [#23](https://github.com/khab40/lob-arena/issues/23) open/In Progress; G0–G7 complete, G8 open, G9 blocked. Target at risk. |
+| M2 LightGBM | 2026-09-23 | [#23](https://github.com/khab40/lob-arena/issues/23) open/In Progress; G0–G8 complete; G9 cost disposition and signed exit pending. Wave 2 remains gated. |
 | M3 Transformer | 2026-10-09 | [#24](https://github.com/khab40/lob-arena/issues/24) open/Todo; follows LightGBM exit. September 24 baseline start is at risk. |
 | M4 cascade | 2026-10-23 | [#25](https://github.com/khab40/lob-arena/issues/25) open/Todo; needs verified standalone Transformer and leakage-safe feature release. |
 | M5 integrated evidence | 2026-10-30 | [#90](https://github.com/khab40/lob-arena/issues/90) open/Todo; requires three-model Nasdaq comparison and LOBSTER robustness evidence. |

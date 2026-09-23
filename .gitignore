@@ -31,7 +31,6 @@ yarn.lock
 # Local agent and worktree tooling
 .agents/
 .codex/
-AGENTS.md
 .worktrees/
 
 # Logs

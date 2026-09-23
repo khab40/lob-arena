@@ -4,7 +4,7 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-21
+Status reconciled: 2026-09-23
 
 ## Validation execution policy — 2026-09-16
 
@@ -18,9 +18,18 @@ change, not model-quality acceptance or a completed G8/G9 milestone.
 
 ## Implementation Status
 
-Status: `[g0-g7-complete; g8-open; g9-pending]`
+Status: `[g0-g8-complete; g9-signed-exit-pending]`
 
-Current G8 recovery: R4 downloaded the final release but failed before scoring;
+The approved replacement Job `aijob-e00kd6g7vaqtngwv9r` completed one frozen
+evaluation. Independent readback verified 176 S3 objects, four final MLflow
+artifacts, 30 dataset identities and 24 metrics. Final key INACTIVE, temporary
+SSH rule absent, Job worker released and VM STOPPED. Measured precision 85.58%,
+recall 65.93% and F1 74.48% apply to three symbol sessions on one research date.
+See [results and unsigned G9 handoff](../operations/g8/g8-final-results-20260923.md).
+G9 cost disposition and signed exit remain pending; production is not qualified.
+
+Historical preparation state (September 21; superseded by the result above):
+R4 downloaded the final release but failed before scoring;
 its approval is consumed. The candidate/calibration/features/thresholds remain frozen.
 The C4 loader correction, comparison/report integration, scored retention before
 logging, same-run MLflow recovery and marker-last publication are implemented.

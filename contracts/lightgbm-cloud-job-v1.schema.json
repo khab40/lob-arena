@@ -302,8 +302,10 @@
         },
         "timeout_seconds": {
           "default": 3600,
-          "maximum": 10800,
-          "minimum": 60,
+          "enum": [
+            3600,
+            10800
+          ],
           "title": "Timeout Seconds",
           "type": "integer"
         }

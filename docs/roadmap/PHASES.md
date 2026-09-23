@@ -153,11 +153,11 @@ Planned work:
 - `[done for rehearsal]` Verify native scored-payload recovery, authenticated
   MLflow round trips and independent S3 readback. These prove recovery mechanics,
   not original Java comparison evidence or final model quality.
-- `[in progress]` Complete the production package, verify original comparison
-  and lineage inputs, and run the separately authorized G8 replacement once.
-- `[todo]` Publish independently verified final C4 comparison/calibration and
-  resource/throughput evidence under the contract's explicit research limitations.
-- `[blocked on G8]` Record G9's signed quality/resource/cost disposition and
+- `[done]` Verify comparison and lineage, sign the approved production package,
+  and execute the authorized G8 replacement once on Nebius.
+- `[done]` Publish and independently verify final C4 quality/calibration evidence,
+  execution duration and scoped resource measurements; complete cloud cleanup.
+- `[pending signed exit]` Record G9's signed quality/resource/cost disposition and
   verified model baseline. Promotion is not automatic from a successful Job.
 
 Why this is first:
@@ -187,11 +187,15 @@ Wave 1 exit criteria:
 See the [current roadmap snapshot](CURRENT_STATUS.md) for milestone dependencies
 and the source revision used by this documentation review.
 
-Status reconciled on 2026-09-21 against merged PRs #200, #201 and #207:
-`[G0-G7 complete; G8 open; G9 blocked]`. The goal is one separately authorized
-final evaluation of the frozen LightGBM candidate on the governed C4 release,
-with independently verified comparison, quality, lineage and execution evidence.
-G9 then records the signed baseline/exit decision before Transformer work.
+Status reconciled on 2026-09-23: `[G0-G8 complete; G9 signed exit pending]`.
+The separately authorized Job `aijob-e00kd6g7vaqtngwv9r` completed one frozen
+evaluation. All 176 S3 objects, four final MLflow artifacts, 30 dataset identities
+and 24 metrics passed independent readback; final access and idle compute are
+closed. See [measured results and G9 handoff](../operations/g8/g8-final-results-20260923.md).
+G9 still requires operator cost disposition and the signed baseline/exit decision.
+
+The September 21 preparation history and ordered plan below are retained for
+audit. Their pending gates were subsequently completed in PRs #219–#223.
 
 R4 (`nasdaq-g8-final-r4-20260913`, Job `aijob-e00vtamgkr07mwzt4t`) downloaded
 the final release but failed before scoring. Preserve its consumed approval and
@@ -214,7 +218,7 @@ Completed engineering evidence:
   Synthetic comparison/lineage fixtures and transport checks do not establish
   production model quality or execution of the changed production entrypoint.
 
-Completion evidence and remaining work, in order:
+Historical completion plan (executed; current result linked above):
 
 1. **Verify original comparison and lineage evidence.** Locate and verify all
    27 original Java/C3 checkpoints, their preparation binding and 30 replay domains;
