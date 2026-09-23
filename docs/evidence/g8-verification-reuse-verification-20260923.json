@@ -1,0 +1,49 @@
+{
+  "schema_version": "g8_verification_reuse_independent_receipt_v1",
+  "verified": true,
+  "job_id": "aijob-e00ydpcb1xh4ksafd5",
+  "provider_state": "COMPLETED",
+  "compute_released": true,
+  "proposal_sha256": "5562fc79b6da61c616f21220163047ec46a821cf985be95b1f56142d49fa31f1",
+  "source_commit": "8ad3a630f6c24300ff2d492b9f7679c0fa6879ed",
+  "evidence": {
+    "job-released.json": "c57474923677947a03b3c6fd0c91b10705ca81cfe0730d2ab82b95a628061e42",
+    "job-logs.json": "5cc67a3b0dd5215068f6c0439ec8e9669623bdb2ed507b46372a4589c18d195a",
+    "worker.py": "d692378474f839d3bf3175263389233cacacd7c0cf74e96c8fe08c5bfebb391a",
+    "overrides.zip": "2a0fdfae0f604540b7e8d9e67f8b7cb7b6330fa6cbaa70885ff37978208feb96"
+  },
+  "verified_result": {
+    "schema_version": "g8_verification_reuse_benchmark_v1",
+    "passed": true,
+    "synthetic_only": true,
+    "model_training_calls": 0,
+    "model_scoring_calls": 0,
+    "production_test_accessed": false,
+    "remote_writes": false,
+    "full_comparison_calls": 2,
+    "independent_first_verification_recomputed": true,
+    "unchanged_copy_repeats": 8,
+    "changed_inputs_rejected_before_reuse": 5,
+    "fresh_process_full_comparisons": 1,
+    "initial_seconds": 2.226569239,
+    "first_verification_seconds": 2.2392961130000018,
+    "eight_repeats_seconds": 1.6392927340000014,
+    "checkpoint_sha256": "548355b02bfb27ea57f70f97cbdd74a171bbfb4e4de5a9e0d51a87604461ed87",
+    "overlay_sha256": {
+      "app.ml.lightgbm.c4_evaluation": "262fe67b09eef944586ff9db3bc1e2d6acd727971c7e9922ce18399aeca0adb9",
+      "app.ml.lightgbm.g8_live_recovery": "a1dc81907738e7f5eb96b723f359a217287559c4653edfbae5fe4ce336616e3b",
+      "app.ml.lightgbm.g8_publication_recovery": "a9d907545c7aa1cb31c46dc7b08c3eb88f960931b9b70d68e91fa78fc328b92d",
+      "run_lightgbm_g8": "615dc10506bfa1383b8802029af7835fbabab7195b04ab501e983f27de716208",
+      "app.ml.lightgbm.c4_replay_evidence": "4b33d29d5136f8c20264b19d4a02056651b5f6fffc922e825d6d0d43fe2ec7c6",
+      "app.ml.lightgbm.g8_mlflow_recovery": "077cd7d895d20d177f88fdf91cdad2a69cc414a48bb5ed1b2a112ac175e50738",
+      "app.ml.lightgbm.g8_replacement": "c7e622f243d56559a39e51a3f7bde8bc5cc675ed88cb1c50aac0c633c6ef524f",
+      "run_lightgbm_g8_replacement": "6f683cee471396252613e9fdfb809bc6b1b87531667d2180ad044ce541a1dd1e",
+      "app.ml.lightgbm.g8_benchmark_readiness": "d4f0b68448dbf886cd560f1cea4f4c61739c7a9dd4dde947a4b2a275aeeabaed",
+      "app.ml.lightgbm.g8_production_transport": "8ec454e5dc15a165758921099942a6f1e0719893c2fe4dcff723df93e96fdf47",
+      "app.ml.lightgbm.g8_scored_checkpoint": "557c9c911d31a98d04363d9962f957e5e8edba9b8aa2915bb76c8f413f8785c3",
+      "app.ml.lightgbm.tracking": "d9d34113bd8f88018146558c997bcae4c4b497aa37819b85a78d20df84050fd3"
+    },
+    "production_runtime_established": false
+  },
+  "scope_limit": "Synthetic comparison correctness only; production duration and revised three-hour contract require separate preflight."
+}
