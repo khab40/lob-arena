@@ -1,5 +1,21 @@
 # Roadmap status — 2026-09-23
 
+## G8 final authorization preparation — 2026-09-23
+
+**PR #220 is merged; all 22 checks passed.** The comparison audit, optimization
+benchmark and production transport preparation are complete. The remaining
+timeout review finding is fixed in [PR #223](https://github.com/khab40/lob-arena/pull/223),
+linked to [Bug #222](https://github.com/khab40/lob-arena/issues/222) under story #23.
+Requests, schema, signed context and renderer now agree on one or three hours;
+28 inert contract tests pass. The frozen candidate and its lineage are unchanged.
+
+The [refreshed unsigned review](../evidence/g8-final-review-20260923.json) binds
+the repaired source commit. See the [final execution plan](../operations/g8/g8-final-authorization-20260923.md).
+Remaining: fresh replacement-final approval, authenticated MLflow/output-intent
+checks, one final evaluation, independent S3/MLflow verification and G9 disposition.
+Nebius MCP safe mode requires an operator handoff for final-key deactivation.
+**G8 remains open; the unsigned package does not authorize final access.**
+
 ## G8 comparison verified; production runtime preflight — 2026-09-23
 
 **The comparison audit passed independently:** 377 files rehashed, 27 original
@@ -22,7 +38,7 @@ Its compute is released, VM stopped and final key inactive. Synthetic timings do
 not establish full production duration; three hours is a finite sizing proposal.
 
 Step 1 is merged in PR #219. Step 2's comparison, optimization and unsigned package
-are verified and in PR #220 for review. Step 3 still requires replacement-specific
+are verified and merged in PR #220. Step 3 still requires replacement-specific
 final authorization, live authorized output-intent/MLflow preflight, one evaluation
 and independent results/lineage verification. The development reader's denied
 output-prefix check remains unverified. **G8 is not closed; no final scoring ran.**
