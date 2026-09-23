@@ -10,9 +10,10 @@ import subprocess
 import sys
 import tempfile
 import time
+import zipfile
 from types import SimpleNamespace
 
-PACKAGE = Path("/bench/package")
+PACKAGE = Path("/g8-package/transport-probes/g8-production-probe-20260921/unsigned-production")
 SCORED = Path("/g8-package/synthetic-final/scored")
 CHECKPOINT_SHA = "548355b02bfb27ea57f70f97cbdd74a171bbfb4e4de5a9e0d51a87604461ed87"
 
@@ -35,6 +36,16 @@ def bootstrap():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     finder = module.install(PACKAGE)
+    overrides = Path("/bench/overrides.zip")
+    require(overrides.stat().st_size <= 16384 and sha(overrides) == os.environ["G8_BENCH_OVERRIDES_SHA256"])
+    names = {"app.ml.lightgbm.c4_replay_evidence", "app.ml.lightgbm.tracking"}
+    with zipfile.ZipFile(overrides) as archive:
+        require(set(archive.namelist()) == {name + ".py" for name in names})
+        for name in names:
+            require(name in finder.sources and name not in sys.modules)
+            raw = archive.read(name + ".py")
+            require(len(raw) <= 40960)
+            finder.sources[name] = (str(overrides) + "/" + name + ".py", raw)
     require(sha(SCORED / "checkpoint.json") == CHECKPOINT_SHA)
     marker = json.loads((SCORED / "checkpoint.json").read_bytes())
     for ref in marker["inventory"]["files"]:
