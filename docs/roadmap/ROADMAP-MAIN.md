@@ -1,11 +1,11 @@
 # Main Roadmap
 
 > **Schedule risk:** September 23 LightGBM exit is at risk; later dates remain
-> baseline targets, not a confirmed forecast. C0–C4 and G0–G7 are complete,
-> G8 is open and G9 blocked. See [current status](CURRENT_STATUS.md) for the
-> merged baseline, PR #207 receipts and GitHub milestone descriptions.
+> baseline targets, not a confirmed forecast. C0–C4 and G0–G8 are complete.
+> G9 awaits operator cost disposition and a signed exit decision. See
+> [current status](CURRENT_STATUS.md) for independently verified final results.
 
-Status date: 2026-09-21. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-09-23. See [current status and evidence](CURRENT_STATUS.md).
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -146,59 +146,27 @@ diagnostic is retained separately from the passing final receipt.
 - G7: complete. The validation-selected candidate is checksum-frozen, the
   exact-hash operator statement is signed, and independent verification exposes
   the final identity without reading the test fold.
-- G8: open. R4 (`aijob-e00vtamgkr07mwzt4t`) downloaded the final release
-  and failed before scoring. Preserve four prior submissions and the consumed
-  approval; candidate, calibration, features and thresholds remain frozen.
-  Corrected C4 loading, comparison/report integration, pre-logging scored retention,
-  same-run MLflow recovery and marker-last publication are implemented.
-- Native recovery and authenticated remote rehearsal are complete for synthetic
-  inputs: the [September 17 evidence](../evidence/g8-native-recovery-20260917.json)
-  records one scoring call, native reattachment and completed recovery, with
-  independent readback of 24 MLflow metrics, 30 inputs and four artifact hashes.
-  The subsequent [independent S3 verification](../evidence/g8-independent-s3-readback-20260917.json)
-  checked all 64 objects and resolves the earlier reader AccessDenied gap.
-- Merged PR #201 prepares the [production native package](../operations/g8/g8-production-package.md)
-  for `nasdaq-g8-replacement-r5-20260917`; it remains unsigned and not executable.
-  The [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
-  now verifies the actual bootstrap/runtime, mounts and signed Job context on Nebius.
-  The later approved comparison audit failed closed; model quality remains unmeasured.
+- G8: complete. The separately approved replacement Job
+  `aijob-e00kd6g7vaqtngwv9r` scored the frozen candidate once and completed within
+  three hours. Independent readers verified 176 S3 objects, four final MLflow
+  artifacts, 30 full dataset identities and 24 metrics recorded once each.
+  Final key INACTIVE, temporary SSH rule absent, worker released and VM STOPPED.
+- Final retained-row precision is 85.58%, recall 65.93% and F1 74.48%, with
+  15 false positives and 46 missed positive observations. Coverage is one date,
+  three symbols and research labels; this does not establish production acceptance.
+- G9: pending operator cost disposition and signed exit. The
+  [results and unsigned handoff](../operations/g8/g8-final-results-20260923.md)
+  bind measured quality and resource limits. The selected model remains frozen.
+- R4's four prior submissions, consumed approval and pre-scoring failure remain
+  historical evidence. The approved replacement does not erase that history.
 
-Completion evidence and remaining critical path:
+Remaining critical path:
 
-1. Verify the original 27 Java/C3 checkpoints and genuine dataset registration;
-   complete frozen projection, C4 profile, comparison inventory and input bindings.
-   The approved [89-object metadata audit](../evidence/g8-original-comparison-metadata-20260921.json)
-   passed and all temporary access is removed. Live registration now verifies
-   four metadata artifacts and 30 final-tabular inputs. [Payload verification](../evidence/g8-original-payload-verification-20260921.json)
-   is complete: 294 original objects staged; all 377 payload/metadata files rehashed.
-   Temporary grants are removed and the VM stopped. Rows were not parsed; production
-   comparison semantics still require verification on Nebius. The subsequently
-   [approved semantic Job](../evidence/g8-comparison-semantics-20260921.json) failed with
-   `ValidationError`. A required `preparation.logical_name` field is missing from
-   the generated comparison metadata; the exact failing call was not logged.
-2. Verify the changed production bootstrap, mounts and context handoff on Nebius
-   without final scoring. Record resources, finite timeout, Job count and identities.
-   Complete: one Job `aijob-e00samq5cpe1bysr4x`, all 12 overlays and 25 package files
-   verified; unsigned entrypoint and wrong context rejected. The recurring provider
-   mount warning remains unexplained despite valid mounts and durable readback.
-   The semantic audit's one-Job approval is consumed, with no retry submitted.
-   Review the [corrected one-Job proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json):
-   preserve the original tree, rebind corrected metadata and add safe failure-stage
-   diagnostics. Snapshot row/schema consistency and prediction pairing remain unverified.
-3. Complete current credential/permission, image-alias, storage, MLflow and
-   output/intent preflight; assemble the canonical request and complete v3 package.
-   The approved [32 GiB expansion and live registration](../evidence/g8-capacity-registration-20260921.json)
-   are verified. The September 21 unsigned review now binds the original comparison,
-   live registration and 32 GiB storage, but must be rebound to the corrected comparison
-   path/hash after a successful audit. Finish comparison/current preflight and recheck
-   the 20 GiB free-space requirement immediately before execution.
-4. Obtain replacement-specific final-test approval and sign the reviewed package;
-   bind actual Job context separately after create. Never reuse R4 authorization.
-5. Execute the one approved replacement, retain scored outputs before logging,
-   recover tracking/publication without rescoring and verify S3/MLflow independently.
-6. Close G8 with actual C4 quality and execution evidence, including failed gates.
-   G9 then records quality, throughput, memory and operator-provided cost disposition
-   and signs the go/no-go decision. Rehearsal success is not an exit decision.
+1. Review the [G8 closure evidence in PR #223](https://github.com/khab40/lob-arena/pull/223).
+2. Record G9's quality, resource and operator-provided cost disposition, then
+   obtain the signed Wave 1 exit decision. Do not infer it from Job success.
+3. Replan downstream dates if required by that decision. Any new model campaign
+   preserves this result and uses fresh untouched held-out evaluation data.
 
 See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
 [validation execution policy](../ml/model-validation-execution-policy.md): model/runtime
