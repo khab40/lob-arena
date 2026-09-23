@@ -149,3 +149,37 @@ Initial report generation never populates this entry. No disk cache, signed
 success shortcut or cross-process reuse is introduced. Run a synthetic frozen
 runtime rehearsal on Nebius, including changed-input and fresh-process checks;
 measure full recomputation counts and elapsed time before declaring readiness.
+
+## Replacement execution window
+
+As a platform operator,
+I want the signed replacement request to declare a realistic finite execution window,
+So that the one authorized evaluation is not cut off during mandatory verification.
+
+The serial audit observed six similarly sized AAPL replays by 961.436 seconds.
+Scaling by compressed bytes gives an approximate 109.7 minutes for the two full
+passes retained by the optimization. This is a sizing estimate, not a measured
+production runtime; SQLite pairing, scoring and publication add work. Prepare a
+three-hour replacement option with unchanged four vCPU, 16 GiB RAM and 100 GiB
+disk, bounded to one execution (12 vCPU-hours / 48 GiB-hours maximum). Final
+authorization must explicitly cover that option before submission. Standard
+development requests retain their existing one-hour ceiling.
+
+```gherkin
+Feature: Bound the replacement verification window
+  Scenario: Render the signed replacement request's timeout
+    Given a verified replacement package binds a three-hour final request
+    When its Job command is rendered
+    Then the provider timeout is three hours
+    And its actual execution context must match that request
+
+  Scenario: Preserve development limits
+    Given a development request exceeds one hour
+    When its resource contract is validated
+    Then validation fails
+
+  Scenario: Reject a timeout outside the reviewed choices
+    Given a final request asks for more than three hours
+    When its resource contract is validated
+    Then validation fails
+```
