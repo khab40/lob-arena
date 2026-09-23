@@ -1,22 +1,33 @@
 # Roadmap status — 2026-09-23
 
-## G8 authorized final evaluation running — 2026-09-23
+## G8 complete; G9 exit decision pending — 2026-09-23
 
-The exact one-run proposal and operator key-deactivation handoff are approved.
-Nebius Job `aijob-e00kd6g7vaqtngwv9r` started at 07:15:36 UTC with the unchanged
-frozen C4 candidate. All 32 signed package files, actual Job resources, image,
-secret-version references and mounts were checked before releasing its signed
-context. Authenticated MLflow readiness and the conditional output reservation
-passed before final access. The single scoring invocation has started.
+**The approved frozen C4 evaluation, independent verification and cloud cleanup
+are complete.** Job `aijob-e00kd6g7vaqtngwv9r` finished at 09:41:25 UTC after
+2h25m49.50s, within its three-hour limit. Exactly one replacement Job and one
+scoring invocation ran; the frozen candidate and threshold were unchanged.
 
-MLflow run `e4e5d9ff757a4587bcd6d01bcd33df06` was reserved before final reads.
-See the [execution receipt](../evidence/g8-final-execution-20260923.json) in
-[PR #223](https://github.com/khab40/lob-arena/pull/223), linked to
-[story #23](https://github.com/khab40/lob-arena/issues/23). The Job has a three-hour
-limit and no automatic retry. Final access and the existing MLflow VM remain
-active for execution and verification; operator deactivation and idle VM stop
-follow completion or abort. **G8 is open:** publication, independent result and
-lineage verification, actual quality assessment and G9 disposition remain.
+LightGBM measured **85.58% precision, 65.93% recall and 74.48% F1**, with 15 false
+positives and 46 missed positive observations. Rules measured 0.89% precision and
+100% recall, with 14,985 false positives. Both detected activity in all 27 observed
+campaigns. Scope: 15,160 retained observations, three symbol sessions, one date;
+research labels and row metrics do not establish production qualification.
+
+Independent readers verified all 176 S3 objects, four final MLflow artifacts,
+30 full dataset identities and 24 metrics with one recorded value each. The final
+key is INACTIVE, temporary SSH rule absent, Job worker released and MLflow VM
+STOPPED. See [results and G9 handoff](../operations/g8/g8-final-results-20260923.md),
+[execution](../evidence/g8-final-execution-20260923.json) and
+[verification](../evidence/g8-final-verification-20260923.json) in
+[PR #223](https://github.com/khab40/lob-arena/pull/223), for
+[story #23](https://github.com/khab40/lob-arena/issues/23).
+
+**Next: review the closure PR, record operator cost disposition and obtain G9's
+signed exit decision.** Story #23 remains open through G9; Wave 2 is still gated.
+No further G8 training, calibration, threshold selection or final scoring is needed.
+
+The dated entries below retain historical snapshots; their then-pending gates
+are superseded by this completion record.
 
 ## G8 final authorization preparation — 2026-09-23
 
@@ -232,7 +243,7 @@ software test, synthetic rehearsal or metadata audit does not close a model-qual
 | Milestone | Baseline target | Verified position and remaining dependency |
 | --- | --- | --- |
 | M1 corpus/infrastructure | 2026-09-11 | Corpus [#22](https://github.com/khab40/lob-arena/issues/22) closed; infrastructure [#20](https://github.com/khab40/lob-arena/issues/20) open/In Progress. Partially overdue. |
-| M2 LightGBM | 2026-09-23 | [#23](https://github.com/khab40/lob-arena/issues/23) open/In Progress; G0–G7 complete, G8 open, G9 blocked. Target at risk. |
+| M2 LightGBM | 2026-09-23 | [#23](https://github.com/khab40/lob-arena/issues/23) open/In Progress; G0–G8 complete; G9 cost disposition and signed exit pending. Wave 2 remains gated. |
 | M3 Transformer | 2026-10-09 | [#24](https://github.com/khab40/lob-arena/issues/24) open/Todo; follows LightGBM exit. September 24 baseline start is at risk. |
 | M4 cascade | 2026-10-23 | [#25](https://github.com/khab40/lob-arena/issues/25) open/Todo; needs verified standalone Transformer and leakage-safe feature release. |
 | M5 integrated evidence | 2026-10-30 | [#90](https://github.com/khab40/lob-arena/issues/90) open/Todo; requires three-model Nasdaq comparison and LOBSTER robustness evidence. |

@@ -10,18 +10,19 @@ I want one authorized evaluation of the frozen C4 candidate with independent
 result and lineage verification,
 So that G8 records measured quality and an evidence-backed G9 disposition.
 
-## Current execution
+## Completed execution
 
-The operator approved the exact proposal and confirmed the manual deactivation
-handoff. The [execution receipt](../../evidence/g8-final-execution-20260923.json)
-records Job `aijob-e00kd6g7vaqtngwv9r`, started at 07:15:36 UTC, and reserved
-MLflow run `e4e5d9ff757a4587bcd6d01bcd33df06`. The signed 32-file package retains
-the reviewed runtime and frozen candidate. Actual provider context, authenticated
-MLflow readiness and conditional output intent passed; final access and the one
-scoring invocation have started. Publication and independent verification remain
-pending. The final key and existing MLflow VM remain active until cleanup.
+The separately approved Job `aijob-e00kd6g7vaqtngwv9r` completed at 09:41:25 UTC.
+Its single scoring invocation retained the frozen C4 candidate and signed runtime.
+Independent readback verified 176 S3 objects, four final MLflow artifacts,
+30 dataset identities and 24 metrics in run `e4e5d9ff757a4587bcd6d01bcd33df06`.
+The key is INACTIVE, temporary SSH rule absent, Job worker released and VM STOPPED.
+See the [execution receipt](../../evidence/g8-final-execution-20260923.json),
+[independent verification](../../evidence/g8-final-verification-20260923.json) and
+[measured results / unsigned G9 handoff](g8-final-results-20260923.md).
+G8 is complete; operator cost disposition and signed G9 exit remain pending.
 
-## Preparation record
+## Historical preparation record (before approval)
 
 PR #219 verified the 90 dataset inputs and seven selected-run MLflow artifacts.
 PR #220 is merged with all 22 checks passing. It completed the comparison audit,
@@ -77,7 +78,7 @@ Feature: One authorized frozen C4 evaluation
     And a failed quality threshold is reported without tuning or rescoring
 ```
 
-## Execution plan
+## Executed plan (retained for audit)
 
 1. Fix the remaining PR #220 timeout review finding. Resource validation,
    published schema, signed context and launcher must accept the same two
@@ -115,5 +116,7 @@ Feature: One authorized frozen C4 evaluation
 
 Out of scope: training, calibration changes, hyperparameter selection, threshold
 changes, tuning after final access, automatic rescoring, Git merge or deletion.
-Local verification covers inert metadata and static contracts only. Runtime
-checks run on Nebius. This plan grants no final-test authorization.
+Local work covered metadata, static contracts and independent artifact inspection;
+model/runtime execution ran on Nebius. Authorization came from the separate
+operator approval and signed package, not from this plan. All execution and
+verification scenarios passed; the measured G9 handoff is unsigned.
