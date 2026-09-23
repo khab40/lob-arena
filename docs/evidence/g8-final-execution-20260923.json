@@ -1,7 +1,7 @@
 {
   "schema_version": "g8_authorized_final_execution_v1",
-  "observed_at": "2026-09-23T07:38:32.702992+00:00",
-  "status": "running_not_independently_verified",
+  "observed_at": "2026-09-23T11:07:54.367Z",
+  "status": "completed_independently_verified_cleaned",
   "story": "https://github.com/khab40/lob-arena/issues/23",
   "pr": "https://github.com/khab40/lob-arena/pull/223",
   "source_commit": "14a4d1a6b0931c822995224d2a5e8d657538e1e6",
@@ -33,12 +33,42 @@
   "single_scoring_invocation_started": true,
   "maximum_final_jobs": 1,
   "automatic_retry_authorized": false,
-  "final_evaluation_completed": false,
-  "independent_results_verified": false,
-  "g8_closed": false,
-  "final_access_state_at_observation": "ACTIVE",
-  "existing_mlflow_vm_state": "RUNNING",
+  "final_evaluation_completed": true,
+  "independent_results_verified": true,
+  "g8_closed": true,
+  "final_access_state_at_observation": "INACTIVE",
+  "existing_mlflow_vm_state": "STOPPED",
   "cleanup_handoff_confirmed": true,
-  "native_markers_readback_sha256": "216ae8018fbda1719647391fb16b8c0c6b7188f8477be98b63566ba9a261b2cc",
-  "durable_evidence": "outputs/g8-final-execution-20260923/"
+  "native_markers_readback_sha256": "3eeb1e0a4d6df0016e7a8a281ece6076709675a5cba91f83eda38a563466592d",
+  "durable_evidence": "outputs/g8-final-execution-20260923/",
+  "job_finished_at": "2026-09-23T09:41:25.602137350Z",
+  "job_wall_seconds": 8749.504449,
+  "final_job_state": "COMPLETED",
+  "job_workers_released": true,
+  "terminal_provider_readback_sha256": "be08aa922c638dc2904b323c899fc83430694047f7e1b495a51e05f01362dba1",
+  "independent_verification": "g8-final-verification-20260923.json",
+  "g9_status": "pending_operator_cost_and_signed_exit",
+  "production_qualified": false,
+  "cleanup": {
+    "schema_version": "g8_final_cleanup_v1",
+    "verified_at": "2026-09-23T11:07:54.367Z",
+    "key": {
+      "id": "accesskey-e00gy66k4xybsdyxqj",
+      "state": "INACTIVE",
+      "resource_version": "11",
+      "updated_at": "2026-09-23T11:05:38.252782Z",
+      "operator_operation_id": "opaccesskey-e00stb2kxcvw90zx69"
+    },
+    "temporary_ssh_rule": {
+      "id": "vpcsecurityrule-e00wd6geb5qh1135wg",
+      "state": "ABSENT",
+      "get_returned_not_found": true,
+      "operator_operation_id": "opvpcsecurityrule-e00v65vn12nmtsa5bv"
+    },
+    "mlflow_vm": {
+      "id": "computeinstance-e00xq8hqrzks2pf3gn",
+      "state": "STOPPED",
+      "resource_version": "102"
+    }
+  }
 }
