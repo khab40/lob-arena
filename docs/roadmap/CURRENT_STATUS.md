@@ -1,5 +1,38 @@
 # Roadmap status — 2026-09-27
 
+## G9 signed and closed — 2026-09-27
+
+**LightGBM exits as `research_baseline_qualified`.** The operator accepted the
+verified S3/MLflow package, unknown-cost disposition under the existing policy,
+and delegated signing. The [signed closure](../operations/g8/g9-closure-20260927.md)
+binds the exact approved JSON and Markdown; public-key verification and mutation
+rejection checks passed. Story [#23](https://github.com/khab40/lob-arena/issues/23)
+is complete. [PR #231](https://github.com/khab40/lob-arena/pull/231) publishes the
+record and remains subject to review/merge.
+
+Transformer [#24](https://github.com/khab40/lob-arena/issues/24) is eligible for
+engineering and remains Todo, not started. Next: plan its sequence contract and
+bounded implementation chunks, then reforecast downstream dates. No production
+qualification, G8 rerun, new model Job or billing query follows this decision.
+The dated proposal and historical snapshots below retain their original wording;
+the signed decision supersedes their pending-G9 status.
+
+## G9 exit package prepared — 2026-09-27
+
+The [G9 exit record](../operations/g8/g9-exit-20260927.md) recommends
+`research_baseline_qualified`: Wave 2 engineering only, with no production claim.
+Its [exact proposal](../evidence/g9-exit-proposal-20260927.json) binds the verified
+G8 results, frozen package/configuration, lineage, quality limitations and resource
+measurements. All 176 retained objects and seven development artifacts were
+rechecked locally. No G8 evaluation or cloud workload was run.
+
+Cost disposition proposed: accept unknown billed cost under the existing
+operator-managed policy; no cost-efficiency claim. Operator acceptance of the
+package interpretation, cost disposition and exact signed exit is still required.
+[#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress and
+[#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until that decision.
+The entries below are historical snapshots; no review of merged #223 remains.
+
 ## Post-merge tracking reconciliation — 2026-09-27
 
 **G8 is complete; G9 is the remaining LightGBM exit gate.**
