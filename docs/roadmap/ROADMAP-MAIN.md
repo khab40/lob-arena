@@ -1,11 +1,11 @@
 # Main Roadmap
 
-> **Schedule risk:** September 23 LightGBM exit is at risk; later dates remain
+> **Schedule risk:** September 23 LightGBM exit is overdue; later dates remain
 > baseline targets, not a confirmed forecast. C0–C4 and G0–G8 are complete.
 > G9 awaits operator cost disposition and a signed exit decision. See
 > [current status](CURRENT_STATUS.md) for independently verified final results.
 
-Status date: 2026-09-23. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-09-27. See [current status and evidence](CURRENT_STATUS.md).
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -15,7 +15,7 @@ deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
 
-`G8-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
+`G9 LightGBM exit -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
 
@@ -162,10 +162,15 @@ diagnostic is retained separately from the passing final receipt.
 
 Remaining critical path:
 
-1. Review the [G8 closure evidence in PR #223](https://github.com/khab40/lob-arena/pull/223).
-2. Record G9's quality, resource and operator-provided cost disposition, then
+The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
+at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
+and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
+
+1. Record G9's quality, resource and operator-provided cost disposition, then
    obtain the signed Wave 1 exit decision. Do not infer it from Job success.
-3. Replan downstream dates if required by that decision. Any new model campaign
+2. Replan downstream dates if required by that decision. The gated September 24
+   Transformer start has passed; October 9 remains a baseline target, not a forecast.
+   Any new model campaign
    preserves this result and uses fresh untouched held-out evaluation data.
 
 See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
@@ -266,15 +271,16 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Reconciled on **2026-09-13**:
+Current LightGBM gate reconciled on **2026-09-27**:
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
   the frozen four-date forward corpus, and its governed release evidence.
-- [#23](https://github.com/khab40/lob-arena/issues/23) records the completed
-  G5-G7 evidence, the 20/20 consumed-slot reconciliation, the selected and
-  authorized validation-only isotonic candidate, all three fail-closed
-  pre-test G8 attempts, the corrected least-privilege G6 campaign policy, the
-  exact-image runtime compatibility gate, and the G8-G9 remainder.
+- [#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress with
+  G0–G8 complete and G9 cost disposition/signed exit pending. Merged #219/#220/#223
+  establish lineage, comparison/preflight, final evaluation and independent
+  verification. Historical attempts and the frozen candidate remain preserved.
+- [#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until #23's
+  accepted exit; completion of G8 alone does not authorize Transformer work.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),
