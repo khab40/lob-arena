@@ -154,9 +154,11 @@ diagnostic is retained separately from the passing final receipt.
 - Final retained-row precision is 85.58%, recall 65.93% and F1 74.48%, with
   15 false positives and 46 missed positive observations. Coverage is one date,
   three symbols and research labels; this does not establish production acceptance.
-- G9: pending operator cost disposition and signed exit. The
-  [results and unsigned handoff](../operations/g8/g8-final-results-20260923.md)
-  bind measured quality and resource limits. The selected model remains frozen.
+- G9: [exit package prepared September 27](../operations/g8/g9-exit-20260927.md),
+  recommending `research_baseline_qualified` for Wave 2 engineering only. Exact
+  results, frozen artifacts, quality limits and resource measurements are bound.
+  Operator package/cost acceptance and signed decision remain pending; billed
+  cost is unknown under the existing operator-managed policy.
 - R4's four prior submissions, consumed approval and pre-scoring failure remain
   historical evidence. The approved replacement does not erase that history.
 
@@ -166,8 +168,9 @@ The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
 at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
 and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
 
-1. Record G9's quality, resource and operator-provided cost disposition, then
-   obtain the signed Wave 1 exit decision. Do not infer it from Job success.
+1. Review the exact G9 proposal and obtain the operator's package/cost acceptance
+   and signed Wave 1 exit decision. Then reconcile #23/#24 and Project #3; do not
+   infer acceptance from Job success or merge. No further G8 evaluation is needed.
 2. Replan downstream dates if required by that decision. The gated September 24
    Transformer start has passed; October 9 remains a baseline target, not a forecast.
    Any new model campaign

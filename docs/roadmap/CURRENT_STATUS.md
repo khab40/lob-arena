@@ -1,5 +1,21 @@
 # Roadmap status — 2026-09-27
 
+## G9 exit package prepared — 2026-09-27
+
+The [G9 exit record](../operations/g8/g9-exit-20260927.md) recommends
+`research_baseline_qualified`: Wave 2 engineering only, with no production claim.
+Its [exact proposal](../evidence/g9-exit-proposal-20260927.json) binds the verified
+G8 results, frozen package/configuration, lineage, quality limitations and resource
+measurements. All 176 retained objects and seven development artifacts were
+rechecked locally. No G8 evaluation or cloud workload was run.
+
+Cost disposition proposed: accept unknown billed cost under the existing
+operator-managed policy; no cost-efficiency claim. Operator acceptance of the
+package interpretation, cost disposition and exact signed exit is still required.
+[#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress and
+[#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until that decision.
+The entries below are historical snapshots; no review of merged #223 remains.
+
 ## Post-merge tracking reconciliation — 2026-09-27
 
 **G8 is complete; G9 is the remaining LightGBM exit gate.**
