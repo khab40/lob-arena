@@ -23,7 +23,7 @@ sourceSets {
 }
 
 dependencies {
-    api("com.google.protobuf:protobuf-java:4.36.1")
+    api("com.google.protobuf:protobuf-java:4.36.2")
     api("io.grpc:grpc-protobuf:1.84.0")
     api("io.grpc:grpc-stub:1.84.0")
     compileOnly("org.apache.tomcat:annotations-api:6.0.53")
@@ -34,7 +34,7 @@ dependencies {
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:4.36.1"
+        artifact = "com.google.protobuf:protoc:4.36.2"
     }
     plugins {
         create("grpc") {
