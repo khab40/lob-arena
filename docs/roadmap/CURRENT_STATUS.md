@@ -1,4 +1,26 @@
-# Roadmap status — 2026-09-23
+# Roadmap status — 2026-09-27
+
+## Post-merge tracking reconciliation — 2026-09-27
+
+**G8 is complete; G9 is the remaining LightGBM exit gate.**
+[PR #223](https://github.com/khab40/lob-arena/pull/223) merged on September 23 at
+`118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed and Bugs
+[#222](https://github.com/khab40/lob-arena/issues/222) and
+[#224](https://github.com/khab40/lob-arena/issues/224) closed automatically.
+Reviewing or merging #223 is no longer remaining work.
+
+Next: record operator cost disposition and obtain the signed G9 exit decision
+using the [verified results and handoff](../operations/g8/g8-final-results-20260923.md).
+Story [#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress;
+Transformer [#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until
+the accepted LightGBM exit. No new G8 evaluation or production promotion follows.
+
+The September 23 G9 target and gated September 24 Transformer start have passed.
+Later dates remain baseline targets pending an evidence-backed reforecast.
+This correction is tracked by [Bug #229](https://github.com/khab40/lob-arena/issues/229)
+under #23 in [Project #3](https://github.com/users/khab40/projects/3).
+Issue bodies and the project overview were updated and independently read back;
+see the [tracking receipt](../evidence/g8-tracking-reconciliation-20260927.json).
 
 ## G8 complete; G9 exit decision pending — 2026-09-23
 
@@ -22,7 +44,7 @@ STOPPED. See [results and G9 handoff](../operations/g8/g8-final-results-20260923
 [PR #223](https://github.com/khab40/lob-arena/pull/223), for
 [story #23](https://github.com/khab40/lob-arena/issues/23).
 
-**Next: review the closure PR, record operator cost disposition and obtain G9's
+**Next: record operator cost disposition and obtain G9's
 signed exit decision.** Story #23 remains open through G9; Wave 2 is still gated.
 No further G8 training, calibration, threshold selection or final scoring is needed.
 
