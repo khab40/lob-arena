@@ -1,0 +1,162 @@
+{
+  "schema_version": "lightgbm_g9_exit_proposal_v1",
+  "date": "2026-09-27",
+  "story": "https://github.com/khab40/lob-arena/issues/23",
+  "status": "awaiting_operator_signature",
+  "proposed_disposition": "research_baseline_qualified",
+  "operator_decision": null,
+  "operator_signature": null,
+  "wave2_unlocked": false,
+  "production_qualified": false,
+  "decision_effect_if_signed": "Permit Wave 2 engineering only; preserve research/non-commercial limits.",
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "freeze_sha256": "232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc",
+  "inventory_sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+  "model_sha256": "e8c4134063bcb346d17b4839cfa21e458ad2d65bab1d2f240a15267d0dc7f2f3",
+  "run_id": "nasdaq-g8-replacement-r5-20260917",
+  "job_id": "aijob-e00kd6g7vaqtngwv9r",
+  "runtime_source_commit": "14a4d1a6b0931c822995224d2a5e8d657538e1e6",
+  "execution_package_sha256": "762abf260a6ef14693584e200d224dd6a90508c36ad69a4b34f78f25f00affe2",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2",
+  "development_mlflow_run_id": "1bd94569914748db8bbde21b13e83d05",
+  "final_mlflow_run_id": "e4e5d9ff757a4587bcd6d01bcd33df06",
+  "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+  "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+  "result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/final/nasdaq-g8-replacement-r5-20260917",
+  "report_sha256": "50f9ac6d5dbfa731cdcad48571d12965ebddb15298559b69d498967c315716d2",
+  "bundle_sha256": "8eaa8c8f00bfee6c78727a7272a4dcd8e056c9331572470ad1f1d019eb968bc5",
+  "package_acceptance": "Governed S3 bundle and MLflow run artifacts verified; no registered-model version or champion alias claimed.",
+  "bundle_components": {
+    "model": "e8c4134063bcb346d17b4839cfa21e458ad2d65bab1d2f240a15267d0dc7f2f3",
+    "training_manifest": "fa528a8660d0a687940bd1df9ce4d5fe2a1e21ca2d6be3ca823aafbd543e037b",
+    "calibration_manifest": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30",
+    "feature_schema": "bd541516f288fab9e48d4f33fa5a398a6cc0ca74b84ef2f2e2d30721a329646f",
+    "checksums": "08a08c3aa1d1015ddb810adf7593fa457991cb831211ca3ce29189d554b010f8"
+  },
+  "configuration": {
+    "features": 31,
+    "preprocessing": {
+      "fit_fold": "train",
+      "mode": "none",
+      "transformer": null
+    },
+    "calibration": "isotonic",
+    "mode": "balanced",
+    "threshold": 0.5769230769230769,
+    "seed": 42,
+    "selected_iterations": 32,
+    "leaves": 8
+  },
+  "quality": {
+    "row_count": 15160,
+    "session_count": 3,
+    "metrics": {
+      "delta.lightgbm_minus_rules.false_alerts_per_million_observations": -987467.018469657,
+      "delta.lightgbm_minus_rules.observed_campaign_recall": 0.0,
+      "delta.lightgbm_minus_rules.row_f1": 0.7270707594327396,
+      "delta.lightgbm_minus_rules.row_precision": 0.8468406593406593,
+      "delta.lightgbm_minus_rules.row_recall": -0.3407407407407408,
+      "lightgbm.calibrated_brier": 0.004401389092171725,
+      "lightgbm.calibrated_ece": 0.004505990143858652,
+      "lightgbm.false_alerts_per_million_observations": 989.4459102902375,
+      "lightgbm.negative_row_false_positive_rate": 0.0009983361064891847,
+      "lightgbm.observed_campaign_recall": 1.0,
+      "lightgbm.raw_brier": 0.01385154706838906,
+      "lightgbm.raw_ece": 0.05817292396588418,
+      "lightgbm.row_f1": 0.7447698744769874,
+      "lightgbm.row_precision": 0.8557692307692307,
+      "lightgbm.row_recall": 0.6592592592592592,
+      "rules.false_alerts_per_million_observations": 988456.4643799473,
+      "rules.negative_row_false_positive_rate": 0.9973377703826956,
+      "rules.observed_campaign_recall": 1.0,
+      "rules.row_f1": 0.017699115044247787,
+      "rules.row_precision": 0.008928571428571428,
+      "rules.row_recall": 1.0
+    },
+    "qualification_limit": "Three symbol sessions on one test date; research C4 row metrics, not seven-date or production qualification."
+  },
+  "family_recall": {
+    "layering_like": 0.6222222222222222,
+    "quote_stuffing": 0.6111111111111112,
+    "spoofing_like_wall": 0.7777777777777778
+  },
+  "uncertainty": {
+    "cluster_count": 3,
+    "confidence_level": 0.95,
+    "method": "paired_session_cluster_percentile",
+    "resamples": 2000,
+    "scope": "conditional_on_observed_sessions_not_temporal_generalization",
+    "seed": 20260828,
+    "support": "limited"
+  },
+  "not_computed": [
+    "false_alerts_per_million_canonical_events",
+    "detection_before_realized_benefit",
+    "full_seven_date_benchmark_qualification"
+  ],
+  "gate_assessment": {
+    "deterministic_development_repeats": "passed G5; distinct from the single G8 final",
+    "same_immutable_comparison_inputs": "passed",
+    "independent_bundle_and_lineage": "passed",
+    "quality_default_90_percent_precision_and_recall": "not_met; balanced selects validation F1, not both floors",
+    "calibration": "measured on final; validation reused for model/calibrator/threshold selection",
+    "clean_window_false_alerts": "research-control rows only; independently adjudicated clean-window gate unproven",
+    "latency": "pure prediction latency not measured",
+    "throughput": "scoring/comparison stage only",
+    "production_or_client_claim": "not_qualified",
+    "cost": "operator disposition pending; amounts unknown"
+  },
+  "resources": {
+    "job_wall_seconds": 8749.504449,
+    "platform": "cpu-d3",
+    "preset": "4vcpu-16gb",
+    "disk_size_gib": 100,
+    "timeout_seconds": 10800,
+    "restart_policy": "never",
+    "scoring_stage": {
+      "cpu_count": 4,
+      "cpu_seconds": 4011.8170047139997,
+      "disk_size_gib": 100,
+      "gpu_count": 0,
+      "memory_gib": 16,
+      "peak_rss_bytes": 354996224,
+      "platform": "cpu-d3",
+      "preset": "4vcpu-16gb",
+      "processed_rows": 15160,
+      "rows_per_second": 3.711030411595969,
+      "wall_seconds": 4085.118772573
+    },
+    "scoring_stage_scope": "original_process_through_prelogging_checkpoint",
+    "allocated_vcpu_hours_over_job_wall": 9.72167161,
+    "allocated_gib_hours_over_job_wall": 38.88668644
+  },
+  "cost_disposition_proposal": {
+    "policy": "operator_managed_alerts",
+    "estimated_cost_usd": null,
+    "billed_cost_usd": null,
+    "campaign_billed_cost_usd": null,
+    "cost_per_million_rows_usd": null,
+    "remaining_gpu_budget_usd": null,
+    "billing_queried": false,
+    "statement": "Accept unquantified cost under the September 16 operator-managed policy; no cost-efficiency claim or new spend ceiling.",
+    "historical_g7_estimate": "Superseded six-hundred-second estimate is not an estimate of the actual replacement Job."
+  },
+  "operations": {
+    "cleanup_observed_at": "2026-09-23T11:07:54.367Z",
+    "cleanup": "Key INACTIVE, temporary SSH rule absent, VM STOPPED, worker released at September 23 readback.",
+    "retention": "Retain 32 GiB filesystem, published bundle, root evidence and R4 recovery history.",
+    "mount_warning": "Unexplained provider warning; actual mount and independent byte verification passed.",
+    "right_sizing": "No resource change; stage RSS/CPU suggests profiling opportunity, not whole-Job sizing proof."
+  },
+  "future_work_boundary": "No G8 rescore/tuning; future quality work needs a new campaign and untouched held-out evaluation data.",
+  "evidence_bindings": {
+    "docs/evidence/g8-final-execution-20260923.json": "858736035994d3dd3cad9aa7a4577548d2090ab9b31302780b91be1021c6b53d",
+    "docs/evidence/g8-final-verification-20260923.json": "0ad39fa279827b6fe59c5740ee05e5c07e8a8482495b6196757e2837adb03f7b",
+    "docs/evidence/lightgbm-lineage-verification-20260922.json": "de35f415ee803a91373995a9f23d8eff2bf7aa312bc3321839c08cb9f7275882",
+    "docs/evidence/lightgbm-candidate-inventory-20260922.json": "eb318a5a62e0a84172e5c749582eb48b5453350289933185ab240a47393e1ccd",
+    "docs/evidence/g8-comparison-verification-20260923.json": "cc9d7deeaf014eec1901547a5f19a4c74da7d2d7c3e830a750c2fe10936e5525",
+    "docs/ml/model-validation-execution-policy.md": "dec16842108d704b0a257f5ee1c86b39150ffab7c9e0453434a3680a543da620",
+    "configs/experiments/lightgbm-wave1/g6-campaign-20260907.json": "49046262d4a05a26f6ae5deb39b6e3244715e5d8e952935a6feffa5337f2f163"
+  },
+  "local_artifact_audit_sha256": "cb293f31d4892b487c7f36c435e9ea2c20d96dc78e774aff3a92dec6ef0296b6"
+}
