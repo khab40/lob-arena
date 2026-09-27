@@ -1,11 +1,11 @@
 # Main Roadmap
 
-> **Schedule risk:** September 23 LightGBM exit is at risk; later dates remain
-> baseline targets, not a confirmed forecast. C0–C4 and G0–G8 are complete.
-> G9 awaits operator cost disposition and a signed exit decision. See
-> [current status](CURRENT_STATUS.md) for independently verified final results.
+> **LightGBM G9 closed September 27 as `research_baseline_qualified`.**
+> Wave 2 engineering is eligible; production qualification is not established.
+> The September 23 exit target was missed; later dates remain baseline targets
+> pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-09-23. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-09-27. See [current status and evidence](CURRENT_STATUS.md).
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -15,7 +15,7 @@ deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
 
-`G8-G9 LightGBM -> Transformer -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
+`Transformer (G9 research exit accepted) -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
 
@@ -154,27 +154,32 @@ diagnostic is retained separately from the passing final receipt.
 - Final retained-row precision is 85.58%, recall 65.93% and F1 74.48%, with
   15 false positives and 46 missed positive observations. Coverage is one date,
   three symbols and research labels; this does not establish production acceptance.
-- G9: pending operator cost disposition and signed exit. The
-  [results and unsigned handoff](../operations/g8/g8-final-results-20260923.md)
-  bind measured quality and resource limits. The selected model remains frozen.
+- G9: [signed and closed September 27](../operations/g8/g9-closure-20260927.md)
+  as `research_baseline_qualified`. Operator package/cost acceptance and delegated
+  signature are verified. Billed cost remains unknown under operator-managed
+  alerts; production/client qualification and registry promotion are not claimed.
 - R4's four prior submissions, consumed approval and pre-scoring failure remain
   historical evidence. The approved replacement does not erase that history.
 
 Remaining critical path:
 
-1. Review the [G8 closure evidence in PR #223](https://github.com/khab40/lob-arena/pull/223).
-2. Record G9's quality, resource and operator-provided cost disposition, then
-   obtain the signed Wave 1 exit decision. Do not infer it from Job success.
-3. Replan downstream dates if required by that decision. Any new model campaign
-   preserves this result and uses fresh untouched held-out evaluation data.
+The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
+at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
+and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
+
+1. Plan #24's sequence contract and bounded Transformer engineering chunks.
+   G9 is accepted; #24 remains Todo until implementation begins.
+2. Reforecast downstream dates. The gated September 24 start was missed;
+   October 9 remains a baseline target, not a forecast. Preserve the frozen
+   LightGBM result; future quality work needs untouched held-out evaluation data.
 
 See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
 [validation execution policy](../ml/model-validation-execution-policy.md): model/runtime
 work runs on Nebius Serverless; historical billing-freshness, submission-expiry and
 fixed VM windows are not current prerequisites. Final-test approval remains separate.
 
-Wave 2 starts only if the disposition is `qualified_for_wave2` or
-`research_baseline_qualified`.
+Wave 2 eligibility is satisfied by the signed `research_baseline_qualified`
+disposition. Its research-only limits remain binding; implementation is not started.
 
 ## Phase 3 - Standalone Transformer
 
@@ -266,15 +271,16 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Reconciled on **2026-09-13**:
+Current LightGBM gate reconciled on **2026-09-27**:
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
   the frozen four-date forward corpus, and its governed release evidence.
-- [#23](https://github.com/khab40/lob-arena/issues/23) records the completed
-  G5-G7 evidence, the 20/20 consumed-slot reconciliation, the selected and
-  authorized validation-only isotonic candidate, all three fail-closed
-  pre-test G8 attempts, the corrected least-privilege G6 campaign policy, the
-  exact-image runtime compatibility gate, and the G8-G9 remainder.
+- [#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress with
+  G0–G8 complete and G9 cost disposition/signed exit pending. Merged #219/#220/#223
+  establish lineage, comparison/preflight, final evaluation and independent
+  verification. Historical attempts and the frozen candidate remain preserved.
+- [#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until #23's
+  accepted exit; completion of G8 alone does not authorize Transformer work.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),

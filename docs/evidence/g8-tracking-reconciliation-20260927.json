@@ -1,0 +1,41 @@
+{
+  "verified_at": "2026-09-27T17:01:42.882Z",
+  "issues": [
+    {
+      "number": 23,
+      "state": "OPEN",
+      "project_status": "In Progress",
+      "body_matches_prepared_update": true
+    },
+    {
+      "number": 24,
+      "state": "OPEN",
+      "project_status": "Todo",
+      "body_matches_prepared_update": true
+    }
+  ],
+  "project": {
+    "number": 3,
+    "readme_matches_prepared_update": true,
+    "description_matches_prepared_update": true
+  },
+  "schema_version": "g8_post_merge_tracking_reconciliation_v1",
+  "bug": "https://github.com/khab40/lob-arena/issues/229",
+  "parent_story": "https://github.com/khab40/lob-arena/issues/23",
+  "source_commit": "118fde384f1c73d90390227085504e31a0319ae0",
+  "merged_pr": 223,
+  "g8_status": "complete",
+  "g9_status": "operator_cost_and_signed_exit_pending",
+  "model_jobs": 0,
+  "cloud_mutations": 0,
+  "final_access": false,
+  "production_qualification_granted": false,
+  "original_story_scope_preserved": true,
+  "historical_receipts_preserved": true,
+  "local_evidence_directory": "outputs/g8-tracking-reconcile-20260927",
+  "prepared_body_sha256": {
+    "issue-23-after.md": "b60ded200b6eab43b7533219466f86dee6fba1db583ce7efc8ab645120e9c212",
+    "issue-24-after.md": "889cbe55ccf661455ccc229a1bdffd28b6181e0d406f2ccf276b5dbc8cce0209",
+    "project-after.md": "790c4f81f219b8da584b50821418e6030cca81c3b969a108764d50bb7a010a19"
+  }
+}

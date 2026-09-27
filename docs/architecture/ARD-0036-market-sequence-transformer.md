@@ -4,6 +4,14 @@ Status: Proposed
 
 Date: 2026-08-16
 
+## Signed LightGBM exit — 2026-09-27
+
+G9 is complete as `research_baseline_qualified`; the operator accepted the
+verified governed package and unknown-cost disposition and delegated signing.
+See the [signed decision and verification](../operations/g8/g9-closure-20260927.md).
+Wave 2 engineering is eligible; #24 remains Todo, not started. Production/client
+qualification is not established. Older pending-G9 statements below are historical.
+
 ## Validation execution policy — 2026-09-16
 
 The operator removed administrative submission/retention windows, billing checks
