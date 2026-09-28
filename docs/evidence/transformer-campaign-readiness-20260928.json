@@ -1,0 +1,64 @@
+{
+  "schema_version": "transformer_campaign_readiness_v1",
+  "observed_date": "2026-09-28",
+  "source_commit_base": "9ef65c1cca88f6e3190573f56d884befdea89606",
+  "campaign_sha256": "e7601f6e265f583eaffdaca3e2e23ca6cff53dbd0a73ccc9fdcc13ed1d744e86",
+  "role_metadata_sha256": "0e1bc71a8442bd20df510a3be2b6576e9eb7bff391b38228c66c8422159c62be",
+  "metadata_inspection_seconds": 0.004558084008749574,
+  "payload_rows_read": 0,
+  "cloud_jobs": 0,
+  "model_runs": 0,
+  "gpu_ready": false,
+  "roles": [
+    {
+      "role": "selection",
+      "symbol": "NVDA",
+      "base_sessions": [
+        "xnas-2019-10-30-nvda"
+      ],
+      "shards": 10,
+      "rows": 1250,
+      "group_sha256": "39655d93af894c2e94ca87b3c41996ed7dc1fbb526372c67be6211a36a903d02"
+    },
+    {
+      "role": "calibration",
+      "symbol": "MSFT",
+      "base_sessions": [
+        "xnas-2019-10-30-msft"
+      ],
+      "shards": 10,
+      "rows": 5490,
+      "group_sha256": "8b2bab01d78ce335fde372f1c0fc253fadd1a7b2ec762caa2d31095001ab50c0"
+    },
+    {
+      "role": "operating_point",
+      "symbol": "AAPL",
+      "base_sessions": [
+        "xnas-2019-10-30-aapl"
+      ],
+      "shards": 10,
+      "rows": 2470,
+      "group_sha256": "a26cb081c7c1f83db04026dca2414e7fa27fe9e88b534d6c66f748e15353e701"
+    }
+  ],
+  "blockers": [
+    "source observation and label-horizon provenance receipt",
+    "CPU role class-support audit",
+    "MLflow application readiness and Transformer namespace permissions",
+    "exact immutable Job authorization"
+  ],
+  "live_mlflow_vm_state": "STOPPED",
+  "issue19_state": "OPEN",
+  "issue19_reopened_at": "2026-09-28T14:34:28Z",
+  "issue19_reconciliation": "Merged #245 / Bug #244",
+  "campaign_file_sha256": "cd39f54d6ab05ee543b4970a2402700b02da30d0d0535a03ad3f6afa59dd6322",
+  "verification": {
+    "focused_tests_passed": 65,
+    "ruff": "passed",
+    "markdown_files_checked": 3,
+    "model_tests_executed": 0
+  },
+  "implementation_source_commit": "ce6a0680ebcae427977b99a75aeae806eeac74e2",
+  "metadata_entrypoint_sha256": "1ab8406eb838e064311575fc923cc1633b771f2a7275c251b9e361f596ad9aae",
+  "tracked_cli_readback_matches": true
+}
