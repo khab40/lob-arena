@@ -1,5 +1,24 @@
 # Roadmap status — 2026-09-28
 
+## Transformer input verification proposed — 2026-09-28
+
+[PR #236](https://github.com/khab40/lob-arena/pull/236) is reviewed and merged;
+dependency PRs #203/#227/#228 are also merged. Story
+[#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress.
+
+Next is the [bounded development-input plan](../ml/transformer-development-verification-plan.md):
+one CPU Job to verify 33,450 training and 9,210 validation rows, preserve
+normalization/configuration and compare batch sizes. CPU is for input preparation;
+Transformer model training follows as a separately planned GPU chunk.
+
+All 185 retained development files match publication checksums (30,034,660 bytes).
+This establishes local artifact integrity, not governed runtime success. Live
+bucket preflight failed with Nebius storage-API DNS timeouts; access is unverified.
+The runner, pinned image and exact execution request still need implementation
+and review after plan approval. No Job or permission change has been performed.
+The [proposal](../evidence/transformer-development-proposal-20260928.json) records
+one Job, 4 vCPU/16 GiB, a one-hour timeout, no GPU and no final-test access.
+
 ## Transformer input-contract implementation — 2026-09-28
 
 The operator approved the first [#24](https://github.com/khab40/lob-arena/issues/24)
