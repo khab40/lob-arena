@@ -176,8 +176,9 @@ The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
 at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
 and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
 
-1. Plan #24's sequence contract and bounded Transformer engineering chunks.
-   G9 is accepted; #24 remains Todo until implementation begins.
+1. Review #24's approved [input-contract implementation](../ml/transformer-input-contract.md),
+   then prepare bounded Nebius development-input verification. #24 is In Progress;
+   model architecture/training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
    LightGBM result; future quality work needs untouched held-out evaluation data.
@@ -188,16 +189,17 @@ work runs on Nebius Serverless; historical billing-freshness, submission-expiry 
 fixed VM windows are not current prerequisites. Final-test approval remains separate.
 
 Wave 2 eligibility is satisfied by the signed `research_baseline_qualified`
-disposition. Its research-only limits remain binding; implementation is not started.
+disposition. Its research-only limits remain binding; input engineering has started.
 
 ## Phase 3 - Standalone Transformer
 
 Dates: **2026-09-24 through 2026-10-09**  
 GitHub: [#24 Market-sequence Transformer](https://github.com/khab40/lob-arena/issues/24)
 
-Classifier/training implementation has not started. C4 sequence projection
-materialization is already implemented and frozen; Wave 2 must validate its
-consumer, causal sampling and cross-model row alignment.
+Classifier/training implementation has not started. The approved input consumer
+now verifies frozen C4 sequences, causal windows, masks, normalization and exact
+baseline alignment with inert tests. Governed-data runtime verification remains
+the next separately bounded step.
 
 Deliverables:
 
@@ -280,16 +282,16 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Current LightGBM gate reconciled on **2026-09-27**:
+Current LightGBM/Transformer gates reconciled on **2026-09-28**:
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
   the frozen four-date forward corpus, and its governed release evidence.
-- [#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress with
-  G0–G8 complete and G9 cost disposition/signed exit pending. Merged #219/#220/#223
-  establish lineage, comparison/preflight, final evaluation and independent
-  verification. Historical attempts and the frozen candidate remain preserved.
-- [#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until #23's
-  accepted exit; completion of G8 alone does not authorize Transformer work.
+- [#23](https://github.com/khab40/lob-arena/issues/23) is closed with G0–G9 complete.
+  Merged #231 records the signed `research_baseline_qualified` disposition.
+  Historical attempts and the frozen candidate remain preserved.
+- [#24](https://github.com/khab40/lob-arena/issues/24) is In Progress after explicit
+  September 28 input-contract approval. G9 permits engineering, not production
+  promotion or a new G8 evaluation.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19),
