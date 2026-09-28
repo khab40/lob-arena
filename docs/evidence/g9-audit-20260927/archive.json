@@ -1,0 +1,50 @@
+{
+  "schema_version": "g9_portable_audit_archive_v1",
+  "bug": "https://github.com/khab40/lob-arena/issues/232",
+  "reviewed_commit": "b23fc476d35216fd34417e6f6d8918819ee99457",
+  "archive": "metadata.zip",
+  "archive_sha256": "fb550430c7015e4a37c7e916a204f70ee1e22c43c57b5d92aeaaa9e735b42093",
+  "archive_size_bytes": 43750,
+  "assembler": "assemble.py.txt",
+  "assembler_sha256": "71a3f96383a857b28476a345c0517b3611d9ee83519325c119edcc347cd65375",
+  "files": {
+    "outputs/g9-exit-20260927/artifact-audit.json": {
+      "sha256": "cb293f31d4892b487c7f36c435e9ea2c20d96dc78e774aff3a92dec6ef0296b6",
+      "size_bytes": 1425
+    },
+    "outputs/g8-final-execution-20260923/independent-s3/verification.json": {
+      "sha256": "36b06bd0e07b18a536ee929d655fc36becb44ceff5ee202e00ca4d25943c8304",
+      "size_bytes": 45859
+    },
+    "outputs/lightgbm-candidate-inventory-20260922/inventory-final.json": {
+      "sha256": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+      "size_bytes": 106873
+    },
+    "outputs/g8-final-execution-20260923/independent-s3/release/artifacts/c4-evaluation.json": {
+      "sha256": "50f9ac6d5dbfa731cdcad48571d12965ebddb15298559b69d498967c315716d2",
+      "size_bytes": 8876
+    },
+    "outputs/g8-final-execution-20260923/independent-s3/release/artifacts/bundle/model-bundle.json": {
+      "sha256": "8eaa8c8f00bfee6c78727a7272a4dcd8e056c9331572470ad1f1d019eb968bc5",
+      "size_bytes": 3672
+    },
+    "outputs/g8-final-execution-20260923/independent-s3/release/artifacts/training/training-run.json": {
+      "sha256": "fa528a8660d0a687940bd1df9ce4d5fe2a1e21ca2d6be3ca823aafbd543e037b",
+      "size_bytes": 40004
+    },
+    "outputs/g8-final-execution-20260923/independent-s3/release/artifacts/calibration/calibration-manifest.json": {
+      "sha256": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30",
+      "size_bytes": 3329
+    },
+    "outputs/g8-final-execution-20260923/independent-s3/release/artifacts/g8-scoring-execution.json": {
+      "sha256": "6426f8b83e1d4f27e2aa742ea301976139d1f993abe2376032e59fc1ac2eca04",
+      "size_bytes": 1017
+    }
+  },
+  "scope": "Original JSON metadata only; no raw rows, model weights, secrets or private keys. No fresh remote availability or payload-byte verification claimed.",
+  "payload_store": {
+    "operator_local_root": "outputs/g8-final-execution-20260923/independent-s3/release",
+    "s3_result_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/final/nasdaq-g8-replacement-r5-20260917",
+    "object_key_rule": "Append each verification.json objects[].path to s3_result_uri; each entry retains full SHA-256, size and version ID."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "g9_operator_approval_v1",
+  "recorded_at": "2026-09-27T17:31:15.149772+00:00",
+  "timestamp_scope": "agent recording time; message transport timestamp unavailable",
+  "operator": "project operator in this conversation",
+  "approval_message": "Approved, including delegated G9 signing",
+  "preceding_confirmation_request": "Please reply \u201cApproved, including delegated G9 signing\u201d to confirm your decision before I sign the record and close #23.",
+  "proposal_sha256": "f487a1abdc0c7b4a038214d69b849a2f0f1e8e232d24d70bfe054eba0563071f",
+  "markdown_sha256": "699502f9c040807586e184e72afb844260c9237d4817f4dc46bc291b0a8387c1",
+  "approved_scope": [
+    "research_baseline_qualified; Wave 2 engineering only",
+    "Accept verified S3/MLflow artifact package for story 23",
+    "Accept unknown costs under existing operator-managed policy",
+    "Retain reply and use new G9 key in agent custody to sign and verify both approved artifact hashes",
+    "Close story 23 and reconcile tracking after verified signature"
+  ],
+  "excluded_scope": [
+    "production promotion",
+    "G8 rerun",
+    "PR merge",
+    "deletion"
+  ],
+  "signing_custody": "new G9 key held by Codex agent under explicit operator delegation; not an independently identity-certified operator key"
+}

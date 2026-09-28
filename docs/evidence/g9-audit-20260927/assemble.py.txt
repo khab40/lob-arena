@@ -1,0 +1,132 @@
+"""Inspect retained bytes and assemble an unsigned G9 proposal; no ML/network."""
+import hashlib
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "outputs/g9-exit-20260927"
+RUN = ROOT / "outputs/g8-final-execution-20260923"
+RELEASE = RUN / "independent-s3/release"
+
+
+def read(path):
+    return json.loads(path.read_text())
+
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def check(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
+execution = read(ROOT / "docs/evidence/g8-final-execution-20260923.json")
+verified = read(ROOT / "docs/evidence/g8-final-verification-20260923.json")
+lineage = read(ROOT / "docs/evidence/lightgbm-lineage-verification-20260922.json")
+inventory_path = ROOT / "outputs/lightgbm-candidate-inventory-20260922/inventory-final.json"
+check(digest(inventory_path) == lineage["inventory_sha256"], "inventory anchor")
+inventory = read(inventory_path)
+receipt_path = RUN / "independent-s3/verification.json"
+check(digest(receipt_path) == verified["s3_receipt_sha256"], "S3 receipt anchor")
+receipt = read(receipt_path)
+for obj in receipt["objects"]:
+    path = RELEASE / obj["path"]
+    check(digest(path) == obj["sha256"] and path.stat().st_size == obj["size_bytes"], str(path))
+check({str(p.relative_to(RELEASE)) for p in RELEASE.rglob('*') if p.is_file()} ==
+      {o['path'] for o in receipt['objects']}, 'exact release file set')
+report = read(RELEASE / "artifacts/c4-evaluation.json")
+bundle = read(RELEASE / "artifacts/bundle/model-bundle.json")
+training = read(RELEASE / "artifacts/training/training-run.json")
+calibration = read(RELEASE / "artifacts/calibration/calibration-manifest.json")
+scoring = read(RELEASE / "artifacts/g8-scoring-execution.json")
+for obj in lineage["artifacts"]:
+    candidates = [p for p in RELEASE.rglob(Path(obj['path']).name) if p.is_file()]
+    check(len(candidates) == 1 and digest(candidates[0]) == obj['sha256'] and
+          candidates[0].stat().st_size == obj['size_bytes'], obj['path'])
+for obj in bundle['artifacts']:
+    path = RELEASE / 'artifacts' / obj['uri']
+    check(digest(path) == obj['sha256'] and path.stat().st_size == obj['size_bytes'], obj['uri'])
+check(training['ordered_feature_columns'] == inventory['configuration']['ordered_features'], 'feature order')
+check(training['preprocessing'] == inventory['configuration']['preprocessing'], 'preprocessing')
+check(report['candidate_sha256'] == inventory['candidate_sha256'] == execution['candidate_sha256'], 'candidate')
+check(report['frozen_threshold'] == inventory['configuration']['operating_points'][1]['threshold'], 'threshold')
+check(report['metrics'] == verified['metrics'], 'metrics')
+bindings = {}
+for path in [
+    'docs/evidence/g8-final-execution-20260923.json',
+    'docs/evidence/g8-final-verification-20260923.json',
+    'docs/evidence/lightgbm-lineage-verification-20260922.json',
+    'docs/evidence/lightgbm-candidate-inventory-20260922.json',
+    'docs/evidence/g8-comparison-verification-20260923.json',
+    'docs/ml/model-validation-execution-policy.md',
+    'configs/experiments/lightgbm-wave1/g6-campaign-20260907.json',
+]:
+    bindings[path] = digest(ROOT / path)
+audit = {'date': '2026-09-27', 'method': 'local byte/hash and JSON metadata inspection',
+         'objects_rehashed': len(receipt['objects']), 'bytes_rehashed': receipt['total_bytes'],
+         'development_mlflow_artifacts_matched_to_final_bundle': 7,
+         'bundle_references_verified': len(bundle['artifacts']), 'ordered_features_verified': 31,
+         'model_loaded': False, 'rows_parsed': False, 'cloud_calls': 0,
+         'source_commit': '26e23e3750b8861994660409b4539244d6638d9e',
+         'assembler_sha256': digest(Path(__file__)), 'evidence_bindings': bindings}
+(OUT / 'artifact-audit.json').write_text(json.dumps(audit, indent=2) + '\n')
+proposal = {
+    'schema_version': 'lightgbm_g9_exit_proposal_v1', 'date': '2026-09-27',
+    'story': 'https://github.com/khab40/lob-arena/issues/23',
+    'status': 'awaiting_operator_signature', 'proposed_disposition': 'research_baseline_qualified',
+    'operator_decision': None, 'operator_signature': None,
+    'wave2_unlocked': False, 'production_qualified': False,
+    'decision_effect_if_signed': 'Permit Wave 2 engineering only; preserve research/non-commercial limits.',
+    'candidate_sha256': inventory['candidate_sha256'], 'freeze_sha256': inventory['freeze_sha256'],
+    'inventory_sha256': lineage['inventory_sha256'], 'model_sha256': inventory['model_sha256'],
+    'run_id': execution['run_id'], 'job_id': execution['job_id'],
+    'runtime_source_commit': execution['source_commit'],
+    'execution_package_sha256': execution['execution_package_sha256'],
+    'image': scoring['execution_context']['image'],
+    'development_mlflow_run_id': lineage['mlflow_run_id'], 'final_mlflow_run_id': verified['mlflow']['run_id'],
+    'feature_release_id': verified['mlflow']['feature_release_id'],
+    'feature_release_sha256': verified['mlflow']['feature_release_sha256'],
+    'result_uri': verified['result_uri'], 'report_sha256': verified['report_sha256'],
+    'bundle_sha256': digest(RELEASE / 'artifacts/bundle/model-bundle.json'),
+    'package_acceptance': 'Governed S3 bundle and MLflow run artifacts verified; no registered-model version or champion alias claimed.',
+    'bundle_components': {a['logical_name']: a['sha256'] for a in bundle['artifacts']
+                          if a['logical_name'] in {'model','training_manifest','calibration_manifest','feature_schema','checksums'}},
+    'configuration': {'features': 31, 'preprocessing': training['preprocessing'],
+                      'calibration': 'isotonic', 'mode': 'balanced', 'threshold': report['frozen_threshold'],
+                      'seed': 42, 'selected_iterations': 32, 'leaves': 8},
+    'quality': {k: verified[k] for k in ['row_count','session_count','metrics','qualification_limit']},
+    'family_recall': {k:v['lightgbm_recall'] for k,v in report['family_recall'].items()},
+    'uncertainty': {k: v for k,v in report['uncertainty'].items() if k != 'intervals'},
+    'not_computed': report['not_computed'],
+    'gate_assessment': {
+        'deterministic_development_repeats': 'passed G5; distinct from the single G8 final',
+        'same_immutable_comparison_inputs': 'passed', 'independent_bundle_and_lineage': 'passed',
+        'quality_default_90_percent_precision_and_recall': 'not_met; balanced selects validation F1, not both floors',
+        'calibration': 'measured on final; validation reused for model/calibrator/threshold selection',
+        'clean_window_false_alerts': 'research-control rows only; independently adjudicated clean-window gate unproven',
+        'latency': 'pure prediction latency not measured', 'throughput': 'scoring/comparison stage only',
+        'production_or_client_claim': 'not_qualified', 'cost': 'operator disposition pending; amounts unknown',
+    },
+    'resources': {'job_wall_seconds': execution['job_wall_seconds'], **execution['resources'],
+                  'scoring_stage': scoring['resource'], 'scoring_stage_scope': scoring['resource_scope'],
+                  'allocated_vcpu_hours_over_job_wall': 4 * execution['job_wall_seconds'] / 3600,
+                  'allocated_gib_hours_over_job_wall': 16 * execution['job_wall_seconds'] / 3600},
+    'cost_disposition_proposal': {
+        'policy': 'operator_managed_alerts', 'estimated_cost_usd': None, 'billed_cost_usd': None,
+        'campaign_billed_cost_usd': None, 'cost_per_million_rows_usd': None,
+        'remaining_gpu_budget_usd': None, 'billing_queried': False,
+        'statement': 'Accept unquantified cost under the September 16 operator-managed policy; no cost-efficiency claim or new spend ceiling.',
+        'historical_g7_estimate': 'Superseded six-hundred-second estimate is not an estimate of the actual replacement Job.',
+    },
+    'operations': {'cleanup_observed_at': execution['cleanup']['verified_at'],
+                   'cleanup': 'Key INACTIVE, temporary SSH rule absent, VM STOPPED, worker released at September 23 readback.',
+                   'retention': 'Retain 32 GiB filesystem, published bundle, root evidence and R4 recovery history.',
+                   'mount_warning': 'Unexplained provider warning; actual mount and independent byte verification passed.',
+                   'right_sizing': 'No resource change; stage RSS/CPU suggests profiling opportunity, not whole-Job sizing proof.'},
+    'future_work_boundary': 'No G8 rescore/tuning; future quality work needs a new campaign and untouched held-out evaluation data.',
+    'evidence_bindings': bindings, 'local_artifact_audit_sha256': digest(OUT / 'artifact-audit.json'),
+}
+(ROOT / 'docs/evidence/g9-exit-proposal-20260927.json').write_text(json.dumps(proposal, indent=2) + '\n')
+print(json.dumps({'audit': audit, 'proposal_sha256': digest(ROOT / 'docs/evidence/g9-exit-proposal-20260927.json')}, indent=2))
