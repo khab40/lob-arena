@@ -7,6 +7,30 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def declared_floor(source: str, package: str) -> tuple[int, ...]:
+    matches = re.findall(
+        rf'^\s*["\']?{re.escape(package)}>=(\d+\.\d+\.\d+)(?=["\'\s,\\]|$)',
+        source,
+        flags=re.MULTILINE,
+    )
+    assert len(matches) == 1, f"Expected one explicit minimum for {package}"
+    return tuple(int(part) for part in matches[0].split("."))
+
+
+@pytest.mark.parametrize("version", ["1.6.0", "1.7.0", "1.10.0", "2.0.0"])
+def test_security_contract_accepts_stronger_floors(version: str) -> None:
+    assert declared_floor(f'  "starlette>={version}"', "starlette") >= (1, 6, 0)
+
+
+@pytest.mark.parametrize(
+    "requirement",
+    ["starlette>=1.5.9", "starlette", "# starlette>=1.6.0", "starlette>=1.6.0rc1"],
+)
+def test_security_contract_rejects_weaker_or_missing_floors(requirement: str) -> None:
+    with pytest.raises(AssertionError):
+        assert declared_floor(requirement, "starlette") >= (1, 6, 0)
+
+
 def locked_version(package: str, path: Path = ROOT / "backend" / "uv.lock") -> tuple[int, ...]:
     lockfile = path.read_text(encoding="utf-8")
     match = re.search(
@@ -57,6 +81,8 @@ def test_every_python_install_surface_enforces_security_floors() -> None:
     ]
 
     for path in starlette_surfaces:
-        assert "starlette>=1.6.0" in path.read_text(encoding="utf-8"), path
+        assert declared_floor(path.read_text(encoding="utf-8"), "starlette") >= (1, 6, 0), path
     for path in pydantic_settings_surfaces:
-        assert "pydantic-settings>=2.14.2" in path.read_text(encoding="utf-8"), path
+        assert declared_floor(path.read_text(encoding="utf-8"), "pydantic-settings") >= (
+            2, 14, 2
+        ), path
