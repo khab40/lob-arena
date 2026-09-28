@@ -22,7 +22,8 @@
   "bucket_version_after_rejection": "132",
   "rendered_policy_sha256": "c902779239fac0646d58ff8c678c8fd37890de237a497ad03c7381d717afacdf",
   "operator_update_trace": "fb71a3e6599678f3e73cc9a03b5474e8",
-  "status": "corrected_policy_applied_audit_passed_removal_pending",
+  "status": "corrected_policy_applied_audit_passed_cleanup_verified",
   "focused_policy_tests_passed": 8,
-  "applied_resource_version": "133"
+  "applied_resource_version": "133",
+  "cleanup_resource_version": "134"
 }

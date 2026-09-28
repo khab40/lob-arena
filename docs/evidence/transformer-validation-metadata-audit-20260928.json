@@ -23,7 +23,7 @@
   "source_separation_verified": false,
   "gpu_ready": false,
   "source_scope_observation": "Three instrument datasets share the same source-file SHA and 10:00-10:30 session; metadata binding alone is not proof of independent observations or label horizons.",
-  "cleanup_status": "operator_removal_pending",
+  "cleanup_status": "independently_verified_complete",
   "cloud_jobs": 0,
   "model_runs": 0,
   "payload_reads": 0,
@@ -32,5 +32,6 @@
     "label_horizon_overlap",
     "replay_manifest_and_feature_lineage",
     "class_support_and_platform_readiness"
-  ]
+  ],
+  "cleanup_resource_version": "134"
 }

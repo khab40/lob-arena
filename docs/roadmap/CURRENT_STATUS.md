@@ -9,15 +9,15 @@ initially returned `AccessDenied` for preparation metadata. The [live audit](../
 now verifies all 29 objects (42,064 bytes) and 30 replay domains, with a matching
 fresh-process readback. The [temporary access proposal](../evidence/transformer-validation-metadata-access-proposal-20260928.json)
 has [operator approval](../evidence/transformer-validation-metadata-approval-20260928.json);
-the corrected policy was applied at version 133. Removal requires the operator handoff because MCP safe mode
-excludes policy updates. No sequence/event payload, Job or model run occurred.
-The first handoff was rejected for exceeding ten paths per policy rule; bucket
-version 132 and both existing rules are unchanged. [Bug #250](https://github.com/khab40/lob-arena/issues/250)
+the corrected policy was applied at version 133 and [removal independently verified](../evidence/transformer-validation-metadata-cleanup-20260928.json)
+at version 134. Both original rules and all other settings are preserved. The
+48-minute-31-second permission window stayed within approval. No sequence/event
+payload, Job or model run occurred. The first handoff was rejected for exceeding
+ten paths per policy rule, leaving version 132 unchanged at that point. [Bug #250](https://github.com/khab40/lob-arena/issues/250)
 partitions the same approved keys into three rules (10/10/9), with provider-limit
-tests and exact removal checks. Operator removal remains pending.
+tests and exact removal checks. This metadata audit and its access cleanup are complete.
 
-Next: remove temporary metadata access after the completed collection;
-verify source observations, label horizons and replay/feature lineage; finish the
+Next: verify source observations, label horizons and replay/feature lineage; finish the
 signed-context CPU role audit package and obtain its exact execution approval.
 MLflow readiness remains a separate gate under #19. GPU readiness is false;
 G8/G9 remain closed. Earlier snapshots below remain historical.

@@ -186,7 +186,8 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    The first [readiness increment](../ml/transformer-campaign-readiness.md) merged
    in #248. The [provenance continuation](../ml/transformer-role-provenance.md)
    verified the 29-object metadata chain and 30 replay domains after the corrected
-   temporary grant. Operator removal is pending. Source/window proof, CPU runtime evidence and platform
+   temporary grant. Access cleanup is independently verified at bucket version 134.
+   Source/window proof, CPU runtime evidence and platform
    readiness remain gates before GPU execution.
    #24 remains
    In Progress; GPU model training and later qualification remain open.

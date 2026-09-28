@@ -20,8 +20,11 @@ and corrected operator grant, the [live audit](../evidence/transformer-validatio
 verified all 29 objects (42,064 bytes) and all 30 replay domains. A fresh process
 verified every retained object/version/hash and reproduced the report. Temporary
 access has [operator approval](../evidence/transformer-validation-metadata-approval-20260928.json);
-operator removal is pending. Keys derive from the retained C4 freeze request and
-C3 naming contract; the verifier rejects references that differ.
+[removal is independently verified](../evidence/transformer-validation-metadata-cleanup-20260928.json)
+at bucket version 134. Only the original two rules remain; other settings are
+unchanged. Access lasted 48 minutes 31 seconds, within the one-hour approval.
+Keys derive from the retained C4 freeze request and C3 naming contract; the
+verifier rejects references that differ.
 
 A passing metadata chain does **not** establish independent observations or label
 horizons. Those checks, replay/feature lineage, class support, platform readiness
@@ -44,11 +47,11 @@ checksum and rejects partial application. Removal uses the fresh current policy
 and removes only the three exact rules, preserving unrelated changes. The first
 operator request was rejected with no mutation: version 132/two original rules
 were independently confirmed. [Repair evidence](../evidence/transformer-metadata-policy-repair-20260928.json)
-records equivalent scope and the corrected policy checksum. Use the root evidence
+records equivalent scope and the corrected policy checksum. The root evidence
 file `outputs/transformer-role-provenance-20260928/temporary-policy-v2.json` recorded
 the applied handoff; the old invalid file remains historical evidence.
 
-After access approval, use the existing authorized development identity with
+The completed collection used the existing authorized development identity with
 `python -m app.ml.transformer.role_provenance_transport INPUT_DIRECTORY NEW_OUTPUT_DIRECTORY`
 from `backend/`. Collection is metadata-only, at most 29 GETs, 256 KiB per object
 and 300 seconds. Existing output directories are rejected. `receipts.json` records
