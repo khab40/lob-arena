@@ -40,3 +40,20 @@ Feature: Governed Transformer development-input verification
     When an independent reader downloads and verifies its artifacts
     Then the saved configuration and normalizer match their published checksums
     And the result binds the exact code, image, inputs and Job identity
+
+  Scenario: Deliver signed context without an interactive handoff
+    Given an armed publisher bound to the reviewed request
+    When the exact provider Job publishes its matching intent
+    Then signed context is published within the startup window
+    And no additional interactive step is required
+
+  Scenario: Reject late context delivery
+    Given a terminal Job or an intent at least 240 seconds old
+    When signed context delivery is attempted
+    Then no context object is written
+
+  Scenario: Diagnose a startup timeout before input access
+    Given a Job that has not received its signed context
+    When the startup deadline expires
+    Then the failure record identifies the context stage
+    And no governed input is downloaded

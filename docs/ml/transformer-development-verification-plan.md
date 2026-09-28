@@ -6,8 +6,13 @@ Plan for [Story #24](https://github.com/khab40/lob-arena/issues/24), under
 [PR #236](https://github.com/khab40/lob-arena/pull/236) is merged at
 `a4ae14619a3e93da3a6e6d679ee64601740878d7`; its input-consumer implementation is
 unchanged from the reviewed code. Dependency PRs #203/#227/#228 are also merged.
-Status: **operator approved implementation and one bounded CPU Job; implemented;
-live metadata preflight and provider dry-run passed; CI gate pending; no Job submitted**.
+Status: **implemented; all 23 launch-gate checks passed; the one approved Job
+failed before input download because signed context arrived after its deadline**.
+The [attempt receipt](../evidence/transformer-development-attempt-20260928-r1.json)
+records the failure and released worker. No normalization or measurements exist.
+[Bug #238](https://github.com/khab40/lob-arena/issues/238) repairs delivery with
+an armed publisher; its tests do not establish real-data acceptance. Another Job
+requires a reviewed replacement proposal and explicit authorization.
 
 The operator's approval is retained in root
 `outputs/transformer-development-verification-20260928/approval.md`.
@@ -112,9 +117,14 @@ pinned secret versions. All 185 version-specific HEAD requests matched expected
 sizes/versions, with no row payload read locally; the output prefix is empty.
 The exact provider create request passed `--dry-run`. No permission changed.
 
-Execution waits for CI on the published implementation. Source/image/request
-are bound, current development permissions and credential versions are verified,
-and result absence will be checked again by the Job. Any newly required permission must be presented
+The original execution consumed its one-Job authorization and its output prefix
+is retained. The repaired publisher must be started with credentials ready before
+any replacement create, and its ready receipt plus live process must be observed.
+It validates provider identity/resources, waits for matching INTENT and refuses
+terminal markers or intent age of 240 seconds or more. No interactive handoff is
+allowed between create and context delivery. A replacement requires a fresh run
+prefix/request/image and approval; the r1 output must never be reused.
+Any newly required permission must be presented
 as an exact change; do not broaden access silently. Relevant CLI help was checked
 through Nebius MCP; the [provider Job reference](https://docs.nebius.com/cli/reference/msp/serverless/v1alpha1/job/index)
 is supplemental and does not override the installed `nebius ai job` interface.

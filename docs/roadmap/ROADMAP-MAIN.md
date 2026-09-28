@@ -178,8 +178,9 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
 
 1. #24's [input-contract implementation](../ml/transformer-input-contract.md) is
    merged in #236. The [CPU development-input verification plan](../ml/transformer-development-verification-plan.md)
-   is approved and implemented; live preflight/dry-run pass. Complete CI, run its
-   one approved Job and independently verify the published package. #24 remains
+   is implemented. Its approved Job failed before input download due to late
+   signed context; #238 repairs the handoff. Review the repair and prepare/approve
+   a fresh replacement attempt, then independently verify its package. #24 remains
    In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
