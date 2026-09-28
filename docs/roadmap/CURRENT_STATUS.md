@@ -1,5 +1,15 @@
 # Roadmap status — 2026-09-28
 
+## Transformer replacement package ready for approval — 2026-09-28
+
+[PR #237](https://github.com/khab40/lob-arena/pull/237) is reviewed and merged.
+The [r2 replacement plan](../ml/transformer-development-replacement-r2.md) binds
+the repaired publisher, rebuilt image, fresh request/output prefix and the same
+bounded CPU workload for [#24](https://github.com/khab40/lob-arena/issues/24) /
+[#238](https://github.com/khab40/lob-arena/issues/238). All 100 focused tests and
+live metadata/provider dry-run checks pass. A new one-run authorization is required
+before submission; no r2 Job or model workload has run. Preserve r1 evidence.
+
 ## Transformer input verification: startup failure repaired — 2026-09-28
 
 [PR #236](https://github.com/khab40/lob-arena/pull/236) is reviewed and merged;
