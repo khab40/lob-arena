@@ -163,6 +163,15 @@ diagnostic is retained separately from the passing final receipt.
 
 Remaining critical path:
 
+Operator priority September 28: finish maintenance and platform acceptance under
+#19–#21 before starting a new model campaign. Dependency repairs are in the
+existing #203/#227/#228 PRs; #225/#226 are merged. The
+[MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md) passed, while
+research candidate registration, application recovery, repeatable infrastructure
+and native observability acceptance remain open. See the
+[current numbered plan](CURRENT_STATUS.md#maintenance-and-platform-continuation--2026-09-28).
+None requires reopening G8 or altering the signed G9 decision.
+
 The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
 at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
 and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
