@@ -31,11 +31,11 @@ ID/hash, normalization version/checksum and per-fold ordered row digests.
 Do not reacquire, relabel, move rows between C4 folds or shorten sequences.
 The 760–764 windows/second input measurement is not GPU model throughput.
 
-First reconcile #19–#21 acceptance evidence. Live GitHub #19 is CLOSED although
-its body still lists incomplete application recovery and registration. Neither
-closure nor the 60-table restore proves application writes, model registration,
-or deployment of the repository's MLflow version. Resolve that discrepancy from
-evidence before execution; do not infer permission to upgrade the live server.
+First reconcile #19–#21 acceptance evidence. [Bug #244](https://github.com/khab40/lob-arena/issues/244)
+reopened #19 as In Progress because application recovery and registration remain
+incomplete. The 60-table restore does not prove application writes, model
+registration, or deployment of the repository's MLflow version. Complete the
+remaining readiness evidence before execution; do not infer upgrade permission.
 Verify private connectivity, deployed/client versions, least-privilege writer,
 artifact round trip and readback. The new experiment/model namespaces need an
 explicit application-permission change; existing LightGBM access is insufficient.

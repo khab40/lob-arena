@@ -305,9 +305,9 @@ Current LightGBM/Transformer gates reconciled on **2026-09-28**:
   promotion or a new G8 evaluation.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
-- [#19](https://github.com/khab40/lob-arena/issues/19) is CLOSED in live GitHub
-  while its body retains recovery/registration gaps; reconcile evidence before
-  relying on it for the GPU campaign. Revalidate #20/#21 acceptance as well;
+- [#19](https://github.com/khab40/lob-arena/issues/19) is reopened/In Progress
+  under [Bug #244](https://github.com/khab40/lob-arena/issues/244). Complete its
+  recovery/registration evidence before the GPU campaign. Revalidate #20/#21 as well;
   completed foundations alone do not prove all platform exit criteria.
 - Seven dated GitHub milestones now encode the targets in this document. The
   critical-path issues and supporting platform/Investigator issues are assigned
