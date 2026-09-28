@@ -38,7 +38,7 @@ def main() -> None:
     parser.add_argument(
         "--allow-short-tag-workaround",
         action="store_true",
-        help="Explicitly allow a <=64-character digest-derived tag after registry verification.",
+        help="Historical existing-Job recovery only; new governed Jobs require a direct digest.",
     )
     parser.add_argument("--name", default=os.environ.get("NEBIUS_JOB_NAME", "market-abuse-smart-batch"))
     parser.add_argument("--runs", type=int, default=int(os.environ.get("NEBIUS_JOB_RUNS", "1000")))
@@ -115,6 +115,12 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if args.workload != "lightgbm-wave1" and (args.recover_existing_job_id or args.recover_job_readback):
+        raise SystemExit("existing-Job recovery requires --workload lightgbm-wave1")
+    if args.workload == "lightgbm-wave1" and not args.recover_existing_job_id:
+        if args.allow_short_tag_workaround or (args.deployment_image and args.deployment_image != args.image):
+            raise SystemExit("new governed Jobs require direct digest deployment; short-tag workaround retired")
+
     if args.recover_job_readback and not args.recover_existing_job_id:
         raise SystemExit("--recover-job-readback requires --recover-existing-job-id")
     if args.recover_job_readback and not args.recover_job_readback.is_file():
@@ -134,6 +140,8 @@ def main() -> None:
         raise SystemExit("inline Object Storage credentials are forbidden; use MysteryBox secret IDs")
     if args.workload == "lightgbm-wave1":
         request = _load_wave1_request(args.request_evidence, args.input_uri)
+        if request.mode == "final-evaluation" and not args.recover_existing_job_id:
+            raise SystemExit("new final evaluation requires the signed replacement-package runner")
         g8_preflight = (
             verify_g8_preflight(args.request_evidence.parent)
             if request.mode == "final-evaluation" and args.request_evidence is not None
@@ -518,45 +526,48 @@ def main() -> None:
         ).hexdigest()
         observed_job_image = None
         post_submission_registry_verification = None
-        if short_tag_workaround:
-            try:
+        try:
+            if short_tag_workaround:
                 if args.recover_existing_job_id:
                     observed_job_image = deployment_image
                     post_submission_registry_verification = _verify_short_tag(
                         deployment_image, args.image
                     )
                 else:
-                    observed_job_image, post_submission_registry_verification = (
-                        _verify_created_short_tag_job(job_id, deployment_image, args.image)
-                    )
-            except RuntimeError as exc:
-                cancelled = subprocess.run(
-                    ["nebius", "ai", "job", "cancel", job_id, "--format", "json"],
-                    check=False,
-                    text=True,
-                    capture_output=True,
-                )
-                _write_evidence(
-                    args.evidence_output,
-                    {
-                        "schema_version": "lightgbm_wave1_g4_submission_v1",
-                        "submitted_at": submitted_at.isoformat(),
-                        "request_sha256": request.canonical_hash(),
-                        "command_sha256": command_sha256,
-                        "reviewed_dry_run_sha256": reviewed_sha256,
-                        "image": args.image,
-                        "deployment_image": deployment_image,
-                        "short_tag_workaround": True,
-                        "pre_submission_registry_verification": registry_verification,
-                        "job_id": job_id,
-                        "status": "POST_SUBMISSION_VERIFICATION_FAILED",
-                        "cancellation_requested": cancelled.returncode == 0,
-                        "failure_sha256": hashlib.sha256(str(exc).encode()).hexdigest(),
-                    },
-                )
-                raise SystemExit(
-                    "post-submission image verification failed; cancellation requested"
-                ) from exc
+                    raise RuntimeError("new short-tag submission is forbidden")
+            elif args.recover_existing_job_id:
+                # The complete existing-Job readback was verified above.
+                observed_job_image = deployment_image
+            else:
+                observed_job_image = _verify_created_digest_job(job_id, args.image)
+        except RuntimeError as exc:
+            cancelled = subprocess.run(
+                ["nebius", "ai", "job", "cancel", job_id, "--format", "json"],
+                check=False,
+                text=True,
+                capture_output=True,
+            )
+            _write_evidence(
+                args.evidence_output,
+                {
+                    "schema_version": "lightgbm_wave1_g4_submission_v1",
+                    "submitted_at": submitted_at.isoformat(),
+                    "request_sha256": request.canonical_hash(),
+                    "command_sha256": command_sha256,
+                    "reviewed_dry_run_sha256": reviewed_sha256,
+                    "image": args.image,
+                    "deployment_image": deployment_image,
+                    "short_tag_workaround": short_tag_workaround,
+                    "pre_submission_registry_verification": registry_verification,
+                    "job_id": job_id,
+                    "status": "POST_SUBMISSION_VERIFICATION_FAILED",
+                    "cancellation_requested": cancelled.returncode == 0,
+                    "failure_sha256": hashlib.sha256(str(exc).encode()).hexdigest(),
+                },
+            )
+            raise SystemExit(
+                "post-submission image verification failed; cancellation requested"
+            ) from exc
         payload = {
             "schema_version": "lightgbm_wave1_g4_submission_v1",
             "submitted_at": submitted_at.isoformat(),
@@ -661,6 +672,28 @@ def _load_reviewed_dry_run(path: Path | None) -> dict[str, object]:
     if payload.get("manual_review_required") is not True:
         raise SystemExit("reviewed Wave 1 dry-run evidence is not reviewable")
     return payload
+
+
+def _verify_created_digest_job(job_id: str, image: str) -> str:
+    """Read the actual created Job; never infer its image from labels or aliases."""
+    if re.fullmatch(r".+@sha256:[0-9a-f]{64}", image) is None:
+        raise RuntimeError("created Job requires an immutable image digest")
+    try:
+        result = subprocess.run(["nebius", "ai", "job", "get", job_id, "--format", "json"],
+                                check=False, text=True, capture_output=True, timeout=60)
+    except subprocess.SubprocessError as exc:
+        raise RuntimeError("created Job readback failed") from exc
+    if result.returncode:
+        raise RuntimeError("created Job could not be read back")
+    try:
+        observed = json.loads(result.stdout)
+    except ValueError as exc:
+        raise RuntimeError("created Job readback is not JSON") from exc
+    if (not isinstance(observed, dict) or not isinstance(observed.get("metadata"), dict)
+            or not isinstance(observed.get("spec"), dict)
+            or observed["metadata"].get("id") != job_id or observed["spec"].get("image") != image):
+        raise RuntimeError("created Job identity/image differs from the approved digest")
+    return image
 
 
 def _verify_short_tag(deployment_image: str, governed_image: str) -> dict[str, object]:

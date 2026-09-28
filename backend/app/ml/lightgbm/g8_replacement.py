@@ -13,7 +13,7 @@ from app.ml.lightgbm.artifacts import sha256_file
 from app.ml.lightgbm.cloud_contracts import LightGbmCloudJobRequest
 from app.ml.lightgbm.cloud_runner import _verify_signature
 from app.ml.lightgbm.g8_mlflow_recovery import ReservationSpec
-from app.ml.lightgbm.g8_production_transport import ARCHIVES, BOOTSTRAP, DEPLOYMENT_IMAGE, MAX_FILE, PACKAGE, verify_archives
+from app.ml.lightgbm.g8_production_transport import ARCHIVES, BOOTSTRAP, MAX_FILE, PACKAGE, verify_archives
 
 SHA = r"^[0-9a-f]{64}$"
 IMAGE = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/lob-arena-jobs@sha256:dc32b12d7216bfeef8e5d95c50363f34bb76f34159ef9343ff3d6996983a89b2"
@@ -268,15 +268,27 @@ def job_command(plan: ReplacementPlan, root: Path, trusted_key: str, *, recovery
     import re
     if re.fullmatch(SHA, trusted_key) is None:
         raise ValueError("trusted public-key hash required")
+    # Offline verification accepts historical bytes; new submissions must bind
+    # the current runner's actual-Job digest check, never the retired alias path.
+    runner_name = "run_lightgbm_g8_replacement.py"
+    loader = globals().get("__loader__")
+    if hasattr(loader, "sources"):
+        runner_sha256 = hashlib.sha256(loader.get_data(loader.get_filename(runner_name[:-3]))).hexdigest()
+    else:
+        runner = Path(__file__).resolve().parents[4] / "serverless/jobs" / runner_name
+        runner_sha256 = sha256_file(runner)
+    if plan.files[runner_name].sha256 != runner_sha256:
+        raise ValueError("new submission requires a freshly signed current runner package")
     request_path = root / "request.json"
     request = LightGbmCloudJobRequest.model_validate_json(request_path.read_bytes())
     if (sha256_file(request_path) != plan.files["request.json"].sha256
             or request.canonical_hash() != plan.request_sha256
+            or request.image != plan.image
             or request.resource.timeout_seconds not in {3600, 10800}):
         raise ValueError("rendered timeout requires the exact package-bound request")
     operation = "--recover" if recovery else "--execute"
     job_name = plan.run_id + "-recovery" if recovery else plan.run_id
-    command = ["nebius", "ai", "job", "create", "--name", job_name, "--image", DEPLOYMENT_IMAGE,
+    command = ["nebius", "ai", "job", "create", "--name", job_name, "--image", plan.image,
         "--parent-id", "project-e00g6zvxpr00waz8t3y51k", "--subnet-id", plan.subnet_id,
         "--platform", "cpu-d3", "--preset", "4vcpu-16gb", "--disk-size", "100Gi",
         "--timeout", f"{request.resource.timeout_seconds // 3600}h",

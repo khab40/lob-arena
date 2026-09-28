@@ -1,6 +1,7 @@
 """Synthetic package signatures and actual live recovery, no production access."""
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -246,8 +247,10 @@ def test_signed_job_context_is_purpose_bound_and_uses_actual_job_id(package, tmp
     context = Wave1ExecutionContext(project_id="project-e00g6zvxpr00waz8t3y51k", image=plan.image,
         platform="cpu-d3", preset="4vcpu-16gb", disk_size_gib=100, timeout_seconds=3600,
         nebius_job_id="aijob-synthetic-recovery")
+    readback = json.dumps({"metadata": {"id": context.nebius_job_id}, "spec": {"image": plan.image}})
     raw = {"purpose": "recover", "execution_package_sha256": plan.identity(), "filesystem_id": plan.filesystem_id,
-           "context": context.model_dump(mode="json"), "job_readback_sha256": "a" * 64}
+           "context": context.model_dump(mode="json"), "job_readback_json": readback,
+           "job_readback_sha256": hashlib.sha256(readback.encode()).hexdigest()}
     path.write_text(json.dumps(raw))
     subprocess.run(["openssl", "pkeyutl", "-sign", "-inkey", str(private), "-rawin", "-in", str(path),
                     "-out", str(path.with_suffix(".sig"))], check=True)

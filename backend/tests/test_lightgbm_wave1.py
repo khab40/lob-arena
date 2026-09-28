@@ -1282,7 +1282,8 @@ def test_wave1_submission_requires_and_binds_reviewed_dry_run(
         submit_script.subprocess,
         "run",
         lambda *_args, **_kwargs: subprocess.CompletedProcess(
-            _args[0], 0, stdout='{"id":"aijob-submit123"}', stderr=""
+            _args[0], 0, stdout=json.dumps({"metadata": {"id": "aijob-submit123"},
+                                           "spec": {"image": LOCAL_IMAGE}}), stderr=""
         ),
     )
     submission = tmp_path / "submission.json"
@@ -1312,10 +1313,12 @@ def test_wave1_submission_requires_and_binds_reviewed_dry_run(
     assert payload["watchdog_seconds"] == 900
 
 
-def test_short_tag_workaround_verifies_registry_before_and_after_creation(
+@pytest.mark.parametrize("readback_state", ["match", "drift", "unavailable"])
+def test_digest_submission_retains_actual_job_image(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
+    readback_state: str,
 ) -> None:
     input_uri = "s3://aimada-wave1-dev-e00g6zvxpr00/releases/release-tag/staging"
     request = LightGbmCloudJobRequest.model_validate(
@@ -1339,7 +1342,7 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
         encoding="utf-8",
     )
     governed_repository, digest_hex = LOCAL_IMAGE.rsplit("@sha256:", maxsplit=1)
-    deployment_image = f"{governed_repository.rsplit('/', maxsplit=1)[0]}/g:{digest_hex[:16]}"
+    deployment_image = LOCAL_IMAGE
     environment = {
         "NEBIUS_SUBNET_ID": "subnet-test",
         "NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID": "access-selector",
@@ -1373,8 +1376,13 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
             )
         if command[:4] == ["nebius", "ai", "job", "get"]:
             return subprocess.CompletedProcess(
-                command, 0, stdout=json.dumps({"spec": {"image": deployment_image}}), stderr=""
+                command, int(readback_state == "unavailable"),
+                stdout=json.dumps({"metadata": {"id": "aijob-tag123"},
+                                   "spec": {"image": deployment_image if readback_state == "match" else "mutable:tag"}}),
+                stderr=""
             )
+        if command[:4] == ["nebius", "ai", "job", "cancel"]:
+            return subprocess.CompletedProcess(command, 0, stdout="{}", stderr="")
         raise AssertionError(command)
 
     monkeypatch.setattr(submit_script.subprocess, "run", run)
@@ -1386,7 +1394,6 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
         LOCAL_IMAGE,
         "--deployment-image",
         deployment_image,
-        "--allow-short-tag-workaround",
     ]
     monkeypatch.setattr(
         sys,
@@ -1398,7 +1405,8 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
     dry_run_payload = json.loads(dry_run.read_text(encoding="utf-8"))
     assert dry_run_payload["image"] == LOCAL_IMAGE
     assert dry_run_payload["deployment_image"] == deployment_image
-    assert dry_run_payload["registry_verification"]["resolved_digest"] == f"sha256:{digest_hex}"
+    assert dry_run_payload["registry_verification"] is None
+    assert dry_run_payload["short_tag_workaround"] is False
     assert dry_run_payload["command"][dry_run_payload["command"].index("--image") + 1] == deployment_image
 
     submission = tmp_path / "submission.json"
@@ -1416,18 +1424,25 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
             str(submission),
         ],
     )
+    if readback_state != "match":
+        with pytest.raises(SystemExit, match="cancellation requested"):
+            submit_script.main()
+        failed = json.loads(submission.read_text())
+        assert failed["status"] == "POST_SUBMISSION_VERIFICATION_FAILED"
+        assert failed["cancellation_requested"] is True
+        assert failed["short_tag_workaround"] is False
+        assert sum(command[:4] == ["nebius", "ai", "job", "create"] for command in calls) == 1
+        assert any(command[:4] == ["nebius", "ai", "job", "cancel"] for command in calls)
+        return
     submit_script.main()
     payload = json.loads(submission.read_text(encoding="utf-8"))
     assert payload["status"] == "SUBMITTED"
     assert payload["image"] == LOCAL_IMAGE
     assert payload["deployment_image"] == deployment_image
     assert payload["observed_job_image"] == deployment_image
-    assert payload["pre_submission_registry_verification"]["resolved_digest"] == (
-        f"sha256:{digest_hex}"
-    )
-    assert payload["post_submission_registry_verification"]["resolved_digest"] == (
-        f"sha256:{digest_hex}"
-    )
+    assert payload["pre_submission_registry_verification"] is None
+    assert payload["post_submission_registry_verification"] is None
+    assert payload["short_tag_workaround"] is False
     created_path = submission.with_name("submission.created.json")
     created = json.loads(created_path.read_text(encoding="utf-8"))
     assert created["status"] == "CREATED_PENDING_VERIFICATION"
@@ -1438,7 +1453,7 @@ def test_short_tag_workaround_verifies_registry_before_and_after_creation(
         if command[:4] == ["nebius", "ai", "job", "create"]
     )
     assert submit_script._redacted_command(create_command) == dry_run_payload["command"]
-    assert sum(command[:4] == ["docker", "buildx", "imagetools", "inspect"] for command in calls) == 3
+    assert sum(command[:4] == ["docker", "buildx", "imagetools", "inspect"] for command in calls) == 0
 
 
 def test_recovered_job_readback_must_match_full_reviewed_context() -> None:
@@ -1537,7 +1552,7 @@ def test_g4_monitor_collect_and_exit_evidence_chain(
     request = LightGbmCloudJobRequest.model_validate(
         _request(result_uri=result_uri, mlflow_tracking_uri="http://10.4.0.54:5500")
     )
-    deployment_image = "ghcr.io/khab40/g:0000000000000000"
+    deployment_image = LOCAL_IMAGE
     request_path = input_root / "request.json"
     request_path.write_bytes(request.canonical_bytes())
     context = Wave1ExecutionContext(

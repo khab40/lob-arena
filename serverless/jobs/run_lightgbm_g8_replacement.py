@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
 import json
 import os
@@ -45,7 +46,7 @@ def observed_context(plan, package, trusted_key, *, recovery=False):
         sig_snapshot.write_bytes(signature_bytes)
         _verify_signature(snapshot, sig_snapshot, package / "authorization-public.pem", trusted_public_key_sha256=trusted_key)
     raw = json.loads(content)
-    if (set(raw) != {"execution_package_sha256", "filesystem_id", "context", "job_readback_sha256", "purpose"}
+    if (set(raw) != {"execution_package_sha256", "filesystem_id", "context", "job_readback_sha256", "job_readback_json", "purpose"}
             or raw["execution_package_sha256"] != plan.identity() or raw["filesystem_id"] != plan.filesystem_id
             or raw["purpose"] != purpose):
         raise ValueError("signed Job readback differs from replacement package/storage")
@@ -55,6 +56,16 @@ def observed_context(plan, package, trusted_key, *, recovery=False):
     context = Wave1ExecutionContext.model_validate(raw["context"])
     if not context.nebius_job_id or not context.nebius_job_id.startswith("aijob-"):
         raise ValueError("actual Nebius Job identity required before final access")
+    readback = raw["job_readback_json"]
+    if (not isinstance(readback, str)
+            or hashlib.sha256(readback.encode()).hexdigest() != raw["job_readback_sha256"]):
+        raise ValueError("signed Job readback bytes differ from their digest")
+    observed = json.loads(readback)
+    if (not isinstance(observed, dict) or not isinstance(observed.get("metadata"), dict)
+            or not isinstance(observed.get("spec"), dict)
+            or observed["metadata"].get("id") != context.nebius_job_id
+            or observed["spec"].get("image") != plan.image or context.image != plan.image):
+        raise ValueError("actual Job identity/image differs from the approved digest")
     return context
 
 

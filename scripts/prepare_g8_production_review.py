@@ -69,7 +69,7 @@ def prepare(*, r4, candidate, rehearsal, output, run_id, frozen_root=None):
         "source_commit": commit, "bindings": bindings, "result_uri": request["result_uri"],
         "frozen_input": request["input"], "request_draft_sha256": digest(canonical(request)),
         "native_package_path": transport.PACKAGE, "bootstrap_injection_count": 1,
-        "deployment_image_alias_requires_fresh_registry_check": transport.DEPLOYMENT_IMAGE,
+        "deployment_image": bindings["image"],
         "mounts": [bindings["filesystem_id"] + ":/g8-durable:rw", bindings["filesystem_id"] + ":/g8-package:ro"],
         "files": {name: {"sha256": digest(raw), "size_bytes": len(raw)} for name, raw in files.items()},
         "history_files": {name: {"sha256": digest(raw), "size_bytes": len(raw)} for name, raw in history.items()},

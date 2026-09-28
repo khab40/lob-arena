@@ -838,8 +838,10 @@ def collect_s3_result(
     deployment_image = submission.get("deployment_image") or governed_image
     if (
         not isinstance(governed_image, str)
-        or not governed_image
-        or observed_context.get("image") != deployment_image
+        or re.fullmatch(r".+@sha256:[0-9a-f]{64}", governed_image) is None
+        or deployment_image != governed_image
+        or submission.get("short_tag_workaround", False) is not False
+        or observed_context.get("image") != governed_image
     ):
         raise ValueError("G4 observed deployment image is not bound to the governed image")
     download_s3_release(result_uri, result, endpoint_url=endpoint_url)
