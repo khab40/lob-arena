@@ -17,8 +17,8 @@ permission mutation, final-test access, G8 and MLflow changes are out of scope.
 The next implementation steps are the fixed 29-key inventory, a verifier anchored
 to the frozen validation preparation SHA-256, and a bounded collector retaining
 object versions. The existing development reader returned `AccessDenied` on the
-preparation object. Temporary metadata access needs separate approval; no grant
-has been applied. Keys derive from the retained C4 freeze request and the C3
+preparation object. Temporary metadata access has [operator approval](../evidence/transformer-validation-metadata-approval-20260928.json);
+the grant has not been applied. Keys derive from the retained C4 freeze request and the C3
 checkpoint naming contract; the verifier rejects references that differ.
 
 A passing metadata chain does **not** establish independent observations or label

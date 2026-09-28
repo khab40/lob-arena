@@ -7,9 +7,11 @@ implements an exact 29-object validation metadata inventory, frozen-root chain
 checks and bounded readback with object-version receipts. The development identity
 returned `AccessDenied` for preparation metadata; live chain verification has not
 completed. The [temporary access proposal](../evidence/transformer-validation-metadata-access-proposal-20260928.json)
-is prepared, not applied. No sequence/event payload, Job or model run occurred.
+has [operator approval](../evidence/transformer-validation-metadata-approval-20260928.json);
+application and removal require the operator handoff because MCP safe mode
+excludes policy updates. No sequence/event payload, Job or model run occurred.
 
-Next: approve/apply the exact metadata access and remove it after collection;
+Next: apply the approved metadata access and remove it after collection;
 verify source observations, label horizons and replay/feature lineage; finish the
 signed-context CPU role audit package and obtain its exact execution approval.
 MLflow readiness remains a separate gate under #19. GPU readiness is false;
