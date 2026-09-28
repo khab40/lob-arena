@@ -68,10 +68,10 @@ and read-only files before final access and again after signed-context waiting.
 The writable checkpoint alias shares the underlying filesystem, so this is
 hash-bound integrity rather than a claim of immutable storage.
 
-Command rendering uses the existing short image alias to avoid the provider's
-image-label length failure; `plan.image` retains the full frozen digest. Before
-submission, independently verify alias-to-digest mapping, preserve a create
-intent, submit once and validate the returned Job. Dry-run does not prove KMS
+New command rendering uses the exact immutable `plan.image` digest. The old
+provider image-label limitation has been superseded by the completed
+[digest-pinned r2 Job](../../ml/transformer-development-results-r2.md).
+Preserve a create intent, submit once and validate the returned Job. Dry-run does not prove KMS
 persistence or runtime readiness. Rendering alone is not submission approval.
 The unsigned review tool deliberately emits no `replacement.json` or signature.
 
@@ -80,12 +80,20 @@ Nebius API readback and stage an operator-signed context at
 `/g8-durable/contexts/<run-id>.json` and `<run-id>.sig`. Its exact keys are
 `execution_package_sha256`, `filesystem_id`, `context` (a
 `Wave1ExecutionContext` with the actual `aijob-...` ID), and
-`job_readback_sha256`, and `purpose` (`execute`). Sign with the same trusted operator key. Review the actual
+`job_readback_sha256`, `job_readback_json`, and `purpose` (`execute`).
+`job_readback_json` is the exact UTF-8 text of the retained provider Job GET;
+`job_readback_sha256` hashes those original UTF-8 bytes, not a reserialized object.
+The signed readback's `metadata.id` must equal the context's actual Job ID, and
+`spec.image` and the context image must both equal `plan.image`. Aliases, missing
+readbacks, another Job or digest fail before final access. Sign with the same trusted operator key. Review the actual
 Job image, the one bootstrap injection, both volume aliases/modes, resources, credentials selectors,
 network and restart policy before releasing this context. The runner waits at
 most five minutes without accessing final data.
 An ambiguous Job-create response is **not permission to submit again**; recover
-the exact API Job identity. The signer, not the runner, attests to API readback.
+the exact API Job identity. The signer attests to the provider origin; the runner
+checks its exact bytes, identity and immutable image. Historical packages remain
+verifiable offline, but new command rendering requires a freshly prepared and
+signed package with the current runner. Old signatures/evidence remain unchanged.
 For an explicit recovery Job, stage `<run-id>-recovery.json`/`.sig`, with purpose
 `recover` and that recovery Job's actual identity. The CLI returns the current
 executing Job ID separately; it never replaces the original scoring identity in
