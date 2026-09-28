@@ -1,4 +1,35 @@
-# Roadmap status — 2026-09-27
+# Roadmap status — 2026-09-28
+
+## Maintenance and platform continuation — 2026-09-28
+
+G8 and G9 remain closed; PR #231 is merged. The current operator priority is
+platform maintenance under [#19](https://github.com/khab40/lob-arena/issues/19),
+[#20](https://github.com/khab40/lob-arena/issues/20) and
+[#21](https://github.com/khab40/lob-arena/issues/21).
+
+1. Dependency repairs are pushed to existing PRs #203/#227/#228. All 22 checks
+   passed on each repaired head; #203 also passed after its subsequent main merge.
+   Bugs #233/#234 track these repairs. #225/#226 are merged and their dependency
+   diffs have no blocking review findings. A merged pin does not deploy a service.
+2. [Metadata restoration](../ml/mlflow-metadata-recovery.md) passed on Nebius:
+   60 tables / 19,521 rows matched the backup snapshot. The private dump is
+   retained and independently rehashed locally; the VM is STOPPED. Deployed
+   MLflow is 3.13.0. This verifies database table recovery, not application writes.
+3. Next #19 chunk: verify the candidate's seven artifacts and exact feature
+   release/hash against the accepted package, register one research-only model
+   version, and record/read back its alias change. Preserve frozen bytes and
+   distinguish a registry record from a deployable MLflow model package.
+4. #20 needs the consolidated infrastructure plan, clean repeat-application
+   evidence, preservation-aware teardown and a complete service-account grant
+   audit. Existing resource-specific idempotency evidence is retained.
+5. #21 needs native telemetry ingestion, correlated dashboards, controlled alert
+   delivery and FOCUS/charge-stop evidence. Cost automation remains a platform
+   acceptance item; it does not reopen G8 or override the operator-managed
+   model-validation billing policy. No billing query was performed.
+
+These stories remain In Progress. Later-model tracking and the application-level
+restore check remain under #19; no new model evaluation or production promotion
+was performed. Historical dated entries below retain their original context.
 
 ## G9 signed and closed — 2026-09-27
 
@@ -7,8 +38,7 @@ verified S3/MLflow package, unknown-cost disposition under the existing policy,
 and delegated signing. The [signed closure](../operations/g8/g9-closure-20260927.md)
 binds the exact approved JSON and Markdown; public-key verification and mutation
 rejection checks passed. Story [#23](https://github.com/khab40/lob-arena/issues/23)
-is complete. [PR #231](https://github.com/khab40/lob-arena/pull/231) publishes the
-record and remains subject to review/merge.
+is complete. [PR #231](https://github.com/khab40/lob-arena/pull/231) is merged.
 
 Transformer [#24](https://github.com/khab40/lob-arena/issues/24) is eligible for
 engineering and remains Todo, not started. Next: plan its sequence contract and
