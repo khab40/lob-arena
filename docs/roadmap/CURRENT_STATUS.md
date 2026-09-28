@@ -1,5 +1,33 @@
 # Roadmap status — 2026-09-28
 
+## Transformer input verification: startup failure repaired — 2026-09-28
+
+[PR #236](https://github.com/khab40/lob-arena/pull/236) is reviewed and merged;
+dependency PRs #203/#227/#228 are also merged. Story
+[#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress.
+
+The operator approved the [bounded development-input plan](../ml/transformer-development-verification-plan.md):
+one CPU Job to verify 33,450 training and 9,210 validation rows, preserve
+normalization/configuration and compare batch sizes. CPU is for input preparation;
+Transformer model training follows as a separately planned GPU chunk.
+
+All 185 retained development files match publication checksums (30,034,660 bytes).
+This establishes local artifact integrity, not governed runtime success. Live
+preflight passed for all 185 object versions and all 23 CI checks passed before
+launch. The one approved Job failed at its signed-context startup gate: context
+arrived 30 seconds after the five-minute deadline. It did not reach governed input
+download; no normalization or batch measurements were produced. The worker is
+released. [Attempt evidence](../evidence/transformer-development-attempt-20260928-r1.json)
+and the existing output prefix are preserved.
+
+[Bug #238](https://github.com/khab40/lob-arena/issues/238) adds an armed context
+publisher and explicit failure-stage reporting. All 100 focused input/C4,
+publication, packaging and grader checks pass locally after the repair.
+Next: review the repair and authorize a fresh bounded replacement attempt after
+its complete execution package is prepared. No second Job has been submitted.
+The [proposal](../evidence/transformer-development-proposal-20260928.json) records
+one Job, 4 vCPU/16 GiB, a one-hour timeout, no GPU and no final-test access.
+
 ## Transformer input-contract implementation — 2026-09-28
 
 The operator approved the first [#24](https://github.com/khab40/lob-arena/issues/24)

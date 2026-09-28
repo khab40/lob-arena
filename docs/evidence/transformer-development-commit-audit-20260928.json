@@ -1,0 +1,71 @@
+{
+  "review_pr": 237,
+  "finding": "P1 commit-size warning",
+  "disposition": "false_positive_PR_aggregate_is_not_a_commit",
+  "cited_commit": "4b5107475e3c54bf8f492ad18b5aa97e255a02aa",
+  "github_commit_api_stats": {
+    "additions": 56,
+    "deletions": 16,
+    "total": 72
+  },
+  "method": "git show --format= --numstat for each parent-relative PR commit; GitHub API independently confirms cited commit",
+  "maximum_changed_lines": 185,
+  "commits": [
+    {
+      "commit": "87273caee5efb9b9708903b030213621841223da",
+      "changed_lines": 185
+    },
+    {
+      "commit": "f96161008d2f3166a8fa468ac7402dc239dfe2f5",
+      "changed_lines": 127
+    },
+    {
+      "commit": "c135ad4a3fd63b29979838cd8c9d0cafc084ea55",
+      "changed_lines": 158
+    },
+    {
+      "commit": "aa1092bb86d6c92981b9efe14b31941928c2e3f5",
+      "changed_lines": 26
+    },
+    {
+      "commit": "6da992fc327d323e3009ffcc6d40f92aca817f64",
+      "changed_lines": 145
+    },
+    {
+      "commit": "8b6259ccb249b7b6e595399f731aa52d19092893",
+      "changed_lines": 138
+    },
+    {
+      "commit": "ac9cf88f3803da248d44107d05ef31462cda44e0",
+      "changed_lines": 139
+    },
+    {
+      "commit": "bd5d9f84f4d323bf894e820df7a98a5cb08f9fbe",
+      "changed_lines": 119
+    },
+    {
+      "commit": "bc9aac2a640906e9ebbbbd50841c8ff4d758f6bc",
+      "changed_lines": 108
+    },
+    {
+      "commit": "47a7f3b3203f280c7cf8dcb640ee24fe18b58f97",
+      "changed_lines": 31
+    },
+    {
+      "commit": "a50c7b863d436b6862d101ba07d6939864d0d3fc",
+      "changed_lines": 114
+    },
+    {
+      "commit": "5b204221dc45a5517d82979bd8b6abb6dd9a211d",
+      "changed_lines": 84
+    },
+    {
+      "commit": "4b5107475e3c54bf8f492ad18b5aa97e255a02aa",
+      "changed_lines": 72
+    },
+    {
+      "commit": "66a1d0a3c107268c0d9afe2e639e1985ed7be888",
+      "changed_lines": 184
+    }
+  ]
+}

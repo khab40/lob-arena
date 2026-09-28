@@ -1,0 +1,87 @@
+{
+  "schema_version": "transformer_development_verification_proposal_v1",
+  "status": "proposed_not_executable",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "reviewed_input_contract_commit": "a4ae14619a3e93da3a6e6d679ee64601740878d7",
+  "purpose": "verify governed inputs and fit preprocessing; no model execution",
+  "run_id": "transformer-input-c4-development-20260928-r1",
+  "input": {
+    "source_uri": "s3://aimada-wave1-dev-e00g6zvxpr00/releases/nasdaq-public-sample-v1-c4-5c85182-20260905/staging",
+    "inventory_sha256": "d99876f0119c0a86e2395a7c61f4919b09506557f21b18dd8ef8e32b84dd0e23",
+    "objects": 185,
+    "bytes": 30034660,
+    "root_file_sha256": "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9",
+    "root_identity_sha256": "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803",
+    "tabular_sha256": "f5810bff50185481cef63095d401e5203f5eca6aed0d97c3b0b9c906ae80c44b",
+    "sequence_sha256": "8b2b6ecb1437144cbae2a672ef903af5cd77b8fe23f8f93c11a2b2c92c444759",
+    "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+    "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+    "fold_rows": {
+      "train": 33450,
+      "validation": 9210
+    }
+  },
+  "resources": {
+    "project_id": "project-e00g6zvxpr00waz8t3y51k",
+    "subnet_id": "vpcsubnet-e00ppzc4353dxv210j",
+    "platform": "cpu-d3",
+    "preset": "4vcpu-16gb",
+    "ephemeral_disk_gib": 100,
+    "gpu_count": 0,
+    "job_count": 1,
+    "provider_timeout_seconds": 3600,
+    "restart_policy": "never",
+    "filesystem_mounts": [],
+    "public_endpoint": false
+  },
+  "verification": {
+    "batch_sizes": [
+      16,
+      64,
+      256
+    ],
+    "fresh_child_processes": 3,
+    "per_child_timeout_seconds": 600,
+    "expected_total_rows": 42660,
+    "exact_output_digest_parity": true,
+    "exact_normalizer_byte_parity": true
+  },
+  "transfer": {
+    "allowlist_only": true,
+    "max_object_bytes": 2097152,
+    "max_input_payload_bytes": 67108864,
+    "max_attempts_per_key": 3,
+    "max_get_attempts": 555,
+    "max_response_bytes": 201326592,
+    "download_deadline_seconds": 300,
+    "max_output_files": 12,
+    "max_output_bytes": 8388608,
+    "publication_deadline_seconds": 300,
+    "conditional_no_overwrite": true,
+    "terminal_marker_last": true
+  },
+  "output_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-research-20260816/development/transformer-input-c4-development-20260928-r1",
+  "cost_disposition": "operator_managed_alerts; no billing query or new monetary ceiling",
+  "execution_bindings": {
+    "runner_source_commit": null,
+    "image_digest": null,
+    "request_sha256": null,
+    "credential_versions": null,
+    "current_input_access": "unverified_storage_api_dns_timeout",
+    "current_output_access": "unverified_storage_api_dns_timeout",
+    "output_prefix_absence": "not_checked"
+  },
+  "not_in_scope": [
+    "training",
+    "scoring",
+    "GPU Jobs",
+    "final-test reads",
+    "G8 rerun",
+    "MLflow VM startup",
+    "model registration",
+    "new permission grants",
+    "merge or cleanup"
+  ],
+  "jobs_submitted": 0,
+  "cloud_mutations": 0
+}

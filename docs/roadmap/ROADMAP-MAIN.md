@@ -176,9 +176,12 @@ The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
 at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
 and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
 
-1. Review #24's approved [input-contract implementation](../ml/transformer-input-contract.md),
-   then prepare bounded Nebius development-input verification. #24 is In Progress;
-   model architecture/training and later qualification remain open.
+1. #24's [input-contract implementation](../ml/transformer-input-contract.md) is
+   merged in #236. The [CPU development-input verification plan](../ml/transformer-development-verification-plan.md)
+   is implemented. Its approved Job failed before input download due to late
+   signed context; #238 repairs the handoff. Review the repair and prepare/approve
+   a fresh replacement attempt, then independently verify its package. #24 remains
+   In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
    LightGBM result; future quality work needs untouched held-out evaluation data.

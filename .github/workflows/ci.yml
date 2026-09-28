@@ -116,7 +116,11 @@ jobs:
 
       - name: Verify Transformer input contracts (inert arrays only)
         working-directory: backend
-        run: uv run --extra ml pytest tests/test_transformer_inputs.py tests/test_transformer_normalization.py
+        run: >-
+          uv run --extra ml pytest tests/test_transformer_inputs.py tests/test_transformer_normalization.py
+          tests/test_transformer_verification_transport.py tests/test_transformer_verification_runner.py
+          tests/test_transformer_verification_readback.py
+          tests/test_transformer_verification_publisher.py
 
       - name: Run governed LightGBM tests
         working-directory: backend
@@ -340,6 +344,9 @@ jobs:
           - name: jobs
             context: .
             file: serverless/jobs/Dockerfile
+          - name: transformer-inputs
+            context: .
+            file: serverless/transformer_inputs/Dockerfile
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -355,6 +362,7 @@ jobs:
           push: false
           load: true
           tags: lob-arena-ci/${{ matrix.name }}:${{ github.sha }}
+          build-args: SOURCE_COMMIT=${{ github.sha }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 

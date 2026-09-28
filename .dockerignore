@@ -66,6 +66,16 @@ agent-runner/**
 serverless/**
 !serverless/jobs/
 !serverless/jobs/**
+!serverless/transformer_inputs/
+!serverless/transformer_inputs/Dockerfile
+!serverless/transformer_inputs/requirements.txt
+
+# Only the approved public development inventory enters the verifier image.
+!docs/
+docs/**
+!docs/evidence/
+docs/evidence/**
+!docs/evidence/transformer-development-input-inventory-20260928.jsonl
 
 # Dedicated public-market-data Job image: only the causal feature entrypoint
 # and immutable data/feature/benchmark configs are admitted to the context.
@@ -81,3 +91,5 @@ configs/**
 !configs/data/**
 !configs/benchmark/
 !configs/benchmark/**
+
+**/__pycache__/**
