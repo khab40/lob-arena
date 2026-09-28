@@ -6,8 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from scripts import submit_nebius_job as submit
-from scripts import lightgbm_wave1 as wave1
+pytest.importorskip("lightgbm")
+pytest.importorskip("mlflow")
+
+from scripts import submit_nebius_job as submit  # noqa: E402
+from scripts import lightgbm_wave1 as wave1  # noqa: E402
 
 
 IMAGE = "registry.example/jobs@sha256:" + "a" * 64

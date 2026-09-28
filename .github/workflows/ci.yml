@@ -122,6 +122,12 @@ jobs:
           tests/test_transformer_verification_readback.py
           tests/test_transformer_verification_publisher.py
 
+      - name: Verify governed image submission contracts (inert metadata only)
+        working-directory: backend
+        run: >-
+          uv run --extra ml pytest tests/test_digest_job_submission.py tests/test_g8_digest_context.py
+          tests/test_g8_final_window.py tests/test_g8_production_transport.py
+
       - name: Run governed LightGBM tests
         working-directory: backend
         run: |

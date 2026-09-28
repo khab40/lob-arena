@@ -6,8 +6,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.ml.lightgbm.cloud_contracts import Wave1ExecutionContext
-from serverless.jobs import run_lightgbm_g8_replacement as runner
+pytest.importorskip("lightgbm")
+pytest.importorskip("mlflow")
+
+from app.ml.lightgbm.cloud_contracts import Wave1ExecutionContext  # noqa: E402
+from serverless.jobs import run_lightgbm_g8_replacement as runner  # noqa: E402
 
 
 IMAGE = "registry.example/jobs@sha256:" + "a" * 64
