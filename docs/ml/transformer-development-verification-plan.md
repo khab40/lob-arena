@@ -6,7 +6,16 @@ Plan for [Story #24](https://github.com/khab40/lob-arena/issues/24), under
 [PR #236](https://github.com/khab40/lob-arena/pull/236) is merged at
 `a4ae14619a3e93da3a6e6d679ee64601740878d7`; its input-consumer implementation is
 unchanged from the reviewed code. Dependency PRs #203/#227/#228 are also merged.
-Status: **proposal for approval; runner/transport not implemented; no Job submitted**.
+Status: **operator approved implementation and one bounded CPU Job; implemented;
+live metadata preflight and provider dry-run passed; CI gate pending; no Job submitted**.
+
+The operator's approval is retained in root
+`outputs/transformer-development-verification-20260928/approval.md`.
+The implemented runner verifies signed Job context, exact object versions/hashes,
+three fresh-process batch measurements and conditional publication. Independent
+readback pins SUCCESS to the provider Job log before checking artifact lineage.
+The [execution preflight](../evidence/transformer-development-preflight-20260928.json)
+binds the source commit, published image digest and exact request hash.
 
 ## Need and scope
 
@@ -41,7 +50,7 @@ The receipt binds feature-release ID/hash, root file and canonical root identiti
 both projection hashes and the existing MLflow dataset-lineage receipt.
 Manifest row counts are expectations; the Job must verify them from consumption.
 
-## Proposed execution envelope
+## Approved execution envelope
 
 The [machine-readable proposal](../evidence/transformer-development-proposal-20260928.json)
 records the same limits and explicitly unresolved execution bindings.
@@ -97,15 +106,15 @@ this chunk does not claim a new MLflow run or model registration.
 
 ## Readiness and next decision
 
-Nebius MCP confirmed the old final Job is COMPLETED and its 32 GiB filesystem
-is READY; neither is reused. Live development/results bucket metadata checks
-failed with storage-API DNS timeouts. Historical policies permit development
-release reads and this research output namespace, but **current IAM and object
-access remain unverified**. No permission change was attempted.
+The initial planning DNS failures are resolved. Nebius MCP confirmed current
+development/results policies and the existing ACTIVE development credential's
+pinned secret versions. All 185 version-specific HEAD requests matched expected
+sizes/versions, with no row payload read locally; the output prefix is empty.
+The exact provider create request passed `--dry-run`. No permission changed.
 
-Execution is not ready until the runner exists, its reviewed source/image/request
+Execution waits for CI on the published implementation. Source/image/request
 are bound, current development permissions and credential versions are verified,
-and the result prefix is absent. Any newly required permission must be presented
+and result absence will be checked again by the Job. Any newly required permission must be presented
 as an exact change; do not broaden access silently. Relevant CLI help was checked
 through Nebius MCP; the [provider Job reference](https://docs.nebius.com/cli/reference/msp/serverless/v1alpha1/job/index)
 is supplemental and does not override the installed `nebius ai job` interface.
