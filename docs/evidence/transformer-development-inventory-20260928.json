@@ -1,0 +1,40 @@
+{
+  "schema_version": "transformer_development_inventory_v1",
+  "observed_date": "2026-09-28",
+  "source_commit": "a4ae14619a3e93da3a6e6d679ee64601740878d7",
+  "publication_receipt_sha256": "591cd71b292b0fa608529e159fd5e043b2666ed4f4626377bbfbfc3756b237f7",
+  "dataset_lineage_receipt_sha256": "c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b",
+  "source_uri": "s3://aimada-wave1-dev-e00g6zvxpr00/releases/nasdaq-public-sample-v1-c4-5c85182-20260905/staging",
+  "inventory_sha256": "d99876f0119c0a86e2395a7c61f4919b09506557f21b18dd8ef8e32b84dd0e23",
+  "objects": 185,
+  "bytes": 30034660,
+  "manifest_pairs": 90,
+  "fold_rows": {
+    "train": 33450,
+    "validation": 9210
+  },
+  "total_rows": 42660,
+  "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+  "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+  "root_file_sha256": "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9",
+  "root_identity_sha256": "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803",
+  "tabular_sha256": "f5810bff50185481cef63095d401e5203f5eca6aed0d97c3b0b9c906ae80c44b",
+  "sequence_sha256": "8b2b6ecb1437144cbae2a672ef903af5cd77b8fe23f8f93c11a2b2c92c444759",
+  "checks": {
+    "local_sizes_and_sha256": "185 matched publication receipt",
+    "manifest_artifact_bindings": "180 matched exact inventory entries",
+    "scope": "development only; no final/test object paths",
+    "row_payloads_parsed": false,
+    "cloud_object_access": false
+  },
+  "live_nebius": {
+    "filesystem_state": "READY",
+    "filesystem_gib": 32,
+    "filesystem_used_by_proposal": false,
+    "prior_final_job_state": "COMPLETED",
+    "bucket_readback": "UNVERIFIED: both MCP storage API requests failed with DNS i/o timeout",
+    "access_changes_applied": false
+  },
+  "model_runs": 0,
+  "jobs_submitted": 0
+}
