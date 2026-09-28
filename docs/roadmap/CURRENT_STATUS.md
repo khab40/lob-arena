@@ -18,8 +18,9 @@ Implementation approval is pending; no GPU Job or Transformer training has run.
    CPU Jobs (two Job-hours), with finite timeouts and no automatic replacements.
 8. Freeze only after independent verification; record a negative outcome if gates fail.
 
-Live #19 is CLOSED while its body still lists application recovery/registration
-gaps. Resolve that evidence discrepancy before execution; namespace permissions
+[#19](https://github.com/khab40/lob-arena/issues/19) is reopened/In Progress under
+[Bug #244](https://github.com/khab40/lob-arena/issues/244). Complete its remaining
+application recovery/registration evidence before execution; namespace permissions
 and exact immutable Job packages need their applicable authorization. No live
 upgrade, final-test access, G8 rerun or production promotion is included. Monetary
 cost remains under the operator-managed policy. Older snapshots below are history.
