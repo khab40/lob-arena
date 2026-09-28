@@ -54,7 +54,9 @@ preflight observations, not runtime acceptance; refresh them before launch.
 ## Startup sequence after approval and green CI
 
 1. Verify the exact request and operational-helper hashes against the proposal.
-   The helper lives in root `outputs/transformer-development-r2-20260928/cloud/`.
+   The helper lives in root `outputs/transformer-development-r2-20260928/cloud/`;
+   its [exact source and restoration notes](../evidence/transformer-development-r2-operator-20260928.md)
+   are preserved in Git for fresh-checkout review (Bug #240).
    Existing pinned development credentials are resolved into process memory;
    neither their values nor the private context key may enter logs or Git.
 2. Start the helper's `arm` action as a persistent local orchestration process.
