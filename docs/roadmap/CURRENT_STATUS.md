@@ -1,5 +1,29 @@
 # Roadmap status — 2026-09-28
 
+## Bounded GPU Transformer plan proposed — 2026-09-28
+
+PR #239 is merged; its independently verified input package is the starting point
+for [#24's numbered GPU plan](../ml/transformer-gpu-campaign-plan.md) and
+[Gherkin acceptance scenarios](../ml/transformer-gpu-campaign.feature).
+Implementation approval is pending; no GPU Job or Transformer training has run.
+
+1. Reconcile platform evidence and verify exact input/normalizer lineage.
+2. Predeclare disjoint source-group roles for selection, calibration and thresholds;
+   stop before GPU work if the single validation date cannot support them.
+3. Build the small causal classifier and verify masks/checkpoint resume in smoke.
+4. Run four fixed trials and two seed confirmations; retain the seed-42 candidate.
+5. Calibrate saved logits, select operating points and compare identical baseline rows.
+6. Retain resolved configs, checkpoints and lineage with authenticated MLflow readback.
+7. Cap the proposal at eight sequential L40S GPU Jobs (14 GPU-hours) and two
+   CPU Jobs (two Job-hours), with finite timeouts and no automatic replacements.
+8. Freeze only after independent verification; record a negative outcome if gates fail.
+
+Live #19 is CLOSED while its body still lists application recovery/registration
+gaps. Resolve that evidence discrepancy before execution; namespace permissions
+and exact immutable Job packages need their applicable authorization. No live
+upgrade, final-test access, G8 rerun or production promotion is included. Monetary
+cost remains under the operator-managed policy. Older snapshots below are history.
+
 ## Transformer development inputs verified — 2026-09-28
 
 The approved r2 Job completed and its [result package independently verified](../ml/transformer-development-results-r2.md).
@@ -15,8 +39,8 @@ Worker and ephemeral disk release are verified. See the
 [#238](https://github.com/khab40/lob-arena/issues/238) now has runtime acceptance;
 [#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress.
 
-Next: review the completed input-verification evidence in PR #239, then propose
-the first bounded GPU Transformer training/checkpoint/calibration/MLflow plan.
+PR #239 is merged. Next: approve the
+[bounded GPU training/checkpoint/calibration/MLflow plan](../ml/transformer-gpu-campaign-plan.md).
 No Transformer model has been trained; G8/G9 remain closed. Earlier entries below
 are dated preparation/failure history, superseded by this verified result.
 

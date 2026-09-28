@@ -5,7 +5,7 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-09-27. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-09-28. See [current status and evidence](CURRENT_STATUS.md).
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -181,8 +181,10 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    is implemented. Its approved Job failed before input download due to late
    signed context; #238's repair is merged in #237 and the separately approved
    [r2 replacement passed independent verification](../ml/transformer-development-results-r2.md).
-   Review its evidence in #239, then propose the bounded GPU training/checkpoint,
-   calibration and MLflow plan. #24 remains
+   PR #239 is merged. The [bounded GPU training/checkpoint, calibration and MLflow
+   plan](../ml/transformer-gpu-campaign-plan.md) is proposed for implementation approval.
+   Validate disjoint development roles and platform readiness before GPU execution.
+   #24 remains
    In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
@@ -201,10 +203,14 @@ disposition. Its research-only limits remain binding; input engineering has star
 Dates: **2026-09-24 through 2026-10-09**  
 GitHub: [#24 Market-sequence Transformer](https://github.com/khab40/lob-arena/issues/24)
 
-Classifier/training implementation has not started. The approved input consumer
-now verifies frozen C4 sequences, causal windows, masks, normalization and exact
-baseline alignment with inert tests. Governed-data runtime verification remains
-the next separately bounded step.
+Classifier/training implementation has not started. Frozen C4 causal windows,
+masks, normalization and exact baseline alignment passed independent governed-data
+runtime verification in merged #239. Next is the proposed
+[eight-step GPU campaign](../ml/transformer-gpu-campaign-plan.md): one GPU at a
+time, four fixed trials, two seed confirmations, separate calibration roles and
+verified MLflow packaging. The ceiling is eight GPU Jobs / 14 GPU-hours plus two
+CPU Jobs / two Job-hours. Implementation and exact execution approvals remain
+distinct. Reforecast after role feasibility and GPU smoke; October 9 is a baseline.
 
 Deliverables:
 
@@ -299,10 +305,10 @@ Current LightGBM/Transformer gates reconciled on **2026-09-28**:
   promotion or a new G8 evaluation.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
-- [#19](https://github.com/khab40/lob-arena/issues/19),
-  [#20](https://github.com/khab40/lob-arena/issues/20), and
-  [#21](https://github.com/khab40/lob-arena/issues/21) remain In Progress with
-  completed foundations and outstanding exit evidence distinguished explicitly.
+- [#19](https://github.com/khab40/lob-arena/issues/19) is CLOSED in live GitHub
+  while its body retains recovery/registration gaps; reconcile evidence before
+  relying on it for the GPU campaign. Revalidate #20/#21 acceptance as well;
+  completed foundations alone do not prove all platform exit criteria.
 - Seven dated GitHub milestones now encode the targets in this document. The
   critical-path issues and supporting platform/Investigator issues are assigned
   to their expected exit milestone.
