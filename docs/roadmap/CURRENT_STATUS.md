@@ -1,5 +1,35 @@
 # Roadmap status — 2026-09-28
 
+## Transformer development inputs verified — 2026-09-28
+
+The approved r2 Job completed and its [result package independently verified](../ml/transformer-development-results-r2.md).
+All 33,450 training and 9,210 validation rows passed the input contract. Batch
+sizes 16/64/256 produced identical normalization, contract and logical-output
+hashes. The six versioned S3 artifacts retain configuration and exact lineage,
+including the feature-release ID/hash. No new MLflow run/model was created.
+
+The repaired publisher delivered context in two seconds. The Job took 496.63
+seconds; fresh-process checks took 151–152 seconds with peak RSS 122–177 MiB.
+Worker and ephemeral disk release are verified. See the
+[acceptance receipt](../evidence/transformer-development-acceptance-r2-20260928.json).
+[#238](https://github.com/khab40/lob-arena/issues/238) now has runtime acceptance;
+[#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress.
+
+Next: review the completed input-verification evidence in PR #239, then propose
+the first bounded GPU Transformer training/checkpoint/calibration/MLflow plan.
+No Transformer model has been trained; G8/G9 remain closed. Earlier entries below
+are dated preparation/failure history, superseded by this verified result.
+
+## Transformer replacement package ready for approval — 2026-09-28
+
+[PR #237](https://github.com/khab40/lob-arena/pull/237) is reviewed and merged.
+The [r2 replacement plan](../ml/transformer-development-replacement-r2.md) binds
+the repaired publisher, rebuilt image, fresh request/output prefix and the same
+bounded CPU workload for [#24](https://github.com/khab40/lob-arena/issues/24) /
+[#238](https://github.com/khab40/lob-arena/issues/238). All 100 focused tests and
+live metadata/provider dry-run checks pass. A new one-run authorization is required
+before submission; no r2 Job or model workload has run. Preserve r1 evidence.
+
 ## Transformer input verification: startup failure repaired — 2026-09-28
 
 [PR #236](https://github.com/khab40/lob-arena/pull/236) is reviewed and merged;

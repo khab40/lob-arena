@@ -1,5 +1,9 @@
 # Transformer development-input verification — 2026-09-28
 
+Latest outcome: the reviewed repair and separately approved r2 replacement
+[passed independent verification](transformer-development-results-r2.md).
+The original r1 planning and failed-attempt history below remain preserved.
+
 Plan for [Story #24](https://github.com/khab40/lob-arena/issues/24), under
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) / Epic #15 in
 [Project #3](https://github.com/users/khab40/projects/3).

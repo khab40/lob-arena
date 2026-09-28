@@ -1,0 +1,155 @@
+{
+  "schema_version": "transformer_development_acceptance_v1",
+  "date": "2026-09-28",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "bug": "https://github.com/khab40/lob-arena/issues/238",
+  "status": "verified_development_inputs_only",
+  "approved_proposal_sha256": "121d10e50e11bd6e2593659e12f13d1a9dff7a7ae11cc83a4c5a527c87748ab6",
+  "operator_reply": "Approve one r2 CPU Job",
+  "source_commit": "6c457d0040c99591fd01bbe15ead5cdb98c4692f",
+  "image_digest": "sha256:01dba2d703be82c12a207fbe14fddc11e89ea1a350687a9aa6e2160c5cf2f7dc",
+  "request_sha256": "c81547db13f015e6cde9631f8930d5f8ac67bf9d3e3d9032a83ddff09aa8136f",
+  "job_id": "aijob-e00avfmh58qjzav9tr",
+  "provider_state": "COMPLETED",
+  "created_at": "2026-09-28T12:31:46.455939Z",
+  "started_at": "2026-09-28T12:33:40.407020666Z",
+  "finished_at": "2026-09-28T12:41:57.034166465Z",
+  "container_duration_seconds": 496.627146,
+  "resources": {
+    "vcpu": 4,
+    "memory_gib": 16,
+    "ephemeral_disk_gib": 100,
+    "gpu": 0
+  },
+  "context": {
+    "context_signature": "verified",
+    "request_sha256": "c81547db13f015e6cde9631f8930d5f8ac67bf9d3e3d9032a83ddff09aa8136f",
+    "job_id": "aijob-e00avfmh58qjzav9tr",
+    "intent_at": "2026-09-28T12:33:41+00:00",
+    "context_at": "2026-09-28T12:33:43+00:00",
+    "delivery_seconds": 2.0,
+    "context_sha256": "36a47c259322eef0854506e25f165b9eba7e673b769b70b5decbc9a28a86efb5"
+  },
+  "transfer": {
+    "get_attempts": 185,
+    "response_bytes": 30034660
+  },
+  "verification": {
+    "contract_sha256": "c28cacdf981c6c4ec7fb32f93a6349aec386ca883f9282cda6bbc588e1ae1c73",
+    "fold_rows": {
+      "train": 33450,
+      "validation": 9210
+    },
+    "job_id": "aijob-e00avfmh58qjzav9tr",
+    "logical_output_sha256": "875544e7c4729bda7e7d1f95707b5024f12992ebd0930e958faa597141588f43",
+    "normalization_sha256": "339e4a2b5738d4219a0fe64768e7d5babb86934cd61f2224c76c6a1b295433bc"
+  },
+  "fold_identity_sha256": {
+    "train": "0df7723f4609826df918590d1f2ec17b0bbe869a013fc250a66bf8296cad5dad",
+    "validation": "313382678bb1a4b23fcfd1c2ca4e15057750e48538250500a39b8455cb6173cd"
+  },
+  "normalization_fit": {
+    "algorithm": "unique_train_rows_welford_population_v1",
+    "fitting_rows": 33450,
+    "fitting_row_sha256": "0df7723f4609826df918590d1f2ec17b0bbe869a013fc250a66bf8296cad5dad",
+    "training_binding_sha256": "312c523d43741fcabfacf6e50bef9915ba84835c4ab272b1c176879170809aa8"
+  },
+  "batch_parity": "identical_normalizer_contract_and_logical_outputs_at_16_64_256",
+  "measurements": [
+    {
+      "batch_size": 16,
+      "preflight_seconds": 53.780809339,
+      "fit_seconds": 42.678402154,
+      "batch_and_digest_seconds": 55.889769324000014,
+      "total_seconds": 152.348980817,
+      "batch_windows_per_second": 763.2881744903011,
+      "peak_rss_mib": 122.12109375
+    },
+    {
+      "batch_size": 64,
+      "preflight_seconds": 52.992742815999975,
+      "fit_seconds": 41.78532840600002,
+      "batch_and_digest_seconds": 56.101796087000025,
+      "total_seconds": 150.87986730900002,
+      "batch_windows_per_second": 760.4034625530505,
+      "peak_rss_mib": 131.8984375
+    },
+    {
+      "batch_size": 256,
+      "preflight_seconds": 53.49861717500005,
+      "fit_seconds": 42.16378065599997,
+      "batch_and_digest_seconds": 55.82009841599995,
+      "total_seconds": 151.48249624699997,
+      "batch_windows_per_second": 764.2408596644857,
+      "peak_rss_mib": 176.88671875
+    }
+  ],
+  "measurement_scope": "preprocessing_and_digest_only_not_model_training_or_inference",
+  "runtime_python": "3.11.16",
+  "runtime_platform": "Linux-6.11.0-1016-nvidia-x86_64-with-glibc2.41",
+  "results_uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-research-20260816/development/transformer-input-c4-development-20260928-r2/",
+  "artifacts": {
+    "configuration.json": {
+      "sha256": "c81547db13f015e6cde9631f8930d5f8ac67bf9d3e3d9032a83ddff09aa8136f",
+      "size_bytes": 472,
+      "version_id": "1"
+    },
+    "input-contract.json": {
+      "sha256": "c28cacdf981c6c4ec7fb32f93a6349aec386ca883f9282cda6bbc588e1ae1c73",
+      "size_bytes": 44243,
+      "version_id": "1"
+    },
+    "inventory-reference.json": {
+      "sha256": "09b317053c8fc9901fe4685df272006ecbc6bdc2cb4c750980e5471d901151b5",
+      "size_bytes": 91,
+      "version_id": "1"
+    },
+    "lineage.json": {
+      "sha256": "208707241921bea38d94af953ebaa8886e17607b6217918b3b1cff42feb7ae8d",
+      "size_bytes": 606,
+      "version_id": "1"
+    },
+    "measurements.json": {
+      "sha256": "6f9d9ecf8a6fe8af4af93bc0241db5db9334e64b4bb2ef03b889fc0651f2e877",
+      "size_bytes": 2425,
+      "version_id": "1"
+    },
+    "normalization.json": {
+      "sha256": "339e4a2b5738d4219a0fe64768e7d5babb86934cd61f2224c76c6a1b295433bc",
+      "size_bytes": 2834,
+      "version_id": "1"
+    }
+  },
+  "provider_log_success_sha256": "8fe6be3d561d247db03ca246c36af41a832252e432aece78e6cc67555d4b6a5b",
+  "checksums_sha256": "f6a67628f6559491db972749baddca65de0c6fdb646d8c37600790ac2302d079",
+  "independent_readback": "passed_in_separate_artifact_inspection_process",
+  "compute_release": {
+    "instance_id": "computeinstance-e00hykz7q7j0jva7c1",
+    "instance_readback": "ResourceNotFound",
+    "disk_id": "computedisk-e00q5t412gja7b9eqy",
+    "disk_readback": "ResourceNotFound"
+  },
+  "actual_cost": "unknown_under_approved_operator_managed_policy",
+  "jobs_submitted_for_r2": 1,
+  "automatic_reruns": 0,
+  "model_runs": 0,
+  "final_test_access": false,
+  "new_mlflow_run_or_registration": false,
+  "prior_r1_evidence": "preserved",
+  "retained_evidence": "outputs/transformer-development-r2-20260928/cloud/",
+  "input_lineage": {
+    "inventory_sha256": "d99876f0119c0a86e2395a7c61f4919b09506557f21b18dd8ef8e32b84dd0e23",
+    "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+    "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+    "root_identity_sha256": "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803",
+    "tabular_sha256": "f5810bff50185481cef63095d401e5203f5eca6aed0d97c3b0b9c906ae80c44b",
+    "sequence_sha256": "8b2b6ecb1437144cbae2a672ef903af5cd77b8fe23f8f93c11a2b2c92c444759",
+    "dataset_lineage_receipt_sha256": "c5818eb6c836cc7693d025422553c36ed0c2981fd0c39af03f1f483cada8af7b"
+  },
+  "limitations": [
+    "Development preprocessing only; no trained Transformer, calibration or quality result",
+    "Existing synthetic-positive and research-control label limitations remain",
+    "No new MLflow run or registration; package retains exact feature-release lineage for later logging",
+    "Batch throughput includes integrity/digest work and is not GPU training throughput"
+  ]
+}

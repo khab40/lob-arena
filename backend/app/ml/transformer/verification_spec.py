@@ -5,7 +5,7 @@ import hashlib
 import json
 from pathlib import Path, PurePosixPath
 
-RUN_ID = "transformer-input-c4-development-20260928-r1"
+RUN_ID = "transformer-input-c4-development-20260928-r2"
 INVENTORY_SHA = "d99876f0119c0a86e2395a7c61f4919b09506557f21b18dd8ef8e32b84dd0e23"
 INPUT_BUCKET = "aimada-wave1-dev-e00g6zvxpr00"
 INPUT_PREFIX = "releases/nasdaq-public-sample-v1-c4-5c85182-20260905/staging/"
