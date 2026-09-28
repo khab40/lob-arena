@@ -122,3 +122,144 @@ stability gate: S log-loss range ≤0.05 and raw-probability F1-at-0.5 range ≤
 across the three seeds. Report family recall and missing families. Failed gates
 yield a research finding and stop before candidate freeze; no added search.
 
+## 5. Calibrate saved predictions and freeze operating points
+
+After grid/seed selection is sealed, a fresh GPU Job loads the seed-42 checkpoint
+from versioned storage, verifies it and emits exactly aligned raw logits for C/O
+and retained S reference rows. Compare S outputs to the training Job at absolute
+tolerance 1e-6. No optimizer is loaded for inference; no weight changes occur.
+Benchmark batches 1/16/64 after 20 warmups with 100 timed batches each; synchronize
+CUDA and report model-only p50/p95 separately from preprocessing/end-to-end time.
+
+One CPU Job fits a **fixed temperature scaler** on C only: p = sigmoid(logit/T),
+T in [0.05, 20], minimize unweighted log loss, bounded scalar optimization,
+maximum 200 evaluations and tolerance 1e-6. Persist objective, solver version,
+convergence, boundary hits and T. No Platt/isotonic method search or refitting on O.
+Non-convergence/non-finite results fail; a boundary solution is reported explicitly.
+Compare raw versus calibrated O log loss, Brier and 10 fixed equal-width ECE bins.
+If both Brier and ECE worsen beyond 1e-6, stop freeze rather than choose a new method.
+
+On O, use the existing LightGBM operating-point rules/tie-breaks: maximum recall
+at precision ≥0.90, maximum F1, maximum precision at recall ≥0.90. Preserve
+unattainable floors as failure; never lower them. Report per-family, clean-window,
+precision/recall/F1/PR-AUC and delay only where label/support semantics permit;
+otherwise publish a reason. O threshold metrics are selection results.
+Compare to retained frozen LightGBM development predictions on exact same row
+identities, without retraining, threshold retuning or final-data reads. If that
+prediction package is absent, mark comparison blocked; no hidden rescoring Job.
+Prior LightGBM validation reuse makes this a development comparison, not a fair
+new holdout claim. The frozen baseline and G8/G9 disposition remain unchanged.
+
+## 6. Bind every configuration and artifact to MLflow
+
+Use proposed experiment `lob-arena/transformer-development` and registry namespace
+`lob-arena-transformer-attack-active` only after permission/readback preflight.
+One campaign parent; child runs keyed by immutable campaign/trial/attempt IDs,
+including failed trials, smoke, role audit, inference and calibration. Log each
+epoch's train/S losses and resource samples with explicit steps. Record exact
+Git SHA, image digest, Python/PyTorch/CUDA/cuDNN/driver/MLflow versions, GPU identity,
+seeds, parameter count, resolved configs and config hashes, actual Job/resource
+IDs, timeout, terminal state, duration, active GPU seconds and peak allocated/
+reserved GPU memory. Report monetary cost as unknown/operator-managed, not zero.
+
+Log metadata-only Dataset inputs with full corpus/split/projection/feature hashes,
+feature-release ID, S/C/O role hashes, ordered row digests and normalizer digest.
+Retain full SHA-256 alongside the existing shortened MLflow Dataset digest adapter.
+Artifact inventory: approval/request/context receipts; dependency lock; resolved
+data/model/training/selection/calibration/resource configs; role manifest;
+normalizer/contract/schema; all checkpoint versions; learning curves; raw logits
+and aligned prediction references; temperature/thresholds; metrics/reliability;
+resource/failure logs; model card; checksum inventory and verification receipts.
+Keep sensitive row artifacts in governed S3; MLflow gets permitted references and
+aggregate evidence, never raw licensed records, credentials or private keys.
+
+Use explicit logging, bounded retries and a durable event journal. Recover by
+reconciling the same run/step/artifact hashes; reject conflicts or duplicate
+ambiguous runs. Tracking loss must not trigger training/scoring again. A sealed
+S3 package without authenticated MLflow readback is pending, not complete.
+Independent verification checks every artifact's version/hash, config consistency,
+row coverage, checkpoint selection, calibration-role isolation, metrics and model
+signature. Register one version only after verification; retain registration and
+research-only alias before/after receipts. No `champion` or production alias.
+Freeze the package without refitting on train+validation. Serving adapter includes
+preprocessing, weights, temperature, thresholds and exact input/output schema.
+
+## 7. Enforce finite execution and evidence bounds
+
+Nebius MCP service/help and project platform catalog checked September 28:
+proposed GPU `gpu-l40s-a / 1gpu-8vcpu-32gb` (48 GB GPU memory); CPU
+`cpu-e2 / 4vcpu-16gb`. Catalog presence does not prove quota/capacity or Job
+admission: recheck and dry-run exact requests before execution. No larger-GPU
+fallback. One Job at a time, non-preemptible, restart `never`, 100 GiB ephemeral
+disk per Job, no persistent filesystem or public endpoint.
+
+| Stage (execution order) | Jobs | Provider timeout each | Maximum GPU-hours |
+| --- | ---: | ---: | ---: |
+| CPU role/provenance and readiness audit | 1 | 1 hour | 0 |
+| GPU smoke and resume/mask checks | 1 | 1 hour | 1 |
+| GPU fixed four-trial grid | 4 | 2 hours | 8 |
+| GPU two seed confirmations | 2 | 2 hours | 4 |
+| GPU selected-checkpoint inference/readback | 1 | 1 hour | 1 |
+| CPU calibration, threshold selection and package verification | 1 | 1 hour | 0 |
+| **Total ceiling** | **10 (8 GPU + 2 CPU)** | **16 Job-hours** | **14** |
+
+Internal workload deadlines reserve the final ten minutes for publication; stop
+training before that deadline. Incomplete epochs/trials are failures, not extra
+authorization. Bound prepared input cache to 8 GiB and retained outputs to 2 GiB
+per Job / 20 GiB total; reject overflow before upload. Verify inputs once per
+Job into immutable, digest-bound cache; never skip integrity checks or rescan
+every source shard per minibatch. Observe CPU/GPU utilization to identify stalls.
+
+Existing MLflow CPU VM: sequential tracking windows, target ≤16 active hours
+across this campaign, stop whenever idle; no new disk/VM or live upgrade implied.
+Record actual startup/idle/stop durations separately from Job ceilings. This is
+an operational estimate, not a reinstated fixed billing/expiry gate. Apply the
+[operator-managed policy](model-validation-execution-policy.md); no billing query
+or invented dollar cap. Failed Jobs count; no automatic create/restart retries.
+
+Before submission bind reviewed source, pinned image, exact config/input hashes,
+output prefixes and versioned secret selectors to the finite slot ledger.
+Generalize and test r2's CPU-specific execution binding for these exact GPU/CPU
+presets; do not reuse the old approval or publisher unchanged. Arm the automatic
+context publisher before create, require actual-Job signed context within five
+minutes, resolve ambiguous creates by readback, and publish SUCCESS last with
+no-overwrite writes. Independent readback anchors SUCCESS to provider logs.
+Verify terminal worker/disk release; retain artifacts until approved disposition.
+
+## 8. Deliver in reviewable chunks and make the decision explicit
+
+1. **Readiness/config PR:** role audit, frozen campaign schema, namespace readiness,
+   Gherkin coverage and exact execution packaging. Stop if roles/platform cannot
+   support the design; propose the concrete repair before model implementation.
+2. **GPU runtime PR:** causal classifier, trainer, checkpoint/resume, bounded
+   publisher, resource collection and MLflow journal. Static checks first;
+   request exact smoke execution approval only after code/image review.
+3. **Campaign/freeze PR:** fixed grid and seeds, saved-logit calibration, threshold
+   and registry readback, independently verified evidence and research decision.
+   Exact remaining campaign bindings require approval before submission.
+
+Each coherent PR: analyze → plan/human approval → code → review → tests → measure;
+commits ≤200 changed lines. Model tests, including synthetic tests, run on Nebius.
+Local/CI checks cover config, inert tensors, serialization and failure contracts
+without executing models. A failed gate may finish a research chunk honestly.
+No claim of full #24 completion until its separate serving/final-protocol and
+feature-producer decision criteria are satisfied. October 9 remains a baseline,
+not a promised finish date; reforecast after role feasibility and smoke evidence.
+
+Approval of this plan authorizes the described implementation scope only.
+Exact immutable Job packages, application/IAM changes, final evaluation, merge
+and deletion retain their applicable separate authorization boundaries.
+
+## API references checked for this proposal
+
+- [PyTorch attention masks](https://docs.pytorch.org/docs/2.14/generated/torch.nn.MultiheadAttention.html):
+  Boolean mask semantics require explicit conversion and boundary tests.
+- [PyTorch reproducibility](https://docs.pytorch.org/docs/2.14/notes/randomness.html):
+  seed and deterministic settings do not promise reproducibility across runtimes.
+- [MLflow tracking](https://mlflow.org/docs/latest/ml/tracking/tracking-api/) and
+  [registry workflow](https://mlflow.org/docs/latest/ml/model-registry/workflow/):
+  explicit run/metric/artifact logging and separately audited model versions/aliases.
+  These are API references, not evidence that the live server was upgraded.
+- [ARD-0036](../architecture/ARD-0036-market-sequence-transformer.md) and
+  [training/selection protocol](../use-cases/ml-training-selection.md) remain the
+  governing research scope; this proposal narrows the first matrix explicitly.
