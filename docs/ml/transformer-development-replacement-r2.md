@@ -4,7 +4,11 @@ For [Story #24](https://github.com/khab40/lob-arena/issues/24) and
 [Bug #238](https://github.com/khab40/lob-arena/issues/238), Feature #16 / Epic #15,
 in [Project #3](https://github.com/users/khab40/projects/3).
 
-**Prepared for one-run authorization; no replacement Job submitted.**
+**Approved, executed once and independently verified.** See the
+[r2 results](transformer-development-results-r2.md) and
+[acceptance receipt](../evidence/transformer-development-acceptance-r2-20260928.json).
+The proposal below remains the immutable pre-approval snapshot whose hash the
+operator approved; the acceptance receipt records authorization and outcome.
 The operator reviewed the repair in merged [PR #237](https://github.com/khab40/lob-arena/pull/237).
 This package uses that repair and a fresh run identity. The prior one-run approval
 was consumed by [r1](../evidence/transformer-development-attempt-20260928-r1.json).
