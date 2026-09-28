@@ -1,0 +1,70 @@
+{
+  "schema_version": "transformer_mlflow_readiness_proposal_v1",
+  "status": "proposed_not_authorized",
+  "ticket": "https://github.com/khab40/lob-arena/issues/19",
+  "consumer_ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "existing_vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+  "resources": {
+    "platform": "cpu-e2",
+    "preset": "2vcpu-8gb",
+    "new_vms": 0,
+    "jobs": 0,
+    "gpus": 0,
+    "intended_window_seconds": 3600,
+    "independent_stop_watchdog_required": true,
+    "cost_policy": "operator_managed_alerts",
+    "new_storage": false
+  },
+  "experiment": "lob-arena/transformer-development",
+  "registered_model": "lob-arena-transformer-attack-active",
+  "additive_grants": [
+    {
+      "principal": "governed-writer",
+      "resource_type": "experiment",
+      "resource_name": "lob-arena/transformer-development",
+      "permission": "EDIT"
+    },
+    {
+      "principal": "governed-writer",
+      "resource_type": "registered_model",
+      "resource_name": "lob-arena-transformer-attack-active",
+      "permission": "EDIT"
+    },
+    {
+      "principal": "prometheus",
+      "resource_type": "experiment",
+      "resource_name": "lob-arena/transformer-development",
+      "permission": "READ"
+    },
+    {
+      "principal": "prometheus",
+      "resource_type": "registered_model",
+      "resource_name": "lob-arena-transformer-attack-active",
+      "permission": "READ"
+    }
+  ],
+  "persistence": "append exactly these resources to bootstrap and existing configured allowlists; preserve every prior entry and grant",
+  "preconditions": [
+    "revalidate stopped VM identity, resource preset, SSH path and private application endpoint",
+    "verify deployed image/client/server versions without upgrade",
+    "verify both existing principals are non-admin and preserve their passwords",
+    "resolve the exact experiment ID by name after bounded create-if-absent",
+    "inspect current grants; abort on conflicting broader permissions instead of revoke/replace",
+    "use compatible 3.13+ RBAC calls; record before/after grants"
+  ],
+  "verification": [
+    "one retained metadata-only smoke run, at most 1 MiB inert artifact roundtrip",
+    "writer creates/reads run and artifact; exporter reads and is denied write",
+    "confirm no change to existing experiment/model grants or default permissions",
+    "stop VM when done; independently verify STOPPED and retain receipts"
+  ],
+  "out_of_scope": [
+    "new cloud IAM grants or public network rules",
+    "credential activation or rotation",
+    "server upgrade or live database restore",
+    "trained model versions, aliases or production promotion",
+    "GPU training, final-test access, G8 rerun",
+    "deletion of probes, resources or prior evidence"
+  ],
+  "failure_policy": "stop and preserve partial state; no automatic revoke, deletion or replacement"
+}

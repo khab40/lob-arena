@@ -182,8 +182,10 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    signed context; #238's repair is merged in #237 and the separately approved
    [r2 replacement passed independent verification](../ml/transformer-development-results-r2.md).
    PR #239 is merged. The [bounded GPU training/checkpoint, calibration and MLflow
-   plan](../ml/transformer-gpu-campaign-plan.md) is proposed for implementation approval.
-   Validate disjoint development roles and platform readiness before GPU execution.
+   plan](../ml/transformer-gpu-campaign-plan.md) was approved and merged in #241.
+   The first [readiness increment](../ml/transformer-campaign-readiness.md) implements
+   configuration and role auditing; source provenance, CPU runtime evidence and
+   platform readiness remain gates before GPU execution.
    #24 remains
    In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;

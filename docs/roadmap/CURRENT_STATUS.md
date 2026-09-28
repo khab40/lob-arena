@@ -1,5 +1,22 @@
 # Roadmap status — 2026-09-28
 
+## Transformer readiness implementation — 2026-09-28
+
+The operator approved merged #241's plan. The first
+[readiness increment](../ml/transformer-campaign-readiness.md) implements frozen
+campaign configuration, label-independent source-group roles and the CPU payload
+audit entrypoint. Metadata inspection assigns NVDA's 1,250 validation targets to
+selection, MSFT's 5,490 to calibration and AAPL's 2,470 to operating points; all
+ten variants of each source session remain together. Class counts and source
+separation are not yet verified by this metadata-only result.
+
+No Job/model has run. GPU readiness remains false pending source-provenance
+binding, the exact authorized CPU audit package and MLflow application readiness.
+The existing MLflow VM is STOPPED; #19 was reopened under #244. A narrow
+Transformer namespace/permission proposal is prepared, not applied. #24 remains
+In Progress, G8/G9 remain closed. Earlier approval-pending statements below are
+historical; execution and permission-change approvals are still separate.
+
 ## Bounded GPU Transformer plan proposed — 2026-09-28
 
 PR #239 is merged; its independently verified input package is the starting point
