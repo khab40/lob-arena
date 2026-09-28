@@ -172,22 +172,15 @@ The two MLflow selectors must contain the `governed-writer` identity created by
 the MLflow initializer. They must not contain the bootstrap administrator or
 the read-only `prometheus` identity.
 
-While Nebius issue #84 remains open, the Operator-approved workaround may be
-used by adding both of the following arguments to the dry-run and submission
-commands:
-
-```bash
-  --deployment-image cr.eu-north1.nebius.cloud/REGISTRY/g:FIRST_16_DIGEST_HEX \
-  --allow-short-tag-workaround
-```
-
-The complete deployment reference must be at most 64 characters and remain in
-the same registry namespace. The submitter resolves it to the governed digest
-during dry-run creation and immediately before submission. After creation it
-reads back the Job image, resolves the tag again, and requests cancellation on
-any mismatch. The full immutable digest remains in the staged request and
-runtime equality contract. This exception is temporary because tags remain
-mutable; remove it when Nebius accepts the documented digest image reference.
+New G4 Jobs use the exact approved digest in both commands above and below.
+The short-tag workaround for [#84](https://github.com/khab40/lob-arena/issues/84)
+is retired: a distinct deployment image or the workaround flag is rejected
+before dry-run generation and submission. After creation, the submitter reads
+back the exact Job ID and `spec.image`; missing or mismatched readback records a
+failed submission and requests cancellation. Historical short-tag receipts
+remain available for monitoring and existing-Job recovery, but cannot satisfy
+new digest-only collection. See [digest-pinned Jobs](../operations/digest-pinned-jobs.md)
+for the retained provider evidence and G8 migration requirements.
 
 Do not submit until the Operator has reviewed `g4-dry-run.json`. Confirm that
 review by passing its SHA-256; the submitter refuses a different request,
