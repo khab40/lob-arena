@@ -99,3 +99,41 @@ def test_feature_order_and_manifest_hash_are_bound(tmp_path):
     args["tabular_sha256"] = "0" * 64
     with pytest.raises(ValueError, match="external SHA-256"):
         DevelopmentInputs.open(**args)
+
+
+@pytest.mark.parametrize("defect", ["domain", "inventory", "length", "path", "ordering"])
+def test_manifest_mismatch_rejected_before_shard_access(tmp_path, monkeypatch, defect):
+    args = make_inputs(tmp_path)
+    path = args["sequence_path"]
+    value = json.loads(path.read_text())
+    if defect == "domain":
+        value["shards"][0]["base_session_id"] = "another-session"
+    elif defect == "inventory":
+        value["shards"][0]["sequence_identity_sha256"] = "c" * 64
+    elif defect == "length":
+        value["shards"][0]["sequence_length"] = 32
+    elif defect == "path":
+        value["shards"][1]["sequences"]["uri"] = value["shards"][0]["sequences"]["uri"]
+    else:
+        value["order_columns"] = ["sequence", "prediction_timestamp_ns"]
+    path.write_text(json.dumps(value))
+    args["sequence_sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+    monkeypatch.setattr("app.ml.transformer.data._resolve", lambda *a: pytest.fail("shard accessed"))
+    with pytest.raises(ValueError):
+        DevelopmentInputs.open(**args)
+
+
+def test_source_run_metadata_must_match_manifest(tmp_path):
+    def mutate(row, fold, index):
+        row["run_id"] = "another-run"
+    args = make_inputs(tmp_path, source_mutate=mutate)
+    with pytest.raises(ValueError, match="replay domain"):
+        DevelopmentInputs.open(**args)
+
+
+def test_changed_shard_bytes_rejected(tmp_path):
+    args = make_inputs(tmp_path)
+    source = tmp_path / "validation.parquet"
+    source.write_bytes(source.read_bytes() + b"corruption")
+    with pytest.raises(ValueError, match="artifact failed verification"):
+        DevelopmentInputs.open(**args)

@@ -109,3 +109,17 @@ def test_invalid_normalization_statistics_rejected(tmp_path, field, value):
     payload[field][0] = value
     with pytest.raises(ValueError):
         Normalization.model_validate(payload)
+
+
+def test_float32_overflow_is_rejected_instead_of_emitting_infinity(tmp_path):
+    data = DevelopmentInputs.open(**make_inputs(tmp_path, validation_shift=1e100))
+    normalization = fit_normalization(data)
+    with pytest.raises((FloatingPointError, ValueError)):
+        list(iter_batches(data, normalization, fold="validation"))
+
+
+@pytest.mark.parametrize("size", [0, -1, True, 1025])
+def test_invalid_batch_size_is_rejected(tmp_path, size):
+    data = DevelopmentInputs.open(**make_inputs(tmp_path))
+    with pytest.raises(ValueError, match="batch size"):
+        list(iter_batches(data, fit_normalization(data), batch_size=size))
