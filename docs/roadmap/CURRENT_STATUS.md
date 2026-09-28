@@ -1,4 +1,89 @@
-# Roadmap status — 2026-09-23
+# Roadmap status — 2026-09-28
+
+## Maintenance and platform continuation — 2026-09-28
+
+G8 and G9 remain closed; PR #231 is merged. The current operator priority is
+platform maintenance under [#19](https://github.com/khab40/lob-arena/issues/19),
+[#20](https://github.com/khab40/lob-arena/issues/20) and
+[#21](https://github.com/khab40/lob-arena/issues/21).
+
+1. Dependency repairs are pushed to existing PRs #203/#227/#228. All 22 checks
+   passed on each repaired head; #203 also passed after its subsequent main merge.
+   Bugs #233/#234 track these repairs. #225/#226 are merged and their dependency
+   diffs have no blocking review findings. A merged pin does not deploy a service.
+2. [Metadata restoration](../ml/mlflow-metadata-recovery.md) passed on Nebius:
+   60 tables / 19,521 rows matched the backup snapshot. The private dump is
+   retained and independently rehashed locally; the VM is STOPPED. Deployed
+   MLflow is 3.13.0. This verifies database table recovery, not application writes.
+3. Next #19 chunk: verify the candidate's seven artifacts and exact feature
+   release/hash against the accepted package, register one research-only model
+   version, and record/read back its alias change. Preserve frozen bytes and
+   distinguish a registry record from a deployable MLflow model package.
+4. #20 needs the consolidated infrastructure plan, clean repeat-application
+   evidence, preservation-aware teardown and a complete service-account grant
+   audit. Existing resource-specific idempotency evidence is retained.
+5. #21 needs native telemetry ingestion, correlated dashboards, controlled alert
+   delivery and FOCUS/charge-stop evidence. Cost automation remains a platform
+   acceptance item; it does not reopen G8 or override the operator-managed
+   model-validation billing policy. No billing query was performed.
+
+These stories remain In Progress. Later-model tracking and the application-level
+restore check remain under #19; no new model evaluation or production promotion
+was performed. Historical dated entries below retain their original context.
+
+## G9 signed and closed — 2026-09-27
+
+**LightGBM exits as `research_baseline_qualified`.** The operator accepted the
+verified S3/MLflow package, unknown-cost disposition under the existing policy,
+and delegated signing. The [signed closure](../operations/g8/g9-closure-20260927.md)
+binds the exact approved JSON and Markdown; public-key verification and mutation
+rejection checks passed. Story [#23](https://github.com/khab40/lob-arena/issues/23)
+is complete. [PR #231](https://github.com/khab40/lob-arena/pull/231) is merged.
+
+Transformer [#24](https://github.com/khab40/lob-arena/issues/24) is eligible for
+engineering and remains Todo, not started. Next: plan its sequence contract and
+bounded implementation chunks, then reforecast downstream dates. No production
+qualification, G8 rerun, new model Job or billing query follows this decision.
+The dated proposal and historical snapshots below retain their original wording;
+the signed decision supersedes their pending-G9 status.
+
+## G9 exit package prepared — 2026-09-27
+
+The [G9 exit record](../operations/g8/g9-exit-20260927.md) recommends
+`research_baseline_qualified`: Wave 2 engineering only, with no production claim.
+Its [exact proposal](../evidence/g9-exit-proposal-20260927.json) binds the verified
+G8 results, frozen package/configuration, lineage, quality limitations and resource
+measurements. All 176 retained objects and seven development artifacts were
+rechecked locally. No G8 evaluation or cloud workload was run.
+
+Cost disposition proposed: accept unknown billed cost under the existing
+operator-managed policy; no cost-efficiency claim. Operator acceptance of the
+package interpretation, cost disposition and exact signed exit is still required.
+[#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress and
+[#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until that decision.
+The entries below are historical snapshots; no review of merged #223 remains.
+
+## Post-merge tracking reconciliation — 2026-09-27
+
+**G8 is complete; G9 is the remaining LightGBM exit gate.**
+[PR #223](https://github.com/khab40/lob-arena/pull/223) merged on September 23 at
+`118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed and Bugs
+[#222](https://github.com/khab40/lob-arena/issues/222) and
+[#224](https://github.com/khab40/lob-arena/issues/224) closed automatically.
+Reviewing or merging #223 is no longer remaining work.
+
+Next: record operator cost disposition and obtain the signed G9 exit decision
+using the [verified results and handoff](../operations/g8/g8-final-results-20260923.md).
+Story [#23](https://github.com/khab40/lob-arena/issues/23) remains In Progress;
+Transformer [#24](https://github.com/khab40/lob-arena/issues/24) remains Todo until
+the accepted LightGBM exit. No new G8 evaluation or production promotion follows.
+
+The September 23 G9 target and gated September 24 Transformer start have passed.
+Later dates remain baseline targets pending an evidence-backed reforecast.
+This correction is tracked by [Bug #229](https://github.com/khab40/lob-arena/issues/229)
+under #23 in [Project #3](https://github.com/users/khab40/projects/3).
+Issue bodies and the project overview were updated and independently read back;
+see the [tracking receipt](../evidence/g8-tracking-reconciliation-20260927.json).
 
 ## G8 complete; G9 exit decision pending — 2026-09-23
 
@@ -22,7 +107,7 @@ STOPPED. See [results and G9 handoff](../operations/g8/g8-final-results-20260923
 [PR #223](https://github.com/khab40/lob-arena/pull/223), for
 [story #23](https://github.com/khab40/lob-arena/issues/23).
 
-**Next: review the closure PR, record operator cost disposition and obtain G9's
+**Next: record operator cost disposition and obtain G9's
 signed exit decision.** Story #23 remains open through G9; Wave 2 is still gated.
 No further G8 training, calibration, threshold selection or final scoring is needed.
 

@@ -1,0 +1,19 @@
+{
+  "schema_version": "g9_exit_signature_verification_v1",
+  "verified_at": "2026-09-27T17:32:39.915622+00:00",
+  "decision_path": "docs/evidence/g9-exit-decision-20260927.json",
+  "decision_sha256": "3ca9ad23e89b2fb5898741c7a64c878f8c53a693fdd844342dce9ad44b7d38ef",
+  "detached_signature_sha256": "b6da1ed3ed14800e5af7e7de0699096342a4ac42f092c48e5ed98698d89d04d6",
+  "public_key_sha256": "07f92a56daad8ff5b23163907698502eada54145fbb687728185db474583c3a3",
+  "public_key_only_signature_verification": true,
+  "approved_json_and_markdown_hashes_verified": true,
+  "operator_approval_hash_verified": true,
+  "source_evidence_bindings_verified": 7,
+  "tampered_decision_rejected": true,
+  "tampered_signature_rejected": true,
+  "changed_markdown_hash_rejected": true,
+  "verification_tool": "OpenSSL 3.6.2 pkeyutl Ed25519; Python standard-library SHA-256",
+  "review_scope": "local verification by executing agent; no independent human identity certification",
+  "model_execution": false,
+  "cloud_calls": 0
+}

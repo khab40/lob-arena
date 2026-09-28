@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-27",
+  "method": "local byte/hash and JSON metadata inspection",
+  "objects_rehashed": 176,
+  "bytes_rehashed": 24463251,
+  "development_mlflow_artifacts_matched_to_final_bundle": 7,
+  "bundle_references_verified": 13,
+  "ordered_features_verified": 31,
+  "model_loaded": false,
+  "rows_parsed": false,
+  "cloud_calls": 0,
+  "source_commit": "26e23e3750b8861994660409b4539244d6638d9e",
+  "assembler_sha256": "71a3f96383a857b28476a345c0517b3611d9ee83519325c119edcc347cd65375",
+  "evidence_bindings": {
+    "docs/evidence/g8-final-execution-20260923.json": "858736035994d3dd3cad9aa7a4577548d2090ab9b31302780b91be1021c6b53d",
+    "docs/evidence/g8-final-verification-20260923.json": "0ad39fa279827b6fe59c5740ee05e5c07e8a8482495b6196757e2837adb03f7b",
+    "docs/evidence/lightgbm-lineage-verification-20260922.json": "de35f415ee803a91373995a9f23d8eff2bf7aa312bc3321839c08cb9f7275882",
+    "docs/evidence/lightgbm-candidate-inventory-20260922.json": "eb318a5a62e0a84172e5c749582eb48b5453350289933185ab240a47393e1ccd",
+    "docs/evidence/g8-comparison-verification-20260923.json": "cc9d7deeaf014eec1901547a5f19a4c74da7d2d7c3e830a750c2fe10936e5525",
+    "docs/ml/model-validation-execution-policy.md": "dec16842108d704b0a257f5ee1c86b39150ffab7c9e0453434a3680a543da620",
+    "configs/experiments/lightgbm-wave1/g6-campaign-20260907.json": "49046262d4a05a26f6ae5deb39b6e3244715e5d8e952935a6feffa5337f2f163"
+  }
+}
