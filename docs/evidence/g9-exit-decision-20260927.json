@@ -1,0 +1,39 @@
+{
+  "schema_version": "lightgbm_g9_signed_exit_v1",
+  "recorded_at": "2026-09-27T17:32:10.945580+00:00",
+  "story": "https://github.com/khab40/lob-arena/issues/23",
+  "pr": "https://github.com/khab40/lob-arena/pull/231",
+  "reviewed_commit": "092bab3e3ff746832154bb437f5ee0d37b28282e",
+  "disposition": "research_baseline_qualified",
+  "g9_closed": true,
+  "wave2_engineering_eligible": true,
+  "wave2_started": false,
+  "production_qualified": false,
+  "package_acceptance": "Operator accepts immutable governed S3 bundle plus verified MLflow run artifacts for story 23. No registered-model version or production alias is claimed; registry lifecycle remains story 19.",
+  "cost_disposition": "Operator accepts unknown costs under operator_managed_alerts; no billing query, cost-efficiency claim or new spend ceiling.",
+  "candidate_sha256": "5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff",
+  "final_run_id": "nasdaq-g8-replacement-r5-20260917",
+  "approved_artifacts": {
+    "docs/evidence/g9-exit-proposal-20260927.json": "f487a1abdc0c7b4a038214d69b849a2f0f1e8e232d24d70bfe054eba0563071f",
+    "docs/operations/g8/g9-exit-20260927.md": "699502f9c040807586e184e72afb844260c9237d4817f4dc46bc291b0a8387c1"
+  },
+  "operator_approval": {
+    "path": "docs/evidence/g9-operator-approval-20260927.json",
+    "sha256": "c85c077bbbb904263b6263e2ebd74c77bae63b97b4bdc7a6cecc3e0a644b6f1f"
+  },
+  "signature": {
+    "algorithm": "Ed25519",
+    "public_key_path": "docs/evidence/g9-exit-public-key-20260927.pem",
+    "public_key_sha256": "07f92a56daad8ff5b23163907698502eada54145fbb687728185db474583c3a3",
+    "detached_signature_path": "docs/evidence/g9-exit-decision-20260927.sig",
+    "custody": "Codex agent; explicitly delegated by operator",
+    "trust_boundary": "Cryptographic integrity of exact decision and approved documents; operator consent derives from retained conversation approval, not independent identity certification."
+  },
+  "restrictions": [
+    "Research/non-commercial limitations retained",
+    "No new G8 evaluation or final-test access",
+    "No production/client qualification or promotion",
+    "No PR merge or deletion",
+    "Preserve frozen baseline and R4 evidence; future quality evaluation needs untouched held-out data"
+  ]
+}
