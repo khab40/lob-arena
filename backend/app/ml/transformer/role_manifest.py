@@ -107,3 +107,18 @@ def metadata_plan(root, tabular, sequences):
 
 def prepare(inputs: Path):
     return metadata_plan(*load_metadata(inputs))
+
+
+def main():
+    import sys
+
+    if len(sys.argv) != 3:
+        raise SystemExit("usage: role_manifest INPUT_DIRECTORY NEW_OUTPUT_FILE")
+    payload = canonical(prepare(Path(sys.argv[1])))
+    with Path(sys.argv[2]).open("xb") as stream:
+        stream.write(payload)
+    print(canonical({"role_metadata_sha256": digest(payload), "gpu_ready": False}).decode())
+
+
+if __name__ == "__main__":
+    main()
