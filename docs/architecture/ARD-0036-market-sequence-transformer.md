@@ -9,8 +9,8 @@ Date: 2026-08-16
 G9 is complete as `research_baseline_qualified`; the operator accepted the
 verified governed package and unknown-cost disposition and delegated signing.
 See the [signed decision and verification](../operations/g8/g9-closure-20260927.md).
-Wave 2 engineering is eligible; the first #24 input-contract chunk was approved
-on September 28 and is In Progress. Production/client qualification is not
+Wave 2 engineering is eligible; the first #24 input-contract chunk and governed
+input verification are complete. Production/client qualification is not
 established. Older pending-G9 statements below are historical.
 
 ## Validation execution policy — 2026-09-16
@@ -36,9 +36,12 @@ GPU campaign, checkpoint/resume loop and serving package have not started.
 
 The [input consumer contract](../ml/transformer-input-contract.md) now verifies
 the complete causal source window, masks, exact target alignment and train-only
-normalization. Approved Gherkin scenarios, 53 input/C4 checks and six local inert
-measurements document this first chunk. Real governed-data consumption on Nebius
-is the next bounded proposal; fixture checks do not establish model qualification.
+normalization. [Merged #239's r2 evidence](../ml/transformer-development-results-r2.md)
+verifies all 42,660 development targets on Nebius with independent artifact readback.
+The [bounded GPU campaign plan](../ml/transformer-gpu-campaign-plan.md) now proposes
+training, checkpoint selection, calibration and MLflow for implementation approval.
+Its first matrix fixes sequence length/encoding/loss and varies size/learning rate;
+broader experiments below remain deferred. Input verification is not model qualification.
 
 ## Context
 
