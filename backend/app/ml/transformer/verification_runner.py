@@ -31,9 +31,12 @@ def execute(s3, request, inventory_path, source_commit, work):
     items = load_inventory(inventory_path, INVENTORY_SHA)
     work.mkdir(parents=True, exist_ok=False)
     claim(s3, request)  # Refuse previous runs before accessing governed inputs.
+    stage = "context"
     try:
         context = wait_context(s3, request)
+        stage = "download"
         transfer = download(s3, items, work / "inputs")
+        stage = "measurement"
         records, first = run_cases(work / "inputs", work)
         artifacts = {"configuration.json": canonical(request),
             "normalization.json": (first / "normalization.json").read_bytes(),
@@ -46,7 +49,7 @@ def execute(s3, request, inventory_path, source_commit, work):
     except Exception as error:
         # Do not leak credential-bearing SDK errors or overwrite an earlier result.
         failure = {"request_sha256": digest(canonical(request)), "error_type": type(error).__name__,
-                   "stage": "context_download_or_measurement", "automatic_retry": False}
+                   "stage": stage, "automatic_retry": False}
         (work / "FAILED.json").write_bytes(canonical(failure))
         try:
             with deadline(30):

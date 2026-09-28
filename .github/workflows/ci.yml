@@ -120,6 +120,7 @@ jobs:
           uv run --extra ml pytest tests/test_transformer_inputs.py tests/test_transformer_normalization.py
           tests/test_transformer_verification_transport.py tests/test_transformer_verification_runner.py
           tests/test_transformer_verification_readback.py
+          tests/test_transformer_verification_publisher.py
 
       - name: Run governed LightGBM tests
         working-directory: backend
