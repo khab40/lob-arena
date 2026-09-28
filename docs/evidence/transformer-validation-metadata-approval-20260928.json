@@ -1,5 +1,5 @@
 {
-  "metadata_access_proposal_sha256": "0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414",
+  "proposal_sha256": "0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414",
   "operator_reply": "Approve metadata access and operator handoff",
   "cleanup_reply": "Approve these two retired refs",
   "cleanup_targets": [

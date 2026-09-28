@@ -1,0 +1,12 @@
+{
+  "classification": "false_positive_public_proposal_checksum",
+  "rule": "generic-api-key",
+  "commit": "d698207633b4a6231e95eb972693763e5b49ea3e",
+  "file": "docs/evidence/transformer-validation-metadata-approval-20260928.json",
+  "line": 2,
+  "proposal_file": "docs/evidence/transformer-validation-metadata-access-proposal-20260928.json",
+  "proposal_sha256": "0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414",
+  "independent_rehash_matched": true,
+  "disposition": "Rename the receipt field to proposal_sha256; ignore only the exact historical fingerprint, without a value-wide, path-wide or rule-wide exemption.",
+  "credential_exposure": false
+}
