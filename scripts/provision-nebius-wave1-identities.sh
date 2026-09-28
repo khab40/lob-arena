@@ -297,11 +297,21 @@ ensure_bucket() {
       die "existing bucket ${name} lacks the approved incomplete-upload cleanup rule"
     if [[ "${actual_policy}" != "${desired_policy}" ]]; then
       if [[ "${policy_mode}" == "preserve-superset" && "${name}" == "${DEV_BUCKET}" ]]; then
+        # Retained preparation grant: g8-comparison-metadata-access-proposal-20260921.json.
+        # This permits preservation only, not creating or extending that identity's access.
         jq -en \
           --argjson actual "${actual_policy}" \
           --argjson desired "${desired_policy}" \
-          'all($desired[]; . as $rule | $actual | any(.[]; . == $rule))' >/dev/null || \
+          '($actual | type == "array") and
+           all($desired[]; . as $rule | $actual | any(.[]; . == $rule))' >/dev/null || \
           die "existing bucket ${name} is missing a required policy rule"
+        jq -en \
+          --argjson actual "${actual_policy}" \
+          --argjson desired "${desired_policy}" \
+          '($desired + [{group_id:"group-e00whp6026c6q5sgnw",
+            roles:["storage.object-editor"], paths:["data/public-sample-v1/*"]}]) as $allowed |
+           all($actual[]; . as $rule | $allowed | any(.[]; . == $rule))' >/dev/null || \
+          die "existing development bucket has an unrecognized policy rule; refusing to reuse it"
         printf 'Preserving additional governed rules on %s\n' "${name}" >&2
       elif [[ "${policy_mode}" == "extend-wave1-results" && "${name}" == "${RESULTS_BUCKET}" ]]; then
         jq -e \
