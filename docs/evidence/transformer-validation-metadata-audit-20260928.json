@@ -1,0 +1,36 @@
+{
+  "schema_version": "transformer_validation_metadata_audit_v1",
+  "date": "2026-09-28",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "repair_ticket": "https://github.com/khab40/lob-arena/issues/250",
+  "source_commit": "d2a7e8f92dc7cc4c6897383e3e6449a430869832",
+  "proposal_sha256": "0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414",
+  "grant_version": "133",
+  "metadata_objects": 29,
+  "get_attempts": 29,
+  "response_bytes": 42064,
+  "object_versions": [
+    "1"
+  ],
+  "report_sha256": "1f796fd610254a1870ea3d59f64d3d5a00e18d4aedf4e8031e3375e47dbd3d59",
+  "object_receipts_sha256": "0d8f588de3248127276a3c10b3d928d9f2477d3977897d49422e7313cc4bf020",
+  "checkpoint_binding_sha256": "59e5b27040647e22d2d4bae5caa661577833bcb1e95da460778cbcf32fd8252f",
+  "preparation_sha256": "63921d1a359c93aab8e0c5ecb7b58938716ffa8f612357af12d4370ce82df64e",
+  "root_identity_sha256": "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803",
+  "validation_run_domains": 30,
+  "metadata_chain_verified": true,
+  "fresh_process_readback_matched": true,
+  "source_separation_verified": false,
+  "gpu_ready": false,
+  "source_scope_observation": "Three instrument datasets share the same source-file SHA and 10:00-10:30 session; metadata binding alone is not proof of independent observations or label horizons.",
+  "cleanup_status": "operator_removal_pending",
+  "cloud_jobs": 0,
+  "model_runs": 0,
+  "payload_reads": 0,
+  "remaining_proof": [
+    "source_observation_overlap",
+    "label_horizon_overlap",
+    "replay_manifest_and_feature_lineage",
+    "class_support_and_platform_readiness"
+  ]
+}

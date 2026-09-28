@@ -1,0 +1,28 @@
+{
+  "schema_version": "transformer_metadata_policy_repair_v1",
+  "bug": "https://github.com/khab40/lob-arena/issues/250",
+  "pr": 249,
+  "provider_limits": {
+    "rules": 10,
+    "paths_per_rule": 10
+  },
+  "provider_source": "https://github.com/nebius/api/blob/318bd5fefafa95918e9168cf17182853bcfd3609/nebius/storage/v1/bucket_policy.proto",
+  "original_proposal_sha256": "0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414",
+  "operator_approval_applies": "Identical 29 keys, principal, storage.viewer role and duration; only grouping changed.",
+  "original_rule_count": 2,
+  "rendered_rule_count": 5,
+  "temporary_path_counts": [
+    10,
+    10,
+    9
+  ],
+  "effective_permissions_unchanged": true,
+  "original_rules_unchanged": true,
+  "removal_preserves_original_rules": true,
+  "bucket_version_after_rejection": "132",
+  "rendered_policy_sha256": "c902779239fac0646d58ff8c678c8fd37890de237a497ad03c7381d717afacdf",
+  "operator_update_trace": "fb71a3e6599678f3e73cc9a03b5474e8",
+  "status": "corrected_policy_applied_audit_passed_removal_pending",
+  "focused_policy_tests_passed": 8,
+  "applied_resource_version": "133"
+}

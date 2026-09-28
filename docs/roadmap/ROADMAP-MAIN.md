@@ -185,8 +185,8 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    plan](../ml/transformer-gpu-campaign-plan.md) was approved and merged in #241.
    The first [readiness increment](../ml/transformer-campaign-readiness.md) merged
    in #248. The [provenance continuation](../ml/transformer-role-provenance.md)
-   adds bounded metadata verification; temporary metadata access is approved,
-   with operator application/removal pending after AccessDenied. Source/window proof, CPU runtime evidence and platform
+   verified the 29-object metadata chain and 30 replay domains after the corrected
+   temporary grant. Operator removal is pending. Source/window proof, CPU runtime evidence and platform
    readiness remain gates before GPU execution.
    #24 remains
    In Progress; GPU model training and later qualification remain open.

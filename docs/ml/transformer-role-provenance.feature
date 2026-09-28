@@ -30,3 +30,21 @@ Feature: Frozen Transformer validation provenance
     When the provenance report is produced
     Then source observation and label horizon separation remain unverified
     And GPU readiness remains false
+
+  Scenario: Respect provider policy limits without broadening the grant
+    Given 29 approved metadata keys and two existing bucket policy rules
+    When the operator handoff policy is prepared
+    Then three temporary rules contain 10, 10 and 9 paths
+    And the same principal receives the same role on exactly the approved keys
+    And both existing rules remain unchanged
+
+  Scenario: Reject insufficient policy capacity
+    Given existing rules leave insufficient capacity for the temporary grant
+    When the operator handoff policy is prepared
+    Then preparation fails before any cloud update
+
+  Scenario: Preserve concurrent policy changes during removal
+    Given the three exact temporary rules and unrelated current rules
+    When the removal policy is prepared
+    Then only the temporary rules are removed
+    And unrelated current rules remain unchanged
