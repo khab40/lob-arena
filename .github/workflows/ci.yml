@@ -114,6 +114,10 @@ jobs:
       - name: Verify ML dependency imports
         run: uv run --project backend --extra ml python -c "import lightgbm, mlflow, sklearn"
 
+      - name: Verify Transformer input contracts (inert arrays only)
+        working-directory: backend
+        run: uv run --extra ml pytest tests/test_transformer_inputs.py tests/test_transformer_normalization.py
+
       - name: Run governed LightGBM tests
         working-directory: backend
         run: |

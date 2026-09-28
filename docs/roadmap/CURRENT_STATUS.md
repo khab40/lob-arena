@@ -1,5 +1,27 @@
 # Roadmap status — 2026-09-28
 
+## Transformer input-contract implementation — 2026-09-28
+
+The operator approved the first [#24](https://github.com/khab40/lob-arena/issues/24)
+implementation chunk. The story is **In Progress** in Project #3. The
+[input contract](../ml/transformer-input-contract.md) now verifies exact C4
+source windows, causal ordering, masks, missingness, train-only normalization
+and baseline row alignment. Its [Gherkin scenarios](../ml/transformer-input-contract.feature)
+map to inert automated tests. Relevant input/C4 checks pass: 53 tests.
+
+Six local fixture measurements passed batch-invariance checks. The 8,192-window
+cases took 25–26 seconds total and 116–170 MiB peak RSS; these are input-array
+measurements, not training or production performance. Config/normalizer examples,
+code hashes and resource results are retained in the
+[receipt](../evidence/transformer-input-measurements-20260928.json).
+
+Next: review this implementation, then prepare the exact Nebius development-input
+verification proposal. Model architecture/training, calibration, MLflow checkpoint
+registration and a future authorized evaluation protocol remain separate chunks.
+G8/G9 stay closed. #19–#21 platform acceptance remains open; #227 is merged,
+while #203/#228 were still open at this implementation snapshot. Older dated
+Todo statements below are historical, superseded by this approved start.
+
 ## Maintenance and platform continuation — 2026-09-28
 
 G8 and G9 remain closed; PR #231 is merged. The current operator priority is
