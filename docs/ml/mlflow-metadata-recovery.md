@@ -57,3 +57,36 @@ Remaining #19 acceptance after this chunk: register the frozen candidate with
 verified lineage and an auditable research-only alias; prove application-level
 readback against restored metadata; carry the tracking contract through later
 Transformer/hybrid runs. No champion or production alias is authorized here.
+
+## Verified drill
+
+The [September 28 receipt](../evidence/mlflow-metadata-recovery-20260928.json)
+records **60 tables / 19,521 rows** restored and matched, including three
+application users. The 380,475-byte private dump was copied to root
+`outputs/platform-maintenance-20260927/recovery-20260928/metadata.dump` and its
+SHA-256 rechecked; directory/file permissions are 0700/0600. The VM-side copy is
+retained at `/opt/aimada/mlflow/recovery-20260928/metadata.dump`.
+
+The restore used the existing PostgreSQL image ID, not a downloaded replacement.
+Its temporary container was stopped and removed automatically; independent
+Docker readback found no restore container. Nebius MCP readback confirmed the VM
+STOPPED at resource version 104. No permissions or final credentials changed.
+The deployed MLflow runtime is **3.13.0**; repository image pin changes, including
+PR #203, are not evidence of a live upgrade.
+
+The database has one registered-model namespace, **zero versions and zero
+aliases**. Registration therefore remains outstanding. This drill verifies table
+data, not sequence advancement or successful application writes after recovery.
+
+To repeat during an authorized maintenance window, run on the VM:
+
+```sh
+python3 scripts/mlflow_metadata_recovery.py \
+  --source-container lob-arena-mlflow-nebius-mlflow-postgres-1 \
+  --output /absolute/new-private-backup-directory
+```
+
+Use a new output directory; existing backups are never overwritten. Only publish
+the sanitized verification JSON. Keep the private dump outside Git and retain it
+until an explicit backup disposition. Restoration into the live database is a
+separate operation; this command has no live-restore mode.
