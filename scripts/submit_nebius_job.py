@@ -115,6 +115,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if args.workload != "lightgbm-wave1" and (args.recover_existing_job_id or args.recover_job_readback):
+        raise SystemExit("existing-Job recovery requires --workload lightgbm-wave1")
     if args.workload == "lightgbm-wave1" and not args.recover_existing_job_id:
         if args.allow_short_tag_workaround or (args.deployment_image and args.deployment_image != args.image):
             raise SystemExit("new governed Jobs require direct digest deployment; short-tag workaround retired")
@@ -138,6 +140,8 @@ def main() -> None:
         raise SystemExit("inline Object Storage credentials are forbidden; use MysteryBox secret IDs")
     if args.workload == "lightgbm-wave1":
         request = _load_wave1_request(args.request_evidence, args.input_uri)
+        if request.mode == "final-evaluation" and not args.recover_existing_job_id:
+            raise SystemExit("new final evaluation requires the signed replacement-package runner")
         g8_preflight = (
             verify_g8_preflight(args.request_evidence.parent)
             if request.mode == "final-evaluation" and args.request_evidence is not None

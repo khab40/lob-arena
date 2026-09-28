@@ -55,10 +55,11 @@ def test_published_resource_schema_matches_context_windows():
     assert timeout["default"] == context["default"] == 3600
 
 
-def renderer():
+def renderer(loader=None):
     source = Path(__file__).resolve().parents[1] / "app/ml/lightgbm/g8_replacement.py"
     function = next(n for n in ast.parse(source.read_text()).body if isinstance(n, ast.FunctionDef) and n.name == "job_command")
-    namespace = dict(__file__=str(source), Path=Path, ReplacementPlan=object, LightGbmCloudJobRequest=LightGbmCloudJobRequest,
+    namespace = dict(__file__=str(source) if loader is None else "/g8-package/production/native-code-1.zip/app.ml.lightgbm.g8_replacement.py",
+        __loader__=loader, hashlib=hashlib, Path=Path, ReplacementPlan=object, LightGbmCloudJobRequest=LightGbmCloudJobRequest,
         sha256_file=lambda p: hashlib.sha256(p.read_bytes()).hexdigest(), SHA=r"^[0-9a-f]{64}$",
         DEPLOYMENT_IMAGE="inert", BOOTSTRAP="bootstrap.py", PACKAGE="/g8-package/production", ARCHIVES=())
     exec(compile(ast.Module(body=[function], type_ignores=[]), str(source), "exec"), namespace)
@@ -67,7 +68,8 @@ def renderer():
 
 @pytest.mark.parametrize("timeout,expected", [(3600, "1h"), (10800, "3h")])
 @pytest.mark.parametrize("recovery", [False, True])
-def test_renderer_binds_timeout_to_request_bytes(tmp_path, timeout, expected, recovery):
+@pytest.mark.parametrize("native", [False, True])
+def test_renderer_binds_timeout_to_request_bytes(tmp_path, timeout, expected, recovery, native):
     value = request(timeout=timeout)
     path = tmp_path / "request.json"
     path.write_bytes(value.canonical_bytes())
@@ -76,12 +78,14 @@ def test_renderer_binds_timeout_to_request_bytes(tmp_path, timeout, expected, re
         filesystem_id="inert", mount_path="/g8-durable", secret_selectors={})
     runner = Path(__file__).resolve().parents[2] / "serverless/jobs/run_lightgbm_g8_replacement.py"
     plan.files[runner.name] = SimpleNamespace(sha256=hashlib.sha256(runner.read_bytes()).hexdigest())
-    command = renderer()(plan, tmp_path, "a" * 64, recovery=recovery)
+    loader = SimpleNamespace(sources={}, get_filename=lambda name: name, get_data=lambda name: runner.read_bytes()) if native else None
+    render = renderer(loader)
+    command = render(plan, tmp_path, "a" * 64, recovery=recovery)
     assert command[command.index("--timeout") + 1] == expected
     assert command[command.index("--image") + 1] == value.image
     path.write_bytes(path.read_bytes() + b"\n")
     with pytest.raises(ValueError, match="package-bound request"):
-        renderer()(plan, tmp_path, "a" * 64)
+        render(plan, tmp_path, "a" * 64)
     plan.files[runner.name].sha256 = "0" * 64
     with pytest.raises(ValueError, match="freshly signed current runner"):
-        renderer()(plan, tmp_path, "a" * 64, recovery=recovery)
+        render(plan, tmp_path, "a" * 64, recovery=recovery)

@@ -16,8 +16,12 @@ an already-created Job. They cannot qualify a new G4 result collection by
 converting an observed alias into the approved digest. Read-only recovery does
 not submit a replacement Job. The market-data and synthetic native-rehearsal
 historical contracts are separate; this repair does not rewrite their evidence.
+Recovery flags with the default synthetic workload are rejected, so a missing
+`--workload lightgbm-wave1` can never turn a recovery request into Job creation.
 
 New G8 production execution/recovery commands also use the signed plan digest.
+Fresh final-evaluation requests through the generic G4 submitter are rejected;
+they must use the signed replacement-package path with its pre-access handshake.
 The [replacement runbook](g8/g8-live-replacement.md) defines the signed actual
 Job readback and current-runner requirement. Offline historical package validation
 and the frozen candidate, signatures, G8/G9 exit and existing artifacts are retained.
@@ -25,7 +29,8 @@ and the frozen candidate, signatures, G8/G9 exit and existing artifacts are reta
 Provider capability evidence: the September 28
 [r2 acceptance receipt](../evidence/transformer-development-acceptance-r2-20260928.json)
 records completed Job `aijob-e00avfmh58qjzav9tr`. Its retained create/terminal
-readbacks in `outputs/transformer-development-r2-20260928/cloud/` both contain
+readbacks have a [sanitized inspectable projection](../evidence/digest-image-provider-readback-20260928.json)
+with source-file checksums. Both contain
 the exact direct `ti@sha256:01dba2d703be82c12a207fbe14fddc11e89ea1a350687a9aa6e2160c5cf2f7dc`
 image reference. No additional Job or model evaluation was needed for this repair.
 

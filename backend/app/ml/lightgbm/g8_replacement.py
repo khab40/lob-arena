@@ -270,8 +270,14 @@ def job_command(plan: ReplacementPlan, root: Path, trusted_key: str, *, recovery
         raise ValueError("trusted public-key hash required")
     # Offline verification accepts historical bytes; new submissions must bind
     # the current runner's actual-Job digest check, never the retired alias path.
-    runner = Path(__file__).resolve().parents[4] / "serverless/jobs/run_lightgbm_g8_replacement.py"
-    if plan.files[runner.name].sha256 != sha256_file(runner):
+    runner_name = "run_lightgbm_g8_replacement.py"
+    loader = globals().get("__loader__")
+    if hasattr(loader, "sources"):
+        runner_sha256 = hashlib.sha256(loader.get_data(loader.get_filename(runner_name[:-3]))).hexdigest()
+    else:
+        runner = Path(__file__).resolve().parents[4] / "serverless/jobs" / runner_name
+        runner_sha256 = sha256_file(runner)
+    if plan.files[runner_name].sha256 != runner_sha256:
         raise ValueError("new submission requires a freshly signed current runner package")
     request_path = root / "request.json"
     request = LightGbmCloudJobRequest.model_validate_json(request_path.read_bytes())

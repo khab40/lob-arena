@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -448,7 +447,7 @@ def test_g8_runtime_compatibility_rejects_import_failure(tmp_path: Path, monkeyp
         g8_evaluation.verify_g8_runtime_compatibility(IMAGE, injected_runner)
 
 
-def test_submitter_accepts_g8_only_at_consumed_development_ceiling(tmp_path: Path) -> None:
+def test_generic_submitter_rejects_new_g8_even_at_development_ceiling(tmp_path: Path) -> None:
     package, _request = _g8_package(tmp_path)
     script = Path(__file__).resolve().parents[2] / "scripts" / "submit_nebius_job.py"
     environment = {
@@ -483,16 +482,14 @@ def test_submitter_accepts_g8_only_at_consumed_development_ceiling(tmp_path: Pat
             str(tmp_path / "dry-run.json"),
             "--dry-run",
         ],
-        check=True,
+        check=False,
         text=True,
         capture_output=True,
         env=environment,
     )
-    payload = json.loads(completed.stdout)
-    command = payload["command"]
-    assert payload["development_jobs_consumed"] == 20
-    assert command.count("--inject-file") == 6
-    assert "run_lightgbm_g8.py" in " ".join(command)
+    assert completed.returncode != 0
+    assert "signed replacement-package runner" in completed.stderr
+    assert not (tmp_path / "dry-run.json").exists()
     assert "final-access-selector" not in completed.stdout
     assert "mlflow-password-selector" not in completed.stdout
 
@@ -504,7 +501,7 @@ def test_submitter_accepts_g8_only_at_consumed_development_ceiling(tmp_path: Pat
         env={**environment, "WAVE1_DEVELOPMENT_JOBS_CONSUMED": "19"},
     )
     assert rejected.returncode != 0
-    assert "exact reconciled development Job count" in rejected.stderr
+    assert "signed replacement-package runner" in rejected.stderr
 
 
 def _g8_package(tmp_path: Path) -> tuple[Path, LightGbmCloudJobRequest]:

@@ -1,0 +1,27 @@
+{
+  "schema_version": "digest_image_provider_evidence_v1",
+  "review_date": "2026-09-28",
+  "bugs": [
+    84,
+    246
+  ],
+  "evidence_kind": "sanitized_projection_of_retained_provider_readbacks_no_new_query",
+  "job_id": "aijob-e00avfmh58qjzav9tr",
+  "created_spec_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/ti@sha256:01dba2d703be82c12a207fbe14fddc11e89ea1a350687a9aa6e2160c5cf2f7dc",
+  "terminal_spec_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/ti@sha256:01dba2d703be82c12a207fbe14fddc11e89ea1a350687a9aa6e2160c5cf2f7dc",
+  "terminal_state": "COMPLETED",
+  "source_readbacks": {
+    "job-create.json": {
+      "path": "outputs/transformer-development-r2-20260928/cloud/job-create.json",
+      "sha256": "74ebdad7af3f15103e2ce5d5824b38fe250f2a3bbce948daf55c3b3fc5dbacdc"
+    },
+    "job-terminal.json": {
+      "path": "outputs/transformer-development-r2-20260928/cloud/job-terminal.json",
+      "sha256": "fadc5d66476d2183e4739fdd78f158af6ffad3b4149c0c4472d8fafdaa482005"
+    }
+  },
+  "committed_acceptance": "docs/evidence/transformer-development-acceptance-r2-20260928.json",
+  "new_jobs": 0,
+  "model_runs": 0,
+  "historical_evidence_modified": false
+}
