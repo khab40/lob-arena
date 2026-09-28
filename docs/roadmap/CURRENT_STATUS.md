@@ -1,5 +1,20 @@
 # Roadmap status — 2026-09-28
 
+## Transformer provenance continuation — 2026-09-28
+
+PR #248 is merged. The [next provenance increment](../ml/transformer-role-provenance.md)
+implements an exact 29-object validation metadata inventory, frozen-root chain
+checks and bounded readback with object-version receipts. The development identity
+returned `AccessDenied` for preparation metadata; live chain verification has not
+completed. The [temporary access proposal](../evidence/transformer-validation-metadata-access-proposal-20260928.json)
+is prepared, not applied. No sequence/event payload, Job or model run occurred.
+
+Next: approve/apply the exact metadata access and remove it after collection;
+verify source observations, label horizons and replay/feature lineage; finish the
+signed-context CPU role audit package and obtain its exact execution approval.
+MLflow readiness remains a separate gate under #19. GPU readiness is false;
+G8/G9 remain closed. Earlier snapshots below remain historical.
+
 ## Transformer readiness implementation — 2026-09-28
 
 The operator approved merged #241's plan. The first

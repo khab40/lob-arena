@@ -1,0 +1,71 @@
+{
+  "schema_version": "transformer_validation_metadata_access_proposal_v1",
+  "status": "proposed_not_authorized",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "bucket_id": "storagebucket-e001935725601413893009",
+  "bucket_name": "aimada-wave1-dev-e00g6zvxpr00",
+  "observed_resource_version": "132",
+  "reason": "Existing development identity received AccessDenied for frozen validation preparation metadata.",
+  "added_rule": {
+    "group_id": "group-e00wb5ptvpq0q7dpaf",
+    "roles": [
+      "storage.viewer"
+    ],
+    "paths": [
+      "data/public-sample-v1/prepared/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/preparation.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/normalized/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/001-aapl-spoofing-like-wall-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/002-aapl-spoofing-like-wall-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/003-aapl-spoofing-like-wall-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/004-aapl-layering-like-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/005-aapl-layering-like-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/006-aapl-layering-like-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/007-aapl-quote-stuffing-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/008-aapl-quote-stuffing-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/009-aapl-quote-stuffing-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/010-msft-spoofing-like-wall-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/011-msft-spoofing-like-wall-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/012-msft-spoofing-like-wall-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/013-msft-layering-like-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/014-msft-layering-like-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/015-msft-layering-like-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/016-msft-quote-stuffing-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/017-msft-quote-stuffing-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/018-msft-quote-stuffing-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/019-nvda-spoofing-like-wall-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/020-nvda-spoofing-like-wall-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/021-nvda-spoofing-like-wall-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/022-nvda-layering-like-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/023-nvda-layering-like-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/024-nvda-layering-like-s43/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/025-nvda-quote-stuffing-s41/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/026-nvda-quote-stuffing-s42/checkpoint.json",
+      "data/public-sample-v1/preparation-checkpoints/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/comparisons/027-nvda-quote-stuffing-s43/checkpoint.json"
+    ]
+  },
+  "key_derivation": "Retained C4 request validation result_uri plus C3 deterministic checkpoint naming; reject any preparation reference outside these keys before further GETs.",
+  "anchor": {
+    "preparation_key": "data/public-sample-v1/prepared/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/preparation.json",
+    "preparation_sha256": "63921d1a359c93aab8e0c5ecb7b58938716ffa8f612357af12d4370ce82df64e"
+  },
+  "bounds": {
+    "metadata_objects": 29,
+    "get_attempts": 29,
+    "max_object_bytes": 262144,
+    "response_byte_bound": 7602205,
+    "deadline_seconds": 300,
+    "jobs": 0,
+    "payload_reads": 0,
+    "model_runs": 0
+  },
+  "permission_window_seconds": 3600,
+  "preconditions": [
+    "Operator applies temporary additive rule after approval; MCP safe mode excludes update.",
+    "Re-read policy and version; preserve both existing rules and all unrelated settings.",
+    "No wildcard, final date, final bucket or sequence/event/label payload is included; collector performs no list requests.",
+    "Operator removes only this exact added rule after audit or abort; agent independently verifies removal."
+  ],
+  "failure_policy": "Preserve partial receipts, stop on first error, no automatic retries or permission changes.",
+  "cleanup": "Remove only the added exact rule, preserving every other policy entry; no object deletion.",
+  "proof_limit": "Metadata chain verification does not prove source observation or label horizon separation, class support or GPU readiness."
+}

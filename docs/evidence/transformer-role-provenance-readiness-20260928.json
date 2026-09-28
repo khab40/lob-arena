@@ -1,0 +1,30 @@
+{
+  "schema_version": "transformer_provenance_readiness_v1",
+  "date": "2026-09-28",
+  "base_commit": "820299fccb4d73fbe7cfed14d7c7b1a26cc46da7",
+  "implementation_commit": "34f0169",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "prior_pr": 248,
+  "prior_pr_state": "MERGED",
+  "focused_tests_passed": 57,
+  "new_tests_passed": 30,
+  "ruff": "passed",
+  "live_metadata_read": {
+    "status": "AccessDenied",
+    "metadata_objects_downloaded": 0,
+    "payload_reads": 0
+  },
+  "proposal_sha256": "0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414",
+  "cloud_jobs": 0,
+  "model_runs": 0,
+  "metadata_chain_verified": false,
+  "source_separation_verified": false,
+  "gpu_ready": false,
+  "remaining": [
+    "temporary_metadata_access_and_operator_removal",
+    "live_metadata_chain_verification",
+    "source_observation_and_label_horizon_proof",
+    "exact_cpu_audit_package_and_authorization",
+    "mlflow_application_readiness"
+  ]
+}
