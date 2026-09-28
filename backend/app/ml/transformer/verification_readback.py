@@ -8,7 +8,7 @@ from .contracts import InputContract, Normalization
 from .verification_context import verify_context
 from .verification_spec import (
     FOLD_ROWS, INVENTORY_SHA, MAX_OUTPUT, OUTPUT_BUCKET, OUTPUT_PREFIX,
-    SEQUENCE_SHA, TABULAR_SHA, canonical, digest,
+    ROOT_IDENTITY_SHA, SEQUENCE_SHA, TABULAR_SHA, canonical, digest,
 )
 from .verification_transport import deadline
 
@@ -47,7 +47,7 @@ def verify_artifacts(artifacts, request, context, expected_job_id):
             or norm.fitting_rows != FOLD_ROWS["train"] or len(records) != 3
             or [r["batch_size"] for r in records] != [16, 64, 256]):
         raise ValueError("published preprocessing lineage differs")
-    if contract.root.canonical_hash() != "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803":
+    if contract.root.canonical_hash() != ROOT_IDENTITY_SHA:
         raise ValueError("published frozen root differs")
     for record in records:
         if (record["fold_rows"] != FOLD_ROWS or record["normalization_sha256"] != norm.sha256()
@@ -67,10 +67,12 @@ def verify_artifacts(artifacts, request, context, expected_job_id):
             "logical_output_sha256": records[0]["logical_output_sha256"]}
 
 
-def collect(s3, request, expected_job_id, output: Path):
+def collect(s3, request, expected_job_id, expected_success_sha256, output: Path):
     output.mkdir(parents=True, exist_ok=False)
     with deadline(300):
         success = read(s3, "SUCCESS", 4096)
+        if digest(success) != expected_success_sha256:
+            raise ValueError("SUCCESS differs from the independent provider Job log")
         terminal = json.loads(success)
         if terminal["request_sha256"] != digest(canonical(request)):
             raise ValueError("terminal request binding differs")

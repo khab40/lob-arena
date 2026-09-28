@@ -13,6 +13,7 @@ OUTPUT_BUCKET = "aimada-wave1-results-e00g6zvxpr00"
 OUTPUT_PREFIX = f"campaigns/wave1-research-20260816/development/{RUN_ID}/"
 ENDPOINT = "https://storage.eu-north1.nebius.cloud"
 ROOT_SHA = "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9"
+ROOT_IDENTITY_SHA = "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803"
 TABULAR_SHA = "f5810bff50185481cef63095d401e5203f5eca6aed0d97c3b0b9c906ae80c44b"
 SEQUENCE_SHA = "8b2b6ecb1437144cbae2a672ef903af5cd77b8fe23f8f93c11a2b2c92c444759"
 FOLD_ROWS = {"train": 33450, "validation": 9210}
