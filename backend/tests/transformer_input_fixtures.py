@@ -26,7 +26,8 @@ def frozen_root():
                                                 EXPECTED_SOURCE_FILES, strict=True)))
 
 
-def make_inputs(path, *, count=4, validation_shift=0, flip_labels=False, mutate=None, source_mutate=None):
+def make_inputs(path, *, count=4, validation_shift=0, flip_labels=False,
+                validation_flip_labels=False, mutate=None, source_mutate=None):
     root = frozen_root()
     path.mkdir(parents=True, exist_ok=True)
     tabular, sequences = [], []
@@ -35,7 +36,7 @@ def make_inputs(path, *, count=4, validation_shift=0, flip_labels=False, mutate=
         identity = hashlib.sha256()
         for index in range(count):
             ts, seq = (index // 2) * 100, index + 1  # Deliberately include timestamp ties.
-            label = (index + int(flip_labels)) % 2
+            label = (index + int(flip_labels) + int(fold == "validation" and validation_flip_labels)) % 2
             target = supervised_row_id(root_sha256=root.canonical_hash(), assignment_sha256=root.assignment_sha256,
                                        replay_sha256="b" * 64, run_id=fold, sequence=seq, timestamp_ns=ts)
             values = {name: float(index + feature + 1) for feature, name in enumerate(FEATURE_COLUMNS)}
