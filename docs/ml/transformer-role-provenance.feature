@@ -31,6 +31,23 @@ Feature: Frozen Transformer validation provenance
     Then source observation and label horizon separation remain unverified
     And GPU readiness remains false
 
+  Scenario: Reuse verified evidence after temporary access removal
+    Given the retained metadata receipts, frozen manifests and train-only normalizer
+    When the CPU audit evidence bundle is prepared offline
+    Then its bytes are deterministic and every included file is checksum-bound
+    And metadata access is not reopened
+    And source separation and execution authorization remain unverified
+
+  Scenario: Reject changed audit evidence
+    Given a missing, altered, extra or oversized evidence file
+    When the CPU audit evidence bundle is verified
+    Then verification fails before any payload read or cloud operation
+
+  Scenario: Preserve an existing audit bundle
+    Given an existing bundle at the requested destination
+    When another bundle is prepared at that destination
+    Then preparation fails and the existing bytes remain unchanged
+
   Scenario: Respect provider policy limits without broadening the grant
     Given 29 approved metadata keys and two existing bucket policy rules
     When the operator handoff policy is prepared

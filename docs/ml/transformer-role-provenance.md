@@ -57,3 +57,53 @@ from `backend/`. Collection is metadata-only, at most 29 GETs, 256 KiB per objec
 and 300 seconds. Existing output directories are rejected. `receipts.json` records
 versions/hashes; `provenance.json` exists only after complete verification.
 Failures retain sanitized diagnostics and partial receipts, with no retry.
+
+## CPU evidence packaging — 2026-09-29
+
+As a validation engineer,
+I want the future CPU audit to consume the already verified evidence,
+So that it can check lineage without reopening temporary metadata access.
+
+Definition of Ready: actor validation engineer; goal deterministic evidence reuse;
+value preserved provenance after grant removal. Acceptance covers all-file hash
+binding, size limits, changed inventory, unchanged readiness gates and overwrite
+rejection in the Gherkin scenarios above. Verification uses inert metadata tests
+and independent inspection of the retained bundle. Execution, payload reads,
+permission changes and proof of source independence remain outside this increment.
+
+`role_audit_bundle` packages three frozen development manifests, 29 metadata
+objects, immutable version receipts and the r2 train-only normalizer. The bundle
+is canonical JSON, capped at 512 KiB with a 256 KiB per-file bound. Verification
+checks frozen manifest hashes, the independently verified receipt hash, all 29
+objects, the preparation chain, unchanged role assignment and train-only binding.
+It rejects extra files and ambiguous/noncanonical JSON. Publication is local and
+exclusive; an existing destination is never replaced.
+
+The retained bundle is 220,125 bytes; its receipt is
+[recorded here](../evidence/transformer-role-audit-bundle-20260929.json).
+Run from `backend/`:
+`python -m app.ml.transformer.role_audit_bundle INPUT_DIRECTORY METADATA_DIRECTORY NORMALIZER NEW_BUNDLE`.
+This prepares evidence only. The signed request/context, digest-pinned image,
+bounded transport and independent CPU output readback still need integration and
+review before requesting exact Job execution approval. The old r2 authorization
+and metadata grant are not reused.
+
+## Source/window review and remaining evidence
+
+The retained validation domains share 10:00–10:30 on October 30, 2019. Their
+instruments differ. At C4's request-bound producer commit `5c851822`, the ITCH
+parser routes each global source sequence to one instrument and keeps separate
+books; replay export writes one instrument/session per manifest; feature state
+is per replay; sequence materialization stays within a shard. Labels describe
+attack-active windows in that replay. These semantics support instrument-scoped
+separation, but code inspection alone does not authenticate the actual artifact
+chain. Same-time instruments can also be correlated; independence is not proven.
+
+The [code inspection record](../evidence/transformer-source-lineage-review-20260929.json)
+retains full producer commit/file hashes. Remaining evidence is the 30 actual
+validation replay manifests (hashes already pinned in C4), their feature metadata
+and label-spec/ground-truth bindings, plus C3's actual producer request/runtime
+binding. The prepared/checkpoint JSON does not embed those records. Any extra
+cloud metadata read must first have an exact inventory and applicable access
+approval. Class support requires the separately authorized CPU payload audit.
+Do not alter the frozen roles or claim source/window separation from this bundle.
