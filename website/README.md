@@ -73,8 +73,8 @@ in a dedicated, reviewed dependency change. Full-repository checkout on a
 symlink-capable filesystem is required (GitHub Actions Linux supports this).
 Changes to either shared dependency file trigger website CI.
 
-`src/tokens.css` defines the public site's white, pale-green and teal palette,
-inspired by the operator's Nebius reference. `/frontend` keeps its own theme.
+`src/tokens.css` adapts LOB Arena's own purple palette to white backgrounds
+and readable dark text. `/frontend` keeps its own theme.
 `TeamMark.tsx` is a local copy of its pure icon component. Provenance is revision
 `b3724b8`; all other components are website-local to avoid coupling the operator
 application to public presentation work. `/frontend` is unchanged.

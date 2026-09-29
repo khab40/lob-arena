@@ -1,19 +1,19 @@
-/* Website-only light palette inspired by Nebius; frontend tokens are unchanged. */
+/* Light adaptation of the LOB Arena palette; frontend tokens are unchanged. */
 :root {
   color-scheme: light;
   --color-bg: #ffffff;
-  --color-bg-muted: #f7f9f5;
+  --color-bg-muted: #f8f9fc;
   --color-surface: #ffffff;
-  --color-surface-elevated: #f0f4f5;
-  --color-border: #dde4e5;
-  --color-border-strong: #b9c8ce;
-  --color-text: #172f3c;
-  --color-text-muted: #526570;
-  --color-text-soft: #364f5d;
-  --color-primary: #d4f274;
-  --color-primary-hover: #c1e354;
-  --color-primary-soft: #eef8d4;
-  --color-link: #245868;
+  --color-surface-elevated: #f3f5f9;
+  --color-border: #dfe4ed;
+  --color-border-strong: #b8c3d4;
+  --color-text: #18243a;
+  --color-text-muted: #53627a;
+  --color-text-soft: #35465f;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-soft: #f1eafe;
+  --color-link: #6d35c4;
   --color-success: #16755b;
   --color-warning: #996016;
   --color-danger: #b34450;
@@ -21,11 +21,11 @@
   --ask: #c75260;
   --bid-text: #126b58;
   --ask-text: #a33849;
-  --chart-line-primary: #267d84;
-  --chart-grid: #e1e9ed;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --chart-line-primary: #8050d6;
+  --chart-grid: #e3e8f0;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--color-text);
   background: var(--color-bg);
