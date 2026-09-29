@@ -455,3 +455,6 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify public checksum exception survives squash
+        run: python3 scripts/check_gitleaks_proposal_exception.py
