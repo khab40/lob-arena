@@ -23,6 +23,7 @@ are neither trading signals nor compliance decisions.
 | Task | Guide |
 | --- | --- |
 | Run the application | [Quickstart](docs/deployment/QUICKSTART.md) |
+| Explore or build the static public website | [Website and Pages guide](website/README.md) |
 | Understand ownership and data flow | [Architecture](docs/architecture.md) |
 | Check delivered versus planned work | [Current status](docs/roadmap/CURRENT_STATUS.md) |
 | Choose a workflow | [Use cases](docs/use-cases/README.md) |
