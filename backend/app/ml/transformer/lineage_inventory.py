@@ -42,7 +42,9 @@ def phase_keys(phase):
 
 def verify_request(raw, source, prepared):
     request = NasdaqPreparationRequest.model_validate_json(raw)
-    binding = PreparationCheckpointBinding(request_sha256=request.canonical_hash(),
+    # C3 wrote its canonical request bytes. New model defaults must not rewrite
+    # that producer identity (e.g. the later optional mlflow_tracking_uri field).
+    binding = PreparationCheckpointBinding(request_sha256=digest(raw),
         source_manifest_sha256=request.source_release_manifest_sha256,
         source_sha256=source.source_sha256, image=request.image, git_commit=request.git_commit,
         feature_config_sha256=request.feature_config_sha256)

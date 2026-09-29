@@ -1,5 +1,12 @@
 # Transformer validation lineage audit — 2026-09-29
 
+The [first approved attempt](../evidence/transformer-lineage-attempt-20260929.json)
+aborted after one request GET. [Bug #260](https://github.com/khab40/lob-arena/issues/260)
+fixes hashing that injected a later optional model default into historical
+producer bytes. The original request reproduces the frozen binding; the repaired
+verifier checks those exact bytes, retaining strict schema/domain validation.
+Access removal is pending operator readback. No automatic retry is authorized.
+
 Story [#24](https://github.com/khab40/lob-arena/issues/24) → Feature #16 → Epic #15,
 in [Project #3](https://github.com/users/khab40/projects/3). Continues the approved
 [GPU campaign plan](transformer-gpu-campaign-plan.md) after merged #249/#254.
@@ -34,7 +41,8 @@ The authentication chain in this increment is:
 
 1. Reverify the retained 34-file CPU evidence bundle and its frozen manifests.
 2. Authenticate `request.json` through the frozen preparation checkpoint binding:
-   request canonical hash, image, source manifest, source bytes, Git commit and
+   hash of the producer's retained canonical bytes (without injecting newer model
+   defaults), image, source manifest, source bytes, Git commit and
    feature configuration file hash must match together.
 3. Authenticate 27 `SUCCESS` checksum inventories against the frozen payload
    inventory hash, count and total size, plus the retained checkpoint's byte hash.

@@ -52,6 +52,24 @@ def test_tampered_phase_one_rejected(index):
         verifier.result([])
 
 
+def test_historical_request_hash_excludes_later_model_defaults():
+    from app.ml.transformer.verification_spec import digest
+    anchor, blobs = fixture()
+    original = json.loads(blobs[inv.REQUEST_KEY])
+    original.pop("mlflow_tracking_uri")
+    raw = canonical(original)
+    request = inv.NasdaqPreparationRequest.model_validate_json(raw)
+    binding = inv.PreparationCheckpointBinding(request_sha256=digest(raw),
+        source_manifest_sha256=request.source_release_manifest_sha256,
+        source_sha256=anchor["source"].source_sha256, image=request.image,
+        git_commit=request.git_commit, feature_config_sha256=request.feature_config_sha256)
+    anchor["prepared"].checkpoint_binding_sha256 = binding.canonical_hash()
+    assert raw != request.canonical_bytes()
+    assert inv.verify_request(raw, anchor["source"], anchor["prepared"]) == request
+    with pytest.raises(ValueError, match="binding"):
+        inv.verify_request(raw + b" ", anchor["source"], anchor["prepared"])
+
+
 def test_unanchored_bundle_and_out_of_order_members_fail():
     with pytest.raises(ValueError):
         context(b"{}")

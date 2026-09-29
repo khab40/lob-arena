@@ -1,5 +1,11 @@
 Feature: Frozen validation metadata authentication
 
+  Scenario: Verify a historical request without a later optional field
+    Given a frozen C3 request whose producer did not emit the optional MLflow URI
+    And its retained bytes match the frozen checkpoint binding
+    When the current verifier checks the request
+    Then the original binding is accepted without adding fields to the hashed record
+
   Scenario: Authenticate both bounded metadata phases
     Given the verified frozen CPU evidence bundle
     And operator approval for the exact two-phase metadata proposal

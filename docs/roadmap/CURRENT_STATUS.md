@@ -1,5 +1,23 @@
 # Roadmap status — 2026-09-29
 
+## Transformer metadata audit abort and compatibility repair — 2026-09-29
+
+The operator approved PR #258's exact two-phase proposal. Phase-one access was
+independently verified at bucket version 135 (eight rules). The
+[audit stopped after one GET, 1,830 bytes](../evidence/transformer-lineage-attempt-20260929.json):
+the new verifier added today's optional `mlflow_tracking_uri: null` before hashing
+the older producer request. [Bug #260](https://github.com/khab40/lob-arena/issues/260)
+under [Story #24](https://github.com/khab40/lob-arena/issues/24) repairs that defect
+by authenticating the retained producer bytes while preserving strict schema and
+domain checks. Those original bytes reproduce the frozen binding exactly.
+The regression failed before repair; 129 focused tests pass afterward.
+
+No retry, inventory/member read or phase-two collection occurred. The already
+approved abort-removal command is prepared; operator removal and independent
+readback are pending. Review the repair before a separately authorized replacement
+audit. CPU execution packaging, semantic source/window proof, class support and
+MLflow readiness remain open; GPU execution is not authorized. G8/G9 remain closed.
+
 ## Transformer lineage audit preparation — 2026-09-29
 
 PR #254 is merged, including the Gitleaks installation-order repair. The next
