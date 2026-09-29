@@ -3,8 +3,8 @@
   "date": "2026-09-29",
   "story": "https://github.com/khab40/lob-arena/issues/24",
   "project": "https://github.com/users/khab40/projects/3",
-  "reason": "One replacement after zero-GET namespace-wrapper abort #263; prior grant removed at version 138",
-  "implementation_commit": "4b5b511514c05a2cd053afa3db711abdd8ce6b1c",
+  "reason": "Unexecuted r2 amendment for P1 #265: remove mutable credential helper and use identical backend from merged main history; prior grant removed at version 138",
+  "implementation_commit": "8d93e3da68d5d576efa49f6ec8d525842ff3247f",
   "backend_tree": "1c700531051e6719603c25be9bcd1dd1ba2f02b1",
   "exact_scope_proposal": "docs/evidence/transformer-lineage-access-proposal-20260929.json",
   "exact_scope_sha256": "7d44ea6cd17da68d71133c2147294373dd9b011ac8bfff28f384777309493ddf",
@@ -33,7 +33,7 @@
   ],
   "phase_two_precondition": "successful phase-one verification and fresh exact phase-two grant readback",
   "retained_request_preflight": "repaired verifier reproduced the original frozen binding offline without further GETs",
-  "output_root": "outputs/transformer-lineage-replacement-r2-20260929",
+  "output_root": "outputs/transformer-lineage-replacement-r2-reviewed-20260929",
   "old_attempt_evidence": "outputs/transformer-lineage-replacement-20260929",
   "preserve_prior_evidence": true,
   "cost_policy": "existing operator-managed metadata GET policy; no compute allocation",
@@ -50,10 +50,11 @@
     "deletion"
   ],
   "operator_script": "scripts/collect_transformer_lineage_metadata.py",
-  "operator_script_commit": "98939fa5905e5fc29581ff02eea4ce678dfce03d",
-  "operator_script_sha256": "5a92864220f6e88218440c621bf599dff385926cced1104c16ae2a4642263689",
+  "operator_script_sha256": "0faf0bdb226f787c29973d8aa60214e9920304a7fbf172d245c5ac8a1b776c2d",
   "previous_proposal_sha256": "4dc2972aac795410df60057bd1c84deea02f3119acd513f9a3cd03abd80a6a2b",
   "prior_wrapper_abort_gets": 0,
   "local_preflight": "Complete operator path tested against pinned backend with blocked network and inert credentials/transport",
-  "attempt_interlock": "exclusive phase-attempt marker; any runtime failure consumes phase attempt"
+  "attempt_interlock": "exclusive phase-attempt marker; any runtime failure consumes phase attempt",
+  "superseded_unexecuted_r2_sha256": "69e73ed5d381bb6ad657c8f3dc84e80323131e0fe02a26bfaf346f3dd2ca9205",
+  "credential_code_binding": "Fixed MysteryBox selectors and reader identity check reside in the SHA-bound operator; client factory comes from verified backend; no ignored helper execution"
 }

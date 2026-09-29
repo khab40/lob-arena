@@ -1,0 +1,61 @@
+{
+  "date": "2026-09-29",
+  "bug": "https://github.com/khab40/lob-arena/issues/265",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "source_pr": "https://github.com/khab40/lob-arena/pull/264",
+  "fixed_findings": [
+    "ignored credential helper execution removed",
+    "backend pin moved to identical tree in merged history",
+    "unapproved cached bytecode rejected; cache generation and external cache prefix disabled"
+  ],
+  "regressions": {
+    "helper_top_level": "reproduced before fix; passes after fix",
+    "helper_client_substitution": "reproduced before fix; passes after fix",
+    "timestamp_valid_bytecode": "reproduced before fix; rejected after fix",
+    "operator_tests": 16,
+    "focused_tests": 219,
+    "legitimate_credential_control": "fixed selectors and timeout, identity, environment and pinned client preserved using inert responses"
+  },
+  "fresh_main_history": {
+    "fresh_single_branch_clone": true,
+    "main_head": "77abe0ca2eee75c9e76618115f45608748652de8",
+    "old_pin_absent": true,
+    "merged_commit": "8d93e3da68d5d576efa49f6ec8d525842ff3247f",
+    "backend_tree": "1c700531051e6719603c25be9bcd1dd1ba2f02b1"
+  },
+  "offline_full_operator": {
+    "offline_only": true,
+    "object_reads": 0,
+    "namespace_package": true,
+    "actual_pinned_backend": true,
+    "historical_helper_executed": false,
+    "fresh_main_history": true,
+    "credential_lookups": 0,
+    "operator_script_sha256": "0faf0bdb226f787c29973d8aa60214e9920304a7fbf172d245c5ac8a1b776c2d",
+    "cloud_operations": 0,
+    "expected_calls": [
+      "inert_credentials",
+      "inert_transport"
+    ]
+  },
+  "published_commit_changed_lines": {
+    "98939fa5905e5fc29581ff02eea4ce678dfce03d": 170,
+    "fbccb4b30e3113852cbb030cf3cd2e87155f5088": 178,
+    "0e6dc197530a606307a3984e0c24b1e634fe9563": 92
+  },
+  "commit_size_finding": "not reproduced; all published commits <=200 lines",
+  "review": "Independent reviewer identified cached-bytecode gap; parent reproduced and repaired it. Reviewer session ended early; final boundary and compatibility pass completed by parent.",
+  "cloud_status": {
+    "bucket_resource_version": "138",
+    "original_rules": 2,
+    "active_temporary_rules": 0,
+    "r2_attempt_started": false,
+    "new_gets": 0,
+    "credential_lookups": 0
+  },
+  "amended_proposal_sha256": "f7c057c1ddfe98dceee962cc11060e52997f6312bfeb9815a653d8fe255ece46",
+  "amended_exact_approval_required": true,
+  "prior_approval_preserved": "outputs/transformer-lineage-replacement-r2-20260929/proposal-approved-69e73ed5.json",
+  "durable_evidence": "outputs/transformer-lineage-replacement-20260929/"
+}
