@@ -1,5 +1,22 @@
 # Roadmap status — 2026-09-29
 
+## Transformer audit cleanup verified; replacement prepared — 2026-09-29
+
+[Temporary access removal is independently verified](../evidence/transformer-lineage-cleanup-20260929.json)
+at bucket version 136: both original rules and all non-policy settings are
+preserved. The six temporary rules existed for 1,000.405439 seconds, within the
+approved hour. The aborted attempt remains preserved with one GET/1,830 bytes.
+PR #258's historical-request repair at `4b5b511` passed 129 focused tests and all
+23 GitHub checks; the actual retained request verifies offline.
+
+The [one-attempt replacement proposal](../evidence/transformer-lineage-replacement-proposal-20260929.json)
+pins that repaired implementation and the unchanged 115-key scope. It requests
+115 new GETs (116 including the aborted attempt), with the same two bounded
+phases, operator grant/replacement/removal and no automatic retries. New output
+directories preserve the aborted evidence. Approval is pending; no replacement
+grant or read has occurred. Story #24 remains in progress; source/window proof,
+CPU execution packaging, class support and MLflow readiness still gate GPU work.
+
 ## Transformer metadata audit abort and compatibility repair — 2026-09-29
 
 The operator approved PR #258's exact two-phase proposal. Phase-one access was

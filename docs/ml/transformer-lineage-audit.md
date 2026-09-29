@@ -5,7 +5,11 @@ aborted after one request GET. [Bug #260](https://github.com/khab40/lob-arena/is
 fixes hashing that injected a later optional model default into historical
 producer bytes. The original request reproduces the frozen binding; the repaired
 verifier checks those exact bytes, retaining strict schema/domain validation.
-Access removal is pending operator readback. No automatic retry is authorized.
+[Access removal is verified](../evidence/transformer-lineage-cleanup-20260929.json)
+at bucket version 136. The [replacement proposal](../evidence/transformer-lineage-replacement-proposal-20260929.json)
+requires fresh approval for one attempt with the same exact keys and repaired
+backend tree. Its 115 new GETs bring the cumulative bound to 116 including the
+aborted read. The original attempt is preserved; no automatic retry is authorized.
 
 Story [#24](https://github.com/khab40/lob-arena/issues/24) → Feature #16 → Epic #15,
 in [Project #3](https://github.com/users/khab40/projects/3). Continues the approved

@@ -191,8 +191,9 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    deterministic CPU evidence bundle, independently checked offline. #249/#254
    are merged. The [next lineage audit](../ml/transformer-lineage-audit.md) prepares
    a separately gated 115-key metadata read in two policy-bounded phases. Next
-   review the [historical-request compatibility repair and aborted attempt](../evidence/transformer-lineage-attempt-20260929.json),
-   verify temporary-access removal, and authorize a replacement audit. The first
+   review the [historical-request compatibility repair and aborted attempt](../evidence/transformer-lineage-attempt-20260929.json)
+   and authorize the [one-attempt replacement](../evidence/transformer-lineage-replacement-proposal-20260929.json).
+   Temporary-access removal is independently verified at bucket version 136. The first
    approved attempt stopped after one request GET; no automatic retry is allowed.
    Then bind replay/feature/label lineage and C3 runtime identity and finish the signed
    CPU execution package. Source/window proof, CPU runtime evidence and platform
