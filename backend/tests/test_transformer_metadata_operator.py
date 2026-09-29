@@ -5,7 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -29,6 +29,7 @@ def operator(tmp_path, monkeypatch):
     (package / "lineage_proposal.py").write_text("def require_proposal(sha):\n    assert sha == 'scope'\n")
     (package / "lineage_transport.py").write_text(
         "calls = []\ndef collect(*args):\n    calls.append(args)\n    return {'inert_transport': True}\n")
+    (package / "verification_transport.py").write_text("def client():\n    return 'inert-client'\n")
     raw = json.dumps({"exact_scope_sha256": "scope",
         "operator_script_sha256": hashlib.sha256(script.read_bytes()).hexdigest()}).encode()
     sha = hashlib.sha256(raw).hexdigest()
@@ -38,12 +39,16 @@ def operator(tmp_path, monkeypatch):
         "permission_started_at": datetime.now(timezone.utc).isoformat()}
     (out / "phase-1-policy-verification.json").write_text(json.dumps(grant))
     code = out / "runtime-fixture"
+    module.real_pinned_backend = module.pinned_backend
     monkeypatch.setattr(module, "pinned_backend", lambda *_: code)
+    monkeypatch.setattr(sys, "dont_write_bytecode", sys.dont_write_bytecode)
+    monkeypatch.setattr(sys, "pycache_prefix", sys.pycache_prefix)
     credentials = []
-    def fake_credentials():
+    def fake_credentials(client_factory):
         credentials.append("inert")
-        return "inert-client"
-    monkeypatch.setattr(module.runpy, "run_path", lambda _: {"authenticated_client": fake_credentials})
+        return client_factory()
+    module.real_authenticated_client = getattr(module, "authenticated_client", None)
+    monkeypatch.setattr(module, "authenticated_client", fake_credentials, raising=False)
     yield module, tmp_path, out, sha, code, credentials
     sys.path[:] = original_path
     for name in tuple(sys.modules):
@@ -51,10 +56,13 @@ def operator(tmp_path, monkeypatch):
             del sys.modules[name]
 
 
-def test_complete_wrapper_accepts_native_namespace(operator):
+def test_complete_wrapper_accepts_native_namespace(operator, monkeypatch):
     module, root, out, sha, _, credentials = operator
+    monkeypatch.setattr(sys, "pycache_prefix", str(root / "external-cache"))
     assert module.run(root, out, sha, 1) == {"inert_transport": True}
+    assert sys.pycache_prefix is None
     assert sys.modules["app"].__file__ is None
+    assert not list((out / "runtime-fixture").rglob("*.pyc"))
     sys.path.insert(0, sys.path[0])
     module.verify_imports(out / "runtime-fixture")
     assert credentials == ["inert"]
@@ -78,15 +86,16 @@ def test_preflight_failure_never_looks_up_credentials(operator, failure, monkeyp
     elif failure == "wrong_approval":
         sha = "0" * 64
     else:
-        def foreign_helper(_):
+        verify = module.verify_imports
+        def foreign_imports(code):
             if failure == "foreign_namespace":
                 sys.modules["app"].__path__ = [str(root / "foreign/app")]
             else:
                 foreign = ModuleType("app.foreign")
                 foreign.__file__ = str(root / "foreign.py")
                 sys.modules["app.foreign"] = foreign
-            return {"authenticated_client": lambda: credentials.append("must not happen")}
-        monkeypatch.setattr(module.runpy, "run_path", foreign_helper)
+            verify(code)
+        monkeypatch.setattr(module, "verify_imports", foreign_imports)
     with pytest.raises(ValueError):
         module.run(root, out, sha, 1)
     assert credentials == []
@@ -107,14 +116,61 @@ def test_changed_operator_script_is_rejected(operator):
     assert credentials == []
 
 
-def test_helper_search_path_is_restored_before_credentials(operator, monkeypatch):
-    module, root, out, sha, code, credentials = operator
-    def helper(_):
-        sys.path.insert(0, str(root / "foreign"))
-        def client():
-            assert sys.path[0] == str(code / "backend")
-            credentials.append("inert")
-        return {"authenticated_client": client}
-    monkeypatch.setattr(module.runpy, "run_path", helper)
-    module.run(root, out, sha, 1)
+@pytest.mark.parametrize("attack", ["top_level", "client_substitution"])
+def test_ignored_helper_cannot_execute(operator, attack):
+    module, root, out, sha, _, credentials = operator
+    helper = root / "outputs/transformer-development-r2-20260928/cloud/verification_operator.py"
+    helper.parent.mkdir(parents=True)
+    sentinel = root / "unapproved-execution"
+    payload = f"from pathlib import Path\nPath({str(sentinel)!r}).touch()\nraise RuntimeError('unapproved helper')\n"
+    if attack == "client_substitution":
+        payload = "def authenticated_client():\n" + "".join("    " + line + "\n" for line in payload.splitlines())
+    helper.write_text(payload)
+    assert module.run(root, out, sha, 1) == {"inert_transport": True}
+    assert not sentinel.exists()
     assert credentials == ["inert"]
+
+
+@pytest.mark.parametrize("failure", [None, "lookup", "ambiguous_id", "ambiguous_secret", "identity", "malformed"])
+def test_bound_credential_lookup_and_client(operator, monkeypatch, failure):
+    module, root, out, sha, _, _ = operator
+    monkeypatch.setattr(module, "authenticated_client", module.real_authenticated_client)
+    # These are inert fixture values, never real credentials.
+    monkeypatch.setattr(module, "READER_ID_SHA256", hashlib.sha256(b"fixture-reader").hexdigest())
+    for name in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_EC2_METADATA_DISABLED"):
+        monkeypatch.setenv(name, "fixture-original")
+    calls = []
+    def lookup(args, **kwargs):
+        assert kwargs == {"capture_output": True, "timeout": 45}
+        calls.append(args)
+        if failure == "lookup":
+            return SimpleNamespace(returncode=1)
+        if failure == "malformed":
+            return SimpleNamespace(returncode=0, stdout=b"invalid-json")
+        data = [{"string_value": "wrong-reader" if failure == "identity" else "fixture-reader"}]
+        if len(calls) == 2:
+            data = [{"key": "ignored", "string_value": "not-selected"},
+                    {"key": "secret", "string_value": "fixture-secret"}]
+        if (failure == "ambiguous_id" and len(calls) == 1
+                or failure == "ambiguous_secret" and len(calls) == 2):
+            data.append(data[-1])
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"data": data}).encode())
+    monkeypatch.setattr(module.subprocess, "run", lookup)
+    if failure:
+        with pytest.raises((ValueError, RuntimeError)):
+            module.run(root, out, sha, 1)
+        assert sys.modules["app.ml.transformer.lineage_transport"].calls == []
+        with pytest.raises(ValueError, match="consumed"):
+            module.run(root, out, sha, 1)
+    else:
+        assert module.run(root, out, sha, 1) == {"inert_transport": True}
+        assert module.os.environ["AWS_ACCESS_KEY_ID"] == "fixture-reader"
+        assert module.os.environ["AWS_SECRET_ACCESS_KEY"] == "fixture-secret"
+        assert module.os.environ["AWS_EC2_METADATA_DISABLED"] == "true"
+        assert sys.modules["app.ml.transformer.lineage_transport"].calls[0][0] == "inert-client"
+    selectors = [("mbsec-e00arhndyprqr8egjw", "mbsecver-e00rjzerny1pf9qhna"),
+                 ("mbsec-e00s7qtjj5n9ghacnh", "mbsecver-e00yfn5w54jc1ybkwv")]
+    assert len(calls) == (1 if failure in {"lookup", "ambiguous_id", "malformed"} else 2)
+    for args, (secret, version) in zip(calls, selectors, strict=False):
+        assert args == ["rtk", "proxy", "nebius", "mysterybox", "payload", "get",
+                        "--secret-id", secret, "--version-id", version, "--format", "json"]

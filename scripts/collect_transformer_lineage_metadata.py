@@ -3,10 +3,12 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
-import runpy
+import os
 import subprocess
 import sys
 
+
+READER_ID_SHA256 = "4f129534101211604ce259cd5ded383065384b86797e8f7b407a810750062d5d"
 
 def pinned_backend(root, out, proposal):
     commit = proposal["implementation_commit"]
@@ -34,7 +36,7 @@ def pinned_backend(root, out, proposal):
         if observed != oid.decode():
             raise ValueError("runtime file differs from pinned Git object")
     actual = {str(path.relative_to(code)) for path in (code / "backend").rglob("*")
-        if path.is_file() and "__pycache__" not in path.parts}
+        if path.is_file()}
     if actual != expected:
         raise ValueError("runtime contains unexpected files")
     return code
@@ -56,6 +58,28 @@ def verify_imports(code):
             raise ValueError("app module imported outside pinned runtime")
         if paths is not None and {Path(p).resolve() for p in paths} != {backend.joinpath(*name.split("."))}:
             raise ValueError("app package searches outside pinned runtime")
+
+
+def authenticated_client(client_factory):
+    selectors = {
+        'AWS_ACCESS_KEY_ID': ('mbsec-e00arhndyprqr8egjw', 'mbsecver-e00rjzerny1pf9qhna'),
+        'AWS_SECRET_ACCESS_KEY': ('mbsec-e00s7qtjj5n9ghacnh', 'mbsecver-e00yfn5w54jc1ybkwv'),
+    }
+    for name, (secret, version) in selectors.items():
+        result = subprocess.run(['rtk', 'proxy', 'nebius', 'mysterybox', 'payload', 'get',
+            '--secret-id', secret, '--version-id', version, '--format', 'json'],
+            capture_output=True, timeout=45)
+        if result.returncode:
+            raise RuntimeError('Pinned development credential lookup failed')
+        entries = [item['string_value'] for item in json.loads(result.stdout)['data']
+            if item.get('string_value') and (name != 'AWS_SECRET_ACCESS_KEY' or item.get('key') == 'secret')]
+        if len(entries) != 1:
+            raise ValueError('Ambiguous credential selector')
+        os.environ[name] = entries[0]
+    if hashlib.sha256(os.environ['AWS_ACCESS_KEY_ID'].encode()).hexdigest() != READER_ID_SHA256:
+        raise ValueError('Wrong development reader identity')
+    os.environ['AWS_EC2_METADATA_DISABLED'] = 'true'
+    return client_factory()
 
 
 def run(root, out, approved_sha, phase):
@@ -84,20 +108,16 @@ def run(root, out, approved_sha, phase):
         raise ValueError("missing current approved grant verification")
     if (out / f"phase-{phase}").exists():
         raise ValueError("phase output already exists")
+    # Source authentication does not authorize cached bytecode. Keep both phases cache-free.
+    sys.dont_write_bytecode = True
+    sys.pycache_prefix = None
     sys.path.insert(0, str(code / "backend"))
     from app.ml.transformer.lineage_proposal import require_proposal
     from app.ml.transformer.lineage_transport import collect
+    from app.ml.transformer.verification_transport import client
     verify_imports(code)
     require_proposal(proposal["exact_scope_sha256"])
-    # Historical credential helper mutates sys.path; restore it and check origins
-    # again before invoking its credential lookup function.
-    search_path = sys.path[:]
-    try:
-        helper = runpy.run_path(str(root / "outputs/transformer-development-r2-20260928/cloud/verification_operator.py"))
-    finally:
-        sys.path[:] = search_path
-    verify_imports(code)
-    return collect(helper["authenticated_client"](),
+    return collect(authenticated_client(client),
         root / "outputs/transformer-role-provenance-20260928/cpu-role-audit-evidence-20260929.json",
         phase, out / f"phase-{phase}", out / "phase-1" if phase == 2 else None)
 
