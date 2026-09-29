@@ -20,7 +20,7 @@ def chain():
         datasets[symbol] = dict(dataset_id=base, source_type="nasdaq_itch", symbol=symbol,
             trade_date=p.DATE, start_time_ms=1, end_time_ms=2, depth=10, row_count=1,
             event_counts={}, imported_at="2026-09-28T00:00:00Z", source_files=[], output_files=[],
-            source_stream_sha256="b" * 64, parser_config_sha256="c" * 64)
+            source_stream_sha256="1" * 64, parser_config_sha256="c" * 64)
     records = [dict(schema_version="market_data_normalized_checkpoint_v2",
         binding_sha256="d" * 64, manifests=datasets, **payload)]
     for number, (symbol, family, seed) in p.COMPARISONS:
@@ -121,6 +121,32 @@ def test_normalized_source_domain_must_match():
         lambda r: r["manifests"]["AAPL"].update(trade_date="2019-12-30"))
     with pytest.raises(ValueError, match="source domain"):
         p.verify_chain(blobs, source, runs)
+
+
+@pytest.mark.parametrize("symbol", p.SYMBOLS)
+@pytest.mark.parametrize("defect", ["missing", "null", "different"])
+def test_hash_consistent_checkpoint_requires_frozen_source_stream(symbol, defect):
+    blobs, source, runs = chain()
+    def mutate(record):
+        dataset = record["manifests"][symbol]
+        if defect == "missing":
+            dataset.pop("source_stream_sha256")
+        else:
+            dataset["source_stream_sha256"] = None if defect == "null" else "9" * 64
+    alter_checkpoint(blobs, source, 0, mutate)
+    with pytest.raises(ValueError, match="source domain"):
+        p.verify_chain(blobs, source, runs)
+
+
+def test_unbound_stream_cannot_publish_collector_success(tmp_path, monkeypatch):
+    blobs, source, runs = chain()
+    alter_checkpoint(blobs, source, 0,
+        lambda r: r["manifests"]["AAPL"].update(source_stream_sha256=None))
+    bind_local_metadata(monkeypatch, source, runs)
+    with pytest.raises(ValueError, match="source domain"):
+        t.collect(S3(blobs), tmp_path, tmp_path / "out")
+    assert not (tmp_path / "out/provenance.json").exists()
+    assert (tmp_path / "out/failure.json").exists()
 
 
 class S3:

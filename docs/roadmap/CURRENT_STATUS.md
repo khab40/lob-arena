@@ -1,5 +1,16 @@
 # Roadmap status — 2026-09-29
 
+## PR #249 review repairs — 2026-09-29
+
+PR #249 is merged. [Bug #251](https://github.com/khab40/lob-arena/issues/251)
+repairs its P1/P2 findings before further Transformer work: a squash-stable,
+exact-path/checksum scanner exception and strict normalized-stream binding to
+the frozen source. [Repair evidence](../evidence/transformer-provenance-review-repair-20260929.json)
+records real-scanner squash/negative-control checks, ten reproduced metadata
+failures fixed and 119 passing focused tests. The retained audit bundle and
+receipt are unchanged. Source separation, CPU execution packaging and MLflow
+readiness remain open; this repair performs no cloud/model execution.
+
 ## Transformer CPU audit evidence — 2026-09-29
 
 Story [#24](https://github.com/khab40/lob-arena/issues/24), continuing draft #249:

@@ -14,6 +14,17 @@ Feature: Frozen Transformer validation provenance
     When provenance metadata is verified
     Then verification fails without reading sequence or event payloads
 
+  Scenario Outline: Reject an unbound normalized source stream
+    Given a checksum-consistent chain whose normalized stream hash is <defect>
+    When provenance metadata is verified for any validation instrument
+    Then verification fails without publishing metadata-chain success
+
+    Examples:
+      | defect                               |
+      | missing                              |
+      | null                                 |
+      | different from the frozen source hash |
+
   Scenario: Reject a reference outside the approved metadata keys
     Given preparation metadata that references another date, bucket or checkpoint
     When the metadata collector validates the reference inventory

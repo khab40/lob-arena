@@ -107,3 +107,27 @@ binding. The prepared/checkpoint JSON does not embed those records. Any extra
 cloud metadata read must first have an exact inventory and applicable access
 approval. Class support requires the separately authorized CPU payload audit.
 Do not alter the frozen roles or claim source/window separation from this bundle.
+
+## Review repairs — 2026-09-29
+
+[Bug #251](https://github.com/khab40/lob-arena/issues/251) addresses the P1/P2 review
+of merged #249 before further campaign work. Every normalized instrument now must
+have `source_stream_sha256` equal to the frozen validation source hash. Missing,
+null and different hashes fail even when checkpoint/preparation checksums agree;
+the collector cannot publish a success report for them. Retained evidence still
+passes, and the audit bundle bytes are unchanged.
+
+The historical Gitleaks commit fingerprint is replaced by a `generic-api-key`
+allowlist requiring both the exact approval-evidence path and the exact public
+proposal checksum. This follows [Gitleaks rule allowlist semantics](https://github.com/gitleaks/gitleaks/blob/v8.24.3/README.md#configuration).
+An actual scanner regression in CI exercises rewritten Git history, moved lines,
+an unsuppressed baseline and negative controls at the same and different paths.
+The original September 28 scanner record is historical; this repair supersedes
+its fingerprint-only disposition. Actual post-merge CI was green; no current
+main-branch failure or credential exposure is claimed.
+
+[Bug #255](https://github.com/khab40/lob-arena/issues/255) makes the regression
+self-contained: CI explicitly downloads Gitleaks 8.24.3 for Linux x64, verifies
+the pinned archive SHA-256 before extraction and passes its absolute executable
+path to the script. It does not depend on the preceding action modifying `PATH`.
+Download/checksum failures stop the step before the scanner can execute.

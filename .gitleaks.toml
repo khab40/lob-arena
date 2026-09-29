@@ -28,3 +28,14 @@ regexes = [
   # Rehashed independently for Bug #224; no secret payload. Receipt: g8-final-transport-verification-20260923.json.
   '''^ce6e9f25e6be59fc7d79bd2c13aeff502d08d03f7c4957f75ea963b471630652$''',
 ]
+
+# Bug #251: public proposal digest, independently rehashed. Both the exact
+# evidence path and extracted value must match; survives squash and line moves.
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "Transformer metadata approval public proposal checksum"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''^docs/evidence/transformer-validation-metadata-approval-20260928\.json$''']
+regexes = ['''^0c7a32442a95d04deedcb12798eb466eb3786273f1c30e0c97cca10b388ef414$''']

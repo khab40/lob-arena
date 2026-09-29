@@ -455,3 +455,18 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install verified Gitleaks for regression
+        run: |
+          gitleaks_dir="$RUNNER_TEMP/gitleaks-regression"
+          mkdir -p "$gitleaks_dir"
+          curl --fail --show-error --silent --location --retry 2 --max-time 120 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            --output "$gitleaks_dir/archive.tar.gz"
+          printf '%s  %s\n' '9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c' \
+            "$gitleaks_dir/archive.tar.gz" | sha256sum --check
+          tar -xzf "$gitleaks_dir/archive.tar.gz" -C "$gitleaks_dir" gitleaks
+          "$gitleaks_dir/gitleaks" version
+
+      - name: Verify public checksum exception survives squash
+        run: python3 scripts/check_gitleaks_proposal_exception.py "$RUNNER_TEMP/gitleaks-regression/gitleaks"
