@@ -1,5 +1,20 @@
 # Roadmap status — 2026-09-29
 
+## Transformer offline lineage verification implemented — 2026-09-29
+
+[PR #258](https://github.com/khab40/lob-arena/pull/258) is merged; its CI passed.
+The next [Story #24 increment](../ml/transformer-lineage-semantics.md) reauthenticates
+both retained metadata phases and cross-checks replay, feature, label, configuration
+and artifact identities across all 30 validation runs. It keeps event-stream and
+replay-file hashes distinct. [199 inert tests pass](../evidence/transformer-lineage-semantics-20260929.json).
+This is implementation evidence; live semantic verification has not run.
+
+The replacement metadata audit still awaits approval of its exact proposal below.
+Access remains removed at bucket version 136. After collection, run offline
+semantic readback, resolve source/window separation and complete the signed CPU
+role-audit package. Class support and MLflow/platform readiness remain open.
+GPU training remains gated; G8/G9 stay closed.
+
 ## Transformer audit cleanup verified; replacement prepared — 2026-09-29
 
 [Temporary access removal is independently verified](../evidence/transformer-lineage-cleanup-20260929.json)
