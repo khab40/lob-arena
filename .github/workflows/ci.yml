@@ -123,6 +123,7 @@ jobs:
           tests/test_transformer_verification_publisher.py
           tests/test_transformer_campaign_spec.py tests/test_transformer_roles.py
           tests/test_transformer_role_provenance.py tests/test_transformer_provenance_failures.py
+          tests/test_transformer_role_audit_bundle.py
           tests/test_transformer_provenance_policy.py
 
       - name: Verify governed image submission contracts (inert metadata only)
