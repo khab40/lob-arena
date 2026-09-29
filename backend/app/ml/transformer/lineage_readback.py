@@ -51,9 +51,14 @@ def verify(bundle, phase_one, phase_two):
         if (shard.replay_manifest_sha256 != stream or shard.base_session_id != member["base_session_id"]
                 or shard.campaign_id != (member["run_id"] if member["mode"] == "hybrid" else None)):
             raise ValueError("frozen projection identity differs from replay domain")
-        records.append(verify_run(member, {**first, **second}, inventories,
+        record = verify_run(member, {**first, **second}, inventories,
             dataset_id=anchor["prepared"].dataset_ids[member["symbol"]],
-            stream_sha=stream, feature_config_sha=root.feature_config_sha256))
+            stream_sha=stream, feature_config_sha=root.feature_config_sha256)
+        # The verified default_label=0 spec makes every emitted row supervised.
+        if record["feature_row_count"] != shard.supervised_row_count:
+            raise ValueError("feature row count differs from frozen supervised row count")
+        record["supervised_row_count"] = shard.supervised_row_count
+        records.append(record)
     return {"schema_version": "transformer_lineage_semantics_v1", "anchor_sha256": digest(raw),
         "phase_one_receipts_sha256": first_receipt["receipts_sha256"],
         "phase_two_receipts_sha256": second_receipt["receipts_sha256"],

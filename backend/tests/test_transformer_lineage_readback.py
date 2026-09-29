@@ -45,7 +45,8 @@ def test_changed_retained_evidence_cannot_pass(phases, phase, filename):
         r.phase_readback(anchor, 2, second, inventories)
 
 
-def test_full_domain_semantics_keeps_remaining_gates_closed(tmp_path, monkeypatch):
+@pytest.fixture
+def semantic_audit(tmp_path, monkeypatch):
     # Authentication is exercised above; isolate frozen-model setup here.
     anchor, request_blobs = fixture()
     anchor["prepared"].dataset_ids = dict.fromkeys(("AAPL", "MSFT", "NVDA"), "fixture-dataset")
@@ -55,7 +56,7 @@ def test_full_domain_semantics_keeps_remaining_gates_closed(tmp_path, monkeypatc
         blobs.update(raw)
         inventories.setdefault(member["prefix"], {}).update(inventory[member["prefix"]])
         shards.append(NS(run_id=member["run_id"], fold="validation", replay_manifest_sha256="a" * 64,
-            base_session_id=member["base_session_id"], campaign_id=member["run_id"] if member["mode"] == "hybrid" else None))
+            supervised_row_count=2, base_session_id=member["base_session_id"], campaign_id=member["run_id"] if member["mode"] == "hybrid" else None))
     files = {name: "{}" for name in (*r.METADATA_NAMES, "frozen-root.json", "tabular-projection.json")}
     bundle = tmp_path / "bundle.json"
     bundle.write_bytes(canonical(dict(files=files)))
@@ -68,9 +69,15 @@ def test_full_domain_semantics_keeps_remaining_gates_closed(tmp_path, monkeypatc
     blobs.update({key: b"{}" for key in phase_keys(1)[1:28]})
     monkeypatch.setattr(r, "phase_readback", lambda _, phase, *args:
         ({key: blobs[key] for key in phase_keys(phase)}, inventories, dict(receipts_sha256="b" * 64)))
+    return bundle, tmp_path, shards
+
+
+def test_full_domain_semantics_keeps_remaining_gates_closed(semantic_audit):
+    bundle, tmp_path, shards = semantic_audit
     result = r.verify(bundle, tmp_path, tmp_path)
     assert len(result["runs"]) == 30 and result["metadata_lineage_verified"]
     assert result["authenticated_metadata_objects"] == 115
+    assert all(run["feature_row_count"] == run["supervised_row_count"] == 2 for run in result["runs"])
     assert all(result[key] is False for key in ("source_separation_verified", "class_support_verified",
         "gpu_ready", "execution_authorized"))
     assert result["payload_reads"] == result["cloud_reads"] == result["model_runs"] == 0
@@ -89,3 +96,17 @@ def test_failed_readback_does_not_publish_success(tmp_path, monkeypatch):
     with pytest.raises(SystemExit, match="FileExistsError"):
         r.main()
     assert output.read_bytes() == b"existing receipt"
+
+
+@pytest.mark.parametrize("member_index", [0, 1])
+@pytest.mark.parametrize("count", [1, 3])
+def test_projection_count_mismatch_does_not_publish_receipt(semantic_audit, monkeypatch, member_index, count):
+    bundle, path, shards = semantic_audit
+    shards[member_index].supervised_row_count = count
+    with pytest.raises(ValueError, match="row count"):
+        r.verify(bundle, path, path)
+    output = path / "success.json"
+    monkeypatch.setattr(r.sys, "argv", ["readback", str(bundle), str(path), str(path), str(output)])
+    with pytest.raises(SystemExit, match="failed: ValueError"):
+        r.main()
+    assert not output.exists()

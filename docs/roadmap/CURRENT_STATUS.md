@@ -6,7 +6,9 @@
 The next [Story #24 increment](../ml/transformer-lineage-semantics.md) reauthenticates
 both retained metadata phases and cross-checks replay, feature, label, configuration
 and artifact identities across all 30 validation runs. It keeps event-stream and
-replay-file hashes distinct. [199 inert tests pass](../evidence/transformer-lineage-semantics-20260929.json).
+replay-file hashes distinct. [203 inert tests pass](../evidence/transformer-lineage-semantics-20260929.json).
+[Bug #262](https://github.com/khab40/lob-arena/issues/262) also binds emitted feature
+counts to frozen supervised counts and rejects mismatches without a receipt.
 This is implementation evidence; live semantic verification has not run.
 
 The replacement metadata audit still awaits approval of its exact proposal below.

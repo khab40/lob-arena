@@ -23,6 +23,7 @@ def test_every_control_and_hybrid_domain_without_payloads(index):
     assert result["event_stream_sha256"] != result["replay_file_sha256"]
     assert result["negative_label_source"] == "research_control_assumption"
     assert result["independently_verified_clean"] is False
+    assert result["feature_row_count"] == 2
 
 
 @pytest.mark.parametrize("section,field,value", [

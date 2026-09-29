@@ -75,6 +75,7 @@ def verify_run(member, blobs, inventories, *, dataset_id, stream_sha, feature_co
         "base_session_id": replay.base_session_id, "campaign_id": replay.campaign_id,
         "event_stream_sha256": stream_sha, "replay_file_sha256": digest(replay_raw),
         "feature_metadata_sha256": digest(blobs[member["feature_key"]]),
+        "feature_row_count": feature["output"]["row_count"],
         "label_spec_sha256": labels.spec_hash(), "label_windows": [w.model_dump(mode="json") for w in labels.labels],
         "negative_label_source": "research_control_assumption", "independently_verified_clean": False}
 

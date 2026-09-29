@@ -62,3 +62,33 @@ not this changed checkout. Next, use its authenticated bytes for this readback,
 resolve source/window separation, then finish the signed CPU role-audit package.
 
 Verification: [inert regression evidence](../evidence/transformer-lineage-semantics-20260929.json).
+
+## Projection row-count binding
+
+[Bug #262](https://github.com/khab40/lob-arena/issues/262) fixes PR #261's P2 review
+finding. The verified `default_label=0` specification labels every emitted row,
+so its feature row count must equal the frozen shard's supervised row count.
+Successful per-run receipts retain both counts. This checks inventory agreement;
+source separation and class-support proof remain pending.
+
+```gherkin
+Feature: Frozen projection row-count binding
+  Scenario: Accept matching row inventories
+    Given authenticated feature metadata with research-control default labels
+    And its emitted row count equals the frozen supervised row count
+    When offline lineage verification runs
+    Then lineage verification succeeds with both counts recorded
+  Scenario Outline: Reject conflicting row inventories
+    Given authenticated feature metadata with research-control default labels
+    And the frozen supervised row count is <relation> the emitted feature count
+    When offline lineage verification runs
+    Then verification fails without publishing a success receipt
+    Examples:
+      | relation     |
+      | smaller than |
+      | greater than |
+```
+
+All four control/hybrid count-mismatch cases failed before the repair because no
+exception was raised; all 203 focused tests pass after repair. Fixtures contain
+only metadata. No cloud reads, payload reads or model runs were required.
