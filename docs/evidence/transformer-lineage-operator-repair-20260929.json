@@ -1,0 +1,54 @@
+{
+  "schema_version": "transformer_lineage_operator_repair_v1",
+  "date": "2026-09-29",
+  "bug": "https://github.com/khab40/lob-arena/issues/263",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "attempt": {
+    "schema_version": "transformer_lineage_wrapper_abort_v1",
+    "proposal_sha256": "4dc2972aac795410df60057bd1c84deea02f3119acd513f9a3cd03abd80a6a2b",
+    "wrapper_sha256": "9b671f454fa5de619fca2617bc298d3e89a293366d811d42cccdd990f44e2621",
+    "phase": 1,
+    "status": "aborted_before_credential_lookup",
+    "error_type": "TypeError",
+    "cause": "Path(app.__file__) received None for native namespace package",
+    "collector_started": false,
+    "get_attempts": 0,
+    "credential_lookups": 0,
+    "payload_reads": 0,
+    "model_runs": 0,
+    "grant_version": "137",
+    "cleanup": "independently verified at resource version 138",
+    "automatic_retry_authorized": false
+  },
+  "cleanup": {
+    "proposal_sha256": "4dc2972aac795410df60057bd1c84deea02f3119acd513f9a3cd03abd80a6a2b",
+    "status": "cleanup_verified",
+    "resource_version": "138",
+    "original_rules_restored": true,
+    "non_policy_settings_preserved": true,
+    "temporary_rules_removed": 6,
+    "access_seconds": 400.130141,
+    "within_approved_hour": true,
+    "get_attempts": 0,
+    "credential_lookups": 0,
+    "collector_started": false,
+    "model_runs": 0
+  },
+  "offline_probe": {
+    "offline_only": true,
+    "object_reads": 0,
+    "namespace_package": true,
+    "actual_pinned_backend": true,
+    "historical_helper_imports": true,
+    "credential_lookups": 0,
+    "operator_script_sha256": "5a92864220f6e88218440c621bf599dff385926cced1104c16ae2a4642263689",
+    "cloud_operations": 0,
+    "expected_calls": [
+      "inert_credentials",
+      "inert_transport"
+    ]
+  },
+  "focused_tests": 211,
+  "live_metadata_verification": false,
+  "new_attempt_authorized": false
+}

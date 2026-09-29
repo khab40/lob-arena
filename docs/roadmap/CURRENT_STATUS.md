@@ -1,5 +1,36 @@
 # Roadmap status — 2026-09-29
 
+## Transformer operator P1 corrections; audit on hold — 2026-09-29
+
+[PR #264](https://github.com/khab40/lob-arena/pull/264) repairs
+[Bug #265](https://github.com/khab40/lob-arena/issues/265): the ignored credential
+helper is no longer executed, and the identical backend is pinned to merged main
+history. Both attack reproductions are blocked; 219 focused tests pass, including
+16 inert operator cases. A fresh main-history clone passes complete offline preflight.
+[Evidence and scenarios](../ml/transformer-lineage-wrapper-repair.md).
+
+The approved r2 proposal was never executed and remains preserved on review hold.
+Review the corrections and approve the amended exact proposal before operator
+handoffs. Its 115-key scope and bounds are unchanged. Access remains removed at
+bucket version 138; metadata/source-window proof and later CPU/MLflow readiness
+remain incomplete. G8/G9 stay closed; no GPU execution is authorized.
+
+## Transformer replacement wrapper abort; access removed — 2026-09-29
+
+PR #261 is merged and its P2 row-count repair passed all 23 checks. The approved
+replacement metadata audit then failed in local orchestration before credentials
+or any GET: the wrapper assumed a native namespace package had `__init__.py`.
+[Bug #263](https://github.com/khab40/lob-arena/issues/263) adds a versioned,
+namespace-aware operator script, import-origin checks and one-attempt interlocks.
+[Repair and evidence](../ml/transformer-lineage-wrapper-repair.md) include 211
+focused tests and a no-network probe using the actual pinned backend/helper imports.
+
+Abort cleanup is independently verified at bucket version 138; only the original
+two rules remain. Access lasted 400.130141 seconds. No retry occurred. Review the
+repair and approve a new exact attempt before restoring access. Actual metadata
+verification, source/window proof, CPU role audit and MLflow readiness still gate
+GPU execution. G8/G9 remain closed.
+
 ## Transformer offline lineage verification implemented — 2026-09-29
 
 [PR #258](https://github.com/khab40/lob-arena/pull/258) is merged; its CI passed.
