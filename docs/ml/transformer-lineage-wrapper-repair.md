@@ -47,7 +47,7 @@ consumes that attempt. An existing abort marker prevents reuse. The retired loca
 wrapper is disabled and its original bytes are preserved.
 
 Eight inert operator tests cover complete execution with native namespaces,
-foreign origins, changed script, expired/missing approval, search-path restoration
+foreign origins, changed script, expired grants or changed approval, search-path restoration
 and consumed attempts. All 211 focused tests pass. A separate offline probe uses
 the actual 321-file pinned backend and actual historical helper imports, with
 credential/collector substitutes and network/credential CLI calls blocked. It
@@ -56,3 +56,9 @@ reaches the expected substituted transport without object reads or credentials.
 The metadata audit and source/window proof remain incomplete. Review this repair
 and a new exact one-attempt proposal before any further grant. This PR authorizes
 no cloud retry, GPU work or final-test access; G8/G9 stay closed.
+
+The [r2 proposal](../evidence/transformer-lineage-replacement-r2-proposal-20260929.json)
+binds the repaired operator script and unchanged collector backend. It requests
+115 new GETs; the cumulative bound remains 116 because this wrapper abort read
+zero objects. Its fresh output root preserves both aborted attempts. Approval is
+pending; no r2 grant, credential lookup or collection has occurred.

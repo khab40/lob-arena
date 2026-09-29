@@ -192,10 +192,13 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    are merged. PR #258 and its compatibility repair are also merged with passing CI.
    The [lineage audit](../ml/transformer-lineage-audit.md) prepares
    a separately gated 115-key metadata read in two policy-bounded phases. Next
-   authorize the [one-attempt replacement](../evidence/transformer-lineage-replacement-proposal-20260929.json).
-   Temporary-access removal is independently verified at bucket version 136. The first
+   review the [namespace-wrapper repair](../ml/transformer-lineage-wrapper-repair.md)
+   and authorize a new exact attempt: the approved replacement stopped before any
+   GET or credential lookup.
+   Temporary-access removal is independently verified at bucket version 138. The first
    approved attempt stopped after one request GET; no automatic retry is allowed.
-   The [offline semantic verifier](../ml/transformer-lineage-semantics.md) is implemented
+   PR #261 merged the [offline semantic verifier](../ml/transformer-lineage-semantics.md), including
+   its row-count binding repair. It is implemented
    and tested on inert metadata; live verification remains pending. After collection,
    verify replay/feature/label lineage and C3 runtime identity, then finish the signed
    CPU execution package. Source/window proof, CPU runtime evidence and platform
