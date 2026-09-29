@@ -1,0 +1,28 @@
+{
+  "schema_version": "transformer_provenance_review_repair_v1",
+  "date": "2026-09-29",
+  "bug": "https://github.com/khab40/lob-arena/issues/251",
+  "parent_story": "https://github.com/khab40/lob-arena/issues/24",
+  "base_commit": "b3724b88fb4e5d4d29a453c4f1d58758a2e5a2ef",
+  "p1": {
+    "review": "https://github.com/khab40/lob-arena/pull/249#discussion_r4129526543",
+    "disposition": "exact path AND exact extracted public checksum on generic-api-key; historical commit fingerprint removed",
+    "scanner_version": "8.24.3",
+    "squash_and_line_move": "pass",
+    "unsuppressed_baseline": "detects public checksum",
+    "negative_controls": "one-character different value and identical checksum at another path both detected",
+    "actual_post_merge_ci": "passed; hypothetical rewritten-history fragility reproduced"
+  },
+  "p2": {
+    "review": "https://github.com/khab40/lob-arena/pull/249#discussion_r4129526551",
+    "disposition": "all normalized source streams must equal frozen source SHA-256",
+    "red_before_fix": 10,
+    "green_after_fix": 10,
+    "focused_suite_passed": 119
+  },
+  "retained_bundle_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+  "bundle_and_receipt_unchanged": true,
+  "source_separation_verified": false,
+  "gpu_ready": false,
+  "cloud_operations": 0
+}

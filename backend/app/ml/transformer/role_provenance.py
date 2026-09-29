@@ -75,6 +75,7 @@ def verify_chain(blobs, source, validation_run_ids):
         dataset = normalized.manifests[symbol]
         if (dataset.symbol != symbol or dataset.trade_date != DATE
                 or dataset.source_type != "nasdaq_itch"
+                or dataset.source_stream_sha256 != source.source_sha256
                 or dataset.parser_config_sha256 != source.parser_config_sha256
                 or dataset.dataset_id != prepared.dataset_ids[symbol]):
             raise ValueError("normalized dataset escaped its source domain")
