@@ -1,0 +1,36 @@
+{
+  "schema_version": "transformer_lineage_semantics_implementation_v1",
+  "date": "2026-09-29",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "base_commit": "8d93e3da68d5d576efa49f6ec8d525842ff3247f",
+  "verification": {
+    "focused_tests": 203,
+    "passed": true,
+    "fixtures": "inert metadata only",
+    "producer_commit": "cf426c0db0940a985133fc7c8482623186acd5a4",
+    "unchanged_producer_files": [
+      "backend/app/features/models.py",
+      "backend/app/features/io.py"
+    ],
+    "p2_regression": {
+      "bug": "https://github.com/khab40/lob-arena/issues/262",
+      "mismatch_cases_failed_before_fix": 4,
+      "mismatch_cases_passed_after_fix": 4,
+      "covers": [
+        "control",
+        "hybrid",
+        "smaller_projection_count",
+        "larger_projection_count",
+        "no_success_receipt_on_mismatch",
+        "matching_counts_recorded"
+      ]
+    }
+  },
+  "live_semantic_verification": false,
+  "cloud_reads": 0,
+  "payload_reads": 0,
+  "model_runs": 0,
+  "source_separation_verified": false,
+  "gpu_ready": false,
+  "execution_authorized": false
+}
