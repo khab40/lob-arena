@@ -1,4 +1,21 @@
-# Roadmap status — 2026-09-28
+# Roadmap status — 2026-09-29
+
+## Transformer CPU audit evidence — 2026-09-29
+
+Story [#24](https://github.com/khab40/lob-arena/issues/24), continuing draft #249:
+the [CPU evidence bundle](../evidence/transformer-role-audit-bundle-20260929.json)
+now binds all 29 verified metadata objects, their version receipts, three frozen
+development manifests and the train-only normalizer. Its 220,125 bytes were
+independently checked in a fresh process; 44 new inert tests cover mutation,
+inventory, bounds and overwrite rejection. Temporary access remains removed;
+packaging needed no cloud or payload reads.
+
+[Producer review](../evidence/transformer-source-lineage-review-20260929.json)
+supports per-instrument processing but does not prove the actual source/window
+chain. Next: bind validation replay/feature/label artifacts and C3 runtime identity,
+then finish the signed CPU Job package and request exact execution authorization.
+Class support and MLflow readiness remain pending. Implementation is approved;
+GPU execution is not. G8/G9 remain closed, and frozen roles are unchanged.
 
 ## Transformer provenance continuation — 2026-09-28
 
