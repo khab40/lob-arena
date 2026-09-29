@@ -188,8 +188,11 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    verified the 29-object metadata chain and 30 replay domains after the corrected
    temporary grant. Access cleanup is independently verified at bucket version 134.
    The verified metadata and train-only normalizer are now bound into a
-   deterministic CPU evidence bundle, independently checked offline. Next bind
-   replay/feature/label lineage and C3 runtime identity, then finish the signed
+   deterministic CPU evidence bundle, independently checked offline. #249/#254
+   are merged. The [next lineage audit](../ml/transformer-lineage-audit.md) prepares
+   a separately gated 115-key metadata read in two policy-bounded phases. Next
+   approve that exact access scope and bind replay/feature/label lineage and C3
+   runtime identity, then finish the signed
    CPU execution package. Source/window proof, CPU runtime evidence and platform
    readiness remain gates before GPU execution.
    #24 remains

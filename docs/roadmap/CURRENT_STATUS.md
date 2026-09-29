@@ -1,5 +1,24 @@
 # Roadmap status — 2026-09-29
 
+## Transformer lineage audit preparation — 2026-09-29
+
+PR #254 is merged, including the Gitleaks installation-order repair. The next
+[lineage increment](../ml/transformer-lineage-audit.md) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) authenticates the C3
+request, checkpoint inventories and exact metadata members. Its
+[115-key proposal](../evidence/transformer-lineage-access-proposal-20260929.json)
+requires new access approval: 58 request/inventory/feature files followed by
+57 replay/label-window metadata files, with phase replacement and final removal.
+The old grant remains removed at bucket version 134; this increment has performed
+no object reads or cloud mutations. The retained bundle was reverified offline.
+
+C4's `replay_manifest_sha256` holds an event-stream hash. Actual replay file bytes
+must instead be authenticated through frozen checkpoint inventories. Collection
+code is prepared; live metadata authentication and semantic source/window proof
+remain pending. Then finish the signed CPU role-audit package and obtain separate
+execution approval. MLflow readiness under #19 remains open; GPU execution is
+not authorized. G8/G9 remain closed.
+
 ## PR #249 review repairs — 2026-09-29
 
 PR #249 is merged. [Bug #251](https://github.com/khab40/lob-arena/issues/251)
@@ -13,7 +32,7 @@ readiness remain open; this repair performs no cloud/model execution.
 
 ## Transformer CPU audit evidence — 2026-09-29
 
-Story [#24](https://github.com/khab40/lob-arena/issues/24), continuing draft #249:
+Story [#24](https://github.com/khab40/lob-arena/issues/24), delivered in merged #249:
 the [CPU evidence bundle](../evidence/transformer-role-audit-bundle-20260929.json)
 now binds all 29 verified metadata objects, their version receipts, three frozen
 development manifests and the train-only normalizer. Its 220,125 bytes were
