@@ -1,4 +1,43 @@
-# Roadmap status — 2026-09-28
+# Roadmap status — 2026-09-29
+
+## Transformer CPU audit evidence — 2026-09-29
+
+Story [#24](https://github.com/khab40/lob-arena/issues/24), continuing draft #249:
+the [CPU evidence bundle](../evidence/transformer-role-audit-bundle-20260929.json)
+now binds all 29 verified metadata objects, their version receipts, three frozen
+development manifests and the train-only normalizer. Its 220,125 bytes were
+independently checked in a fresh process; 44 new inert tests cover mutation,
+inventory, bounds and overwrite rejection. Temporary access remains removed;
+packaging needed no cloud or payload reads.
+
+[Producer review](../evidence/transformer-source-lineage-review-20260929.json)
+supports per-instrument processing but does not prove the actual source/window
+chain. Next: bind validation replay/feature/label artifacts and C3 runtime identity,
+then finish the signed CPU Job package and request exact execution authorization.
+Class support and MLflow readiness remain pending. Implementation is approved;
+GPU execution is not. G8/G9 remain closed, and frozen roles are unchanged.
+
+## Transformer provenance continuation — 2026-09-28
+
+PR #248 is merged. The [next provenance increment](../ml/transformer-role-provenance.md)
+implements an exact 29-object validation metadata inventory, frozen-root chain
+checks and bounded readback with object-version receipts. The development identity
+initially returned `AccessDenied` for preparation metadata. The [live audit](../evidence/transformer-validation-metadata-audit-20260928.json)
+now verifies all 29 objects (42,064 bytes) and 30 replay domains, with a matching
+fresh-process readback. The [temporary access proposal](../evidence/transformer-validation-metadata-access-proposal-20260928.json)
+has [operator approval](../evidence/transformer-validation-metadata-approval-20260928.json);
+the corrected policy was applied at version 133 and [removal independently verified](../evidence/transformer-validation-metadata-cleanup-20260928.json)
+at version 134. Both original rules and all other settings are preserved. The
+48-minute-31-second permission window stayed within approval. No sequence/event
+payload, Job or model run occurred. The first handoff was rejected for exceeding
+ten paths per policy rule, leaving version 132 unchanged at that point. [Bug #250](https://github.com/khab40/lob-arena/issues/250)
+partitions the same approved keys into three rules (10/10/9), with provider-limit
+tests and exact removal checks. This metadata audit and its access cleanup are complete.
+
+Next: verify source observations, label horizons and replay/feature lineage; finish the
+signed-context CPU role audit package and obtain its exact execution approval.
+MLflow readiness remains a separate gate under #19. GPU readiness is false;
+G8/G9 remain closed. Earlier snapshots below remain historical.
 
 ## Transformer readiness implementation — 2026-09-28
 

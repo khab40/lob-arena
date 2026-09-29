@@ -1,0 +1,59 @@
+{
+  "schema_version": "transformer_source_lineage_review_v1",
+  "date": "2026-09-29",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "producer_source": "retained C4 request git_commit; C3 runtime binding still required",
+  "files": [
+    {
+      "path": "backend/app/data_ingestion/itch.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "f6760df09241253c56941572e6bbda6045f3a5b3745d7793f6a6ec1d03a7f1a5",
+      "matches_current_bytes": true
+    },
+    {
+      "path": "backend/app/market_data/replay_export.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "a829f09cce6c5658574b3148b97efdb9b588df59cefc1321178b687b51b1d19c",
+      "matches_current_bytes": true
+    },
+    {
+      "path": "backend/app/market_data/projections.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "6980ba947079387c8a59881ec77f4c628d64342a2a969aa7295d89a49366b6c1",
+      "matches_current_bytes": false
+    },
+    {
+      "path": "backend/app/features/pipeline.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "e5e839e67909a839ed3a8ce779f05526e1d259a6347da0bffa20b35185aff2fe",
+      "matches_current_bytes": true
+    },
+    {
+      "path": "backend/app/features/models.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "1e5fcaed61dc45ace1a671dd318fbbd9787ceaf4996aea1d584251e780cca2d4",
+      "matches_current_bytes": true
+    },
+    {
+      "path": "backend/app/features/io.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "934123e285525418c585900ed59307310d9236dd0b24ea080cefa303b3dbdc58",
+      "matches_current_bytes": true
+    },
+    {
+      "path": "backend/app/features/streaming.py",
+      "producer_commit": "5c851822cb86c834ead2f6f850fa9789ade8adfe",
+      "sha256": "381784f8e20cee384c893d4155462df078a1427471a9e273a2be48bf630bb58e",
+      "matches_current_bytes": true
+    }
+  ],
+  "projection_difference": "Only C4MlflowDatasetReleaseReceipt model added since producer; materialization logic unchanged",
+  "source_separation_verified": false,
+  "missing": [
+    "C3 producer request/runtime binding",
+    "30 validation replay manifests pinned by C4",
+    "feature metadata and label-spec/ground-truth bindings"
+  ],
+  "cloud_reads": 0,
+  "model_runs": 0
+}

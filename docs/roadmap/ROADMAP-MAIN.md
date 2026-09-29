@@ -5,7 +5,7 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-09-28. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-09-29. See [current status and evidence](CURRENT_STATUS.md).
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -183,9 +183,15 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    [r2 replacement passed independent verification](../ml/transformer-development-results-r2.md).
    PR #239 is merged. The [bounded GPU training/checkpoint, calibration and MLflow
    plan](../ml/transformer-gpu-campaign-plan.md) was approved and merged in #241.
-   The first [readiness increment](../ml/transformer-campaign-readiness.md) implements
-   configuration and role auditing; source provenance, CPU runtime evidence and
-   platform readiness remain gates before GPU execution.
+   The first [readiness increment](../ml/transformer-campaign-readiness.md) merged
+   in #248. The [provenance continuation](../ml/transformer-role-provenance.md)
+   verified the 29-object metadata chain and 30 replay domains after the corrected
+   temporary grant. Access cleanup is independently verified at bucket version 134.
+   The verified metadata and train-only normalizer are now bound into a
+   deterministic CPU evidence bundle, independently checked offline. Next bind
+   replay/feature/label lineage and C3 runtime identity, then finish the signed
+   CPU execution package. Source/window proof, CPU runtime evidence and platform
+   readiness remain gates before GPU execution.
    #24 remains
    In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
@@ -207,7 +213,7 @@ GitHub: [#24 Market-sequence Transformer](https://github.com/khab40/lob-arena/is
 
 Classifier/training implementation has not started. Frozen C4 causal windows,
 masks, normalization and exact baseline alignment passed independent governed-data
-runtime verification in merged #239. Next is the proposed
+runtime verification in merged #239. Implementation follows the approved
 [eight-step GPU campaign](../ml/transformer-gpu-campaign-plan.md): one GPU at a
 time, four fixed trials, two seed confirmations, separate calibration roles and
 verified MLflow packaging. The ceiling is eight GPU Jobs / 14 GPU-hours plus two

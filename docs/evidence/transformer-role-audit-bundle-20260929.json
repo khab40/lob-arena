@@ -1,0 +1,36 @@
+{
+  "bundle_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+  "bundle_size_bytes": 220125,
+  "campaign_sha256": "e7601f6e265f583eaffdaca3e2e23ca6cff53dbd0a73ccc9fdcc13ed1d744e86",
+  "execution_authorized": false,
+  "gpu_ready": false,
+  "metadata_chain_verified": true,
+  "metadata_objects": 29,
+  "metadata_sha256": "0e1bc71a8442bd20df510a3be2b6576e9eb7bff391b38228c66c8422159c62be",
+  "model_runs": 0,
+  "normalization_sha256": "339e4a2b5738d4219a0fe64768e7d5babb86934cd61f2224c76c6a1b295433bc",
+  "payload_reads": 0,
+  "schema_version": "transformer_role_audit_bundle_receipt_v1",
+  "source_separation_verified": false,
+  "training_binding_verified": true,
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "bundle_path": "outputs/transformer-role-provenance-20260928/cpu-role-audit-evidence-20260929.json",
+  "independent_readback": {
+    "bundle_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+    "verified_files": 34,
+    "metadata_objects": 29,
+    "verifier": "fresh stdlib process; no role_audit_bundle import",
+    "source_separation_verified": false,
+    "new_cloud_reads": 0
+  },
+  "limits": {
+    "bundle_bytes": 524288,
+    "file_bytes": 262144
+  },
+  "remaining": [
+    "source_window_and_replay_feature_lineage",
+    "signed_cpu_runtime_package_and_exact_authorization",
+    "class_support",
+    "mlflow_readiness"
+  ]
+}

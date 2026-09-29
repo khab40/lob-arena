@@ -1,0 +1,23 @@
+{
+  "schema_version": "transformer_metadata_cleanup_v1",
+  "date": "2026-09-28",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "repair_ticket": "https://github.com/khab40/lob-arena/issues/250",
+  "operator_operation_id": "opstoragebucket-e00rjjefhdfsg108pz",
+  "independent_verification": "Nebius MCP storage bucket get",
+  "bucket_id": "storagebucket-e001935725601413893009",
+  "resource_version": "134",
+  "remaining_rules": 2,
+  "original_rules_preserved": true,
+  "temporary_rules_removed": 3,
+  "non_policy_settings_unchanged": true,
+  "grant_applied_at": "2026-09-28T17:10:25.637078Z",
+  "grant_removed_at": "2026-09-28T17:58:56.753356Z",
+  "permission_window_seconds": 2911.116278,
+  "approved_window_seconds": 3600,
+  "within_approved_window": true,
+  "readback_sha256": "ad1553ff980950e5c3fb69934ce00d7cb3be9d0d70a009656270acfee9ee641b",
+  "cloud_jobs": 0,
+  "payload_reads": 0,
+  "status": "verified_complete"
+}

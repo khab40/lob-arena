@@ -1,6 +1,6 @@
 # Bounded Transformer development campaign — 2026-09-28
 
-Status: **proposed; implementation approval pending; no GPU execution authorized**.
+Status: **implementation approved; readiness work in progress; no GPU execution authorized**.
 [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
