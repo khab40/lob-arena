@@ -1,0 +1,39 @@
+{
+  "schema_version": "transformer_lineage_attempt_v1",
+  "date": "2026-09-29",
+  "pr": "https://github.com/khab40/lob-arena/pull/258",
+  "bug": "https://github.com/khab40/lob-arena/issues/260",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "attempt_source_commit": "9aabca9a0bb4d8bba13ee19207c37f3b028943c7",
+  "proposal_sha256": "7d44ea6cd17da68d71133c2147294373dd9b011ac8bfff28f384777309493ddf",
+  "operator_approval": "Approve both phases and operator handoffs",
+  "phase": 1,
+  "status": "aborted",
+  "measurements": {
+    "completed_response_bytes": 1830,
+    "deadline_seconds": 300,
+    "get_attempts": 1,
+    "model_runs": 0,
+    "payload_reads": 0,
+    "response_byte_bound": 15204410
+  },
+  "request_receipt": {
+    "key": "data/public-sample-v1/prepared/2019-10-30/nasdaq-c3-10302019-cf426c0-v2-20260903/request.json",
+    "sha256": "7f2bd13ac8cdc3320b5a893fd32d5068fceb171f13d65090e6906ce89f9c5a8d",
+    "size_bytes": 1830,
+    "version_id": "1"
+  },
+  "cause": "Current request model injected the later optional mlflow_tracking_uri null default before hashing",
+  "producer_commit": "cf426c0db0940a985133fc7c8482623186acd5a4",
+  "expected_binding_sha256": "59e5b27040647e22d2d4bae5caa661577833bcb1e95da460778cbcf32fd8252f",
+  "repair": "Keep strict model/domain validation; hash retained producer request bytes for the frozen binding",
+  "retained_request_verified_offline": true,
+  "additional_gets_after_failure": 0,
+  "regression": "historical request without optional MLflow field failed before repair and passes afterward; changed bytes rejected",
+  "focused_tests_passed": 129,
+  "phase_two_started": false,
+  "source_separation_verified": false,
+  "gpu_ready": false,
+  "cleanup_status": "operator removal requested at bucket version 135; not yet verified",
+  "replacement_execution_authorized": false
+}

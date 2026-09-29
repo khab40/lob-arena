@@ -1,5 +1,59 @@
 # Roadmap status — 2026-09-29
 
+## Transformer audit cleanup verified; replacement prepared — 2026-09-29
+
+[Temporary access removal is independently verified](../evidence/transformer-lineage-cleanup-20260929.json)
+at bucket version 136: both original rules and all non-policy settings are
+preserved. The six temporary rules existed for 1,000.405439 seconds, within the
+approved hour. The aborted attempt remains preserved with one GET/1,830 bytes.
+PR #258's historical-request repair at `4b5b511` passed 129 focused tests and all
+23 GitHub checks; the actual retained request verifies offline.
+
+The [one-attempt replacement proposal](../evidence/transformer-lineage-replacement-proposal-20260929.json)
+pins that repaired implementation and the unchanged 115-key scope. It requests
+115 new GETs (116 including the aborted attempt), with the same two bounded
+phases, operator grant/replacement/removal and no automatic retries. New output
+directories preserve the aborted evidence. Approval is pending; no replacement
+grant or read has occurred. Story #24 remains in progress; source/window proof,
+CPU execution packaging, class support and MLflow readiness still gate GPU work.
+
+## Transformer metadata audit abort and compatibility repair — 2026-09-29
+
+The operator approved PR #258's exact two-phase proposal. Phase-one access was
+independently verified at bucket version 135 (eight rules). The
+[audit stopped after one GET, 1,830 bytes](../evidence/transformer-lineage-attempt-20260929.json):
+the new verifier added today's optional `mlflow_tracking_uri: null` before hashing
+the older producer request. [Bug #260](https://github.com/khab40/lob-arena/issues/260)
+under [Story #24](https://github.com/khab40/lob-arena/issues/24) repairs that defect
+by authenticating the retained producer bytes while preserving strict schema and
+domain checks. Those original bytes reproduce the frozen binding exactly.
+The regression failed before repair; 129 focused tests pass afterward.
+
+No retry, inventory/member read or phase-two collection occurred. The already
+approved abort-removal command is prepared; operator removal and independent
+readback are pending. Review the repair before a separately authorized replacement
+audit. CPU execution packaging, semantic source/window proof, class support and
+MLflow readiness remain open; GPU execution is not authorized. G8/G9 remain closed.
+
+## Transformer lineage audit preparation — 2026-09-29
+
+PR #254 is merged, including the Gitleaks installation-order repair. The next
+[lineage increment](../ml/transformer-lineage-audit.md) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) authenticates the C3
+request, checkpoint inventories and exact metadata members. Its
+[115-key proposal](../evidence/transformer-lineage-access-proposal-20260929.json)
+requires new access approval: 58 request/inventory/feature files followed by
+57 replay/label-window metadata files, with phase replacement and final removal.
+The old grant remains removed at bucket version 134; this increment has performed
+no object reads or cloud mutations. The retained bundle was reverified offline.
+
+C4's `replay_manifest_sha256` holds an event-stream hash. Actual replay file bytes
+must instead be authenticated through frozen checkpoint inventories. Collection
+code is prepared; live metadata authentication and semantic source/window proof
+remain pending. Then finish the signed CPU role-audit package and obtain separate
+execution approval. MLflow readiness under #19 remains open; GPU execution is
+not authorized. G8/G9 remain closed.
+
 ## PR #249 review repairs — 2026-09-29
 
 PR #249 is merged. [Bug #251](https://github.com/khab40/lob-arena/issues/251)
@@ -13,7 +67,7 @@ readiness remain open; this repair performs no cloud/model execution.
 
 ## Transformer CPU audit evidence — 2026-09-29
 
-Story [#24](https://github.com/khab40/lob-arena/issues/24), continuing draft #249:
+Story [#24](https://github.com/khab40/lob-arena/issues/24), delivered in merged #249:
 the [CPU evidence bundle](../evidence/transformer-role-audit-bundle-20260929.json)
 now binds all 29 verified metadata objects, their version receipts, three frozen
 development manifests and the train-only normalizer. Its 220,125 bytes were
