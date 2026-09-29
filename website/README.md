@@ -73,13 +73,20 @@ in a dedicated, reviewed dependency change. Full-repository checkout on a
 symlink-capable filesystem is required (GitHub Actions Linux supports this).
 Changes to either shared dependency file trigger website CI.
 
-`src/tokens.css` snapshots the existing frontend's navy/purple dark theme.
+`src/tokens.css` adapts LOB Arena's own purple palette to white backgrounds
+and readable dark text. `/frontend` keeps its own theme.
 `TeamMark.tsx` is a local copy of its pure icon component. Provenance is revision
 `b3724b8`; all other components are website-local to avoid coupling the operator
 application to public presentation work. `/frontend` is unchanged.
 
 ## Content and data boundaries
 
+- Home's **Request a walkthrough** link opens `/lob-arena/#/about#contact` and
+  focuses the contact section. The published email address was supplied by the
+  operator in [Story #257](https://github.com/khab40/lob-arena/issues/257).
+  Its `mailto:` link prepares an editable subject/body in the visitor's email
+  app; the website neither sends email nor collects inquiry data. The adjacent
+  LinkedIn link uses the operator-supplied profile; no scheduling service is used.
 - `src/data/replay.ts`: hand-authored synthetic price/depth/event sequences and
   scripted flags. No licensed payloads, model training, inference or scores.
 - `src/data/research.ts`: dated, immutable source links and verified research

@@ -12,7 +12,7 @@ export default function Home() {
         <h1>Put detection<br />under <em>pressure.</em></h1>
         <p className="lede">Replay the market. Introduce controlled attacks. Find out what your detectors actually catch.</p>
         <p className="hero-description">LOB Arena is a research and validation platform for market-abuse detection, built around reproducible limit-order-book scenarios and inspectable evidence.</p>
-        <div className="actions"><Link to="/demo" className="button">Explore the arena <span aria-hidden="true">↗</span></Link><Link to="/research" className="button secondary">Read the research</Link></div>
+        <div className="actions"><Link to="/demo" className="button">Explore the arena <span aria-hidden="true">↗</span></Link><Link to="/research" className="button secondary">Read the research</Link><Link to="/about#contact" className="text-link walkthrough-link">Request a walkthrough <span aria-hidden="true">→</span></Link></div>
         <div className="hero-footnote"><span className="status-dot" /> Bundled synthetic demo · no account required</div>
       </div>
       <div className="hero-terminal">

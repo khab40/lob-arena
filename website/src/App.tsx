@@ -13,14 +13,21 @@ const pages = [
   ['/architecture', 'Architecture', '04'], ['/detectors', 'Detectors / ML', '05'], ['/about', 'About / Docs', '06'],
 ];
 export default function App() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   const [open, setOpen] = useState(false);
   const main = useRef<HTMLElement>(null);
   useEffect(() => {
     document.title = `${pages.find(([path]) => path === pathname)?.[1] ?? 'Page not found'} · LOB Arena`;
-    window.scrollTo(0, 0);
-    main.current?.focus();
-  }, [pathname]);
+    const contact = pathname === '/about' && hash === '#contact'
+      ? document.getElementById('contact') : null;
+    if (contact) {
+      contact.scrollIntoView({ block: 'start' });
+      contact.focus({ preventScroll: true });
+    } else {
+      window.scrollTo(0, 0);
+      main.current?.focus();
+    }
+  }, [pathname, hash]);
   return <div className="app-shell">
     <a className="skip-link" href="#main-content" onClick={(event) => { event.preventDefault(); main.current?.focus(); }}>Skip to content</a>
     <aside className="sidebar">
