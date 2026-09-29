@@ -125,3 +125,9 @@ an unsuppressed baseline and negative controls at the same and different paths.
 The original September 28 scanner record is historical; this repair supersedes
 its fingerprint-only disposition. Actual post-merge CI was green; no current
 main-branch failure or credential exposure is claimed.
+
+[Bug #255](https://github.com/khab40/lob-arena/issues/255) makes the regression
+self-contained: CI explicitly downloads Gitleaks 8.24.3 for Linux x64, verifies
+the pinned archive SHA-256 before extraction and passes its absolute executable
+path to the script. It does not depend on the preceding action modifying `PATH`.
+Download/checksum failures stop the step before the scanner can execute.
