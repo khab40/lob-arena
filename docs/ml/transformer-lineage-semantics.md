@@ -56,10 +56,11 @@ compared with producer commit `cf426c0db0940a985133fc7c8482623186acd5a4` and are
 The output preserves the research-control negative-label assumption. Label windows
 are reported in producer tick coordinates; this does not prove observation or
 label-horizon separation, independently clean negatives, or per-role class counts.
-No real semantic readback has run yet: the replacement collection is awaiting its
-own approval. Its pinned collector must run from its approved backend snapshot,
-not this changed checkout. Next, use its authenticated bytes for this readback,
-resolve source/window separation, then finish the signed CPU role-audit package.
+The approved [r3 collection and semantic readback passed on 2026-10-01](transformer-lineage-r3-results.md):
+all 115 objects and 30 validation-run bindings were independently verified, and
+temporary access was removed. Source/window separation, the signed CPU role-audit
+package and exact execution approval remain next; metadata agreement does not
+satisfy those gates.
 
 Verification: [inert regression evidence](../evidence/transformer-lineage-semantics-20260929.json).
 
