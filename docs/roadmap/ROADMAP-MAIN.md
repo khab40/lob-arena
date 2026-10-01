@@ -192,12 +192,13 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    are merged. PR #258 and its compatibility repair are also merged with passing CI.
    The [lineage audit](../ml/transformer-lineage-audit.md) prepares
    a separately gated 115-key metadata read in two policy-bounded phases. Next
-   review the [namespace and P1 operator repairs](../ml/transformer-lineage-wrapper-repair.md)
-   and authorize the amended exact r2 proposal: ignored credential code is removed,
-   and the identical backend pin resolves from merged main history. The original
-   r2 approval remains preserved and unexecuted on review hold.
-   Temporary-access removal is independently verified at bucket version 138. The first
-   approved attempt stopped after one request GET; no automatic retry is allowed.
+   review the [actual-runtime readiness repair](../ml/transformer-runtime-preflight.md)
+   for Bug #266, then approve the exact r3 replacement proposal. PR #264 is merged;
+   its amended r2 audit stopped before any GET because the interpreter lacked the
+   S3 SDK. The replacement now requires real-client preflight in the pinned
+   interpreter before a grant and matching readiness before credentials.
+   Temporary-access removal is verified at bucket version 140. All prior attempts
+   remain preserved and consumed; no automatic retry is allowed.
    PR #261 merged the [offline semantic verifier](../ml/transformer-lineage-semantics.md), including
    its row-count binding repair. It is implemented
    and tested on inert metadata; live verification remains pending. After collection,
