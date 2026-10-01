@@ -11,10 +11,15 @@ settings at bucket version 140 within 240.126501 seconds. The attempt is consume
 [real runtime preflight](../ml/transformer-runtime-preflight.md): exact interpreter,
 Python/dependency pins, actual S3 client construction with sockets blocked, a
 receipt predating the grant, and a repeated runtime check before credentials.
-235 focused tests and 11 mandatory SDK-enabled tests pass locally; the exact
+[PR #267](https://github.com/khab40/lob-arena/pull/267) also fixes
+[Bug #268](https://github.com/khab40/lob-arena/issues/268): preflight and live
+client creation now isolate credentials identically, excluding ambient tokens,
+profiles and expiration while restoring the caller environment.
+243 focused tests pass with the real SDK enabled, including all 17 runtime cases; the exact
 operator CLI also passes offline against the frozen backend. The
 [r3 proposal](../evidence/transformer-lineage-replacement-r3-proposal-20261001.json)
 retains the 115-key scope and requires review and separate exact approval.
+Its amended script/proposal binding supersedes the unapproved pre-review version.
 No r3 attempt, grant, credential lookup or S3 GET has occurred. GPU readiness
 and source/window proof remain incomplete; G8/G9 stay closed.
 

@@ -50,12 +50,12 @@
     "deletion"
   ],
   "operator_script": "scripts/collect_transformer_lineage_metadata.py",
-  "operator_script_sha256": "9d65dd418df07eb079b344b87ee02d9d29e97b8d4fded714c2030fe10179634d",
+  "operator_script_sha256": "e7ecde02db6fda7c63476a837f655bcfc7626091e4a38cd7bfe9586584561a64",
   "previous_proposal_sha256": "f7c057c1ddfe98dceee962cc11060e52997f6312bfeb9815a653d8fe255ece46",
   "prior_wrapper_abort_gets": 0,
   "local_preflight": "Actual pinned operator preflight with the exact interpreter and real SDK, dummy credentials, sockets/subprocesses blocked; receipt must predate grant and match execution runtime",
   "attempt_interlock": "exclusive phase-attempt marker; any runtime failure consumes phase attempt",
-  "credential_code_binding": "Fixed MysteryBox selectors and reader identity check reside in the SHA-bound operator; client factory comes from verified backend; no ignored helper execution",
+  "credential_code_binding": "Fixed MysteryBox selectors and reader identity check reside in the SHA-bound operator; client factory comes from verified backend; no ignored helper execution; probe and live construction share a cleared temporary environment that excludes ambient tokens, profiles and expiration and restores the caller environment",
   "operator_python": "outputs/transformer-lineage-replacement-r2-reviewed-20260929/operator-venv/bin/python",
   "runtime_python": "3.11.15",
   "runtime_dependencies": {

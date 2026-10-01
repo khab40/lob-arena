@@ -1,6 +1,8 @@
 """Check the actual SDK path as well as failures before runtime readiness."""
 import importlib.util
 from importlib import metadata
+import hashlib
+import json
 import os
 from pathlib import Path
 import platform
@@ -91,7 +93,8 @@ def test_probe_blocks_external_operations_and_restores_environment(operator, ine
     assert dict(os.environ) == original
 
 
-def test_real_pinned_s3_client_constructs_offline(operator):
+@pytest.fixture
+def real_client():
     # Default backend tests allow absent optional SDK; the dedicated CI step requires it.
     if os.environ.get("REQUIRE_REAL_METADATA_SDK") == "1":
         import botocore  # noqa: F401
@@ -101,7 +104,51 @@ def test_real_pinned_s3_client_constructs_offline(operator):
     requirements = Path(__file__).resolve().parents[2] / "serverless/transformer_inputs/requirements.txt"
     sdk_version = next(line.split("==")[1] for line in requirements.read_text().splitlines()
         if line.startswith("botocore=="))
+    return client, sdk_version
+
+
+def test_real_pinned_s3_client_constructs_offline(operator, real_client):
+    client, sdk_version = real_client
     receipt = operator.runtime_probe(client, {"runtime_python": platform.python_version(),
         "runtime_dependencies": {"botocore": sdk_version}})
     assert receipt["dependencies"]["botocore"] == sdk_version
     assert receipt["executable"] and receipt["prefix"]
+
+
+@pytest.mark.parametrize("ambient", [(), ("AWS_SESSION_TOKEN",), ("AWS_SECURITY_TOKEN",),
+    ("AWS_SESSION_TOKEN", "AWS_SECURITY_TOKEN"), ("AWS_PROFILE",), ("AWS_CREDENTIAL_EXPIRATION",)])
+def test_real_live_client_ignores_ambient_credentials(operator, real_client, monkeypatch, ambient):
+    client, sdk_version = real_client
+    for name in ("AWS_SESSION_TOKEN", "AWS_SECURITY_TOKEN", "AWS_PROFILE", "AWS_CREDENTIAL_EXPIRATION"):
+        monkeypatch.delenv(name, raising=False)
+    for name in ambient:
+        monkeypatch.setenv(name, "invalid-fixture")
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "original-fixture")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "original-fixture")
+    original = dict(os.environ)
+    monkeypatch.setattr(operator, "READER_ID_SHA256", hashlib.sha256(b"fixture-reader").hexdigest())
+    calls = []
+    def lookup(*args, **kwargs):
+        calls.append(args)
+        value = "fixture-reader" if len(calls) == 1 else "fixture-secret"
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"data": [
+            {"key": "secret", "string_value": value}]}).encode())
+    def prohibited(*args, **kwargs):
+        pytest.fail("offline SDK regression must not use network or subprocesses")
+    monkeypatch.setattr(operator.subprocess, "run", lookup)
+    for owner, name in ((socket.socket, "connect"), (socket.socket, "connect_ex"),
+            (socket, "create_connection"), (socket, "getaddrinfo"), (subprocess, "Popen")):
+        monkeypatch.setattr(owner, name, prohibited)
+    operator.runtime_probe(client, {"runtime_python": platform.python_version(),
+        "runtime_dependencies": {"botocore": sdk_version}})
+    assert calls == []
+    s3 = operator.authenticated_client(client)
+    try:
+        credentials = s3._request_signer._credentials.get_frozen_credentials()
+        assert credentials.access_key == "fixture-reader"
+        assert credentials.secret_key == "fixture-secret"
+        assert credentials.token is None
+        assert dict(os.environ) == original
+        assert len(calls) == 2
+    finally:
+        s3.close()

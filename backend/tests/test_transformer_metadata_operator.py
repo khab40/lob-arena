@@ -136,7 +136,7 @@ def test_ignored_helper_cannot_execute(operator, attack):
     assert credentials == ["inert"]
 
 
-@pytest.mark.parametrize("failure", [None, "lookup", "ambiguous_id", "ambiguous_secret", "identity", "malformed"])
+@pytest.mark.parametrize("failure", [None, "lookup", "ambiguous_id", "ambiguous_secret", "identity", "malformed", "client"])
 def test_bound_credential_lookup_and_client(operator, monkeypatch, failure):
     module, root, out, sha, _, _ = operator
     monkeypatch.setattr(module, "authenticated_client", module.real_authenticated_client)
@@ -144,6 +144,11 @@ def test_bound_credential_lookup_and_client(operator, monkeypatch, failure):
     monkeypatch.setattr(module, "READER_ID_SHA256", hashlib.sha256(b"fixture-reader").hexdigest())
     for name in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_EC2_METADATA_DISABLED"):
         monkeypatch.setenv(name, "fixture-original")
+    original = dict(module.os.environ)
+    if failure == "client":
+        def failed_client():
+            raise RuntimeError("fixture construction failure")
+        monkeypatch.setattr(sys.modules["app.ml.transformer.verification_transport"], "client", failed_client)
     calls = []
     def lookup(args, **kwargs):
         assert kwargs == {"capture_output": True, "timeout": 45}
@@ -169,10 +174,8 @@ def test_bound_credential_lookup_and_client(operator, monkeypatch, failure):
             module.run(root, out, sha, 1)
     else:
         assert module.run(root, out, sha, 1) == {"inert_transport": True}
-        assert module.os.environ["AWS_ACCESS_KEY_ID"] == "fixture-reader"
-        assert module.os.environ["AWS_SECRET_ACCESS_KEY"] == "fixture-secret"
-        assert module.os.environ["AWS_EC2_METADATA_DISABLED"] == "true"
         assert sys.modules["app.ml.transformer.lineage_transport"].calls[0][0] == "inert-client"
+    assert dict(module.os.environ) == original
     selectors = [("mbsec-e00arhndyprqr8egjw", "mbsecver-e00rjzerny1pf9qhna"),
                  ("mbsec-e00s7qtjj5n9ghacnh", "mbsecver-e00yfn5w54jc1ybkwv")]
     assert len(calls) == (1 if failure in {"lookup", "ambiguous_id", "malformed"} else 2)

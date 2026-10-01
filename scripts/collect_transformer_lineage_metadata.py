@@ -65,11 +65,19 @@ def verify_imports(code):
             raise ValueError("app package searches outside pinned runtime")
 
 
+def credential_environment(access_key, secret_key):
+    """Keep probe/live client construction identical and restore caller state."""
+    return patch.dict(os.environ, {"AWS_ACCESS_KEY_ID": access_key,
+        "AWS_SECRET_ACCESS_KEY": secret_key, "AWS_EC2_METADATA_DISABLED": "true",
+        "AWS_SHARED_CREDENTIALS_FILE": os.devnull, "AWS_CONFIG_FILE": os.devnull}, clear=True)
+
+
 def authenticated_client(client_factory):
     selectors = {
         'AWS_ACCESS_KEY_ID': ('mbsec-e00arhndyprqr8egjw', 'mbsecver-e00rjzerny1pf9qhna'),
         'AWS_SECRET_ACCESS_KEY': ('mbsec-e00s7qtjj5n9ghacnh', 'mbsecver-e00yfn5w54jc1ybkwv'),
     }
+    credentials = {}
     for name, (secret, version) in selectors.items():
         result = subprocess.run(['rtk', 'proxy', 'nebius', 'mysterybox', 'payload', 'get',
             '--secret-id', secret, '--version-id', version, '--format', 'json'],
@@ -80,11 +88,11 @@ def authenticated_client(client_factory):
             if item.get('string_value') and (name != 'AWS_SECRET_ACCESS_KEY' or item.get('key') == 'secret')]
         if len(entries) != 1:
             raise ValueError('Ambiguous credential selector')
-        os.environ[name] = entries[0]
-    if hashlib.sha256(os.environ['AWS_ACCESS_KEY_ID'].encode()).hexdigest() != READER_ID_SHA256:
+        credentials[name] = entries[0]
+    if hashlib.sha256(credentials['AWS_ACCESS_KEY_ID'].encode()).hexdigest() != READER_ID_SHA256:
         raise ValueError('Wrong development reader identity')
-    os.environ['AWS_EC2_METADATA_DISABLED'] = 'true'
-    return client_factory()
+    with credential_environment(credentials['AWS_ACCESS_KEY_ID'], credentials['AWS_SECRET_ACCESS_KEY']):
+        return client_factory()
 
 
 def load_proposal(out, approved_sha):
@@ -107,13 +115,10 @@ def runtime_probe(client_factory, proposal):
     for name, version in expected.items():
         if metadata.version(name) != version:
             raise ValueError("runtime dependency version differs: " + name)
-    environment = {"AWS_ACCESS_KEY_ID": "offline-fixture", "AWS_SECRET_ACCESS_KEY": "offline-fixture",
-        "AWS_EC2_METADATA_DISABLED": "true", "AWS_SHARED_CREDENTIALS_FILE": os.devnull,
-        "AWS_CONFIG_FILE": os.devnull}
     def prohibited(*args, **kwargs):
         raise RuntimeError("network or subprocess prohibited during offline preflight")
     with ExitStack() as stack:
-        stack.enter_context(patch.dict(os.environ, environment, clear=True))
+        stack.enter_context(credential_environment("offline-fixture", "offline-fixture"))
         for owner, name in ((socket.socket, "connect"), (socket.socket, "connect_ex"),
                 (socket, "create_connection"), (socket, "getaddrinfo"), (subprocess, "Popen")):
             stack.enter_context(patch.object(owner, name, prohibited))

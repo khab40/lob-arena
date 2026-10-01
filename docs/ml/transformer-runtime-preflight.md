@@ -1,6 +1,7 @@
 # Transformer metadata runtime readiness — 2026-10-01
 
-Fixes [Bug #266](https://github.com/khab40/lob-arena/issues/266), a child of
+Fixes [Bug #266](https://github.com/khab40/lob-arena/issues/266) and
+[Bug #268](https://github.com/khab40/lob-arena/issues/268), children of
 [Story #24](https://github.com/khab40/lob-arena/issues/24), Feature #16 / Epic #15,
 in [Project #3](https://github.com/users/khab40/projects/3).
 
@@ -13,6 +14,10 @@ No metadata or model result was produced by that attempt.
 As a platform operator,
 I want the actual metadata runtime checked before temporary access,
 So that missing dependencies and runtime drift cannot escape inert unit tests.
+
+As a platform operator,
+I want preflight and collection to isolate credentials consistently,
+So that ambient shell tokens cannot invalidate the pinned reader identity.
 
 Actor: platform operator. Goal: verify the exact execution interpreter and real
 S3 client before requesting a grant. Value: catch provisioning failures offline.
@@ -44,6 +49,24 @@ Feature: Actual metadata runtime readiness
     Given the earlier audit attempt is consumed
     When an offline runtime check succeeds
     Then that attempt remains blocked
+  Scenario Outline: Ignore ambient credential settings
+    Given the operator shell contains <setting>
+    And the pinned reader lookup supplies a valid access-key pair
+    When the live metadata client is constructed
+    Then it retains only that pair with no session token
+    And the caller environment is unchanged
+    Examples:
+      | setting                                 |
+      | AWS_SESSION_TOKEN                       |
+      | AWS_SECURITY_TOKEN                      |
+      | both session token variables            |
+      | an invalid AWS_PROFILE                  |
+      | an invalid AWS_CREDENTIAL_EXPIRATION     |
+  Scenario: Preserve the environment after a failure
+    Given the operator has an existing shell environment
+    When credential lookup or client construction fails
+    Then the shell environment is unchanged
+    And no S3 request occurs
 ```
 
 ## Repair and execution order
@@ -62,6 +85,13 @@ interpreter path, environment prefix, Python version and complete installed
 package inventory. Before each live phase, the operator requires that receipt
 predate the grant, repeats real-client readiness and compares the runtime.
 Failures still obey the exclusive attempt marker and cleanup rule.
+
+Both preflight and live client construction use the same cleared, temporary
+credential environment. Live lookups collect the two pinned values locally and
+validate the reader identity before entering it. The constructed client retains
+the static pair after the caller environment is restored; ambient session tokens,
+profiles and credential expiration cannot alter that pair. This operator is a
+single-process, sequential command; the temporary environment is process-global.
 
 1. Provision a dedicated operator environment from the existing
    `serverless/transformer_inputs/requirements.txt`; do not assume the backend
@@ -86,6 +116,9 @@ Separate tests exercise missing dependencies, wrong versions, wrong transport
 settings, blocked network/process access and environment restoration. A required
 CI step installs the pinned verifier requirements and runs the **real** client
 construction test; that step cannot silently skip a missing SDK.
+It also exercises real live-client construction with dummy lookup responses,
+both token aliases, profile/expiration contamination and a clean control. No
+network or external credential command is permitted in these tests.
 
 The actual operator environment is also exercised offline against the complete
 frozen backend. Passing unit tests alone is not evidence that a cloud interpreter

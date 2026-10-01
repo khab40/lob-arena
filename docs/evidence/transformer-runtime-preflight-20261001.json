@@ -1,10 +1,11 @@
 {
   "date": "2026-10-01",
   "bug": "https://github.com/khab40/lob-arena/issues/266",
+  "review_bug": "https://github.com/khab40/lob-arena/issues/268",
   "story": "https://github.com/khab40/lob-arena/issues/24",
   "project": "https://github.com/users/khab40/projects/3",
-  "operator_script_sha256": "9d65dd418df07eb079b344b87ee02d9d29e97b8d4fded714c2030fe10179634d",
-  "proposal_sha256": "d5e331771da37f3e707e07f037ef04158b6cdd5c3f45f46c3791cdb62fa5fa21",
+  "operator_script_sha256": "e7ecde02db6fda7c63476a837f655bcfc7626091e4a38cd7bfe9586584561a64",
+  "proposal_sha256": "1ef8b8fd011a3e8a2be091b2c3222c0d7b0fc7d8d5c8e59ffa0229ffbc766d66",
   "pinned_backend_tree": "1c700531051e6719603c25be9bcd1dd1ba2f02b1",
   "real_cli_preflight": "passed without client substitution",
   "runtime_python": "3.11.15",
@@ -28,9 +29,10 @@
     "cryptography": "50.0.0"
   },
   "wrong_interpreter_rejected": true,
-  "real_sdk_tests": 11,
-  "focused_tests_passed": 235,
-  "optional_sdk_test_skipped_in_base_environment": 1,
+  "real_sdk_tests": 17,
+  "focused_tests_passed": 243,
+  "focused_tests_skipped": 0,
+  "focused_suite_sdk_enabled": true,
   "sdk_test_required_in_dedicated_ci": true,
   "offline_only": true,
   "credential_lookups": 0,
@@ -38,5 +40,18 @@
   "audit_attempt_started": false,
   "old_attempt_preserved": true,
   "durable_readiness_receipt": "outputs/transformer-lineage-replacement-r3-20261001/runtime-readiness.json",
-  "review": "Parent reviewed proposal binding, timestamp ordering, interpreter/dependency drift, client configuration, cleanup and consumed-attempt behavior. No delegation used."
+  "credential_regression": "Before repair, both token aliases separately and together contaminated the actual signer; the clean control leaked environment changes and invalid profile caused construction failure. After repair, all six real-SDK credential cases pass, including separate invalid profile and expiration controls; lookup and construction failures preserve the caller environment.",
+  "preflight_verified_at": "2026-10-01T17:50:06.172927+00:00",
+  "superseded_unapproved_r3": "outputs/transformer-lineage-replacement-r3-20261001/superseded-before-p1",
+  "commit_size_finding": {
+    "comment_id": 4158502393,
+    "disposition": "not applicable: aggregate PR diff was mistaken for one commit",
+    "changed_lines_by_commit": {
+      "d38d9d472ac8669ce359bbb251ec1aa4ed749bab": 153,
+      "a2a4b0abf0b51aec2b5e3e66083dcebbb87bdcfd": 114,
+      "50cc25799baacb8afa62accc97e21f05dc13c0bf": 161,
+      "ea0798ef760c72c4c8d29711631e904d9270ab3e": 113
+    }
+  },
+  "review": "Parent verified original commit parent diffs and runtime binding. A read-only investigator independently reproduced token contamination; a separate patch reviewer found no outstanding P1/P2 and independently passed all seven lookup/client cases."
 }

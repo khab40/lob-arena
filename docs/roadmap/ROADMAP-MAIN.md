@@ -193,7 +193,9 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    The [lineage audit](../ml/transformer-lineage-audit.md) prepares
    a separately gated 115-key metadata read in two policy-bounded phases. Next
    review the [actual-runtime readiness repair](../ml/transformer-runtime-preflight.md)
-   for Bug #266, then approve the exact r3 replacement proposal. PR #264 is merged;
+   for Bugs #266/#268 in PR #267, then approve the amended exact r3 proposal.
+   Preflight and live construction now share credential isolation, so ambient
+   tokens, profiles and expiration cannot alter the approved reader pair. PR #264 is merged;
    its amended r2 audit stopped before any GET because the interpreter lacked the
    S3 SDK. The replacement now requires real-client preflight in the pinned
    interpreter before a grant and matching readiness before credentials.
