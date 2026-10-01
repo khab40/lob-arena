@@ -30,7 +30,8 @@ def operator(tmp_path, monkeypatch):
     (package / "lineage_transport.py").write_text(
         "calls = []\ndef collect(*args):\n    calls.append(args)\n    return {'inert_transport': True}\n")
     (package / "verification_transport.py").write_text("def client():\n    return 'inert-client'\n")
-    raw = json.dumps({"exact_scope_sha256": "scope",
+    raw = json.dumps({"exact_scope_sha256": "scope", "backend_tree": "fixture-tree",
+        "operator_python": str(Path(sys.executable).absolute()),
         "operator_script_sha256": hashlib.sha256(script.read_bytes()).hexdigest()}).encode()
     sha = hashlib.sha256(raw).hexdigest()
     (out / "proposal.json").write_bytes(raw)
@@ -47,8 +48,12 @@ def operator(tmp_path, monkeypatch):
     def fake_credentials(client_factory):
         credentials.append("inert")
         return client_factory()
+    monkeypatch.setattr(module, "runtime_probe", lambda *_: {"inert_runtime": True})
     module.real_authenticated_client = getattr(module, "authenticated_client", None)
     monkeypatch.setattr(module, "authenticated_client", fake_credentials, raising=False)
+    module.preflight(tmp_path, out, sha)
+    grant["permission_started_at"] = datetime.now(timezone.utc).isoformat()
+    (out / "phase-1-policy-verification.json").write_text(json.dumps(grant))
     yield module, tmp_path, out, sha, code, credentials
     sys.path[:] = original_path
     for name in tuple(sys.modules):
@@ -174,3 +179,42 @@ def test_bound_credential_lookup_and_client(operator, monkeypatch, failure):
     for args, (secret, version) in zip(calls, selectors, strict=False):
         assert args == ["rtk", "proxy", "nebius", "mysterybox", "payload", "get",
                         "--secret-id", secret, "--version-id", version, "--format", "json"]
+
+
+@pytest.mark.parametrize("failure", ["missing_receipt", "interpreter", "dependencies", "late_preflight"])
+def test_runtime_drift_blocks_credentials(operator, monkeypatch, failure):
+    module, root, out, sha, _, credentials = operator
+    if failure == "missing_receipt":
+        (out / "runtime-readiness.json").unlink()
+    elif failure == "late_preflight":
+        module.preflight(root, out, sha)
+    else:
+        monkeypatch.setattr(module, "runtime_probe", lambda *_: {failure: "changed"})
+    with pytest.raises((ValueError, FileNotFoundError)):
+        module.run(root, out, sha, 1)
+    assert credentials == []
+    assert sys.modules["app.ml.transformer.lineage_transport"].calls == []
+    with pytest.raises(ValueError, match="consumed"):
+        module.run(root, out, sha, 1)
+
+
+def test_failed_offline_preflight_never_arms_attempt(operator, monkeypatch):
+    module, root, out, sha, _, credentials = operator
+    (out / "runtime-readiness.json").unlink()
+    def missing(*_):
+        raise ModuleNotFoundError("botocore")
+    monkeypatch.setattr(module, "runtime_probe", missing)
+    with pytest.raises(ModuleNotFoundError):
+        module.preflight(root, out, sha)
+    assert not (out / "runtime-readiness.json").exists()
+    assert not (out / "phase-1-attempt.json").exists()
+    assert credentials == []
+
+
+def test_successful_preflight_does_not_reset_aborted_attempt(operator):
+    module, root, out, sha, _, credentials = operator
+    (out / "wrapper-abort.json").write_text("{}")
+    module.preflight(root, out, sha)
+    with pytest.raises(ValueError, match="consumed"):
+        module.run(root, out, sha, 1)
+    assert credentials == []
