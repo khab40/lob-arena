@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-01",
+  "bug": "https://github.com/khab40/lob-arena/issues/266",
+  "proposal_sha256": "f7c057c1ddfe98dceee962cc11060e52997f6312bfeb9815a653d8fe255ece46",
+  "status": "aborted_before_first_get",
+  "cause": "backend/.venv lacked botocore; prior probe replaced real client construction",
+  "get_attempts": 0,
+  "attempt_consumed": true,
+  "automatic_retry": false,
+  "cleanup": {
+    "status": "verified",
+    "resource_version": "140",
+    "original_policy_and_settings_restored": true,
+    "active_temporary_rules": 0,
+    "access_seconds": 240.126501,
+    "get_attempts": 0,
+    "retry_authorized": false
+  },
+  "retained_evidence": "outputs/transformer-lineage-replacement-r2-reviewed-20260929"
+}
