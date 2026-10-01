@@ -45,6 +45,13 @@ jobs:
         working-directory: backend
         run: uv run pytest -c pyproject.toml tests --junitxml=test-results.xml
 
+      - name: Verify metadata operator with the real S3 SDK (offline)
+        env:
+          REQUIRE_REAL_METADATA_SDK: "1"
+        run: >-
+          uv run --frozen --project backend --with-requirements serverless/transformer_inputs/requirements.txt
+          python -m pytest -c backend/pyproject.toml backend/tests/test_transformer_runtime_preflight.py
+
       - name: Upload backend test report
         if: ${{ always() && hashFiles('backend/test-results.xml') != '' }}
         uses: actions/upload-artifact@v6
