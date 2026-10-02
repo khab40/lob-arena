@@ -100,3 +100,156 @@ def client_command(source, inputs, journal, image, proposal_sha, commit, attempt
             "--entrypoint", "python", image, "-B", "/work/deployments/mlflow/readiness_live.py",
             "--input-dir", "/inputs", "--journal", "/journal", "--proposal-sha256", proposal_sha,
             "--source-commit", commit]
+
+
+def _run(source, inputs, output, env_file, proposal_sha, commit):
+    start = time.monotonic()
+    deadline = start + 400
+    def command(args, *, data=None, env=None, timeout=30):
+        remaining = min(timeout, deadline - time.monotonic())
+        if remaining <= 0:
+            raise TimeoutError("readiness deadline")
+        result = subprocess.run(args, input=data, env=env, capture_output=True,
+                                timeout=remaining, check=False)
+        if result.returncode:
+            raise RuntimeError("readiness subprocess failed; output redacted")
+        return result.stdout
+    def users():
+        return command(database(DB, "psql", "-XqAt", "-v", "ON_ERROR_STOP=1"),
+            data=b"BEGIN READ ONLY; SELECT row_to_json(t)::text FROM users t ORDER BY id; COMMIT;\n")
+    def defaults():
+        code = ("import configparser,json; c=configparser.ConfigParser(interpolation=None); "
+                "c.read('/tmp/mlflow-auth.ini'); "
+                "print(json.dumps({k:c['mlflow'][k] for k in "
+                "('default_permission','grant_default_workspace_access')}))")
+        return json.loads(command(["docker", "exec", APP, "python", "-c", code]))
+    for path in (source, inputs, output.parent, env_file):
+        if not path.is_absolute() or path.resolve(strict=True) != path:
+            raise ValueError("canonical existing paths required")
+    if (not sys.dont_write_bytecode or os.environ.get("PYTHONPATH") != str(source)
+            or not output.is_absolute() or output.resolve() != output):
+        raise ValueError("launch reviewed source with python -B and exact PYTHONPATH")
+    env_stat = env_file.stat()
+    if (not stat.S_ISREG(env_stat.st_mode) or stat.S_IMODE(env_stat.st_mode) != 0o600
+            or env_stat.st_uid != os.geteuid() or env_stat.st_size > 1024 * 1024):
+        raise ValueError("owned regular private 0600 env required before mutations")
+    if (not re.fullmatch(r"[a-f0-9]{64}", proposal_sha) or not re.fullmatch(r"[a-f0-9]{40}", commit)
+            or not (inputs / "proposal.json").is_file() or (inputs / "proposal.json").stat().st_size > 65536):
+        raise ValueError("bounded immutable proposal required")
+    proposal_raw = (inputs / "proposal.json").read_bytes()
+    if hashlib.sha256(proposal_raw).hexdigest() != proposal_sha:
+        raise ValueError("proposal anchor mismatch")
+    proposal = json.loads(proposal_raw)
+    if (proposal["implementation_source_commit"] != commit or proposal["output_directory"] != str(output)
+            or proposal["env_file"] != "existing-compose-environment-file"
+            or output.is_relative_to(source) or output.is_relative_to(inputs)):
+        raise ValueError("source binding mismatch")
+    checked_files(source, proposal["package_files_sha256"])
+    checked_files(inputs, proposal["input_files_sha256"], ("proposal.json",))
+    from deployments.mlflow.readiness_config import append_allowlists, update_allowlists
+    from deployments.mlflow.readiness_tracking import persist
+    from scripts.mlflow_metadata_recovery import database
+    inspected = json.loads(command(["docker", "inspect", APP, INIT]))
+    if (len(inspected) != 2 or not inspected[0]["State"]["Running"]
+            or inspected[0]["Config"].get("Labels", {}).get("com.docker.compose.project.environment_file") != str(env_file)):
+        raise ValueError("existing live application and exact Compose env label required")
+    # Validate config before any new container or API mutation, retain only in memory.
+    before_env = env_file.read_bytes()
+    expected_env = append_allowlists(before_env)
+    output.mkdir(mode=0o700, exist_ok=False)
+    persist(output / "window-intent.json", {"proposal_sha256": proposal_sha, "source_commit": commit})
+    before_users = users()
+    before_defaults = defaults()
+    if before_defaults != {"default_permission": "NO_PERMISSIONS",
+                           "grant_default_workspace_access": "false"}:
+        raise ValueError("unexpected live authentication defaults")
+    image = inspected[0]["Image"]
+    runtime = json.loads(command(["docker", "exec", "-i", *[part for key, value in TRANSPORT.items()
+        for part in ("-e", key + "=" + value)], APP, "python", "-B", "-"],
+        data=(source / "scripts/mlflow_readiness_preflight.py").read_bytes()))
+    if runtime.get("status") != "verified" or runtime.get("mlflow_version") != "3.13.0":
+        raise ValueError("deployed runtime preflight failed")
+    values = dict(entry.split("=", 1) for entry in inspected[1]["Config"]["Env"])
+    if any(not values.get(k) for k in CREDENTIAL_KEYS):
+        raise ValueError("existing service credentials required")
+    client_env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), **TRANSPORT,
+                  **{k: values[k] for k in CREDENTIAL_KEYS}}
+    journal = output / "live"
+    journal.mkdir(mode=0o700)
+    # Restore completes before the live phase; it owns its two temporary containers.
+    if deadline - time.monotonic() < 260:
+        raise TimeoutError("insufficient bounded restore and cleanup reserve")
+    command([sys.executable, "-B", str(source / "scripts/mlflow_application_restore.py"),
+             "--source-root", str(source), "--output", str(output / "restore"),
+             "--expected-receipt", str(inputs / "restore-receipt.json")], timeout=250)
+    cleanup = json.loads((output / "restore/cleanup.json").read_bytes())
+    restored = json.loads((output / "restore/application-receipt.json").read_bytes())
+    expected_restore = json.loads((inputs / "restore-receipt.json").read_bytes())
+    if (cleanup.get("failed") != [] or len(cleanup.get("attempted", [])) != 2
+            or restored.get("status") != "verified" or restored.get("runtime_version") != "3.13.0"
+            or restored.get("network_mode") != "none" or restored.get("startup_preserved_all_tables") is not True
+            or restored.get("backup_sha256") != expected_restore["backup_sha256"]
+            or restored.get("images") != [expected_restore["postgres_image_id"], image]):
+        raise ValueError("restored application or cleanup receipt incomplete")
+    if json.loads(command(["docker", "inspect", APP]))[0]["Image"] != image:
+        raise ValueError("deployed image changed during restore")
+    # Refuse a pre-existing container rather than removing another attempt's work.
+    matches = command(["docker", "ps", "-aq", "--filter", "name=^/" + CLIENT + "$"])
+    if matches.strip():
+        raise ValueError("client container name is already in use")
+    attempted = False
+    attempt = hashlib.sha256((proposal_sha + "\n" + str(output)).encode()).hexdigest()
+    try:
+        attempted = True
+        command(client_command(source, inputs, journal, image, proposal_sha, commit, attempt),
+                env=client_env, timeout=180)
+    finally:
+        if attempted:
+            def cleanup_call(args):
+                result = subprocess.run(args, capture_output=True, timeout=5, check=False)
+                if result.returncode:
+                    raise RuntimeError("client cleanup subprocess failed; output redacted")
+                return result.stdout
+            with budget(20):
+                persist(output / "client-cleanup.json", cleanup_client(attempt, cleanup_call))
+    if users() != before_users or defaults() != before_defaults:
+        raise ValueError("live credentials, identities or defaults changed")
+    if env_file.read_bytes() != before_env:
+        raise ValueError("live env changed concurrently")
+    live_raw = (journal / "live-receipt.json").read_bytes()
+    live = json.loads(live_raw)
+    if (live.get("schema_version") != "mlflow_live_readiness_phase_v1" or live.get("binding") != {
+            "proposal_sha256": proposal_sha, "source_commit": commit, "purpose": "mlflow-readiness-20261002"}):
+        raise ValueError("live phase receipt binding differs")
+    config = update_allowlists(env_file)
+    if env_file.read_bytes() != expected_env:
+        raise ValueError("allowlist readback differs")
+    receipt = {"status": "application_verified_pending_independent_readback_and_vm_stop",
+               "source_commit": commit, "proposal_sha256": proposal_sha, "image_id": image,
+               "live_users_and_credentials_unchanged": True, "defaults_unchanged": True,
+               "allowlists": config, "runtime": runtime, "seconds": time.monotonic() - start,
+               "live_receipt_sha256": hashlib.sha256(live_raw).hexdigest(),
+               "model_jobs": 0, "final_access": False}
+    persist(output / "application-receipt.json", receipt)
+    return receipt
+
+
+def run(source, inputs, output, env_file, proposal_sha, commit):
+    with budget(400):
+        return _run(source, inputs, output, env_file, proposal_sha, commit)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    for name in ("source", "inputs", "output", "env-file"):
+        parser.add_argument("--" + name, type=Path, required=True)
+    parser.add_argument("--proposal-sha256", required=True)
+    parser.add_argument("--source-commit", required=True)
+    args = parser.parse_args()
+    try:
+        run(args.source, args.inputs, args.output, args.env_file,
+            args.proposal_sha256, args.source_commit)
+    except Exception as exc:
+        print(json.dumps({"status": "failed", "error_type": type(exc).__name__}), flush=True)
+        raise SystemExit(1) from None
+    print("Application checks completed; independent readback and VM stop still required.")
