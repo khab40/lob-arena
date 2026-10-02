@@ -1,0 +1,42 @@
+{
+  "schema_version": "mlflow_readiness_console_analysis_v1",
+  "source": "Nebius MCP compute instance logs",
+  "vm_id": "computeinstance-e00xq8hqrzks2pf3gn",
+  "read_only": true,
+  "no_vm_restart": true,
+  "entry_count": 1699,
+  "requested_since": "2026-10-02T13:30:00Z",
+  "requested_until": "2026-10-02T13:35:00Z",
+  "first_entry": "2026-10-02T13:31:21.907151Z",
+  "last_entry": "2026-10-02T13:34:11.922893Z",
+  "log_buckets": [
+    "sp_serial"
+  ],
+  "events": [
+    {
+      "timestamp": "2026-10-02T13:31:30.496974Z",
+      "message": "[  OK  ] Mounted mnt-cloud\\x2dmetadata.mount - /mnt/cloud-metadata."
+    },
+    {
+      "timestamp": "2026-10-02T13:31:40.003146Z",
+      "message": "[  OK  ] Started ssh.service - OpenBSD Secure Shell server."
+    },
+    {
+      "timestamp": "2026-10-02T13:32:19.393037Z",
+      "message": "[   57.495528] cloud-init[2160]: AIMADA MLflow VM bootstrap complete"
+    },
+    {
+      "timestamp": "2026-10-02T13:33:23.473119Z",
+      "message": "[  OK  ] Stopped docker.service - Docker Application Container Engine."
+    },
+    {
+      "timestamp": "2026-10-02T13:33:23.711257Z",
+      "message": "         Unmounting mnt-cloud\\x2dmetadata.mount - /mnt/cloud-metadata..."
+    }
+  ],
+  "limitations": [
+    "Serial stream contains no MLflow application stderr or Docker healthcheck output.",
+    "Last retained serial entry precedes provider STOPPED readback; unmount completion is not shown.",
+    "R2 read-only preflight failure remains undiagnosed."
+  ]
+}

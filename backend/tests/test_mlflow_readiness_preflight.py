@@ -111,3 +111,21 @@ def test_public_credential_or_nonendpoint_uri_rejected(uri):
                                   "http://127.0.0.1:5500", "http://10.4.0.54:5500"])
 def test_explicit_private_or_isolated_service_endpoint(uri):
     assert preflight.private_endpoint(uri) is True
+
+
+def test_missing_dependency_reports_fixed_import_check(runtime):
+    del runtime.modules["psycopg2"]
+    checks = []
+    with pytest.raises(ModuleNotFoundError):
+        preflight.verify(runtime.importer, record=checks.append)
+    assert checks[-1] == "import_psycopg2"
+    assert set(checks) <= preflight.DIAGNOSTIC_CHECKS
+
+
+def test_signature_failure_identifies_exact_interface(runtime, monkeypatch):
+    monkeypatch.setattr(InertSDK, "log_metric", lambda self, run_id: None)
+    checks = []
+    with pytest.raises(ValueError):
+        preflight.verify(runtime.importer, record=checks.append)
+    assert checks[-1] == "signature_tracking_log_metric"
+    assert set(checks) <= preflight.DIAGNOSTIC_CHECKS

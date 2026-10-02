@@ -1,0 +1,12 @@
+{
+  "schema_version": "mlflow_readiness_execution_manifest_v1",
+  "proposal_sha256": "ba068320b3ee80f35a3035bde49dadac3a20714e333333d5ae4a233290fe40bb",
+  "implementation_source_commit": "75f8cea58227932cec3396e245e8ae169ba8d6b3",
+  "local_files_sha256": {
+    "orchestrate.py": "ff72cc8e8deff825e318d1f7fb86afd58afb36aebfd92837758332df158f448d",
+    "remote_readback.py": "3d33156101b3f485208980fd4b44d229cd5325c7b96f8feb74172fabf5a21daf",
+    "independent_verify.py": "2eb7e5366513cf584ebce6fd78c49210f8aab54c6d3513273471507b8a8d2532",
+    "mlflow_readiness_guest.py": "dd1900ab919a6052a9190c6607b25585ec2de99b9f3a5d830c78cf7354849d3d",
+    "nebius_mlflow_watchdog.py": "40f9e0171cf2c8528560460919a52c2b535fc348dfcfb5ce3f62298b68e235f7"
+  }
+}

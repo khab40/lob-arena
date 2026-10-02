@@ -1,4 +1,52 @@
+## 2026-10-02 — Research takes priority; platform maintenance deferred
+
+Operator-approved change: merge the reusable MLflow health/diagnostic fixes in
+[PR #283](https://github.com/khab40/lob-arena/pull/283), then develop the full bounded
+Transformer versus frozen LightGBM experiment under [#24](https://github.com/khab40/lob-arena/issues/24)
+and [Project #3](https://github.com/users/khab40/projects/3). Preserve data separation,
+row alignment, durable artifacts and the existing final-test boundary. Evaluate
+whether Transformer quality and resource cost justify continuing; a negative result
+is a valid research outcome. No final evaluation or G8/G9 reopening is needed.
+
+Platform maintenance #19–#21 and MLflow recovery/registration acceptance move
+after research. MLflow can remain running if needed; successful online tracking
+is not a prerequisite for training when complete artifacts and a replayable event
+journal are durably retained. Registry promotion remains outside this fork.
+The following sections record earlier attempts and are historical where superseded.
+
+## 2026-10-02 — MLflow retry stopped; logs reviewed before further execution
+
+[PR #283](https://github.com/khab40/lob-arena/pull/283), [Bug #282](https://github.com/khab40/lob-arena/issues/282),
+parent [#19](https://github.com/khab40/lob-arena/issues/19), consumer [#24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+R3 timed out before staging; zero application writes, artifact reads or model Jobs.
+VM independently STOPPED at version116. Existing serial logs show successful
+metadata mounting, followed by a separate unmount wait during shutdown. Only
+about45 seconds remained after bootstrap completion inside the 120-second guest
+gate; MLflow health was still starting. Its underlying cause and r2's initial
+preflight failure remain unknown. Further starts are held at the operator's
+request to inspect logs first. [Analysis and evidence](../ml/mlflow-readiness-health.md#r3-console-analysis).
+Three retries with increasing per-call timeouts up to120 seconds are recorded in
+AGENTS.md for future transient failures; this does not require blind retries.
+
 # Roadmap status — 2026-10-02
+
+## MLflow healthy-service retry preparation — 2026-10-02
+
+[PR #279](https://github.com/khab40/lob-arena/pull/279) is merged; both merge
+workflows passed. The approved r2 attempt passed guest/process checks but stopped
+in initial read-only application checks. The [receipt](../evidence/mlflow-readiness-r2-attempt-20261002.json)
+records zero application mutations or artifact transfers and verified STOPPED
+at version 112. The exact failing subcheck was not retained.
+
+[Bug #282](https://github.com/khab40/lob-arena/issues/282) adds existing Docker
+healthchecks and safe subcheck diagnostics. [Its design](../ml/mlflow-readiness-health.md)
+separates operator instructions from agent-selected timing/retry limits.
+All 234 focused inert tests and 45 operator/verifier checks pass. The operator
+approved retries; the prepared [r3 proposal](../evidence/mlflow-readiness-r3-proposal-20261002.json)
+and [execution manifest](../evidence/mlflow-readiness-r3-execution-manifest-20261002.json)
+retain the original resources/mutations. R3 has not run. MLflow readiness and
+subsequent exact CPU authorization remain pending; G8/G9 stay closed.
 
 ## MLflow readiness startup repair; replacement pending — 2026-10-02
 
