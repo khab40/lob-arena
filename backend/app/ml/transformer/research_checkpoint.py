@@ -48,7 +48,7 @@ def write_checkpoint(output, *, model, optimizer, trial, bindings, progress, pub
             or not isinstance(receipt.get("version_id"), str) or not receipt["version_id"]
             or receipt["version_id"] == "null"):
         raise ValueError("versioned checkpoint publication not acknowledged")
-    record = {"epoch": progress["epoch"], "name": path.name, **receipt}
+    record = {**receipt, "epoch": progress["epoch"], "name": path.name}
     with (output / f'epoch-{progress["epoch"]:02}.json').open("x") as stream:
         json.dump(record, stream, sort_keys=True, allow_nan=False)
         stream.flush()
@@ -57,6 +57,8 @@ def write_checkpoint(output, *, model, optimizer, trial, bindings, progress, pub
 
 
 def load_checkpoint(path, expected_sha, *, model, optimizer, trial, bindings):
+    if not 0 < Path(path).stat().st_size <= 128 * 1024 * 1024:
+        raise ValueError("checkpoint exceeds the 128 MiB research bound")
     if file_sha(path) != expected_sha:
         raise ValueError("checkpoint bytes differ from verified version")
     state = torch.load(path, map_location="cpu", weights_only=True)

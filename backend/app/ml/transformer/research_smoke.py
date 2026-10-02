@@ -1,9 +1,12 @@
 """GPU-only behavior checks invoked by the reviewed Nebius smoke Job wrapper."""
 from pathlib import Path
+from types import SimpleNamespace
 
+import numpy as np
 import torch
 
 from .research_checkpoint import load_checkpoint, write_checkpoint
+from .research_evaluation import fit_temperature
 from .research_model import SequenceClassifier
 from .research_policy import Trial
 from .research_training import configure
@@ -11,6 +14,18 @@ from .research_training import configure
 
 def run_smoke(output: Path, *, bindings, publish):
     configure(42)  # Reject local CPU execution before constructing any model.
+    # Fitting tests run here in the authorized Job, never in local/CI checks.
+    calibration = SimpleNamespace(role="calibration", labels=np.array([0, 1] * 20))
+    fitted = fit_temperature(calibration, np.array([-2., 2.] * 20))
+    if fitted["temperature"] != .05 or fitted["evaluations"] > 200:
+        raise AssertionError("calibration boundary or evaluation budget changed")
+    calibration.role = "selection"
+    try:
+        fit_temperature(calibration, np.zeros(40))
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("temperature fitted on selection role")
     output.mkdir(parents=True, exist_ok=False)
     results = []
     for width in (64, 128):

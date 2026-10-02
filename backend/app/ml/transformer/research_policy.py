@@ -64,3 +64,23 @@ def select_grid(results):
         if result["selection_log_loss"] < 0 or result["parameter_count"] <= 0:
             raise ValueError("invalid trial metrics")
     return min(results, key=lambda r: (r["selection_log_loss"], r["parameter_count"], r["trial_sha256"]))
+
+
+def seed_stability(results, winner):
+    """Verify confirmation belongs to the selected configuration, not a new search."""
+    if len(results) != 3 or {r["trial"]["seed"] for r in results} != {42, 7, 2027}:
+        raise ValueError("all three unique confirmation seeds required")
+    losses, f1s = [], []
+    for result in results:
+        trial = Trial(**result["trial"])
+        if (result["status"] != "verified" or result["trial_sha256"] != trial.sha256()
+                or trial.width != winner.width or trial.learning_rate != winner.learning_rate):
+            raise ValueError("confirmation differs from verified winning configuration")
+        loss, f1 = result["selection_log_loss"], result["selection_f1_at_half"]
+        if not math.isfinite(loss) or loss < 0 or not math.isfinite(f1) or not 0 <= f1 <= 1:
+            raise ValueError("invalid confirmation metric")
+        losses.append(loss)
+        f1s.append(f1)
+    loss_range, f1_range = max(losses) - min(losses), max(f1s) - min(f1s)
+    return {"selection_log_loss_range": loss_range, "selection_f1_at_half_range": f1_range,
+            "passed": loss_range <= 0.05 and f1_range <= 0.05, "candidate_seed": 42}
