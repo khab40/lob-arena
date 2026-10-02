@@ -1,0 +1,97 @@
+{
+  "schema_version": "transformer_source_review_correction_v1",
+  "date": "2026-10-02",
+  "pull_request": "https://github.com/khab40/lob-arena/pull/272",
+  "ticket": "https://github.com/khab40/lob-arena/issues/274",
+  "parent_story": "https://github.com/khab40/lob-arena/issues/24",
+  "p1": {
+    "disposition": "false_positive_pr_aggregate_misidentified_as_single_commit",
+    "reviewed_head": "3354f59d581d038dc26de924651514a2233b4130",
+    "pr_aggregate_changed_lines": 989,
+    "maximum_commit_changed_lines": 166,
+    "github_commit_list_matches_git": true,
+    "commits": [
+      {
+        "sha": "f8d9293a15de062a82749d321afca2a357fa89b7",
+        "additions": 166,
+        "deletions": 0,
+        "changed_lines": 166
+      },
+      {
+        "sha": "ec8cc1a97a3cfb15e1f29463ec2e2865a156469e",
+        "additions": 141,
+        "deletions": 0,
+        "changed_lines": 141
+      },
+      {
+        "sha": "dc4539181ce19a7d10ca56b3950162f6ea82adf7",
+        "additions": 119,
+        "deletions": 0,
+        "changed_lines": 119
+      },
+      {
+        "sha": "afa6aeb0858cea541111958b7783869e09f343ca",
+        "additions": 155,
+        "deletions": 0,
+        "changed_lines": 155
+      },
+      {
+        "sha": "aa3864f33f6c7371239db9c1b008efc6a4371fbc",
+        "additions": 144,
+        "deletions": 0,
+        "changed_lines": 144
+      },
+      {
+        "sha": "3d4c744b45ab7e8f898c0b26fbac73bfa234154a",
+        "additions": 163,
+        "deletions": 0,
+        "changed_lines": 163
+      },
+      {
+        "sha": "bf09037aee5d53e1b1148d8a4ecac05786ed97ff",
+        "additions": 30,
+        "deletions": 5,
+        "changed_lines": 35
+      },
+      {
+        "sha": "84f1b8a58357fb2b6df061443f616b46fee95045",
+        "additions": 18,
+        "deletions": 4,
+        "changed_lines": 22
+      },
+      {
+        "sha": "3354f59d581d038dc26de924651514a2233b4130",
+        "additions": 55,
+        "deletions": 7,
+        "changed_lines": 62
+      }
+    ],
+    "history_rewritten": false
+  },
+  "p2": {
+    "disposition": "fixed_atomic_exclusive_publication",
+    "implementation_commit": "dab2130d9563f1dbb8feba487b1eb2926d9ffa62",
+    "reproduced_partial_bytes": 3,
+    "write_flush_sync_close_before_link": true,
+    "final_path_never_removed": true,
+    "post_publication_cleanup_failure": "report_owned_temporary_alias_preserve_complete_receipt",
+    "new_publication_and_cli_tests_passed": 15,
+    "focused_tests_passed": 247,
+    "independent_focused_tests_passed": 112,
+    "receipt_bytes": 4663,
+    "unchanged_receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+    "independent_review_findings": []
+  },
+  "files_sha256": {
+    "backend/app/ml/transformer/receipt_publication.py": "c5b37f1dc5b521f617bc5f206b1adf8c57f1f48b767aa5096f38605648932770",
+    "backend/app/ml/transformer/source_separation.py": "3a9542155162eba48785f561fa3074822aa6ffcc712f45095dfb6c21dbb6b6dc",
+    "backend/tests/test_transformer_receipt_publication.py": "995c1adf4e91d4d68d64b9db2722e5e1e5d5428a7aa5d3a6f0a5ee444a7a654a",
+    "backend/tests/test_transformer_source_separation.py": "3d76263a6eedabd289cce13a0753781170ab316eab21452f578a6d79113292dd"
+  },
+  "retained_evidence": "outputs/transformer-source-review-20261002/",
+  "commit_size_review_sha256": "f45179880ce99a6fce1192fda4bc36fd49f8612dee9c7f2fdd08664b738f245a",
+  "independent_review_sha256": "e40e8712e83ead8b9372942b3bc2493137aedd2d038f4aacfb516d8f48aeb29f",
+  "cloud_reads": 0,
+  "payload_reads": 0,
+  "model_runs": 0
+}

@@ -2,6 +2,12 @@
 
 ## Transformer source domains verified — 2026-10-02
 
+[PR #272 review corrections](../evidence/transformer-source-review-20261002.json)
+repair partial receipt publication under [Bug #274](https://github.com/khab40/lob-arena/issues/274).
+All 247 focused tests pass and the verified receipt is unchanged. The commit-size
+P1 was a PR-aggregate counting error; the nine reviewed commits met the limit.
+PR #272 remains open for review; the next CPU packaging chunk follows its merge.
+
 [PR #271](https://github.com/khab40/lob-arena/pull/271) merged with all 23 checks
 passed. The next [Story #24 increment](../ml/transformer-source-separation.md)
 verifies the complete source-file/instrument domains against the frozen producer

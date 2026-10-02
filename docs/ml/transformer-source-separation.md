@@ -55,7 +55,7 @@ and publishes no success receipt after a failed proof. This increment makes
 **zero cloud reads, payload reads or model runs**; it does not enumerate the
 payload's individual source-observation IDs again.
 
-Verification passed 232 focused inert tests, including 97 new contract cases.
+Initial verification passed 232 focused inert tests, including 97 new contract cases.
 Independent review found no P1/P2 issues and reproduced the 4,663-byte receipt
 exactly in 0.062 seconds. Source, label and orchestration boundary cases are in
 `test_transformer_source_contract.py`, `test_transformer_label_domain.py` and
@@ -67,6 +67,18 @@ collection failure: the metadata helper imported NumPy through the row adapter.
 Its constants now come from the standard-library-only specification. A Python
 `-S` regression proves import without site packages; the existing ML CI step
 explicitly runs all three new suites. Source roles and receipt bytes are unchanged.
+
+The [review correction](../evidence/transformer-source-review-20261002.json) for
+[Bug #274](https://github.com/khab40/lob-arena/issues/274) fixes a reproduced partial
+receipt after a failed write. Publication now stages complete bytes, checks the
+write length, flushes, synchronizes and closes before exclusively linking the
+final filename. Existing or concurrently created evidence cannot be replaced.
+Only this invocation's temporary file is cleaned; if cleanup fails after successful
+publication, the command reports the temporary alias and preserves the complete
+receipt. Atomic visibility is verified; power-loss directory durability is not claimed.
+Fifteen new fault/CLI cases and all 247 focused tests pass. Independent CLI readback
+reproduces the original receipt unchanged. The P1 size finding counted the whole
+PR: at reviewed head `3354f59`, its nine commits each changed at most 166 lines.
 
 ## Producer semantics reviewed
 

@@ -51,6 +51,32 @@ Feature: Frozen C4 source-domain separation
     Then the existing bytes remain unchanged
     And the request fails
 
+  Scenario Outline: Keep failed receipt writes retryable
+    Given an unused receipt destination
+    When publication fails during <stage>
+    Then no final receipt exists
+    And a later attempt can use the original destination
+
+    Examples:
+      | stage       |
+      | write       |
+      | short write |
+      | flush       |
+      | file sync   |
+      | close       |
+      | publication |
+
+  Scenario: Preserve a destination created during publication
+    Given another process claims the receipt path while new bytes are prepared
+    When publication attempts to claim the same path
+    Then publication fails and preserves the other process's evidence
+
+  Scenario: Report temporary cleanup after complete publication
+    Given a complete receipt was published but removing its temporary alias fails
+    When the command reports its result
+    Then the complete receipt remains unchanged
+    And the temporary alias is reported for cleanup
+
   Scenario: Preserve the limits of a successful source proof
     Given a successful instrument-domain separation proof
     When the receipt is produced

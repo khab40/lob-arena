@@ -153,3 +153,36 @@ def test_cli_writes_exact_success_and_never_authorizes_execution(monkeypatch, tm
     monkeypatch.setattr(s.sys, "argv", ["source_separation", "a", "b", "c", str(output)])
     s.main()
     assert Path(output).read_bytes() == s.canonical(receipt)
+
+
+def test_cli_publication_failure_leaves_no_receipt_and_allows_retry(monkeypatch, tmp_path, capsys):
+    output = tmp_path / "receipt.json"
+    result = {"source_separation_verified": True, "gpu_ready": False}
+    monkeypatch.setattr(s, "verify", lambda *_: result)
+    monkeypatch.setattr(s.sys, "argv", ["source", "a", "b", "c", str(output)])
+    publication = s.publish_receipt
+
+    def fail(*_):
+        raise OSError("inert failure")
+
+    monkeypatch.setattr(s, "publish_receipt", fail)
+    with pytest.raises(SystemExit, match="failed: OSError"):
+        s.main()
+    assert not output.exists() and capsys.readouterr().out == ""
+    monkeypatch.setattr(s, "publish_receipt", publication)
+    s.main()
+    assert output.read_bytes() == s.canonical(result)
+
+
+def test_cli_reports_cleanup_alias_without_invalidating_complete_receipt(monkeypatch, tmp_path, capsys):
+    output, alias = tmp_path / "receipt.json", tmp_path / ".owned.tmp"
+    monkeypatch.setattr(s, "verify", lambda *_: {"source_separation_verified": True})
+    monkeypatch.setattr(s.sys, "argv", ["source", "a", "b", "c", str(output)])
+
+    def publish(path, payload):
+        path.write_bytes(payload)
+        return alias
+
+    monkeypatch.setattr(s, "publish_receipt", publish)
+    s.main()
+    assert output.exists() and str(alias) in capsys.readouterr().out
