@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 from types import SimpleNamespace as Entity
 from unittest.mock import Mock
+from urllib.parse import unquote, urlsplit
 
 import pytest
 
@@ -30,6 +31,7 @@ def setup(monkeypatch):
     def entity(snapshot):
         return Entity(info=Entity(**snapshot), data=Entity(**snapshot))
     run = entity({"run_id": "b" * 32, "experiment_id": "8", "status": "FINISHED",
+                  "artifact_uri": recovery.SOURCE + "/" + "b" * 32 + "/artifacts",
                   "params": {"probe": "metadata-only"}, "metrics": {"restore_ready": 1.0},
                   "tags": {"lob_arena.restore_probe": "true"}})
     client = Mock(tracking_uri=recovery.RESTORED_URI, _registry_uri=recovery.RESTORED_URI)
@@ -42,9 +44,17 @@ def setup(monkeypatch):
                                               artifact_location=recovery.SOURCE)
     client.create_run.return_value = run
     client.get_metric_history.return_value = [Entity(value=1.0, step=0, timestamp=recovery.STAMP)]
-    versions = [Entity(name=recovery.MODEL, version=str(n), source=recovery.SOURCE,
+    versions = [Entity(name=recovery.MODEL, version=str(n), source=run.info.artifact_uri,
                        run_id="b" * 32, status="READY") for n in (1, 2)]
-    client.create_model_version.side_effect = versions
+    def create_version(name, source, *, run_id, await_creation_for):
+        # MLflow v3.13.0 handlers._validate_source_run: a local version source
+        # must be contained in the given run's artifact directory, not its parent.
+        source_path = Path(unquote(urlsplit(source).path)).resolve()
+        run_path = Path(unquote(urlsplit(run.info.artifact_uri).path)).resolve()
+        if run_id != run.info.run_id or run_path not in [source_path, *source_path.parents]:
+            raise ValueError("local source is outside run artifacts")
+        return versions[client.create_model_version.call_count - 1]
+    client.create_model_version.side_effect = create_version
     client.get_model_version.side_effect = versions
     auth = Mock(tracking_uri=recovery.RESTORED_URI)
     auth.get_user.side_effect = [Entity(id=1, is_admin=True), Missing(),
@@ -70,10 +80,23 @@ def test_success_binds_sequences_persisted_data_and_no_artifacts(setup):
     assert result["full_database_preservation_verified"] is False
     assert "password" not in str(result)
     assert client.create_model_version.call_count == 2
+    assert all(call.args == (recovery.MODEL, setup[3].info.artifact_uri)
+               for call in client.create_model_version.call_args_list)
     assert auth.create_user.call_count == 1
     assert not client.log_artifact.called
     assert not auth.update_user_password.called
     assert all(call.args[0] != recovery.FROZEN_RUN for call in client.log_param.call_args_list)
+
+
+@pytest.mark.parametrize("artifact_uri", [recovery.SOURCE, "file:///unexpected/artifacts",
+    recovery.SOURCE + "/" + "c" * 32 + "/artifacts"])
+def test_unexpected_run_artifact_directory_stops_before_probe_metadata(setup, artifact_uri):
+    client, _, _, run = setup
+    run.info.artifact_uri = artifact_uri
+    with pytest.raises(ValueError, match="artifact directory differs"):
+        call(setup)
+    client.log_param.assert_not_called()
+    client.create_model_version.assert_not_called()
 
 
 @pytest.mark.parametrize("target", ["tracking_uri", "_registry_uri", "auth"])

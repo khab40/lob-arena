@@ -92,9 +92,12 @@ def verify_application(client, auth, baseline, *, admin_username, probe_password
     experiment = client.get_experiment(experiment_id)
     require(experiment.experiment_id == experiment_id and experiment.name == EXPERIMENT
             and experiment.artifact_location == SOURCE, "experiment readback differs")
-    run_id = client.create_run(experiment_id, start_time=STAMP).info.run_id
+    created = client.create_run(experiment_id, start_time=STAMP)
+    run_id = created.info.run_id
     require(re.fullmatch(r"[a-f0-9]{32}", run_id) is not None and run_id != FROZEN_RUN,
             "invalid probe run identity")
+    version_source = f"{SOURCE}/{run_id}/artifacts"
+    require(created.info.artifact_uri == version_source, "probe artifact directory differs")
     client.log_param(run_id, "probe", "metadata-only", synchronous=True)
     client.log_metric(run_id, "restore_ready", 1.0, timestamp=STAMP, step=0, synchronous=True)
     client.set_tag(run_id, "lob_arena.restore_probe", "true", synchronous=True)
@@ -109,11 +112,11 @@ def verify_application(client, auth, baseline, *, admin_username, probe_password
             == (1.0, 0, STAMP), "probe metric history differs")
     client.create_registered_model(MODEL)
     for number in (1, 2):
-        version = client.create_model_version(MODEL, SOURCE, run_id=run_id, await_creation_for=0)
+        version = client.create_model_version(MODEL, version_source, run_id=run_id, await_creation_for=0)
         require(version.version == str(number), "new registry counter differs")
         stored = client.get_model_version(MODEL, str(number))
         require((stored.name, stored.version, stored.source, stored.run_id, stored.status)
-                == (MODEL, str(number), SOURCE, run_id, "READY"), "registry readback differs")
+                == (MODEL, str(number), version_source, run_id, "READY"), "registry readback differs")
     user = auth.create_user(USER, probe_password)
     require(type(user.id) is int and user.id > baseline["user_max_id"], "user sequence regressed")
     stored_user = auth.get_user(USER)
