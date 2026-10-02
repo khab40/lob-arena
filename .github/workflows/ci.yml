@@ -51,6 +51,7 @@ jobs:
         run: >-
           uv run --frozen --project backend --with-requirements serverless/transformer_inputs/requirements.txt
           python -m pytest -c backend/pyproject.toml backend/tests/test_transformer_runtime_preflight.py
+          backend/tests/test_transformer_role_execution_transport.py
 
       - name: Upload backend test report
         if: ${{ always() && hashFiles('backend/test-results.xml') != '' }}
@@ -137,6 +138,12 @@ jobs:
           tests/test_transformer_source_contract.py tests/test_transformer_label_domain.py
           tests/test_transformer_source_separation.py
           tests/test_transformer_receipt_publication.py
+          tests/test_transformer_role_source.py tests/test_transformer_role_rows.py
+          tests/test_transformer_bound_role_audit.py
+          tests/test_transformer_role_execution_spec.py tests/test_transformer_role_execution_context.py
+          tests/test_transformer_role_execution_runner.py tests/test_transformer_role_execution_readback.py
+          tests/test_transformer_role_execution_publisher.py tests/test_transformer_role_deadline.py
+          tests/test_transformer_role_execution_transport.py
 
       - name: Verify governed image submission contracts (inert metadata only)
         working-directory: backend
@@ -369,6 +376,10 @@ jobs:
           - name: transformer-inputs
             context: .
             file: serverless/transformer_inputs/Dockerfile
+          - name: transformer-role-audit
+            context: .
+            file: serverless/transformer_role_audit/Dockerfile
+            target: runtime
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -381,6 +392,7 @@ jobs:
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
+          target: ${{ matrix.target }}
           push: false
           load: true
           tags: lob-arena-ci/${{ matrix.name }}:${{ github.sha }}

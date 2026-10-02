@@ -196,13 +196,16 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    356,040 bytes and all 30 validation-run semantic bindings independently verified.
    Cleanup restored the original two rules and non-policy settings at bucket
    version 143. Earlier attempts remain preserved and consumed.
-   PR #271 is merged. The [source separation proof](../ml/transformer-source-separation.md)
+   PRs #271/#272 are merged. The [source separation proof](../ml/transformer-source-separation.md)
    now reauthenticates retained evidence and binds the three whole instrument
    domains, including warm-up ancestry and all synthetic labels, to the reviewed
    producer contract. It claims neither time separation nor statistical independence.
-   Next finish the signed CPU role-audit package and obtain its exact execution approval. Verify
-   per-role class support and row alignment, complete MLflow/platform readiness,
-   and obtain separate bounded GPU authorization. Research-control negative labels
+   The [CPU role-audit package](../ml/transformer-role-audit-package.md) now binds
+   this proof to signed provider context, restricted row records and independent
+   class-count readback. No CPU audit has run. Complete MLflow/platform readiness
+   before execution as required by the approved campaign, seal and review the
+   image/request, then obtain exact CPU authorization. Verify per-role support
+   and row alignment before separate bounded GPU authorization. Research-control negative labels
    remain assumptions; positive labels remain synthetic. The producer-contract
    proof does not enumerate payload observations or establish model quality.
    #24 remains

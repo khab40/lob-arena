@@ -69,6 +69,8 @@ serverless/**
 !serverless/transformer_inputs/
 !serverless/transformer_inputs/Dockerfile
 !serverless/transformer_inputs/requirements.txt
+!serverless/transformer_role_audit/
+!serverless/transformer_role_audit/Dockerfile
 
 # Only the approved public development inventory enters the verifier image.
 !docs/
@@ -76,6 +78,7 @@ docs/**
 !docs/evidence/
 docs/evidence/**
 !docs/evidence/transformer-development-input-inventory-20260928.jsonl
+!docs/evidence/transformer-source-separation-receipt-20261002.json
 
 # Dedicated public-market-data Job image: only the causal feature entrypoint
 # and immutable data/feature/benchmark configs are admitted to the context.
