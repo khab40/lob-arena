@@ -117,24 +117,57 @@ def client_command(source, inputs, journal, image, proposal_sha, commit, attempt
 def _run(source, inputs, output, env_file, proposal_sha, commit):
     start = time.monotonic()
     deadline = start + HOST_WORK_SECONDS
-    def command(args, *, data=None, env=None, timeout=30):
+    def command(args, *, data=None, env=None, timeout=30, phase=None):
         remaining = min(timeout, deadline - time.monotonic())
         if remaining <= 0:
             raise TimeoutError("readiness deadline")
-        result = subprocess.run(args, input=data, env=env, capture_output=True,
-                                timeout=remaining, check=False)
+        try:
+            result = subprocess.run(args, input=data, env=env, capture_output=True,
+                                    timeout=remaining, check=False)
+        except subprocess.TimeoutExpired as error:
+            if phase:
+                persist(output / (phase + ".json"), {"phase": phase, "status": "timeout"})
+            error.readiness_phase = phase
+            raise
+        if phase:
+            receipt = {"phase": phase, "status": "passed" if result.returncode == 0 else "failed",
+                       "returncode": result.returncode}
+            if result.returncode:
+                # Keep fixed identifiers only; stdout/stderr may contain private users/config.
+                if phase in {"runtime_preflight", "defaults_before", "defaults_after"}:
+                    try:
+                        value = json.loads(result.stdout) if len(result.stdout) <= 4096 else {}
+                        for key in ("failed_check", "error_type"):
+                            item = value.get(key)
+                            allowed = DIAGNOSTIC_CHECKS | {"auth_defaults_read"} if key == "failed_check" else {
+                                "ValueError", "TypeError", "AttributeError", "KeyError", "ImportError",
+                                "ModuleNotFoundError", "PermissionError", "FileNotFoundError", "OSError", "RuntimeError"}
+                            if isinstance(item, str) and item in allowed:
+                                receipt[key] = item
+                    except (ValueError, AttributeError):
+                        pass
+                match = re.search(rb"(?:ERROR|FATAL):\s+([0-9A-Z]{5})\b", getattr(result, "stderr", b"")[:4096])
+                if phase in {"users_before", "users_after"} and match:
+                    receipt["sqlstate"] = match.group(1).decode("ascii")
+            persist(output / (phase + ".json"), receipt)
         if result.returncode:
-            raise RuntimeError("readiness subprocess failed; output redacted")
+            error = RuntimeError("readiness subprocess failed; output redacted")
+            error.readiness_phase = phase
+            raise error
         return result.stdout
-    def users():
+    def users(phase):
         return command(database(DB, "psql", "-XqAt", "-v", "ON_ERROR_STOP=1"),
-            data=b"BEGIN READ ONLY; SELECT row_to_json(t)::text FROM users t ORDER BY id; COMMIT;\n")
-    def defaults():
-        code = ("import configparser,json; c=configparser.ConfigParser(interpolation=None); "
-                "c.read('/tmp/mlflow-auth.ini'); "
-                "print(json.dumps({k:c['mlflow'][k] for k in "
-                "('default_permission','grant_default_workspace_access')}))")
-        return json.loads(command(["docker", "exec", APP, "python", "-c", code]))
+            data=b"\\set VERBOSITY sqlstate\nBEGIN READ ONLY; SELECT row_to_json(t)::text FROM users t ORDER BY id; COMMIT;\n", phase=phase)
+    def defaults(phase):
+        code = """import configparser,json
+try:
+    c=configparser.ConfigParser(interpolation=None); c.read('/tmp/mlflow-auth.ini')
+    print(json.dumps({k:c['mlflow'][k] for k in ('default_permission','grant_default_workspace_access')}))
+except Exception as error:
+    print(json.dumps({'failed_check':'auth_defaults_read','error_type':type(error).__name__}))
+    raise SystemExit(1) from None
+"""
+        return json.loads(command(["docker", "exec", APP, "python", "-c", code], phase=phase))
     for path in (source, inputs, output.parent, env_file):
         if not path.is_absolute() or path.resolve(strict=True) != path:
             raise ValueError("canonical existing paths required")
@@ -158,6 +191,7 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
         raise ValueError("source binding mismatch")
     checked_files(source, proposal["package_files_sha256"])
     checked_files(inputs, proposal["input_files_sha256"], ("proposal.json",))
+    from scripts.mlflow_readiness_preflight import DIAGNOSTIC_CHECKS
     from deployments.mlflow.readiness_config import append_allowlists, update_allowlists
     from deployments.mlflow.readiness_tracking import persist
     from scripts.mlflow_metadata_recovery import database
@@ -170,15 +204,15 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
     expected_env = append_allowlists(before_env)
     output.mkdir(mode=0o700, exist_ok=False)
     persist(output / "window-intent.json", {"proposal_sha256": proposal_sha, "source_commit": commit})
-    before_users = users()
-    before_defaults = defaults()
+    before_users = users("users_before")
+    before_defaults = defaults("defaults_before")
     if before_defaults != {"default_permission": "NO_PERMISSIONS",
                            "grant_default_workspace_access": "false"}:
         raise ValueError("unexpected live authentication defaults")
     image = inspected[0]["Image"]
     runtime = json.loads(command(["docker", "exec", "-i", *[part for key, value in TRANSPORT.items()
         for part in ("-e", key + "=" + value)], APP, "python", "-B", "-"],
-        data=(source / "scripts/mlflow_readiness_preflight.py").read_bytes()))
+        data=(source / "scripts/mlflow_readiness_preflight.py").read_bytes(), phase="runtime_preflight"))
     if runtime.get("status") != "verified" or runtime.get("mlflow_version") != "3.13.0":
         raise ValueError("deployed runtime preflight failed")
     values = dict(entry.split("=", 1) for entry in inspected[1]["Config"]["Env"])
@@ -226,7 +260,7 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
                 return result.stdout
             with budget(CLIENT_CLEANUP_SECONDS):
                 persist(output / "client-cleanup.json", cleanup_client(attempt, cleanup_call))
-    if users() != before_users or defaults() != before_defaults:
+    if users("users_after") != before_users or defaults("defaults_after") != before_defaults:
         raise ValueError("live credentials, identities or defaults changed")
     if env_file.read_bytes() != before_env:
         raise ValueError("live env changed concurrently")
@@ -264,6 +298,7 @@ if __name__ == "__main__":
         run(args.source, args.inputs, args.output, args.env_file,
             args.proposal_sha256, args.source_commit)
     except Exception as exc:
-        print(json.dumps({"status": "failed", "error_type": type(exc).__name__}), flush=True)
+        print(json.dumps({"status": "failed", "error_type": type(exc).__name__,
+                          "phase": getattr(exc, "readiness_phase", None)}), flush=True)
         raise SystemExit(1) from None
     print("Application checks completed; independent readback and VM stop still required.")

@@ -239,3 +239,52 @@ def test_foreign_staging_owner_rejected_before_subprocess(case, monkeypatch, tar
     with pytest.raises(ValueError, match="current operator"):
         case.execute()
     assert case.calls == []
+
+
+@pytest.mark.parametrize("phase", ["users_before", "defaults_before", "runtime_preflight"])
+def test_initial_failure_retains_safe_phase_before_restore_or_live_work(case, monkeypatch, phase):
+    original = window.subprocess.run
+    def run(args, **kwargs):
+        target = ("users_before" if "psql" in args else "runtime_preflight" if kwargs.get("input") == b"inert-preflight"
+                  else "defaults_before" if args[:2] == ["docker", "exec"] else None)
+        if target == phase:
+            return NS(returncode=1, stdout=encode({"failed_check": "import_psycopg2", "error_type": "ModuleNotFoundError",
+                       "password": "private sentinel"}), stderr=b"ERROR: 42703 private sentinel")
+        return original(args, **kwargs)
+    monkeypatch.setattr(window.subprocess, "run", run)
+    with pytest.raises(RuntimeError) as error:
+        case.execute()
+    assert error.value.readiness_phase == phase
+    result = json.loads((case.output / (phase + ".json")).read_bytes())
+    assert result["status"] == "failed" and result["returncode"] == 1
+    if phase == "users_before":
+        assert result["sqlstate"] == "42703" and "failed_check" not in result
+    else:
+        assert result["failed_check"] == "import_psycopg2"
+    assert "private sentinel" not in str(result)
+    assert not (case.output / "live").exists() and not (case.output / "restore").exists()
+
+
+def test_diagnostic_fields_reject_unrecognized_values(case, monkeypatch):
+    original = window.subprocess.run
+    def run(args, **kwargs):
+        if kwargs.get("input") == b"inert-preflight":
+            return NS(returncode=1, stdout=encode({"failed_check": "PrivateSentinel", "error_type": "PrivateSentinel"}), stderr=b"")
+        return original(args, **kwargs)
+    monkeypatch.setattr(window.subprocess, "run", run)
+    with pytest.raises(RuntimeError):
+        case.execute()
+    assert json.loads((case.output / "runtime_preflight.json").read_bytes()) == {
+        "phase": "runtime_preflight", "status": "failed", "returncode": 1}
+
+
+def test_initial_timeout_retains_phase_without_command_or_output(case, monkeypatch):
+    original = window.subprocess.run
+    def run(args, **kwargs):
+        if "psql" in args:
+            raise window.subprocess.TimeoutExpired("private sentinel", 30, output=b"private sentinel")
+        return original(args, **kwargs)
+    monkeypatch.setattr(window.subprocess, "run", run)
+    with pytest.raises(window.subprocess.TimeoutExpired):
+        case.execute()
+    assert json.loads((case.output / "users_before.json").read_bytes()) == {"phase": "users_before", "status": "timeout"}
