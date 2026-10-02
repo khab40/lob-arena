@@ -136,6 +136,7 @@ jobs:
           tests/test_transformer_lineage_semantics.py tests/test_transformer_lineage_readback.py
           tests/test_transformer_source_contract.py tests/test_transformer_label_domain.py
           tests/test_transformer_source_separation.py
+          tests/test_transformer_receipt_publication.py
 
       - name: Verify governed image submission contracts (inert metadata only)
         working-directory: backend

@@ -9,6 +9,7 @@ from app.market_data.projections import (
 from . import lineage_readback
 from .label_domain import verify_labels
 from .lineage_inventory import run_members
+from .receipt_publication import publish_receipt
 from .role_audit_bundle import MAX_BUNDLE, read_bounded
 from .role_manifest import ROLES, SYMBOLS, metadata_plan
 from .source_contract import PRODUCER_COMMIT, PRODUCER_IMAGE, verify_domains
@@ -108,11 +109,13 @@ def main():
         if output.exists():
             raise FileExistsError("receipt already exists")
         result = verify(*(Path(arg) for arg in sys.argv[1:4]))
-        with output.open("xb") as stream:
-            stream.write(canonical(result))
+        cleanup_pending = publish_receipt(output, canonical(result))
     except Exception as error:
         raise SystemExit(f"Source separation failed: {type(error).__name__}") from None
-    print(canonical({"source_separation_verified": True, "gpu_ready": False}).decode())
+    summary = {"source_separation_verified": True, "gpu_ready": False}
+    if cleanup_pending is not None:
+        summary["temporary_cleanup_path"] = str(cleanup_pending)
+    print(canonical(summary).decode())
 
 
 if __name__ == "__main__":
