@@ -3,11 +3,13 @@ import json
 import subprocess
 import time
 
+HEALTH = {"unknown", "absent", "starting", "healthy", "unhealthy"}
 STATES = {"unknown", "created", "restarting", "running", "removing", "paused", "exited", "dead"}
 PROBE = r'''
 import json,subprocess
 value={'ssh_reachable':True,'sudo_status':'unknown','docker_status':'unknown',
-       'app_status':'unknown','app_running':False,'db_status':'unknown','db_running':False}
+       'app_status':'unknown','app_running':False,'app_health':'unknown',
+       'db_status':'unknown','db_running':False,'db_health':'unknown'}
 def emit(): print(json.dumps(value,sort_keys=True),flush=True)
 def call(args):
     try:
@@ -32,6 +34,8 @@ if code==0:
                     if status in {'created','restarting','running','removing','paused','exited','dead'}:
                         value[name+'_status']=status
                         value[name+'_running']=row['Running'] is True
+                        health=row.get('Health',{}).get('Status','absent')
+                        if health in {'absent','starting','healthy','unhealthy'}: value[name+'_health']=health
             except (ValueError,KeyError,TypeError,AssertionError): pass
         emit()
 '''
@@ -50,13 +54,15 @@ def normalized(raw, *, partial=False):
     if partial and raw and not raw.endswith(b"\n"):
         raw = raw.rsplit(b"\n", 1)[0] if b"\n" in raw else b""
     result = {"ssh_reachable": False, "sudo_status": "unknown", "docker_status": "unknown",
-              "app_status": "unknown", "app_running": False, "db_status": "unknown", "db_running": False}
+              "app_status": "unknown", "app_running": False, "app_health": "unknown",
+              "db_status": "unknown", "db_running": False, "db_health": "unknown"}
     for line in raw.splitlines():
         value = json.loads(line)
         if (set(value) != set(result) or type(value["ssh_reachable"]) is not bool
                 or value["sudo_status"] not in {"unknown", "allowed", "denied", "timed_out"}
                 or value["docker_status"] not in {"unknown", "available", "unavailable", "timed_out"}
-                or any(value[name + "_status"] not in STATES or type(value[name + "_running"]) is not bool
+                or any(value[name + "_status"] not in STATES or value[name + "_health"] not in HEALTH
+                       or type(value[name + "_running"]) is not bool
                        for name in ("app", "db"))):
             raise ReadinessError("invalid_readiness_response")
         result = value
@@ -64,10 +70,10 @@ def normalized(raw, *, partial=False):
 
 
 def wait_for_guest(ssh, *, expires, record, now=time.monotonic, sleep=time.sleep, run=subprocess.run):
-    """Poll at most 90s, preserving 435s of the already-armed 600s VM window."""
+    """Poll at most 120s, preserving 435s of the already-armed 600s VM window."""
     start = now()
-    deadline = min(start + 90, expires - 435)
-    for number in range(1, 92):
+    deadline = min(start + 120, expires - 435)
+    for number in range(1, 122):
         remaining = deadline - now()
         if remaining <= 0:
             code = "guest_reserve_exhausted" if deadline == expires - 435 else "guest_readiness_timeout"
@@ -102,8 +108,10 @@ def wait_for_guest(ssh, *, expires, record, now=time.monotonic, sleep=time.sleep
             failure = failure or "guest_probe_failed"
         if observed["sudo_status"] == "denied":
             failure = failure or "guest_sudo_denied"
+        if any(observed[name + "_health"] == "absent" for name in ("app", "db")):
+            failure = failure or "guest_healthcheck_absent"
         ready = returncode == 0 and observed["ssh_reachable"] and observed["sudo_status"] == "allowed" and observed["docker_status"] == "available" and all(
-            observed[name + "_running"] and observed[name + "_status"] == "running" for name in ("app", "db"))
+            observed[name + "_running"] and observed[name + "_status"] == "running" and observed[name + "_health"] == "healthy" for name in ("app", "db"))
         result = {"event": "poll", "poll": number, **observed, "ssh_returncode": returncode,
                   "poll_timed_out": timed_out, "failure_code": failure,
                   "elapsed_seconds": now()-start, "remaining_vm_seconds": expires-now(), "ready": ready}
