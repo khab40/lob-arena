@@ -196,12 +196,15 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    356,040 bytes and all 30 validation-run semantic bindings independently verified.
    Cleanup restored the original two rules and non-policy settings at bucket
    version 143. Earlier attempts remain preserved and consumed.
-   Next resolve source-observation and label-horizon separation, then finish the
-   signed CPU role-audit package and obtain its exact execution approval. Verify
+   PR #271 is merged. The [source separation proof](../ml/transformer-source-separation.md)
+   now reauthenticates retained evidence and binds the three whole instrument
+   domains, including warm-up ancestry and all synthetic labels, to the reviewed
+   producer contract. It claims neither time separation nor statistical independence.
+   Next finish the signed CPU role-audit package and obtain its exact execution approval. Verify
    per-role class support and row alignment, complete MLflow/platform readiness,
    and obtain separate bounded GPU authorization. Research-control negative labels
-   remain assumptions; positive labels remain synthetic. Metadata agreement does
-   not prove independent observations or model quality.
+   remain assumptions; positive labels remain synthetic. The producer-contract
+   proof does not enumerate payload observations or establish model quality.
    #24 remains
    In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;

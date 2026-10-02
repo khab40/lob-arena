@@ -1,4 +1,32 @@
-# Roadmap status — 2026-10-01
+# Roadmap status — 2026-10-02
+
+## Transformer source domains verified — 2026-10-02
+
+[PR #272 review corrections](../evidence/transformer-source-review-20261002.json)
+repair partial receipt publication under [Bug #274](https://github.com/khab40/lob-arena/issues/274).
+All 247 focused tests pass and the verified receipt is unchanged. The commit-size
+P1 was a PR-aggregate counting error; the nine reviewed commits met the limit.
+PR #272 remains open for review; the next CPU packaging chunk follows its merge.
+
+[PR #271](https://github.com/khab40/lob-arena/pull/271) merged with all 23 checks
+passed. The next [Story #24 increment](../ml/transformer-source-separation.md)
+verifies the complete source-file/instrument domains against the frozen producer
+and all 115 retained metadata objects. NVDA selection (1,250 targets), MSFT
+calibration (5,490) and AAPL operating points (2,470) keep all ten replay variants
+per instrument together. All 27 synthetic label windows stay in their domains.
+The proof includes pre-window book state; tick labels are not converted to time.
+
+[Independent readback](../evidence/transformer-source-separation-20261002.json)
+reproduces the receipt; 232 focused inert tests pass. This is a producer-contract
+proof of source/label non-overlap, with no payload re-enumeration. Same trading
+time, market correlation, synthetic templates and assumed control negatives
+remain explicit limitations; statistical independence and model quality are not
+established. No new cloud access or model execution occurred.
+
+Next: finish the signed CPU role-audit package and obtain exact execution approval
+to verify class support and row alignment; complete MLflow/platform readiness,
+then present the separately authorized bounded GPU package. Story #24 remains
+in progress. G8/G9 stay closed and GPU readiness remains false.
 
 ## Transformer metadata lineage verified; access removed — 2026-10-01
 
