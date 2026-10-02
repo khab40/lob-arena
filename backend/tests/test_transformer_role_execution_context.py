@@ -1,9 +1,11 @@
 import copy
 import io
 
+import pytest
+
+pytest.importorskip("cryptography")
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
-import pytest
 
 from app.ml.transformer import role_execution_context as context
 from app.ml.transformer import role_execution_spec as spec

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("numpy")
+pytest.importorskip("cryptography")
 from app.ml.transformer import role_execution_readback as readback
 from app.ml.transformer.role_execution_context import context_for_job
 from app.ml.transformer.role_execution_transport import claim, publish, put_new

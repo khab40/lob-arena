@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("numpy")
+pytest.importorskip("cryptography")
 from app.ml.transformer import role_execution_runner as runner
 from app.ml.transformer.verification_spec import canonical, digest
 from transformer_role_execution_fixtures import MemoryStore, request_and_key
