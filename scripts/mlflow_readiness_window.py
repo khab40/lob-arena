@@ -117,7 +117,7 @@ def client_command(source, inputs, journal, image, proposal_sha, commit, attempt
 def _run(source, inputs, output, env_file, proposal_sha, commit):
     start = time.monotonic()
     deadline = start + HOST_WORK_SECONDS
-    def command(args, *, data=None, env=None, timeout=30, phase=None):
+    def command(args, *, data=None, env=None, timeout=30, phase=None, validate=None):
         remaining = min(timeout, deadline - time.monotonic())
         if remaining <= 0:
             raise TimeoutError("readiness deadline")
@@ -129,9 +129,17 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
                 persist(output / (phase + ".json"), {"phase": phase, "status": "timeout"})
             error.readiness_phase = phase
             raise
+        semantic_failure = False
+        if result.returncode == 0 and validate is not None:
+            try:
+                semantic_failure = not validate(result.stdout)
+            except (ValueError, TypeError, KeyError):
+                semantic_failure = True
         if phase:
             receipt = {"phase": phase, "status": "passed" if result.returncode == 0 else "failed",
                        "returncode": result.returncode}
+            if semantic_failure:
+                receipt.update(status="failed", failed_check="auth_defaults_semantics")
             if result.returncode:
                 # Keep fixed identifiers only; stdout/stderr may contain private users/config.
                 if phase in {"runtime_preflight", "defaults_before", "defaults_after"}:
@@ -150,6 +158,10 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
                 if phase in {"users_before", "users_after"} and match:
                     receipt["sqlstate"] = match.group(1).decode("ascii")
             persist(output / (phase + ".json"), receipt)
+        if semantic_failure:
+            error = ValueError("unexpected authentication defaults; values redacted")
+            error.readiness_phase = phase
+            raise error
         if result.returncode:
             error = RuntimeError("readiness subprocess failed; output redacted")
             error.readiness_phase = phase
@@ -167,7 +179,9 @@ except Exception as error:
     print(json.dumps({'failed_check':'auth_defaults_read','error_type':type(error).__name__}))
     raise SystemExit(1) from None
 """
-        return json.loads(command(["docker", "exec", APP, "python", "-c", code], phase=phase))
+        expected = {"default_permission": "NO_PERMISSIONS", "grant_default_workspace_access": "false"}
+        return json.loads(command(["docker", "exec", APP, "python", "-c", code], phase=phase,
+                                  validate=lambda raw: json.loads(raw) == expected))
     for path in (source, inputs, output.parent, env_file):
         if not path.is_absolute() or path.resolve(strict=True) != path:
             raise ValueError("canonical existing paths required")

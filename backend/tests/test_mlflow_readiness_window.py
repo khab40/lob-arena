@@ -288,3 +288,25 @@ def test_initial_timeout_retains_phase_without_command_or_output(case, monkeypat
     with pytest.raises(window.subprocess.TimeoutExpired):
         case.execute()
     assert json.loads((case.output / "users_before.json").read_bytes()) == {"phase": "users_before", "status": "timeout"}
+
+
+@pytest.mark.parametrize("raw", [b'{"default_permission":"private sentinel"}', b'[]', b'not-json'])
+@pytest.mark.parametrize("occurrence,phase", [(1, "defaults_before"), (2, "defaults_after")])
+def test_semantic_defaults_failure_is_never_recorded_as_passed(case, monkeypatch, raw, occurrence, phase):
+    original, seen = window.subprocess.run, []
+    def run(args, **kwargs):
+        result = original(args, **kwargs)
+        if args[:2] == ["docker", "exec"] and "-c" in args and args[2] == window.APP:
+            seen.append(1)
+            if len(seen) == occurrence:
+                result.stdout = raw
+        return result
+    monkeypatch.setattr(window.subprocess, "run", run)
+    with pytest.raises(ValueError) as error:
+        case.execute()
+    assert error.value.readiness_phase == phase
+    receipt = json.loads((case.output / (phase + ".json")).read_bytes())
+    assert receipt == {"phase": phase, "status": "failed", "returncode": 0,
+                       "failed_check": "auth_defaults_semantics"}
+    assert "private sentinel" not in json.dumps(receipt)
+    assert not (case.output / "application-receipt.json").exists()

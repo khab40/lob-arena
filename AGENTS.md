@@ -2,6 +2,12 @@
 
 # Operator execution preferences
 
+- Research priority (operator instruction, 2026-10-02): validate Transformer
+  against frozen LightGBM before further platform maintenance. The existing
+  MLflow VM may remain running if needed under the operator-managed cost policy.
+  Preserve durable experiment artifacts when online tracking is unavailable;
+  reconcile MLflow later. This does not authorize final-test access or promotion.
+
 - For transient orchestration failures, use up to three retries with increasing
   per-attempt timeouts, capped at 120 seconds (operator instruction, 2026-10-02).
   Default short-call schedule: initial 30 seconds, then 60, 90 and 120 seconds.

@@ -1,3 +1,19 @@
+## 2026-10-02 — Research takes priority; platform maintenance deferred
+
+Operator-approved change: merge the reusable MLflow health/diagnostic fixes in
+[PR #283](https://github.com/khab40/lob-arena/pull/283), then develop the full bounded
+Transformer versus frozen LightGBM experiment under [#24](https://github.com/khab40/lob-arena/issues/24)
+and [Project #3](https://github.com/users/khab40/projects/3). Preserve data separation,
+row alignment, durable artifacts and the existing final-test boundary. Evaluate
+whether Transformer quality and resource cost justify continuing; a negative result
+is a valid research outcome. No final evaluation or G8/G9 reopening is needed.
+
+Platform maintenance #19–#21 and MLflow recovery/registration acceptance move
+after research. MLflow can remain running if needed; successful online tracking
+is not a prerequisite for training when complete artifacts and a replayable event
+journal are durably retained. Registry promotion remains outside this fork.
+The following sections record earlier attempts and are historical where superseded.
+
 ## 2026-10-02 — MLflow retry stopped; logs reviewed before further execution
 
 [PR #283](https://github.com/khab40/lob-arena/pull/283), [Bug #282](https://github.com/khab40/lob-arena/issues/282),

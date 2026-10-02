@@ -116,3 +116,20 @@ or Docker healthcheck output, so they cannot distinguish slow startup from a
 persistent application/healthcheck fault. R2's separate initial-check failure also
 remains unexplained. Further attempts are held pending this log review; increasing
 timeouts alone is not a demonstrated repair.
+
+## Review correction and research handoff — 2026-10-02
+
+PR #283's P2 review found that successful subprocess execution with invalid
+semantic authentication defaults could publish a passed phase receipt. The fix
+validates defaults before finalizing either before/after receipt; malformed JSON
+and unexpected defaults retain a failed phase without values. Six inert regression
+cases cover both phases and malformed/unexpected output. Prior r2/r3 packages are
+immutable and are not repinned or rerun by this fix.
+
+The operator authorized merging these reusable fixes and moving to the Transformer
+versus LightGBM research fork under #24. Platform maintenance under #19–#21 is
+explicitly deferred until after research. MLflow may remain running if needed under
+the existing operator-managed cost policy; the old600-second maintenance target
+is historical, not a requirement for future research tracking. No new VM start,
+permission grant or model Job follows merely from merging this PR. Readiness is
+still incomplete; the unresolved live failures are retained for later diagnosis.
