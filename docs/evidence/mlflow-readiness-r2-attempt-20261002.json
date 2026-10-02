@@ -1,0 +1,29 @@
+{
+  "schema_version": "mlflow_readiness_attempt_v1",
+  "date": "2026-10-02",
+  "proposal_sha256": "b36f60dd0d4ef49d9d130c548e254e257b49ebc51c0f0c3825cb914d4e9a08e3",
+  "execution_manifest_sha256": "ff4f596b52c1ce5ae44bbd179556c7610b588ce92f001c9fd13be0da8ca0d28c",
+  "status": "aborted_during_initial_read_only_checks",
+  "source_staged": true,
+  "initial_intent_retained": true,
+  "wrapper_seconds": 0.8234971360000003,
+  "failed_subcheck": "not retained; users/defaults/runtime checks are possible",
+  "guest_readiness_seconds": 78.2339483750111,
+  "restore_started": false,
+  "live_started": false,
+  "application_grants": 0,
+  "registry_writes": 0,
+  "probe_runs": 0,
+  "artifact_transfers": 0,
+  "temporary_containers": 0,
+  "model_jobs": 0,
+  "final_access": false,
+  "watchdog_stop_verified": true,
+  "independent_mcp": {
+    "state": "STOPPED",
+    "resource_version": "112"
+  },
+  "elapsed_start_request_to_stop_verified_seconds": 215.51448607444763,
+  "one_further_retry_authorized": true,
+  "cost_disposition": "unknown under existing operator-managed policy"
+}
