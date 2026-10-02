@@ -2,6 +2,13 @@
 
 # Operator execution preferences
 
+- For transient orchestration failures, use up to three retries with increasing
+  per-attempt timeouts, capped at 120 seconds (operator instruction, 2026-10-02).
+  Default short-call schedule: initial 30 seconds, then 60, 90 and 120 seconds.
+  Preserve overall workload/shutdown budgets and exact access/run scopes.
+  Reconcile ambiguous mutations before retrying; do not duplicate completed work
+  or retry deterministic configuration, authentication or validation failures.
+
 - Run future agent-initiated model workloads on Nebius Serverless Jobs, including
   synthetic rehearsals, fixture generation that trains models, and pre-production
   tests that exercise training, scoring, or the frozen evaluation runtime.

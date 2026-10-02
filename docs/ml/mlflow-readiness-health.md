@@ -66,9 +66,13 @@ These numbers are engineering choices, not Nebius platform requirements:
 - The agent selected a 120-second guest-polling maximum for this repair. The
   absolute deadline still requires 435 seconds remaining, so slow starts can
   shorten that allowance. This has not yet been measured on the VM.
-- The operator explicitly approved retries without giving a count. The agent
-  selected at most one additional start after r2; that count is not an
-  operator-imposed requirement. Existing mutation/resource limits remain.
+- The operator subsequently specified up to three retries with increasing
+  timeouts capped at 120 seconds. Short orchestration calls default to an initial
+  30 seconds, then 60, 90 and 120 seconds, within the overall deadline. This
+  supersedes the earlier agent-selected one-retry cap. Deterministic failures
+  require repair; ambiguous mutations require readback before any retry. The
+  prepared r3 package still describes one VM maintenance attempt, with its
+  existing resource and mutation limits; it does not automatically repeat writes.
 
 The previous failure was not the 600-second deadline. This repair adds the
 missing health gate and diagnostics; increasing a timeout alone is not a diagnosis.
