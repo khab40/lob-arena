@@ -55,12 +55,18 @@ and publishes no success receipt after a failed proof. This increment makes
 **zero cloud reads, payload reads or model runs**; it does not enumerate the
 payload's individual source-observation IDs again.
 
-Verification passed 231 focused inert tests, including 96 new contract cases.
+Verification passed 232 focused inert tests, including 97 new contract cases.
 Independent review found no P1/P2 issues and reproduced the 4,663-byte receipt
 exactly in 0.062 seconds. Source, label and orchestration boundary cases are in
 `test_transformer_source_contract.py`, `test_transformer_label_domain.py` and
 `test_transformer_source_separation.py`. The lineage-result checksum hashes
 canonical JSON; the evidence also retains the earlier pretty-printed file's checksum.
+
+[Bug #273](https://github.com/khab40/lob-arena/issues/273) repairs the initial CI
+collection failure: the metadata helper imported NumPy through the row adapter.
+Its constants now come from the standard-library-only specification. A Python
+`-S` regression proves import without site packages; the existing ML CI step
+explicitly runs all three new suites. Source roles and receipt bytes are unchanged.
 
 ## Producer semantics reviewed
 

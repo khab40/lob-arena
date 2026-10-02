@@ -3,7 +3,7 @@
   "date": "2026-10-02",
   "story": "https://github.com/khab40/lob-arena/issues/24",
   "base_commit": "c0d0e90226a2690c0c1e08ae65f5ca9f82782afc",
-  "verifier_commit": "dc4539181ce19a7d10ca56b3950162f6ea82adf7",
+  "verifier_commit": "84f1b8a58357fb2b6df061443f616b46fee95045",
   "receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
   "receipt_size_bytes": 4663,
   "receipt_file": "transformer-source-separation-receipt-20261002.json",
@@ -24,13 +24,55 @@
     "java/control-plane/src/main/java/ai/lobarena/controlplane/LiveArenaService.java": "1dbc89b0f636c54fc442184170aa3b5269d902d8badb9de39a9c80615ccc9b65"
   },
   "verifier_files_sha256": {
-    "backend/app/ml/transformer/source_contract.py": "a5248d96aae19ded2cc5b3029aebc845117b5e79a3e854e29183e3d6d8c711bb",
+    "backend/app/ml/transformer/source_contract.py": "b9da22514398e4739b23b57d3089cc17fc929c63c9fa84ca82e76bcaa933b5bd",
     "backend/app/ml/transformer/label_domain.py": "dd82e260e2f4c3d908f6dc4b3290ee9dd0a4a82cecad0ac1642d033b11aaa801",
-    "backend/app/ml/transformer/source_separation.py": "72dc04826c8ebc7fcb9ad7d5c82bc8f0bea2e2527a1e86ef71a3bab3adc88cf0"
+    "backend/app/ml/transformer/source_separation.py": "72dc04826c8ebc7fcb9ad7d5c82bc8f0bea2e2527a1e86ef71a3bab3adc88cf0",
+    "backend/app/ml/transformer/verification_spec.py": "9e228890eaead3844cabdaeb36ce4b23ccb6e5812be4223b75b32fa1366c4b7d",
+    "backend/app/ml/transformer/role_manifest.py": "8670b055dfb0affdf506de7d954f3faea40df4dc9a5e440b2a2f79804e33b870"
   },
-  "focused_tests_passed": 231,
-  "new_contract_tests_passed": 96,
+  "focused_tests_passed": 232,
+  "new_contract_tests_passed": 97,
   "independent_receipt_identical": true,
+  "ci_repair_review": {
+    "cloud_reads": 0,
+    "findings": [],
+    "matches_parent_and_original_independent_receipt_bytes": true,
+    "model_runs": 0,
+    "parent_story": "https://github.com/khab40/lob-arena/issues/24",
+    "payload_reads": 0,
+    "receipt_path": "outputs/transformer-source-separation-20261002/ci-repair-source-separation.json",
+    "receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+    "receipt_size_bytes": 4663,
+    "review_conclusions": [
+      "Moved unchanged SYMBOLS tuple into stdlib-only verification_spec; role_manifest retains the same reexport for existing callers.",
+      "source_contract no longer imports role_manifest or optional NumPy transitively.",
+      "New subprocess regression uses python -S and verifies source_contract imports without site packages, NumPy or the tensor data module.",
+      "All three new test modules are explicitly included in existing ML-enabled CI, whose environment installs the frozen ml extra.",
+      "The repair preserves complete retained-evidence proof bytes and all source, label and execution limitations."
+    ],
+    "reviewed_at": "2026-10-02T03:50:00.668326+00:00",
+    "reviewed_files": {
+      "../.github/workflows/ci.yml": "39f22662ba5c54e53c43553cd7b8f15dafaaa0c1055a4e7a640096077606e6a9",
+      "app/ml/transformer/label_domain.py": "dd82e260e2f4c3d908f6dc4b3290ee9dd0a4a82cecad0ac1642d033b11aaa801",
+      "app/ml/transformer/role_manifest.py": "8670b055dfb0affdf506de7d954f3faea40df4dc9a5e440b2a2f79804e33b870",
+      "app/ml/transformer/source_contract.py": "b9da22514398e4739b23b57d3089cc17fc929c63c9fa84ca82e76bcaa933b5bd",
+      "app/ml/transformer/source_separation.py": "72dc04826c8ebc7fcb9ad7d5c82bc8f0bea2e2527a1e86ef71a3bab3adc88cf0",
+      "app/ml/transformer/verification_spec.py": "9e228890eaead3844cabdaeb36ce4b23ccb6e5812be4223b75b32fa1366c4b7d",
+      "tests/test_transformer_source_contract.py": "42fd4489ddf0882a4ec9774e8bb0dd246fd1b612bdb4500c3f7308f0d838fafb"
+    },
+    "reviewed_patch_commit": "84f1b8a58357fb2b6df061443f616b46fee95045",
+    "reviewer": "/root/separation_independent_review",
+    "schema_version": "transformer_source_separation_ci_repair_review_v1",
+    "source_commit": "84f1b8a58357fb2b6df061443f616b46fee95045",
+    "tests": {
+      "command": "python -m pytest tests/test_transformer_source_contract.py tests/test_transformer_label_domain.py tests/test_transformer_source_separation.py -q",
+      "failed": 0,
+      "passed": 97,
+      "pytest_elapsed_seconds": 0.51
+    },
+    "ticket": "https://github.com/khab40/lob-arena/issues/273",
+    "verification_elapsed_seconds": 0.0629425840015756
+  },
   "independent_review_sha256": "373704146525834edbced69e19f3a40161b3a6d5d48aaca04ae75c2198f5a477",
   "independent_review": {
     "cloud_reads": 0,

@@ -11,7 +11,7 @@ per instrument together. All 27 synthetic label windows stay in their domains.
 The proof includes pre-window book state; tick labels are not converted to time.
 
 [Independent readback](../evidence/transformer-source-separation-20261002.json)
-reproduces the receipt; 231 focused inert tests pass. This is a producer-contract
+reproduces the receipt; 232 focused inert tests pass. This is a producer-contract
 proof of source/label non-overlap, with no payload re-enumeration. Same trading
 time, market correlation, synthetic templates and assumed control negatives
 remain explicit limitations; statistical independence and model quality are not
