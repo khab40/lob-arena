@@ -48,7 +48,7 @@ def test_active_lock_uses_patched_framework_versions() -> None:
 
 @pytest.mark.parametrize(
     ("package", "minimum_version"),
-    [("cryptography", (50, 0, 0)), ("anyio", (4, 14, 2))],
+    [("cryptography", (50, 0, 0)), ("anyio", (4, 14, 2)), ("urllib3", (2, 8, 0))],
 )
 def test_every_backend_lock_uses_patched_dependencies(
     package: str, minimum_version: tuple[int, ...]

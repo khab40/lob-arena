@@ -41,3 +41,20 @@ printf '%s  %s\n' '8536d1bcbd47e8f6ddea1ce32fa1e002ce7f3c8dd427e7ab1380700084f3d
 
 The backend dependency-floor tests cover AnyIO >=4.14.2 in both lockfiles,
 while retaining the existing cryptography and framework security checks.
+
+## 2026-10-02: urllib3 2.8.0
+
+Bug: https://github.com/khab40/lob-arena/issues/276 (Project #3).
+
+The maintained derivative updates only urllib3 from 2.7.0 to 2.8.0
+and its distribution metadata for Dependabot alerts #48, #49 and #50.
+This closes HTTPS proxy TLS policy confusion, unbounded chunk-size buffering,
+and Deflate streaming loops. The active backend already uses 2.8.0.
+Dependency edges and original captured deployment evidence remain unchanged;
+this amendment does not claim the July deployment ran the patched version.
+
+Previous SHA-256: `8536d1bcbd47e8f6ddea1ce32fa1e002ce7f3c8dd427e7ab1380700084f3de54`.
+Current SHA-256: `d07b56f3fa93262ac9361499218e2b7ff438ff4e7a93b8db277ce097275d9eab`.
+
+The earlier verification command applies to the September derivative; use
+the current hash above when verifying this amended lockfile.
