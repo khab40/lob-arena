@@ -1,0 +1,143 @@
+{
+  "schema_version": "transformer_source_separation_evidence_v1",
+  "date": "2026-10-02",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "base_commit": "c0d0e90226a2690c0c1e08ae65f5ca9f82782afc",
+  "verifier_commit": "dc4539181ce19a7d10ca56b3950162f6ea82adf7",
+  "receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+  "receipt_size_bytes": 4663,
+  "receipt_file": "transformer-source-separation-receipt-20261002.json",
+  "lineage_receipt_hash_encoding": "canonical JSON result, not previous pretty-printed file bytes",
+  "previous_lineage_file_sha256": "8146a4d25eefe81062d4a5988e4a9ac27d193481301155ae277123667b0d56eb",
+  "retained_evidence": "outputs/transformer-source-separation-20261002/",
+  "producer_commit": "cf426c0db0940a985133fc7c8482623186acd5a4",
+  "reviewed_producer_files_sha256": {
+    "backend/app/data_ingestion/itch.py": "f6760df09241253c56941572e6bbda6045f3a5b3745d7793f6a6ec1d03a7f1a5",
+    "backend/app/market_data/preparation.py": "261fdc73523911f8e7e2c2d375f8319e7685b1ca6a8d0947c66396a5d86fa7f3",
+    "backend/app/market_data/replay_export.py": "a829f09cce6c5658574b3148b97efdb9b588df59cefc1321178b687b51b1d19c",
+    "backend/app/features/pipeline.py": "e5e839e67909a839ed3a8ce779f05526e1d259a6347da0bffa20b35185aff2fe",
+    "backend/app/features/streaming.py": "381784f8e20cee384c893d4155462df078a1427471a9e273a2be48bf630bb58e",
+    "backend/app/features/io.py": "934123e285525418c585900ed59307310d9236dd0b24ea080cefa303b3dbdc58",
+    "backend/app/features/models.py": "1e5fcaed61dc45ace1a671dd318fbbd9787ceaf4996aea1d584251e780cca2d4",
+    "scripts/generate_features.py": "d00162b93ad63e98f990c15b157e1b46d94990a43c68cb650d49800e54ff6cf7",
+    "java/control-plane/src/main/java/ai/lobarena/controlplane/HistoricalMarketDataSource.java": "61863fe75534698c96ed519dc2e86b446f56487a4faf648b73abd5b38d4e2ac0",
+    "java/control-plane/src/main/java/ai/lobarena/controlplane/LiveArenaService.java": "1dbc89b0f636c54fc442184170aa3b5269d902d8badb9de39a9c80615ccc9b65"
+  },
+  "verifier_files_sha256": {
+    "backend/app/ml/transformer/source_contract.py": "a5248d96aae19ded2cc5b3029aebc845117b5e79a3e854e29183e3d6d8c711bb",
+    "backend/app/ml/transformer/label_domain.py": "dd82e260e2f4c3d908f6dc4b3290ee9dd0a4a82cecad0ac1642d033b11aaa801",
+    "backend/app/ml/transformer/source_separation.py": "72dc04826c8ebc7fcb9ad7d5c82bc8f0bea2e2527a1e86ef71a3bab3adc88cf0"
+  },
+  "focused_tests_passed": 231,
+  "new_contract_tests_passed": 96,
+  "independent_receipt_identical": true,
+  "independent_review_sha256": "373704146525834edbced69e19f3a40161b3a6d5d48aaca04ae75c2198f5a477",
+  "independent_review": {
+    "cloud_reads": 0,
+    "findings": [],
+    "independent_receipt_path": "outputs/transformer-source-separation-20261002/independent-source-separation.json",
+    "independent_receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+    "matches_parent_receipt_bytes": true,
+    "model_runs": 0,
+    "payload_reads": 0,
+    "proof_limitations": [
+      "Authenticated metadata plus reviewed pinned producer contract; payload observation IDs were not reenumerated.",
+      "Statistical independence is not established.",
+      "Class support and exact payload row alignment remain pending."
+    ],
+    "receipt_size_bytes": 4663,
+    "review_conclusions": [
+      "Public verifier authenticates all retained upstream evidence before interpreting domains and rejects an anchor changed after authentication.",
+      "Reviewed producer cf426c0 provides global source sequence numbers, one-to-one stock-locate mapping and per-symbol active-order/book state.",
+      "Entire source-file/instrument domains retain pre-window book warm-up ancestry and every replay variant in exactly one role.",
+      "Pinned label contract assigns pointwise inclusive run-local ticks, without a future target horizon.",
+      "Receipt does not claim timestamp mapping, temporal disjointness or statistical independence and preserves class-support and execution gates."
+    ],
+    "reviewed_at": "2026-10-02T03:41:52.727019+00:00",
+    "reviewer": "/root/separation_independent_review",
+    "schema_version": "transformer_source_separation_independent_review_v1",
+    "source_commit": "afa6aeb0858cea541111958b7783869e09f343ca",
+    "source_files": {
+      "app/ml/transformer/label_domain.py": "dd82e260e2f4c3d908f6dc4b3290ee9dd0a4a82cecad0ac1642d033b11aaa801",
+      "app/ml/transformer/source_contract.py": "a5248d96aae19ded2cc5b3029aebc845117b5e79a3e854e29183e3d6d8c711bb",
+      "app/ml/transformer/source_separation.py": "72dc04826c8ebc7fcb9ad7d5c82bc8f0bea2e2527a1e86ef71a3bab3adc88cf0"
+    },
+    "tests": {
+      "command": "python -m pytest tests/test_transformer_source_contract.py tests/test_transformer_label_domain.py tests/test_transformer_source_separation.py -q",
+      "failed": 0,
+      "note": "Executed independently with HEAD dc4539181ce19a7d10ca56b3950162f6ea82adf7 and the three-module test suite present in the working tree. Reviewed verifier modules match that commit; the orchestration test file was subsequently committed at afa6aeb0858cea541111958b7783869e09f343ca.",
+      "passed": 96,
+      "pytest_elapsed_seconds": 0.51
+    },
+    "ticket": "https://github.com/khab40/lob-arena/issues/24",
+    "verification_elapsed_seconds": 0.06168795799749205
+  },
+  "result": {
+    "anchor_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+    "class_support_verified": false,
+    "cloud_reads": 0,
+    "execution_authorized": false,
+    "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+    "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+    "gpu_ready": false,
+    "independently_verified_clean": false,
+    "label_horizon_separation_verified": true,
+    "label_tick_to_timestamp_mapping_claimed": false,
+    "limitations": [
+      "one_validation_date",
+      "one_instrument_per_role",
+      "correlated_market_time",
+      "shared_synthetic_templates_and_seeds",
+      "prior_development_exposure",
+      "producer_contract_proof_without_payload_reenumeration"
+    ],
+    "lineage_receipt_sha256": "777dc99fc3bdb2d5a25b88508bde6034aefab972d7790be9323d833af8c0c3ba",
+    "model_runs": 0,
+    "negative_label_source": "research_control_assumption",
+    "payload_observation_ids_reenumerated": false,
+    "payload_reads": 0,
+    "phase_one_receipts_sha256": "c5b5283ed5f289b40fe887c94de8da09a5a72c808ec9654718855bfc0156bdd0",
+    "phase_two_receipts_sha256": "34d70a24112955d4c4893e0f79fabc4693489570e9efd44b826f9d2a84d60d01",
+    "producer_commit": "cf426c0db0940a985133fc7c8482623186acd5a4",
+    "producer_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/mdp@sha256:8ba71e9ed8ef90b10efe7abd3b2d8d8e0089990281a12c0c903ab8f7508e7195",
+    "proof_method": "authenticated_metadata_and_pinned_producer_contract",
+    "remaining_proof": [
+      "CPU_class_support_and_exact_row_alignment",
+      "MLflow_and_platform_readiness",
+      "exact_execution_authorization"
+    ],
+    "role_metadata_sha256": "0e1bc71a8442bd20df510a3be2b6576e9eb7bff391b38228c66c8422159c62be",
+    "schema_version": "transformer_source_separation_v1",
+    "source_observation_identity": [
+      "source_stream_sha256",
+      "source_sequence"
+    ],
+    "source_observation_separation_verified": true,
+    "source_separation_verified": true,
+    "statistical_independence_claimed": false,
+    "temporal_disjoint": false
+  },
+  "role_summary": [
+    {
+      "role": "selection",
+      "instrument": "NVDA",
+      "normalized_rows": 31052,
+      "row_count": 1250,
+      "positive_label_windows": 9
+    },
+    {
+      "role": "calibration",
+      "instrument": "MSFT",
+      "normalized_rows": 137119,
+      "row_count": 5490,
+      "positive_label_windows": 9
+    },
+    {
+      "role": "operating_point",
+      "instrument": "AAPL",
+      "normalized_rows": 61515,
+      "row_count": 2470,
+      "positive_label_windows": 9
+    }
+  ]
+}
