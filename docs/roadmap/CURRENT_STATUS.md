@@ -1,3 +1,18 @@
+## 2026-10-02 — MLflow retry stopped; logs reviewed before further execution
+
+[PR #283](https://github.com/khab40/lob-arena/pull/283), [Bug #282](https://github.com/khab40/lob-arena/issues/282),
+parent [#19](https://github.com/khab40/lob-arena/issues/19), consumer [#24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+R3 timed out before staging; zero application writes, artifact reads or model Jobs.
+VM independently STOPPED at version116. Existing serial logs show successful
+metadata mounting, followed by a separate unmount wait during shutdown. Only
+about45 seconds remained after bootstrap completion inside the 120-second guest
+gate; MLflow health was still starting. Its underlying cause and r2's initial
+preflight failure remain unknown. Further starts are held at the operator's
+request to inspect logs first. [Analysis and evidence](../ml/mlflow-readiness-health.md#r3-console-analysis).
+Three retries with increasing per-call timeouts up to120 seconds are recorded in
+AGENTS.md for future transient failures; this does not require blind retries.
+
 # Roadmap status — 2026-10-02
 
 ## MLflow healthy-service retry preparation — 2026-10-02

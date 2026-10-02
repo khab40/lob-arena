@@ -83,3 +83,36 @@ Verification: 234 focused inert tests pass, including 11 new health/diagnostic
 cases, with no local model execution. Actual healthy-service evidence and MLflow
 readiness remain pending the bounded retry. Out of scope: new permissions beyond
 the original four grants, deployment upgrade, model Jobs, final access and merge.
+
+## R3 console analysis
+
+R3 reached its 120-second guest deadline before staging; zero application writes
+or artifact GETs occurred. The watchdog stopped the VM; independent MCP readback
+confirms STOPPED at resource version116. See the [attempt receipt](../evidence/mlflow-readiness-r3-attempt-20261002.json)
+and [serial-log analysis](../evidence/mlflow-readiness-r3-console-analysis-20261002.json).
+
+The operator requested log inspection without another retry. Read-only Nebius
+MCP retrieval returned 1,699 serial entries, without starting the VM. Timeline
+on October 2, in Asia/Tbilisi (UTC+04:00):
+
+- 17:31:04: provider RUNNING recorded; guest-readiness polling begins.
+- 17:31:30: `/mnt/cloud-metadata` mounted successfully.
+- 17:32:19: cloud-init reports MLflow VM bootstrap complete.
+- About 17:33:04: the guest polling limit expires; last observation still has
+  PostgreSQL healthy and MLflow running with health starting.
+- 17:33:06: watchdog begins stopping the VM after the readiness abort.
+- 17:33:23: Docker is stopped; metadata unmount is pending afterward.
+- 17:34:43: watchdog independently verifies provider STOPPED.
+
+The repeated metadata mount **stop** message is a shutdown wait, not evidence
+that startup mounting failed. It occurs after the readiness failure and therefore
+cannot be its initiating cause. The serial stream ends before unmount completion;
+the exact cause of that shutdown delay is not established.
+
+The 120-second gate counted guest boot time from provider RUNNING, leaving only
+about45 seconds after the bootstrap completion message. Bootstrap completion is
+not application readiness. These logs do not contain MLflow application stderr
+or Docker healthcheck output, so they cannot distinguish slow startup from a
+persistent application/healthcheck fault. R2's separate initial-check failure also
+remains unexplained. Further attempts are held pending this log review; increasing
+timeouts alone is not a demonstrated repair.

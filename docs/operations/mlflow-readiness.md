@@ -1,11 +1,16 @@
 # MLflow readiness operation — 2026-10-02
 
-Current continuation: PR #279 is merged. Its r2 attempt stopped in initial
-read-only checks and the VM is verified STOPPED at version 112. The operator
-approved retries without specifying a count. [Bug #282's repair](../ml/mlflow-readiness-health.md)
-adds service health and safe failure receipts for the prepared r3 retry.
-The [r3 proposal](../evidence/mlflow-readiness-r3-proposal-20261002.json) records
-the current bounds and their attribution; the earlier r2 account below is historical.
+Current continuation: [PR #283](https://github.com/khab40/lob-arena/pull/283),
+[Bug #282](https://github.com/khab40/lob-arena/issues/282). R3 timed out in guest
+readiness before staging or application checks. Independent Nebius readback
+confirms STOPPED at version116. The operator requests existing-log inspection
+before further retries; no diagnostic restart was executed.
+
+The operator now specifies up to three retries with increasing timeouts capped at
+120 seconds for transient orchestration calls. This supersedes the earlier
+agent-selected retry count. It does not require retrying deterministic failures.
+See [console analysis](../ml/mlflow-readiness-health.md#r3-console-analysis).
+The earlier r1/r2 execution account below is historical.
 
 Status: the approved first attempt aborted before staging; independent Nebius
 readback verified STOPPED at resource version 108. No application mutation or
