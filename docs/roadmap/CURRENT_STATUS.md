@@ -18,7 +18,9 @@ repairs missing readiness diagnostics and shutdown reserves under
 [Bug #280](https://github.com/khab40/lob-arena/issues/280). Actual-image compatibility
 and application proof remain pending. The
 [replacement proposal](../evidence/mlflow-readiness-replacement-proposal-20261002.json)
-requires fresh exact execution-manifest approval; the first authorization is consumed.
+requires fresh exact [execution-manifest](../evidence/mlflow-readiness-r2-execution-manifest-20261002.json)
+approval; the first authorization is consumed. All 218 focused inert tests and
+39 operator/verifier checks pass; independent review has no unresolved P1/P2 findings.
 After independently verified readiness and shutdown, seal the CPU image/request,
 verify admission, then request exact one-Job authorization. No CPU/GPU Job,
 training, scoring or final access occurred. G8/G9 remain closed; #19/#24 stay open.

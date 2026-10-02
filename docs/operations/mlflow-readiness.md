@@ -5,7 +5,11 @@ readback verified STOPPED at resource version 108. No application mutation or
 artifact transfer occurred. The [attempt receipt](../evidence/mlflow-readiness-attempt-20261002.json)
 preserves that consumed authorization. The
 [replacement proposal](../evidence/mlflow-readiness-replacement-proposal-20261002.json)
-requires fresh approval of its separately hashed execution manifest before another start.
+requires fresh approval of its [execution manifest](../evidence/mlflow-readiness-r2-execution-manifest-20261002.json)
+before another start. Manifest SHA-256:
+`4ef479bc2d5f98e9a9d5054ebe8beef7caaabc3151f50d02c26a89e60b5694bc`.
+Its five exact operator/helper files are retained in root
+`outputs/transformer-mlflow-readiness-r2-20261002/` for inspection.
 Ticket: [#19](https://github.com/khab40/lob-arena/issues/19), consumer
 [#24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
