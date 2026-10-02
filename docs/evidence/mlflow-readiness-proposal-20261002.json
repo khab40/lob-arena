@@ -5,7 +5,7 @@
   "ticket": "https://github.com/khab40/lob-arena/issues/19",
   "consumer": "https://github.com/khab40/lob-arena/issues/24",
   "project": "https://github.com/users/khab40/projects/3",
-  "implementation_source_commit": "c59e2aa7517dddabf9cf6550537bd548b072d259",
+  "implementation_source_commit": "b2e897cd9de5e687317d0dcbf0067b9d4b3eaf1a",
   "scope": "one metadata readiness attempt; no model execution",
   "vm": {
     "id": "computeinstance-e00xq8hqrzks2pf3gn",
@@ -159,7 +159,7 @@
     "deployments/mlflow/readiness_config.py": "fd5054646e86435375364f4b66a73d47c5d32739b29be85abdba450bd7ea066d",
     "deployments/mlflow/readiness_live.py": "e85efac75078fe1f0aef24141bb002f879ebf3c03cde3da1a763bd94d3e3b7be",
     "deployments/mlflow/readiness_permissions.py": "2543f2760779ef96ce44e70d3be4032060e9a0e3103c1d044139ae31f1aaba07",
-    "deployments/mlflow/readiness_recovery.py": "64a066a6df5c76cb7e373298435955007d3379ee8b3e7089238d92e0a9d1f1ea",
+    "deployments/mlflow/readiness_recovery.py": "a32e6769e0b2655c64a1cc7791eb415ef6a6c566111dc920076f5230fa60618e",
     "deployments/mlflow/readiness_registry.py": "9dcf7ee05138fe94c9c43435a875db5b7c47a6da4b3778ac6dde2df9640c624b",
     "deployments/mlflow/readiness_tracking.py": "d69531bc9ffb0c1e0b5ac054035a196ab6bbd9d9bdb5cf00a489a8a8ca291c04",
     "scripts/mlflow_readiness_window.py": "47a8089c7bb32682d4241d68459c6b141e8097cceb395df0cb0cc6273aeb546e",
