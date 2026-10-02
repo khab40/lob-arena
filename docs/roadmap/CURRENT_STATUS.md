@@ -1,5 +1,31 @@
 # Roadmap status — 2026-10-02
 
+## MLflow readiness startup repair; replacement pending — 2026-10-02
+
+[PR #275](https://github.com/khab40/lob-arena/pull/275) is merged with passing CI.
+The next [Story #19](https://github.com/khab40/lob-arena/issues/19) increment prepares
+restored application/sequence checks, frozen LightGBM registry lineage and
+additive Transformer permissions with a retained parent/child tracking probe.
+The [design](../ml/mlflow-readiness-design.md),
+[architecture decision](../architecture/ARD-0041-mlflow-readiness-before-transformer-execution.md)
+and [operation](../operations/mlflow-readiness.md) are separate records.
+
+The approved first start aborted during guest readiness, before staging or
+application execution. [Its receipt](../evidence/mlflow-readiness-attempt-20261002.json)
+records zero grants, registry writes, probe runs or artifact transfers; independent
+Nebius MCP confirmed STOPPED at version 108. [PR #279](https://github.com/khab40/lob-arena/pull/279)
+repairs missing readiness diagnostics and shutdown reserves under
+[Bug #280](https://github.com/khab40/lob-arena/issues/280). [Bug #281](https://github.com/khab40/lob-arena/issues/281) also rejects occupied or
+unverifiable Transformer namespaces before grants. Actual-image compatibility
+and application proof remain pending. The
+[replacement proposal](../evidence/mlflow-readiness-replacement-proposal-20261002.json)
+requires fresh exact [execution-manifest](../evidence/mlflow-readiness-r2-execution-manifest-20261002.json)
+approval; the first authorization is consumed. All 223 focused inert tests and
+40 operator/verifier checks pass; independent review has no unresolved P1/P2 findings.
+After independently verified readiness and shutdown, seal the CPU image/request,
+verify admission, then request exact one-Job authorization. No CPU/GPU Job,
+training, scoring or final access occurred. G8/G9 remain closed; #19/#24 stay open.
+
 ## Transformer CPU audit package implemented — 2026-10-02
 
 [PR #272](https://github.com/khab40/lob-arena/pull/272) merged with all 23 checks

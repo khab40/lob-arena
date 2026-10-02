@@ -17,6 +17,7 @@ DEFAULT_EXPERIMENTS = (
     "lob-arena/corpus-releases",
     "lob-arena/lightgbm-development",
     "lob-arena/governed-evaluation",
+    "lob-arena/transformer-development",
 )
 DEFAULT_METRIC_KEYS = (
     "precision",
@@ -29,7 +30,7 @@ DEFAULT_METRIC_KEYS = (
     "cloud_rows_per_second",
     "cloud_estimated_cost_usd",
 )
-DEFAULT_MODEL_NAMES = ("lob-arena-lightgbm-attack-active",)
+DEFAULT_MODEL_NAMES = ("lob-arena-lightgbm-attack-active", "lob-arena-transformer-attack-active")
 RUN_STATUSES = ("RUNNING", "SCHEDULED", "FINISHED", "FAILED", "KILLED", "OTHER")
 MODEL_VERSION_STATUSES = ("READY", "PENDING_REGISTRATION", "FAILED_REGISTRATION", "OTHER")
 

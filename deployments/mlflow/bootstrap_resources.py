@@ -11,8 +11,10 @@ EXPERIMENTS = (
     "lob-arena/corpus-releases",
     "lob-arena/lightgbm-development",
     "lob-arena/governed-evaluation",
+    "lob-arena/transformer-development",
 )
 REGISTERED_MODEL = "lob-arena-lightgbm-attack-active"
+REGISTERED_MODELS = (REGISTERED_MODEL, "lob-arena-transformer-attack-active")
 
 
 def configure_client() -> MlflowClient:
@@ -38,23 +40,24 @@ def main() -> None:
         else:
             print(f"MLflow experiment already exists: {name}.")
 
-    try:
-        client.create_registered_model(
-            REGISTERED_MODEL,
-            tags={
-                "lob_arena.target": "attack_active",
-                "lob_arena.release_contract": "lightgbm-phase0-v1",
-            },
-            description=(
+    for model_name in REGISTERED_MODELS:
+        tags = {"lob_arena.target": "attack_active"}
+        if model_name == REGISTERED_MODEL:
+            tags["lob_arena.release_contract"] = "lightgbm-phase0-v1"
+            description = (
                 "Governed binary attack_active LightGBM releases. Production aliases "
                 "must refer only to checksum-verified release bundles."
-            ),
-        )
-        print(f"Created MLflow registered model {REGISTERED_MODEL}.")
-    except MlflowException as error:
-        if "already exists" not in str(error).lower():
-            raise
-        print(f"MLflow registered model already exists: {REGISTERED_MODEL}.")
+            )
+        else:
+            tags["lob_arena.lifecycle"] = "development-only"
+            description = "Governed Transformer development. No production promotion is authorized."
+        try:
+            client.create_registered_model(model_name, tags=tags, description=description)
+            print(f"Created MLflow registered model {model_name}.")
+        except MlflowException as error:
+            if "already exists" not in str(error).lower():
+                raise
+            print(f"MLflow registered model already exists: {model_name}.")
 
 
 if __name__ == "__main__":

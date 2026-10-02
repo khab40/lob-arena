@@ -1,0 +1,184 @@
+{
+  "schema_version": "mlflow_readiness_proposal_v1",
+  "date": "2026-10-02",
+  "status": "proposed_not_authorized",
+  "ticket": "https://github.com/khab40/lob-arena/issues/19",
+  "consumer": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "implementation_source_commit": "b2e897cd9de5e687317d0dcbf0067b9d4b3eaf1a",
+  "scope": "one metadata readiness attempt; no model execution",
+  "vm": {
+    "id": "computeinstance-e00xq8hqrzks2pf3gn",
+    "platform": "cpu-e2",
+    "preset": "2vcpu-8gb",
+    "existing_disk_gib": 32,
+    "starts": 1,
+    "shutdown_target_seconds": 600,
+    "watchdog_required_before_start": true,
+    "not_a_provider_billing_cap": true,
+    "initial_state_required": "STOPPED",
+    "final_state_required": "STOPPED"
+  },
+  "cost_disposition": "unknown under existing operator-managed policy; no billing freshness gate",
+  "temporary_containers": {
+    "restore_postgres": {
+      "cpu": 1,
+      "memory_mib": 1024,
+      "data_tmpfs_mib": 512,
+      "network": "none",
+      "image": "retained backup PostgreSQL image ID"
+    },
+    "restore_mlflow": {
+      "cpu": 1,
+      "memory_mib": 2048,
+      "tmpfs_mib": 256,
+      "network": "none",
+      "user": "staging operator UID:GID",
+      "image": "existing deployed MLflow image ID; exact version 3.13.0"
+    },
+    "live_client": {
+      "cpu": 1,
+      "memory_mib": 512,
+      "tmpfs_mib": 64,
+      "network": "existing VM host network, private MLflow endpoint only",
+      "user": "staging operator UID:GID",
+      "image": "same deployed MLflow image ID"
+    },
+    "total_created_maximum": 3,
+    "image_pulls": 0,
+    "published_ports": 0,
+    "cleanup": "only owned attempt-labeled containers, remove and verify by immutable ID"
+  },
+  "timing": {
+    "host_work_seconds": 400,
+    "host_cleanup_seconds": 20,
+    "restore_work_seconds": 210,
+    "restore_cleanup_seconds": 30,
+    "http_timeout_seconds": 10,
+    "http_retries": 0,
+    "replacement_attempts": 0
+  },
+  "source_directory": "/opt/aimada/mlflow/readiness-package-20261002-r1",
+  "input_directory": "/opt/aimada/mlflow/readiness-inputs-20261002-r1",
+  "output_directory": "/opt/aimada/mlflow/readiness-20261002-r1",
+  "env_file": "existing-compose-environment-file",
+  "env_file_resolution": "exact existing application Compose environment_file label; canonical owned 0600; no guessed fallback",
+  "tracking_uri": "http://10.4.0.54:5500",
+  "restored_backup": {
+    "path": "/opt/aimada/mlflow/recovery-20260928/metadata.dump",
+    "bytes": 380475,
+    "sha256": "a5272943981769a1c0c62ca6021f50f2d92049fc894c4879e0f3d3ba88aba110",
+    "postgres_image_id": "sha256:029660641a0cfc575b14f336ba448fb8a75fd595d42e1fa316b9fb4378742297",
+    "live_database_replaced": false,
+    "api_mutations_maximum": 10,
+    "new_resources": "isolated experiment, run, user, registry namespace and two inert versions; no artifact IO"
+  },
+  "transformer_namespaces": {
+    "experiment": "lob-arena/transformer-development",
+    "registered_model": "lob-arena-transformer-attack-active",
+    "create_only_if_absent": true,
+    "creator_permissions": "MLflow may create admin MANAGE ownership records for new namespaces"
+  },
+  "additive_service_grants": [
+    {
+      "user": "governed-writer",
+      "resource_type": "experiment",
+      "resource": "lob-arena/transformer-development",
+      "permission": "EDIT"
+    },
+    {
+      "user": "governed-writer",
+      "resource_type": "registered_model",
+      "resource": "lob-arena-transformer-attack-active",
+      "permission": "EDIT"
+    },
+    {
+      "user": "prometheus",
+      "resource_type": "experiment",
+      "resource": "lob-arena/transformer-development",
+      "permission": "READ"
+    },
+    {
+      "user": "prometheus",
+      "resource_type": "registered_model",
+      "resource": "lob-arena-transformer-attack-active",
+      "permission": "READ"
+    }
+  ],
+  "configuration": "append only both namespaces to existing allowlists; preserve all other bytes; do not invoke initializer",
+  "frozen_registration": {
+    "model": "lob-arena-lightgbm-attack-active",
+    "new_versions_maximum": 1,
+    "alias": "research-baseline",
+    "frozen_run_id": "1bd94569914748db8bbde21b13e83d05",
+    "source": "runs:/1bd94569914748db8bbde21b13e83d05/governed/model.txt",
+    "seven_artifacts_verified_before_write": true,
+    "full_dataset_lineage_verified_before_write": true,
+    "research_only": true,
+    "deployable_model_flavor_claim": false
+  },
+  "tracking_probe": {
+    "retained_runs_maximum": 2,
+    "relationship": "parent and child",
+    "model_jobs": 0,
+    "parameters": 1,
+    "metrics": 1,
+    "inert_artifact_bytes": 49,
+    "exporter_denial": "one tag-write attempt on same child must return HTTP 403/PERMISSION_DENIED and leave no tag",
+    "durable_journal_required": true
+  },
+  "artifact_transfer": {
+    "get_count": 8,
+    "put_count": 1,
+    "frozen_artifact_bytes": 90458,
+    "expected_get_bytes": 90507,
+    "maximum_get_bytes_including_one_guard_byte_per_object": 90515,
+    "maximum_put_bytes": 49,
+    "retained_for_independent_offline_hash_verification": true,
+    "redirects": false
+  },
+  "preservation": {
+    "existing_users_and_credentials": "private SQL equality before/after; retain boolean only",
+    "existing_grants": "exact additive role/permission readback",
+    "defaults": "NO_PERMISSIONS and grant_default_workspace_access=false unchanged",
+    "historical_frozen_run": "read only"
+  },
+  "excluded": [
+    "CPU/GPU Serverless Jobs",
+    "training/scoring/calibration",
+    "final-test access or G8 rerun",
+    "new cloud IAM/network permissions",
+    "credential activation or rotation",
+    "prior grant removal",
+    "live restore or deployment upgrade",
+    "production promotion",
+    "PR merge",
+    "Git deletion"
+  ],
+  "package_files_sha256": {
+    "deployments/mlflow/readiness_config.py": "fd5054646e86435375364f4b66a73d47c5d32739b29be85abdba450bd7ea066d",
+    "deployments/mlflow/readiness_live.py": "e85efac75078fe1f0aef24141bb002f879ebf3c03cde3da1a763bd94d3e3b7be",
+    "deployments/mlflow/readiness_permissions.py": "2543f2760779ef96ce44e70d3be4032060e9a0e3103c1d044139ae31f1aaba07",
+    "deployments/mlflow/readiness_recovery.py": "a32e6769e0b2655c64a1cc7791eb415ef6a6c566111dc920076f5230fa60618e",
+    "deployments/mlflow/readiness_registry.py": "9dcf7ee05138fe94c9c43435a875db5b7c47a6da4b3778ac6dde2df9640c624b",
+    "deployments/mlflow/readiness_tracking.py": "d69531bc9ffb0c1e0b5ac054035a196ab6bbd9d9bdb5cf00a489a8a8ca291c04",
+    "scripts/mlflow_readiness_window.py": "47a8089c7bb32682d4241d68459c6b141e8097cceb395df0cb0cc6273aeb546e",
+    "scripts/mlflow_application_restore.py": "fdf443f0ea1be1f6137630a5b527aeac4607f702a17c69f88810ab0c5a6034d4",
+    "scripts/mlflow_readiness_preflight.py": "bf1b0c86dc1cf360b39d53d5a27210c871d0eb552ea6135c70f4d0e43ad13c57",
+    "scripts/mlflow_metadata_recovery.py": "c1bb90ba1dd5b66f28074bc11b3ed85452726444119d850effd78f111b55561a",
+    "scripts/lightgbm_retention_contract.py": "f5abd1fa27ff17d304e7ff1f97d001801c408946a77a72bb0e8138b8d21c99b0"
+  },
+  "input_files_sha256": {
+    "manifest.json": "de35f415ee803a91373995a9f23d8eff2bf7aa312bc3321839c08cb9f7275882",
+    "inventory.json": "04d9757a9232a4d724099360557101b18a5cdb8207d05c4781fd1482daf15876",
+    "source-proof.json": "c735a7b72fab9eaed9979883e09fa0ac3364e7c8867a089b1310e4090a6f8a91",
+    "restore-receipt.json": "6210e69d5f43dc5eaad539524411db92a55ab8d09495826747a2d709492d21f1"
+  },
+  "watchdog_sha256": "40f9e0171cf2c8528560460919a52c2b535fc348dfcfb5ce3f62298b68e235f7",
+  "completion_requires": [
+    "independent retained artifact and receipt verification",
+    "temporary container absence",
+    "fresh Nebius MCP STOPPED readback",
+    "retained watchdog result"
+  ]
+}

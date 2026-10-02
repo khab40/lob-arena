@@ -131,6 +131,10 @@ def test_mlflow_bootstrap_generates_private_untracked_secrets(tmp_path: Path) ->
     assert len(values["MLFLOW_FLASK_SERVER_SECRET_KEY"]) >= 64
     assert values["MLFLOW_WRITER_USERNAME"] == "governed-writer"
     assert len(values["MLFLOW_WRITER_PASSWORD"]) >= 48
+    assert values["MLFLOW_EXPORTER_EXPERIMENTS"].endswith(",lob-arena/transformer-development")
+    assert values["MLFLOW_EXPORTER_MODEL_NAMES"] == (
+        "lob-arena-lightgbm-attack-active,lob-arena-transformer-attack-active"
+    )
     assert all(
         secret not in first.stdout
         for key, secret in values.items()
@@ -201,6 +205,10 @@ def test_mlflow_smoke_provisions_roadmap_resources() -> None:
     assert "lob-arena/lightgbm-development" in bootstrap
     assert "lob-arena/governed-evaluation" in bootstrap
     assert "lob-arena-lightgbm-attack-active" in bootstrap
+    assert "lob-arena/transformer-development" in bootstrap
+    assert "lob-arena-transformer-attack-active" in bootstrap
+    assert 'REGISTERED_MODEL = "lob-arena-lightgbm-attack-active"' in bootstrap
+    assert "for model_name in REGISTERED_MODELS:" in bootstrap
     assert "client.log_metric" in smoke
     assert "client.log_artifact" in smoke
     assert "download_artifacts" in smoke
@@ -290,6 +298,10 @@ def test_nebius_mlflow_bootstrap_reads_s3_secret_from_stdin(tmp_path: Path) -> N
     assert values["MLFLOW_WRITER_USERNAME"] == "governed-writer"
     assert len(values["MLFLOW_WRITER_PASSWORD"]) >= 48
     assert "10.0.0.10:*" in values["MLFLOW_ALLOWED_HOSTS"]
+    assert values["MLFLOW_EXPORTER_EXPERIMENTS"].endswith(",lob-arena/transformer-development")
+    assert values["MLFLOW_EXPORTER_MODEL_NAMES"] == (
+        "lob-arena-lightgbm-attack-active,lob-arena-transformer-attack-active"
+    )
     assert secret not in result.stdout
 
 

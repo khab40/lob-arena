@@ -124,7 +124,7 @@ def _reconcile_permissions(
 def main() -> None:
     from bootstrap_resources import (
         EXPERIMENTS,
-        REGISTERED_MODEL,
+        REGISTERED_MODELS,
         main as bootstrap_resources,
     )
 
@@ -143,7 +143,7 @@ def main() -> None:
     )
 
     experiments = _csv("MLFLOW_EXPORTER_EXPERIMENTS", EXPERIMENTS)
-    models = _csv("MLFLOW_EXPORTER_MODEL_NAMES", (REGISTERED_MODEL,))
+    models = _csv("MLFLOW_EXPORTER_MODEL_NAMES", REGISTERED_MODELS)
     experiment_ids: dict[str, str] = {}
     for experiment_name in experiments:
         experiment = tracking_client.get_experiment_by_name(experiment_name)
