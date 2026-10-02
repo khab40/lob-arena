@@ -1,6 +1,7 @@
 """Inert orchestration checks; no Docker process, database or network is used."""
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -61,6 +62,8 @@ def test_exact_isolation_bounds_credentials_and_cleanup(case):
         assert "-p" not in args and "--publish" not in args
         assert all("AWS" not in arg for arg in args)
     assert [args[args.index("--memory") + 1] for args in runs] == ["1g", "2g"]
+    assert "--user" not in runs[0]  # PostgreSQL retains its image initialization user.
+    assert runs[1][runs[1].index("--user") + 1] == f"{os.geteuid()}:{os.getegid()}"
     private = next(kw["data"] for a, kw in calls if a[-1] == restore.RECEIVE)
     assert b"AWS" not in private
     assert all("must-not-copy" not in p.read_text() for p in output.glob("*.json"))
@@ -94,6 +97,33 @@ def test_table_drift_aborts_before_probe_and_cleans_only_attempt(case, monkeypat
 def test_bad_backup_does_not_start_containers(case):
     case[3].write_bytes(b"wrong")
     with pytest.raises(ValueError, match="backup"):
+        execute(case)
+    assert case[4] == []
+
+
+def test_nonroot_staging_owner_can_read_private_helper(case, monkeypatch):
+    helper = case[2]
+    helper.chmod(0o600)
+    helper.parent.chmod(0o700)
+    original_stat = Path.stat
+    def staged_stat(path, *args, **kwargs):
+        result = original_stat(path, *args, **kwargs)
+        if path in (helper, helper.parent):
+            values = list(result)
+            values[4:6] = [1000, 1001]
+            return os.stat_result(values)
+        return result
+    monkeypatch.setattr(Path, "stat", staged_stat)
+    monkeypatch.setattr(restore.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(restore.os, "getegid", lambda: 1001)
+    execute(case)
+    app = next(a for a, _ in case[4] if a[:2] == ["docker", "run"] and "--read-only" in a)
+    assert app[app.index("--user") + 1] == "1000:1001"
+
+
+def test_foreign_helper_owner_aborts_before_docker(case, monkeypatch):
+    monkeypatch.setattr(restore.os, "geteuid", lambda: case[2].stat().st_uid + 1)
+    with pytest.raises(ValueError, match="staging user"):
         execute(case)
     assert case[4] == []
 

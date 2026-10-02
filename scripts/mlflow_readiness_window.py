@@ -53,10 +53,14 @@ def budget(seconds):
 
 
 def checked_files(directory, manifest, extras=()):
+    if directory.stat().st_uid != os.geteuid():
+        raise ValueError("staged directory must belong to the current operator")
     actual = set()
     for index, path in enumerate(directory.rglob("*")):
         if index >= 100 or path.is_symlink() or not (path.is_file() or path.is_dir()):
             raise ValueError("package contains unreviewed paths")
+        if path.stat().st_uid != os.geteuid():
+            raise ValueError("staged files and directories must belong to the current operator")
         if path.is_file():
             actual.add(path.relative_to(directory).as_posix())
     if actual != set(manifest) | set(extras):
@@ -91,11 +95,11 @@ def client_command(source, inputs, journal, image, proposal_sha, commit, attempt
         raise ValueError("immutable deployed image required")
     return ["docker", "run", "--rm", "--pull", "never", "--name", CLIENT,
             "--label", LABEL + "=" + attempt,
-            "--network", "host", "--read-only", "--user", "0:0", "--cpus", "1",
+            "--network", "host", "--read-only", "--user", f"{os.geteuid()}:{os.getegid()}", "--cpus", "1",
             "--memory", "512m", "--pids-limit", "128", "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges", "--tmpfs", "/tmp:size=64m,mode=1777",
             "-v", f"{source}:/work:ro", "-v", f"{inputs}:/inputs:ro",
-            "-v", f"{journal}:/journal:rw", "-e", "PYTHONPATH=/work",
+            "-v", f"{journal}:/journal:rw", "-e", "PYTHONPATH=/work", "-e", "HOME=/tmp",
             *[part for key in (*CREDENTIAL_KEYS, *TRANSPORT) for part in ("-e", key)],
             "--entrypoint", "python", image, "-B", "/work/deployments/mlflow/readiness_live.py",
             "--input-dir", "/inputs", "--journal", "/journal", "--proposal-sha256", proposal_sha,

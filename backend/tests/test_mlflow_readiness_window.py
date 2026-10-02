@@ -176,3 +176,30 @@ def test_phase_budget_raises_and_restores_alarm_handler():
             window.signal.raise_signal(window.signal.SIGALRM)
     assert window.signal.getsignal(window.signal.SIGALRM) == previous
     assert window.signal.getitimer(window.signal.ITIMER_REAL) == (0.0, 0.0)
+
+
+def test_client_runs_as_operator_without_root_capabilities(case, monkeypatch):
+    monkeypatch.setattr(window.os, "geteuid", lambda: 1000)
+    monkeypatch.setattr(window.os, "getegid", lambda: 1001)
+    args = window.client_command(case.source, case.inputs, case.output, IMAGE,
+                                 case.sha, case.commit, "e" * 64)
+    assert args[args.index("--user") + 1] == "1000:1001"
+    assert args[args.index("--cap-drop") + 1] == "ALL"
+    assert "HOME=/tmp" in args
+
+
+@pytest.mark.parametrize("target", ["root", "file"])
+def test_foreign_staging_owner_rejected_before_subprocess(case, monkeypatch, target):
+    original = Path.stat
+    foreign = case.source if target == "root" else case.source / "scripts/mlflow_readiness_preflight.py"
+    def changed_owner(path, *args, **kwargs):
+        observed = original(path, *args, **kwargs)
+        if path == foreign:
+            fields = list(observed)
+            fields[4] = observed.st_uid + 1
+            return window.os.stat_result(fields)
+        return observed
+    monkeypatch.setattr(Path, "stat", changed_owner)
+    with pytest.raises(ValueError, match="current operator"):
+        case.execute()
+    assert case.calls == []

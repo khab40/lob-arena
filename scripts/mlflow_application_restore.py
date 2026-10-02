@@ -125,7 +125,13 @@ def run(directory, receipt, helper, *, backup=BACKUP, source_db=SOURCE_DB, sourc
     require(hashlib.sha256(backup.read_bytes()).hexdigest() == BACKUP_SHA256, "backup digest differs")
     require(receipt["backup_sha256"] == BACKUP_SHA256 and len(receipt["tables"]) == 60,
             "retained receipt differs")
-    require(helper.name == "readiness_recovery.py" and helper.is_file(), "reviewed helper required")
+    require(helper.name == "readiness_recovery.py" and helper.is_file()
+            and helper.absolute() == helper.resolve(), "canonical reviewed helper required")
+    owner = os.geteuid()
+    require(helper.stat().st_uid == owner and helper.parent.stat().st_uid == owner
+            and helper.stat().st_mode & 0o400 and helper.parent.stat().st_mode & 0o500 == 0o500,
+            "reviewed helper and directory must be owned and accessible by the staging user")
+    app_user = f"{owner}:{os.getegid()}"
     directory.mkdir(mode=0o700, parents=True, exist_ok=False)
     original_command = recovery.command
     deadline = time.monotonic() + 210
@@ -178,7 +184,7 @@ def run(directory, receipt, helper, *, backup=BACKUP, source_db=SOURCE_DB, sourc
         recovery.compare(receipt["tables"], recovery.inventory(names[0]))
         before = baseline(names[0])
         attempted.append(names[1])
-        bounded([*common, "--name", names[1], "--memory", "2g", "--user", "0:0", "--read-only", "--cap-drop", "ALL",
+        bounded([*common, "--name", names[1], "--memory", "2g", "--user", app_user, "--read-only", "--cap-drop", "ALL",
                  "--tmpfs", "/tmp:rw,size=268435456,mode=1777", "--add-host", "mlflow-restored:127.0.0.1",
                  "--mount", f"type=bind,src={socket},dst=/restore-socket,readonly",
                  "--mount", f"type=bind,src={helper.parent.resolve()},dst=/reviewed-helper,readonly",
