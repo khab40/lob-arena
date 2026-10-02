@@ -161,3 +161,98 @@ class Artifacts:
                               data=raw, stream=True, allow_redirects=False) as response:
             if response.status_code not in {200, 201, 204}:
                 raise ValueError("artifact upload rejected")
+
+
+def namespaces(admin, journal):
+    experiment = admin.get_experiment_by_name(EXPERIMENT)
+    try:
+        model = admin.get_registered_model(MODEL)
+    except Exception as exc:
+        if getattr(exc, "error_code", None) != "RESOURCE_DOES_NOT_EXIST":
+            raise
+        model = None
+    if experiment is not None and (experiment.name != EXPERIMENT or experiment.lifecycle_stage != "active"):
+        raise ValueError("existing experiment conflicts")
+    if model is not None and (model.name != MODEL or model.aliases):
+        raise ValueError("existing model namespace conflicts")
+    if experiment is None:
+        persist(journal / "experiment-intent.json", {"name": EXPERIMENT})
+        admin.create_experiment(EXPERIMENT)
+        experiment = admin.get_experiment_by_name(EXPERIMENT)
+    if model is None:
+        persist(journal / "model-intent.json", {"name": MODEL})
+        admin.create_registered_model(MODEL)
+        model = admin.get_registered_model(MODEL)
+    if (experiment is None or experiment.name != EXPERIMENT or experiment.lifecycle_stage != "active"
+            or model.name != MODEL or model.aliases):
+        raise ValueError("namespace readback differs")
+    return str(experiment.experiment_id)
+
+
+def execute(input_dir, journal, proposal_sha256, source_commit, *, preflight=verify, make_clients=clients):
+    runtime = preflight()  # Must precede credentials and client construction.
+    if not re.fullmatch(r"[a-f0-9]{64}", proposal_sha256) or not re.fullmatch(r"[a-f0-9]{40}", source_commit):
+        raise ValueError("exact execution binding required")
+    journal = Path(journal)
+    if (not journal.is_absolute() or journal.resolve(strict=True) != journal or not journal.is_dir()
+            or stat.S_IMODE(journal.stat().st_mode) != 0o700 or journal.stat().st_uid != os.geteuid()):
+        raise ValueError("pre-existing canonical private journal required")
+    if (journal / "live-intent.json").exists() or (journal / "live-intent.json").is_symlink():
+        raise FileExistsError("live attempt already consumed")
+    raw = []
+    for name in ("manifest.json", "inventory.json", "source-proof.json"):
+        path = Path(input_dir) / name
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > 1024 * 1024:
+            raise ValueError("bounded regular lineage inputs required")
+        raw.append(path.read_bytes())
+    manifest = json.loads(raw[0])
+    if (hashlib.sha256(raw[0]).hexdigest() != MANIFEST_SHA256
+            or hashlib.sha256(raw[1]).hexdigest() != manifest["inventory_sha256"]
+            or hashlib.sha256(raw[2]).hexdigest() != manifest["dataset_source_proof_sha256"]):
+        raise ValueError("lineage input digests differ")
+    binding = {"proposal_sha256": proposal_sha256, "source_commit": source_commit,
+               "purpose": "mlflow-readiness-20261002"}
+    admin, auth, writer, exporter, credentials = make_clients()
+    if auth.get_user("admin").is_admin is not True:
+        raise ValueError("existing admin identity required")
+    descriptor = os.open(journal / "live-intent.json", os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(descriptor, "w") as stream:
+        json.dump(binding, stream, sort_keys=True)
+        stream.flush()
+        os.fsync(stream.fileno())
+    descriptor = os.open(journal, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    experiment_id = namespaces(admin, journal)
+    permissions = apply_permissions(auth, inspect_permissions(auth, experiment_id))
+    artifacts = Artifacts(writer, credentials, journal / "artifacts")
+    try:
+        registry = register_baseline(writer, artifacts.download, *raw, journal / "registry")
+        runs = reserve_pair(writer, journal, binding)
+        tracking = verify_tracking(writer, exporter, runs, artifacts.upload, artifacts.download, journal)
+    finally:
+        artifacts.session.close()
+    receipt = {"schema_version": "mlflow_live_readiness_phase_v1", "binding": binding,
+               "runtime": runtime, "permissions": permissions, "registry": registry, "tracking": tracking,
+               "overall_readiness_verified": False, "external_checks_required": [
+                   "private_sql_preservation", "restored_application_readwrite", "vm_stopped"]}
+    persist(journal / "live-receipt.json", receipt)
+    return receipt
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    for name in ("input-dir", "journal", "proposal-sha256", "source-commit"):
+        parser.add_argument("--" + name, required=True)
+    try:
+        execute(**vars(parser.parse_args()))
+    except Exception as exc:
+        print(json.dumps({"status": "failed", "error_type": type(exc).__name__}))
+        raise SystemExit(1) from None
+    print(json.dumps({"status": "live_phase_verified", "overall_readiness_verified": False}))
+
+
+if __name__ == "__main__":
+    main()
