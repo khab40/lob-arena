@@ -1,0 +1,68 @@
+{
+  "schema_version": "transformer_role_audit_package_verification_v1",
+  "date": "2026-10-02",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "implementation_source_commit": "db8bc3e1755fe06f1cd26e1ef412d17c9cd44618",
+  "base_commit": "a971228ea6c4a259ecd87d9914709e680506f74d",
+  "merged_source_proof_pr": 272,
+  "status": "implementation_verified_execution_not_authorized",
+  "verification": {
+    "transformer_tests_with_pinned_sdk": {
+      "passed": 665,
+      "skipped": 0
+    },
+    "basic_environment": {
+      "passed": 657,
+      "skipped_optional_sdk": 8
+    },
+    "minimal_crypto_boundary": {
+      "passed": 47,
+      "skipped": 4
+    },
+    "nested_deadline_expiry_repetitions": 300,
+    "independent_review_unresolved_p1_p2": 0,
+    "ruff": "passed",
+    "markdown_links": "passed",
+    "gitleaks": "passed",
+    "whitespace": "passed",
+    "ci": "pending_on_publication"
+  },
+  "evidence_bindings": {
+    "bundle_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+    "source_receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+    "independent_source_readback_sha256": "3b4c9a948ffce165227ce3853df1b6242a59600e40651bdea3bc1b2028b08393",
+    "independent_execution_review_sha256": "a9c59168ec3f13e1ee4443d5cc8acb0d12c72ce48dd66cb1ffff1e45e0a4efb9"
+  },
+  "measured_metadata_bounds": {
+    "validation_runs": 30,
+    "validation_rows": 9210,
+    "input_objects": 185,
+    "input_bytes": 30034660,
+    "largest_input_bytes": 348308,
+    "expected_ledger_bytes": 1305978
+  },
+  "cloud": {
+    "documentation_checked_via": "Nebius MCP ai help",
+    "payload_reads": 0,
+    "job_submissions": 0,
+    "model_runs": 0,
+    "new_permissions": 0,
+    "final_test_access": false
+  },
+  "remaining_gates": [
+    "MLflow/platform readiness required before execution",
+    "reviewed source archive sealed image and registry digest",
+    "fresh provider admission and exact one-run authorization",
+    "one CPU Job and independent result/resource readback",
+    "separate GPU authorization"
+  ],
+  "class_support_verified": false,
+  "gpu_ready": false,
+  "g8_g9_reopened": false,
+  "commit_size_audit": {
+    "reviewed_commits": 17,
+    "max_changed_lines": 188,
+    "limit": 200
+  }
+}

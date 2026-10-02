@@ -19,6 +19,11 @@ Verification: local inert tests, real SDK Stubber tests, authenticated retained
 metadata inspection and CI image import checks. Actual rows run only in the
 separately authorized Nebius Job.
 
+[Verification evidence](../evidence/transformer-role-audit-package-20261002.json):
+665 Transformer tests pass with pinned SDK dependencies and no skips; independent
+review has no unresolved P1/P2 findings. The metadata-only size calculation gives
+a 1,305,978-byte ledger, within its 2 MiB bound. CI status is checked on the PR.
+
 ## Package behavior
 
 The worker authenticates the frozen 220,125-byte evidence bundle and separate

@@ -9,6 +9,8 @@ frozen normalizer and exact validation roles to a new bounded CPU attempt.
 It retains a restricted target ledger and independently recomputes run order,
 row identities and class support. Signed provider context, one-attempt transfer,
 versioned publication and independent readback have inert regression coverage.
+All 665 Transformer tests pass with pinned SDK dependencies and no skips;
+independent review has no unresolved P1/P2 findings.
 
 Packaging does not establish actual class support: no governed payload, Job,
 training, scoring or final-test access occurred. CI builds the runtime stage;
