@@ -1,5 +1,23 @@
 # Roadmap status — 2026-10-02
 
+## MLflow readiness preparation — 2026-10-02
+
+[PR #275](https://github.com/khab40/lob-arena/pull/275) is merged with passing CI.
+The next [Story #19](https://github.com/khab40/lob-arena/issues/19) increment prepares
+restored application/sequence checks, frozen LightGBM registry lineage and
+additive Transformer permissions with a retained parent/child tracking probe.
+The [design](../ml/mlflow-readiness-design.md),
+[architecture decision](../architecture/ARD-0041-mlflow-readiness-before-transformer-execution.md)
+and [operation](../operations/mlflow-readiness.md) are separate records.
+
+No readiness window has run; actual deployed-image compatibility and application
+proof remain pending. Read-only Nebius MCP confirms the existing VM is STOPPED
+and its current SSH rule matches the operator. The expanded maintenance proposal
+requires exact approval for the new application grants and registry writes.
+After independently verified readiness and shutdown, seal the CPU image/request,
+verify admission, then request exact one-Job authorization. No CPU/GPU Job,
+training, scoring or final access occurred. G8/G9 remain closed; #19/#24 stay open.
+
 ## Transformer CPU audit package implemented — 2026-10-02
 
 [PR #272](https://github.com/khab40/lob-arena/pull/272) merged with all 23 checks

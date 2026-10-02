@@ -202,7 +202,9 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    producer contract. It claims neither time separation nor statistical independence.
    The [CPU role-audit package](../ml/transformer-role-audit-package.md) now binds
    this proof to signed provider context, restricted row records and independent
-   class-count readback. No CPU audit has run. Complete MLflow/platform readiness
+   class-count readback; PR #275 is merged. No CPU audit has run. Complete
+   [MLflow readiness](../ml/mlflow-readiness-design.md): restored application
+   behavior, frozen research registration and additive Transformer tracking
    before execution as required by the approved campaign, seal and review the
    image/request, then obtain exact CPU authorization. Verify per-role support
    and row alignment before separate bounded GPU authorization. Research-control negative labels

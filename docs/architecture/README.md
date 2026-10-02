@@ -48,6 +48,7 @@ Each record retains its own decision context and supersession status.
 - [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
 - [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
 - [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
+- [ARD-0041: MLflow Readiness Before Transformer Execution](ARD-0041-mlflow-readiness-before-transformer-execution.md)
 
 ### Agent Execution
 
