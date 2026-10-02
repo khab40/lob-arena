@@ -190,23 +190,21 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    The verified metadata and train-only normalizer are now bound into a
    deterministic CPU evidence bundle, independently checked offline. #249/#254
    are merged. PR #258 and its compatibility repair are also merged with passing CI.
-   The [lineage audit](../ml/transformer-lineage-audit.md) prepares
-   a separately gated 115-key metadata read in two policy-bounded phases. Next
-   review the [actual-runtime readiness repair](../ml/transformer-runtime-preflight.md)
-   for Bugs #266/#268 in PR #267, then approve the amended exact r3 proposal.
-   Preflight and live construction now share credential isolation, so ambient
-   tokens, profiles and expiration cannot alter the approved reader pair. PR #264 is merged;
-   its amended r2 audit stopped before any GET because the interpreter lacked the
-   S3 SDK. The replacement now requires real-client preflight in the pinned
-   interpreter before a grant and matching readiness before credentials.
-   Temporary-access removal is verified at bucket version 140. All prior attempts
-   remain preserved and consumed; no automatic retry is allowed.
-   PR #261 merged the [offline semantic verifier](../ml/transformer-lineage-semantics.md), including
-   its row-count binding repair. It is implemented
-   and tested on inert metadata; live verification remains pending. After collection,
-   verify replay/feature/label lineage and C3 runtime identity, then finish the signed
-   CPU execution package. Source/window proof, CPU runtime evidence and platform
-   readiness remain gates before GPU execution.
+   PR #267 merged the [actual-runtime readiness repair](../ml/transformer-runtime-preflight.md)
+   for Bugs #266/#268. The separately approved
+   [r3 audit passed](../ml/transformer-lineage-r3-results.md): 115 metadata GETs,
+   356,040 bytes and all 30 validation-run semantic bindings independently verified.
+   Cleanup restored the original two rules and non-policy settings at bucket
+   version 143. Earlier attempts remain preserved and consumed.
+   PR #271 is merged. The [source separation proof](../ml/transformer-source-separation.md)
+   now reauthenticates retained evidence and binds the three whole instrument
+   domains, including warm-up ancestry and all synthetic labels, to the reviewed
+   producer contract. It claims neither time separation nor statistical independence.
+   Next finish the signed CPU role-audit package and obtain its exact execution approval. Verify
+   per-role class support and row alignment, complete MLflow/platform readiness,
+   and obtain separate bounded GPU authorization. Research-control negative labels
+   remain assumptions; positive labels remain synthetic. The producer-contract
+   proof does not enumerate payload observations or establish model quality.
    #24 remains
    In Progress; GPU model training and later qualification remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;

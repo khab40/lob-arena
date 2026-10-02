@@ -1,27 +1,58 @@
-# Roadmap status — 2026-10-01
+# Roadmap status — 2026-10-02
 
-## Transformer actual-runtime preflight repair — 2026-10-01
+## Transformer source domains verified — 2026-10-02
 
-PR #264 merged, but its approved amended r2 attempt stopped before any GET:
-the backend interpreter lacked botocore. Cleanup restored the original policy and
-settings at bucket version 140 within 240.126501 seconds. The attempt is consumed.
-[Abort evidence](../evidence/transformer-lineage-runtime-abort-20261001.json).
+[PR #272 review corrections](../evidence/transformer-source-review-20261002.json)
+repair partial receipt publication under [Bug #274](https://github.com/khab40/lob-arena/issues/274).
+All 247 focused tests pass and the verified receipt is unchanged. The commit-size
+P1 was a PR-aggregate counting error; the nine reviewed commits met the limit.
+PR #272 remains open for review; the next CPU packaging chunk follows its merge.
 
-[Bug #266](https://github.com/khab40/lob-arena/issues/266) adds a
-[real runtime preflight](../ml/transformer-runtime-preflight.md): exact interpreter,
-Python/dependency pins, actual S3 client construction with sockets blocked, a
-receipt predating the grant, and a repeated runtime check before credentials.
-[PR #267](https://github.com/khab40/lob-arena/pull/267) also fixes
-[Bug #268](https://github.com/khab40/lob-arena/issues/268): preflight and live
-client creation now isolate credentials identically, excluding ambient tokens,
-profiles and expiration while restoring the caller environment.
-243 focused tests pass with the real SDK enabled, including all 17 runtime cases; the exact
-operator CLI also passes offline against the frozen backend. The
-[r3 proposal](../evidence/transformer-lineage-replacement-r3-proposal-20261001.json)
-retains the 115-key scope and requires review and separate exact approval.
-Its amended script/proposal binding supersedes the unapproved pre-review version.
-No r3 attempt, grant, credential lookup or S3 GET has occurred. GPU readiness
-and source/window proof remain incomplete; G8/G9 stay closed.
+[PR #271](https://github.com/khab40/lob-arena/pull/271) merged with all 23 checks
+passed. The next [Story #24 increment](../ml/transformer-source-separation.md)
+verifies the complete source-file/instrument domains against the frozen producer
+and all 115 retained metadata objects. NVDA selection (1,250 targets), MSFT
+calibration (5,490) and AAPL operating points (2,470) keep all ten replay variants
+per instrument together. All 27 synthetic label windows stay in their domains.
+The proof includes pre-window book state; tick labels are not converted to time.
+
+[Independent readback](../evidence/transformer-source-separation-20261002.json)
+reproduces the receipt; 232 focused inert tests pass. This is a producer-contract
+proof of source/label non-overlap, with no payload re-enumeration. Same trading
+time, market correlation, synthetic templates and assumed control negatives
+remain explicit limitations; statistical independence and model quality are not
+established. No new cloud access or model execution occurred.
+
+Next: finish the signed CPU role-audit package and obtain exact execution approval
+to verify class support and row alignment; complete MLflow/platform readiness,
+then present the separately authorized bounded GPU package. Story #24 remains
+in progress. G8/G9 stay closed and GPU readiness remains false.
+
+## Transformer metadata lineage verified; access removed — 2026-10-01
+
+The approved [r3 metadata audit](../ml/transformer-lineage-r3-results.md) succeeded:
+58 + 57 GETs, 356,040 bytes, and all 30 validation-run semantic bindings verified.
+Independent readback confirmed the retained objects and results. Nebius MCP
+verified removal at bucket version **143**, restoring the original two rules and
+all non-policy settings. Temporary access lasted 780.438587 seconds across both
+phases, within the approved bounds. No event/sequence payloads were read or models run.
+
+[PR #267](https://github.com/khab40/lob-arena/pull/267) is merged, including the
+real SDK preflight and credential-isolation fixes for Bugs #266/#268. Earlier
+aborted attempts remain consumed and preserved; r3 used its separately approved
+proposal. [Audit evidence](../evidence/transformer-lineage-r3-audit-20261001.json)
+binds the runtime, object and run inventories, verification and cleanup.
+
+Next for [Story #24](https://github.com/khab40/lob-arena/issues/24):
+
+1. Resolve source-observation and label-horizon separation.
+2. Finish the signed CPU role-audit package, obtain exact execution approval,
+   and verify row alignment and per-role class support.
+3. Complete MLflow/platform readiness, then obtain separate bounded GPU authorization.
+
+Research-control negatives remain assumptions; positives remain synthetic.
+Metadata verification establishes lineage, not model quality. Story #24 stays
+in progress; GPU readiness is incomplete and G8/G9 stay closed.
 
 ## Transformer operator P1 corrections; audit on hold — 2026-09-29
 

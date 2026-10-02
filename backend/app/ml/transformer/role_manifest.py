@@ -8,10 +8,9 @@ from app.market_data.projections import (
     _load_bound_manifest,
 )
 from .data import baseline_order, domain
-from .verification_spec import FOLD_ROWS, ROOT_SHA, SEQUENCE_SHA, TABULAR_SHA, canonical, checked_file, digest
+from .verification_spec import FOLD_ROWS, ROOT_SHA, SEQUENCE_SHA, SYMBOLS, TABULAR_SHA, canonical, checked_file, digest
 
 ROLES = ("selection", "calibration", "operating_point")
-SYMBOLS = ("AAPL", "MSFT", "NVDA")
 
 
 def load_metadata(inputs: Path):

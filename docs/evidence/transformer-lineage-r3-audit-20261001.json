@@ -1,0 +1,108 @@
+{
+  "schema_version": "transformer_lineage_r3_audit_v1",
+  "date": "2026-10-01",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "proposal_sha256": "1ef8b8fd011a3e8a2be091b2c3222c0d7b0fc7d8d5c8e59ffa0229ffbc766d66",
+  "operator_script_sha256": "e7ecde02db6fda7c63476a837f655bcfc7626091e4a38cd7bfe9586584561a64",
+  "collector_commit": "8d93e3da68d5d576efa49f6ec8d525842ff3247f",
+  "collector_backend_tree": "1c700531051e6719603c25be9bcd1dd1ba2f02b1",
+  "semantic_readback_runtime": {
+    "implementation_commit": "ef397e6344f052cbe1b73731c8fa2220c110eed2",
+    "backend_tree": "3a7a7f6d03528f76ec891aefa9027da73162f091",
+    "purpose": "offline semantic verification from merged PR261/267 code; no cloud client or request",
+    "separate_from_frozen_collector": true,
+    "collector_commit": "8d93e3da68d5d576efa49f6ec8d525842ff3247f",
+    "snapshot_path": "outputs/transformer-lineage-replacement-r3-20261001/runtime-ef397e6",
+    "snapshot_blob_inventory_verified": true,
+    "archive_sha256": "9c46f3e6cba1088ada8c50485a6a73590811580817c4ca13475447d18c0f948e"
+  },
+  "source_anchor_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+  "producer_commit": "cf426c0db0940a985133fc7c8482623186acd5a4",
+  "producer_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/mdp@sha256:8ba71e9ed8ef90b10efe7abd3b2d8d8e0089990281a12c0c903ab8f7508e7195",
+  "runtime_python": "3.11.15",
+  "runtime_botocore": "1.43.103",
+  "cost_policy": "existing operator-managed metadata GET policy; no compute allocation",
+  "phases": [
+    {
+      "phase": 1,
+      "get_attempts": 58,
+      "authenticated_bytes": 250298,
+      "operator_elapsed_seconds": 10.923676,
+      "receipts_sha256": "c5b5283ed5f289b40fe887c94de8da09a5a72c808ec9654718855bfc0156bdd0",
+      "verification_sha256": "d50d189250e3c148fe7636e022b84535623d55ee9141226fd565e8fc529496c4"
+    },
+    {
+      "phase": 2,
+      "get_attempts": 57,
+      "authenticated_bytes": 105742,
+      "operator_elapsed_seconds": 9.746385,
+      "receipts_sha256": "34d70a24112955d4c4893e0f79fabc4693489570e9efd44b826f9d2a84d60d01",
+      "verification_sha256": "f86a3d779a754162c23b6fa4e75256cd91b88f53f168c76004c84011c04b1414"
+    }
+  ],
+  "total_get_attempts": 115,
+  "total_authenticated_bytes": 356040,
+  "get_attempts_including_prior_aborted_attempts": 116,
+  "runs_verified": 30,
+  "runs_per_instrument": {
+    "AAPL": 10,
+    "MSFT": 10,
+    "NVDA": 10
+  },
+  "feature_and_supervised_rows": 9210,
+  "control_runs": 3,
+  "hybrid_runs": 27,
+  "metadata_lineage_verified": true,
+  "source_separation_verified": false,
+  "class_support_verified": false,
+  "gpu_ready": false,
+  "execution_authorized": false,
+  "negative_label_source": "research_control_assumption",
+  "independently_verified_clean": false,
+  "remaining_proof": [
+    "source_observation_and_label_horizon_separation",
+    "CPU_class_support",
+    "MLflow_and_platform_readiness",
+    "exact_execution_authorization"
+  ],
+  "cleanup": {
+    "status": "verified",
+    "verified_at": "2026-10-01T18:30:57.690353+00:00",
+    "resource_version": "143",
+    "original_policy_and_settings_restored": true,
+    "active_temporary_rules": 0,
+    "phase_access_seconds": [
+      570.225036,
+      210.213551
+    ],
+    "total_access_seconds": 780.438587,
+    "get_attempts": 115,
+    "additional_gets_authorized": false
+  },
+  "object_ledger": {
+    "path": "transformer-lineage-r3-objects-20261001.jsonl",
+    "sha256": "87132a37bbd9a71a18d6dcbb4b0b6abb69b6145278e13923611a5f6449661d4e"
+  },
+  "run_ledger": {
+    "path": "transformer-lineage-r3-runs-20261001.jsonl",
+    "sha256": "a89712e50b9af537d94f903806c071de1e549dafc9baef2127afa65737887f6f"
+  },
+  "semantic_receipt_sha256": "8146a4d25eefe81062d4a5988e4a9ac27d193481301155ae277123667b0d56eb",
+  "independent_review": "Separate agent rehashed all 115 files, independently verified the merged verifier Git blobs, and reran semantic verification with sockets and subprocesses blocked; all 30 runs passed.",
+  "evidence_root": "outputs/transformer-lineage-replacement-r3-20261001",
+  "payload_reads": 0,
+  "model_runs": 0,
+  "new_jobs": 0,
+  "additional_reads_authorized": false,
+  "g8_g9_reopened": false,
+  "durable_archive": {
+    "path": "outputs/transformer-lineage-replacement-r3-20261001/verified-metadata-evidence.tar.gz",
+    "sha256": "e1a33708da1da2ace4c1cffef9341f44fd90174613ff847db97c52fbea08c7ed",
+    "evidence_files": 138,
+    "manifest_files": 1,
+    "total_files": 139,
+    "manifest_sha256": "874edb8080e810a7df88b46a4f86ee3ff5fab3e130c2f2b2aac08fdab2f79389",
+    "contents_reverified": true
+  }
+}
