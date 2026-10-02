@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import re
 
-from .role_manifest import SYMBOLS
-from .verification_spec import canonical, digest
+from .verification_spec import SYMBOLS, canonical, digest
 
 PRODUCER_COMMIT = "cf426c0db0940a985133fc7c8482623186acd5a4"
 PRODUCER_IMAGE = ("cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/mdp@sha256:"

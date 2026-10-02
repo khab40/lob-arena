@@ -1,9 +1,22 @@
 import copy
+from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
 from app.ml.transformer import source_contract as c
 from app.ml.transformer.verification_spec import canonical, digest
+
+
+def test_source_metadata_import_needs_no_site_packages():
+    result = subprocess.run([sys.executable, "-S", "-c",
+        "import sys; from app.ml.transformer import source_contract; "
+        "assert source_contract.SYMBOLS == ('AAPL', 'MSFT', 'NVDA'); "
+        "assert 'numpy' not in sys.modules; "
+        "assert 'app.ml.transformer.data' not in sys.modules"],
+        cwd=Path(__file__).resolve().parents[1], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
 
 
 def fixture():
