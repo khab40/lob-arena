@@ -178,6 +178,19 @@ def test_exporter_configuration_is_allow_listed_and_deduplicated(monkeypatch) ->
     assert config.cache_seconds == 45
 
 
+def test_exporter_defaults_include_both_development_namespaces(monkeypatch) -> None:
+    monkeypatch.delenv("MLFLOW_EXPORTER_EXPERIMENTS", raising=False)
+    monkeypatch.delenv("MLFLOW_EXPORTER_MODEL_NAMES", raising=False)
+    config = ExporterConfig.from_environment()
+    assert config.experiments == (
+        "lob-arena/corpus-releases", "lob-arena/lightgbm-development",
+        "lob-arena/governed-evaluation", "lob-arena/transformer-development",
+    )
+    assert config.model_names == (
+        "lob-arena-lightgbm-attack-active", "lob-arena-transformer-attack-active",
+    )
+
+
 def test_exporter_bootstrap_rejects_admin_before_password_update() -> None:
     admin = SimpleNamespace(id=1, username="admin", is_admin=True)
 
