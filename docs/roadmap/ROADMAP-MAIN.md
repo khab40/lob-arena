@@ -204,8 +204,11 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    this proof to signed provider context, restricted row records and independent
    class-count readback; PR #275 is merged. No CPU audit has run. Complete
    [MLflow readiness](../ml/mlflow-readiness-design.md): restored application
-   behavior, frozen research registration and additive Transformer tracking
-   before execution as required by the approved campaign, seal and review the
+   behavior, frozen research registration and additive Transformer tracking.
+   The first approved maintenance start aborted before staging; STOPPED is
+   independently verified. PR #279 includes Bug #280's startup diagnostics and
+   timing repair; obtain replacement authorization and verified readiness
+   before execution as required by the approved campaign. Seal and review the
    image/request, then obtain exact CPU authorization. Verify per-role support
    and row alignment before separate bounded GPU authorization. Research-control negative labels
    remain assumptions; positive labels remain synthetic. The producer-contract

@@ -61,6 +61,19 @@ Feature: MLflow readiness for governed development
     When the registration helper verifies the frozen package
     Then registration does not establish readiness
     And no conflicting record is overwritten
+
+  Scenario: Retain a guest startup failure safely
+    Given one approved VM start with a bounded shutdown target
+    When SSH or the existing application containers are not ready in time
+    Then sanitized readiness observations explain the last observed state
+    And application mutations are not attempted
+    And shutdown evidence is retained without an automatic replacement
+
+  Scenario: Preserve time for verification and cleanup
+    Given isolated restore completed within the maintenance window
+    When less than 220 seconds remain for live work and preservation
+    Then the live client is not launched
+    And restore evidence is retained while the VM is stopped
 ```
 
 ## Components and evidence
@@ -103,6 +116,11 @@ responses, corrupt artifacts, lineage mismatch, stale sequences, configuration
 preservation and strict denial classification. These tests execute no models.
 Live readiness must be independently read back after the separately approved
 [operation](../operations/mlflow-readiness.md); it is currently pending.
+The first approved start exhausted its 45-second guest-readiness allowance before
+staging. SSH began 35.89 seconds after provider RUNNING; the exact final Docker
+condition was not retained. [Bug #280](https://github.com/khab40/lob-arena/issues/280)
+adds safe observations and shared timing reserves. The replacement remains subject
+to exact authorization; its 330-second application budget is not yet benchmarked.
 
 Out of scope: final-test access, G8 evaluation, GPU/CPU Job execution, changing
 thresholds or candidates, production promotion, live restore, deployment upgrade,

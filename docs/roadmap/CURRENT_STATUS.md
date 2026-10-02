@@ -1,6 +1,6 @@
 # Roadmap status — 2026-10-02
 
-## MLflow readiness preparation — 2026-10-02
+## MLflow readiness startup repair; replacement pending — 2026-10-02
 
 [PR #275](https://github.com/khab40/lob-arena/pull/275) is merged with passing CI.
 The next [Story #19](https://github.com/khab40/lob-arena/issues/19) increment prepares
@@ -10,10 +10,15 @@ The [design](../ml/mlflow-readiness-design.md),
 [architecture decision](../architecture/ARD-0041-mlflow-readiness-before-transformer-execution.md)
 and [operation](../operations/mlflow-readiness.md) are separate records.
 
-No readiness window has run; actual deployed-image compatibility and application
-proof remain pending. Read-only Nebius MCP confirms the existing VM is STOPPED
-and its current SSH rule matches the operator. The expanded maintenance proposal
-requires exact approval for the new application grants and registry writes.
+The approved first start aborted during guest readiness, before staging or
+application execution. [Its receipt](../evidence/mlflow-readiness-attempt-20261002.json)
+records zero grants, registry writes, probe runs or artifact transfers; independent
+Nebius MCP confirmed STOPPED at version 108. [PR #279](https://github.com/khab40/lob-arena/pull/279)
+repairs missing readiness diagnostics and shutdown reserves under
+[Bug #280](https://github.com/khab40/lob-arena/issues/280). Actual-image compatibility
+and application proof remain pending. The
+[replacement proposal](../evidence/mlflow-readiness-replacement-proposal-20261002.json)
+requires fresh exact execution-manifest approval; the first authorization is consumed.
 After independently verified readiness and shutdown, seal the CPU image/request,
 verify admission, then request exact one-Job authorization. No CPU/GPU Job,
 training, scoring or final access occurred. G8/G9 remain closed; #19/#24 stay open.

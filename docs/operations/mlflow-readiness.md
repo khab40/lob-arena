@@ -1,7 +1,11 @@
 # MLflow readiness operation — 2026-10-02
 
-Status: prepared, not executed. Application changes require approval of the
-exact [proposal](../evidence/mlflow-readiness-proposal-20261002.json).
+Status: the approved first attempt aborted before staging; independent Nebius
+readback verified STOPPED at resource version 108. No application mutation or
+artifact transfer occurred. The [attempt receipt](../evidence/mlflow-readiness-attempt-20261002.json)
+preserves that consumed authorization. The
+[replacement proposal](../evidence/mlflow-readiness-replacement-proposal-20261002.json)
+requires fresh approval of its separately hashed execution manifest before another start.
 Ticket: [#19](https://github.com/khab40/lob-arena/issues/19), consumer
 [#24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
@@ -18,8 +22,18 @@ retained probe runs. It does not authorize the CPU audit.
   32 GiB disk. One start, 600-second shutdown target, independent watchdog armed
   before start, early stop on completion or abort. This is not a provider billing
   cap. Unknown costs retain the operator-managed disposition; no new billing gate.
-- Host operation has a 420-second work/cleanup ceiling. Restore has 210 seconds
-  work plus 30 seconds cleanup within that ceiling. No automatic second attempt.
+- Host operation has a 330-second work budget plus 20 seconds cleanup. Restore
+  has 210 seconds work plus 30 seconds cleanup within that ceiling. After restore,
+  at least 220 seconds must remain before live work begins: 180 seconds live work,
+  20 seconds cleanup and 20 seconds for preservation/configuration checks.
+  Both phases cannot consume their maxima in one window. Completion is
+  unbenchmarked; insufficient reserve aborts before live writes. No automatic retry.
+- Guest readiness allows at most 90 seconds, constrained by the absolute VM
+  deadline. Every poll retains sanitized SSH/sudo/Docker/container states.
+  Authentication, host-key and sudo denial stop immediately. Before execution,
+  435 seconds must remain: 370 seconds SSH execution, 40 independent readback,
+  20 evidence collection and 5 stop signaling. Remote inspection and application
+  execution share one 360-second deadline inside the SSH bound.
 - Restore: two temporary containers from the existing deployed images. PostgreSQL
   1 CPU/1 GiB with 512 MiB database tmpfs; MLflow 1 CPU/2 GiB with 256 MiB tmpfs.
   Both use network `none`, a private Unix socket and no ports or cloud credentials.
@@ -51,7 +65,10 @@ retained probe runs. It does not authorize the CPU audit.
 
 ## Preparation before start
 
-1. Obtain exact proposal approval. Record its hash and the implementation commit.
+1. Obtain exact replacement execution-manifest approval. The manifest binds the
+   proposal, implementation commit, orchestrator, guest helper, watchdog,
+   independent readback and verifier. Record its hash in `authorization.json`;
+   the execution gate checks approval and all bytes before reserving the attempt.
    Use the listed package/input hashes; stage only those files from the reviewed
    commit. The seven model artifacts are downloaded by the operation, not loaded
    into a model. Do not copy the private database dump into a PR.
@@ -98,7 +115,7 @@ still says independent readback and VM stop are pending.
 ## Independent readback and completion
 
 Copy only the evidence, journals and eight retained artifact files into root
-`outputs/transformer-mlflow-readiness-20261002/`; keep private files private.
+`outputs/transformer-mlflow-readiness-r2-20261002/`; keep private files private.
 Independently recompute each artifact size/hash against the committed seven-file
 manifest and inert probe payload. Check proposal/source/image identities, restored
 table equality and allocated IDs, namespace IDs, four permissions, parent/child
