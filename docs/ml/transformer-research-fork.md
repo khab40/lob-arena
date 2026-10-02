@@ -49,3 +49,41 @@ Feature: Research-first Transformer comparison
 7. Report quality deltas at the declared operating points, log loss/PR-AUC, calibration, per-family support, seed variation, latency and actual resource use. A missing comparison or incomplete grid is inconclusive. Dominated quality/cost supports stopping; improvement supports a separately scoped next study. No numerical superiority margin is invented after results.
 
 Verification: inert/static checks locally; causal/mask/gradient/resume tests on the GPU before expensive trials; independent artifact/metric/lineage readback. The same-date, three-instrument synthetic-label limitations remain explicit. Research package verification and MLflow reconciliation have separate statuses.
+
+## Implementation and remaining execution work
+
+The [protocol amendment](../../configs/experiments/transformer/research-fork-20261002.json)
+preserves the original config hash and records the changed ordering. It is not an
+executable Job request. GELU feed-forward activation, final layer normalization
+and bounded golden-section temperature fitting resolve previously unspecified
+implementation choices. The original authorization files remain unchanged.
+
+The research core now provides authenticated role materialization; two-layer
+causal attention with padding/missingness handling; weighted AdamW training;
+epoch checkpoints with code/data/config/RNG bindings; fixed-grid and seed checks;
+calibration on C; and comparison on O with frozen baseline thresholds. Checkpoint
+acknowledgement requires a version ID and matching checksum. Trial completion
+remains pending independent verification, and the grid selector rejects it until
+the verifier reports success.
+
+Local verification: 32 inert policy, saved-prediction arithmetic, alignment and
+seed-receipt tests. GPU-only mask, causal, gradient, batch, resume and calibration
+checks are implemented but have not run. Neither a trained model nor a measured
+Transformer advantage exists yet.
+
+Remaining work in this research track:
+
+1. Wire the reviewed input transport, versioned publisher and event journal into
+   the worker; publish failures and negative class-support results durably.
+2. Pin/build the CUDA runtime and bind source, dependency, image and request
+   identities. Complete the real-data smoke and per-family/resource reporting.
+3. Verify frozen LightGBM prediction availability on the exact development rows.
+   Include any required frozen-model scoring explicitly within the execution bounds.
+4. Seal the package, run the bounded GPU campaign, independently verify every
+   result, then present the continue/stop decision. Keep platform maintenance
+   deferred; reconcile MLflow from retained artifacts afterward.
+
+The protocol permits at most eight GPU Jobs: smoke, four grid trials, two seed
+confirmations and inference/calibration comparison. Their existing timeouts total
+14 GPU-hours. The amended inference worker must account for calibration within
+its one-hour slot; it must not silently add the old CPU calibration Job.

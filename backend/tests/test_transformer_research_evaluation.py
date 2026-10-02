@@ -1,10 +1,11 @@
 """Artifact arithmetic only: no model construction, scoring or fitting."""
 from types import SimpleNamespace
 
-import numpy as np
 import pytest
 
-from app.ml.transformer.research_evaluation import compare, metrics
+np = pytest.importorskip("numpy")
+
+from app.ml.transformer.research_evaluation import compare, metrics  # noqa: E402
 
 
 def fixture():

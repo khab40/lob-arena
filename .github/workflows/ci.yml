@@ -144,6 +144,8 @@ jobs:
           tests/test_transformer_role_execution_runner.py tests/test_transformer_role_execution_readback.py
           tests/test_transformer_role_execution_publisher.py tests/test_transformer_role_deadline.py
           tests/test_transformer_role_execution_transport.py
+          tests/test_transformer_research_policy.py tests/test_transformer_research_evaluation.py
+          tests/test_transformer_research_stability.py
 
       - name: Verify governed image submission contracts (inert metadata only)
         working-directory: backend

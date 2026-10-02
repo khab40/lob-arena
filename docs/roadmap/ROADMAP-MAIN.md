@@ -5,7 +5,14 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-09-29. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-10-02. See [current status and evidence](CURRENT_STATUS.md).
+
+Operator-approved priority: [Transformer versus LightGBM research](../ml/transformer-research-fork.md)
+under [#24](https://github.com/khab40/lob-arena/issues/24), before platform maintenance
+#19–#21. PR #283's reusable repairs are merged. Decide whether Transformer merits
+further work; stopping it and retaining LightGBM is a valid outcome. Hybrid work
+and later Transformer deliverables are conditional on that research decision.
+Existing dates below remain baseline targets pending evidence-based reforecast.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -15,7 +22,7 @@ deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
 
-`Transformer (G9 research exit accepted) -> Transformer/LightGBM hybrid -> integrated evidence -> secure CEO UI -> final demo`
+`Transformer/LightGBM research decision -> selected detector approach -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
 

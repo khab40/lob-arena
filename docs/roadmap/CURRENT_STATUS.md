@@ -1,7 +1,8 @@
 ## 2026-10-02 — Research takes priority; platform maintenance deferred
 
-Operator-approved change: merge the reusable MLflow health/diagnostic fixes in
-[PR #283](https://github.com/khab40/lob-arena/pull/283), then develop the full bounded
+The reusable MLflow health/diagnostic fixes in
+[PR #283](https://github.com/khab40/lob-arena/pull/283) merged as `837e9a9`, with all
+24 premerge checks passing. Work now follows the approved [research fork](../ml/transformer-research-fork.md): develop the full bounded
 Transformer versus frozen LightGBM experiment under [#24](https://github.com/khab40/lob-arena/issues/24)
 and [Project #3](https://github.com/users/khab40/projects/3). Preserve data separation,
 row alignment, durable artifacts and the existing final-test boundary. Evaluate
@@ -13,6 +14,14 @@ after research. MLflow can remain running if needed; successful online tracking
 is not a prerequisite for training when complete artifacts and a replayable event
 journal are durably retained. Registry promotion remains outside this fork.
 The following sections record earlier attempts and are historical where superseded.
+
+Implemented research core: two-layer causal model, authenticated input adapter,
+weighted training, checkpoint publication interface/resume, fixed-grid selection,
+seed stability, temperature calibration and exact-row comparison. **32 inert tests
+pass; no GPU run has occurred.** GPU-only causal/gradient/resume/calibration checks
+are prepared but unexecuted. The sealed runtime, durable publisher/event journal,
+baseline prediction readback and independent campaign verifier remain to be wired
+and verified before execution. This is implementation progress, not model evidence.
 
 ## 2026-10-02 — MLflow retry stopped; logs reviewed before further execution
 

@@ -1,0 +1,26 @@
+{
+  "schema_version": "transformer_research_protocol_v1",
+  "status": "implementation_in_progress_not_execution_authorization",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "base_config": "configs/experiments/transformer/c4-campaign-20260928.json",
+  "base_config_sha256": "cd39f54d6ab05ee543b4970a2402700b02da30d0d0535a03ad3f6afa59dd6322",
+  "preserve": ["inputs", "roles", "training", "selection", "thresholds"],
+  "model_resolution": {"ffn_activation": "gelu", "final_layer_norm": true},
+  "calibration_resolution": {"solver": "golden_section_v1", "bounds": [0.05, 20.0], "max_evaluations": 200, "tolerance": 0.000001},
+  "execution_order": ["authenticate_inputs", "audit_roles_and_support", "gpu_smoke", "fixed_grid", "verify_and_select", "confirmation_seeds", "calibrate_and_compare", "independent_readback", "operator_research_decision"],
+  "role_audit_location": "first_gpu_job_before_optimizer_step",
+  "resource_bounds": {
+    "platform": "gpu-l40s-a", "preset": "1gpu-8vcpu-32gb",
+    "maximum_gpu_jobs": 8, "maximum_planned_gpu_hours": 14,
+    "smoke_timeout_seconds": 3600, "trial_timeout_seconds": 7200,
+    "inference_timeout_seconds": 3600, "concurrency": 1,
+    "ephemeral_disk_gib": 100, "input_cache_gib": 8,
+    "output_per_job_gib": 2, "output_total_gib": 20,
+    "publication_reserve_seconds": 600, "restart_policy": "never",
+    "automatic_replacement": false, "cost_policy": "operator_managed_alerts"
+  },
+  "tracking": {"primary": "versioned_artifacts_and_event_journal", "mlflow_online_required": false, "mlflow_reconcile_required_later": true},
+  "baseline": {"model": "frozen_c4_lightgbm", "exact_ordered_targets_and_labels": true, "availability": "unverified", "fallback_scoring": "must_be_explicit_in_sealed_package"},
+  "decision": {"outcomes": ["continue_research", "stop_transformer", "inconclusive"], "automatic_search_expansion": false, "final_test": false, "production_promotion": false},
+  "execution_package": {"image_digest": null, "source_commit": null, "output_prefix": null, "request_sha256": null, "status": "not_sealed"}
+}

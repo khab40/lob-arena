@@ -135,6 +135,7 @@ def train_trial(train, selection, trial, *, output: Path, bindings, publish, exp
             "trial_sha256": trial.sha256(), "bindings": bindings, "progress": progress,
             "published_checkpoints": records, "selected_epoch": progress["best_epoch"],
             "selection_log_loss": progress["best_loss"],
+            "selection_f1_at_half": progress["history"][progress["best_epoch"] - 1]["selection_f1_at_half"],
             "parameter_count": sum(p.numel() for p in model.parameters()),
             "duration_seconds": time.monotonic() - started,
             "peak_allocated_gpu_bytes": torch.cuda.max_memory_allocated(),

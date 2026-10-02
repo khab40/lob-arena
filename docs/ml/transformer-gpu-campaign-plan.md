@@ -1,5 +1,11 @@
 # Bounded Transformer development campaign — 2026-09-28
 
+**2026-10-02 amendment:** the operator-approved [research fork](transformer-research-fork.md)
+supersedes the platform/MLflow-first ordering below. Perform role checks inside the
+first GPU Job, retain complete artifacts durably, and reconcile MLflow later.
+The fixed model grid, input boundaries and exact-package execution gate remain.
+The original config is retained unchanged for historical package verification.
+
 Status: **implementation approved; readiness work in progress; no GPU execution authorized**.
 [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
