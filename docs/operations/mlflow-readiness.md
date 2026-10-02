@@ -7,7 +7,7 @@ preserves that consumed authorization. The
 [replacement proposal](../evidence/mlflow-readiness-replacement-proposal-20261002.json)
 requires fresh approval of its [execution manifest](../evidence/mlflow-readiness-r2-execution-manifest-20261002.json)
 before another start. Manifest SHA-256:
-`4ef479bc2d5f98e9a9d5054ebe8beef7caaabc3151f50d02c26a89e60b5694bc`.
+`ff4f596b52c1ce5ae44bbd179556c7610b588ce92f001c9fd13be0da8ca0d28c`.
 Its five exact operator/helper files are retained in root
 `outputs/transformer-mlflow-readiness-r2-20261002/` for inspection.
 Ticket: [#19](https://github.com/khab40/lob-arena/issues/19), consumer

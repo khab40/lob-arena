@@ -5,7 +5,7 @@
   "ticket": "https://github.com/khab40/lob-arena/issues/19",
   "consumer": "https://github.com/khab40/lob-arena/issues/24",
   "project": "https://github.com/users/khab40/projects/3",
-  "implementation_source_commit": "7b4192127132d464feab6a0984bb1f4da87a1d29",
+  "implementation_source_commit": "f7fcdc50e5823039293ee0285abd0dfbd94ae5be",
   "scope": "one replacement metadata readiness attempt; fresh execution-manifest approval required; no model execution",
   "vm": {
     "id": "computeinstance-e00xq8hqrzks2pf3gn",
@@ -65,7 +65,13 @@
     "api_mutations_maximum": 10,
     "new_resources": "isolated experiment, run, user, registry namespace and two inert versions; no artifact IO"
   },
-  "transformer_namespaces": {"experiment": "lob-arena/transformer-development", "registered_model": "lob-arena-transformer-attack-active", "create_only_if_absent": true, "creator_permissions": "MLflow may create admin MANAGE ownership records for new namespaces"},
+  "transformer_namespaces": {
+    "experiment": "lob-arena/transformer-development",
+    "registered_model": "lob-arena-transformer-attack-active",
+    "create_only_if_absent": true,
+    "creator_permissions": "MLflow may create admin MANAGE ownership records for new namespaces",
+    "existing_namespace_requires": "no aliases and no versions; unreadable or incomplete version inventory rejects before grants"
+  },
   "additive_service_grants": [
     {"user": "governed-writer", "resource_type": "experiment", "resource": "lob-arena/transformer-development", "permission": "EDIT"},
     {"user": "governed-writer", "resource_type": "registered_model", "resource": "lob-arena-transformer-attack-active", "permission": "EDIT"},
@@ -124,7 +130,7 @@
   ],
   "package_files_sha256": {
     "deployments/mlflow/readiness_config.py": "fd5054646e86435375364f4b66a73d47c5d32739b29be85abdba450bd7ea066d",
-    "deployments/mlflow/readiness_live.py": "e85efac75078fe1f0aef24141bb002f879ebf3c03cde3da1a763bd94d3e3b7be",
+    "deployments/mlflow/readiness_live.py": "6d236bad526822f6a07bb5fe7c98ebeaec58c70fc72178fe3a27e92595a7d69c",
     "deployments/mlflow/readiness_permissions.py": "2543f2760779ef96ce44e70d3be4032060e9a0e3103c1d044139ae31f1aaba07",
     "deployments/mlflow/readiness_recovery.py": "a32e6769e0b2655c64a1cc7791eb415ef6a6c566111dc920076f5230fa60618e",
     "deployments/mlflow/readiness_registry.py": "9dcf7ee05138fe94c9c43435a875db5b7c47a6da4b3778ac6dde2df9640c624b",
@@ -150,5 +156,6 @@
   ],
   "attempt": "replacement-r2",
   "bug": "https://github.com/khab40/lob-arena/issues/280",
-  "predecessor": {"proposal_sha256": "7637c4e43520933c555ea45669de9534bb062a439d28243b2e7d5961eddad420", "status": "aborted_before_staging", "receipt": "docs/evidence/mlflow-readiness-attempt-20261002.json", "approval_consumed": true}
+  "predecessor": {"proposal_sha256": "7637c4e43520933c555ea45669de9534bb062a439d28243b2e7d5961eddad420", "status": "aborted_before_staging", "receipt": "docs/evidence/mlflow-readiness-attempt-20261002.json", "approval_consumed": true},
+  "namespace_bug": "https://github.com/khab40/lob-arena/issues/281"
 }

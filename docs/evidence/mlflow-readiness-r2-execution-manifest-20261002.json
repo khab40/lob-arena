@@ -1,11 +1,11 @@
 {
   "schema_version": "mlflow_readiness_execution_manifest_v1",
-  "proposal_sha256": "cc5e9a0ef114572d4d25690c5cd33bcfdc827b7df9cc6dded150534251de5897",
-  "implementation_source_commit": "7b4192127132d464feab6a0984bb1f4da87a1d29",
+  "proposal_sha256": "b36f60dd0d4ef49d9d130c548e254e257b49ebc51c0f0c3825cb914d4e9a08e3",
+  "implementation_source_commit": "f7fcdc50e5823039293ee0285abd0dfbd94ae5be",
   "local_files_sha256": {
-    "orchestrate.py": "8e8bef758d1877af020aaf2301c43b070ad3a1178ef3ec2a19703eb83553e8cf",
-    "remote_readback.py": "6b8c20b14d529748209bb64f0f9c3c5bb1b4c4e62fd88f7a2c4b5eeb0a2504fa",
-    "independent_verify.py": "b9be21619356eeea37e7931025fae0bf0caf6d552ad62e7fbee70dd348bc18c5",
+    "orchestrate.py": "1061ee78284acea1273f79f395d44eaea54857bbc769e62c5ae4ecf94e87f41c",
+    "remote_readback.py": "51404dd178556622069b9aca73e48ab6e6c3e0a9890ac2f34c3679ef65b75fac",
+    "independent_verify.py": "a7aae12321728888729073f39884256edb2973ce079200769e51a8f947bed9b4",
     "mlflow_readiness_guest.py": "a47d0f38f0a09e0aa2befadfb6d97f2c156f7954c91ffea2cff68d0475988ec8",
     "nebius_mlflow_watchdog.py": "40f9e0171cf2c8528560460919a52c2b535fc348dfcfb5ce3f62298b68e235f7"
   }
