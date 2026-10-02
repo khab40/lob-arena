@@ -34,6 +34,17 @@ Feature: MLflow readiness for governed development
     Then no permission mutation is attempted
     And readiness remains unverified
 
+  Scenario: Reject unreviewed Transformer versions before grants
+    Given the Transformer registered model contains a version without an alias
+    When readiness inspects the namespace
+    Then it stops before service grants or probe runs
+    And it preserves every existing model record
+
+  Scenario: Refuse an unverifiable Transformer namespace
+    Given version existence cannot be read from the Transformer namespace
+    When readiness inspects that namespace
+    Then it does not establish readiness or add permissions
+
   Scenario: Verify restricted parent and child tracking
     Given a durable journal bound to the approved maintenance proposal
     When the writer records one metadata-only parent and child

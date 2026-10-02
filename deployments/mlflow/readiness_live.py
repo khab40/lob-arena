@@ -163,6 +163,14 @@ class Artifacts:
                 raise ValueError("artifact upload rejected")
 
 
+def require_empty_model_namespace(admin, model):
+    if model.name != MODEL or model.aliases:
+        raise ValueError("existing model namespace conflicts")
+    versions = admin.search_model_versions(f"name = '{MODEL}'", max_results=1)
+    if versions or getattr(versions, "token", None):
+        raise ValueError("model namespace has versions; readiness requires an empty namespace")
+
+
 def namespaces(admin, journal):
     experiment = admin.get_experiment_by_name(EXPERIMENT)
     try:
@@ -173,8 +181,8 @@ def namespaces(admin, journal):
         model = None
     if experiment is not None and (experiment.name != EXPERIMENT or experiment.lifecycle_stage != "active"):
         raise ValueError("existing experiment conflicts")
-    if model is not None and (model.name != MODEL or model.aliases):
-        raise ValueError("existing model namespace conflicts")
+    if model is not None:
+        require_empty_model_namespace(admin, model)
     if experiment is None:
         persist(journal / "experiment-intent.json", {"name": EXPERIMENT})
         admin.create_experiment(EXPERIMENT)
@@ -183,6 +191,7 @@ def namespaces(admin, journal):
         persist(journal / "model-intent.json", {"name": MODEL})
         admin.create_registered_model(MODEL)
         model = admin.get_registered_model(MODEL)
+        require_empty_model_namespace(admin, model)
     if (experiment is None or experiment.name != EXPERIMENT or experiment.lifecycle_stage != "active"
             or model.name != MODEL or model.aliases):
         raise ValueError("namespace readback differs")

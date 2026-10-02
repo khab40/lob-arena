@@ -3,6 +3,7 @@ import json
 import os
 import threading
 from types import SimpleNamespace as NS
+from unittest.mock import Mock
 
 import pytest
 
@@ -100,6 +101,73 @@ def test_namespace_conflict_aborts_before_creation(tmp_path):
     with pytest.raises(ValueError, match="experiment conflicts"):
         live.namespaces(admin, tmp_path)
     assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("has_version,token", [(True, None), (False, "unread-page")])
+def test_existing_transformer_versions_abort_before_namespace_writes_grants_or_probe(tmp_path, monkeypatch,
+                                                                                   has_version, token):
+    class Versions(list):
+        pass
+    versions = Versions([NS(version="1")] if has_version else [])
+    versions.token = token
+    admin = Mock()
+    admin.get_experiment_by_name.return_value = None
+    admin.get_registered_model.return_value = NS(name=live.MODEL, aliases={})
+    admin.search_model_versions.return_value = versions
+    journal, inputs = tmp_path / "journal", tmp_path / "inputs"
+    journal.mkdir(mode=0o700)
+    inputs.mkdir()
+    raw = b"{}"
+    manifest = json.dumps({"inventory_sha256": hashlib.sha256(raw).hexdigest(),
+                           "dataset_source_proof_sha256": hashlib.sha256(raw).hexdigest()}).encode()
+    for name, content in (("manifest.json", manifest), ("inventory.json", raw), ("source-proof.json", raw)):
+        (inputs / name).write_bytes(content)
+    monkeypatch.setattr(live, "MANIFEST_SHA256", hashlib.sha256(manifest).hexdigest())
+    forbidden = Mock(side_effect=AssertionError("live mutation reached after namespace conflict"))
+    for name in ("inspect_permissions", "apply_permissions", "Artifacts", "register_baseline", "reserve_pair"):
+        monkeypatch.setattr(live, name, forbidden)
+    auth = NS(get_user=lambda _: NS(is_admin=True))
+    with pytest.raises(ValueError, match="model namespace has versions"):
+        live.execute(inputs, journal, "a" * 64, "b" * 40, preflight=lambda: {},
+                     make_clients=lambda: (admin, auth, None, None, None))
+    admin.create_experiment.assert_not_called()
+    admin.create_registered_model.assert_not_called()
+    forbidden.assert_not_called()
+    assert not (journal / "live-receipt.json").exists()
+
+
+def test_empty_existing_transformer_namespace_remains_usable(tmp_path):
+    admin = Mock()
+    admin.get_experiment_by_name.return_value = NS(name=live.EXPERIMENT, lifecycle_stage="active", experiment_id="7")
+    admin.get_registered_model.return_value = NS(name=live.MODEL, aliases={})
+    admin.search_model_versions.return_value = []
+    assert live.namespaces(admin, tmp_path) == "7"
+    admin.search_model_versions.assert_called_once_with(f"name = '{live.MODEL}'", max_results=1)
+    admin.create_experiment.assert_not_called()
+    admin.create_registered_model.assert_not_called()
+
+
+def test_new_namespace_version_readback_conflict_is_not_accepted(tmp_path):
+    class Missing(Exception):
+        error_code = "RESOURCE_DOES_NOT_EXIST"
+    admin = Mock()
+    admin.get_experiment_by_name.return_value = NS(name=live.EXPERIMENT, lifecycle_stage="active", experiment_id="7")
+    admin.get_registered_model.side_effect = [Missing(), NS(name=live.MODEL, aliases={})]
+    admin.search_model_versions.return_value = [NS(version="1")]
+    with pytest.raises(ValueError, match="model namespace has versions"):
+        live.namespaces(admin, tmp_path)
+    admin.create_registered_model.assert_called_once_with(live.MODEL)
+
+
+def test_failed_version_lookup_prevents_namespace_creation(tmp_path):
+    admin = Mock()
+    admin.get_experiment_by_name.return_value = None
+    admin.get_registered_model.return_value = NS(name=live.MODEL, aliases={})
+    admin.search_model_versions.side_effect = PermissionError("lookup unavailable")
+    with pytest.raises(PermissionError):
+        live.namespaces(admin, tmp_path)
+    admin.create_experiment.assert_not_called()
+    admin.create_registered_model.assert_not_called()
 
 
 @pytest.mark.parametrize("fail_registry", [False, True])
