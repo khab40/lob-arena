@@ -100,6 +100,42 @@ def test_complete_window_keeps_credentials_scoped_and_checks_cleanup(case):
     assert window.LABEL + "=" in launch[launch.index("--label") + 1]
 
 
+@pytest.mark.parametrize("restore_seconds", [110.001, 240])
+def test_successful_restore_with_insufficient_live_reserve_never_launches_client(case, monkeypatch, restore_seconds):
+    elapsed = [0.0]
+    monkeypatch.setattr(window.time, "monotonic", lambda: elapsed[0])
+    original = window.subprocess.run
+    def process(args, **kwargs):
+        result = original(args, **kwargs)
+        if len(args) > 2 and args[2].endswith("mlflow_application_restore.py"):
+            elapsed[0] += restore_seconds
+        return result
+    monkeypatch.setattr(window.subprocess, "run", process)
+    before = case.env.read_bytes()
+    with pytest.raises(TimeoutError, match="preservation reserve after restore"):
+        case.execute()
+    assert json.loads((case.output / "restore/cleanup.json").read_bytes())["failed"] == []
+    assert not any(args[:2] == ["docker", "run"] for args in case.calls)
+    assert not case.envs and case.env.read_bytes() == before
+    assert not (case.output / "application-receipt.json").exists()
+
+
+def test_exact_220_second_live_reserve_allows_one_bounded_launch(case, monkeypatch):
+    elapsed, live_timeouts = [0.0], []
+    monkeypatch.setattr(window.time, "monotonic", lambda: elapsed[0])
+    original = window.subprocess.run
+    def process(args, **kwargs):
+        result = original(args, **kwargs)
+        if len(args) > 2 and args[2].endswith("mlflow_application_restore.py"):
+            elapsed[0] = 110.0
+        if args[:2] == ["docker", "run"]:
+            live_timeouts.append(kwargs["timeout"])
+        return result
+    monkeypatch.setattr(window.subprocess, "run", process)
+    assert case.execute()["seconds"] == 110.0
+    assert live_timeouts == [180]
+
+
 @pytest.mark.parametrize("failure", ["extra-source", "input-drift", "env-mode", "output", "bytecode"])
 def test_local_boundary_failure_precedes_every_subprocess(case, monkeypatch, failure):
     if failure == "extra-source":

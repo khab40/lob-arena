@@ -1,7 +1,9 @@
 """Run approved metadata readiness inside the existing MLflow VM.
 
 An external 600-second VM watchdog must already be armed. This host-side wrapper
-caps work plus temporary-container cleanup at 420 seconds. It never starts a VM.
+caps work plus temporary-container cleanup at 350 seconds. It never starts a VM.
+The unbenchmarked maximum restore and live durations cannot both fit this window;
+successful restore alone does not authorize starting a live phase without its reserve.
 """
 from __future__ import annotations
 
@@ -31,6 +33,12 @@ TRANSPORT = {"MLFLOW_TRACKING_URI": URI, "MLFLOW_REGISTRY_URI": URI,
              "MLFLOW_ENABLE_ASYNC_LOGGING": "false", "MLFLOW_DISABLE_TELEMETRY": "true",
              "PYTHONDONTWRITEBYTECODE": "1"}
 LABEL = "lob-arena.readiness-attempt"
+HOST_WORK_SECONDS = 330
+RESTORE_ADMISSION_SECONDS = 260
+CLIENT_WORK_SECONDS = 180
+CLIENT_CLEANUP_SECONDS = 20
+PRESERVATION_SECONDS = 20
+LIVE_ADMISSION_SECONDS = CLIENT_WORK_SECONDS + CLIENT_CLEANUP_SECONDS + PRESERVATION_SECONDS
 
 
 @contextmanager
@@ -108,7 +116,7 @@ def client_command(source, inputs, journal, image, proposal_sha, commit, attempt
 
 def _run(source, inputs, output, env_file, proposal_sha, commit):
     start = time.monotonic()
-    deadline = start + 400
+    deadline = start + HOST_WORK_SECONDS
     def command(args, *, data=None, env=None, timeout=30):
         remaining = min(timeout, deadline - time.monotonic())
         if remaining <= 0:
@@ -181,7 +189,7 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
     journal = output / "live"
     journal.mkdir(mode=0o700)
     # Restore completes before the live phase; it owns its two temporary containers.
-    if deadline - time.monotonic() < 260:
+    if deadline - time.monotonic() < RESTORE_ADMISSION_SECONDS:
         raise TimeoutError("insufficient bounded restore and cleanup reserve")
     command([sys.executable, "-B", str(source / "scripts/mlflow_application_restore.py"),
              "--source-root", str(source), "--output", str(output / "restore"),
@@ -201,12 +209,14 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
     matches = command(["docker", "ps", "-aq", "--filter", "name=^/" + CLIENT + "$"])
     if matches.strip():
         raise ValueError("client container name is already in use")
+    if deadline - time.monotonic() < LIVE_ADMISSION_SECONDS:
+        raise TimeoutError("insufficient live, cleanup and preservation reserve after restore")
     attempted = False
     attempt = hashlib.sha256((proposal_sha + "\n" + str(output)).encode()).hexdigest()
     try:
         attempted = True
         command(client_command(source, inputs, journal, image, proposal_sha, commit, attempt),
-                env=client_env, timeout=180)
+                env=client_env, timeout=CLIENT_WORK_SECONDS)
     finally:
         if attempted:
             def cleanup_call(args):
@@ -214,7 +224,7 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
                 if result.returncode:
                     raise RuntimeError("client cleanup subprocess failed; output redacted")
                 return result.stdout
-            with budget(20):
+            with budget(CLIENT_CLEANUP_SECONDS):
                 persist(output / "client-cleanup.json", cleanup_client(attempt, cleanup_call))
     if users() != before_users or defaults() != before_defaults:
         raise ValueError("live credentials, identities or defaults changed")
@@ -239,7 +249,7 @@ def _run(source, inputs, output, env_file, proposal_sha, commit):
 
 
 def run(source, inputs, output, env_file, proposal_sha, commit):
-    with budget(400):
+    with budget(HOST_WORK_SECONDS):
         return _run(source, inputs, output, env_file, proposal_sha, commit)
 
 
