@@ -1,5 +1,12 @@
 # MLflow readiness operation — 2026-10-02
 
+Current continuation: PR #279 is merged. Its r2 attempt stopped in initial
+read-only checks and the VM is verified STOPPED at version 112. The operator
+approved retries without specifying a count. [Bug #282's repair](../ml/mlflow-readiness-health.md)
+adds service health and safe failure receipts for the prepared r3 retry.
+The [r3 proposal](../evidence/mlflow-readiness-r3-proposal-20261002.json) records
+the current bounds and their attribution; the earlier r2 account below is historical.
+
 Status: the approved first attempt aborted before staging; independent Nebius
 readback verified STOPPED at resource version 108. No application mutation or
 artifact transfer occurred. The [attempt receipt](../evidence/mlflow-readiness-attempt-20261002.json)

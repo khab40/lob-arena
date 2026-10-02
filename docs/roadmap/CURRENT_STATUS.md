@@ -1,5 +1,22 @@
 # Roadmap status — 2026-10-02
 
+## MLflow healthy-service retry preparation — 2026-10-02
+
+[PR #279](https://github.com/khab40/lob-arena/pull/279) is merged; both merge
+workflows passed. The approved r2 attempt passed guest/process checks but stopped
+in initial read-only application checks. The [receipt](../evidence/mlflow-readiness-r2-attempt-20261002.json)
+records zero application mutations or artifact transfers and verified STOPPED
+at version 112. The exact failing subcheck was not retained.
+
+[Bug #282](https://github.com/khab40/lob-arena/issues/282) adds existing Docker
+healthchecks and safe subcheck diagnostics. [Its design](../ml/mlflow-readiness-health.md)
+separates operator instructions from agent-selected timing/retry limits.
+All 234 focused inert tests and 45 operator/verifier checks pass. The operator
+approved retries; the prepared [r3 proposal](../evidence/mlflow-readiness-r3-proposal-20261002.json)
+and [execution manifest](../evidence/mlflow-readiness-r3-execution-manifest-20261002.json)
+retain the original resources/mutations. R3 has not run. MLflow readiness and
+subsequent exact CPU authorization remain pending; G8/G9 stay closed.
+
 ## MLflow readiness startup repair; replacement pending — 2026-10-02
 
 [PR #275](https://github.com/khab40/lob-arena/pull/275) is merged with passing CI.
