@@ -1,12 +1,31 @@
 # Roadmap status — 2026-10-02
 
+## Transformer CPU audit package implemented — 2026-10-02
+
+[PR #272](https://github.com/khab40/lob-arena/pull/272) merged with all 23 checks
+passed, including the P1/P2 corrections. The next approved
+[Story #24 package](../ml/transformer-role-audit-package.md) binds its source proof,
+frozen normalizer and exact validation roles to a new bounded CPU attempt.
+It retains a restricted target ledger and independently recomputes run order,
+row identities and class support. Signed provider context, one-attempt transfer,
+versioned publication and independent readback have inert regression coverage.
+
+Packaging does not establish actual class support: no governed payload, Job,
+training, scoring or final-test access occurred. CI builds the runtime stage;
+the sealed private image and exact execution request remain to be prepared.
+The original campaign's MLflow/platform readiness is required **before** CPU
+execution; older entries that put this readiness afterward are superseded.
+Next complete those prerequisites, seal/review the exact image and one-run request,
+obtain execution approval, then verify the CPU outcome before GPU authorization.
+G8/G9 stay closed; #24 remains In Progress in Project #3.
+
 ## Transformer source domains verified — 2026-10-02
 
 [PR #272 review corrections](../evidence/transformer-source-review-20261002.json)
 repair partial receipt publication under [Bug #274](https://github.com/khab40/lob-arena/issues/274).
 All 247 focused tests pass and the verified receipt is unchanged. The commit-size
 P1 was a PR-aggregate counting error; the nine reviewed commits met the limit.
-PR #272 remains open for review; the next CPU packaging chunk follows its merge.
+PR #272 is merged; the CPU packaging continuation is recorded above.
 
 [PR #271](https://github.com/khab40/lob-arena/pull/271) merged with all 23 checks
 passed. The next [Story #24 increment](../ml/transformer-source-separation.md)
