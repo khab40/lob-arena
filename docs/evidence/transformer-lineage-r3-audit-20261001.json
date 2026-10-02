@@ -99,7 +99,9 @@
   "durable_archive": {
     "path": "outputs/transformer-lineage-replacement-r3-20261001/verified-metadata-evidence.tar.gz",
     "sha256": "e1a33708da1da2ace4c1cffef9341f44fd90174613ff847db97c52fbea08c7ed",
-    "files": 138,
+    "evidence_files": 138,
+    "manifest_files": 1,
+    "total_files": 139,
     "manifest_sha256": "874edb8080e810a7df88b46a4f86ee3ff5fab3e130c2f2b2aac08fdab2f79389",
     "contents_reverified": true
   }
