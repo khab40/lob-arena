@@ -10,6 +10,8 @@ from .campaign_spec import configuration, configuration_sha256
 from .contracts import Normalization
 from .data import DevelopmentInputs
 from .role_manifest import ROLES, load_metadata, metadata_plan
+from .role_rows import collect, verify_rows
+from .role_source import authenticate
 from .verification_spec import SEQUENCE_SHA, TABULAR_SHA, canonical, checked_file, digest
 
 
@@ -66,6 +68,53 @@ def audit(inputs: Path, normalizer: Path):
             + ["source_provenance_receipt_required", "platform_readiness_required",
                "exact_execution_authorization_required"],
         "model_runs": 0, "final_test_access": False}
+
+
+def _result(metadata, contract_raw, normalizer_raw, binding, rows):
+    return {"schema_version": "transformer_bound_role_audit_v1",
+        "campaign_sha256": configuration_sha256(), "metadata_sha256": digest(canonical(metadata)),
+        "normalization_sha256": digest(normalizer_raw), "input_contract_sha256": digest(contract_raw),
+        "source_binding": binding, **rows, "gpu_ready": False,
+        "blockers": ([] if rows["class_support_passed"] else ["insufficient_class_support"])
+            + ["platform_readiness_required", "exact_execution_authorization_required"],
+        "label_verification": "checksum_bound_worker_adapter",
+        "independent_readback_scope": "target_identity_coverage_and_class_count_arithmetic",
+        "model_runs": 0, "final_test_access": False}
+
+
+def audit_package(inputs: Path, bundle_raw: bytes, source_raw: bytes):
+    """One future authorized CPU pass; authentication precedes all payload reads."""
+    metadata, contract, normalizer_raw, binding = authenticate(bundle_raw, source_raw)
+    root, tabular, sequences = load_metadata(inputs)
+    if canonical(metadata_plan(root, tabular, sequences)) != canonical(metadata):
+        raise ValueError("downloaded manifests differ from authenticated audit roles")
+    data = DevelopmentInputs.open(root=root, tabular_path=inputs / "manifests/tabular-projection.json",
+        tabular_sha256=TABULAR_SHA, sequence_path=inputs / "manifests/sequence-projection.json",
+        sequence_sha256=SEQUENCE_SHA, artifact_root=inputs / "artifacts")
+    contract_raw = contract.canonical_bytes()
+    if data.contract.canonical_bytes() != contract_raw:
+        raise ValueError("payload adapter contract differs from authenticated audit bundle")
+    ledger, rows = collect(data.windows("validation"), metadata)
+    result = _result(metadata, contract_raw, normalizer_raw, binding, rows)
+    return {"role-audit.json": canonical(result), "target-ledger.jsonl": ledger,
+        "input-contract.json": contract_raw, "normalization.json": normalizer_raw}
+
+
+def verify_package(artifacts, bundle_raw: bytes, source_raw: bytes):
+    """Independent readback rederives every aggregate without governed payloads."""
+    required = {"role-audit.json", "target-ledger.jsonl", "input-contract.json", "normalization.json"}
+    if set(artifacts) != required:
+        raise ValueError("role audit artifact inventory changed")
+    metadata, contract, normalizer_raw, binding = authenticate(bundle_raw, source_raw)
+    contract_raw = contract.canonical_bytes()
+    if (artifacts["input-contract.json"] != contract_raw
+            or artifacts["normalization.json"] != normalizer_raw):
+        raise ValueError("published contract or normalizer differs from the frozen audit materials")
+    rows = verify_rows(artifacts["target-ledger.jsonl"], metadata)
+    result = _result(metadata, contract_raw, normalizer_raw, binding, rows)
+    if artifacts["role-audit.json"] != canonical(result):
+        raise ValueError("published audit aggregates differ from independent row readback")
+    return result
 
 
 def main():
