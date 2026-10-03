@@ -1,4 +1,23 @@
-## 2026-10-03 — Startup repaired; replacement smoke awaits authorization
+## 2026-10-03 — GPU smoke completed and independently verified
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+Following merged PR #288 and exact operator approval, the single replacement
+Job `aijob-e00t8wpga7gh6c64q7` reached COMPLETED. Independent readback verified
+its request/context, versioned hashes, role evidence, event journal and result.
+Both width-64/128 CUDA behavior checks and the 1,024-row, two-epoch/32-step
+real-data smoke passed. Runtime: 4m39s; 15 retained artifacts, 7.77 MB.
+
+[Result, measurements and limitations](../ml/transformer-replacement-smoke-result.md).
+This establishes a working GPU execution path; it does not establish Transformer
+quality versus LightGBM. No grid, seed or inference Job has been launched.
+Next: prepare exact four-trial fixed-grid authorization using this verified smoke,
+then verify trials before selection, confirmation and calibration/comparison.
+MLflow reconciliation and platform maintenance remain after research. The old
+failed attempt is retained, and this successful smoke must not be repeated.
+The following dated sections are historical where superseded.
+
+## 2026-10-03 — Earlier startup-repair authorization snapshot
 
 [PR #284](https://github.com/khab40/lob-arena/pull/284) merged as `585b1bc`, including
 the P2 repairs. [Bug #287](https://github.com/khab40/lob-arena/issues/287), under
