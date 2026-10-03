@@ -82,7 +82,10 @@ The unexecuted proposal starting `f86cdb69` is superseded by the hash below.
 [Proposal JSON](../evidence/transformer-replacement-smoke-proposal-20261003.json),
 SHA-256 `be433e78cd6dc731b6e143bd29f05e07622a5338ad7a6c8f585641f68e2cecd1`.
 It binds the source, immutable image, exact request, configuration and command.
-Approval is pending. This proposes one smoke Job: one L40S, 8 vCPU, 32 GiB RAM,
+The operator approved this proposal; its one Job completed and was independently
+verified. [Execution result](transformer-replacement-smoke-result.md).
+The authorization is consumed: do not repeat this request.
+The approved smoke used one L40S, 8 vCPU, 32 GiB RAM,
 100 GiB disk, 1 GiB shared memory, one hour, restart never, concurrency one.
 It checks governed inputs, CUDA behavior and a 1,024-row/two-epoch training smoke.
 Grid, seed and comparison Jobs are not authorized by this proposal.

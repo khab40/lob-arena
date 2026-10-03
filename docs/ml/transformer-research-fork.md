@@ -77,11 +77,11 @@ Transformer advantage exists yet.
 
 Remaining work in this research track:
 
-1. Review the [startup repair and exact replacement proposal](transformer-research-startup-repair.md).
-   The two confirmed mismatches are repaired, with replay tests, a new digest
-   image and a passing dry-run. The first attempt remains consumed and retained.
-2. Prepare any replacement within explicitly approved bounds, run the campaign,
-   independently verify every
+1. The [replacement GPU smoke is independently verified](transformer-replacement-smoke-result.md).
+   Its CUDA behavior checks and two-epoch real-data smoke passed; both the failed
+   first attempt and successful replacement remain consumed and retained.
+2. Prepare exact authorization for the four fixed-grid Jobs using the verified
+   smoke receipt, then complete the remaining campaign slots. Independently verify every
    result, then present the continue/stop decision. Keep platform maintenance
    deferred; reconcile MLflow from retained artifacts afterward.
 
@@ -132,7 +132,7 @@ confirmations and inference/calibration comparison. Their existing timeouts tota
 14 GPU-hours. The amended inference worker must account for calibration within
 its one-hour slot; it must not silently add the old CPU calibration Job.
 
-Execution status, 2026-10-03: smoke Job `aijob-e00qpnac5v335pddbn` failed with
+Earlier execution status, 2026-10-03: smoke Job `aijob-e00qpnac5v335pddbn` failed with
 `PublicationUncertain` before signed-context delivery and model execution.
 Reconciliation found only INTENT, with no SUCCESS or execution context. The
 attempt is consumed; it is not a quality result or permission for an automatic

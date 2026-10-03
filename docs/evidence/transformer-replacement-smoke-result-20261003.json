@@ -1,0 +1,136 @@
+{
+  "schema_version": "transformer_research_smoke_result_v1",
+  "date": "2026-10-03",
+  "status": "independently_verified",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "repair_pr": "https://github.com/khab40/lob-arena/pull/288",
+  "proposal_sha256": "be433e78cd6dc731b6e143bd29f05e07622a5338ad7a6c8f585641f68e2cecd1",
+  "authorization": {
+    "operator_reply": "one bounded GPU smoke",
+    "record_sha256": "ec715d809cf31de997b468a31ee1140c467fb1d6db463fbf2639e4215e7bacf3",
+    "new_jobs_authorized": 1,
+    "new_jobs_created": 1
+  },
+  "runtime_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "merged_source_commit": "72351e7ddd0af8db22a9866c22d49788b6a70a1b",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "job_id": "aijob-e00t8wpga7gh6c64q7",
+  "run_id": "transformer-research-c4-20261003-r2-smoke",
+  "provider_terminal_state": "COMPLETED",
+  "created_at": "2026-10-03T15:57:49.597830Z",
+  "started_at": "2026-10-03T16:01:36.596815457Z",
+  "finished_at": "2026-10-03T16:06:15.968951633Z",
+  "provider_runtime_seconds": 279.372136,
+  "created_to_terminal_seconds": 506.371121,
+  "resources": {
+    "platform": "gpu-l40s-a",
+    "preset": "1gpu-8vcpu-32gb",
+    "disk_gib": 100,
+    "shm_gib": 1,
+    "timeout_seconds": 3600,
+    "restart_policy": "never",
+    "on_demand": true
+  },
+  "s3_output_bucket": "aimada-wave1-results-e00g6zvxpr00",
+  "s3_output_prefix": "campaigns/wave1-research-20260816/development/transformer-research-c4-20261003-r2/smoke/",
+  "success_receipt": {
+    "sha256": "e4945d6d97bffee257fe964b7d2db74219a0598218afd41cf09ea823011bedc6",
+    "size_bytes": 221,
+    "version_id": "1"
+  },
+  "independent_readback": {
+    "status": "verified",
+    "artifact_count": 15,
+    "artifact_bytes": 7769350,
+    "verification_sha256": "0cce5804d05ff1c9b2b0bbb2b7f62475a1175ac24d1529dd82d4aba48e2a802c",
+    "provider_terminal_sha256": "bd265ab70a766f075a600723d8e9fd68115b38bd574d9c259e009bab0b40e0ca",
+    "model_deserialized_or_executed_by_verifier": false
+  },
+  "role_support": {
+    "calibration": {
+      "row_count": 5490,
+      "positive_rows": 45,
+      "negative_rows": 5445,
+      "support_passed": true
+    },
+    "operating_point": {
+      "row_count": 2470,
+      "positive_rows": 45,
+      "negative_rows": 2425,
+      "support_passed": true
+    },
+    "selection": {
+      "row_count": 1250,
+      "positive_rows": 45,
+      "negative_rows": 1205,
+      "support_passed": true
+    }
+  },
+  "result": {
+    "checks": {
+      "architectures": [
+        {
+          "causal_padding_missingness_batch_gradient_resume": "passed",
+          "checkpoint": {
+            "epoch": 1,
+            "name": "epoch-01.pt",
+            "object_name": "64-epoch-01.pt",
+            "sha256": "f33dda451bbb8aab321728e2d78e7b3b28c60620b59a2c8bd16b7c3bdfc82100",
+            "size_bytes": 1363017,
+            "version_id": "1"
+          },
+          "width": 64
+        },
+        {
+          "causal_padding_missingness_batch_gradient_resume": "passed",
+          "checkpoint": {
+            "epoch": 1,
+            "name": "epoch-01.pt",
+            "object_name": "128-epoch-01.pt",
+            "sha256": "766be0df60861d1e3667470aa6856683c9312bcdda16ee6422f7db47004278b0",
+            "size_bytes": 5033609,
+            "version_id": "1"
+          },
+          "width": 128
+        }
+      ],
+      "device": "cuda",
+      "status": "verified",
+      "tolerance_absolute": 1e-06
+    },
+    "completed_at": "2026-10-03T16:06:15.311311+00:00",
+    "final_test_access": false,
+    "job_id": "aijob-e00t8wpga7gh6c64q7",
+    "kind": "smoke",
+    "measurements": {
+      "cost": "unknown_operator_managed",
+      "cpu_seconds": 282.319055918,
+      "elapsed_seconds": 277.35886840600006,
+      "peak_rss_kib": 2815648,
+      "transfer": {
+        "get_attempts": 185,
+        "response_bytes": 30034660
+      }
+    },
+    "mlflow_reconciliation": "pending_retained_artifacts",
+    "real_data": {
+      "epochs": 2,
+      "loss": 0.10292983055114746,
+      "optimizer_steps": 32,
+      "ordered_target_sha256": "c4706bde02e68a16bbc0144c446194415fa6e23ccbc348685ddf37acaeffd5cd",
+      "rows": 1024
+    },
+    "request_sha256": "1aecb34fc2be6a62465a7b49f54fe1791d731df25a69d8f2be9c977090d20830"
+  },
+  "limitations": [
+    "smoke validates execution, not Transformer superiority",
+    "smoke loss is the final weighted training minibatch, not held-out quality",
+    "GPU utilization and peak GPU memory not measured",
+    "actual cost unknown under operator-managed policy",
+    "generic role-audit platform/authorization flags are not global readiness; this run uses the separately approved research fork"
+  ],
+  "next_step": "prepare exact fixed-grid authorization, then independently verify each trial before selection",
+  "additional_jobs_authorized": false,
+  "durable_local_evidence": "outputs/transformer-startup-repair-20261003/p2/execution"
+}
