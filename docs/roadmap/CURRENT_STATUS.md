@@ -1,3 +1,27 @@
+## 2026-10-03 — GPU execution package verified; campaign pending
+
+[PR #284](https://github.com/khab40/lob-arena/pull/284),
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The worker, durable versioned publisher, signed provider-context handoff and
+independent result verifier are implemented. At runtime source `b8c988a`, all
+734 inert Transformer tests and 24 CI checks passed; Ruff and Gitleaks passed.
+The sealed linux/amd64 image built and passed source/runtime/baseline inspection.
+Registry publication and exact provider dry-run precede execution. No GPU Job
+has launched, and no Transformer quality result exists yet.
+
+Frozen LightGBM development predictions are verified for all 9,210 targets;
+ordered lineage maps match S/C/O counts 1,250/5,490/2,470. The worker rechecks
+labels and identity against actual governed inputs. Saved raw scores use the
+frozen isotonic mapping; no baseline retraining or rescoring is needed.
+Its prior validation exposure and unmeasured latency remain explicit limitations.
+
+Next: execute the approved eight-slot campaign sequentially, verify each result
+before dependent work, then report whether to continue or stop Transformer
+research. MLflow reconciliation and platform maintenance remain deferred.
+[Execution design and limits](../ml/transformer-research-fork.md#execution-package--2026-10-03).
+The dated sections below describe earlier states where superseded.
+
 ## 2026-10-02 — Research takes priority; platform maintenance deferred
 
 The reusable MLflow health/diagnostic fixes in
