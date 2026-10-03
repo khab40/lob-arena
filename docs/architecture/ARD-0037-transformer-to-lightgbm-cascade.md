@@ -8,6 +8,14 @@ Date: 2026-08-16
 
 Status: `[todo; GitHub Story #25; gated by ARD-0036 exit disposition]`
 
+Updated 2026-10-03: this is conditional future scope under
+[Story #25](https://github.com/khab40/lob-arena/issues/25), not the current
+standalone experiment. Follow
+[ARD-0042's research sequence](ARD-0042-transformer-lightgbm-research-sequence.md)
+first: frozen LightGBM, standalone Transformer, verified comparison, then an
+operator continue/stop/inconclusive decision. A decision to continue does not
+automatically authorize this cascade or production serving.
+
 No cascade implementation or performance benefit is claimed by this record.
 The `transformer_feature_release_v1` contract, exact join, cascade model family
 and ablation campaign have not started.
@@ -102,7 +110,8 @@ The cascade is promoted only when:
 
 If the gates fail, the negative result is retained and standalone LightGBM
 remains the baseline candidate, or the champion/rollback only if separately
-qualified and promoted. G8/G9 being open does not establish a production champion.
+qualified and promoted. The signed G9 research-baseline outcome does not establish
+a production champion.
 
 ## Alternatives Considered
 

@@ -42,13 +42,14 @@ Each record retains its own decision context and supersession status.
 - [ARD-0035: Nebius-First Qualification Of Governed LightGBM](ARD-0035-nebius-lightgbm-first.md) — CPU-first Nebius execution, evidence, performance, cost and exit gates for the existing LightGBM v1 boundary
 - [ARD-0036: Governed Market-Sequence Transformer Challenger](ARD-0036-market-sequence-transformer.md) — Causal sequence contracts, bounded GPU training, standalone evaluation and the gate into derived-feature work
 - [ARD-0037: Transformer-Derived Features Into LightGBM](ARD-0037-transformer-to-lightgbm-cascade.md) — Versioned Transformer feature releases, exact joins, CPU decision layer, fallback and governed promotion
+- [ARD-0042: Transformer and LightGBM Research Sequence](ARD-0042-transformer-lightgbm-research-sequence.md) — Standalone comparison first, fixed S/C/O roles, durable results before MLflow, and a conditional later cascade
 
 ### Frozen Evaluation and Recovery
 
 - [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
 - [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
 - [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
-- [ARD-0041: MLflow Readiness Before Transformer Execution](ARD-0041-mlflow-readiness-before-transformer-execution.md)
+- [ARD-0041: MLflow Readiness Before Transformer Execution](ARD-0041-mlflow-readiness-before-transformer-execution.md) — Maintenance design retained; research ordering superseded by ARD-0042
 
 ### Agent Execution
 

@@ -1,12 +1,27 @@
 # ARD-0041: MLflow readiness before Transformer execution
 
-Status: Proposed; implementation prepared, operational verification pending.
+Status: Maintenance design retained; research prerequisite superseded by ARD-0042.
 
 Date: 2026-10-02
 
 Tickets: [Story #19](https://github.com/khab40/lob-arena/issues/19), consumed by
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
+
+## Research-order amendment — 2026-10-03
+
+The operator's 2026-10-02 research fork moves platform maintenance after the
+Transformer comparison. [ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md)
+supersedes this record's requirement to finish MLflow readiness and a separate
+CPU role-audit Job before that bounded experiment. Input and support checks move
+inside the GPU Job before fitting; durable versioned results precede later
+MLflow reconciliation. The existing MLflow VM may remain running if needed.
+The shutdown requirement below belongs to the earlier exact maintenance proposal,
+not a new restriction on the research fork. This amendment does not assert that
+restoration, registration, grants or operational acceptance succeeded.
+
+The remaining sections preserve the maintenance design and its original context.
+They do not authorize further maintenance attempts or new permissions.
 
 ## Context
 

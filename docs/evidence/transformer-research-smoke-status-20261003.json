@@ -1,0 +1,37 @@
+{
+  "schema_version": "transformer_research_status_snapshot_v1",
+  "date": "2026-10-03",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "source_commit": "9f3784aff3e77cab0eeea4b9f2978f11b53f0501",
+  "job_id": "aijob-e00qpnac5v335pddbn",
+  "state": "FAILED",
+  "started_at": "2026-10-03T06:49:48.212631984Z",
+  "finished_at": "2026-10-03T06:49:49.646446973Z",
+  "worker_error": "PublicationUncertain",
+  "reconciled_objects": [
+    "INTENT"
+  ],
+  "success_marker_present": false,
+  "execution_context_present": false,
+  "model_execution_reached": false,
+  "quality_result_available": false,
+  "interpretation": "Startup failure; root cause under investigation; not a model-quality result.",
+  "retained_evidence": [
+    {
+      "path": "outputs/transformer-research-fork-20261002/execution-label-safe/smoke/request.json",
+      "sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252"
+    },
+    {
+      "path": "outputs/transformer-research-fork-20261002/execution-label-safe/smoke/terminal.json",
+      "sha256": "3d360450c53428d615876e10c6ca9b0e31ca6d25c114f835f6caf21d2ab238c6"
+    },
+    {
+      "path": "outputs/transformer-research-fork-20261002/execution-label-safe/smoke/logs.json",
+      "sha256": "51bee6530589dc2aea55bf73c756d41d3673bb1289cfc64263ab96bac22aec8c"
+    },
+    {
+      "path": "outputs/transformer-research-fork-20261002/execution-label-safe/smoke/publication-reconciliation.json",
+      "sha256": "99de73d093d6df134423080534527f1715406d253b3a980992d5c242618f282c"
+    }
+  ]
+}

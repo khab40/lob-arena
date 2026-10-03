@@ -1,4 +1,4 @@
-## 2026-10-03 — GPU execution package verified; campaign pending
+## 2026-10-03 — Transformer architecture recorded; smoke failed before fitting
 
 [PR #284](https://github.com/khab40/lob-arena/pull/284),
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
@@ -7,8 +7,12 @@ The worker, durable versioned publisher, signed provider-context handoff and
 independent result verifier are implemented. At runtime source `b8c988a`, all
 734 inert Transformer tests and 24 CI checks passed; Ruff and Gitleaks passed.
 The sealed linux/amd64 image built and passed source/runtime/baseline inspection.
-Registry publication and exact provider dry-run precede execution. No GPU Job
-has launched, and no Transformer quality result exists yet.
+The subsequent short-repository fix was published at source `9f3784a`, and the
+exact provider dry-run passed. Smoke Job `aijob-e00qpnac5v335pddbn` then failed
+at startup with `PublicationUncertain` before model execution. Reconciliation
+found only INTENT, without SUCCESS or a signed execution context. No Transformer
+quality result exists. The [status snapshot](../evidence/transformer-research-smoke-status-20261003.json)
+binds the retained request, terminal state, logs and reconciliation evidence.
 
 Frozen LightGBM development predictions are verified for all 9,210 targets;
 ordered lineage maps match S/C/O counts 1,250/5,490/2,470. The worker rechecks
@@ -16,9 +20,13 @@ labels and identity against actual governed inputs. Saved raw scores use the
 frozen isotonic mapping; no baseline retraining or rescoring is needed.
 Its prior validation exposure and unmeasured latency remain explicit limitations.
 
-Next: execute the approved eight-slot campaign sequentially, verify each result
-before dependent work, then report whether to continue or stop Transformer
-research. MLflow reconciliation and platform maintenance remain deferred.
+The updated [Transformer design](../architecture/ARD-0036-market-sequence-transformer.md)
+and new [comparison/sequence decision](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md)
+separate current standalone research from the conditional later cascade.
+Next: diagnose and repair startup, retain the consumed attempt and prepare any
+replacement within explicitly approved bounds. Verify each completed result
+before dependent work, then report continue/stop/inconclusive. MLflow
+reconciliation and platform maintenance remain deferred.
 [Execution design and limits](../ml/transformer-research-fork.md#execution-package--2026-10-03).
 The dated sections below describe earlier states where superseded.
 

@@ -40,6 +40,9 @@ Feature: Research-first Transformer comparison
 
 ## Execution path
 
+Architecture: [Transformer design](../architecture/ARD-0036-market-sequence-transformer.md)
+and [comparison and experiment sequence](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md).
+
 1. Merge PR283 with its review repair; retain its evidence and defer live MLflow acceptance under19–21.
 2. New PR from updated main: implement the existing two-layer causal model, weighted training, deterministic checkpoint selection/resume, calibration and comparison. Use the approved width64/128 × learning-rate0.0003/0.001 grid, seed42 and winner confirmation seeds7/2027; maximum30 epochs and patience5 remain unchanged.
 3. Move authenticated input/class support and smoke checks into the first GPU Job before fitting. Keep frozen inputs, source grouping, train-only normalization and unchanged S/C/O roles. This replaces the separate CPU-first prerequisite; it does not skip its data checks.
@@ -74,9 +77,11 @@ Transformer advantage exists yet.
 
 Remaining work in this research track:
 
-1. Seal and publish the implemented worker's CUDA image, bound to its source,
-   hash-locked dependencies, authenticated input metadata and frozen baseline.
-2. Run the bounded GPU campaign, independently verify every
+1. Diagnose and repair startup of the first smoke attempt, which failed before
+   model execution; preserve its consumed request and publication evidence.
+   The source-bound CUDA image was published and the exact dry-run passed.
+2. Prepare any replacement within explicitly approved bounds, run the campaign,
+   independently verify every
    result, then present the continue/stop decision. Keep platform maintenance
    deferred; reconcile MLflow from retained artifacts afterward.
 
@@ -126,3 +131,9 @@ The protocol permits at most eight GPU Jobs: smoke, four grid trials, two seed
 confirmations and inference/calibration comparison. Their existing timeouts total
 14 GPU-hours. The amended inference worker must account for calibration within
 its one-hour slot; it must not silently add the old CPU calibration Job.
+
+Execution status, 2026-10-03: smoke Job `aijob-e00qpnac5v335pddbn` failed with
+`PublicationUncertain` before signed-context delivery and model execution.
+Reconciliation found only INTENT, with no SUCCESS or execution context. The
+attempt is consumed; it is not a quality result or permission for an automatic
+replacement. See [current status](../roadmap/CURRENT_STATUS.md).
