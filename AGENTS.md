@@ -2,6 +2,14 @@
 
 # Operator execution preferences
 
+- Before building, uploading or submitting a Nebius Job image, verify that the
+  repository portion is at most 64 characters. Keep the full immutable digest
+  in the Job image reference; use separate repository and 64-character digest
+  fields for labels. Never fall back to a mutable tag. This failure has recurred
+  three times; consult `docs/operations/digest-pinned-jobs.md` and Bug #285.
+  The 65-character `.../transformer-research` repository fails; `.../tr` passes
+  with the identical digest. Enforce the boundary locally before cloud calls.
+
 - Research priority (operator instruction, 2026-10-02): validate Transformer
   against frozen LightGBM before further platform maintenance. The existing
   MLflow VM may remain running if needed under the operator-managed cost policy.
