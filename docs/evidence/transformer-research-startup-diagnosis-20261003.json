@@ -1,0 +1,74 @@
+{
+  "request_sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252",
+  "job_id": "aijob-e00qpnac5v335pddbn",
+  "intent_receipt": {
+    "sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252",
+    "size_bytes": 1598,
+    "version_id": "1"
+  },
+  "intent_matches_exact_request": true,
+  "head_metadata": {
+    "Sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252"
+  },
+  "get_metadata": {
+    "Sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252"
+  },
+  "head_meta_headers": {
+    "x-amz-meta-sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252"
+  },
+  "get_meta_headers": {
+    "x-amz-meta-sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252"
+  },
+  "provider_differences": {
+    "pricing_model": {
+      "expected": null,
+      "observed": {
+        "on_demand": {}
+      }
+    }
+  },
+  "operations": {
+    "head": 1,
+    "get": 1,
+    "put": 0,
+    "jobs_created": 0
+  },
+  "ticket": "https://github.com/khab40/lob-arena/issues/287",
+  "date": "2026-10-03",
+  "provider_spec_observed": {
+    "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:7966648808d12e34559b15d871ae52218c5748a43edf5981adf945c8f304cd33",
+    "environment_variables": [
+      {
+        "name": "AWS_ACCESS_KEY_ID",
+        "mysterybox_secret": {
+          "secret_id": "mbsec-e00arhndyprqr8egjw",
+          "version_id": "mbsecver-e00rjzerny1pf9qhna"
+        }
+      },
+      {
+        "name": "AWS_SECRET_ACCESS_KEY",
+        "mysterybox_secret": {
+          "secret_id": "mbsec-e00s7qtjj5n9ghacnh",
+          "version_id": "mbsecver-e00yfn5w54jc1ybkwv"
+        }
+      }
+    ],
+    "platform": "gpu-l40s-a",
+    "preset": "1gpu-8vcpu-32gb",
+    "shm_size_bytes": "1073741824",
+    "disk": {
+      "type": "NETWORK_SSD",
+      "size_bytes": "107374182400"
+    },
+    "subnet_id": "vpcsubnet-e00ppzc4353dxv210j",
+    "pricing_model": {
+      "on_demand": {}
+    },
+    "timeout": "3600s",
+    "injected_files": [
+      {
+        "container_path": "/opt/research/request.json"
+      }
+    ]
+  }
+}

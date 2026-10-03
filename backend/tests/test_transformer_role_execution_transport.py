@@ -10,7 +10,7 @@ from app.ml.transformer.role_execution_spec import (
     OUTPUT_PREFIX, canonical, digest, load_inventory,
 )
 from app.ml.transformer.role_execution_transport import (
-    Budget, PublicationUncertain, claim, download, publish, put_new, read_result, read_version,
+    Budget, PublicationUncertain, claim, download, publish, put_new, read_result, read_version, verify_sha_metadata,
 )
 
 REQUEST = {"output_bucket": OUTPUT_BUCKET, "output_prefix": OUTPUT_PREFIX}
@@ -133,3 +133,21 @@ def test_real_sdk_stubber_uses_conditional_put_and_versioned_get():
             "ContentType": "application/json", "Metadata": {"sha256": digest(b"{}")}})
         assert put_new(s3, REQUEST, "fixture.json", b"{}")["version_id"] == "2"
         stub.assert_no_pending_responses()
+
+
+@pytest.mark.parametrize("key", ["sha256", "Sha256", "SHA256", "sHa256"])
+def test_result_metadata_casing_preserves_version_and_byte_verification(key):
+    store = Store()
+    body = io.BytesIO(b"abc")
+    store.response = {"Body": body, "VersionId": "1", "ContentLength": 3,
+                      "Metadata": {key: digest(b"abc")}}
+    raw, receipt = read_result(store, REQUEST, "fixture.json", 3, "1")
+    assert raw == b"abc" and receipt["sha256"] == digest(b"abc") and body.closed
+
+
+@pytest.mark.parametrize("metadata", [None, {}, {"Sha256": "wrong"}, {"sha256 ": digest(b"abc")},
+    {"Sha256": digest(b"abc"), "sha256": digest(b"abc")},
+    {"Sha256": digest(b"abc"), "SHA256": "wrong"}])
+def test_case_normalization_does_not_accept_missing_wrong_or_ambiguous_metadata(metadata):
+    with pytest.raises(ValueError, match="SHA metadata"):
+        verify_sha_metadata({"Metadata": metadata}, digest(b"abc"))

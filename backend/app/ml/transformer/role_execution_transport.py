@@ -125,6 +125,15 @@ def put_new(s3, request, name, payload):
     return {"sha256": digest(payload), "size_bytes": len(payload), "version_id": version}
 
 
+def verify_sha_metadata(response, expected_sha):
+    """SDK metadata casing varies; require one unambiguous byte checksum."""
+    metadata = response.get("Metadata")
+    values = [value for key, value in metadata.items() if isinstance(key, str) and key.lower() == "sha256"] \
+        if isinstance(metadata, dict) else []
+    if len(values) != 1 or values[0] != expected_sha:
+        raise ValueError("result object SHA metadata mismatch")
+
+
 def read_result(s3, request, name, limit, version_id=None):
     if type(limit) is not int or not 0 < limit <= MAX_OUTPUT:
         raise ValueError("invalid result read bound")
@@ -133,8 +142,7 @@ def read_result(s3, request, name, limit, version_id=None):
         args["VersionId"] = _version(version_id)
     response = s3.get_object(**args)
     payload, receipt = _body(response, limit, version_id)
-    if response.get("Metadata", {}).get("sha256") != receipt["sha256"]:
-        raise ValueError("result object SHA metadata mismatch")
+    verify_sha_metadata(response, receipt["sha256"])
     return payload, receipt
 
 
