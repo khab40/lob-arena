@@ -71,6 +71,9 @@ serverless/**
 !serverless/transformer_inputs/requirements.txt
 !serverless/transformer_role_audit/
 !serverless/transformer_role_audit/Dockerfile
+!serverless/transformer_research/
+!serverless/transformer_research/Dockerfile
+!serverless/transformer_research/requirements.txt
 
 # Only the approved public development inventory enters the verifier image.
 !docs/
@@ -94,5 +97,8 @@ configs/**
 !configs/data/**
 !configs/benchmark/
 !configs/benchmark/**
+!configs/experiments/
+!configs/experiments/transformer/
+!configs/experiments/transformer/**
 
 **/__pycache__/**

@@ -28,8 +28,10 @@ stream, scenario ground truth, hashes, and release contracts.
 ## Implementation scope
 
 LightGBM training/calibration and C4 tabular/sequence preparation exist.
-Transformer training, cascade, model-version promotion and Java-stream learned
-serving remain planned. Use the [ML lifecycle](use-cases/ml-lifecycle.md) for
+The Transformer research model, trainer and artifact-verification code are
+implemented in PR #284, but no successful GPU model run or quality result is
+verified. Cascade, model-version promotion and Java-stream learned serving remain
+planned. Use the [ML lifecycle](use-cases/ml-lifecycle.md) for
 implementation boundaries and [current status](roadmap/CURRENT_STATUS.md) for
 dated qualification, frozen candidate and authorization evidence.
 
@@ -102,6 +104,22 @@ must agree before release verification or tracking. The
 [release decision](architecture/ARD-0026-governed-lightgbm-release-boundary.md)
 owns artifact relationships; the [ML lifecycle](use-cases/ml-lifecycle.md)
 owns development, validation reuse and planned promotion workflows.
+
+### Transformer research and comparison order
+
+[ARD-0036](architecture/ARD-0036-market-sequence-transformer.md) owns the causal
+64-row, 60-feature sequence classifier, masks, training and checkpoint design.
+[ARD-0042](architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns the
+sequence: preserve frozen LightGBM, train the bounded standalone Transformer,
+select on S, calibrate on C, compare on identical O targets, independently verify,
+then decide whether to continue. These are development results, not final-test
+or production qualification.
+
+Versioned results and journals precede deferred MLflow reconciliation under the
+approved research fork. A future Transformer-to-LightGBM cascade remains a
+separate conditional study under
+[ARD-0037](architecture/ARD-0037-transformer-to-lightgbm-cascade.md); no model feeds
+the other during today's standalone comparison.
 
 ### Frozen C4 Evaluation and Recovery
 

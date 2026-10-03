@@ -1,7 +1,47 @@
+## 2026-10-03 — Transformer architecture recorded; smoke failed before fitting
+
+P2 review repairs are implemented under [Bug #286](https://github.com/khab40/lob-arena/issues/286):
+per-family comparisons include shared controls, and the selected checkpoint must
+match the best epoch, slot and published receipt. See the
+[repair acceptance and next-days plan](../ml/transformer-research-p2-repair-plan.md).
+These repairs do not resolve the separate startup publication/context failure
+or establish a trained model. Latest-head CI is tracked on the PR.
+
+[PR #284](https://github.com/khab40/lob-arena/pull/284),
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The worker, durable versioned publisher, signed provider-context handoff and
+independent result verifier are implemented. At runtime source `b8c988a`, all
+734 inert Transformer tests and 24 CI checks passed; Ruff and Gitleaks passed.
+The sealed linux/amd64 image built and passed source/runtime/baseline inspection.
+The subsequent short-repository fix was published at source `9f3784a`, and the
+exact provider dry-run passed. Smoke Job `aijob-e00qpnac5v335pddbn` then failed
+at startup with `PublicationUncertain` before model execution. Reconciliation
+found only INTENT, without SUCCESS or a signed execution context. No Transformer
+quality result exists. The [status snapshot](../evidence/transformer-research-smoke-status-20261003.json)
+binds the retained request, terminal state, logs and reconciliation evidence.
+
+Frozen LightGBM development predictions are verified for all 9,210 targets;
+ordered lineage maps match S/C/O counts 1,250/5,490/2,470. The worker rechecks
+labels and identity against actual governed inputs. Saved raw scores use the
+frozen isotonic mapping; no baseline retraining or rescoring is needed.
+Its prior validation exposure and unmeasured latency remain explicit limitations.
+
+The updated [Transformer design](../architecture/ARD-0036-market-sequence-transformer.md)
+and new [comparison/sequence decision](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md)
+separate current standalone research from the conditional later cascade.
+Next: diagnose and repair startup, retain the consumed attempt and prepare any
+replacement within explicitly approved bounds. Verify each completed result
+before dependent work, then report continue/stop/inconclusive. MLflow
+reconciliation and platform maintenance remain deferred.
+[Execution design and limits](../ml/transformer-research-fork.md#execution-package--2026-10-03).
+The dated sections below describe earlier states where superseded.
+
 ## 2026-10-02 — Research takes priority; platform maintenance deferred
 
-Operator-approved change: merge the reusable MLflow health/diagnostic fixes in
-[PR #283](https://github.com/khab40/lob-arena/pull/283), then develop the full bounded
+The reusable MLflow health/diagnostic fixes in
+[PR #283](https://github.com/khab40/lob-arena/pull/283) merged as `837e9a9`, with all
+24 premerge checks passing. Work now follows the approved [research fork](../ml/transformer-research-fork.md): develop the full bounded
 Transformer versus frozen LightGBM experiment under [#24](https://github.com/khab40/lob-arena/issues/24)
 and [Project #3](https://github.com/users/khab40/projects/3). Preserve data separation,
 row alignment, durable artifacts and the existing final-test boundary. Evaluate
@@ -13,6 +53,14 @@ after research. MLflow can remain running if needed; successful online tracking
 is not a prerequisite for training when complete artifacts and a replayable event
 journal are durably retained. Registry promotion remains outside this fork.
 The following sections record earlier attempts and are historical where superseded.
+
+Implemented research core: two-layer causal model, authenticated input adapter,
+weighted training, checkpoint publication interface/resume, fixed-grid selection,
+seed stability, temperature calibration and exact-row comparison. **32 inert tests
+pass; no GPU run has occurred.** GPU-only causal/gradient/resume/calibration checks
+are prepared but unexecuted. The sealed runtime, durable publisher/event journal,
+baseline prediction readback and independent campaign verifier remain to be wired
+and verified before execution. This is implementation progress, not model evidence.
 
 ## 2026-10-02 — MLflow retry stopped; logs reviewed before further execution
 
