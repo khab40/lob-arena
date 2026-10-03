@@ -1,4 +1,17 @@
-## 2026-10-03 — GPU smoke completed and independently verified
+## 2026-10-03 — Four training trials prepared and operator-authorized
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+After merged PR #290, the operator authorized widths 64/128 × learning rates
+0.0003/0.001, seed 42: four sequential Jobs, at most two hours each.
+The [execution package](../ml/transformer-training-grid.md) binds four exact
+requests to the verified smoke and its unchanged immutable image. All four
+provider dry-runs passed; read-only preflight found names and prefixes unused.
+No training-grid Job has been created. Next: review/CI, fresh per-slot preflight,
+then sequential execution with independent readback before advancing.
+Confirmation seeds and calibration/comparison remain separate later steps.
+
+## 2026-10-03 — Earlier GPU smoke completion snapshot
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
