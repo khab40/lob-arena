@@ -1,0 +1,20 @@
+{
+  "ticket": "https://github.com/khab40/lob-arena/issues/289",
+  "review": "https://github.com/khab40/lob-arena/pull/288#discussion_r4173338372",
+  "runtime_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "before_fix": {
+    "terminal_fault_cases": 4,
+    "failed_wrong_preflight_stage": 4,
+    "success_control_passed": 1
+  },
+  "after_fix": {
+    "inert_transformer_tests_passed": 781,
+    "terminal_fault_cases_passed": 4,
+    "success_control_passed": 1,
+    "followup_writes_after_fault": 0,
+    "ruff": "passed"
+  },
+  "local_model_execution": false,
+  "replacement_job_created": false,
+  "exception_behavior": "publication stage, sanitized cause, rethrow without follow-up marker or retry"
+}

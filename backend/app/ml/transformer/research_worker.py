@@ -34,9 +34,10 @@ def execute(s3, request, package, work):
     started, cpu = time.monotonic(), time.process_time()
     expires = started + request["resources"]["timeout_seconds"] - 60
     with deadline(expires - started):
-        store.claim()
-        stage = "context"
+        stage = "claim"
         try:
+            store.claim()
+            stage = "context"
             context = wait(store)
             store.put("configuration.json", canonical(request))
             store.event("started", {"job_id": context["job_id"], "source_commit": source_commit})
@@ -72,9 +73,13 @@ def execute(s3, request, package, work):
                     "peak_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
                     "cost": "unknown_operator_managed", "transfer": transfer},
                 mlflow_reconciliation="pending_retained_artifacts", final_test_access=False)
-        except PublicationUncertain:
+        except PublicationUncertain as error:
+            error.research_stage = stage
             raise  # Do not write another terminal marker after an ambiguous PUT.
         except Exception as error:
+            error.research_stage = stage
+            if stage == "claim":
+                raise  # An occupied or unverifiable prefix belongs to its prior attempt.
             failure = {"request_sha256": request_sha(request), "stage": stage,
                 "error_type": type(error).__name__, "automatic_replacement": False}
             try:
@@ -83,7 +88,11 @@ def execute(s3, request, package, work):
             except Exception:
                 pass
             raise
-        return store.finish(result)
+        try:
+            return store.finish(result)
+        except Exception as error:
+            error.research_stage = "publication"
+            raise  # Preserve possibly committed terminal objects; never add a marker here.
 
 
 def main():
@@ -95,7 +104,9 @@ def main():
             raise ValueError("request exceeds injection envelope")
         result = execute(client(), json.loads(request_path.read_bytes()), Path("/opt/research"), work)
     except Exception as error:
-        print(canonical({"status": "failed", "error_type": type(error).__name__}).decode(), flush=True)
+        print(canonical({"status": "failed", "error_type": type(error).__name__,
+            "stage": getattr(error, "research_stage", "preflight"),
+            "cause_type": type(error.__cause__).__name__ if error.__cause__ else None}).decode(), flush=True)
         raise SystemExit(1) from None
     print(canonical({"status": "published", "success_object": result}).decode(), flush=True)
 

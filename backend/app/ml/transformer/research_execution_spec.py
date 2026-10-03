@@ -5,7 +5,7 @@ from .research_baseline import CALIBRATION_SHA, PREDICTIONS_SHA
 from .role_execution_spec import BUNDLE_SHA, PROJECT, SOURCE_RECEIPT_SHA, SUBNET, secret_selectors  # noqa: F401
 from .verification_spec import INVENTORY_SHA, OUTPUT_BUCKET, canonical, digest
 
-CAMPAIGN = "transformer-research-c4-20261002-r1"
+CAMPAIGN = "transformer-research-c4-20261003-r2"
 PREFIX = f"campaigns/wave1-research-20260816/development/{CAMPAIGN}/"
 REPOSITORY = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr"
 SLOTS = ("smoke", "search-64-0003", "search-64-001", "search-128-0003", "search-128-001",
@@ -92,6 +92,7 @@ def provider_spec(request):
         "injected_files": [{"container_path": "/opt/research/request.json"}],
         "container_command": "", "args": "", "working_dir": "", "ports": [],
         "registry_credentials": {}, "public_ip": False, "ssh_authorized_keys": [],
+        "pricing_model": {"on_demand": {}},
         "preemptible": False, "restart_attempts": "0", "shm_size_bytes": str(1024**3), "volumes": []}
 
 

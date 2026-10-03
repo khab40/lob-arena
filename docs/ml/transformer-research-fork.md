@@ -77,9 +77,9 @@ Transformer advantage exists yet.
 
 Remaining work in this research track:
 
-1. Diagnose and repair startup of the first smoke attempt, which failed before
-   model execution; preserve its consumed request and publication evidence.
-   The source-bound CUDA image was published and the exact dry-run passed.
+1. Review the [startup repair and exact replacement proposal](transformer-research-startup-repair.md).
+   The two confirmed mismatches are repaired, with replay tests, a new digest
+   image and a passing dry-run. The first attempt remains consumed and retained.
 2. Prepare any replacement within explicitly approved bounds, run the campaign,
    independently verify every
    result, then present the continue/stop decision. Keep platform maintenance

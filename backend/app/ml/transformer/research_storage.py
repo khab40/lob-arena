@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 
 from .research_execution_spec import MAX_OBJECT, MAX_OUTPUT, PREFIX, SLOTS, receipt, request_sha, validate
-from .role_execution_transport import PublicationUncertain, _body
+from .role_execution_transport import PublicationUncertain, _body, verify_sha_metadata
 from .verification_spec import OUTPUT_BUCKET, canonical, digest
 
 
@@ -36,9 +36,9 @@ class Store:
         response = self.s3.get_object(**args)
         raw, observed = _body(response, limit, args.get("VersionId"))
         self.read_bytes += len(raw)
-        if (self.read_bytes > 4 * MAX_OUTPUT or expected is not None and observed != expected
-                or response.get("Metadata", {}).get("sha256") != observed["sha256"]):
+        if self.read_bytes > 4 * MAX_OUTPUT or expected is not None and observed != expected:
             raise ValueError("versioned research artifact differs")
+        verify_sha_metadata(response, observed["sha256"])
         return raw, observed
 
     def put(self, name, raw, *, artifact=True):

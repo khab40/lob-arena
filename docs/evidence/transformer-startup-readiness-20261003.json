@@ -1,0 +1,32 @@
+{
+  "schema_version": "transformer_startup_readiness_v1",
+  "ticket": "https://github.com/khab40/lob-arena/issues/287",
+  "runtime_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image_digest": "sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "registry_index_digest": "sha256:f41f0689dcf9e702fe5d32a6bf2574055ad5e821821563faf233bfe700ee26b2",
+  "registry_child_platform": "linux/amd64",
+  "registry_child_digest_verified": true,
+  "repository_length": 47,
+  "image_python_files_match_source": 56,
+  "image_inspection_sha256": "9acfbec20d2e9f5b4df8b009a7e1c48b8bdbf77587963c3e1bdaac03868f059b",
+  "inert_transformer_tests_passed": 781,
+  "ruff": "passed",
+  "image_dependency_check": "passed",
+  "sealed_baseline_and_bundle_check": "passed",
+  "dry_run": {
+    "command": "nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-research-c4-20261003-r2-smoke --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 1h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-startup-repair-20261003/p2/execution/smoke/request.json:/opt/research/request.json --dry-run",
+    "status": "success",
+    "output": "Job validation succeeded; no resource was created.\n"
+  },
+  "live_read_only_preflight": {
+    "checked_at": "2026-10-03T14:26:26.942030+00:00",
+    "output_empty": true,
+    "slot_absent": true
+  },
+  "request_sha256": "1aecb34fc2be6a62465a7b49f54fe1791d731df25a69d8f2be9c977090d20830",
+  "model_execution": false,
+  "replacement_job_created": false,
+  "ci": "check_latest_pr_head_before_authorization",
+  "limits": "Provider validation and inert replay do not prove CUDA/runtime success.",
+  "publication_regression_sha256": "5440ce99ee52de767be154897b75b429c1133f978ec2922e43268fc3d58af57a"
+}

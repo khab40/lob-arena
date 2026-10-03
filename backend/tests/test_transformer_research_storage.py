@@ -15,6 +15,7 @@ class S3:
         self.objects = {}
         self.corrupt = False
         self.ambiguous = False
+        self.metadata_case = "sha256"
 
     def list_objects_v2(self, **args):
         return {"KeyCount": sum(name.startswith(args["Prefix"]) for name in self.objects)}
@@ -32,6 +33,7 @@ class S3:
         assert args.get("VersionId", "version-1") == "version-1"
         raw, metadata = self.objects[args["Key"]]
         raw = b"x" * len(raw) if self.corrupt else raw
+        metadata = {self.metadata_case: metadata["sha256"]}
         return {"Body": io.BytesIO(raw), "ContentLength": len(raw), "VersionId": "version-1", "Metadata": metadata}
 
 
@@ -39,8 +41,10 @@ def request():
     return template("smoke", "a" * 40, "sha256:" + "b" * 64, "c" * 64, "d" * 32, {})
 
 
-def test_durable_publication_has_terminal_inventory_and_journal():
+@pytest.mark.parametrize("metadata_case", ["sha256", "Sha256", "SHA256"])
+def test_durable_publication_has_terminal_inventory_and_journal(metadata_case):
     s3, req = S3(), request()
+    s3.metadata_case = metadata_case
     store = Store(s3, req)
     store.claim()
     store.event("started", {})
