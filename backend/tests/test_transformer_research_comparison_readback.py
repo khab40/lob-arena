@@ -15,7 +15,7 @@ def fixture(monkeypatch):
     split = SimpleNamespace(role="operating_point", labels=y, target_ids=ids)
     baseline = {"operating_point": {"target_ids": ids, "labels": y, "raw_probabilities": probs,
         "frozen_calibration": {"isotonic_x": [0., 1.], "isotonic_y": [0., 1.]},
-        "families": ["fixture"] * 40}}
+        "families": ["control", "fixture"] * 20}}
     winner = {"trial_sha256": "a" * 64, "trial": {"width": 64, "learning_rate": .0003}}
     stability = {"passed": True}
     monkeypatch.setattr(readback, "load", lambda *args: (baseline, thresholds, {}))
@@ -26,7 +26,8 @@ def fixture(monkeypatch):
         "calibration": {"temperature": 1., "objective_log_loss": float(np.log(2)),
             "fitting_role": "calibration", "solver": "golden_section_v1", "converged": True,
             "evaluations": 40}, "comparison": comparison,
-        "per_family": {"fixture": {"rows": 40, "positives": 20,
+        "per_family": {"fixture": {"population": "family_positives_plus_shared_controls",
+            "threshold": .5, "rows": 40, "positives": 20, "negatives": 20,
             "transformer": metrics(y, probs), "lightgbm": metrics(y, probs)}},
         "freeze_blocked": comparison["freeze_blocked"], "inference": {"elapsed_seconds": 1., "rows": 40}}
     artifacts = {k: b"fixture" for k in ("baseline-predictions.parquet", "baseline-calibration.json",
@@ -39,12 +40,15 @@ def test_independent_comparison_accepts_saved_arithmetic(monkeypatch):
     assert readback.verify(*fixture(monkeypatch))["comparison_verified"]
 
 
-@pytest.mark.parametrize("field", ["family", "nan", "objective", "winner", "duration", "freeze"])
+@pytest.mark.parametrize("field", ["family", "positive_only", "nan", "objective", "winner", "duration", "freeze"])
 def test_report_tampering_is_rejected(monkeypatch, field):
     args = fixture(monkeypatch)
     result = args[0]
     if field == "family":
         result["per_family"]["fixture"]["rows"] = 41
+    elif field == "positive_only":
+        result["per_family"]["fixture"].update(rows=20, positives=20, negatives=0)
+        result["per_family"]["fixture"]["transformer"].update(precision=1., f1=1., false_positive=0)
     elif field == "nan":
         result["calibration"]["objective_log_loss"] = float("nan")
     elif field == "objective":

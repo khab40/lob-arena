@@ -5,7 +5,7 @@ import time
 import numpy as np
 import torch
 
-from .research_evaluation import compare, fit_temperature, metrics, sigmoid
+from .research_evaluation import compare, family_comparison, fit_temperature, sigmoid
 from .research_model import SequenceClassifier
 from .research_policy import Trial, class_session_weights, seed_stability, select_grid
 from .research_smoke import run_smoke
@@ -96,13 +96,9 @@ def run(slot, splits, bindings, baseline, thresholds, prior, store, work, expire
     probabilities = np.interp(baseline_o["raw_probabilities"], frozen["isotonic_x"], frozen["isotonic_y"])
     comparison = compare(splits["operating_point"], logits["operating_point"], calibration["temperature"],
         baseline_o["target_ids"], baseline_o["labels"], probabilities, thresholds)
-    families = {}
     calibrated = sigmoid(logits["operating_point"] / calibration["temperature"])
-    for family in sorted(set(baseline_o["families"])):
-        mask = np.array([value == family for value in baseline_o["families"]])
-        families[family] = {"rows": int(mask.sum()), "positives": int(splits["operating_point"].labels[mask].sum()),
-            "transformer": metrics(splits["operating_point"].labels[mask], calibrated[mask]),
-            "lightgbm": metrics(baseline_o["labels"][mask], probabilities[mask])}
+    families = family_comparison(splits["operating_point"].labels, baseline_o["families"],
+                                 calibrated, probabilities)
     torch.cuda.synchronize()
     started = time.monotonic()
     predict(model, splits["operating_point"], expires=expires - 120)

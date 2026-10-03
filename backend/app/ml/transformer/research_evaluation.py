@@ -76,6 +76,32 @@ def metrics(labels, probabilities, threshold=0.5):
             **reliability.model_dump(), "reliability_bins": bins}
 
 
+def family_comparison(labels, families, transformer_probabilities, baseline_probabilities):
+    """Each family's positives versus shared controls, at threshold 0.5.
+
+    Controls are reused across families; these overlapping populations must not
+    be summed into campaign totals. Other families' positives are excluded.
+    """
+    labels, transformer = checked(labels, transformer_probabilities)
+    _, baseline = checked(labels, baseline_probabilities)
+    families = np.asarray(families)
+    if (families.shape != labels.shape or any(not isinstance(f, str) or not f for f in families)
+            or set(labels.tolist()) != {0, 1} or np.any((families == "control") & (labels == 1))):
+        raise ValueError("aligned named attack positives and negative controls required")
+    for probabilities in (transformer, baseline):
+        if np.any((probabilities < 0) | (probabilities > 1)):
+            raise ValueError("family probabilities must be in [0,1]")
+    controls = labels == 0
+    results = {}
+    for family in sorted(set(families[labels == 1])):
+        mask = controls | ((families == family) & (labels == 1))
+        results[family] = {"population": "family_positives_plus_shared_controls", "threshold": 0.5,
+            "rows": int(mask.sum()), "positives": int(labels[mask].sum()), "negatives": int(controls.sum()),
+            "transformer": metrics(labels[mask], transformer[mask]),
+            "lightgbm": metrics(labels[mask], baseline[mask])}
+    return results
+
+
 def compare(split, logits, temperature, baseline_ids, baseline_labels, baseline_probabilities, baseline_thresholds):
     if split.role != "operating_point" or not 0.05 <= temperature <= 20:
         raise ValueError("bounded temperature and operating-point role required")

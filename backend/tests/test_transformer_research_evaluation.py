@@ -5,7 +5,7 @@ import pytest
 
 np = pytest.importorskip("numpy")
 
-from app.ml.transformer.research_evaluation import compare, metrics  # noqa: E402
+from app.ml.transformer.research_evaluation import compare, family_comparison, metrics  # noqa: E402
 
 
 def fixture():
@@ -66,3 +66,39 @@ def test_calibration_regression_blocks_freeze():
     arguments["temperature"] = 20.
     result = compare(**arguments)
     assert result["calibration_worsened_brier_and_ece"] and result["freeze_blocked"]
+
+
+def test_family_comparison_includes_shared_false_alerts_but_not_other_attacks():
+    labels = [0, 1, 0, 1, 1]
+    families = ["control", "layering", "control", "wall", "wall"]
+    # Transformer alerts on everything; baseline correctly separates all rows.
+    report = family_comparison(labels, families, [.9] * 5, [.1, .9, .1, .9, .9])
+    assert set(report) == {"layering", "wall"}
+    for family, positives in (("layering", 1), ("wall", 2)):
+        item = report[family]
+        assert item["population"] == "family_positives_plus_shared_controls"
+        assert item["threshold"] == .5
+        assert item["rows"] == positives + 2
+        assert item["positives"] == positives and item["negatives"] == 2
+        assert item["transformer"]["false_positive"] == 2
+        assert item["transformer"]["precision"] == pytest.approx(positives / (positives + 2))
+        assert item["transformer"]["f1"] == pytest.approx(2 * positives / (2 * positives + 2))
+        assert item["lightgbm"]["f1"] == 1
+    # Changing another family's positive cannot change layering metrics.
+    changed = family_comparison(labels, families, [.9, .9, .9, .1, .1], [.1, .9, .1, .9, .9])
+    assert changed["layering"] == report["layering"]
+    assert changed["wall"]["transformer"]["recall"] == 0
+
+
+@pytest.mark.parametrize("labels,families,probabilities", [
+    ([1, 1], ["wall", "wall"], [.9, .9]),
+    ([0, 0], ["control", "control"], [.1, .1]),
+    ([0, 1], ["control", "control"], [.1, .9]),
+    ([0, 1], ["control"], [.1, .9]),
+    ([0, 1], ["control", ""], [.1, .9]),
+    ([0, 1], ["control", "wall"], [.1, float("nan")]),
+    ([0, 1], ["control", "wall"], [.1, 1.1]),
+])
+def test_family_comparison_rejects_invalid_populations(labels, families, probabilities):
+    with pytest.raises(ValueError):
+        family_comparison(labels, families, probabilities, probabilities)

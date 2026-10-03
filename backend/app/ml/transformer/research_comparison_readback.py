@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import numpy as np
 
 from .research_baseline import align, load
-from .research_evaluation import compare, metrics, sigmoid
+from .research_evaluation import compare, family_comparison, sigmoid
 from .research_policy import Trial, seed_stability, select_grid
 from .verification_spec import canonical
 
@@ -47,12 +47,7 @@ def verify(result, artifacts, metadata, prior, predictions):
     comparison = compare(split, z, temperature, b["target_ids"], b["labels"], probabilities, thresholds)
     if canonical(comparison) != canonical(result["comparison"]):
         raise ValueError("reported comparison differs from frozen predictions")
-    families = {}
-    for family in sorted(set(b["families"])):
-        mask = np.array([value == family for value in b["families"]])
-        families[family] = {"rows": int(mask.sum()), "positives": int(y[mask].sum()),
-            "transformer": metrics(y[mask], sigmoid(z[mask] / temperature)),
-            "lightgbm": metrics(y[mask], probabilities[mask])}
+    families = family_comparison(y, b["families"], sigmoid(z / temperature), probabilities)
     if canonical(families) != canonical(result["per_family"]):
         raise ValueError("per-family metrics differ from saved predictions")
     if result["freeze_blocked"] != (comparison["freeze_blocked"] or not stability["passed"]):

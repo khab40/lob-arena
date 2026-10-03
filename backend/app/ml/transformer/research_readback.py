@@ -23,7 +23,7 @@ def predictions(raw, ledger, role, metadata):
     return np.array([r["label"] for r in rows]), np.array([r["logit"] for r in rows])
 
 
-def verify_trial(result, artifacts, inventory, metadata):
+def verify_trial(result, artifacts, inventory, metadata, *, slot):
     trial = Trial(**result["trial"])
     if result["trial_sha256"] != trial.sha256():
         raise ValueError("trial identity differs")
@@ -52,6 +52,12 @@ def verify_trial(result, artifacts, inventory, metadata):
             or len(history) < 30 and stale < 5):
         raise ValueError("selected epoch or stopping rule differs")
     selected = result["selected_checkpoint"]
+    name = f"epoch-{best_epoch:02}.pt"
+    published = [item for item in result["published_checkpoints"] if item.get("epoch") == best_epoch]
+    if (type(selected.get("epoch")) is not int or selected["epoch"] != best_epoch
+            or selected.get("name") != name or selected.get("object_name") != f"{slot}-{name}"
+            or len(published) != 1 or published[0] != selected):
+        raise ValueError("selected checkpoint differs from the verified best epoch publication")
     if inventory.get(selected["object_name"]) != {k: selected[k] for k in ("sha256", "size_bytes", "version_id")}:
         raise ValueError("selected checkpoint is absent from immutable inventory")
     return {**result, "status": "verified"}
@@ -103,7 +109,7 @@ def collect(store, slot, success, expected_request_sha, bundle, source, metadata
                 raise ValueError("grid slot configuration differs")
         elif result["trial"]["seed"] != int(slot.split("-")[1]):
             raise ValueError("confirmation slot seed differs")
-        result = verify_trial(result, artifacts, inventory, metadata)
+        result = verify_trial(result, artifacts, inventory, metadata, slot=slot)
     elif slot == "smoke":
         if (result["checks"]["status"] != "verified" or result["real_data"]["optimizer_steps"] != 32
                 or result["real_data"]["rows"] != 1024 or result["real_data"]["epochs"] != 2):
