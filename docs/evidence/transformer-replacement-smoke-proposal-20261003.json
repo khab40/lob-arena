@@ -1,0 +1,115 @@
+{
+  "schema_version": "transformer_replacement_smoke_proposal_v1",
+  "status": "awaiting_operator_approval",
+  "date": "2026-10-03",
+  "ticket": "https://github.com/khab40/lob-arena/issues/287",
+  "parent": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "runtime_source_commit": "2e51af264e92725b04795bd7ac2bebb09113c5a8",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:10ba1c63035b35842c44b069cbf8e2f5fe16c810c491b5e99c2e1b6f685da242",
+  "request_file": "outputs/transformer-startup-repair-20261003/execution/smoke/request.json",
+  "request_sha256": "1e2fa7c48e783ae3f4c36f9cf0b35383bda1def92ee5221b31b7c3b7c51adb27",
+  "run_id": "transformer-research-c4-20261003-r2-smoke",
+  "output_bucket": "aimada-wave1-results-e00g6zvxpr00",
+  "output_prefix": "campaigns/wave1-research-20260816/development/transformer-research-c4-20261003-r2/smoke/",
+  "consumed_attempt": {
+    "job_id": "aijob-e00qpnac5v335pddbn",
+    "state": "FAILED",
+    "request_sha256": "0f3ab3b994f530c98a8012874cd435acf453eb3f01b282d6bb7ee16e395f8252",
+    "model_execution": false,
+    "retain_unchanged": true
+  },
+  "resources": {
+    "disk_gib": 100,
+    "max_output_bytes": 2147483648,
+    "platform": "gpu-l40s-a",
+    "preemptible": false,
+    "preset": "1gpu-8vcpu-32gb",
+    "publication_reserve_seconds": 600,
+    "restart_policy": "never",
+    "shm_bytes": 1073741824,
+    "timeout_seconds": 3600,
+    "maximum_new_jobs": 1,
+    "concurrency": 1
+  },
+  "inputs": {
+    "development_objects": 185,
+    "size_bytes": 30034660,
+    "baseline_calibration_sha256": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30",
+    "baseline_predictions_sha256": "828e261801aa36ab55c02fbe199bbd00ce44b8cef64dd0e0a183d0f6e0913f76",
+    "bundle_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+    "input_inventory_sha256": "d99876f0119c0a86e2395a7c61f4919b09506557f21b18dd8ef8e32b84dd0e23",
+    "source_receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae"
+  },
+  "scope": [
+    "authenticate governed development inputs and role support",
+    "CUDA causal, mask, gradient, batch, resume and calibration checks",
+    "1024-row real-data smoke: 2 epochs, at most 32 optimizer steps",
+    "signed provider context, durable publication and independent readback"
+  ],
+  "transport_bounds": {
+    "max_object_bytes": 134217728,
+    "max_output_bytes": 2147483648,
+    "per_store_max_gets": 1024,
+    "per_store_max_read_bytes": 8589934592,
+    "source_download_gets": 185,
+    "source_download_separate_from_store_budget": true,
+    "operator_and_worker_store_budgets_are_separate": true,
+    "read_only_transient_timeouts_seconds": [
+      30,
+      60,
+      90,
+      120
+    ],
+    "automatic_publication_retry": false,
+    "automatic_job_replacement": false
+  },
+  "campaign_accounting": {
+    "original_job_limit": 8,
+    "original_timeout_hours": 14,
+    "consumed_jobs": 1,
+    "additional_smoke_timeout_hours_requested": 1,
+    "potential_total_jobs_including_consumed_attempt": 9,
+    "potential_total_timeout_hours_including_consumed_attempt": 15,
+    "remaining_seven_slots_authorized_by_this_proposal": false
+  },
+  "cost": {
+    "policy": "operator_managed_alerts",
+    "actual_cost": "unknown",
+    "pricing_model": "on_demand",
+    "published_starting_gpu_hour_usd": 1.55,
+    "price_source": "https://nebius.com/prices",
+    "price_checked_date": "2026-10-03",
+    "one_hour_compute_at_starting_rate_usd": 1.55,
+    "hard_dollar_cap": null,
+    "limitations": "Starting price is not an exact quote or hard cap; provisioning, storage and taxes can add cost."
+  },
+  "no_authorization_for": [
+    "grid or seed Jobs",
+    "final-test access",
+    "G8/G9 rerun",
+    "new IAM grants",
+    "MLflow maintenance",
+    "production promotion",
+    "merge",
+    "deletion"
+  ],
+  "bound_files_sha256": {
+    "configs/experiments/transformer/c4-campaign-20260928.json": "cd39f54d6ab05ee543b4970a2402700b02da30d0d0535a03ad3f6afa59dd6322",
+    "configs/experiments/transformer/research-fork-20261002.json": "26bf717904f6dddf1830acfd910ca6d9bc8974d80436183b9fc41a25f10baf3b",
+    "scripts/transformer_research_operator.py": "30ae20ed15e47508edb8e8cfa6db4e07442fef0622841fded50004e1afbf017c",
+    "docs/evidence/transformer-research-startup-diagnosis-20261003.json": "c8bf70c92111bf4a1f82059540c86baf05304e09fc8074f35160e1a9a4dfc4e3",
+    "docs/evidence/transformer-startup-readiness-20261003.json": "b26633411606fabff2c4991ca5e49f806e33eb0d3f06a8da1a5862f3cd4b16b0"
+  },
+  "create_command": "nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-research-c4-20261003-r2-smoke --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:10ba1c63035b35842c44b069cbf8e2f5fe16c810c491b5e99c2e1b6f685da242 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 1h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-startup-repair-20261003/execution/smoke/request.json:/opt/research/request.json",
+  "launch_gates": [
+    "latest PR head review and CI pass",
+    "explicit approval of this proposal SHA-256",
+    "reverify immutable image, request and bound files",
+    "repeat read-only name/prefix preflight",
+    "start operator attester before the single create",
+    "create once, retain returned Job identity"
+  ],
+  "completion_gate": "COMPLETED plus independently verified SUCCESS, context, hashes, smoke checks and result",
+  "abort_policy": "Preserve failed/ambiguous attempt; inspect without resubmission. No automatic replacement."
+}
