@@ -159,6 +159,7 @@ jobs:
           tests/test_transformer_role_execution_publisher.py tests/test_transformer_role_deadline.py
           tests/test_transformer_role_execution_transport.py
           tests/test_transformer_research_policy.py tests/test_transformer_research_evaluation.py
+          tests/test_transformer_research_progress.py
           tests/test_transformer_research_stability.py
           tests/test_transformer_research_storage.py tests/test_transformer_research_readback.py
           tests/test_transformer_research_operator.py
