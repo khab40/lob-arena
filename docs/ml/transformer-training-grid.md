@@ -7,7 +7,9 @@ instructed: “Prepare and authorize the **four training trials**: widths 64/128
 learning rates 0.0003/0.001, seed 42; sequential, maximum two hours each.”
 That instruction authorizes this existing grid scope; it is retained verbatim in
 the [exact request package](../evidence/transformer-training-grid-authorization-20261003.json).
-The package records authorization, not a claim that training has run.
+The package is the immutable authorization record. **Execution is complete:**
+all four Jobs passed independent verification; see the
+[results and next steps](transformer-training-grid-results.md).
 
 As a researcher,
 I want the four predeclared Transformer configurations trained on governed inputs,
@@ -61,7 +63,7 @@ Four Jobs allocate at most eight timeout-hours. Under
 [Bug #292](https://github.com/khab40/lob-arena/issues/292), the operator approved
 **$50 additional; $350 total excluding VAT**. The $300 already spent in 2026 is
 an operator-reported baseline as of October 3, not independently reconciled
-billing or a new allowance. Actual incremental trial charges remain unknown.
+billing or a new allowance. Actual incremental trial charges remain unreconciled.
 No replacement is included.
 
 Before each create, the operator must retain a spend-ledger entry showing
@@ -70,8 +72,9 @@ reservation for the next trial <= $50 excluding VAT. Include provisioning,
 runtime, disk, requests, transfer and retained-artifact storage; unknown or
 unbounded components block submission. Do not treat a published starting price
 as a worst-case quote. This is an operator-managed admission limit, not an
-automatic provider billing cutoff. The first reservation and current pricing
-evidence are still required before execution; no Job has been submitted.
+automatic provider billing cutoff. Execution retained current pricing evidence
+and four $12.50 reservations; all four Jobs completed and verified. The full
+$50 stays reserved until billing reconciliation and cannot fund extra Jobs.
 Keep the ledger in root `outputs/transformer-grid-20261003/spend-ledger.json`.
 
 Inputs remain the pinned governed development corpus: 33,450 training rows and
@@ -86,13 +89,16 @@ and replayable MLflow events in its separate versioned S3 prefix. The bound is
 ## Verification and execution handoff
 
 Preparation passed all four immutable-request checks, all four provider dry-runs
-and read-only checks that the four names/prefixes were unused. No Job was created.
+and read-only checks that the four names/prefixes were unused before creation.
 The 14 existing inert policy tests passed, including refusal to select from an
 incomplete/duplicate/failed grid and deterministic tie-breaking. Secret scanning
 and whitespace checks passed. No local training or scoring was performed.
 The retained local receipts are in root `outputs/transformer-grid-20261003/`.
 Exact requests and existing private signing custody stay in root
 `outputs/transformer-startup-repair-20261003/p2/execution/`; do not regenerate them.
+
+The procedure below was completed for each slot; do not replay consumed requests.
+The separate result record binds all four Job identities and verified outputs.
 
 1. Review this package and its CI; satisfy the spend-ledger gate above before
    each Job. Before execution, recheck request hashes,
