@@ -12,6 +12,11 @@ binds the authorization, runtime, per-trial receipts, selected checkpoints and
 resource measurements. The [original execution package](transformer-training-grid.md)
 records the bounds and behavioral acceptance criteria.
 
+[Per-experiment reports and charts](experiments/transformer-grid-20261003/index.md)
+show the recorded epoch losses, selection F1 and selected-checkpoint errors.
+The [reporting workflow](transformer-run-reporting.md) generates these from verified
+artifacts after collection, before online MLflow reconciliation.
+
 ## Results and interpretation
 
 All trials used 33,450 training rows and the same 1,250-row selection fold

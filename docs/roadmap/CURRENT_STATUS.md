@@ -9,6 +9,9 @@ Winner: **width 128, learning rate 0.0003, epoch 4**, selection log loss
 0.00243783 and selection F1 at 0.5 of 1.0. The 1,250-row selection fold has only
 45 positives and was used for tuning; this does not establish a LightGBM win.
 [Results, measurements, evidence and next steps](../ml/transformer-training-grid-results.md).
+[Per-run Markdown reports and charts](../ml/experiments/transformer-grid-20261003/index.md)
+are backfilled from verified artifacts; future training collections can use the
+[automatic report handoff](../ml/transformer-run-reporting.md). No new model run is needed.
 
 Total provider runtime was 23m41s; 132 artifacts / 125.78 MB are independently
 verified and durably retained. All four grid Jobs are terminal. The approved
