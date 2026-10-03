@@ -100,3 +100,7 @@ zero, actual PNG output, idempotent reuse, rendering failure and an early collec
 failure before artifact creation. An exclusive attempt receipt prevents automatic
 recollection in that last case. Independent review and rendered inspection passed.
 No GPU image, operator helper, prior authorization or original run artifact changed.
+
+[Live epoch and selection logs](transformer-training-progress.md) complement these
+post-run reports in future runtime packages. That implementation has separate
+runtime compatibility requirements; it does not change the completed grid image.

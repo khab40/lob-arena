@@ -12,6 +12,12 @@ Winner: **width 128, learning rate 0.0003, epoch 4**, selection log loss
 [Per-run Markdown reports and charts](../ml/experiments/transformer-grid-20261003/index.md)
 are backfilled from verified artifacts; future training collections can use the
 [automatic report handoff](../ml/transformer-run-reporting.md). No new model run is needed.
+The [live training progress implementation](../ml/transformer-training-progress.md)
+adds phase/epoch logs, checkpoint and grid-selection summaries for future runtime
+packages; 90 inert tests and independent review pass. It is not deployed into the
+completed grid's sealed image. Current dependency checks require identical source
+and image identities, so retain the pinned campaign runtime unless an explicit
+compatibility package is reviewed.
 
 Total provider runtime was 23m41s; 132 artifacts / 125.78 MB are independently
 verified and durably retained. All four grid Jobs are terminal. The approved
