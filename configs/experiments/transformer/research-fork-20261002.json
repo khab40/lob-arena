@@ -1,6 +1,6 @@
 {
   "schema_version": "transformer_research_protocol_v1",
-  "status": "implementation_in_progress_not_execution_authorization",
+  "status": "execution_packaging_not_a_job_request",
   "ticket": "https://github.com/khab40/lob-arena/issues/24",
   "base_config": "configs/experiments/transformer/c4-campaign-20260928.json",
   "base_config_sha256": "cd39f54d6ab05ee543b4970a2402700b02da30d0d0535a03ad3f6afa59dd6322",
@@ -14,13 +14,13 @@
     "maximum_gpu_jobs": 8, "maximum_planned_gpu_hours": 14,
     "smoke_timeout_seconds": 3600, "trial_timeout_seconds": 7200,
     "inference_timeout_seconds": 3600, "concurrency": 1,
-    "ephemeral_disk_gib": 100, "input_cache_gib": 8,
+    "ephemeral_disk_gib": 100, "shared_memory_gib": 1, "input_cache_gib": 8,
     "output_per_job_gib": 2, "output_total_gib": 20,
     "publication_reserve_seconds": 600, "restart_policy": "never",
     "automatic_replacement": false, "cost_policy": "operator_managed_alerts"
   },
   "tracking": {"primary": "versioned_artifacts_and_event_journal", "mlflow_online_required": false, "mlflow_reconcile_required_later": true},
-  "baseline": {"model": "frozen_c4_lightgbm", "exact_ordered_targets_and_labels": true, "availability": "unverified", "fallback_scoring": "must_be_explicit_in_sealed_package"},
+  "baseline": {"model": "frozen_c4_lightgbm", "exact_ordered_targets_and_labels": true, "availability": "9210_saved_validation_rows_verified", "prediction_sha256": "828e261801aa36ab55c02fbe199bbd00ce44b8cef64dd0e0a183d0f6e0913f76", "calibration_sha256": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30", "fallback_scoring": "not_needed", "latency": "not_measured_saved_predictions_reused"},
   "decision": {"outcomes": ["continue_research", "stop_transformer", "inconclusive"], "automatic_search_expansion": false, "final_test": false, "production_promotion": false},
   "execution_package": {"image_digest": null, "source_commit": null, "output_prefix": null, "request_sha256": null, "status": "not_sealed"}
 }

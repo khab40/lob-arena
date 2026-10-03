@@ -1,0 +1,2 @@
+-r ../transformer_inputs/requirements.txt
+torch==2.13.0+cu126

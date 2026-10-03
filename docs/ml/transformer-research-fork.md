@@ -66,22 +66,55 @@ acknowledgement requires a version ID and matching checksum. Trial completion
 remains pending independent verification, and the grid selector rejects it until
 the verifier reports success.
 
-Local verification: 32 inert policy, saved-prediction arithmetic, alignment and
-seed-receipt tests. GPU-only mask, causal, gradient, batch, resume and calibration
+Local verification covers inert policy, saved-prediction arithmetic, alignment,
+seed receipts, versioned publication faults and operator handshake. GPU-only mask,
+causal, gradient, batch, resume and calibration
 checks are implemented but have not run. Neither a trained model nor a measured
 Transformer advantage exists yet.
 
 Remaining work in this research track:
 
-1. Wire the reviewed input transport, versioned publisher and event journal into
-   the worker; publish failures and negative class-support results durably.
-2. Pin/build the CUDA runtime and bind source, dependency, image and request
-   identities. Complete the real-data smoke and per-family/resource reporting.
-3. Verify frozen LightGBM prediction availability on the exact development rows.
-   Include any required frozen-model scoring explicitly within the execution bounds.
-4. Seal the package, run the bounded GPU campaign, independently verify every
+1. Seal and publish the implemented worker's CUDA image, bound to its source,
+   hash-locked dependencies, authenticated input metadata and frozen baseline.
+2. Run the bounded GPU campaign, independently verify every
    result, then present the continue/stop decision. Keep platform maintenance
    deferred; reconcile MLflow from retained artifacts afterward.
+
+## Execution package — 2026-10-03
+
+The worker reads 185 pinned development objects (30,034,660 bytes), verifies
+class support and ordered targets, then trains only inside Nebius Jobs. The
+first slot performs CUDA behavior checks and a 1,024-row, two-epoch real-data
+smoke before any full trial. All eight slots use one L40S, 8 vCPU, 32 GiB RAM,
+100 GiB disk and explicit 1 GiB shared memory; concurrency remains one.
+
+The versioned S3 publisher conditionally creates every artifact, reads back its
+exact version and checksum, and publishes SUCCESS only after the result,
+inventory and linked event journal are durable. Ambiguous writes stop without
+retrying. Checkpoints retain optimizer/RNG state and source/data/config bindings.
+The independent reader validates selected epochs, saved-logit metrics, seed
+stability, calibration optimality and per-family results without loading weights.
+
+The operator helper checks its SDK before retrieving existing development
+credentials into memory. It binds a freshly observed provider Job to the signed
+request and refuses expired worker intents. Read-only orchestration permits
+three transient retries with 30/60/90/120-second timeouts; permission errors and
+ambiguous mutations are not retried. Provisioning time is separate from the
+worker's five-minute context handshake. No permissions are added by this package.
+
+Frozen LightGBM predictions are available for all 9,210 validation targets:
+selection 1,250, calibration 5,490, operating point 2,470. Original prediction IDs
+are authenticated and mapped through frozen run lineage to governed target IDs;
+ordered hashes and labels are checked again in the worker. The saved raw scores
+use the existing frozen isotonic mapping; no LightGBM refit or rescore is needed.
+Its calibrator previously saw the full validation fold, which remains a comparison
+limitation. LightGBM latency is unmeasured because saved predictions are reused.
+
+Implementation and receipts belong to [PR #284](https://github.com/khab40/lob-arena/pull/284).
+Exact execution requests, signing custody and readback evidence are retained in
+the root `outputs/transformer-research-fork-20261002/` directory. The protocol
+amendment's null package fields are not execution authority: the operator helper
+creates separate immutable requests only after the source/image identities exist.
 
 The protocol permits at most eight GPU Jobs: smoke, four grid trials, two seed
 confirmations and inference/calibration comparison. Their existing timeouts total
