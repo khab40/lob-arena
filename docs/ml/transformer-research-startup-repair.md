@@ -55,16 +55,16 @@ the stage and exception types without exposing exception text. A failed claim
 cannot publish into an occupied or unverified prefix. The new campaign uses
 `transformer-research-c4-20261003-r2`; the consumed r1 evidence is unchanged.
 
-Verification: 776 inert Transformer tests, Ruff and diff checks passed. Tests
+Verification: 781 inert Transformer tests, Ruff and diff checks passed. Tests
 replay the actual provider spec and mixed-case SDK response through claim,
 operator signing and worker context verification. The sealed linux/amd64 image
 passed dependency/baseline checks; all 56 Transformer Python files match source
-`2e51af264e92725b04795bd7ac2bebb09113c5a8`. The published child digest is
-`sha256:10ba1c63035b35842c44b069cbf8e2f5fe16c810c491b5e99c2e1b6f685da242`.
+`87ce8a933c40fe825569e3de6a8699b519808c34`. The published child digest is
+`sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9`.
 Later documentation commits do not change this runtime source.
 
 The exact provider dry-run passed without creating a resource. Live read-only
-preflight found the name and prefix unused at 13:12:41 UTC.
+preflight found the name and prefix unused at 14:26:26 UTC.
 [Readiness receipt](../evidence/transformer-startup-readiness-20261003.json).
 Neither inert tests nor dry-run prove CUDA execution or a model-quality result.
 
@@ -75,10 +75,12 @@ terminal publication diagnostics: failures in `result.json` or `SUCCESS`
 publication now report `publication`, preserving any committed object without
 retry or another marker. Four injected PUT/readback faults reproduced the wrong
 `preflight` stage before the repair; the successful completion control passed.
-The repair and five regression cases are inert; no model runs locally.
+All five regression cases now pass; no model runs locally.
+[Regression receipt](../evidence/transformer-publication-p2-regression-20261003.json).
+The unexecuted proposal starting `f86cdb69` is superseded by the hash below.
 
 [Proposal JSON](../evidence/transformer-replacement-smoke-proposal-20261003.json),
-SHA-256 `f86cdb69bad0599d60c53271155959f2eeefb6ba01bdc6325509f7d7ea741e0d`.
+SHA-256 `be433e78cd6dc731b6e143bd29f05e07622a5338ad7a6c8f585641f68e2cecd1`.
 It binds the source, immutable image, exact request, configuration and command.
 Approval is pending. This proposes one smoke Job: one L40S, 8 vCPU, 32 GiB RAM,
 100 GiB disk, 1 GiB shared memory, one hour, restart never, concurrency one.
@@ -99,7 +101,7 @@ the existing operator-managed policy. [Price source](https://nebius.com/prices).
    exact proposal hash. Recheck image digest, request and bound-file hashes.
 2. Use the pinned root operator venv and this runtime's `PYTHONPATH`. Run
    `transformer_research_operator.py preflight` again with evidence directory
-   `outputs/transformer-startup-repair-20261003/execution` and slot `smoke`.
+   `outputs/transformer-startup-repair-20261003/p2/execution` and slot `smoke`.
 3. Start the same helper's `attest` action before the single create command in
    the proposal. It waits for the worker INTENT, rechecks the provider, and signs
    the exact context. Keep the attester running during provisioning; retain its

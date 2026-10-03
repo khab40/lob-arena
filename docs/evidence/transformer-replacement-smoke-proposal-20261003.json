@@ -5,10 +5,10 @@
   "ticket": "https://github.com/khab40/lob-arena/issues/287",
   "parent": "https://github.com/khab40/lob-arena/issues/24",
   "project": "https://github.com/users/khab40/projects/3",
-  "runtime_source_commit": "2e51af264e92725b04795bd7ac2bebb09113c5a8",
-  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:10ba1c63035b35842c44b069cbf8e2f5fe16c810c491b5e99c2e1b6f685da242",
-  "request_file": "outputs/transformer-startup-repair-20261003/execution/smoke/request.json",
-  "request_sha256": "1e2fa7c48e783ae3f4c36f9cf0b35383bda1def92ee5221b31b7c3b7c51adb27",
+  "runtime_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "request_file": "outputs/transformer-startup-repair-20261003/p2/execution/smoke/request.json",
+  "request_sha256": "1aecb34fc2be6a62465a7b49f54fe1791d731df25a69d8f2be9c977090d20830",
   "run_id": "transformer-research-c4-20261003-r2-smoke",
   "output_bucket": "aimada-wave1-results-e00g6zvxpr00",
   "output_prefix": "campaigns/wave1-research-20260816/development/transformer-research-c4-20261003-r2/smoke/",
@@ -99,9 +99,10 @@
     "configs/experiments/transformer/research-fork-20261002.json": "26bf717904f6dddf1830acfd910ca6d9bc8974d80436183b9fc41a25f10baf3b",
     "scripts/transformer_research_operator.py": "30ae20ed15e47508edb8e8cfa6db4e07442fef0622841fded50004e1afbf017c",
     "docs/evidence/transformer-research-startup-diagnosis-20261003.json": "c8bf70c92111bf4a1f82059540c86baf05304e09fc8074f35160e1a9a4dfc4e3",
-    "docs/evidence/transformer-startup-readiness-20261003.json": "b26633411606fabff2c4991ca5e49f806e33eb0d3f06a8da1a5862f3cd4b16b0"
+    "docs/evidence/transformer-startup-readiness-20261003.json": "e4d1480c701aff62e4291a97eb367d260c86b812f88d3384bc1b995a22e25695",
+    "docs/evidence/transformer-publication-p2-regression-20261003.json": "5440ce99ee52de767be154897b75b429c1133f978ec2922e43268fc3d58af57a"
   },
-  "create_command": "nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-research-c4-20261003-r2-smoke --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:10ba1c63035b35842c44b069cbf8e2f5fe16c810c491b5e99c2e1b6f685da242 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 1h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-startup-repair-20261003/execution/smoke/request.json:/opt/research/request.json",
+  "create_command": "nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-research-c4-20261003-r2-smoke --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 1h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-startup-repair-20261003/p2/execution/smoke/request.json:/opt/research/request.json",
   "launch_gates": [
     "latest PR head review and CI pass",
     "explicit approval of this proposal SHA-256",
@@ -111,5 +112,7 @@
     "create once, retain returned Job identity"
   ],
   "completion_gate": "COMPLETED plus independently verified SUCCESS, context, hashes, smoke checks and result",
-  "abort_policy": "Preserve failed/ambiguous attempt; inspect without resubmission. No automatic replacement."
+  "abort_policy": "Preserve failed/ambiguous attempt; inspect without resubmission. No automatic replacement.",
+  "supersedes_unexecuted_proposal_sha256": "f86cdb69bad0599d60c53271155959f2eeefb6ba01bdc6325509f7d7ea741e0d",
+  "review_fix_ticket": "https://github.com/khab40/lob-arena/issues/289"
 }

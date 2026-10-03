@@ -7,7 +7,8 @@ the P2 repairs. [Bug #287](https://github.com/khab40/lob-arena/issues/287), unde
 startup mismatches: SDK checksum-key casing and explicit provider on-demand pricing.
 The old INTENT bytes were correct; its checksum metadata was present as `Sha256`.
 
-The corrected digest image is published. All 776 inert Transformer tests passed;
+The corrected digest image includes the [P2 publication-stage repair](https://github.com/khab40/lob-arena/issues/289).
+The unexecuted earlier proposal is superseded; use the refreshed hash in the runbook. All 781 inert Transformer tests passed;
 the exact provider dry-run passed, and read-only preflight found the new name and
 prefix unused. No replacement Job has been created and no model-quality result
 exists. [Diagnosis, verification and execution handoff](../ml/transformer-research-startup-repair.md).
