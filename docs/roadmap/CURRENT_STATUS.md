@@ -1,5 +1,12 @@
 ## 2026-10-03 — Transformer architecture recorded; smoke failed before fitting
 
+P2 review repairs are implemented under [Bug #286](https://github.com/khab40/lob-arena/issues/286):
+per-family comparisons include shared controls, and the selected checkpoint must
+match the best epoch, slot and published receipt. See the
+[repair acceptance and next-days plan](../ml/transformer-research-p2-repair-plan.md).
+These repairs do not resolve the separate startup publication/context failure
+or establish a trained model. Latest-head CI is tracked on the PR.
+
 [PR #284](https://github.com/khab40/lob-arena/pull/284),
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).

@@ -96,6 +96,9 @@ negatives. Insufficient support blocks fitting without reassignment. The frozen
 Report log loss, average precision (the implementation's PR-AUC convention),
 precision/recall/F1, false positives, Brier score, ECE and per-family support.
 Default 0.5 metrics and the selected/frozen operating points are distinct views.
+Per-family metrics at 0.5 compare each family's positives with all shared negative
+controls, excluding other families' positives. Support counts identify the
+population; controls recur across families, so these reports cannot be summed.
 The inference worker also records Transformer batch timing including host-to-device
 transfer; trial receipts record runtime and peak GPU memory. Saved LightGBM
 predictions provide no fresh latency measurement, so no speedup claim is allowed.
