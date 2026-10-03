@@ -1,4 +1,22 @@
-## 2026-10-03 — Transformer architecture recorded; smoke failed before fitting
+## 2026-10-03 — Startup repaired; replacement smoke awaits authorization
+
+[PR #284](https://github.com/khab40/lob-arena/pull/284) merged as `585b1bc`, including
+the P2 repairs. [Bug #287](https://github.com/khab40/lob-arena/issues/287), under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) and
+[Project #3](https://github.com/users/khab40/projects/3), repairs two confirmed
+startup mismatches: SDK checksum-key casing and explicit provider on-demand pricing.
+The old INTENT bytes were correct; its checksum metadata was present as `Sha256`.
+
+The corrected digest image is published. All 776 inert Transformer tests passed;
+the exact provider dry-run passed, and read-only preflight found the new name and
+prefix unused. No replacement Job has been created and no model-quality result
+exists. [Diagnosis, verification and execution handoff](../ml/transformer-research-startup-repair.md).
+
+Next: review/CI and exact approval of the one-hour replacement smoke, then execute
+once and independently verify it before dependent trials. The consumed attempt
+remains retained. MLflow and platform maintenance stay after research.
+
+## 2026-10-03 — Earlier architecture and failed-smoke snapshot
 
 P2 review repairs are implemented under [Bug #286](https://github.com/khab40/lob-arena/issues/286):
 per-family comparisons include shared controls, and the selected checkpoint must
