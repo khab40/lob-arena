@@ -88,7 +88,11 @@ def execute(s3, request, package, work):
             except Exception:
                 pass
             raise
-        return store.finish(result)
+        try:
+            return store.finish(result)
+        except Exception as error:
+            error.research_stage = "publication"
+            raise  # Preserve possibly committed terminal objects; never add a marker here.
 
 
 def main():

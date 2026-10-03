@@ -181,3 +181,71 @@ def test_failed_claim_does_not_publish_into_existing_or_unverified_attempt(monke
     with pytest.raises(error_type) as caught:
         worker.execute(None, {"resources": {"timeout_seconds": 3600}}, tmp_path, tmp_path / "work")
     assert caught.value.research_stage == "claim"
+
+
+@pytest.mark.parametrize("target,fault", [("result.json", "put"), ("result.json", "readback"),
+    ("SUCCESS", "put"), ("SUCCESS", "readback"), (None, None)])
+def test_terminal_publication_reports_stage_without_followup_writes(monkeypatch, tmp_path, capsys, target, fault):
+    from app.ml.transformer import research_worker as worker
+    from app.ml.transformer.verification_spec import digest
+    from test_transformer_research_storage import S3, request
+
+    writes, computations = [], []
+    class FaultS3(S3):
+        def put_object(self, **kwargs):
+            name = kwargs["Key"].rsplit("/", 1)[-1]
+            writes.append(name)
+            response = super().put_object(**kwargs)
+            if name == target and fault == "put":
+                raise TimeoutError("sensitive acknowledgement detail")
+            return response
+
+        def get_object(self, **kwargs):
+            if kwargs["Key"].rsplit("/", 1)[-1] == target and fault == "readback":
+                raise OSError("sensitive readback detail")
+            return super().get_object(**kwargs)
+
+    req, s3 = request(), FaultS3()
+    package = tmp_path / "package"
+    package.mkdir()
+    for name in ("bundle.json", "source-separation.json", "baseline.parquet", "baseline-calibration.json"):
+        (package / name).write_bytes(b"fixture")
+    (package / "source-commit").write_text(req["source_commit"])
+    monkeypatch.setattr(worker, "BUNDLE_SHA", digest(b"fixture"))
+    monkeypatch.setattr(worker, "SOURCE_RECEIPT_SHA", digest(b"fixture"))
+    monkeypatch.setattr(worker, "authenticate", lambda *a: ({},))
+    monkeypatch.setattr(worker, "load_baseline", lambda *a: ({}, {}, {}))
+    monkeypatch.setattr(worker, "load_inventory", lambda *a: [])
+    monkeypatch.setattr(worker, "wait", lambda *a: {"job_id": "aijob-fixture"})
+    monkeypatch.setattr(worker, "download", lambda *a: {})
+    monkeypatch.setattr(worker, "audit_package", lambda *a: {})
+    monkeypatch.setattr(worker, "prepare", lambda *a: ({}, {}))
+    def inert_computation(*args):
+        computations.append(True)
+        return {"inert_fixture": True}
+    # Replace the GPU module before import: exercise orchestration, never a model.
+    monkeypatch.setitem(worker.sys.modules, "app.ml.transformer.research_run",
+                        SimpleNamespace(run=inert_computation))
+    real_execute = worker.execute
+    monkeypatch.setattr(worker, "execute", lambda client, request, unused, work:
+                        real_execute(client, request, package, work))
+    monkeypatch.setattr(worker, "client", lambda: s3)
+    request_path = tmp_path / "request.json"
+    request_path.write_bytes(canonical(req))
+    monkeypatch.setattr(worker.sys, "argv", ["worker", str(request_path), str(tmp_path / "work")])
+    if fault:
+        with pytest.raises(SystemExit) as stopped:
+            worker.main()
+        assert stopped.value.code == 1
+        assert json.loads(capsys.readouterr().out) == {"status": "failed", "stage": "publication",
+            "error_type": "PublicationUncertain", "cause_type": "TimeoutError" if fault == "put" else "OSError"}
+        assert writes[-1] == target and writes.count(target) == 1
+        assert (req["output_prefix"] + target) in s3.objects  # Possibly committed: preserve for reconciliation.
+    else:
+        worker.main()
+        output = json.loads(capsys.readouterr().out)
+        success = s3.objects[req["output_prefix"] + "SUCCESS"][0]
+        assert output == {"status": "published", "success_object": {
+            "sha256": digest(success), "size_bytes": len(success), "version_id": "version-1"}}
+    assert computations == [True]
+    assert "FAILED" not in writes and len(writes) == len(set(writes))

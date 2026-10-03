@@ -70,6 +70,13 @@ Neither inert tests nor dry-run prove CUDA execution or a model-quality result.
 
 ## Exact replacement proposal
 
+P2 follow-up [Bug #289](https://github.com/khab40/lob-arena/issues/289) corrects
+terminal publication diagnostics: failures in `result.json` or `SUCCESS`
+publication now report `publication`, preserving any committed object without
+retry or another marker. Four injected PUT/readback faults reproduced the wrong
+`preflight` stage before the repair; the successful completion control passed.
+The repair and five regression cases are inert; no model runs locally.
+
 [Proposal JSON](../evidence/transformer-replacement-smoke-proposal-20261003.json),
 SHA-256 `f86cdb69bad0599d60c53271155959f2eeefb6ba01bdc6325509f7d7ea741e0d`.
 It binds the source, immutable image, exact request, configuration and command.
