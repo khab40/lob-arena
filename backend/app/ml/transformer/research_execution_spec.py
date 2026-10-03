@@ -7,7 +7,7 @@ from .verification_spec import INVENTORY_SHA, OUTPUT_BUCKET, canonical, digest
 
 CAMPAIGN = "transformer-research-c4-20261002-r1"
 PREFIX = f"campaigns/wave1-research-20260816/development/{CAMPAIGN}/"
-REPOSITORY = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/transformer-research"
+REPOSITORY = "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr"
 SLOTS = ("smoke", "search-64-0003", "search-64-001", "search-128-0003", "search-128-001",
          "seed-7", "seed-2027", "inference")
 MAX_OBJECT = 128 * 1024**2
@@ -54,6 +54,8 @@ def receipt(item):
 
 
 def validate(request, source_commit=None):
+    if len(REPOSITORY) > 64:
+        raise ValueError("research image repository exceeds Nebius label limit")
     if not isinstance(request, dict) or request.get("slot") not in SLOTS:
         raise ValueError("invalid research request")
     patterns = {"source_commit": r"[0-9a-f]{40}", "image_digest": r"sha256:[0-9a-f]{64}",

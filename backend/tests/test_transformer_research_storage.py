@@ -85,3 +85,13 @@ def test_execution_request_cannot_expand_scope(field, value):
     req[field] = value
     with pytest.raises(ValueError):
         validate(req)
+
+
+def test_image_repository_limit_preserves_digest_addressing(monkeypatch):
+    from app.ml.transformer import research_execution_spec as spec
+    req = request()
+    assert spec.provider_spec(req)["image"].endswith("@" + req["image_digest"])
+    assert len(spec.REPOSITORY) <= 64
+    monkeypatch.setattr(spec, "REPOSITORY", "r" * 65)
+    with pytest.raises(ValueError, match="label limit"):
+        spec.validate(req)

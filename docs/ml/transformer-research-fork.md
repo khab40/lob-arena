@@ -116,6 +116,12 @@ the root `outputs/transformer-research-fork-20261002/` directory. The protocol
 amendment's null package fields are not execution authority: the operator helper
 creates separate immutable requests only after the source/image identities exist.
 
+[Bug #285](https://github.com/khab40/lob-arena/issues/285): keep the repository
+portion of the image reference at most 64 characters. The original 65-character
+name failed provider dry-run; the identical digest under `tr` passed. Request
+validation now enforces this boundary locally. Submission still uses a full
+digest, never a mutable-tag workaround.
+
 The protocol permits at most eight GPU Jobs: smoke, four grid trials, two seed
 confirmations and inference/calibration comparison. Their existing timeouts total
 14 GPU-hours. The amended inference worker must account for calibration within
