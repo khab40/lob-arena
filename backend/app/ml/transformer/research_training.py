@@ -13,6 +13,7 @@ from torch.nn import functional as F
 from .research_checkpoint import load_checkpoint, write_checkpoint
 from .research_model import SequenceClassifier
 from .research_policy import class_session_weights, improved, learning_rate_factor
+from .research_progress import TrialProgress
 
 
 def configure(seed):
@@ -61,7 +62,7 @@ def selection_metrics(logits, labels):
     return loss, 2 * tp / max(1, 2 * tp + fp + fn)
 
 
-def train_trial(train, selection, trial, *, output: Path, bindings, publish, expires, resume=None):
+def train_trial(train, selection, trial, *, output: Path, bindings, publish, expires, resume=None, progress_event=None):
     """publish(path, sha) must return a verified version-id/checksum receipt.
 
     The Job wrapper owns input authentication, exact execution authorization,
@@ -94,9 +95,13 @@ def train_trial(train, selection, trial, *, output: Path, bindings, publish, exp
             raise ValueError("checkpoint epoch/optimizer position differs")
     started = time.monotonic()
     records = []
+    logging = TrialProgress(trial, len(train), len(selection), batches, persist=progress_event)
+    logging.start(progress)
     for epoch in range(progress["epoch"], trial.max_epochs):
         if progress["stale_epochs"] >= trial.patience:
             break
+        logging.epoch_started(epoch + 1, progress["global_step"])
+        first_lr = trial.learning_rate * learning_rate_factor(progress["global_step"], total_steps)
         model.train()
         order = torch.randperm(len(train), generator=torch.Generator().manual_seed(trial.seed + epoch)).numpy()
         weighted_sum = 0.0
@@ -130,8 +135,9 @@ def train_trial(train, selection, trial, *, output: Path, bindings, publish, exp
             "selection_log_loss": selection_loss, "selection_f1_at_half": f1})
         records.append(write_checkpoint(output, model=model, optimizer=optimizer, trial=trial,
             bindings=bindings, progress=progress, publish=publish))
+        logging.epoch_completed(progress, records[-1], first_lr, optimizer.param_groups[0]["lr"])
     torch.cuda.synchronize()
-    return {"status": "completed_pending_independent_verification", "trial": asdict(trial),
+    result = {"status": "completed_pending_independent_verification", "trial": asdict(trial),
             "trial_sha256": trial.sha256(), "bindings": bindings, "progress": progress,
             "published_checkpoints": records, "selected_epoch": progress["best_epoch"],
             "selection_log_loss": progress["best_loss"],
@@ -142,3 +148,5 @@ def train_trial(train, selection, trial, *, output: Path, bindings, publish, exp
             "peak_reserved_gpu_bytes": torch.cuda.max_memory_reserved(),
             "runtime": {"torch": str(torch.__version__), "cuda": torch.version.cuda,
                         "cudnn": torch.backends.cudnn.version(), "gpu": torch.cuda.get_device_name()}}
+    logging.finish(result)
+    return result
