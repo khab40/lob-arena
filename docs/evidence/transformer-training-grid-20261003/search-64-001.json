@@ -1,0 +1,50 @@
+{
+  "slot": "search-64-001",
+  "job_id": "aijob-e00dj72sk0ks6fc3h9",
+  "status": "verified",
+  "trial": {
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "max_epochs": 30,
+    "patience": 5,
+    "seed": 42,
+    "width": 64
+  },
+  "trial_sha256": "8a56c8db1ccaa0ccff5b1c37b8dd88fbd4f665401095596b8f239d1926fae57b",
+  "selection_log_loss": 0.029996830474217313,
+  "selection_f1_at_half": 0.896551724137931,
+  "selected_epoch": 6,
+  "selected_checkpoint": {
+    "epoch": 6,
+    "name": "epoch-06.pt",
+    "object_name": "search-64-001-epoch-06.pt",
+    "sha256": "468ec05a2ea22370f55e20eb42fa5cd18dbbe6a99402c7ce60d2b594e5faf893",
+    "size_bytes": 1363529,
+    "version_id": "1"
+  },
+  "stopped_epoch": 11,
+  "parameter_count": 107905,
+  "training_seconds": 48.95822445600004,
+  "provider_running_seconds": 354.666976,
+  "created_to_finished_seconds": 576.307568,
+  "worker_seconds": 352.657499929,
+  "cpu_seconds": 355.502897073,
+  "peak_host_rss_kib": 2819840,
+  "peak_gpu_allocated_bytes": 140076544,
+  "peak_gpu_reserved_bytes": 159383552,
+  "artifact_count": 34,
+  "artifact_bytes": 16528151,
+  "verification_sha256": "e451e7e8e7f09bebeeabcabae04ba2834668f6251b5560840358745113df481a",
+  "success_receipt": {
+    "sha256": "12fefd052f3e7d026430c99612b0e12ba5c7b6da34a083302bd8218fa4a4cc9a",
+    "size_bytes": 221,
+    "version_id": "1"
+  },
+  "request_sha256": "b8697fa036da1d1bb0e145939979882e3853d3f5321f5840b6364580f713b870",
+  "verification_path": "outputs/transformer-startup-repair-20261003/p2/execution/search-64-001/verification.json",
+  "output_bucket": "aimada-wave1-results-e00g6zvxpr00",
+  "output_prefix": "campaigns/wave1-research-20260816/development/transformer-research-c4-20261003-r2/search-64-001/",
+  "created_at": "2026-10-03T17:26:28.237609Z",
+  "started_at": "2026-10-03T17:30:09.878201573Z",
+  "finished_at": "2026-10-03T17:36:04.545177228Z"
+}
