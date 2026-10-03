@@ -57,9 +57,22 @@ Each Job: one L40S, 8 vCPU, 32 GiB RAM, 100 GiB ephemeral disk,
 Training: at most 30 epochs, batch 64, patience 5; the runtime reserves
 600 seconds within the timeout for publication. Seed 42 is an arbitrary fixed
 seed for reproducibility, not evidence of robustness across initializations.
-Four Jobs allocate at most eight timeout-hours. Actual monetary cost is unknown
-under the existing operator-managed policy; this is not a currency spend cap.
-Provisioning, retained storage and taxes can add cost. No replacement is included.
+Four Jobs allocate at most eight timeout-hours. Under
+[Bug #292](https://github.com/khab40/lob-arena/issues/292), the operator approved
+**$50 additional; $350 total excluding VAT**. The $300 already spent in 2026 is
+an operator-reported baseline as of October 3, not independently reconciled
+billing or a new allowance. Actual incremental trial charges remain unknown.
+No replacement is included.
+
+Before each create, the operator must retain a spend-ledger entry showing
+accounted incremental charges + outstanding commitments + a conservative
+reservation for the next trial <= $50 excluding VAT. Include provisioning,
+runtime, disk, requests, transfer and retained-artifact storage; unknown or
+unbounded components block submission. Do not treat a published starting price
+as a worst-case quote. This is an operator-managed admission limit, not an
+automatic provider billing cutoff. The first reservation and current pricing
+evidence are still required before execution; no Job has been submitted.
+Keep the ledger in root `outputs/transformer-grid-20261003/spend-ledger.json`.
 
 Inputs remain the pinned governed development corpus: 33,450 training rows and
 1,250 selection rows. Calibration/operating-point roles remain separate.
@@ -81,7 +94,8 @@ The retained local receipts are in root `outputs/transformer-grid-20261003/`.
 Exact requests and existing private signing custody stay in root
 `outputs/transformer-startup-repair-20261003/p2/execution/`; do not regenerate them.
 
-1. Review this package and its CI. Before execution, recheck request hashes,
+1. Review this package and its CI; satisfy the spend-ledger gate above before
+   each Job. Before execution, recheck request hashes,
    image/source bindings and the previous trial's terminal/verified result.
    The request dependency graph binds smoke only; the operator enforces the
    stronger sequential order above before each create.

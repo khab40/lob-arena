@@ -7,7 +7,11 @@ After merged PR #290, the operator authorized widths 64/128 × learning rates
 The [execution package](../ml/transformer-training-grid.md) binds four exact
 requests to the verified smoke and its unchanged immutable image. All four
 provider dry-runs passed; read-only preflight found names and prefixes unused.
-No training-grid Job has been created. Next: review/CI, fresh per-slot preflight,
+No training-grid Job has been created. The operator approved $50 additional
+spend excluding VAT above the reported $300 spent in 2026 ($350 total).
+[Bug #292](https://github.com/khab40/lob-arena/issues/292) binds that limit and
+requires an admission ledger with conservative reservations before each create.
+Next: review/CI, current price/reservation evidence, fresh per-slot preflight,
 then sequential execution with independent readback before advancing.
 Confirmation seeds and calibration/comparison remain separate later steps.
 

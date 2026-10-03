@@ -39,8 +39,21 @@
   "cost": {
     "policy": "existing operator-managed policy",
     "actual_cost": "unknown",
-    "currency_spend_cap": null,
-    "qualification": "8 timeout-hours is a resource bound, not a billing cap; provisioning, storage and taxes can add cost"
+    "currency": "USD",
+    "vat": "excluded",
+    "currency_spend_cap": 50,
+    "cap_scope": "additional spend attributable to these four trials",
+    "operator_approval": "$50 additional; $350 total excluding VAT",
+    "reported_2026_baseline": 300,
+    "baseline_as_of": "2026-10-03",
+    "baseline_source": "operator report; not independently reconciled to billing",
+    "baseline_plus_allowance": 350,
+    "budget_gate": "before every create, require accounted incremental spend plus outstanding commitments plus a conservative reservation for the next trial to be at most 50 USD excluding VAT; unknown or unbounded costs block submission",
+    "reservation_scope": "include provisioning, runtime, disk, requests, transfer and retained-artifact storage; do not use a published starting rate as an upper bound",
+    "enforcement": "operator-managed admission ledger checked before every Job; not a provider-side automatic monetary cap",
+    "ledger": "outputs/transformer-grid-20261003/spend-ledger.json",
+    "ledger_status": "requires current price and bounded reservation evidence before first submission",
+    "qualification": "8 timeout-hours remains a resource bound; 50 USD is the separately approved spend maximum excluding VAT"
   },
   "sequence_gate": "require terminal COMPLETED and independent verified readback before starting the next listed trial; stop on failure or uncertainty",
   "winner_rule": "minimum selection_log_loss, then parameter_count, then trial_sha256; all four verified results required",
