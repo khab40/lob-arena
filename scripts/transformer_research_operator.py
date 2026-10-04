@@ -193,6 +193,7 @@ def main():
     parser.add_argument("--image-digest")
     parser.add_argument("--bundle", type=Path)
     parser.add_argument("--source-receipt", type=Path)
+    parser.add_argument("--custody", type=Path, help="Existing signing custody; never copied into a package")
     args = parser.parse_args()
     if args.action == "prepare":
         return prepare(args)
@@ -213,7 +214,8 @@ def main():
         return {"slot_absent": True, "output_empty": True, "checked_at": datetime.now(UTC).isoformat()}
     if args.action == "attest":
         with stage("custody_read"):
-            key = Ed25519PrivateKey.from_private_bytes((args.evidence / "context-private.key").read_bytes())
+            custody = args.custody or args.evidence / "context-private.key"
+            key = Ed25519PrivateKey.from_private_bytes(custody.read_bytes())
         return attest(store, directory, key)
     bundle, source = args.bundle.read_bytes(), args.source_receipt.read_bytes()
     job = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
