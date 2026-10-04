@@ -1,3 +1,22 @@
+## 2026-10-04 — Week plan and GitHub tracking reconciliation
+
+[4–10 October plan](../ml/transformer-week-plan-20261004.md),
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+October 3 completed startup repair, replacement smoke, four verified training
+trials and per-run reports; future-runtime epoch logging is implemented.
+PR #291 merged as `25668a1`; implementation head `e3e1332` passed all 25 checks.
+Next are two exact-authorized confirmation seeds, one calibration/comparison
+Job, independent verification and a continue/stop/inconclusive decision.
+No more grid search is planned. Source/image dependency pins remain unchanged.
+
+#24/#16/#15 remain In Progress; #25/#90/#91 remain Todo and conditional.
+#22/#23 remain Done, G8/G9 closed. #19–#21 acceptance remains open and follows
+research. Bug #292 is repaired, exercised and closed/Done after PR #291 merge;
+the $50 reservation remains committed until actual billing reconciliation.
+M2/M3 milestone descriptions and related issue bodies are reconciled with these
+results; dates remain baselines, not claims of full milestone completion.
+
 ## 2026-10-03 — Four GPU training trials completed and independently verified
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
@@ -26,8 +45,8 @@ until billing reconciliation under [Bug #292](https://github.com/khab40/lob-aren
 Compute/disk time estimates about $1.00 excluding VAT and other charges;
 the actual bill is not reconciled. Online MLflow reconciliation remains pending.
 
-Next: review the [PR #291 results](https://github.com/khab40/lob-arena/pull/291),
-prepare exact authorization for confirmation seeds 7/2027, then calibration and
+Next after [merged PR #291](https://github.com/khab40/lob-arena/pull/291): prepare
+exact authorization for confirmation seeds 7/2027, then calibration and
 operating-point comparison against frozen LightGBM. No further search, final-test
 access or G8/G9 rerun is included. Platform maintenance follows research.
 The following dated sections are historical where superseded.
