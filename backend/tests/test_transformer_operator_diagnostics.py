@@ -60,7 +60,8 @@ def test_absent_job_provisioning_missing_intent_then_exactly_one_context(monkeyp
     events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
     assert [(e["event"], e["stage"]) for e in events] == [
         ("attester_ready", "provider_read"), ("attester_waiting", "provider_read"),
-        ("attester_waiting", "intent_read"), ("context_publication_started", "context_publish"),
+        ("provider_observed", "provider_validation"), ("attester_waiting", "intent_read"),
+        ("provider_observed", "provider_validation"), ("context_publication_started", "context_publish"),
         ("context_published", "context_publish")]
     assert all(e["evidence_status"] == "progress_not_independent_verification" for e in events)
 

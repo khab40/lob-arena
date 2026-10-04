@@ -143,10 +143,35 @@ registry aliases and platform #19–#21 acceptance are separate completion state
 Status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
 the separately authorized replacement and [four grid trials](../ml/transformer-training-grid-results.md)
 are independently verified. The selection winner is width 128 / rate 0.0003 /
-seed 42 / epoch 4; this does not establish an advantage over LightGBM. The
-[current week plan](../ml/transformer-week-plan-20261004.md) calls for exact
-authorization of two seed Jobs and one inference/calibration Job before execution.
+seed 42 / epoch 4. Both [replacement confirmations](../ml/transformer-confirmation-results-20261004.md)
+are independently verified and three-seed stability passed: selection-loss range
+0.002395075568322679 and F1 range 0.0. Seed 42 remains the candidate; this does not
+establish an advantage over LightGBM. The [current week plan](../ml/transformer-week-plan-20261004.md)
+next requires checkpoint-origin compatibility and separate exact run/spend approval
+for one inference/calibration Job, at most one hour. Calibration/comparison has not run.
 Research decision precedes MLflow/platform maintenance and any conditional cascade.
+
+## Replacement lineage decision — 4 October 2026
+
+After seed 7 failed before training, its prefix remains consumed. The original
+v1 schema fixes campaign/name/prefix, so a new name alone cannot safely replace
+that attempt. The [confirmation-only v2 package](../ml/transformer-confirmation-r2-20261004.md)
+uses a fresh fixed namespace and exactly five pinned legacy publications.
+Cross-image compatibility applies only to those smoke/grid references, requiring
+their original source, image, signing key and request/SUCCESS hashes. Own-result
+verification still requires the new exact assembly identity and trial.
+
+The new image retains the original sealed image layers; only four execution
+modules and the source marker change. Numerical source and assembly source are
+separate provenance fields. Model, training, selection, inputs, dependencies and
+baseline bytes stay unchanged. Supervised attester readiness precedes async
+submission, retaining failure diagnostics without automatically retrying a write.
+
+This compatibility does not authorize inference or silently migrate checkpoints.
+The later inference package must recognize the selected seed-42 checkpoint's
+original bindings and record its own execution identity separately. Never rewrite
+checkpoint bindings to satisfy a newer runtime. This keeps the comparison design
+unchanged while making replacement provenance explicit and testable.
 
 ## Comparison versus combination
 

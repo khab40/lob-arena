@@ -1,6 +1,6 @@
 # Transformer research week: 4–10 October 2026
 
-Reconciled 4 October, Asia/Tbilisi, against verified 3 October results and live
+Reconciled 4 October, Asia/Tbilisi, against verified grid/confirmation results and live
 GitHub tracking. [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
@@ -21,10 +21,13 @@ was not submitted. [Failure report](experiments/transformer-confirmation-2026100
 [Bug #306](https://github.com/khab40/lob-arena/issues/306) repairs diagnostics and
 startup-path coverage. The original error's exact cause remains unknown.
 
-The sequence below is paused at confirmation. Next: review/test the repair and
-prepare a fresh replacement identity and exact authorization. Existing approval
-permits no replacement; keep the failed attempt's $12.50 reservation committed
-until billing reconciliation. Subsequent dates are conditional and not achieved.
+PR #307's diagnostic repair is merged. Both exactly approved replacement Jobs
+reached COMPLETED and passed independent readback. [Three-seed stability passed](transformer-confirmation-results-20261004.md):
+selection-loss range 0.002395075568322679 and F1-at-0.5 range 0.0, below the 0.05
+limits. Seed 42 / epoch 4 remains the candidate. PR #308 remains open.
+Keep the full $25 confirmation commitment, including the failed attempt's $12.50,
+until billing reconciliation. Calibration and LightGBM comparison have not run;
+subsequent dates remain conditional and separate exact run/spend approval is required.
 
 ## Completed on 3 October
 
@@ -48,14 +51,13 @@ Dates are working targets, conditional on review, exact approval, capacity and
 verification. Proceed as soon as prerequisites pass; do not wait for a calendar
 day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
 
-1. **4 October — confirm stability.** Prepare two exact
-   sequential requests for winner seeds **7 and 2027**, at most two hours each.
-   Check pinned dependencies, source/image, budget, availability and exact dry-run
-   before creation. Obtain exact run/spend authorization, execute and independently
-   verify each result. Keep seed 42 as candidate; do not select the luckiest seed.
-   Existing freeze gates require both selection-loss and F1 ranges ≤0.05.
+1. **4 October — confirm stability: complete.** Both replacement seeds **7 and
+   2027** completed sequentially and passed independent verification. Both
+   selection-loss and F1 ranges pass the existing ≤0.05 stability gates. Keep
+   seed 42 / epoch 4 as candidate; do not select the luckiest seed.
 2. **5 October — calibrate and compare.** Prepare one separately authorized
-   calibration/inference Job, at most one hour, after verified confirmations.
+   calibration/inference Job, at most one hour, with explicit checkpoint-origin
+   compatibility and an exact request/image, dry-run and spend approval.
    Fit temperature only on C (5,490 rows); choose declared operating points and
    compare on the identical O targets (2,470 rows). Reuse frozen LightGBM
    predictions/calibrator/thresholds; no refit, rescore or final-fold access.
@@ -82,17 +84,22 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
 
 ## Bounds and interpretation
 
-Remaining planned model work is **three Jobs / five timeout GPU-hours**, with
-one L40S, 8 vCPU, 32 GiB RAM, 100 GiB disk, concurrency one and restart never.
+Remaining planned model work is **one Job / one timeout GPU-hour**, requiring
+separate exact authorization: one L40S, 8 vCPU, 32 GiB RAM, 100 GiB disk,
+concurrency one and restart never.
 The completed four-Job authorization is consumed. Its $50 reservation above the
 operator-reported $300 baseline remains committed pending billing reconciliation;
 the roughly $1 compute/disk estimate is not a bill or reusable authorization.
 Exact next-stage monetary bounds must be approved before submission.
+The $25 confirmation commitment also remains held; neither completed Jobs nor
+estimated savings release it or authorize calibration.
 
-Use the completed grid's pinned source `87ce8a9` and recorded digest image for
-dependent campaign slots. New logging code cannot silently change those identities;
-its future runtime needs an explicit compatibility package. Existing checkpoints
-already provide epoch curves for post-run reports; do not repeat training for logs.
+The replacement package layers four execution modules onto the grid's original
+digest image, preserving numerical source `87ce8a9` and all model/dependency bytes.
+It admits only confirmation seeds and exact legacy smoke/grid references. Later
+inference needs explicit checkpoint-origin compatibility; it cannot relabel the
+seed-42 checkpoint's original bindings. New logging is not part of this image.
+Existing epoch artifacts provide post-run curves; do not repeat training for logs.
 
 O is also used for threshold selection, LightGBM calibration previously saw the
 validation fold, and labels remain synthetic/research controls. Report these

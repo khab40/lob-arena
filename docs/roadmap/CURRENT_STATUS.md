@@ -1,4 +1,40 @@
-## 2026-10-04 — Seed 7 failed before training; confirmation sequence stopped
+## 2026-10-04 — Both replacement confirmations verified; seed stability passed
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The exactly approved replacement Jobs for seeds 7 and 2027 both reached COMPLETED
+and passed independent artifact readback. Three-seed stability passed: selection
+log-loss range **0.002395075568322679**, F1-at-0.5 range **0.0**; both limits are
+0.05. Width 128 / learning rate 0.0003 / seed 42 / epoch 4 remains the candidate.
+[Results](../ml/transformer-confirmation-results-20261004.md) and
+[evidence](../evidence/transformer-confirmation-results-20261004.json).
+
+Calibration and exact-row LightGBM comparison have not run. Next: prepare the
+checkpoint-origin compatibility package and obtain separate exact run/spend
+approval for one calibration/inference Job, at most one hour. The full $25
+confirmation commitment remains held pending billing reconciliation, including
+the failed attempt; earlier $50 commitments are unchanged. PR #308 remains open.
+Story #24 remains In Progress; G8/G9 remain closed. No final-test access or
+promotion is authorized, and platform maintenance follows the research decision.
+
+## 2026-10-04 — Earlier replacement preparation snapshot; approval was pending
+
+[PR #307](https://github.com/khab40/lob-arena/pull/307) merged with green CI.
+The [replacement package](../ml/transformer-confirmation-r2-20261004.md) preserves
+the failed seed-7 attempt and verified grid, adds a fresh two-seed namespace and
+supervised context delivery, and keeps the original numerical runtime unchanged.
+Both exact Nebius dry-runs and unused-name/prefix checks passed. Image inspection
+verified 14 preserved base layers and 269 unchanged runtime files.
+
+Next: review this package/CI and approve its exact proposal; then run seeds 7 and
+2027 sequentially, at most two hours each, with independent verification between
+them. Proposed reservations are $6.25 each within the existing $25 excluding-VAT
+cap; the failed attempt's $12.50 remains committed pending billing reconciliation.
+No new Job or context was published. Calibration/comparison requires a separate
+checkpoint-origin compatibility package after stability passes. Story #24 remains
+In Progress; G8/G9 remain closed and platform maintenance follows research.
+
+## 2026-10-04 — Earlier seed-7 failure; confirmation sequence stopped
 
 PR #296 merged and the operator approved its exact two-seed package and $25
 additional cap excluding VAT. Seed-7 Job `aijob-e00k6zkjr3hqc15dhb` reached FAILED
@@ -10,8 +46,8 @@ Seed 2027 was not submitted; no retry or replacement was performed.
 
 [Bug #306](https://github.com/khab40/lob-arena/issues/306) repairs the missing
 safe diagnostic evidence and startup-path tests; the incident's underlying
-AttributeError cause is not yet established. Review/test the repair before
-preparing a fresh replacement identity and exact authorization. Keep $12.50
+AttributeError cause is not yet established. The diagnostic repair merged in
+PR #307; its replacement package is above. Keep $12.50
 reserved pending billing reconciliation. Story #24 remains In Progress;
 stability, calibration and LightGBM comparison remain outstanding. G8/G9 closed.
 

@@ -4,6 +4,7 @@ import math
 
 import numpy as np
 
+from .research_confirmation_contract import is_replacement, origin_matches, require_reference
 from .research_context import verify as verify_context
 from .research_execution_spec import request_sha, validate
 from .research_policy import Trial, improved
@@ -64,6 +65,7 @@ def verify_trial(result, artifacts, inventory, metadata, *, slot):
 
 
 def collect(store, slot, success, expected_request_sha, bundle, source, metadata, *, output=None):
+    require_reference(store.request, slot, success, expected_request_sha)
     inventory = store.read_publication(slot, success, expected_request_sha)
     required = AUDIT | {"configuration.json", "execution-context.json", "result.json", "baseline-verification.json"}
     if not required <= set(inventory):
@@ -82,7 +84,7 @@ def collect(store, slot, success, expected_request_sha, bundle, source, metadata
     request = json.loads(artifacts["configuration.json"])
     validate(request)
     if (request["slot"] != slot or request_sha(request) != expected_request_sha
-            or any(request[k] != store.request[k] for k in ("source_commit", "image_digest", "context_public_key"))):
+            or not origin_matches(request, store.request, slot)):
         raise ValueError("prior campaign code/image/key differs")
     context = verify_context(json.loads(artifacts["execution-context.json"]), request)
     audit = verify_package({k: artifacts[k] for k in AUDIT}, bundle, source)
@@ -109,6 +111,8 @@ def collect(store, slot, success, expected_request_sha, bundle, source, metadata
                 raise ValueError("grid slot configuration differs")
         elif result["trial"]["seed"] != int(slot.split("-")[1]):
             raise ValueError("confirmation slot seed differs")
+        if is_replacement(request) and result["trial"] != request["trial"]:
+            raise ValueError("confirmation result differs from fixed winning configuration")
         result = verify_trial(result, artifacts, inventory, metadata, slot=slot)
     elif slot == "smoke":
         if (result["checks"]["status"] != "verified" or result["real_data"]["optimizer_steps"] != 32
