@@ -19,10 +19,13 @@ The Transformer implementation, replacement GPU smoke and all four fixed-grid
 trials have passed independent verification. The [grid results](../ml/transformer-training-grid-results.md)
 select width 128, learning rate 0.0003, seed 42, epoch 4: selection log loss
 0.002437833 and F1 1.0 on 1,250 rows, including 45 positives. This is the tuning
-fold, not evidence of superiority over LightGBM. Next are separately bounded
-seed-7/2027 confirmations ([exact package prepared; approval pending](../ml/transformer-confirmation-20261004.md)),
-then calibration and an exact-row operating-point-role
-comparison under the approved research fork. No final-test run is authorized.
+fold, not evidence of superiority over LightGBM. The approved seed-7 confirmation
+failed before training during context delivery; seed 2027 remains unsubmitted.
+Next: [repair attester diagnostics](https://github.com/khab40/lob-arena/issues/306),
+review/test, then prepare exact replacement authorization. See the
+[failure report](../ml/experiments/transformer-confirmation-20261004/seed-7.md).
+Seed stability, calibration and an exact-row operating-point-role comparison
+remain pending. No final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.

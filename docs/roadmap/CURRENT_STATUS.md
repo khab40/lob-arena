@@ -1,4 +1,21 @@
-## 2026-10-04 — Two confirmation requests prepared; exact approval pending
+## 2026-10-04 — Seed 7 failed before training; confirmation sequence stopped
+
+PR #296 merged and the operator approved its exact two-seed package and $25
+additional cap excluding VAT. Seed-7 Job `aijob-e00k6zkjr3hqc15dhb` reached FAILED
+at context delivery; the local attester exited with AttributeError and no signed
+context was published. Only INTENT and FAILED are present; no training result.
+Seed 2027 was not submitted; no retry or replacement was performed.
+[Run report](../ml/experiments/transformer-confirmation-20261004/seed-7.md) and
+[evidence](../evidence/transformer-confirmation-failure-20261004.json).
+
+[Bug #306](https://github.com/khab40/lob-arena/issues/306) repairs the missing
+safe diagnostic evidence and startup-path tests; the incident's underlying
+AttributeError cause is not yet established. Review/test the repair before
+preparing a fresh replacement identity and exact authorization. Keep $12.50
+reserved pending billing reconciliation. Story #24 remains In Progress;
+stability, calibration and LightGBM comparison remain outstanding. G8/G9 closed.
+
+## 2026-10-04 — Earlier two-seed preparation snapshot
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
