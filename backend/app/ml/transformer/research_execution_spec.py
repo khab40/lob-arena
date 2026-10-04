@@ -1,6 +1,7 @@
 """Eight fixed research slots; exact immutable request validation."""
 import re
 
+from . import research_comparison_contract as comparison
 from . import research_confirmation_contract as confirmation
 from .research_baseline import CALIBRATION_SHA, PREDICTIONS_SHA
 from .role_execution_spec import BUNDLE_SHA, PROJECT, SOURCE_RECEIPT_SHA, SUBNET, secret_selectors  # noqa: F401
@@ -60,6 +61,16 @@ def replacement_template(slot, source_commit, image_digest, context_public_key, 
     return request
 
 
+def comparison_template(source_commit, image_digest, context_public_key, nonce, prior=None):
+    prior = comparison.prerequisites() if prior is None else prior
+    request = template("inference", source_commit, image_digest, context_public_key, nonce, prior)
+    request.update(schema_version=comparison.SCHEMA, campaign=comparison.CAMPAIGN,
+        run_id=comparison.CAMPAIGN + "-inference", output_prefix=comparison.PREFIX + "inference/",
+        numerical_source_commit=confirmation.BASE_SOURCE, base_image_digest=confirmation.BASE_IMAGE_DIGEST,
+        compatibility_sha256=comparison.COMPATIBILITY_SHA256)
+    return request
+
+
 def receipt(item):
     if (not isinstance(item, dict) or set(item) != {"sha256", "size_bytes", "version_id"}
             or not isinstance(item["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])
@@ -92,6 +103,14 @@ def validate(request, source_commit=None):
                        if k.endswith("_sha256"))):
             raise ValueError("confirmation compatibility identity or prerequisites differ")
         constructor = replacement_template
+    if comparison.is_comparison(request):
+        if (request["slot"] != "inference" or prior != comparison.MANIFEST["prior"]
+                or request["context_public_key"] != confirmation.CONTEXT_PUBLIC_KEY
+                or request["source_commit"] in (confirmation.BASE_SOURCE, comparison.MANIFEST["confirmation_origin"]["source_commit"])
+                or request["image_digest"] in (confirmation.BASE_IMAGE_DIGEST, comparison.MANIFEST["confirmation_origin"]["image_digest"])):
+            raise ValueError("comparison identity or fixed prerequisites differ")
+        def constructor(slot, *args):
+            return comparison_template(*args)
     for item in prior.values():
         if set(item) != {"success", "request"}:
             raise ValueError("prior receipt must bind its exact request")

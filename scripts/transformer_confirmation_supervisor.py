@@ -157,8 +157,9 @@ def main():
         raise ValueError("reviewed supervisor input changed")
     request = json.loads(request_path.read_bytes())
     seconds = request["resources"]["timeout_seconds"]
-    if request["slot"] != args.slot or seconds != 7200 or not 1 <= args.ready_seconds <= 120:
-        raise ValueError("supervisor escaped confirmation bounds")
+    expected_seconds = {"seed-7": 7200, "seed-2027": 7200, "inference": 3600}.get(args.slot)
+    if request["slot"] != args.slot or seconds != expected_seconds or not 1 <= args.ready_seconds <= 120:
+        raise ValueError("supervisor escaped fixed execution bounds")
     binding.update(slot=args.slot, run_id=request["run_id"])
     command = [args.operator_python, "-u", args.operator, "attest", "--evidence", args.evidence, "--slot", args.slot]
     if args.custody:

@@ -24,9 +24,12 @@ are [independently verified](../ml/transformer-confirmation-results-20261004.md)
 three-seed stability passed with selection-loss range 0.002395075568322679 and
 F1 range 0.0. Seed 42 / epoch 4 remains the candidate. The earlier failed attempt
 is preserved, and the full $25 confirmation commitment remains held pending billing.
-Next: prepare checkpoint-origin compatibility and obtain separate exact run/spend
-approval for one calibration/inference Job, at most one hour. Calibration and
-exact-row LightGBM comparison have not run; no final-test run is authorized.
+The [checkpoint compatibility package](../ml/transformer-comparison-20261004.md)
+is prepared: 229 artifacts verified, 289 inert tests passed, frozen numerical
+image preserved and exact dry-run passed. Next: review CI and separately approve
+one one-hour calibration/inference Job and its proposed $6.25 additional cap
+excluding VAT. Calibration and exact-row LightGBM comparison have not run; no
+final-test run is authorized. PR #308 is merged.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.

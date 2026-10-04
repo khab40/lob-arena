@@ -1,3 +1,19 @@
+## 2026-10-04 — Checkpoint compatibility prepared; comparison approval pending
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24): the
+[comparison package](../ml/transformer-comparison-20261004.md) binds all seven
+verified publications and 229 local artifacts to unchanged seed 42 / epoch 4.
+289 inert tests, image equivalence, exact Nebius dry-run and unused-name/prefix
+checks passed. No comparison Job was created. Request metadata validates inside
+the image; actual CUDA checkpoint loading remains part of the authorized Job.
+
+Next: review the package/CI and separately authorize its exact one-attempt,
+one-hour L40S calibration/LightGBM comparison with a proposed **$6.25 additional
+cap excluding VAT**. Keep the full $25 confirmation commitment reserved pending
+billing. Independently verify results, retain the comparison report/plots, then
+decide continue/stop/inconclusive. No further training, final-test access or
+production promotion; G8/G9 stay closed and platform maintenance follows research.
+
 ## 2026-10-04 — Both replacement confirmations verified; seed stability passed
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
@@ -13,7 +29,7 @@ Calibration and exact-row LightGBM comparison have not run. Next: prepare the
 checkpoint-origin compatibility package and obtain separate exact run/spend
 approval for one calibration/inference Job, at most one hour. The full $25
 confirmation commitment remains held pending billing reconciliation, including
-the failed attempt; earlier $50 commitments are unchanged. PR #308 remains open.
+the failed attempt; earlier $50 commitments are unchanged. PR #308 is merged with green CI.
 Story #24 remains In Progress; G8/G9 remain closed. No final-test access or
 promotion is authorized, and platform maintenance follows the research decision.
 

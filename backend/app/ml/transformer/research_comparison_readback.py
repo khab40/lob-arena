@@ -1,16 +1,18 @@
 """Recompute reported comparison arithmetic; never train, score weights or fit."""
+import json
 import math
 from types import SimpleNamespace
 
 import numpy as np
 
 from .research_baseline import align, load
+from .research_comparison_contract import checkpoint_origin, is_comparison
 from .research_evaluation import compare, family_comparison, sigmoid
 from .research_policy import Trial, seed_stability, select_grid
 from .verification_spec import canonical
 
 
-def verify(result, artifacts, metadata, prior, predictions):
+def verify(result, artifacts, metadata, prior, predictions, *, request=None):
     baseline, thresholds, _ = load(artifacts["baseline-predictions.parquet"],
                                     artifacts["baseline-calibration.json"], metadata)
     winner = select_grid([prior[name]["result"] for name in prior if name.startswith("search-")])
@@ -19,6 +21,13 @@ def verify(result, artifacts, metadata, prior, predictions):
     stability = seed_stability([winner, prior["seed-7"]["result"], prior["seed-2027"]["result"]], Trial(**winner["trial"]))
     if canonical(stability) != canonical(result["stability"]):
         raise ValueError("confirmation stability differs")
+    if request is not None and is_comparison(request):
+        origin = checkpoint_origin(request, prior, result["execution_bindings"])
+        inputs = [json.loads(raw)["payload"]["bindings"] for name, raw in artifacts.items()
+                  if name.startswith("event-") and json.loads(raw)["kind"] == "inputs_verified"]
+        if (not stability["passed"] or canonical(origin) != canonical(result["checkpoint_origin"])
+                or len(inputs) != 1 or canonical(inputs[0]) != canonical(result["execution_bindings"])):
+            raise ValueError("comparison checkpoint or execution provenance differs")
     calibration = result["calibration"]
     temperature = calibration["temperature"]
     if (not .05 <= temperature <= 20 or calibration["fitting_role"] != "calibration"
