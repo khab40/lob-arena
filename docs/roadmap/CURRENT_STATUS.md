@@ -1,3 +1,16 @@
+## 2026-10-04 — Two confirmation requests prepared; exact approval pending
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The [two-seed package](../ml/transformer-confirmation-20261004.md) binds seeds
+7/2027, width 128, learning rate 0.0003, sequential two-hour Jobs to the verified
+grid source/image. Both provider dry-runs and unused-name/prefix checks passed;
+147 prerequisite artifacts and 58 inert tests verified. No Job was created.
+Exact proposal/run approval and a separate proposed $25 cap excluding VAT remain
+pending. The prior $50 grid reservation stays committed until billing reconciliation.
+After approval: execute/verify each seed, report stability, then separately
+authorize calibration/comparison. G8/G9 remain closed; no additional search.
+
 ## 2026-10-04 — Week plan and GitHub tracking reconciliation
 
 [4–10 October plan](../ml/transformer-week-plan-20261004.md),

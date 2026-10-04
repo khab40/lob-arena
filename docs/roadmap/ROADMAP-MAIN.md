@@ -20,7 +20,8 @@ trials have passed independent verification. The [grid results](../ml/transforme
 select width 128, learning rate 0.0003, seed 42, epoch 4: selection log loss
 0.002437833 and F1 1.0 on 1,250 rows, including 45 positives. This is the tuning
 fold, not evidence of superiority over LightGBM. Next are separately bounded
-seed-7/2027 confirmations, then calibration and an exact-row operating-point-role
+seed-7/2027 confirmations ([exact package prepared; approval pending](../ml/transformer-confirmation-20261004.md)),
+then calibration and an exact-row operating-point-role
 comparison under the approved research fork. No final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
