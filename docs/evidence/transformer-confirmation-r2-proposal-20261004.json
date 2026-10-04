@@ -33,7 +33,7 @@
   },
   "runbook_file": {
     "path": "docs/ml/transformer-confirmation-r2-20261004.md",
-    "sha256": "a249a8964f1607056bb750c107ae56843ac289d5643fa0d7f9d875cfdb18e8b3"
+    "sha256": "58cfae762767a88d723775df07eb24f9ce80e7957fd8274d8eb854ae4b3aaa02"
   },
   "grid_results_file": {
     "path": "docs/evidence/transformer-training-grid-results-20261003.json",
@@ -46,11 +46,11 @@
     },
     {
       "path": "scripts/transformer_confirmation_supervisor.py",
-      "sha256": "214dd507a43895bc48249e776a0c865ef7a317973b5aae338d441122745b07f8"
+      "sha256": "09155e13cf7629b454d071a628137738b12422a5045834f09aff3c69c8d68ee3"
     },
     {
       "path": "scripts/transformer_research_operator.py",
-      "sha256": "01a4bcd42c378208e92ebb9563bcb1c27a25516bdafd8b9f44fbe7df4606d6f1"
+      "sha256": "15f15285331a6fec3bc148616e0ad680bd3d48ff6f43f8be601c35c561600230"
     },
     {
       "path": "scripts/transformer_report_data.py",

@@ -88,6 +88,8 @@ reservation. Review retention on 2 January 2027; no deletion is authorized.
    Use `inspect` with the same proposal/request hashes; require the returned
    **`admission_ready` to equal true**, not merely exit code zero. It requires
    ready + absent-provider poll + live process start identities + <=3s heartbeat.
+   Once a Job is observed, admission is permanently closed for that attempt;
+   later NotFound or repeated readiness messages require reconciliation.
    The initial readiness window is 120s; the attester is never restarted.
 4. Reserve $6.25 before submitting the exact command once. Local CLI 0.12.283
    explicitly supports `--async`; MCP help differs, so use the validated local

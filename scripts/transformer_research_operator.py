@@ -146,6 +146,7 @@ def attest(store, directory, key):
             continue
         with stage("provider_validation"):
             context = observed(job, request)
+        progress("provider_observed", "provider_validation")
         with stage("intent_read"):
             try:
                 intent, item = store.read(request["slot"], "INTENT", limit=16384)

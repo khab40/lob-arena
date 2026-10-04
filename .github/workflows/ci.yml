@@ -166,6 +166,7 @@ jobs:
           tests/test_transformer_operator_diagnostics.py
           tests/test_transformer_confirmation_contract.py tests/test_transformer_confirmation_contract_readback.py
           tests/test_transformer_confirmation_supervisor.py tests/test_transformer_confirmation_supervisor_cli.py
+          tests/test_transformer_confirmation_supervisor_admission.py
           tests/test_transformer_confirmation_prepare.py
           tests/test_transformer_research_comparison_readback.py
 

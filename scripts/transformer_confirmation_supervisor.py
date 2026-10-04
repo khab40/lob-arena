@@ -41,7 +41,7 @@ def inspect(output, proposal_sha256, request_sha256, *, now=time.time, identity=
         for name in ("supervisor", "attester"):
             if not status[name + "_start"] or identity(status[name + "_pid"]) != status[name + "_start"]:
                 raise ValueError("supervised process identity is no longer live")
-        status["admission_ready"] = (status["state"] == "ready"
+        status["admission_ready"] = (status["state"] == "ready" and not status["admission_closed"]
             and now() <= status["admission_expires_at"])
     return status
 
@@ -50,7 +50,7 @@ def supervise(command, output, binding, ready_seconds, seconds, *, spawn=subproc
               now=time.time, pause=time.sleep, identity=process_identity):
     output.mkdir(parents=True, exist_ok=False)  # A consumed attempt is never restarted.
     child, status = None, {"binding": binding, "state": "starting", "supervisor_pid": os.getpid(),
-        "supervisor_start": identity(os.getpid()), "admission_ready": False}
+        "supervisor_start": identity(os.getpid()), "admission_ready": False, "admission_closed": False}
     started, ready_at, ready_event, buffer = now(), None, False, ""
     terminal, published = None, False
     try:
@@ -74,17 +74,20 @@ def supervise(command, output, binding, ready_seconds, seconds, *, spawn=subproc
                                 raise ValueError("unexpected attester ready stage")
                             ready_event = True
                         elif event == "attester_waiting":
-                            if ready_event and record.get("stage") == "provider_read":
+                            if record.get("stage") == "intent_read":
+                                status["admission_closed"] = True
+                            if ready_event and not status["admission_closed"] and record.get("stage") == "provider_read":
                                 if ready_at is None:
                                     ready_at = now()
                                 status.update(state="ready", admission_expires_at=ready_at + ready_seconds)
                             else:
                                 status["state"] = "attesting"
-                        elif event == "context_published":
-                            published = True
-                            status["state"] = "attesting"
-                        elif event == "context_publication_started":
-                            status["state"] = "attesting"
+                        elif event in ("provider_observed", "context_publication_started", "context_published"):
+                            expected = "provider_validation" if event == "provider_observed" else "context_publish"
+                            if record.get("stage") != expected:
+                                raise ValueError("unexpected attester observation/publication stage")
+                            published = published or event == "context_published"
+                            status.update(state="attesting", admission_closed=True)
                         elif record.get("context_delivered") is True or record.get("status") == "failed":
                             if terminal is not None:
                                 raise ValueError("duplicate attester terminal output")
