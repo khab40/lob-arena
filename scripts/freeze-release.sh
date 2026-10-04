@@ -220,7 +220,7 @@ PYTHON_BIN="python3"
 capture "${STAGING_DIR}/versions/python.txt" "${PYTHON_BIN}" --version
 capture "${STAGING_DIR}/versions/python-packages.txt" "${PYTHON_BIN}" -m pip list --format=freeze --disable-pip-version-check
 copy_tracked "versions/requirements" \
-  'backend/pyproject.toml' 'backend/uv.lock' 'serverless/endpoint/requirements.txt' 'frontend/package.json' 'frontend/pnpm-lock.yaml'
+  'backend/pyproject.toml' 'backend/uv.lock' 'serverless/endpoint/requirements.txt' 'frontend/package.json' 'frontend/pnpm-lock.yaml' 'frontend/patches/**'
 
 VLLM_IMAGE="$(awk '/^FROM[[:space:]]+vllm\/vllm-openai:/ {print $2; exit}' "${ROOT_DIR}/serverless/endpoint/Dockerfile" 2>/dev/null || true)"
 {

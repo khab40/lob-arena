@@ -2,10 +2,10 @@ name: Public website
 
 on:
   pull_request:
-    paths: ['website/**', 'frontend/package.json', 'frontend/pnpm-lock.yaml', '.github/workflows/website.yml']
+    paths: ['website/**', 'frontend/package.json', 'frontend/pnpm-lock.yaml', 'frontend/patches/**', 'frontend/test/braces-depth-security.test.mjs', '.github/workflows/website.yml']
   push:
     branches: [main]
-    paths: ['website/**', 'frontend/package.json', 'frontend/pnpm-lock.yaml', '.github/workflows/website.yml']
+    paths: ['website/**', 'frontend/package.json', 'frontend/pnpm-lock.yaml', 'frontend/patches/**', 'frontend/test/braces-depth-security.test.mjs', '.github/workflows/website.yml']
   workflow_dispatch:
 
 permissions:
