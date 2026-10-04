@@ -1,0 +1,15 @@
+Name:      cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952
+MediaType: application/vnd.oci.image.index.v1+json
+Digest:    sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952
+           
+Manifests: 
+  Name:        cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:455c5413242d71948ac47089472ad497c312efdb8eedc184613beead0f8db7a5
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    linux/amd64
+               
+  Name:        cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b985e662a4206cd54d51da93d9399e48d18314c7d4d3abab154c0504250c89df
+  MediaType:   application/vnd.oci.image.manifest.v1+json
+  Platform:    unknown/unknown
+  Annotations: 
+    vnd.docker.reference.type:   attestation-manifest
+    vnd.docker.reference.digest: sha256:455c5413242d71948ac47089472ad497c312efdb8eedc184613beead0f8db7a5

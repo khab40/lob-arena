@@ -36,5 +36,9 @@
   "network_enabled": false,
   "published_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952",
   "registry_digest_independently_read": true,
-  "platform_manifest": "sha256:455c5413242d71948ac47089472ad497c312efdb8eedc184613beead0f8db7a5"
+  "platform_manifest": "sha256:455c5413242d71948ac47089472ad497c312efdb8eedc184613beead0f8db7a5",
+  "registry_readback_file": {
+    "path": "docs/evidence/transformer-confirmation-r2-registry-20261004.txt",
+    "sha256": "57b83ccacbbbe012bc6872efdad24d6ee19c786d57450b1407ad184d513de04d"
+  }
 }

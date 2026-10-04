@@ -29,7 +29,7 @@
   },
   "image_equivalence_file": {
     "path": "docs/evidence/transformer-confirmation-r2-image-20261004.json",
-    "sha256": "b6ccfe7a5f4d0c1ea71e13617e986d4565e48cdebd1371602899c9e681203c86"
+    "sha256": "c305f9486b332f63709651ecf1ce0f7934ea6e887af8dce13752195da7f4896b"
   },
   "runbook_file": {
     "path": "docs/ml/transformer-confirmation-r2-20261004.md",
