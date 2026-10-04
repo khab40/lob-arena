@@ -12,6 +12,20 @@ This refreshes the existing plan; it does not change the experiment protocol or
 authorize execution, final-test access, promotion, merging or cleanup.
 Verification: reconcile saved evidence, repository documentation and GitHub state.
 
+## 4 October execution update
+
+The two-seed package in PR #296 was merged and explicitly approved with a $25
+additional cap excluding VAT. Seed 7 failed at context delivery before training;
+the local attester returned AttributeError without diagnostic origin. Seed 2027
+was not submitted. [Failure report](experiments/transformer-confirmation-20261004/seed-7.md).
+[Bug #306](https://github.com/khab40/lob-arena/issues/306) repairs diagnostics and
+startup-path coverage. The original error's exact cause remains unknown.
+
+The sequence below is paused at confirmation. Next: review/test the repair and
+prepare a fresh replacement identity and exact authorization. Existing approval
+permits no replacement; keep the failed attempt's $12.50 reservation committed
+until billing reconciliation. Subsequent dates are conditional and not achieved.
+
 ## Completed on 3 October
 
 - Startup/publication fixes and the replacement GPU smoke passed independent

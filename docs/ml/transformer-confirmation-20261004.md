@@ -2,9 +2,12 @@
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
-**Prepared, not authorized or executed.** The operator requested this package
-and exact run/spend approval. The completed grid authorization excludes these
-seeds. This package requests two additional Jobs, with no replacements.
+**Approved; sequence stopped after seed-7 startup failure.** The operator
+approved the exact proposal and $25 additional cap. Seed 7 failed at context
+delivery before training; seed 2027 was not submitted. See the
+[failed-run report](experiments/transformer-confirmation-20261004/seed-7.md).
+The package below is retained as the approved historical protocol; its original
+proposal bytes remain unchanged. It authorizes no replacement Job.
 
 As a researcher,
 I want to repeat the selected Transformer configuration with seeds 7 and 2027,

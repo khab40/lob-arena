@@ -1,5 +1,6 @@
 """Prepare, attest and read back the approved research slots; never create Jobs."""
 import argparse
+from contextlib import contextmanager
 from datetime import UTC, datetime
 import importlib.metadata
 import json
@@ -20,6 +21,42 @@ from app.ml.transformer.role_execution_spec import secret_selectors
 from app.ml.transformer.role_execution_transport import client
 from app.ml.transformer.role_source import authenticate
 from app.ml.transformer.verification_spec import canonical
+
+
+@contextmanager
+def stage(name):
+    try:
+        yield
+    except Exception as error:
+        if not hasattr(error, "operator_stage"):
+            error.operator_stage = name
+        raise
+
+
+def progress(event, name):
+    print(canonical({"event": event, "stage": name,
+        "evidence_status": "progress_not_independent_verification"}).decode(), flush=True)
+
+
+def failure_record(error):
+    def frames(exception):
+        result, trace = [], exception.__traceback__
+        while trace is not None:
+            code = trace.tb_frame.f_code
+            result.append({"file": Path(code.co_filename).name,
+                "function": code.co_name, "line": trace.tb_lineno})
+            trace = trace.tb_next
+        return result[-8:]
+    cause = error.__cause__ or (None if error.__suppress_context__ else error.__context__)
+    return {"status": "failed", "stage": getattr(error, "operator_stage", "startup"),
+        "error_type": type(error).__name__, "cause_type": type(cause).__name__ if cause else None,
+        "frames": frames(error), "cause_frames": frames(cause) if cause else []}
+
+
+def missing_key(error):
+    response = getattr(error, "response", None)
+    details = response.get("Error") if isinstance(response, dict) else None
+    return isinstance(details, dict) and details.get("Code") in ("NoSuchKey", "404")
 
 
 def cli(*args):
@@ -92,41 +129,59 @@ def prepare(args):
 
 def attest(store, directory, key):
     request = store.request
-    if key.public_key().public_bytes_raw().hex() != request["context_public_key"]:
-        raise ValueError("signing custody differs from prepared request")
+    with stage("custody_validation"):
+        if key.public_key().public_bytes_raw().hex() != request["context_public_key"]:
+            raise ValueError("signing custody differs from prepared request")
+    progress("attester_ready", "provider_read")
     # Image provisioning is separate from the worker's five-minute handshake.
     expires = time.monotonic() + request["resources"]["timeout_seconds"]
     for _ in range(request["resources"]["timeout_seconds"] // 5):
         if time.monotonic() >= expires:
             break
-        job = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
+        with stage("provider_read"):
+            job = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
         if job is None:
+            progress("attester_waiting", "provider_read")
             time.sleep(5)
             continue
-        context = observed(job, request)
-        try:
-            intent, item = store.read(request["slot"], "INTENT", limit=16384)
-        except Exception as error:
-            if getattr(error, "response", {}).get("Error", {}).get("Code") not in ("NoSuchKey", "404"):
-                raise
-            time.sleep(5)
-            continue
-        if intent != canonical(request):
-            raise ValueError("worker intent differs")
-        head = store.s3.head_object(Bucket=request["output_bucket"],
-            Key=request["output_prefix"] + "INTENT", VersionId=item["version_id"])
-        if not 0 <= (datetime.now(UTC) - head["LastModified"]).total_seconds() < 240:
-            raise ValueError("worker intent expired")
-        fresh = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
-        fresh_context = observed(fresh, request)
-        if fresh_context["job_id"] != context["job_id"]:
-            raise ValueError("provider Job changed before signing")
+        with stage("provider_validation"):
+            context = observed(job, request)
+        with stage("intent_read"):
+            try:
+                intent, item = store.read(request["slot"], "INTENT", limit=16384)
+            except Exception as error:
+                if not missing_key(error):
+                    raise
+                progress("attester_waiting", "intent_read")
+                time.sleep(5)
+                continue
+        with stage("intent_validation"):
+            if intent != canonical(request):
+                raise ValueError("worker intent differs")
+        with stage("intent_head"):
+            head = store.s3.head_object(Bucket=request["output_bucket"],
+                Key=request["output_prefix"] + "INTENT", VersionId=item["version_id"])
+        with stage("intent_validation"):
+            if not 0 <= (datetime.now(UTC) - head["LastModified"]).total_seconds() < 240:
+                raise ValueError("worker intent expired")
+        with stage("provider_recheck"):
+            fresh = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
+        with stage("provider_recheck_validation"):
+            fresh_context = observed(fresh, request)
+            if fresh_context["job_id"] != context["job_id"]:
+                raise ValueError("provider Job changed before signing")
         context, job = fresh_context, fresh
-        envelope = {"context": context, "signature": key.sign(canonical(context)).hex()}
-        store.put("execution-context.json", canonical(envelope), artifact=False)
-        write(directory / "provider-context.json", {"job": job, "envelope": envelope})
+        with stage("context_sign"):
+            envelope = {"context": context, "signature": key.sign(canonical(context)).hex()}
+        with stage("context_publish"):
+            progress("context_publication_started", "context_publish")
+            store.put("execution-context.json", canonical(envelope), artifact=False)
+        progress("context_published", "context_publish")
+        with stage("context_receipt"):
+            write(directory / "provider-context.json", {"job": job, "envelope": envelope})
         return {"job_id": context["job_id"], "context_delivered": True}
-    raise TimeoutError("operator attestation window expired")
+    with stage("attestation_timeout"):
+        raise TimeoutError("operator attestation window expired")
 
 
 def main():
@@ -142,8 +197,12 @@ def main():
     if args.action == "prepare":
         return prepare(args)
     directory = args.evidence / args.slot
-    request = json.loads((directory / "request.json").read_bytes())
-    store = Store(authenticated_client(), request)
+    with stage("request_read"):
+        request = json.loads((directory / "request.json").read_bytes())
+    with stage("authentication"):
+        s3 = authenticated_client()
+    with stage("request_validation"):
+        store = Store(s3, request)
     if args.action == "preflight":
         job = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
         if job is not None:
@@ -153,7 +212,8 @@ def main():
             raise ValueError("slot prefix is occupied")
         return {"slot_absent": True, "output_empty": True, "checked_at": datetime.now(UTC).isoformat()}
     if args.action == "attest":
-        key = Ed25519PrivateKey.from_private_bytes((args.evidence / "context-private.key").read_bytes())
+        with stage("custody_read"):
+            key = Ed25519PrivateKey.from_private_bytes((args.evidence / "context-private.key").read_bytes())
         return attest(store, directory, key)
     bundle, source = args.bundle.read_bytes(), args.source_receipt.read_bytes()
     job = cli("ai", "job", "get-by-name", "--parent-id", PROJECT, "--name", request["run_id"])
@@ -170,9 +230,13 @@ def main():
     return {"status": report["status"], "job_id": report["context"]["job_id"]}
 
 
-if __name__ == "__main__":
+def run():
     try:
-        print(canonical(main()).decode())
+        print(canonical(main()).decode(), flush=True)
     except Exception as error:
-        print(canonical({"status": "failed", "error_type": type(error).__name__}).decode())
+        print(canonical(failure_record(error)).decode(), flush=True)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    run()

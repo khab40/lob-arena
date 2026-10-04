@@ -1,0 +1,4 @@
+{
+  "status": "success",
+  "output": "Provisioning resources for the workload\nWorkload initialization started\nDownloading container image\nStarting workload container\n{\"cause_type\":null,\"error_type\":\"TimeoutError\",\"stage\":\"context\",\"status\":\"failed\"}\n"
+}

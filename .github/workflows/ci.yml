@@ -163,6 +163,7 @@ jobs:
           tests/test_transformer_research_stability.py
           tests/test_transformer_research_storage.py tests/test_transformer_research_readback.py
           tests/test_transformer_research_operator.py
+          tests/test_transformer_operator_diagnostics.py
           tests/test_transformer_research_comparison_readback.py
 
       - name: Verify governed image submission contracts (inert metadata only)
