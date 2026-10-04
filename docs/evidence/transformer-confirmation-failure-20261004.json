@@ -66,23 +66,38 @@
   "local_receipts": {
     "execution-authorization.json": {
       "path": "outputs/transformer-confirmation-20261004/execution-authorization.json",
-      "sha256": "5263b5614839d3fd209fcd8f5b7832c8c826a6e14d8545e21818247e281ee4fd"
+      "sha256": "5263b5614839d3fd209fcd8f5b7832c8c826a6e14d8545e21818247e281ee4fd",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/execution-authorization.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "5263b5614839d3fd209fcd8f5b7832c8c826a6e14d8545e21818247e281ee4fd"
     },
     "seed-7-provider-failed.json": {
       "path": "outputs/transformer-confirmation-20261004/seed-7-provider-failed.json",
-      "sha256": "146d917098c026289c847693541ea97c577b22352f4d4e246da7183e6f3c0849"
+      "sha256": "146d917098c026289c847693541ea97c577b22352f4d4e246da7183e6f3c0849",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-provider-failed.json",
+      "tracked_copy_transform": "provider projection: environment_variables and injected_files omitted; complete original remains at root path",
+      "tracked_copy_sha256": "1982333a1e10333dfef41864d6be02de58b13c28b45ff05ef86343b18eb0158b"
     },
     "seed-7-attester-failure.json": {
       "path": "outputs/transformer-confirmation-20261004/seed-7-attester-failure.json",
-      "sha256": "cb3b796cc361222cc4b5b4a2439de7d7ab5b717afbe5696eac3ecb4f96cf1d53"
+      "sha256": "cb3b796cc361222cc4b5b4a2439de7d7ab5b717afbe5696eac3ecb4f96cf1d53",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-attester-failure.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "cb3b796cc361222cc4b5b4a2439de7d7ab5b717afbe5696eac3ecb4f96cf1d53"
     },
     "seed-7-terminal-logs.json": {
       "path": "outputs/transformer-confirmation-20261004/seed-7-terminal-logs.json",
-      "sha256": "26adb2fa803d1e39b99191ba880245614de3c40605b5ba4b1624c3f557f61f92"
+      "sha256": "26adb2fa803d1e39b99191ba880245614de3c40605b5ba4b1624c3f557f61f92",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-terminal-logs.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "26adb2fa803d1e39b99191ba880245614de3c40605b5ba4b1624c3f557f61f92"
     },
     "seed-7-output-diagnosis.json": {
       "path": "outputs/transformer-confirmation-20261004/seed-7-output-diagnosis.json",
-      "sha256": "74b989a6bf49fdc50de9ff5125fd7984716bee9a189c9417b5b8a19f2a8c523f"
+      "sha256": "74b989a6bf49fdc50de9ff5125fd7984716bee9a189c9417b5b8a19f2a8c523f",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-output-diagnosis.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "74b989a6bf49fdc50de9ff5125fd7984716bee9a189c9417b5b8a19f2a8c523f"
     }
   },
   "next_steps": [

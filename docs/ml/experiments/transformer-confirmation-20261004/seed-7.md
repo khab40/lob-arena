@@ -8,6 +8,10 @@ there are no epochs, loss curves, checkpoints or metrics to report.
 [Story #24](https://github.com/khab40/lob-arena/issues/24) in
 [Project #3](https://github.com/users/khab40/projects/3).
 [Machine-readable evidence](../../../evidence/transformer-confirmation-failure-20261004.json).
+Its receipt entries also bind tracked copies for fresh-checkout review. Four
+are byte-identical originals; the provider copy explicitly omits credential
+selectors and the injected request payload. The complete provider receipt and
+its original hash remain preserved in project-root `outputs/`.
 
 | Item | Observed value |
 | --- | --- |

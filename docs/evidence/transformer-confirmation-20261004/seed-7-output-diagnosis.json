@@ -1,0 +1,52 @@
+{
+  "checked_at_utc": "2026-10-04T06:57:28.735933+00:00",
+  "keys": [
+    "FAILED",
+    "INTENT"
+  ],
+  "truncated": false,
+  "reads": {
+    "INTENT": {
+      "status": "read",
+      "receipt": {
+        "sha256": "de263eb34c41b541836cce505f6f35ef56cdc02d24b14e66ebc554f5deb6e6bb",
+        "size_bytes": 2736,
+        "version_id": "1"
+      },
+      "matches_request": true
+    },
+    "execution-context.json": {
+      "error_type": "NoSuchKey",
+      "error_message": null,
+      "response_type": "dict",
+      "code": "NoSuchKey",
+      "frames": [
+        {
+          "file": "<stdin>",
+          "line": 12,
+          "name": "<module>"
+        },
+        {
+          "file": "research_storage.py",
+          "line": 36,
+          "name": "read"
+        },
+        {
+          "file": "client.py",
+          "line": 606,
+          "name": "_api_call"
+        },
+        {
+          "file": "context.py",
+          "line": 123,
+          "name": "wrapper"
+        },
+        {
+          "file": "client.py",
+          "line": 1094,
+          "name": "_make_api_call"
+        }
+      ]
+    }
+  }
+}
