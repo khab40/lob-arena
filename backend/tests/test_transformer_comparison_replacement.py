@@ -3,13 +3,16 @@ from copy import deepcopy
 
 import pytest
 
-from app.ml.transformer import research_comparison_contract as contract
-from app.ml.transformer.research_confirmation_contract import CONTEXT_PUBLIC_KEY
-from app.ml.transformer.research_execution_spec import (
+pytest.importorskip("numpy")
+pytest.importorskip("pyarrow")
+pytest.importorskip("cryptography")
+from app.ml.transformer import research_comparison_contract as contract  # noqa: E402
+from app.ml.transformer.research_confirmation_contract import CONTEXT_PUBLIC_KEY  # noqa: E402
+from app.ml.transformer.research_execution_spec import (  # noqa: E402
     comparison_replacement_template, comparison_template, provider_spec, request_sha, validate,
 )
-from app.ml.transformer.research_storage import key
-from test_transformer_comparison_contract import checkpoint_inputs
+from app.ml.transformer.research_storage import key  # noqa: E402
+from test_transformer_comparison_contract import checkpoint_inputs  # noqa: E402
 
 
 def replacement():
