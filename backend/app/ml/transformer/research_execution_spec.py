@@ -1,6 +1,7 @@
 """Eight fixed research slots; exact immutable request validation."""
 import re
 
+from . import research_confirmation_contract as confirmation
 from .research_baseline import CALIBRATION_SHA, PREDICTIONS_SHA
 from .role_execution_spec import BUNDLE_SHA, PROJECT, SOURCE_RECEIPT_SHA, SUBNET, secret_selectors  # noqa: F401
 from .verification_spec import INVENTORY_SHA, OUTPUT_BUCKET, canonical, digest
@@ -45,6 +46,20 @@ def template(slot, source_commit, image_digest, context_public_key, nonce, prior
         "final_test": False, "mlflow_online_required": False}
 
 
+def replacement_template(slot, source_commit, image_digest, context_public_key, nonce, prior=None):
+    if slot not in confirmation.SLOTS:
+        raise ValueError("replacement supports the two confirmation seeds only")
+    prior = confirmation.prerequisites() if prior is None else prior
+    request = template(slot, source_commit, image_digest, context_public_key, nonce, prior)
+    request.update(schema_version=confirmation.SCHEMA, campaign=confirmation.CAMPAIGN,
+        run_id=f"{confirmation.CAMPAIGN}-{slot}", output_prefix=confirmation.PREFIX + slot + "/",
+        numerical_source_commit=confirmation.BASE_SOURCE, base_image_digest=confirmation.BASE_IMAGE_DIGEST,
+        compatibility_sha256=confirmation.COMPATIBILITY_SHA256,
+        trial={"width": 128, "learning_rate": .0003, "seed": int(slot.split("-")[1]),
+               "max_epochs": 30, "batch_size": 64, "patience": 5})
+    return request
+
+
 def receipt(item):
     if (not isinstance(item, dict) or set(item) != {"sha256", "size_bytes", "version_id"}
             or not isinstance(item["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])
@@ -67,6 +82,16 @@ def validate(request, source_commit=None):
     prior = request.get("prior")
     if not isinstance(prior, dict) or set(prior) != set(dependencies(request["slot"])):
         raise ValueError("fixed research dependency graph differs")
+    constructor = template
+    if confirmation.is_replacement(request):
+        if (request["slot"] not in confirmation.SLOTS or prior != confirmation.LEGACY_PRIOR
+                or request["context_public_key"] != confirmation.CONTEXT_PUBLIC_KEY
+                or request["source_commit"] == confirmation.BASE_SOURCE
+                or request["image_digest"] == confirmation.BASE_IMAGE_DIGEST
+                or any(request.get(k) != value for k, value in confirmation.MANIFEST.items()
+                       if k.endswith("_sha256"))):
+            raise ValueError("confirmation compatibility identity or prerequisites differ")
+        constructor = replacement_template
     for item in prior.values():
         if set(item) != {"success", "request"}:
             raise ValueError("prior receipt must bind its exact request")
@@ -77,7 +102,7 @@ def validate(request, source_commit=None):
         if (not isinstance(previous, dict) or set(previous) != {"sha256"}
                 or not re.fullmatch(r"[0-9a-f]{64}", previous["sha256"])):
             raise ValueError("prior request checksum invalid")
-    expected = template(request["slot"], *(request[k] for k in patterns), prior)
+    expected = constructor(request["slot"], *(request[k] for k in patterns), prior)
     if canonical(expected) != canonical(request) or len(canonical(request)) > 16384:
         raise ValueError("request escapes fixed research bounds")
 
