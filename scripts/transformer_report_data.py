@@ -11,6 +11,21 @@ def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
+def source_lineage(request):
+    if request.get("schema_version") != "transformer_research_execution_v2":
+        return [f'- Source: `{request["source_commit"]}`', f'- Image: `{request["image_digest"]}`']
+    patterns = {"numerical_source_commit": r"[0-9a-f]{40}",
+                "base_image_digest": r"sha256:[0-9a-f]{64}", "compatibility_sha256": r"[0-9a-f]{64}"}
+    if any(not isinstance(request.get(key), str) or not re.fullmatch(pattern, request[key])
+           for key, pattern in patterns.items()):
+        raise ValueError("invalid confirmation report provenance")
+    return [f'- Assembly source: `{request["source_commit"]}`',
+            f'- Executed image: `{request["image_digest"]}`',
+            f'- Numerical source: `{request["numerical_source_commit"]}`',
+            f'- Base image: `{request["base_image_digest"]}`',
+            f'- Compatibility manifest SHA-256: `{request["compatibility_sha256"]}`']
+
+
 def load(directory: Path):
     receipt_raw = (directory / "verification.json").read_bytes()
     receipt = json.loads(receipt_raw)
@@ -28,6 +43,7 @@ def load(directory: Path):
     for key in ("source_commit", "image_digest"):
         if request[key] != result["bindings"][key]:
             raise ValueError("report source binding differs")
+    lineage = source_lineage(request)
     for value in (request["slot"], request["run_id"], result["job_id"], request["output_bucket"]):
         if not re.fullmatch(r"[a-zA-Z0-9_.-]+", value):
             raise ValueError("unsafe report identity")
@@ -76,7 +92,7 @@ def load(directory: Path):
             raise ValueError("report metrics differ from verified predictions")
     normalization = artifact("normalization.json")
     return {"request": request, "result": result, "provider": provider, "counts": counts,
-            "training_rows": normalization["fitting_rows"],
+            "training_rows": normalization["fitting_rows"], "source_lineage": lineage,
             "metrics": metrics, "receipt_sha256": sha(receipt_raw), "receipt": receipt}
 
 
@@ -120,7 +136,7 @@ def markdown(data):
         (f'Online MLflow status: `{r.get("mlflow_reconciliation", "not_recorded")}`. '
          "Configuration, metrics and replayable events are retained."), "",
         "## Lineage", "", f'- Run: `{req["run_id"]}`', f'- Job: `{r["job_id"]}`',
-        f'- Source: `{req["source_commit"]}`', f'- Image: `{req["image_digest"]}`',
+        *data["source_lineage"],
         f'- Request SHA-256: `{r["request_sha256"]}`', f'- Verification SHA-256: `{data["receipt_sha256"]}`',
         f'- S3 prefix: `s3://{req["output_bucket"]}/{req["output_prefix"]}`',
         f'- Checkpoint: `{checkpoint["object_name"]}` (version `{checkpoint["version_id"]}`)',
