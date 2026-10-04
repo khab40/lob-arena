@@ -21,10 +21,11 @@ was not submitted. [Failure report](experiments/transformer-confirmation-2026100
 [Bug #306](https://github.com/khab40/lob-arena/issues/306) repairs diagnostics and
 startup-path coverage. The original error's exact cause remains unknown.
 
-The sequence below is paused at confirmation. Next: review/test the repair and
-prepare a fresh replacement identity and exact authorization. Existing approval
-permits no replacement; keep the failed attempt's $12.50 reservation committed
-until billing reconciliation. Subsequent dates are conditional and not achieved.
+PR #307's diagnostic repair is merged. The sequence below awaits review/CI and
+exact approval of the [fresh replacement package](transformer-confirmation-r2-20261004.md).
+Both dry-runs passed; propose $6.25 for each new seed within the existing $25 cap.
+Keep the failed attempt's $12.50 commitment until billing reconciliation.
+No replacement has run. Subsequent dates are conditional and not achieved.
 
 ## Completed on 3 October
 
@@ -89,10 +90,12 @@ operator-reported $300 baseline remains committed pending billing reconciliation
 the roughly $1 compute/disk estimate is not a bill or reusable authorization.
 Exact next-stage monetary bounds must be approved before submission.
 
-Use the completed grid's pinned source `87ce8a9` and recorded digest image for
-dependent campaign slots. New logging code cannot silently change those identities;
-its future runtime needs an explicit compatibility package. Existing checkpoints
-already provide epoch curves for post-run reports; do not repeat training for logs.
+The replacement package layers four execution modules onto the grid's original
+digest image, preserving numerical source `87ce8a9` and all model/dependency bytes.
+It admits only confirmation seeds and exact legacy smoke/grid references. Later
+inference needs explicit checkpoint-origin compatibility; it cannot relabel the
+seed-42 checkpoint's original bindings. New logging is not part of this image.
+Existing epoch artifacts provide post-run curves; do not repeat training for logs.
 
 O is also used for threshold selection, LightGBM calibration previously saw the
 validation fold, and labels remain synthetic/research controls. Report these

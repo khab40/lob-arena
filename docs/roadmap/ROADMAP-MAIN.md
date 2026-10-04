@@ -21,8 +21,9 @@ select width 128, learning rate 0.0003, seed 42, epoch 4: selection log loss
 0.002437833 and F1 1.0 on 1,250 rows, including 45 positives. This is the tuning
 fold, not evidence of superiority over LightGBM. The approved seed-7 confirmation
 failed before training during context delivery; seed 2027 remains unsubmitted.
-Next: [repair attester diagnostics](https://github.com/khab40/lob-arena/issues/306),
-review/test, then prepare exact replacement authorization. See the
+The [diagnostic repair](https://github.com/khab40/lob-arena/pull/307) is merged.
+Next: review and exactly authorize the [fresh replacement package](../ml/transformer-confirmation-r2-20261004.md),
+then execute/verify both confirmations within the unchanged $25 stage cap. See the
 [failure report](../ml/experiments/transformer-confirmation-20261004/seed-7.md).
 Seed stability, calibration and an exact-row operating-point-role comparison
 remain pending. No final-test run is authorized.
