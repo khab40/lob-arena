@@ -25,11 +25,12 @@ three-seed stability passed with selection-loss range 0.002395075568322679 and
 F1 range 0.0. Seed 42 / epoch 4 remains the candidate. The earlier failed attempt
 is preserved, and the full $25 confirmation commitment remains held pending billing.
 The [checkpoint compatibility package](../ml/transformer-comparison-20261004.md)
-is prepared: 229 artifacts verified, 289 inert tests passed, frozen numerical
-image preserved and exact dry-run passed. Next: review CI and separately approve
-one one-hour calibration/inference Job and its proposed $6.25 additional cap
-excluding VAT. Calibration and exact-row LightGBM comparison have not run; no
-final-test run is authorized. PR #308 is merged.
+was approved and PR #311 merged, but its one-hour Job was cancelled when the
+observer rejected IMAGE_PULLING. No comparison result exists; the output prefix
+is empty. [Bug #312](https://github.com/khab40/lob-arena/issues/312) repairs the
+state mismatch and startup timer. Next: review repair, prepare a fresh replacement
+package and obtain exact authorization. The consumed attempt's $6.25 remains
+reserved pending billing. Seed 42 is retained; no final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.

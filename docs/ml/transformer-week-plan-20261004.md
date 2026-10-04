@@ -24,10 +24,17 @@ startup-path coverage. The original error's exact cause remains unknown.
 PR #307's diagnostic repair is merged. Both exactly approved replacement Jobs
 reached COMPLETED and passed independent readback. [Three-seed stability passed](transformer-confirmation-results-20261004.md):
 selection-loss range 0.002395075568322679 and F1-at-0.5 range 0.0, below the 0.05
-limits. Seed 42 / epoch 4 remains the candidate. PR #308 remains open.
+limits. Seed 42 / epoch 4 remains the candidate. PR #308 is merged.
 Keep the full $25 confirmation commitment, including the failed attempt's $12.50,
 until billing reconciliation. Calibration and LightGBM comparison have not run;
 subsequent dates remain conditional and separate exact run/spend approval is required.
+
+PR #311's checkpoint package was merged and exactly approved with a $6.25
+additional cap. Its single comparison Job was cancelled during image download
+because the observer omitted IMAGE_PULLING. The output prefix is empty and no
+comparison result is verified. [Incident and repair](transformer-comparison-abort-20261004.md)
+under [Bug #312](https://github.com/khab40/lob-arena/issues/312). The $6.25 remains
+held; another Job requires a corrected fresh package and separate authorization.
 
 ## Completed on 3 October
 
@@ -55,7 +62,7 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    2027** completed sequentially and passed independent verification. Both
    selection-loss and F1 ranges pass the existing ≤0.05 stability gates. Keep
    seed 42 / epoch 4 as candidate; do not select the luckiest seed.
-2. **5 October — calibrate and compare.** Prepare one separately authorized
+2. **5 October — calibrate and compare.** Review the observer repair, then prepare one replacement separately authorized
    calibration/inference Job, at most one hour, with explicit checkpoint-origin
    compatibility and an exact request/image, dry-run and spend approval.
    Fit temperature only on C (5,490 rows); choose declared operating points and
@@ -84,7 +91,8 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
 
 ## Bounds and interpretation
 
-Remaining planned model work is **one Job / one timeout GPU-hour**, requiring
+The initial comparison attempt is consumed. A proposed replacement would be
+**one Job / one timeout GPU-hour**, requiring
 separate exact authorization: one L40S, 8 vCPU, 32 GiB RAM, 100 GiB disk,
 concurrency one and restart never.
 The completed four-Job authorization is consumed. Its $50 reservation above the

@@ -1,3 +1,18 @@
+## 2026-10-04 — Comparison attempt cancelled; observer repair required
+
+The operator approved PR #311's exact one-hour L40S comparison and $6.25
+additional cap. Job `aijob-e00ma26ee5bavrb8nb` was cancelled after the observer
+rejected supported IMAGE_PULLING. Its S3 prefix is empty; no signed context or
+comparison result was published. [Failure report](../ml/transformer-comparison-abort-20261004.md)
+and [Bug #312](https://github.com/khab40/lob-arena/issues/312).
+
+The repair shares the existing provider state set, preserves one startup budget
+across image download and adds the real snapshot regression. 75 inert tests pass.
+Next: review repair, prepare a fresh replacement package and obtain separate
+exact authorization. Keep the full $6.25 reservation held pending billing; the
+one-attempt approval is consumed. Seed 42 remains unchanged; model-quality
+outcome is inconclusive. Story #24 remains In Progress; G8/G9 stay closed.
+
 ## 2026-10-04 — Checkpoint compatibility prepared; comparison approval pending
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24): the
