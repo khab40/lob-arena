@@ -11,9 +11,9 @@ supervisor = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(supervisor)
 
 
-def cli(monkeypatch, tmp_path, *, slot="seed-7", timeout=7200, ready=120):
+def cli(monkeypatch, tmp_path, *, slot="seed-7", timeout=7200, ready=120, requested_slot="seed-7"):
     evidence = tmp_path / "evidence"
-    request = evidence / "seed-7" / "request.json"
+    request = evidence / requested_slot / "request.json"
     request.parent.mkdir(parents=True)
     request.write_text(json.dumps({"slot": slot, "run_id": "confirmation-seed-7",
                                    "resources": {"timeout_seconds": timeout}}))
@@ -22,7 +22,7 @@ def cli(monkeypatch, tmp_path, *, slot="seed-7", timeout=7200, ready=120):
     operator.write_text("raise RuntimeError('must never execute')")
     paths = {"request": request, "proposal": proposal, "operator": operator}
     args = ["supervisor", "run", "--output", str(tmp_path / "supervision"),
-            "--evidence", str(evidence), "--slot", "seed-7", "--proposal", str(proposal),
+            "--evidence", str(evidence), "--slot", requested_slot, "--proposal", str(proposal),
             "--operator", str(operator), "--operator-python", "/reviewed/python",
             "--ready-seconds", str(ready), "--custody", str(tmp_path / "unread-custody.json")]
     for name, path in paths.items():
@@ -66,6 +66,20 @@ def test_cli_rejects_changed_reviewed_bytes_before_spawn(monkeypatch, tmp_path, 
                                      {"ready": 121}, {"ready": 0}])
 def test_cli_rejects_confirmation_bounds_before_spawn(monkeypatch, tmp_path, overrides):
     _, calls = cli(monkeypatch, tmp_path, **overrides)
+    with pytest.raises(ValueError):
+        supervisor.main()
+    assert not calls
+
+
+def test_comparison_supervision_uses_exact_one_hour(monkeypatch, tmp_path):
+    _, calls = cli(monkeypatch, tmp_path, slot="inference", requested_slot="inference", timeout=3600)
+    assert supervisor.main() == 0
+    assert calls[0][-1] == 3600
+
+
+@pytest.mark.parametrize("slot,seconds", [("inference", 7200), ("seed-7", 3600), ("other", 7200)])
+def test_slot_cannot_change_its_timeout(monkeypatch, tmp_path, slot, seconds):
+    _, calls = cli(monkeypatch, tmp_path, slot=slot, requested_slot=slot, timeout=seconds)
     with pytest.raises(ValueError):
         supervisor.main()
     assert not calls

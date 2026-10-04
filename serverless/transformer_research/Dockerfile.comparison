@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+# Context must be produced by scripts/transformer_comparison_image.py.
+# Preserve trained numerical code, dependencies, immutable inputs and entrypoint.
+FROM cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952
+COPY research_confirmation_contract.py research_comparison_contract.py \
+     research_publication_contract.py research_execution_spec.py research_storage.py \
+     research_readback.py research_comparison_readback.py research_run.py \
+     /opt/research/backend/app/ml/transformer/
+ARG SOURCE_COMMIT
+RUN python -c 'import re,sys; assert re.fullmatch("[0-9a-f]{40}",sys.argv[1]); open("/opt/research/source-commit","w").write(sys.argv[1])' "${SOURCE_COMMIT}"
