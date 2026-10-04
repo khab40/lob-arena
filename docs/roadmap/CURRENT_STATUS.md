@@ -1,4 +1,20 @@
-## 2026-10-04 — Comparison attempt cancelled; observer repair required
+## 2026-10-04 — Observer repair merged; corrected comparison awaits authorization
+
+[PR #313](https://github.com/khab40/lob-arena/pull/313) merged as `ae7145e`
+after all 25 checks passed, closing [Bug #312](https://github.com/khab40/lob-arena/issues/312).
+The [fresh r2 package](../ml/transformer-comparison-r2-20261004.md) preserves
+seed 42 / width 128 / rate 0.0003 / epoch 4 and the seven verified publications.
+252 inert tests passed, one expected skip; 229 artifacts, immutable image,
+in-image request validation, exact Nebius dry-run and unused-name/prefix checks passed.
+
+Next: review package/CI, authorize its exact one-attempt one-hour L40S request
+and proposed **$6.25 additional cap excluding VAT**, then independently verify
+calibration and the identical-row LightGBM comparison. Zero r2 Jobs created.
+The consumed r1 $6.25 stays held pending billing; no model-quality conclusion
+exists yet. Story #24 stays In Progress; G8/G9 remain closed. Later settings
+export is tracked separately in [Story #314](https://github.com/khab40/lob-arena/issues/314).
+
+## 2026-10-04 — Earlier comparison attempt cancelled; observer repair required
 
 The operator approved PR #311's exact one-hour L40S comparison and $6.25
 additional cap. Job `aijob-e00ma26ee5bavrb8nb` was cancelled after the observer

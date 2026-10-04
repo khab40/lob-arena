@@ -34,7 +34,12 @@ additional cap. Its single comparison Job was cancelled during image download
 because the observer omitted IMAGE_PULLING. The output prefix is empty and no
 comparison result is verified. [Incident and repair](transformer-comparison-abort-20261004.md)
 under [Bug #312](https://github.com/khab40/lob-arena/issues/312). The $6.25 remains
-held; another Job requires a corrected fresh package and separate authorization.
+held. PR #313 merged with all 25 checks passed and Bug #312 is closed.
+The [corrected r2 package](transformer-comparison-r2-20261004.md) preserves
+the candidate and prerequisites; 252 inert tests (one expected skip), image
+inspection, unused-name/prefix checks and exact dry-run passed. Zero r2 Jobs
+created. Next: package review/CI, exact one-hour L40S authorization and proposed
+$6.25 additional cap, then independent comparison verification and research decision.
 
 ## Completed on 3 October
 
