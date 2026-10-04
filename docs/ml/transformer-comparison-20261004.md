@@ -34,7 +34,7 @@ Feature: Compare the verified selected checkpoint across execution versions
   Scenario: Keep the comparison scope fixed
     Given the exact one-hour development comparison request
     When the package is admitted
-    Then it permits only calibration and operating-point roles
+    Then it fits temperature on calibration and scores calibration and operating-point rows
     And no training or final-test access is authorized
 
   Scenario: Observe startup before submission
@@ -65,3 +65,73 @@ Feature: Compare the verified selected checkpoint across execution versions
    alignment independently, retain plots and present continue/stop/inconclusive.
 
 No inference/calibration Job may be created by this preparation step.
+
+## Prepared package and execution handoff
+
+The package retains width 128, learning rate 0.0003, seed 42, epoch 4. The new
+v3 request has seven exact request/SUCCESS references. Checkpoint bytes, trial,
+original source/image, feature release, role manifest, ordered targets and
+train-only normalization must match. New execution source/image are recorded
+separately. Checkpoint deserialization and CUDA compatibility are checked in the
+separately authorized Job, before scoring; no local weights were executed.
+
+The image preserves original model, training, evaluation, worker, dependencies
+and immutable inputs. Its run module differs only by checkpoint-origin handling;
+the context builder reverses that patch and requires the original source hash.
+The newer live training logger is not part of this sealed runtime. This Job
+performs no gradient training. Existing T/S inputs are read for provenance and
+train-only normalization; C fits one scalar temperature and O selects development
+operating points against the frozen LightGBM predictions on exactly aligned rows.
+
+Execution evidence is rooted at `outputs/transformer-comparison-20261004/`.
+The operator interpreter is `operator-venv/bin/python` below that directory, with
+`PYTHONPATH=backend:scripts` from the implementation checkout. Its seven direct
+requirements are pinned by `serverless/transformer_inputs/requirements.txt`.
+The old incomplete environment is retained; it is not an executable dependency.
+
+After exact proposal/spend approval and green CI:
+
+1. Recheck request, proposal, referenced files, assembly image and operator hashes.
+   Run the pure local prerequisite preflight, inspect all pinned SDK imports,
+   verify existing signing custody and confirm name/prefix remain unused.
+   Refresh the estimate against the $6.25 reservation before admission.
+2. Start `transformer_comparison_observer.py run` with the exact request path/hash
+   and a fresh observer output directory. It records provider reads before create.
+   Start `transformer_confirmation_supervisor.py run` for slot `inference`, binding
+   proposal/request/operator hashes, the explicit interpreter and existing custody.
+   Do not create until both inspect commands report `admission_ready: true`.
+3. Run the exact create command once. Retain the returned operation and Job ID.
+   An ambiguous response requires read-only reconciliation, never another create.
+   The observer targets a ten-second cadence; network retries may lengthen it.
+   A stale observation (over 30 seconds), dead process or failure blocks admission.
+   Once a Job is seen the admission latch stays closed, even if it disappears.
+4. Keep operator supervision active through provider terminal state. Cancel only
+   this created Job on attester failure, uncertainty, monitoring loss, STARTING
+   beyond ten minutes or create-to-terminal beyond two hours. Cancellation must
+   be included in the exact run authorization. The observer only reports; it does
+   not cancel automatically. One-hour provider runtime is not extended by the
+   extra billing reserve. No helper restart or automatic replacement is allowed.
+5. Retain SUCCESS, provider terminal readback and immutable artifact receipts.
+   Collect using the pinned operator and independently check all seven prerequisites,
+   original checkpoint origin, the input event, exact C/O row alignment, temperature
+   optimum, frozen LightGBM calibration/thresholds and reproduced metric arithmetic.
+   A completed provider state alone is not a verified result.
+6. Save one comparison Markdown report with raw/calibrated/LightGBM metrics,
+   calibration reliability and precision-recall plots, threshold/confusion tables,
+   per-family support, measured Transformer latency and continue/stop/inconclusive
+   research disposition. No epoch graph is produced for this non-training Job;
+   retained training curves remain linked. Replayable artifacts precede online
+   MLflow reconciliation. Do not compare unmeasured LightGBM latency or claim a
+   final-test/production win from this one-instrument/date development comparison.
+
+The proposed $6.25 is additional to the fully retained $25 confirmation cap and
+$50 grid allowance, on the operator-reported $300 historical baseline. The
+$381.25 planning envelope is not the current account bill. Actual charges remain
+unreconciled; no estimated savings are released. Retention covers 90 days with
+an operator review on 2027-01-02, without automatic deletion.
+
+Exact create command (authorization still pending):
+
+```sh
+rtk proxy nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-compare-c4-20261004-r1-inference --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:5ab068aae50ef1e8dc2ff89315f5cf5cda01b20b937b48caed8194f08880d713 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 1h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-comparison-20261004/execution/inference/request.json:/opt/research/request.json --async --format json --retries 1 --no-browser --auth-timeout 120s
+```
