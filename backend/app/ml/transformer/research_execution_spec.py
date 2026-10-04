@@ -71,6 +71,15 @@ def comparison_template(source_commit, image_digest, context_public_key, nonce, 
     return request
 
 
+def comparison_replacement_template(source_commit, image_digest, context_public_key, nonce, prior=None):
+    request = comparison_template(source_commit, image_digest, context_public_key, nonce, prior)
+    request.update(schema_version=comparison.REPLACEMENT_SCHEMA, campaign=comparison.REPLACEMENT_CAMPAIGN,
+        run_id=comparison.REPLACEMENT_CAMPAIGN + "-inference",
+        output_prefix=comparison.REPLACEMENT_PREFIX + "inference/",
+        replacement_of=dict(comparison.REPLACEMENT_OF))
+    return request
+
+
 def receipt(item):
     if (not isinstance(item, dict) or set(item) != {"sha256", "size_bytes", "version_id"}
             or not isinstance(item["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", item["sha256"])
@@ -109,8 +118,13 @@ def validate(request, source_commit=None):
                 or request["source_commit"] in (confirmation.BASE_SOURCE, comparison.MANIFEST["confirmation_origin"]["source_commit"])
                 or request["image_digest"] in (confirmation.BASE_IMAGE_DIGEST, comparison.MANIFEST["confirmation_origin"]["image_digest"])):
             raise ValueError("comparison identity or fixed prerequisites differ")
+        if comparison.is_replacement(request) and (
+                request["source_commit"] == comparison.REPLACEMENT_OF["source_commit"]
+                or request["image_digest"] == comparison.REPLACEMENT_OF["image_digest"]):
+            raise ValueError("replacement comparison requires new sealed execution identities")
         def constructor(slot, *args):
-            return comparison_template(*args)
+            builder = comparison_replacement_template if comparison.is_replacement(request) else comparison_template
+            return builder(*args)
     for item in prior.values():
         if set(item) != {"success", "request"}:
             raise ValueError("prior receipt must bind its exact request")

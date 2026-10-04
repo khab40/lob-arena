@@ -10,7 +10,9 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from app.ml.transformer.research_comparison_contract import MANIFEST, checkpoint_origin
 from app.ml.transformer.research_confirmation_contract import CONTEXT_PUBLIC_KEY
-from app.ml.transformer.research_execution_spec import comparison_template, request_sha, validate
+from app.ml.transformer.research_execution_spec import (
+    comparison_replacement_template, comparison_template, request_sha, validate,
+)
 from app.ml.transformer.research_policy import Trial, seed_stability
 from app.ml.transformer.verification_spec import canonical, digest
 from transformer_confirmation_prepare import VERIFIED_SHA, create_command, verify_legacy
@@ -56,13 +58,14 @@ def local_preflight(legacy, confirmations, bundle, source):
     return prior, stability
 
 
-def prepare(legacy, confirmations, bundle, source, output, custody, source_commit, image_digest):
+def prepare(legacy, confirmations, bundle, source, output, custody, source_commit, image_digest, replacement=False):
     prior, stability = local_preflight(legacy, confirmations, bundle, source)
     private = Ed25519PrivateKey.from_private_bytes(custody.read_bytes())
     public = private.public_key().public_bytes_raw().hex()
     if public != CONTEXT_PUBLIC_KEY:
         raise ValueError("comparison signing custody differs")
-    request = comparison_template(source_commit, image_digest, public, secrets.token_hex(16))
+    builder = comparison_replacement_template if replacement else comparison_template
+    request = builder(source_commit, image_digest, public, secrets.token_hex(16))
     validate(request)
     bindings = {**prior[MANIFEST["selected"]["slot"]]["result"]["bindings"],
                 "source_commit": source_commit, "image_digest": image_digest}
@@ -89,5 +92,6 @@ if __name__ == "__main__":
         parser.add_argument("--" + name, type=Path, required=True)
     for name in ("source-commit", "image-digest"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--replacement", action="store_true")
     result = prepare(**vars(parser.parse_args()))
     print(json.dumps({"requests_prepared": 1, "request_sha256": result["request_sha256"], "jobs_created": 0}))

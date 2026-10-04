@@ -1,0 +1,173 @@
+{
+  "schema_version": "transformer_comparison_proposal_v2",
+  "date": "2026-10-04",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "authorization": {
+    "status": "awaiting_exact_run_and_additional_spend_approval",
+    "jobs_authorized": 0,
+    "binding": "SHA-256 of this exact JSON and all referenced file hashes",
+    "scope_if_approved": "one fresh r2 Job, one attempt, supervised context, independent verification/reporting; cancel only this created Job to enforce bounds"
+  },
+  "assembly_source_commit": "73984fc53f640bc89e39a883165ef4c81be414b5",
+  "numerical_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:56ccf4ee7c7bdc7c06f9971223a6158c1080095562e60ca128e0e683e1b6d460",
+  "repository_characters": 47,
+  "request_sha256": "e8f049ee86b32cfb1991b48e94508719e2b11e8b2a61e8d7763fbf69bedad68d",
+  "request_file": {
+    "path": "docs/evidence/transformer-comparison-r2-request-20261004.json",
+    "sha256": "f58d3dca7d605d516bbc12fe42e7704970ab426db0f224bb85c9e120990ff2fc"
+  },
+  "image_file": {
+    "path": "docs/evidence/transformer-comparison-r2-image-20261004.json",
+    "sha256": "c5d2500ef65f760e697249a1ea85991b12656376d37d6355d96601fef6e59f0f"
+  },
+  "readiness_file": {
+    "path": "docs/evidence/transformer-comparison-r2-readiness-20261004.json",
+    "sha256": "99417fdde95d093d6fd581349d586993dc7fc6bc4160d96ca2ac4bfc2a3c10fd"
+  },
+  "runbook_file": {
+    "path": "docs/ml/transformer-comparison-r2-20261004.md",
+    "sha256": "eaca2acdde21b874098b332f640098c42d78662e4598dcd6d71b0630b975335e"
+  },
+  "operator_files": [
+    {"path": "scripts/transformer_comparison_prepare.py", "sha256": "688ceaf855f65af7e55072d0377b4cd278a819477025e1df457fca5b202405dd"},
+    {"path": "scripts/transformer_comparison_observer.py", "sha256": "6431dd62c5354341d034626371cbca3d38ff525c0814d98bc1b0e0b5a3a57877"},
+    {"path": "scripts/transformer_comparison_image.py", "sha256": "377696715622b9bb4a8efc9a2a73004d965d798d47d27243fd48f5fdcc0c57fc"},
+    {"path": "scripts/transformer_confirmation_prepare.py", "sha256": "04024eba2e60fb6c8712728f7ec0ca4d90ec5d8be6a1b94cefd1f914b16e003f"},
+    {"path": "scripts/transformer_confirmation_supervisor.py", "sha256": "c3403dcb2c01b4ea09825db5c221ec71f01a44700b1b572ec679aff453f52b6f"},
+    {"path": "scripts/transformer_research_operator.py", "sha256": "15f15285331a6fec3bc148616e0ad680bd3d48ff6f43f8be601c35c561600230"},
+    {"path": "serverless/transformer_inputs/requirements.txt", "sha256": "2bdb4d066cb34b8b0a1335be24f4bb5cd0950e7af52608fd36690344538c505c"},
+    {"path": "backend/app/ml/transformer/role_execution_context.py", "sha256": "face0ed834853989c1db7602a7e508790f73365eeda50394167d6a8e7a31d100"},
+    {"path": "backend/app/ml/transformer/research_context.py", "sha256": "9fa19ca36396013bd53e9f8aa03e561f0adc770b70b7e9fc6fdcbe5056f68643"},
+    {"path": "backend/app/ml/transformer/research_execution_spec.py", "sha256": "adf897cc6c3b54bb3a05a5d58bb627541d50248c97d9545df89fe9af6f8eb27f"},
+    {"path": "backend/app/ml/transformer/research_comparison_contract.py", "sha256": "ff68149108d859537930875c7a8543dc4dfe1c516c12583481cba0a2142aaa28"},
+    {"path": "backend/app/ml/transformer/research_storage.py", "sha256": "8ce57aae9292139635520549fb884dbff9534005e026e819f03bcd77e419c58b"},
+    {"path": "backend/app/ml/transformer/research_readback.py", "sha256": "a940cf8ae1c257eb967f8b9edfff7281b7c7c7f37df718e3e8688392f5cd1959"},
+    {"path": "backend/app/ml/transformer/research_comparison_readback.py", "sha256": "29d83892731599fac3e85ffd7b983a528f98dfdac14665a8a9344b30a7d2dc7b"},
+    {"path": "backend/app/ml/transformer/research_publication_contract.py", "sha256": "d14f600d34dfe79bf9487203db63a40d46a5c3b4a069bd54005e2c6db34ba894"},
+    {"path": "backend/app/ml/transformer/research_confirmation_contract.py", "sha256": "7bbbffdb4d100146303148a582a920a7cc6a70c9ce3a4326f4782c23b7a2b5b5"},
+    {"path": "backend/app/ml/transformer/role_execution_spec.py", "sha256": "54a717afc258454a002ac96b9e52c79bb8f85ec0617601f5865231a73bd1a111"},
+    {"path": "backend/app/ml/transformer/role_execution_transport.py", "sha256": "f5aa75f56babb0ad924d06ae3b3bac8ecc3022d80e30a48977364b2c9814f87e"},
+    {"path": "backend/app/ml/transformer/verification_spec.py", "sha256": "9e228890eaead3844cabdaeb36ce4b23ccb6e5812be4223b75b32fa1366c4b7d"},
+    {"path": "backend/app/ml/transformer/role_source.py", "sha256": "6637b2bb2686dd1504db3dcc0355f580fc5848400deaab722d22311266b42878"}
+  ],
+  "operator_python": "outputs/transformer-comparison-20261004/operator-venv/bin/python",
+  "custody_path": "outputs/transformer-startup-repair-20261003/p2/execution/context-private.key",
+  "execution_path": "outputs/transformer-comparison-replacement-r2-20261004/execution",
+  "selected_checkpoint": {
+    "epoch": 4,
+    "name": "epoch-04.pt",
+    "object_name": "search-128-0003-epoch-04.pt",
+    "sha256": "e2cc94d8e11ad3ad644e52d5283fd958c5458717efd7cfe02ccc30f8f82e6b2b",
+    "size_bytes": 5033993,
+    "version_id": "1"
+  },
+  "max_jobs": 1,
+  "max_concurrent_jobs": 1,
+  "resources": {
+    "disk_gib": 100,
+    "max_output_bytes": 2147483648,
+    "platform": "gpu-l40s-a",
+    "preemptible": false,
+    "preset": "1gpu-8vcpu-32gb",
+    "publication_reserve_seconds": 600,
+    "restart_policy": "never",
+    "shm_bytes": 1073741824,
+    "timeout_seconds": 3600
+  },
+  "max_create_to_terminal_seconds": 7200,
+  "max_starting_seconds": 600,
+  "admission": {
+    "observer_started_before_create": true,
+    "observer_max_age_seconds": 30,
+    "supervisor_max_heartbeat_age_seconds": 3,
+    "ready_window_seconds": 120,
+    "gate": "both live inspect outputs admission_ready true immediately before one create",
+    "monitoring": "10-second target cadence, read retries may lengthen; operator watches through terminal",
+    "failure": "close admission; cancel only exact created Job on monitoring/context failure or bounds; no replacement"
+  },
+  "cost": {
+    "currency": "USD",
+    "vat": "excluded",
+    "additional_cap_proposed": 6.25,
+    "reservation_before_create": 6.25,
+    "existing_confirmation_commitment_retained": 25,
+    "prior_grid_allowance_retained": 50,
+    "historical_operator_baseline": 300,
+    "baseline_plus_reserved_allowances_if_approved": 387.5,
+    "actual_current_account_spend": "not_reconciled",
+    "planning_envelope_is_current_bill": false,
+    "policy": "operator-managed admission ledger, not provider monetary cutoff",
+    "max_runtime_hours": 1,
+    "extra_billing_hours_reserved": 1,
+    "runtime_extension": false,
+    "artifact_gib_reserved": 2,
+    "retention_days_reserved": 90,
+    "egress_gib_reserved": 16,
+    "requests_reserved": 10000,
+    "retention_review_date": "2027-01-02",
+    "retention_review_authorizes_deletion": false,
+    "release_policy": "hold submitted reservation until actual charges reconcile",
+    "gate": "refresh scoped estimate <=6.25 and reserve once; block unknown/unbounded components",
+    "anomaly_policy": "cancel exact active Job and reconcile; no automatic retry or replacement",
+    "consumed_comparison_attempts": 1,
+    "prior_comparison_commitment_retained": 6.25
+  },
+  "read_only_retry_policy": {
+    "initial_seconds": 30,
+    "retry_seconds": [
+      60,
+      90,
+      120
+    ],
+    "mutation_retries": 0,
+    "ambiguous_write": "read-only reconciliation; never resubmit"
+  },
+  "outputs": [
+    "C logits and scalar temperature",
+    "O logits and selected development operating points",
+    "frozen LightGBM predictions/calibration and exact row alignment",
+    "original checkpoint plus new execution lineage",
+    "calibration/PR/confusion/family metrics",
+    "runtime/resource measurements",
+    "durable artifact inventory and replayable MLflow events",
+    "independent verification and Markdown/plots"
+  ],
+  "limitations": [
+    "development operating points selected on reported role",
+    "prior development exposure",
+    "one date and instrument per role",
+    "research control negatives",
+    "LightGBM latency not measured"
+  ],
+  "mlflow_online_required": false,
+  "out_of_scope": [
+    "training or checkpoint reselection",
+    "extra attempts or replacements",
+    "final-test access",
+    "new IAM",
+    "G8/G9 rerun",
+    "production promotion",
+    "merge",
+    "deletion"
+  ],
+  "defect_ticket": "https://github.com/khab40/lob-arena/issues/312",
+  "repair_merge_commit": "ae7145e26a71b51e8819be1ca993cd9576f2c5f7",
+  "replacement_of": {
+    "image_digest": "sha256:5ab068aae50ef1e8dc2ff89315f5cf5cda01b20b937b48caed8194f08880d713",
+    "job_id": "aijob-e00ma26ee5bavrb8nb",
+    "proposal_sha256": "e5ef3bf3aeee9b8d9e15b24d8ea1b1288809c7183a12764d800f8c10399a0716",
+    "request_sha256": "d5b28eb967d59700182d8003e6b08e73264a2ed06ba0e3c6cb4b94160a9b4deb",
+    "source_commit": "b275e147257b605c8c528e7e61294a114cab7962",
+    "terminal_state": "CANCELLED"
+  },
+  "checkpoint_origin_file": {
+    "path": "docs/evidence/transformer-comparison-r2-origin-20261004.json",
+    "sha256": "b4c7f33caea9e4c0b5c3ae5d719501dba7089b8ea333cc1722f272dbdd187af1"
+  },
+  "startup_states_counted": [
+    "STARTING",
+    "IMAGE_PULLING"
+  ]
+}

@@ -7,6 +7,17 @@ from .verification_spec import canonical, digest
 CAMPAIGN = "transformer-compare-c4-20261004-r1"
 SCHEMA = "transformer_research_execution_v3"
 PREFIX = f"campaigns/wave1-research-20260816/development/{CAMPAIGN}/"
+REPLACEMENT_CAMPAIGN = "transformer-compare-c4-20261004-r2"
+REPLACEMENT_SCHEMA = "transformer_research_execution_v4"
+REPLACEMENT_PREFIX = f"campaigns/wave1-research-20260816/development/{REPLACEMENT_CAMPAIGN}/"
+REPLACEMENT_OF = {
+    "job_id": "aijob-e00ma26ee5bavrb8nb",
+    "request_sha256": "d5b28eb967d59700182d8003e6b08e73264a2ed06ba0e3c6cb4b94160a9b4deb",
+    "proposal_sha256": "e5ef3bf3aeee9b8d9e15b24d8ea1b1288809c7183a12764d800f8c10399a0716",
+    "source_commit": "b275e147257b605c8c528e7e61294a114cab7962",
+    "image_digest": "sha256:5ab068aae50ef1e8dc2ff89315f5cf5cda01b20b937b48caed8194f08880d713",
+    "terminal_state": "CANCELLED",
+}
 MANIFEST = {'schema_version': 'transformer_comparison_compatibility_v1',
  'confirmation_origin': {'source_commit': '7b88ea213b0e38b8e453e40943dd8403ded79fb4',
                          'image_digest': 'sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952',
@@ -58,7 +69,11 @@ COMPATIBILITY_SHA256 = digest(canonical(MANIFEST))
 
 
 def is_comparison(request):
-    return request.get("schema_version") == SCHEMA
+    return request.get("schema_version") in (SCHEMA, REPLACEMENT_SCHEMA)
+
+
+def is_replacement(request):
+    return request.get("schema_version") == REPLACEMENT_SCHEMA
 
 
 def prerequisites():
@@ -67,7 +82,7 @@ def prerequisites():
 
 def artifact_prefix(request, slot):
     if slot == request["slot"] == "inference":
-        return PREFIX + slot + "/"
+        return (REPLACEMENT_PREFIX if is_replacement(request) else PREFIX) + slot + "/"
     if slot in confirmation.LEGACY_PRIOR:
         return confirmation.LEGACY_PREFIX + slot + "/"
     if slot in confirmation.SLOTS:

@@ -28,9 +28,12 @@ The [checkpoint compatibility package](../ml/transformer-comparison-20261004.md)
 was approved and PR #311 merged, but its one-hour Job was cancelled when the
 observer rejected IMAGE_PULLING. No comparison result exists; the output prefix
 is empty. [Bug #312](https://github.com/khab40/lob-arena/issues/312) repairs the
-state mismatch and startup timer. Next: review repair, prepare a fresh replacement
-package and obtain exact authorization. The consumed attempt's $6.25 remains
-reserved pending billing. Seed 42 is retained; no final-test run is authorized.
+state mismatch and startup timer; PR #313 merged with all 25 checks passed.
+The [fresh r2 package](../ml/transformer-comparison-r2-20261004.md) passes
+252 inert tests (one expected skip), image/request inspection and exact dry-run.
+Next: review package/CI and obtain exact one-hour L40S authorization with a new
+$6.25 excluding-VAT cap. Zero r2 Jobs created. The consumed attempt's $6.25
+remains reserved pending billing. Seed 42 is retained; no final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
