@@ -40,7 +40,8 @@ Status: `[in progress]`
 
 Roadmap decision date: 2026-08-16
 
-Status reconciliation date: 2026-08-27
+Status reconciliation date: 2026-10-04. The [current research-week plan](../ml/transformer-week-plan-20261004.md)
+puts the Transformer/LightGBM decision before platform maintenance and any cascade.
 
 ### Commercial North Star And Deliberate Parking Decision
 
@@ -91,20 +92,18 @@ report.
 
 Use the dated [roadmap snapshot](CURRENT_STATUS.md) for live issue status.
 Older board counts are superseded; epics, features and stories overlap and
-are not additive engineering progress. The active
-detector sequence is GitHub Feature #16: Wave 1 / Story #23 is in progress;
-Wave 2 / Story #24, Wave 3 / Story #25, integrated evidence / Story #90 and
-secure demo UI / Story #91 remain Todo. No Transformer or
-Transformer-to-LightGBM implementation is claimed yet.
+are not additive engineering progress. Under Feature #16, Wave 1 / Story #23
+closed with the signed `research_baseline_qualified` G9 disposition. Wave 2 /
+Story #24 is In Progress: the GPU smoke and four training trials are independently
+verified; seed stability, calibration and exact-row comparison remain.
+Wave 3 / Story #25 is conditional on the research decision; Stories #90/#91
+remain downstream. No cascade or production qualification is established.
 
-The active learned-detector work is deliberately sequential. Governed LightGBM
-v1 is already implemented locally, so the first wave is not a second LightGBM
-implementation. It is the production-shaped Nebius qualification of the
-existing release boundary. Transformer work starts only after that baseline is
-measured and frozen. The combined design then uses causal Transformer outputs
-as additional LightGBM inputs so GPU-heavy sequence learning can improve a
-CPU-efficient serving path. UI simplification begins only after the complete
-model/data/evidence path can be run without manual artifact repair.
+The [research fork](../ml/transformer-research-fork.md) tests standalone value
+against frozen LightGBM before further platform maintenance under #19–#21.
+A negative result may stop Transformer work. Combining Transformer outputs with
+a new LightGBM candidate requires a justified, separately approved next study.
+The full E2E sequence above remains the conditional baseline scope.
 
 ### Shared Data Foundation: Selective Nasdaq To Nebius S3
 
@@ -119,9 +118,9 @@ Do not interpret its old task counts or Job budget as new execution authority.
 
 | Wave | Status | Primary Nebius resource | Outcome | Exit gate before next wave |
 | --- | --- | --- | --- | --- |
-| 1. Nebius LightGBM baseline | `[in progress]` | CPU Serverless AI Jobs, Standard Object Storage, shared MLflow | Train, calibrate, evaluate and package governed LightGBM v1 on immutable cloud inputs; publish runtime, throughput and cost evidence | Reproducible bundle verifies; declared quality/latency gates pass; cost per million scored rows is measured; no frozen-test reruns for tuning |
-| 2. Market-sequence Transformer | `[todo]` | Time-boxed GPU Serverless AI Jobs with CPU preprocessing/evaluation | Train and calibrate a causal sequence challenger on the same split and label contracts | Standalone Transformer bundle verifies; GPU hours/cost and inference latency are recorded; comparison with Wave 1 uses identical evaluation rows |
-| 3. Transformer to LightGBM cascade | `[todo]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize versioned causal Transformer embeddings/scores and train LightGBM with those features plus the existing tabular set | Ablation proves or rejects incremental value; serving-cost and failure-mode gates pass; champion/rollback decision is signed |
+| 1. Nebius LightGBM baseline | `[done: research_baseline_qualified]` | CPU Serverless AI Jobs, Standard Object Storage, shared MLflow | Verified frozen bundle and signed G9 research disposition | Research-only limits and accepted unknown costs remain explicit; no G8 rerun or production promotion |
+| 2. Market-sequence Transformer | `[in progress: four trials verified]` | Bounded GPU Serverless AI Jobs with input checks and calibration inside the Jobs | Confirm seeds, calibrate and compare with frozen LightGBM on identical development rows | Independently verified quality, stability and resource evidence supports continue/stop/inconclusive; exact remaining Job/spend approval required |
+| 3. Transformer to LightGBM cascade | `[conditional; not started]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize causal embeddings/scores and train a new LightGBM candidate only if the research decision justifies it | Separate scope/approval, ablation, serving-cost and failure-mode gates, and champion/rollback decision |
 | 4. Integrated E2E evidence flow | `[todo; GitHub Story #90]` | Existing CPU/GPU Jobs, Object Storage and MLflow | Run one campaign from Nasdaq/LOBSTER source manifests through all three detector paths and one comparison/evidence package | One command or bounded orchestration path verifies every identity, metric, artifact and cost record without manual repair |
 | 5. Secure CEO demo UI | `[todo after Wave 4; GitHub Story #91]` | Existing React/FastAPI/Java surfaces plus selectively restored Google Auth | Deliver Sign in → Data → Replay → Experiments → Management Summary from verified campaign artifacts | A non-technical reviewer can run or replay the demo, explain the outcome and limitations, and cannot access sensitive shared data without backend authorization |
 
@@ -157,8 +156,9 @@ Planned work:
   and execute the authorized G8 replacement once on Nebius.
 - `[done]` Publish and independently verify final C4 quality/calibration evidence,
   execution duration and scoped resource measurements; complete cloud cleanup.
-- `[pending signed exit]` Record G9's signed quality/resource/cost disposition and
-  verified model baseline. Promotion is not automatic from a successful Job.
+- `[done]` Record G9's signed `research_baseline_qualified` disposition in
+  the [signed closure from #231](../operations/g8/g9-closure-20260927.md), including accepted
+  unknown costs under the operator-managed policy. Production promotion is excluded.
 
 Why this is first:
 
@@ -187,12 +187,16 @@ Wave 1 exit criteria:
 See the [current roadmap snapshot](CURRENT_STATUS.md) for milestone dependencies
 and the source revision used by this documentation review.
 
-Status reconciled on 2026-09-23: `[G0-G8 complete; G9 signed exit pending]`.
+Current status: G0–G9 closed; the [September 27 signed exit](../operations/g8/g9-closure-20260927.md)
+permits Wave 2 research engineering. The following September 23 snapshot and
+earlier recovery plan are historical, not authorization to reopen G8/G9.
+
+Historical status on 2026-09-23: `[G0-G8 complete; G9 signed exit pending]`.
 The separately authorized Job `aijob-e00kd6g7vaqtngwv9r` completed one frozen
 evaluation. All 176 S3 objects, four final MLflow artifacts, 30 dataset identities
 and 24 metrics passed independent readback; final access and idle compute are
 closed. See [measured results and G9 handoff](../operations/g8/g8-final-results-20260923.md).
-G9 still requires operator cost disposition and the signed baseline/exit decision.
+The then-pending G9 cost disposition and signed decision were completed in #231.
 
 The September 21 preparation history and ordered plan below are retained for
 audit. Their pending gates were subsequently completed in PRs #219–#223.
@@ -305,26 +309,29 @@ retain downstream baseline dates until an evidence-backed replan is approved.
 Goal: measure whether causal temporal context improves the frozen Wave 1
 baseline enough to justify GPU training and a larger operational surface.
 
-Planned work:
+Current work follows the [research-week plan](../ml/transformer-week-plan-20261004.md):
 
-- `[todo]` Define a versioned causal sequence contract with event-time cutoff,
-  sequence length, stride, padding/masking, feature ordering and split binding.
-- `[todo]` Use CPU Jobs for sequence materialization and time-boxed GPU Jobs for
-  training; do not use the vLLM investigation endpoint for this classifier.
-- `[todo]` Run architecture-size, sequence-length, encoding, class-weight/focal
-  loss and seed-stability experiments using validation only.
-- `[todo]` Register preprocessing, model weights, calibration, thresholds,
-  checkpoint hash, parameter count, GPU hours and cost metadata.
-- `[todo]` Compare standalone Transformer and LightGBM on the exact same frozen
-  observations and operational gates.
+- `[done]` Verify causal inputs, masks, train-only normalization, role support
+  and baseline row alignment inside the GPU smoke and four fixed-grid trials.
+- `[done]` Select width 128 / learning rate 0.0003 / seed 42 / epoch 4 from
+  [four verified trials](../ml/transformer-training-grid-results.md); retain curves,
+  checkpoints, measurements and replayable MLflow events in durable storage.
+- `[next]` Obtain exact authorization for sequential seed-7/2027 confirmations
+  (two hours each), then one calibration/comparison Job (one hour). No expanded
+  search, automatic replacement or final-test access is included.
+- `[next]` Independently verify stability, C-role calibration and exact-row
+  O-role comparison; record continue/stop/inconclusive and any eligible freeze.
+- `[deferred]` Reconcile MLflow and #19–#21 after the research decision.
+  New logging is future-runtime code; current dependency source/image pins remain.
 
 Wave 2 exit criteria:
 
 - No future event or post-cutoff aggregation enters a sequence representation.
 - GPU endpoints/jobs are bounded by timeout and budget and leave no idle GPU
   compute after the campaign.
-- The Transformer either clears a predeclared incremental-value gate or is
-  retained as research evidence without promotion.
+- The operator records a decision from verified quality/stability/resource
+  evidence and declared limitations. No superiority margin is invented after
+  results; candidate freeze gates remain separate from research continuation.
 
 ### Wave 3: Combine Transformer Outputs Into LightGBM
 
@@ -506,9 +513,9 @@ Current foundation:
 - The governed benchmark already accepts a fully verified LightGBM release as
   an external alert source, and detector tournaments produce normalized metrics
   and artifacts.
-- The existing runtime detector adapter is deliberately LightGBM-specific;
-  Transformer and cascade implementations do not yet exist, and there is no
-  common detector contract, registry or black-box conformance suite.
+- The existing runtime detector adapter is deliberately LightGBM-specific.
+  Transformer research training exists; a common detector adapter, cascade,
+  adapter registry and black-box conformance suite remain unimplemented.
 
 Planned work:
 
