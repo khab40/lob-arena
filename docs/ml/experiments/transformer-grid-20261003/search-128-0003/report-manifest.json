@@ -1,0 +1,26 @@
+{
+  "report_fingerprint": "483d701a9360812ce8cb0ad218eec73fec0d3a23fd3311d52b0312d135e60b47",
+  "verification_sha256": "e26e8212dd147f5feb28bf1093aa5e3bbbea530327f67a992e32626cba7ace33",
+  "summary": {
+    "trial": {
+      "batch_size": 64,
+      "learning_rate": 0.0003,
+      "max_epochs": 30,
+      "patience": 5,
+      "seed": 42,
+      "width": 128
+    },
+    "metrics": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "log_loss": 0.002437833479241921
+    },
+    "selected_epoch": 4
+  },
+  "files": {
+    "report.md": "95995729ab9ef37376e35deaf246099f3d4c0463c930d5046329077ce9a232a6",
+    "learning-curves.png": "0e6fd3c2cac262df4ba17c48e41e504c4a76ffc29c14e220b83fbd6e2a5c5c16",
+    "confusion-matrix.png": "36f82bf764cdfef4488794bda1f70474438fafcd85793f626baaf89a460b7b97"
+  }
+}

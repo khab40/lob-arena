@@ -1,4 +1,38 @@
-## 2026-10-03 — GPU smoke completed and independently verified
+## 2026-10-03 — Four GPU training trials completed and independently verified
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The authorized widths 64/128 × learning rates 0.0003/0.001 grid ran sequentially
+on Nebius L40S Jobs with seed 42. All four reached COMPLETED and passed separate
+artifact readback before advancing; no replacement was submitted.
+Winner: **width 128, learning rate 0.0003, epoch 4**, selection log loss
+0.00243783 and selection F1 at 0.5 of 1.0. The 1,250-row selection fold has only
+45 positives and was used for tuning; this does not establish a LightGBM win.
+[Results, measurements, evidence and next steps](../ml/transformer-training-grid-results.md).
+[Per-run Markdown reports and charts](../ml/experiments/transformer-grid-20261003/index.md)
+are backfilled from verified artifacts; future training collections can use the
+[automatic report handoff](../ml/transformer-run-reporting.md). No new model run is needed.
+The [live training progress implementation](../ml/transformer-training-progress.md)
+adds phase/epoch logs, checkpoint and grid-selection summaries for future runtime
+packages; 90 inert tests and independent review pass. It is not deployed into the
+completed grid's sealed image. Current dependency checks require identical source
+and image identities, so retain the pinned campaign runtime unless an explicit
+compatibility package is reviewed.
+
+Total provider runtime was 23m41s; 132 artifacts / 125.78 MB are independently
+verified and durably retained. All four grid Jobs are terminal. The approved
+$50 incremental cap above the operator-reported $300 baseline remains reserved
+until billing reconciliation under [Bug #292](https://github.com/khab40/lob-arena/issues/292).
+Compute/disk time estimates about $1.00 excluding VAT and other charges;
+the actual bill is not reconciled. Online MLflow reconciliation remains pending.
+
+Next: review the [PR #291 results](https://github.com/khab40/lob-arena/pull/291),
+prepare exact authorization for confirmation seeds 7/2027, then calibration and
+operating-point comparison against frozen LightGBM. No further search, final-test
+access or G8/G9 rerun is included. Platform maintenance follows research.
+The following dated sections are historical where superseded.
+
+## 2026-10-03 — Earlier GPU smoke completion snapshot
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).

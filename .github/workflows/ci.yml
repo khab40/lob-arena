@@ -96,6 +96,20 @@ jobs:
       - name: Build production frontend
         run: pnpm run build
 
+  transformer-reports:
+    name: Transformer offline reports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - name: Verify reports from inert saved artifacts
+        run: >-
+          uv run --no-project --with-requirements scripts/requirements-transformer-report.txt
+          --with pytest pytest backend/tests/test_transformer_research_report.py
+
   lightgbm-phase1:
     name: LightGBM governed data boundary
     runs-on: ubuntu-latest
@@ -145,6 +159,7 @@ jobs:
           tests/test_transformer_role_execution_publisher.py tests/test_transformer_role_deadline.py
           tests/test_transformer_role_execution_transport.py
           tests/test_transformer_research_policy.py tests/test_transformer_research_evaluation.py
+          tests/test_transformer_research_progress.py
           tests/test_transformer_research_stability.py
           tests/test_transformer_research_storage.py tests/test_transformer_research_readback.py
           tests/test_transformer_research_operator.py

@@ -1,0 +1,65 @@
+{
+  "schema_version": "transformer_verified_grid_v1",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "status": "four_trials_independently_verified",
+  "authorization_sha256": "eef308d62653a9e953953b57e78b3c2707aec6cad3ecb7ba7892e58153f5a9fb",
+  "source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image_digest": "sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "sequential_verified": true,
+  "job_count": 4,
+  "replacement_jobs": 0,
+  "winner": {
+    "batch_size": 64,
+    "learning_rate": 0.0003,
+    "max_epochs": 30,
+    "patience": 5,
+    "seed": 42,
+    "width": 128
+  },
+  "winner_trial_sha256": "cd7c973e11dc6706490f0aa412f774e1642ffd11b6111af5ecb3c10ddf01e7db",
+  "selection_rule": "log loss, then parameter count, then trial hash",
+  "spend": {
+    "baseline_operator_report_usd_ex_vat": 300,
+    "approved_incremental_cap_usd_ex_vat": 50,
+    "reservation_retained_usd": 50,
+    "actual_charges": "not_reconciled",
+    "compute_disk_estimate_from_creation_to_terminal_usd": 1.0008984829114143,
+    "estimate_excludes": "object storage, requests, transfer and VAT"
+  },
+  "limitations": [
+    "selection metrics are used for tuning",
+    "one seed only",
+    "confirmation, calibration and operating-point comparison remain pending",
+    "no final-test access or LightGBM superiority claim",
+    "MLflow reconciliation pending retained artifacts"
+  ],
+  "training_seconds_definition": "Training loop includes selection evaluation and checkpoint publication",
+  "selection_rows": {
+    "total": 1250,
+    "positive": 45,
+    "negative": 1205
+  },
+  "trials": [
+    {
+      "slot": "search-64-0003",
+      "path": "transformer-training-grid-20261003/search-64-0003.json",
+      "sha256": "22322d943412d9d6168caff7426974a0acf2d385eea0cb8eac8064f5282dab24"
+    },
+    {
+      "slot": "search-64-001",
+      "path": "transformer-training-grid-20261003/search-64-001.json",
+      "sha256": "d1d1f1859cea44f72c028c036306cc27b714c9f0e72f724ec4a6e5c2bfc3eea1"
+    },
+    {
+      "slot": "search-128-0003",
+      "path": "transformer-training-grid-20261003/search-128-0003.json",
+      "sha256": "12d421c8440ff582860559848bfcf4b39d347cd6fbdde1498d08147cd49fa395"
+    },
+    {
+      "slot": "search-128-001",
+      "path": "transformer-training-grid-20261003/search-128-001.json",
+      "sha256": "8a46851a231e8dce85117cfabf01295434fea320fee7d43d3ae339b57b8f538f"
+    }
+  ],
+  "spend_ledger_sha256": "8240a1af250720b5a86a32c3dd97cb9f90dc294c4572fe769f644bb1c4f34b00"
+}

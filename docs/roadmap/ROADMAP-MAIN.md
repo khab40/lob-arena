@@ -14,11 +14,13 @@ further work; stopping it and retaining LightGBM is a valid outcome. Hybrid work
 and later Transformer deliverables are conditional on that research decision.
 Existing dates below remain baseline targets pending evidence-based reforecast.
 
-The execution package in [PR #284](https://github.com/khab40/lob-arena/pull/284)
-has passed 734 inert tests and 24 CI checks. Frozen baseline prediction alignment
-and sealed image inspection passed. The next milestone is actual bounded GPU
-execution and independently verified comparison; implementation checks do not
-establish a Transformer quality result.
+The Transformer implementation, replacement GPU smoke and all four fixed-grid
+trials have passed independent verification. The [grid results](../ml/transformer-training-grid-results.md)
+select width 128, learning rate 0.0003, seed 42, epoch 4: selection log loss
+0.002437833 and F1 1.0 on 1,250 rows, including 45 positives. This is the tuning
+fold, not evidence of superiority over LightGBM. Next are separately bounded
+seed-7/2027 confirmations, then calibration and an exact-row operating-point-role
+comparison under the approved research fork. No final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -176,13 +178,12 @@ diagnostic is retained separately from the passing final receipt.
 
 Remaining critical path:
 
-Operator priority September 28: finish maintenance and platform acceptance under
-#19–#21 before starting a new model campaign. Dependency repairs are in the
-existing #203/#227/#228 PRs; #225/#226 are merged. The
-[MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md) passed, while
-research candidate registration, application recovery, repeatable infrastructure
-and native observability acceptance remain open. See the
-[current numbered plan](CURRENT_STATUS.md#maintenance-and-platform-continuation--2026-09-28).
+The September 28 maintenance-first ordering is historical and was superseded by
+the operator's October 2 [research-first decision](../ml/transformer-research-fork.md).
+Complete the Transformer/LightGBM comparison before platform acceptance under
+#19–#21. The [MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md)
+passed; remaining recovery/registration, infrastructure and observability work
+is deferred. Preserve durable research artifacts and reconcile MLflow afterward.
 None requires reopening G8 or altering the signed G9 decision.
 
 The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
@@ -215,22 +216,17 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    producer contract. It claims neither time separation nor statistical independence.
    The [CPU role-audit package](../ml/transformer-role-audit-package.md) now binds
    this proof to signed provider context, restricted row records and independent
-   class-count readback; PR #275 is merged. No CPU audit has run. Complete
-   [MLflow readiness](../ml/mlflow-readiness-design.md): restored application
-   behavior, frozen research registration and additive Transformer tracking.
-   The first approved maintenance start aborted before staging; STOPPED is
-   independently verified. PR #279 includes Bug #280's startup diagnostics and
-   timing repair; obtain replacement authorization and verified readiness
-   before execution as required by the approved campaign. Seal and review the
-   image/request, then obtain exact CPU authorization. Verify per-role support
-   and row alignment before separate bounded GPU authorization. Research-control negative labels
-   remain assumptions; positive labels remain synthetic. The producer-contract
-   proof does not enumerate payload observations or establish model quality.
-   #24 remains
-   In Progress; GPU model training and later qualification remain open.
+   class-count readback; PR #275 is merged. The research fork moved these checks
+   into each GPU Job, replacing the separate CPU-first prerequisite. The verified
+   smoke and four grid Jobs checked per-role support and exact row alignment.
+   [MLflow readiness](../ml/mlflow-readiness-design.md) and platform acceptance
+   remain deferred; retained S3 artifacts and replayable events preserve results.
+   Research-control negative labels remain assumptions and positive labels remain
+   synthetic. The [grid result](../ml/transformer-training-grid-results.md) advances
+   #24's research campaign; seed stability, calibration and comparison remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
-   LightGBM result; future quality work needs untouched held-out evaluation data.
+   LightGBM result; future qualification claims need untouched held-out evaluation data.
 
 See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
 [validation execution policy](../ml/model-validation-execution-policy.md): model/runtime
@@ -238,21 +234,28 @@ work runs on Nebius Serverless; historical billing-freshness, submission-expiry 
 fixed VM windows are not current prerequisites. Final-test approval remains separate.
 
 Wave 2 eligibility is satisfied by the signed `research_baseline_qualified`
-disposition. Its research-only limits remain binding; input engineering has started.
+disposition. Its research-only limits remain binding; the fixed training grid is verified.
 
 ## Phase 3 - Standalone Transformer
 
 Dates: **2026-09-24 through 2026-10-09**  
 GitHub: [#24 Market-sequence Transformer](https://github.com/khab40/lob-arena/issues/24)
 
-Classifier/training implementation has not started. Frozen C4 causal windows,
-masks, normalization and exact baseline alignment passed independent governed-data
-runtime verification in merged #239. Implementation follows the approved
-[eight-step GPU campaign](../ml/transformer-gpu-campaign-plan.md): one GPU at a
-time, four fixed trials, two seed confirmations, separate calibration roles and
-verified MLflow packaging. The ceiling is eight GPU Jobs / 14 GPU-hours plus two
-CPU Jobs / two Job-hours. Implementation and exact execution approvals remain
-distinct. Reforecast after role feasibility and GPU smoke; October 9 is a baseline.
+Classifier/training implementation is complete. Frozen C4 causal windows, masks,
+train-only normalization, role support and exact baseline alignment have passed
+governed-data runtime checks. The replacement smoke and
+[four sequential grid trials](../ml/transformer-training-grid-results.md) are
+independently verified. Width 128 / learning rate 0.0003 is the selection-fold
+winner; confirmation seeds 7 and 2027 are the next separately bounded runs.
+After stability verification, fit calibration on C and compare both detectors
+on identical O-role targets using the declared operating points. Preserve the
+LightGBM calibrator's prior validation exposure as a comparison limitation.
+
+The approved [research fork](../ml/transformer-research-fork.md) supersedes the
+original CPU-first/MLflow-first ordering. The failed first smoke and approved
+replacement remain consumed attempts; neither the original eight-slot plan nor
+the completed four-trial authorization permits automatic replacements or later
+slots. Reforecast after stability and comparison; October 9 remains a baseline.
 
 Deliverables:
 
@@ -262,7 +265,7 @@ Deliverables:
 - smallest viable Transformer classifier;
 - bounded GPU training matrix;
 - seed stability, calibration, and threshold selection;
-- one final governed evaluation;
+- any later final governed evaluation requires separate authorization and data;
 - model bundle containing weights, preprocessing, schema, and checksums;
 - comparison against LightGBM on identical rows; and
 - GPU hours, cost, memory, throughput, and inference latency.
@@ -335,21 +338,22 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Current LightGBM/Transformer gates reconciled on **2026-09-28**:
+Research progress updated on **2026-10-03** for
+[GitHub Project #3](https://github.com/users/khab40/projects/3):
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
   the frozen four-date forward corpus, and its governed release evidence.
 - [#23](https://github.com/khab40/lob-arena/issues/23) is closed with G0–G9 complete.
   Merged #231 records the signed `research_baseline_qualified` disposition.
   Historical attempts and the frozen candidate remain preserved.
-- [#24](https://github.com/khab40/lob-arena/issues/24) is In Progress after explicit
-  September 28 input-contract approval. G9 permits engineering, not production
-  promotion or a new G8 evaluation.
+- [#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress after
+  verified GPU smoke and four-trial training. Seed confirmation, calibration and
+  exact-row LightGBM comparison remain; G9 permits no production promotion or G8 rerun.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19) is reopened/In Progress
   under [Bug #244](https://github.com/khab40/lob-arena/issues/244). Complete its
-  recovery/registration evidence before the GPU campaign. Revalidate #20/#21 as well;
+  recovery/registration evidence after research. Revalidate #20/#21 as well;
   completed foundations alone do not prove all platform exit criteria.
 - Seven dated GitHub milestones now encode the targets in this document. The
   critical-path issues and supporting platform/Investigator issues are assigned
@@ -363,7 +367,7 @@ UI phases but must never change detector scores or labels.
 
 ## Schedule Assumptions And Risks
 
-The **2026-11-20** forecast assumes:
+The **2026-11-20** baseline target assumes:
 
 - same-day approval of reviewed cloud packages and submissions;
 - no additional C3 root-cause-analysis cycle;

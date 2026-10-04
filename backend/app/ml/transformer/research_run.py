@@ -8,6 +8,7 @@ import torch
 from .research_evaluation import compare, family_comparison, fit_temperature, sigmoid
 from .research_model import SequenceClassifier
 from .research_policy import Trial, class_session_weights, seed_stability, select_grid
+from .research_progress import grid_selected
 from .research_smoke import run_smoke
 from .research_training import configure, predict, tensors, train_trial
 from .verification_spec import canonical, digest
@@ -69,12 +70,13 @@ def run(slot, splits, bindings, baseline, thresholds, prior, store, work, expire
         trial = Trial(int(width), .0003 if rate == "0003" else .001)
     else:
         winner = select_grid(grid)
+        grid_selected(grid, winner, persist=store.event)
         trial = Trial(**winner["trial"])
         if slot.startswith("seed-"):
             trial = replace(trial, seed=int(slot.split("-")[1]))
     if slot != "inference":
         result = train_trial(splits["train"], splits["selection"], trial, output=work / slot,
-            bindings=bindings, publish=store.checkpoint, expires=expires)
+            bindings=bindings, publish=store.checkpoint, expires=expires, progress_event=store.event)
         checkpoint = next(item for item in result["published_checkpoints"] if item["epoch"] == result["selected_epoch"])
         model = selected_model(work / slot / checkpoint["name"], checkpoint["sha256"], trial, bindings)
         logits = predict(model, splits["selection"], expires=expires - 120)

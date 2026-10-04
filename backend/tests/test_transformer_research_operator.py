@@ -20,6 +20,15 @@ operator = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(operator)
 
 
+def terminal_output(capsys):
+    entries = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    terminals = [entry for entry in entries if "status" in entry]
+    assert len(terminals) == 1 and entries[-1] == terminals[0]
+    assert all(entry["evidence_status"] == "progress_not_independent_verification"
+               for entry in entries[:-1])
+    return terminals[0], entries[:-1]
+
+
 def fixture(monkeypatch, age=0, state="RUNNING"):
     key = Ed25519PrivateKey.generate()
     req = template("smoke", "a" * 40, "sha256:" + "b" * 64,
@@ -158,7 +167,9 @@ def test_worker_reports_safe_failure_stage_and_cause_without_exception_text(monk
     monkeypatch.setattr(worker, "execute", fail)
     with pytest.raises(SystemExit):
         worker.main()
-    assert json.loads(capsys.readouterr().out) == {"status": "failed", "stage": "claim",
+    terminal, progress = terminal_output(capsys)
+    assert not progress
+    assert terminal == {"status": "failed", "stage": "claim",
         "error_type": "PublicationUncertain", "cause_type": "ValueError"}
 
 
@@ -179,7 +190,7 @@ def test_failed_claim_does_not_publish_into_existing_or_unverified_attempt(monke
     store = SimpleNamespace(claim=claim, put=lambda *a, **kw: pytest.fail("wrote after failed claim"))
     monkeypatch.setattr(worker, "Store", lambda *a: store)
     with pytest.raises(error_type) as caught:
-        worker.execute(None, {"resources": {"timeout_seconds": 3600}}, tmp_path, tmp_path / "work")
+        worker.execute(None, {"slot": "smoke", "resources": {"timeout_seconds": 3600}}, tmp_path, tmp_path / "work")
     assert caught.value.research_stage == "claim"
 
 
@@ -237,15 +248,21 @@ def test_terminal_publication_reports_stage_without_followup_writes(monkeypatch,
         with pytest.raises(SystemExit) as stopped:
             worker.main()
         assert stopped.value.code == 1
-        assert json.loads(capsys.readouterr().out) == {"status": "failed", "stage": "publication",
+        terminal, progress = terminal_output(capsys)
+        assert terminal == {"status": "failed", "stage": "publication",
             "error_type": "PublicationUncertain", "cause_type": "TimeoutError" if fault == "put" else "OSError"}
         assert writes[-1] == target and writes.count(target) == 1
         assert (req["output_prefix"] + target) in s3.objects  # Possibly committed: preserve for reconciliation.
     else:
         worker.main()
-        output = json.loads(capsys.readouterr().out)
+        terminal, progress = terminal_output(capsys)
         success = s3.objects[req["output_prefix"] + "SUCCESS"][0]
-        assert output == {"status": "published", "success_object": {
+        assert terminal == {"status": "published", "success_object": {
             "sha256": digest(success), "size_bytes": len(success), "version_id": "version-1"}}
+    assert [entry["phase"] for entry in progress if entry["event"] == "phase_started"] == [
+        "preflight", "claim", "context", "dependencies", "input_download", "input_audit",
+        "sequence_preparation", "gpu", "publication"]
+    assert [entry for entry in progress if entry["event"] == "inputs_ready"] == [{
+        "event": "inputs_ready", "slot": "smoke", "evidence_status": "progress_not_independent_verification"}]
     assert computations == [True]
     assert "FAILED" not in writes and len(writes) == len(set(writes))

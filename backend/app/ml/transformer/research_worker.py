@@ -10,6 +10,7 @@ from .research_baseline import align, load as load_baseline
 from .research_context import wait
 from .research_execution_spec import BUNDLE_SHA, SOURCE_RECEIPT_SHA, request_sha, validate
 from .research_inputs import prepare
+from .research_progress import emit
 from .research_readback import collect
 from .research_storage import Store
 from .role_audit import audit_package
@@ -22,6 +23,7 @@ from .verification_spec import INVENTORY_SHA, canonical, digest, load_inventory
 def execute(s3, request, package, work):
     source_commit = (package / "source-commit").read_text().strip()
     validate(request, source_commit)
+    emit("phase_started", phase="preflight", slot=request["slot"])
     bundle, source = (package / "bundle.json").read_bytes(), (package / "source-separation.json").read_bytes()
     if digest(bundle) != BUNDLE_SHA or digest(source) != SOURCE_RECEIPT_SHA:
         raise ValueError("research evidence package differs")
@@ -36,20 +38,25 @@ def execute(s3, request, package, work):
     with deadline(expires - started):
         stage = "claim"
         try:
+            emit("phase_started", phase=stage, slot=request["slot"])
             store.claim()
             stage = "context"
+            emit("phase_started", phase=stage, slot=request["slot"])
             context = wait(store)
             store.put("configuration.json", canonical(request))
             store.event("started", {"job_id": context["job_id"], "source_commit": source_commit})
             prior = {}
             stage = "dependencies"
+            emit("phase_started", phase=stage, slot=request["slot"])
             with deadline(600):
                 for slot, item in request["prior"].items():
                     prior[slot] = collect(store, slot, item["success"], item["request"]["sha256"],
                         bundle, source, metadata)
             stage = "inputs"
+            emit("phase_started", phase="input_download", slot=request["slot"])
             transfer = download(s3, items, work / "inputs")
             with deadline(expires - time.monotonic() - 600):
+                emit("phase_started", phase="input_audit", slot=request["slot"])
                 audit = audit_package(work / "inputs", bundle, source)
                 for name, raw in audit.items():
                     store.put(name, raw)
@@ -57,12 +64,16 @@ def execute(s3, request, package, work):
                 if request["slot"] == "inference":
                     store.put("baseline-predictions.parquet", (package / "baseline.parquet").read_bytes())
                     store.put("baseline-calibration.json", (package / "baseline-calibration.json").read_bytes())
+                emit("phase_started", phase="sequence_preparation", slot=request["slot"])
                 splits, bindings = prepare(work / "inputs", bundle, source)
                 for role in baseline:
                     align(splits[role], baseline[role])
                 bindings.update(source_commit=source_commit, image_digest=request["image_digest"])
                 store.event("inputs_verified", {"bindings": bindings, "transfer": transfer})
+                emit("inputs_ready", slot=request["slot"],
+                     **{role + "_rows": len(split) for role, split in splits.items()})
                 stage = "gpu"
+                emit("phase_started", phase=stage, slot=request["slot"])
                 from .research_run import run
                 result = run(request["slot"], splits, bindings, baseline, thresholds,
                              prior, store, work, expires)
@@ -89,6 +100,7 @@ def execute(s3, request, package, work):
                 pass
             raise
         try:
+            emit("phase_started", phase="publication", slot=request["slot"])
             return store.finish(result)
         except Exception as error:
             error.research_stage = "publication"
