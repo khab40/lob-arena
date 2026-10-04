@@ -19,14 +19,14 @@ The Transformer implementation, replacement GPU smoke and all four fixed-grid
 trials have passed independent verification. The [grid results](../ml/transformer-training-grid-results.md)
 select width 128, learning rate 0.0003, seed 42, epoch 4: selection log loss
 0.002437833 and F1 1.0 on 1,250 rows, including 45 positives. This is the tuning
-fold, not evidence of superiority over LightGBM. The approved seed-7 confirmation
-failed before training during context delivery; seed 2027 remains unsubmitted.
-The [diagnostic repair](https://github.com/khab40/lob-arena/pull/307) is merged.
-Next: review and exactly authorize the [fresh replacement package](../ml/transformer-confirmation-r2-20261004.md),
-then execute/verify both confirmations within the unchanged $25 stage cap. See the
-[failure report](../ml/experiments/transformer-confirmation-20261004/seed-7.md).
-Seed stability, calibration and an exact-row operating-point-role comparison
-remain pending. No final-test run is authorized.
+fold, not evidence of superiority over LightGBM. Both replacement confirmations
+are [independently verified](../ml/transformer-confirmation-results-20261004.md);
+three-seed stability passed with selection-loss range 0.002395075568322679 and
+F1 range 0.0. Seed 42 / epoch 4 remains the candidate. The earlier failed attempt
+is preserved, and the full $25 confirmation commitment remains held pending billing.
+Next: prepare checkpoint-origin compatibility and obtain separate exact run/spend
+approval for one calibration/inference Job, at most one hour. Calibration and
+exact-row LightGBM comparison have not run; no final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -229,7 +229,8 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    remain deferred; retained S3 artifacts and replayable events preserve results.
    Research-control negative labels remain assumptions and positive labels remain
    synthetic. The [grid result](../ml/transformer-training-grid-results.md) advances
-   #24's research campaign; seed stability, calibration and comparison remain open.
+   #24's research campaign; [confirmation stability passed](../ml/transformer-confirmation-results-20261004.md),
+   while calibration and comparison remain open.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
    LightGBM result; future qualification claims need untouched held-out evaluation data.
@@ -252,8 +253,9 @@ train-only normalization, role support and exact baseline alignment have passed
 governed-data runtime checks. The replacement smoke and
 [four sequential grid trials](../ml/transformer-training-grid-results.md) are
 independently verified. Width 128 / learning rate 0.0003 is the selection-fold
-winner; confirmation seeds 7 and 2027 are the next separately bounded runs.
-After stability verification, fit calibration on C and compare both detectors
+winner; both confirmation seeds are verified and three-seed stability passed.
+Next prepare explicit checkpoint-origin compatibility and separately authorize
+one calibration/inference Job. Fit calibration on C and compare both detectors
 on identical O-role targets using the declared operating points. Preserve the
 LightGBM calibrator's prior validation exposure as a comparison limitation.
 
@@ -353,8 +355,9 @@ Research progress updated on **2026-10-04** for
   Merged #231 records the signed `research_baseline_qualified` disposition.
   Historical attempts and the frozen candidate remain preserved.
 - [#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress after
-  verified GPU smoke and four-trial training. Seed confirmation, calibration and
-  exact-row LightGBM comparison remain; G9 permits no production promotion or G8 rerun.
+  verified GPU smoke, four-trial training and both seed confirmations. Stability
+  passed; calibration and exact-row LightGBM comparison remain. G9 permits no
+  production promotion or G8 rerun.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19) is reopened/In Progress

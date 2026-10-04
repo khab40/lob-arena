@@ -94,8 +94,9 @@ Use the dated [roadmap snapshot](CURRENT_STATUS.md) for live issue status.
 Older board counts are superseded; epics, features and stories overlap and
 are not additive engineering progress. Under Feature #16, Wave 1 / Story #23
 closed with the signed `research_baseline_qualified` G9 disposition. Wave 2 /
-Story #24 is In Progress: the GPU smoke and four training trials are independently
-verified; seed stability, calibration and exact-row comparison remain.
+Story #24 is In Progress: the GPU smoke, four training trials and both seed
+confirmations are independently verified; [seed stability passed](../ml/transformer-confirmation-results-20261004.md).
+Calibration and exact-row comparison remain.
 Wave 3 / Story #25 is conditional on the research decision; Stories #90/#91
 remain downstream. No cascade or production qualification is established.
 
@@ -119,7 +120,7 @@ Do not interpret its old task counts or Job budget as new execution authority.
 | Wave | Status | Primary Nebius resource | Outcome | Exit gate before next wave |
 | --- | --- | --- | --- | --- |
 | 1. Nebius LightGBM baseline | `[done: research_baseline_qualified]` | CPU Serverless AI Jobs, Standard Object Storage, shared MLflow | Verified frozen bundle and signed G9 research disposition | Research-only limits and accepted unknown costs remain explicit; no G8 rerun or production promotion |
-| 2. Market-sequence Transformer | `[in progress: four trials verified]` | Bounded GPU Serverless AI Jobs with input checks and calibration inside the Jobs | Confirm seeds, calibrate and compare with frozen LightGBM on identical development rows | Independently verified quality, stability and resource evidence supports continue/stop/inconclusive; exact remaining Job/spend approval required |
+| 2. Market-sequence Transformer | `[in progress: confirmations verified; stability passed]` | Bounded GPU Serverless AI Jobs with input checks and calibration inside the Jobs | Prepare checkpoint-origin compatibility, then calibrate and compare with frozen LightGBM on identical development rows | Independently verified quality, stability and resource evidence supports continue/stop/inconclusive; separate exact approval required for the remaining one-hour Job |
 | 3. Transformer to LightGBM cascade | `[conditional; not started]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize causal embeddings/scores and train a new LightGBM candidate only if the research decision justifies it | Separate scope/approval, ablation, serving-cost and failure-mode gates, and champion/rollback decision |
 | 4. Integrated E2E evidence flow | `[todo; GitHub Story #90]` | Existing CPU/GPU Jobs, Object Storage and MLflow | Run one campaign from Nasdaq/LOBSTER source manifests through all three detector paths and one comparison/evidence package | One command or bounded orchestration path verifies every identity, metric, artifact and cost record without manual repair |
 | 5. Secure CEO demo UI | `[todo after Wave 4; GitHub Story #91]` | Existing React/FastAPI/Java surfaces plus selectively restored Google Auth | Deliver Sign in → Data → Replay → Experiments → Management Summary from verified campaign artifacts | A non-technical reviewer can run or replay the demo, explain the outcome and limitations, and cannot access sensitive shared data without backend authorization |
@@ -316,11 +317,13 @@ Current work follows the [research-week plan](../ml/transformer-week-plan-202610
 - `[done]` Select width 128 / learning rate 0.0003 / seed 42 / epoch 4 from
   [four verified trials](../ml/transformer-training-grid-results.md); retain curves,
   checkpoints, measurements and replayable MLflow events in durable storage.
-- `[next]` Obtain exact authorization for sequential seed-7/2027 confirmations
-  (two hours each), then one calibration/comparison Job (one hour). No expanded
+- `[done]` Independently verify both replacement confirmations and three-seed
+  stability; retain seed 42 / epoch 4 as the candidate.
+- `[next]` Prepare checkpoint-origin compatibility and obtain separate exact
+  run/spend approval for one calibration/comparison Job (one hour). No expanded
   search, automatic replacement or final-test access is included.
-- `[next]` Independently verify stability, C-role calibration and exact-row
-  O-role comparison; record continue/stop/inconclusive and any eligible freeze.
+- `[next]` Independently verify C-role calibration and exact-row O-role comparison;
+  record continue/stop/inconclusive and any eligible freeze.
 - `[deferred]` Reconcile MLflow and #19–#21 after the research decision.
   New logging is future-runtime code; current dependency source/image pins remain.
 

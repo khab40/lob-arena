@@ -1,4 +1,23 @@
-## 2026-10-04 — Replacement confirmations packaged; exact approval pending
+## 2026-10-04 — Both replacement confirmations verified; seed stability passed
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The exactly approved replacement Jobs for seeds 7 and 2027 both reached COMPLETED
+and passed independent artifact readback. Three-seed stability passed: selection
+log-loss range **0.002395075568322679**, F1-at-0.5 range **0.0**; both limits are
+0.05. Width 128 / learning rate 0.0003 / seed 42 / epoch 4 remains the candidate.
+[Results](../ml/transformer-confirmation-results-20261004.md) and
+[evidence](../evidence/transformer-confirmation-results-20261004.json).
+
+Calibration and exact-row LightGBM comparison have not run. Next: prepare the
+checkpoint-origin compatibility package and obtain separate exact run/spend
+approval for one calibration/inference Job, at most one hour. The full $25
+confirmation commitment remains held pending billing reconciliation, including
+the failed attempt; earlier $50 commitments are unchanged. PR #308 remains open.
+Story #24 remains In Progress; G8/G9 remain closed. No final-test access or
+promotion is authorized, and platform maintenance follows the research decision.
+
+## 2026-10-04 — Earlier replacement preparation snapshot; approval was pending
 
 [PR #307](https://github.com/khab40/lob-arena/pull/307) merged with green CI.
 The [replacement package](../ml/transformer-confirmation-r2-20261004.md) preserves

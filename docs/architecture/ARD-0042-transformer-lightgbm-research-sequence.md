@@ -143,9 +143,12 @@ registry aliases and platform #19–#21 acceptance are separate completion state
 Status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
 the separately authorized replacement and [four grid trials](../ml/transformer-training-grid-results.md)
 are independently verified. The selection winner is width 128 / rate 0.0003 /
-seed 42 / epoch 4; this does not establish an advantage over LightGBM. The
-[current week plan](../ml/transformer-week-plan-20261004.md) calls for exact
-authorization of two seed Jobs and one inference/calibration Job before execution.
+seed 42 / epoch 4. Both [replacement confirmations](../ml/transformer-confirmation-results-20261004.md)
+are independently verified and three-seed stability passed: selection-loss range
+0.002395075568322679 and F1 range 0.0. Seed 42 remains the candidate; this does not
+establish an advantage over LightGBM. The [current week plan](../ml/transformer-week-plan-20261004.md)
+next requires checkpoint-origin compatibility and separate exact run/spend approval
+for one inference/calibration Job, at most one hour. Calibration/comparison has not run.
 Research decision precedes MLflow/platform maintenance and any conditional cascade.
 
 ## Replacement lineage decision — 4 October 2026
