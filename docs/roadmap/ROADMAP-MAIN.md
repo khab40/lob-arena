@@ -5,7 +5,8 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-10-03. See [current status and evidence](CURRENT_STATUS.md).
+Status date: 2026-10-04. See [current status and evidence](CURRENT_STATUS.md)
+and the [4–10 October research plan](../ml/transformer-week-plan-20261004.md).
 
 Operator-approved priority: [Transformer versus LightGBM research](../ml/transformer-research-fork.md)
 under [#24](https://github.com/khab40/lob-arena/issues/24), before platform maintenance
@@ -338,7 +339,7 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Research progress updated on **2026-10-03** for
+Research progress updated on **2026-10-04** for
 [GitHub Project #3](https://github.com/users/khab40/projects/3):
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,

@@ -140,10 +140,13 @@ implemented worker records MLflow reconciliation as pending. Later reconciliatio
 must index these same artifacts and identities without retraining. Online MLflow,
 registry aliases and platform #19–#21 acceptance are separate completion states.
 
-The first smoke attempt on 2026-10-03 failed during startup publication before
-model execution. This establishes neither a trained candidate nor model quality;
-see [current status](../roadmap/CURRENT_STATUS.md). Preserve the consumed attempt
-and reconcile its artifacts before proposing any replacement within explicit bounds.
+Status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
+the separately authorized replacement and [four grid trials](../ml/transformer-training-grid-results.md)
+are independently verified. The selection winner is width 128 / rate 0.0003 /
+seed 42 / epoch 4; this does not establish an advantage over LightGBM. The
+[current week plan](../ml/transformer-week-plan-20261004.md) calls for exact
+authorization of two seed Jobs and one inference/calibration Job before execution.
+Research decision precedes MLflow/platform maintenance and any conditional cascade.
 
 ## Comparison versus combination
 

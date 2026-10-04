@@ -65,25 +65,30 @@ The research core now provides authenticated role materialization; two-layer
 causal attention with padding/missingness handling; weighted AdamW training;
 epoch checkpoints with code/data/config/RNG bindings; fixed-grid and seed checks;
 calibration on C; and comparison on O with frozen baseline thresholds. Checkpoint
-acknowledgement requires a version ID and matching checksum. Trial completion
-remains pending independent verification, and the grid selector rejects it until
-the verifier reports success.
+acknowledgement requires a version ID and matching checksum. The grid selector
+rejects trial completion until separate artifact verification reports success.
 
 Local verification covers inert policy, saved-prediction arithmetic, alignment,
-seed receipts, versioned publication faults and operator handshake. GPU-only mask,
-causal, gradient, batch, resume and calibration
-checks are implemented but have not run. Neither a trained model nor a measured
-Transformer advantage exists yet.
+seed receipts, versioned publication faults and operator handshake. The replacement
+GPU smoke passed its CUDA behavior checks and real-data rehearsal. All four
+training trials are independently verified; winner width 128 / rate 0.0003 /
+seed 42 / epoch 4 is a tuning result, not a measured advantage over LightGBM.
 
-Remaining work in this research track:
+Current progress and remaining work follow the [October 4–10 plan](transformer-week-plan-20261004.md):
 
 1. The [replacement GPU smoke is independently verified](transformer-replacement-smoke-result.md).
    Its CUDA behavior checks and two-epoch real-data smoke passed; both the failed
    first attempt and successful replacement remain consumed and retained.
-2. Prepare exact authorization for the four fixed-grid Jobs using the verified
-   smoke receipt, then complete the remaining campaign slots. Independently verify every
-   result, then present the continue/stop decision. Keep platform maintenance
-   deferred; reconcile MLflow from retained artifacts afterward.
+2. The [four fixed-grid Jobs are independently verified](transformer-training-grid-results.md).
+   Their authorization is consumed. Prepare separate exact run/spend authorization
+   for two sequential seed confirmations (7/2027, two hours each), followed by one
+   calibration/comparison slot (one hour). Keep seed 42 as the candidate.
+3. Verify every dependent result, then record continue/stop/inconclusive. Keep
+   platform #19–#21 and MLflow reconciliation after research; cascade #25 requires
+   a justified, separately approved study. No final-test access or promotion follows.
+4. Preserve the current source/image pins for remaining campaign dependencies.
+   [Richer logging](transformer-training-progress.md) is future-runtime code; it
+   does not authorize rebuilding sealed requests or repeating completed trials.
 
 ## Execution package — 2026-10-03
 

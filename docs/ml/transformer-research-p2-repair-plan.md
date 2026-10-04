@@ -54,6 +54,12 @@ Feature: Trustworthy Transformer research readback
 
 ## Next few days
 
+Superseded on 4 October by the [current week plan](transformer-week-plan-20261004.md).
+Startup repair, replacement smoke and the four-trial grid all completed on
+3 October. The schedule below is retained as the original forecast; it does not
+authorize repeating completed work. Two confirmation seeds and the combined
+calibration/comparison remain before the research decision.
+
 Dates below are targets in Asia/Tbilisi, conditional on repair and GPU capacity.
 The [comparison decision](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md)
 and existing resource bounds remain authoritative.
