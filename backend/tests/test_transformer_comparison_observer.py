@@ -41,10 +41,11 @@ def run(request, path, output, snapshots, *, step=10):
 
 def test_observes_before_creation_and_closes_admission_permanently(tmp_path):
     request, path, output, job = setup(tmp_path)
-    assert run(request, path, output, [None, job("STARTING"), job(), job("COMPLETED")]) == 0
+    snapshots = [None, job("PROVISIONING"), job("STARTING"), job("IMAGE_PULLING"), job(), job("COMPLETED")]
+    assert run(request, path, output, snapshots) == 0
     records = [json.loads(line) for line in (output / "observations.jsonl").read_text().splitlines()]
-    assert [r["state"] for r in records] == ["absent", "STARTING", "RUNNING", "COMPLETED"]
-    assert [r["admission_closed"] for r in records] == [False, True, True, True]
+    assert [r["state"] for r in records] == ["absent", "PROVISIONING", "STARTING", "IMAGE_PULLING", "RUNNING", "COMPLETED"]
+    assert [r["admission_closed"] for r in records] == [False, True, True, True, True, True]
     assert not observer.inspect(output, observer.sha(path))["admission_ready"]
     with pytest.raises(FileExistsError):
         run(request, path, output, [])
@@ -94,3 +95,35 @@ def test_admission_requires_fresh_live_bound_observer(tmp_path, change):
         expected = "f" * 64
     with pytest.raises(ValueError):
         observer.inspect(output, expected, now=now, identity=identity)
+
+
+def test_real_image_pulling_snapshot_matches_approved_request():
+    root = Path(__file__).resolve().parents[2]
+    request = json.loads((root / "docs/evidence/transformer-comparison-request-20261004.json").read_bytes())
+    job = json.loads((Path(__file__).parent / "fixtures/transformer_comparison_image_pulling.json").read_bytes())
+    context = observer.observed(job, request, allowed_states=observer.STATES)
+    assert context["job_id"] == "aijob-e00ma26ee5bavrb8nb"
+    assert observer.STATES - observer.TERMINAL == observer.LIVE_STATES
+
+
+@pytest.mark.parametrize("states", [
+    ["STARTING", "IMAGE_PULLING", "STARTING"],
+    ["IMAGE_PULLING", "STARTING", "IMAGE_PULLING"],
+    ["IMAGE_PULLING", "IMAGE_PULLING", "IMAGE_PULLING"],
+])
+def test_startup_timer_spans_image_pull_transitions(tmp_path, states):
+    request, path, output, job = setup(tmp_path)
+    with pytest.raises(TimeoutError):
+        run(request, path, output, [job(s) for s in states], step=301)
+    status = observer.inspect(output, observer.sha(path))
+    assert status["state"] == "failed" and status["admission_closed"]
+    assert status["received_provider_state"] == states[-1]
+
+
+def test_unrecognized_provider_state_is_rejected_without_logging_arbitrary_value(tmp_path):
+    request, path, output, job = setup(tmp_path)
+    with pytest.raises(ValueError):
+        run(request, path, output, [job("unexpected provider response")])
+    status = observer.inspect(output, observer.sha(path))
+    assert status["state"] == "failed" and status["admission_closed"]
+    assert status["received_provider_state"] == "UNRECOGNIZED"
