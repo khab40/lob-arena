@@ -22,7 +22,8 @@ def test_sdk_drift_blocks_before_any_file_or_custody_read(tmp_path, monkeypatch)
     assert not (tmp_path / "output").exists()
 
 
-def test_preparation_preserves_checkpoint_and_cannot_overwrite_attempt(tmp_path, monkeypatch):
+@pytest.mark.parametrize("replacement", [False, True])
+def test_preparation_preserves_checkpoint_and_cannot_overwrite_attempt(tmp_path, monkeypatch, replacement):
     previous = json.loads((Path(__file__).parent / "fixtures/transformer_selected_origin.json").read_bytes())
     previous["inventory"] = {"fixture": {}}
     monkeypatch.setattr(prepare, "local_preflight", lambda *args:
@@ -33,7 +34,7 @@ def test_preparation_preserves_checkpoint_and_cannot_overwrite_attempt(tmp_path,
     custody, output = tmp_path / "custody", tmp_path / "output"
     custody.write_bytes(b"inert fixture")
     args = (tmp_path, tmp_path, tmp_path, tmp_path, output, custody, "a" * 40, "sha256:" + "b" * 64)
-    result = prepare.prepare(*args)
+    result = prepare.prepare(*args, replacement=replacement)
     command = shlex.split(result["create_command"])
     assert command[:4] == ["nebius", "ai", "job", "create"]
     for flag, value in (("--timeout", "1h"), ("--retries", "1"), ("--restart-policy", "never")):
@@ -42,6 +43,9 @@ def test_preparation_preserves_checkpoint_and_cannot_overwrite_attempt(tmp_path,
     assert not result["jobs_created"] and not result["context_attestation_started"]
     assert not (output / "context-private.key").exists()
     original = Path(result["request_path"]).read_bytes()
+    request = json.loads(original)
+    assert ("replacement_of" in request) == replacement
+    assert request["campaign"].endswith("-r2" if replacement else "-r1")
     with pytest.raises(FileExistsError):
-        prepare.prepare(*args)
+        prepare.prepare(*args, replacement=replacement)
     assert Path(result["request_path"]).read_bytes() == original

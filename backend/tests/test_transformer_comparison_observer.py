@@ -10,12 +10,15 @@ pytest.importorskip("cryptography")
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 import transformer_comparison_observer as observer  # noqa: E402
 from app.ml.transformer.research_confirmation_contract import CONTEXT_PUBLIC_KEY  # noqa: E402
-from app.ml.transformer.research_execution_spec import comparison_template, provider_spec  # noqa: E402
+from app.ml.transformer.research_execution_spec import (  # noqa: E402
+    comparison_replacement_template, comparison_template, provider_spec,
+)
 from app.ml.transformer.verification_spec import canonical  # noqa: E402
 
 
-def setup(tmp_path):
-    request = comparison_template("a" * 40, "sha256:" + "b" * 64, CONTEXT_PUBLIC_KEY, "c" * 32)
+def setup(tmp_path, replacement=False):
+    builder = comparison_replacement_template if replacement else comparison_template
+    request = builder("a" * 40, "sha256:" + "b" * 64, CONTEXT_PUBLIC_KEY, "c" * 32)
     path = tmp_path / "request.json"
     path.write_bytes(canonical(request))
     output = tmp_path / "observer"
@@ -39,8 +42,9 @@ def run(request, path, output, snapshots, *, step=10):
                             pause=pause, identity=lambda _: "fixture-process")
 
 
-def test_observes_before_creation_and_closes_admission_permanently(tmp_path):
-    request, path, output, job = setup(tmp_path)
+@pytest.mark.parametrize("replacement", [False, True])
+def test_observes_before_creation_and_closes_admission_permanently(tmp_path, replacement):
+    request, path, output, job = setup(tmp_path, replacement)
     snapshots = [None, job("PROVISIONING"), job("STARTING"), job("IMAGE_PULLING"), job(), job("COMPLETED")]
     assert run(request, path, output, snapshots) == 0
     records = [json.loads(line) for line in (output / "observations.jsonl").read_text().splitlines()]

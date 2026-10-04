@@ -170,6 +170,7 @@ jobs:
           tests/test_transformer_confirmation_prepare.py
           tests/test_transformer_research_comparison_readback.py
           tests/test_transformer_comparison_contract.py
+          tests/test_transformer_comparison_replacement.py
           tests/test_transformer_comparison_prepare.py
           tests/test_transformer_comparison_observer.py
 
