@@ -1,0 +1,84 @@
+{
+  "schema_version": "transformer_comparison_readiness_v2",
+  "date": "2026-10-04",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "local_prerequisites": {
+    "status": "verified",
+    "runs": 7,
+    "artifacts": 229,
+    "stability": {
+      "selection_log_loss_range": 0.002395075568322679,
+      "selection_f1_at_half_range": 0.0,
+      "passed": true,
+      "candidate_seed": 42
+    },
+    "sdk_versions": {
+      "botocore": "1.43.103",
+      "cryptography": "50.0.0",
+      "numpy": "2.4.6",
+      "pyarrow": "25.0.0",
+      "pydantic": "2.13.5",
+      "protobuf": "7.36.2",
+      "PyYAML": "6.0.3"
+    },
+    "checkpoint": {
+      "epoch": 4,
+      "name": "epoch-04.pt",
+      "object_name": "search-128-0003-epoch-04.pt",
+      "sha256": "e2cc94d8e11ad3ad644e52d5283fd958c5458717efd7cfe02ccc30f8f82e6b2b",
+      "size_bytes": 5033993,
+      "version_id": "1"
+    },
+    "model_execution": false,
+    "cloud_reads": 0,
+    "jobs_created": 0,
+    "scope": "local prerequisite artifacts and SDK pins; full admission remains pending"
+  },
+  "provider_preflight": {
+    "slot_absent": true,
+    "output_empty": true,
+    "checked_at": "2026-10-04T15:52:25.703914+00:00",
+    "jobs_created": 0
+  },
+  "provider_dry_run": {
+    "status": "passed",
+    "output_sha256": "ff6365c6f70bb7862e1d0239e799239b1cd1a4e6456dc98d94d7545afb197071"
+  },
+  "image_request_validation": {
+    "status": "valid",
+    "request_sha256": "e8f049ee86b32cfb1991b48e94508719e2b11e8b2a61e8d7763fbf69bedad68d",
+    "network_enabled": false,
+    "model_execution": false
+  },
+  "existing_access": {
+    "new_grant": false,
+    "note": "Existing development credentials successfully list the fresh output prefix; no policy change."
+  },
+  "validation": {
+    "inert_tests_passed": 252,
+    "inert_tests_skipped": 1,
+    "ruff": "passed",
+    "checkpoint_weights_executed_locally": false
+  },
+  "pricing": {
+    "currency": "USD",
+    "vat": "excluded",
+    "source": "Nebius MCP billing calculator",
+    "checked_on": "2026-10-04",
+    "hourly_compute_usd": "1.5484",
+    "hourly_disk_usd": "0.0097222",
+    "quote_receipt_sha256": "773b7b056c291e771ef4572a0c424ae37f5dabae92c0b2dac3b234551dc1c53e",
+    "storage_source": "https://docs.nebius.com/object-storage/resources/pricing",
+    "components_usd": {
+      "compute_disk_two_billing_hours": "3.1162444",
+      "artifact_storage_2gib_90days": "0.08699178082191780821917808219",
+      "egress_16gib": "0.240",
+      "requests_10000_at_class_a_rate": "0.0340"
+    },
+    "subtotal_usd": "3.477236180821917808219178082",
+    "contingency_usd": "2.772763819178082191780821918"
+  },
+  "jobs_created": 0,
+  "attester_started": false,
+  "authorization_status": "pending"
+}
