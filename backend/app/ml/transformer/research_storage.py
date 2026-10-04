@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import re
 
-from .research_confirmation_contract import artifact_prefix, is_replacement
+from .research_publication_contract import artifact_prefix, is_compatible
 from .research_execution_spec import MAX_OBJECT, MAX_OUTPUT, PREFIX, SLOTS, receipt, request_sha, validate
 from .role_execution_transport import PublicationUncertain, _body, verify_sha_metadata
 from .verification_spec import OUTPUT_BUCKET, canonical, digest
@@ -13,7 +13,7 @@ def key(slot, name, request=None):
     if (slot not in SLOTS or not isinstance(name, str)
             or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}", name)):
         raise ValueError("research artifact leaves its fixed slot")
-    prefix = artifact_prefix(request, slot) if request is not None and is_replacement(request) else PREFIX + slot + "/"
+    prefix = artifact_prefix(request, slot) if request is not None and is_compatible(request) else PREFIX + slot + "/"
     return prefix + name
 
 

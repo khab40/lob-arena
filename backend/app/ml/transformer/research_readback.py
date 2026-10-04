@@ -4,10 +4,11 @@ import math
 
 import numpy as np
 
-from .research_confirmation_contract import is_replacement, origin_matches, require_reference
+from .research_confirmation_contract import is_replacement
 from .research_context import verify as verify_context
 from .research_execution_spec import request_sha, validate
 from .research_policy import Trial, improved
+from .research_publication_contract import origin_matches, require_reference
 from .role_audit import verify_package
 from .verification_spec import digest
 
@@ -122,7 +123,7 @@ def collect(store, slot, success, expected_request_sha, bundle, source, metadata
         from .research_comparison_readback import verify
         prior = {name: collect(store, name, item["success"], item["request"]["sha256"], bundle, source, metadata)
                  for name, item in request["prior"].items()}
-        verify(result, artifacts, metadata, prior, predictions)
+        verify(result, artifacts, metadata, prior, predictions, request=request)
     else:
         raise ValueError("unexpected research result kind")
     return {"request": request, "context": context, "result": result, "audit": audit,
