@@ -10,11 +10,13 @@ import time
 from app.ml.transformer.research_comparison_contract import is_comparison
 from app.ml.transformer.research_context import observed
 from app.ml.transformer.research_execution_spec import PROJECT, request_sha, validate
+from app.ml.transformer.role_execution_context import LIVE_STATES
 from transformer_confirmation_supervisor import process_identity, save, sha
 from transformer_research_operator import cli
 
 TERMINAL = {"COMPLETED", "FAILED", "CANCELLED", "CANCELED"}
-STATES = TERMINAL | {"PROVISIONING", "STARTING", "RUNNING"}
+STATES = TERMINAL | LIVE_STATES
+STARTUP = {"STARTING", "IMAGE_PULLING"}
 
 
 def inspect(output, expected_sha, *, now=time.time, identity=process_identity):
@@ -50,13 +52,15 @@ def observe(request, path, output, *, read=cli, now=time.time, pause=time.sleep,
                     raise ValueError("Job disappeared or submission window expired")
                 status["state"] = "absent"
             else:
+                state = job["status"]["state"]
+                status["received_provider_state"] = state if state in STATES else "UNRECOGNIZED"
                 context = observed(job, request, allowed_states=STATES)
                 if job_id and job_id != context["job_id"]:
                     raise ValueError("observer Job identity changed")
                 job_id = context["job_id"]
                 status.update(state=job["status"]["state"], job_id=job_id, admission_closed=True,
                     provider_status=job["status"], created_at=job["metadata"]["created_at"])
-                if status["state"] == "STARTING":
+                if status["state"] in STARTUP:
                     if starting_at is None:
                         starting_at = checked
                 else:

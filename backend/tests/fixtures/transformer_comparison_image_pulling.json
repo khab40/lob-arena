@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "id": "aijob-e00ma26ee5bavrb8nb",
+    "parent_id": "project-e00g6zvxpr00waz8t3y51k",
+    "name": "transformer-compare-c4-20261004-r1-inference",
+    "resource_version": "1",
+    "created_at": "2026-10-04T14:23:56.248803Z",
+    "updated_at": "2026-10-04T14:23:56.248803Z"
+  },
+  "spec": {
+    "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:5ab068aae50ef1e8dc2ff89315f5cf5cda01b20b937b48caed8194f08880d713",
+    "environment_variables": [
+      {
+        "name": "AWS_ACCESS_KEY_ID",
+        "mysterybox_secret": {
+          "secret_id": "mbsec-e00arhndyprqr8egjw",
+          "version_id": "mbsecver-e00rjzerny1pf9qhna"
+        }
+      },
+      {
+        "name": "AWS_SECRET_ACCESS_KEY",
+        "mysterybox_secret": {
+          "secret_id": "mbsec-e00s7qtjj5n9ghacnh",
+          "version_id": "mbsecver-e00yfn5w54jc1ybkwv"
+        }
+      }
+    ],
+    "platform": "gpu-l40s-a",
+    "preset": "1gpu-8vcpu-32gb",
+    "shm_size_bytes": "1073741824",
+    "disk": {
+      "type": "NETWORK_SSD",
+      "size_bytes": "107374182400"
+    },
+    "subnet_id": "vpcsubnet-e00ppzc4353dxv210j",
+    "pricing_model": {
+      "on_demand": {}
+    },
+    "timeout": "3600s",
+    "injected_files": [
+      {
+        "container_path": "/opt/research/request.json"
+      }
+    ]
+  },
+  "status": {
+    "instances": [
+      {
+        "state": "IMAGE_PULLING",
+        "compute_instance_id": "computeinstance-e00khnzc05bdsf8hrw",
+        "compute_instance_state": "RUNNING",
+        "private_ip": "10.0.0.46"
+      }
+    ],
+    "state": "IMAGE_PULLING"
+  }
+}
