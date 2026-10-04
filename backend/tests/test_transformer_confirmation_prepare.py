@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+pytest.importorskip("numpy")
 pytest.importorskip("cryptography")
 from app.ml.transformer.research_confirmation_contract import CONTEXT_PUBLIC_KEY  # noqa: E402
 from app.ml.transformer.research_execution_spec import replacement_template  # noqa: E402

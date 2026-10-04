@@ -3,13 +3,14 @@ from copy import deepcopy
 
 import pytest
 
-from app.ml.transformer import research_confirmation_contract as contract
-from app.ml.transformer.research_execution_spec import (
+pytest.importorskip("numpy")
+from app.ml.transformer import research_confirmation_contract as contract  # noqa: E402
+from app.ml.transformer.research_execution_spec import (  # noqa: E402
     provider_spec, replacement_template, request_sha, template, validate,
 )
-from app.ml.transformer.research_storage import Store, key
-from app.ml.transformer.verification_spec import canonical, digest
-from test_transformer_research_storage import S3
+from app.ml.transformer.research_storage import Store, key  # noqa: E402
+from app.ml.transformer.verification_spec import canonical, digest  # noqa: E402
+from test_transformer_research_storage import S3  # noqa: E402
 
 
 def replacement(slot="seed-7"):

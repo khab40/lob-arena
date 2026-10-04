@@ -4,11 +4,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.ml.transformer import research_confirmation_contract as contract
-from app.ml.transformer import research_readback as readback
-from app.ml.transformer.research_execution_spec import request_sha
-from app.ml.transformer.verification_spec import canonical, digest
-from test_transformer_confirmation_contract import original_smoke, replacement
+pytest.importorskip("numpy")
+from app.ml.transformer import research_confirmation_contract as contract  # noqa: E402
+from app.ml.transformer import research_readback as readback  # noqa: E402
+from app.ml.transformer.research_execution_spec import request_sha  # noqa: E402
+from app.ml.transformer.verification_spec import canonical, digest  # noqa: E402
+from test_transformer_confirmation_contract import original_smoke, replacement  # noqa: E402
 
 
 @pytest.mark.parametrize("slot", contract.LEGACY_PRIOR)
