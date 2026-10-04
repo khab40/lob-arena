@@ -4,6 +4,8 @@
 !Dockerfile
 !package.json
 !pnpm-lock.yaml
+!patches/
+!patches/**
 !index.html
 !eslint.config.js
 !postcss.config.js
