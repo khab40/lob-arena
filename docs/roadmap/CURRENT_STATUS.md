@@ -1,4 +1,34 @@
-## 2026-10-04 — Observer repair merged; corrected comparison awaits authorization
+## 2026-10-05 — Comparison completed and independently reconciled; research decision pending
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #315 merged with green CI; the operator approved its exact one-hour L40S
+package and $6.25 additional cap excluding VAT. One Job `aijob-e00acpmmjmp4rfnrf3`
+completed in 324.59 seconds. Signed context and continuous provider observations
+are retained; fresh independent provider readback confirms COMPLETED.
+
+All 15 new artifacts and 229 prerequisites passed offline reconciliation.
+[Bug #317](https://github.com/khab40/lob-arena/issues/317) repairs the original
+strict readback's single-ULP log-loss mismatch with bounded aggregate rounding;
+hashes, rows, counts, thresholds and decisions remain exact. The failure is
+preserved; no model rerun occurred. [Report and four plots](../ml/experiments/transformer-comparison-r2-20261004/report.md)
+and [bound evidence](../evidence/transformer-comparison-results-r2-20261005.json).
+
+On O's 2,470 development rows / 45 positives, calibrated Transformer F1/AP are
+1.00/1.00 versus frozen LightGBM 0.545/0.436; log loss is 0.000502 versus 0.046880.
+Temperature 0.998497 was fitted only on C. Candidate remains width 128 / rate
+0.0003 / seed 42 / epoch 4. Recommendation: **continue_research**; operator
+decision is pending. Prior exposure, scenario labels, one source group per role
+and O threshold selection limit interpretation; an unseen protocol and leakage
+review are needed before broader claims. No freeze or production promotion.
+
+Next: review result/repair PR and record continue/stop/inconclusive; then retain
+the selected settings under #314 and reconcile online MLflow. Story #24 stays
+In Progress; G8/G9 stay closed. Full $6.25 and prior commitments remain held
+pending actual billing. No further Job is needed for this comparison.
+Earlier dated entries below are historical snapshots.
+
+## 2026-10-04 — Observer repair merged; corrected comparison awaited authorization
 
 [PR #313](https://github.com/khab40/lob-arena/pull/313) merged as `ae7145e`
 after all 25 checks passed, closing [Bug #312](https://github.com/khab40/lob-arena/issues/312).

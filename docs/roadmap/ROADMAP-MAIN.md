@@ -5,7 +5,7 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-10-04. See [current status and evidence](CURRENT_STATUS.md)
+Status date: 2026-10-05. See [current status and evidence](CURRENT_STATUS.md)
 and the [4–10 October research plan](../ml/transformer-week-plan-20261004.md).
 
 Operator-approved priority: [Transformer versus LightGBM research](../ml/transformer-research-fork.md)
@@ -26,14 +26,21 @@ F1 range 0.0. Seed 42 / epoch 4 remains the candidate. The earlier failed attemp
 is preserved, and the full $25 confirmation commitment remains held pending billing.
 The [checkpoint compatibility package](../ml/transformer-comparison-20261004.md)
 was approved and PR #311 merged, but its one-hour Job was cancelled when the
-observer rejected IMAGE_PULLING. No comparison result exists; the output prefix
-is empty. [Bug #312](https://github.com/khab40/lob-arena/issues/312) repairs the
+observer rejected IMAGE_PULLING. That attempt's output prefix is empty.
+[Bug #312](https://github.com/khab40/lob-arena/issues/312) repairs the
 state mismatch and startup timer; PR #313 merged with all 25 checks passed.
 The [fresh r2 package](../ml/transformer-comparison-r2-20261004.md) passes
 252 inert tests (one expected skip), image/request inspection and exact dry-run.
-Next: review package/CI and obtain exact one-hour L40S authorization with a new
-$6.25 excluding-VAT cap. Zero r2 Jobs created. The consumed attempt's $6.25
-remains reserved pending billing. Seed 42 is retained; no final-test run is authorized.
+PR #315 merged and its exactly approved one-hour L40S Job completed in 324.59 s.
+The [comparison report](../ml/experiments/transformer-comparison-r2-20261004/report.md)
+records independently reconciled temperature/operating points and all 244 artifacts.
+[Bug #317](https://github.com/khab40/lob-arena/issues/317) resolves a single-ULP
+aggregate mismatch without rerunning the model. O development F1/AP are 1.00/1.00
+for Transformer versus 0.545/0.436 for frozen LightGBM. Recommendation is
+continue_research, pending operator disposition; perfect scores need an unseen
+protocol and leakage/robustness review. Next: review results and record the
+research decision, then retain settings #314 and reconcile MLflow. Both $6.25
+comparison commitments remain held pending billing. No final-test run is authorized.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -261,16 +268,17 @@ governed-data runtime checks. The replacement smoke and
 [four sequential grid trials](../ml/transformer-training-grid-results.md) are
 independently verified. Width 128 / learning rate 0.0003 is the selection-fold
 winner; both confirmation seeds are verified and three-seed stability passed.
-Next prepare explicit checkpoint-origin compatibility and separately authorize
-one calibration/inference Job. Fit calibration on C and compare both detectors
-on identical O-role targets using the declared operating points. Preserve the
-LightGBM calibrator's prior validation exposure as a comparison limitation.
+Checkpoint compatibility, C-only temperature fitting and identical-row O
+comparison are independently reconciled. Next: review the result and record the
+research decision before settings retention/MLflow and any broader study.
+Preserve prior development exposure, O threshold selection and the LightGBM
+calibrator's prior validation exposure as comparison limitations.
 
 The approved [research fork](../ml/transformer-research-fork.md) supersedes the
 original CPU-first/MLflow-first ordering. The failed first smoke and approved
 replacement remain consumed attempts; neither the original eight-slot plan nor
 the completed four-trial authorization permits automatic replacements or later
-slots. Reforecast after stability and comparison; October 9 remains a baseline.
+slots. Reforecast after the research decision; October 9 remains a baseline.
 
 Deliverables:
 
@@ -353,7 +361,7 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Research progress updated on **2026-10-04** for
+Research progress updated on **2026-10-05** for
 [GitHub Project #3](https://github.com/users/khab40/projects/3):
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
@@ -363,7 +371,8 @@ Research progress updated on **2026-10-04** for
   Historical attempts and the frozen candidate remain preserved.
 - [#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress after
   verified GPU smoke, four-trial training and both seed confirmations. Stability
-  passed; calibration and exact-row LightGBM comparison remain. G9 permits no
+  passed; calibration and exact-row comparison are verified, operator decision
+  and later settings/MLflow/qualification acceptance remain. G9 permits no
   production promotion or G8 rerun.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
