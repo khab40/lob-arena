@@ -45,7 +45,7 @@ class HoldoutStore:
             try:
                 with deadline(min(timeout, self.expires - time.monotonic())):
                     response = self.s3.get_object(**args)
-                    raw, observed = self.consume(response, limit, args["VersionId"])
+                    raw, observed = self.consume(response, limit, args.get("VersionId"))
                     if metadata:
                         verify_sha_metadata(response, observed["sha256"])
                     return raw, observed
