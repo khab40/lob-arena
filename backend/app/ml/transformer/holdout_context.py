@@ -42,11 +42,15 @@ def verify_context(request, envelope, *, approved_request_sha256, trusted_public
 
 
 def check_parity(request, context, saved_raw, target_ids, labels, logits):
+    if digest(saved_raw) != request.input(request.reference_logits_path).reference.sha256:
+        raise ValueError("reference bytes differ from approved saved artifact")
     saved = json_record(saved_raw)
     if (not isinstance(saved, list) or len(saved) != request.reference_rows
             or tuple(r["target_id"] for r in saved) != tuple(target_ids)
             or len(set(target_ids)) != request.reference_rows
             or digest(canonical(tuple(target_ids))) != request.reference_targets_sha256
+            or any(type(r["label"]) is not int or r["label"] not in (0, 1) for r in saved)
+            or any(type(label) is not int or label not in (0, 1) for label in labels)
             or tuple(r["label"] for r in saved) != tuple(labels)):
         raise ValueError("reference identity, label or count differs")
     expected = np.asarray([r["logit"] for r in saved], dtype=np.float64)

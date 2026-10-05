@@ -4,8 +4,7 @@ from pathlib import Path
 import os
 from tempfile import NamedTemporaryFile
 
-from app.ml.transformer.holdout_spec import SETTINGS_SHA
-from app.ml.transformer.holdout_worker import TRUST
+from app.ml.transformer.holdout_spec import SETTINGS_SHA, TRUST
 from app.ml.transformer.settings_release import ArtifactRead, json_record, load_release
 from app.ml.transformer.verification_spec import canonical, digest
 

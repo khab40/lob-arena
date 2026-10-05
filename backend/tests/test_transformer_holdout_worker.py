@@ -95,3 +95,20 @@ def test_admission_failure_has_zero_io(tmp_path, monkeypatch, defect):
         execute(s3, req, package, envelope, **args, consumer_factory=DeclaredParityFailure)
     assert s3.calls == []
     assert not (tmp_path / "work").exists()
+
+
+def test_december_in_consumed_development_metadata_stops_before_model_and_final_get(tmp_path, monkeypatch):
+    req, envelope, package, s3 = prepared(tmp_path, monkeypatch)
+    data = DevelopmentInputs.open()
+    from dataclasses import replace
+    shard = data.tabular.shards[0].model_copy(update={"base_session_id": "2019-12-30-aapl"})
+    bad = replace(data, tabular=data.tabular.model_copy(update={"shards": (shard, *data.tabular.shards[1:])}))
+    monkeypatch.setattr(DevelopmentInputs, "open", lambda **kwargs: bad)
+    def never(*args, **kwargs):
+        pytest.fail("model constructed before chronological exclusion")
+    with pytest.raises(ValueError, match="chronological exclusion"):
+        execute(s3, req, package, envelope, approved_request_sha256=req.sha256(),
+            trusted_public_key=req.context_public_key, work=tmp_path / "work",
+            source_commit=req.source_commit, consumer_factory=never)
+    assert not any(args["Bucket"] == "fixture" and args["Key"] == "tabular.json"
+                   for kind, args in s3.calls if kind == "get")

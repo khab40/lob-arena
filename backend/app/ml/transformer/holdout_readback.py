@@ -12,7 +12,7 @@ from .holdout_context import check_parity, verify_context
 from .holdout_metrics import fixed_comparison, paired_bootstrap
 from .research_comparison_readback import arithmetic_matches
 from .settings_release import checked_read, json_record, load_release
-from .holdout_worker import TRUST
+from .holdout_spec import TRUST
 from .verification_spec import canonical, digest
 
 

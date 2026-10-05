@@ -3,8 +3,6 @@ from pathlib import Path
 
 import pytest
 
-pytest.importorskip("numpy")
-
 from test_transformer_settings_export import artifact_map  # noqa: E402
 from app.ml.transformer.settings_release import save_release  # noqa: E402
 

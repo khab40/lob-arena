@@ -16,6 +16,9 @@ G8_PREFIX = ("s3://" + OUTPUT_BUCKET + "/campaigns/nasdaq-g6-development-2026090
              "final/nasdaq-g8-replacement-r5-20260917/")
 MAX_OUTPUT = 2 * 1024**3
 MAX_READ = 16 * 1024**3
+TRUST = {"verification_sha256": "22f65037c0533cf10d8b4693033b3b80e388bf1e6743692d16140e863e14de98",
+         "selection_sha256": "e26e8212dd147f5feb28bf1093aa5e3bbbea530327f67a992e32626cba7ace33",
+         "decision_sha256": "88c750864434bea09fd0136a9779b2b8d136ad4c8e1a248fcda6f4cc3dd10823"}
 
 
 class InputObject(SettingsRecord):

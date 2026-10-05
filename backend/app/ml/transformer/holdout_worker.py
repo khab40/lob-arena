@@ -12,14 +12,10 @@ from .holdout_context import check_parity, verify_context
 from .holdout_data import HoldoutInputs
 from .holdout_metrics import fixed_comparison, paired_bootstrap
 from .holdout_storage import HoldoutStore
+from .holdout_spec import TRUST
 from .role_deadline import deadline
 from .settings_release import ArtifactRead, checked_read, json_record, load_release
 from .verification_spec import canonical, digest
-
-TRUST = {"verification_sha256": "22f65037c0533cf10d8b4693033b3b80e388bf1e6743692d16140e863e14de98",
-         "selection_sha256": "e26e8212dd147f5feb28bf1093aa5e3bbbea530327f67a992e32626cba7ace33",
-         "decision_sha256": "88c750864434bea09fd0136a9779b2b8d136ad4c8e1a248fcda6f4cc3dd10823"}
-
 
 def retain(directory, item, raw):
     path = directory / item.path
@@ -74,7 +70,8 @@ def execute(s3, request, package_raw, envelope, *, approved_request_sha256, trus
                 raise ValueError("development parity contract differs from checkpoint")
             for shard in dataset.tabular.shards:
                 allowed = ("2019-01-30", "2019-03-27") if shard.fold == "train" else ("2019-10-30",)
-                if not any(day in shard.base_session_id and day in shard.run_id for day in allowed):
+                if ("2019-12-30" in shard.base_session_id + shard.run_id
+                        or not any(day in shard.base_session_id and day in shard.run_id for day in allowed)):
                     raise ValueError("consumed development inventory lacks chronological exclusion proof")
             checkpoint = next(item for item in request.inputs if item.reference == release.artifacts.checkpoint)
             selection = json_record(checked_read(release.artifacts.selection_verification, reader))
