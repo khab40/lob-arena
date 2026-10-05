@@ -1,6 +1,6 @@
 # Transformer research week: 4–10 October 2026
 
-Reconciled 4 October, Asia/Tbilisi, against verified grid/confirmation results and live
+Reconciled 5 October, Asia/Tbilisi, against verified grid/confirmation/comparison results and live
 GitHub tracking. [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
@@ -12,7 +12,21 @@ This refreshes the existing plan; it does not change the experiment protocol or
 authorize execution, final-test access, promotion, merging or cleanup.
 Verification: reconcile saved evidence, repository documentation and GitHub state.
 
-## 4 October execution update
+## 5 October comparison update
+
+PR #315 merged and the exact one-hour L40S package/$6.25 cap was approved.
+One comparison Job completed; all 15 new artifacts plus 229 prerequisites passed
+offline reconciliation. [Results and four plots](experiments/transformer-comparison-r2-20261004/report.md).
+The original verifier rejected a one-ULP aggregate difference; [Bug #317](https://github.com/khab40/lob-arena/issues/317)
+adds bounded arithmetic reconciliation with exact hashes/rows/thresholds intact.
+No model rerun. C-only temperature is 0.998497; on identical O rows Transformer
+F1/AP are 1.00/1.00 versus LightGBM 0.545/0.436. Recommendation is
+**continue_research**, pending operator decision. Perfect development scores
+require an unseen protocol and leakage/robustness review before broader claims.
+The full $6.25 remains held; actual billing and online MLflow are unreconciled.
+The dated execution snapshot below is historical.
+
+## 4 October execution snapshot before replacement approval
 
 The two-seed package in PR #296 was merged and explicitly approved with a $25
 additional cap excluding VAT. Seed 7 failed at context delivery before training;
@@ -67,21 +81,21 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    2027** completed sequentially and passed independent verification. Both
    selection-loss and F1 ranges pass the existing ≤0.05 stability gates. Keep
    seed 42 / epoch 4 as candidate; do not select the luckiest seed.
-2. **5 October — calibrate and compare.** Review the observer repair, then prepare one replacement separately authorized
-   calibration/inference Job, at most one hour, with explicit checkpoint-origin
-   compatibility and an exact request/image, dry-run and spend approval.
-   Fit temperature only on C (5,490 rows); choose declared operating points and
-   compare on the identical O targets (2,470 rows). Reuse frozen LightGBM
-   predictions/calibrator/thresholds; no refit, rescore or final-fold access.
-3. **6 October — verify and decide.** Recompute prediction metrics, calibration,
-   threshold and family results; verify hashes, lineage, seed spread and resources.
-   Report actual quality deltas and limitations. Record `continue_research`,
-   `stop_transformer` or `inconclusive`; a failed run is not an architectural loss.
+2. **5 October — calibrate and compare: complete.** One exactly authorized
+   replacement Job fitted temperature only on C (5,490 rows), selected declared
+   operating points and compared identical O targets (2,470 rows). Frozen
+   LightGBM predictions/calibrator/thresholds were reused; no refit or final access.
+3. **5–6 October — review and decide.** Independent prediction/calibration,
+   threshold/family, hash/lineage and resource verification is complete with the
+   rounding reconciliation above. Review the result/repair PR and record
+   `continue_research`, `stop_transformer` or `inconclusive`. The recommendation
+   is continue_research; operator disposition remains pending.
 4. **7 October — retain the decision package.** Bind selected weights, input
    contract, normalization, configuration, calibration, thresholds, predictions,
    plots, resource/cost disposition and independent receipts. Freeze a candidate
-   only if existing stability/calibration/operating-point gates pass. Preserve
-   failed gates and negative results without further search.
+   only after operator disposition and existing gates pass. Selected-settings
+   export is [Story #314](https://github.com/khab40/lob-arena/issues/314); prepare
+   its approved implementation plan before coding. Preserve failed attempts.
 5. **8–9 October — reconcile MLflow after the research decision.** Index the same
    retained runs/artifacts without retraining. Keep online registration/alias and
    restoration acceptance separately visible under [#19](https://github.com/khab40/lob-arena/issues/19).
@@ -96,16 +110,16 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
 
 ## Bounds and interpretation
 
-The initial comparison attempt is consumed. A proposed replacement would be
-**one Job / one timeout GPU-hour**, requiring
-separate exact authorization: one L40S, 8 vCPU, 32 GiB RAM, 100 GiB disk,
-concurrency one and restart never.
+Both comparison authorizations are consumed: initial cancelled attempt and one
+completed replacement. **No further Job is needed for this comparison.** The
+replacement used one L40S, 8 vCPU, 32 GiB RAM, 100 GiB disk, concurrency one and
+restart never within one hour. Both $6.25 reservations remain held until billing.
 The completed four-Job authorization is consumed. Its $50 reservation above the
 operator-reported $300 baseline remains committed pending billing reconciliation;
 the roughly $1 compute/disk estimate is not a bill or reusable authorization.
-Exact next-stage monetary bounds must be approved before submission.
+Any future study requires its own exact data/execution/spend approval.
 The $25 confirmation commitment also remains held; neither completed Jobs nor
-estimated savings release it or authorize calibration.
+estimated savings release it or authorize further work.
 
 The replacement package layers four execution modules onto the grid's original
 digest image, preserving numerical source `87ce8a9` and all model/dependency bytes.
