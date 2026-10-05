@@ -1,17 +1,47 @@
 """Fixed operating points and paired source-session summaries; never optimize."""
 import numpy as np
 
-from .research_evaluation import metrics, sigmoid
-
 MODES = ("high_precision", "balanced", "high_recall")
 BASELINE_THRESHOLDS = (1.0, 0.5769230769230769, 0.01296456352636128)
 
 
+def sigmoid(logits):
+    return np.exp(-np.logaddexp(0., -np.asarray(logits, dtype=np.float64)))
+
+
 def defined_metrics(labels, probabilities, threshold):
+    labels, probabilities = np.asarray(labels), np.asarray(probabilities, dtype=np.float64)
+    if (labels.ndim != 1 or labels.shape != probabilities.shape or not np.isin(labels, (0, 1)).all()
+            or not np.isfinite(probabilities).all() or np.any((probabilities < 0) | (probabilities > 1))
+            or not 0 <= threshold <= 1):
+        raise ValueError("invalid fixed metric inputs")
     if not len(labels):
         return {"undefined_reason": "no retained observations"}
-    result = metrics(labels, probabilities, threshold)
-    tp, fp, fn = result["tp"], result["fp"], result["fn"]
+    predicted = probabilities >= threshold
+    tp = int(np.sum(predicted & (labels == 1)))
+    fp = int(np.sum(predicted & (labels == 0)))
+    fn = int(np.sum(~predicted & (labels == 1)))
+    clipped = np.clip(probabilities, 1e-15, 1 - 1e-15)
+    order = np.argsort(-probabilities, kind="stable")
+    ends = np.r_[np.flatnonzero(np.diff(probabilities[order]) != 0), len(labels) - 1]
+    cumulative = np.cumsum(labels[order])[ends]
+    recall = cumulative / max(1, int(labels.sum()))
+    bins, ece = [], 0.
+    assignments = np.minimum((probabilities * 10).astype(int), 9)
+    for index in range(10):
+        selected = assignments == index
+        count = int(selected.sum())
+        mean = float(probabilities[selected].mean()) if count else None
+        rate = float(labels[selected].mean()) if count else None
+        if count:
+            ece += count / len(labels) * abs(mean - rate)
+        bins.append({"index": index, "count": count, "mean_probability": mean, "positive_rate": rate})
+    result = {"tp": tp, "fp": fp, "fn": fn, "tn": len(labels) - tp - fp - fn,
+        "precision": tp / max(1, tp + fp), "recall": tp / max(1, tp + fn),
+        "f1": 2 * tp / max(1, 2 * tp + fp + fn),
+        "average_precision": float(np.sum(np.diff(np.r_[0, recall]) * cumulative / (ends + 1))),
+        "log_loss": float(-np.mean(labels * np.log(clipped) + (1 - labels) * np.log1p(-clipped))),
+        "brier": float(np.mean((probabilities - labels) ** 2)), "ece": float(ece), "reliability_bins": bins}
     reasons = {}
     for name, denominator in (("precision", tp + fp), ("recall", tp + fn), ("f1", 2 * tp + fp + fn)):
         if denominator == 0:
