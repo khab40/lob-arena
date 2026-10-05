@@ -1,8 +1,8 @@
 # ARD-0042: Transformer and LightGBM Research Sequence
 
-Status: Accepted research ordering; comparison outcome pending.
+Status: Accepted research ordering; operator continuation approved, holdout execution pending.
 
-Date: 2026-10-03. Records the operator-approved fork of 2026-10-02.
+Date: 2026-10-03; updated 2026-10-05. Records the operator-approved research forks.
 
 Tickets: [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Feature #16](https://github.com/khab40/lob-arena/issues/16),
@@ -34,6 +34,25 @@ Value: test the hypothesis before investing in serving or a cascade.
 Out of scope: new corpus, final fold, LightGBM refit, deployment and promotion.
 Verification: exact ordered identities and labels, complete trial receipts,
 independent recomputation from saved predictions and explicit limitations.
+
+## Holdout extension — 5 October 2026
+
+PR #318 merged with verified C/O results; the operator chose **continue_research**
+and approved the later-date implementation plan. [Settings #314](../ml/transformer-settings-release.md)
+retain the original seed-42/epoch-4 candidate as research-only metadata. The
+[locked protocol](../ml/transformer-holdout-protocol-20261005.md) extends the original
+development-only fork with separately authorized December inference. It does not
+change the original experiment's exclusion of final data or reopen LightGBM G8/G9.
+
+Order: settings/protocol → separate holdout adapter/package → exact dry-run and
+final-access/run/spend approval → one GPU reference-parity/holdout Job → independent
+paired report → operator decision → later MLflow reconciliation. Preserve all
+weights, feature order, normalizer, temperature and operating points. Read saved
+G8 baseline predictions; never rescore LightGBM. Historical December exposure is
+disclosed, so this cannot be called a globally blind benchmark. No training,
+calibration fitting, threshold search or automatic replacement follows the holdout.
+The remaining text describes the original development study; its final-fold
+exclusion remains enforced by all existing development consumers.
 
 ## Experiment sequence
 

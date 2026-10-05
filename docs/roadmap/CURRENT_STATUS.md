@@ -1,3 +1,30 @@
+## 2026-10-05 — Continue research approved; settings saved and holdout protocol locked
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Story #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #318 merged with all 25 checks passed; Bug #317 is closed. The operator chose
+**continue_research** and approved implementation of the later-date validation plan.
+The [selected settings module](../ml/transformer-settings-release.md) retains the
+original seed-42/epoch-4 checkpoint, model/feature settings, normalizer, calibration
+and operating points against seven hash-pinned retained artifacts. Research-only;
+GPU inference consumer parity and online MLflow remain pending. #314 is In Progress.
+90 new metadata tests and 226 regression tests pass without skips; Ruff and
+Markdown links pass. The preserved seven-blob bundle reloads identically.
+
+The [locked December protocol](../ml/transformer-holdout-protocol-20261005.md)
+reuses prepared 2019-12-30 C4 Nasdaq rows and saved G8 LightGBM predictions.
+December is unseen by this Transformer, but historical baseline results are known.
+Balanced is primary; no training, normalization/calibration fitting or threshold
+selection is permitted. No final payload was read and no new Job was submitted.
+
+Next medium PR: distinct holdout adapter/request/worker/readback, preserving all
+existing development final-access denials. Then pin exact artifacts/image, dry-run
+and obtain fresh combined final-access/run/spend authorization; proposed one-hour
+L40S / $6.25 additional cap is not yet approved. Independently verify/report before
+another research decision; MLflow/platform maintenance follows research. G8/G9 stay
+closed and #25 stays Todo. Earlier entries below are historical snapshots.
+
 ## 2026-10-05 — Comparison completed and independently reconciled; research decision pending
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),

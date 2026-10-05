@@ -1,8 +1,8 @@
 # ARD-0036: Governed Market-Sequence Transformer Challenger
 
-Status: Accepted for bounded development research; GPU verification pending.
+Status: Accepted research design; development GPU results verified, holdout execution pending.
 
-Date: 2026-08-16; updated 2026-10-03.
+Date: 2026-08-16; updated 2026-10-05.
 
 Ticket: [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
@@ -36,9 +36,18 @@ Status: `[in progress; GitHub Story #24; research-baseline G9 exit accepted]`
 The causal classifier, GPU trainer, checkpoint/resume support, calibration,
 versioned publisher and independent result reader are implemented in
 [PR #284](https://github.com/khab40/lob-arena/pull/284). This is implementation
-progress, not a verified trained detector. The first GPU smoke Job failed at
-startup before model execution; no Transformer quality result exists. See the
-[dated status](../roadmap/CURRENT_STATUS.md) for execution evidence.
+progress with independently verified replacement smoke, four trials, three-seed
+stability and C/O comparison. PR #318 merged and the operator chose continue_research.
+The original failed attempts remain preserved. Development results do not establish
+holdout or production quality; see [current status](../roadmap/CURRENT_STATUS.md).
+
+The [research settings release](../ml/transformer-settings-release.md) binds the
+original checkpoint and complete preprocessing/calibration configuration. Its
+metadata gates pass; authorized inference-consumer parity remains pending. The
+[December protocol](../ml/transformer-holdout-protocol-20261005.md) extends research
+with a separate holdout consumer and fresh exact final-access/run/spend gate.
+Existing development consumers must continue rejecting final data. No model,
+normalizer, calibration or threshold choice may use December outcomes.
 
 The [input consumer contract](../ml/transformer-input-contract.md) now verifies
 the complete causal source window, masks, exact target alignment and train-only
