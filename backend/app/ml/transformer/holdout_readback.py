@@ -10,6 +10,7 @@ from app.market_data.projections import TabularProjectionManifest
 from .holdout_baseline import pair_saved_predictions
 from .holdout_context import check_parity, verify_context
 from .holdout_metrics import fixed_comparison, paired_bootstrap
+from .holdout_measurements import validate_measurements
 from .research_comparison_readback import arithmetic_matches
 from .settings_release import checked_read, json_record, load_release
 from .holdout_spec import TRUST
@@ -64,6 +65,7 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
             or len(predictions) != len(ledger) or len({r["target_id"] for r in ledger}) != len(ledger)
             or root.canonical_hash() != release.lineage.root_sha256):
         raise ValueError("holdout result lineage or population differs")
+    validate_measurements(result.get("measurements"), ledger, request)
     saved = [row for path in request.baseline_paths
              for row in pq.read_table(io.BytesIO(store.input(request.input(path), gate).data)).to_pylist()]
     population = SavedPopulation(root, tabular, ledger)
@@ -97,4 +99,5 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
     return {"status": "verified", "request_sha256": request.sha256(), "job_id": context["job_id"],
         "rows": len(ledger), "result_sha256": digest(files["result.json"]), "inventory": inventory,
         "model_execution": False, "baseline_rescored": False, "production_qualified": False,
+        "measurements_verified": True,
         "arithmetic_policy": "named_float64_reductions_max_8_ulp"}

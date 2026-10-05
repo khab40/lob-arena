@@ -89,6 +89,10 @@ def publication(tmp_path, monkeypatch):
         "context": envelope["context"], "parity": gate.parity, "comparison": comparison,
         "final_test_access": True, "fitting": False, "baseline_rescored": False,
         "original_checkpoint_bindings": {"original": True},
+        "measurements": {"elapsed_seconds": 1.25, "batch_size": 64, "rows": len(ledger),
+            "peak_gpu_allocated_bytes": 1024, "peak_gpu_reserved_bytes": 2048,
+            "includes_host_to_device": True, "lightgbm_latency": "not_measured_saved_predictions_reused",
+            "ordered_targets_sha256": digest(canonical([row["target_id"] for row in ledger]))},
         "execution_bindings": {"source_commit": req.source_commit, "image_digest": req.image_digest,
             "tabular_sha256": items[0].reference.sha256, "sequence_sha256": items[1].reference.sha256}}
     store = HoldoutStore(s3, req, expires=time.monotonic() + 60)
@@ -98,7 +102,8 @@ def publication(tmp_path, monkeypatch):
     return store, settings, result
 
 
-@pytest.mark.parametrize("defect", [None, "metric", "baseline_flag", "original_binding", "execution_binding"])
+@pytest.mark.parametrize("defect", [None, "metric", "baseline_flag", "original_binding", "execution_binding",
+                                  "missing_measurements", "elapsed", "rows", "targets", "gpu_memory"])
 def test_independent_end_to_end_readback_of_declared_artifacts(tmp_path, monkeypatch, defect):
     store, settings, result = publication(tmp_path, monkeypatch)
     if defect == "metric":
@@ -109,6 +114,16 @@ def test_independent_end_to_end_readback_of_declared_artifacts(tmp_path, monkeyp
         result["original_checkpoint_bindings"] = {}
     elif defect == "execution_binding":
         result["execution_bindings"]["source_commit"] = "0" * 40
+    elif defect == "missing_measurements":
+        del result["measurements"]
+    elif defect == "elapsed":
+        result["measurements"]["elapsed_seconds"] = -1
+    elif defect == "rows":
+        result["measurements"]["rows"] -= 1
+    elif defect == "targets":
+        result["measurements"]["ordered_targets_sha256"] = "0" * 64
+    elif defect == "gpu_memory":
+        result["measurements"]["peak_gpu_reserved_bytes"] = 1
     success = store.finish(result)
     args = dict(approved_request_sha256=store.request.sha256(),
                 trusted_public_key=store.request.context_public_key, settings_reader=lambda ref: ArtifactRead(b"", "1"))
@@ -119,3 +134,4 @@ def test_independent_end_to_end_readback_of_declared_artifacts(tmp_path, monkeyp
         receipt = verify_result(store, success, settings, **args)
         assert receipt["status"] == "verified" and receipt["rows"] == 15160
         assert receipt["model_execution"] is False
+        assert receipt["measurements_verified"] is True
