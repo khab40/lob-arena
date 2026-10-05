@@ -91,10 +91,12 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    seven retained artifact receipts. [Protocol](transformer-holdout-protocol-20261005.md)
    fixes prepared December C4 data, calibration and thresholds before access.
    PR #319 merged with green CI; seven retained artifacts reload identically.
-4. **5–7 October — separate holdout consumer/package: implemented, review next.** Preserve
-   development final-access denials; authenticate final sequence/tabular manifests
-   and original saved G8 baseline predictions. Verify identities, labels, causal
-   cutoffs, masks, missingness and unchanged normalization; test rejection paths.
+4. **5–7 October — consumer merged; image/startup packaging implemented.** PR #321
+   merged with green CI and Bug #322 closed. The [sealed runtime and delivery](transformer-holdout-execution-package.md)
+   preserve 13 numerical files and 48 dependencies; 391 inert regressions pass.
+   Archived receipts authenticate original G8 prediction versions/hashes. Review
+   this packaging chunk, then complete exact final manifests/shards, saved bounded
+   reference logits, access/credential pins and fresh metadata availability.
 5. **7–8 October — exact authorization, then one GPU inference Job.** Pin source,
    image, settings/protocol and exact key/version inventories. Complete dependency,
    context/publication checks and Nebius dry-run before requesting fresh combined

@@ -42,10 +42,11 @@ The approved next study uses the same prepared December Nasdaq data with candida
 choices locked before access. [Settings #314](../ml/transformer-settings-release.md)
 and the [prospective protocol](../ml/transformer-holdout-protocol-20261005.md) are
 merged in PR #319. The [separate consumer](../ml/transformer-holdout-consumer.md)
-now implements authorization/parity, exact inputs/pairing and publication/readback;
-292 inert regressions pass and seven retained artifacts form the portable package.
-Consumer review/CI and actual CUDA parity remain pending. Next: exact final metadata,
-sealed image/entrypoint/context delivery and dry-run, fresh final-access/run/spend
+is merged in PR #321 with authorization/parity, exact inputs/pairing and verified
+measurement/publication readback. The [sealed execution image/startup chunk](../ml/transformer-holdout-execution-package.md)
+preserves 13 numerical files and 48 installed packages; 391 inert regressions pass.
+Actual CUDA parity remains pending. Next: exact final metadata, reference/access
+pins, published image and provider dry-run, fresh final-access/run/spend
 approval, one GPU inference evaluation and independent report/decision.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending

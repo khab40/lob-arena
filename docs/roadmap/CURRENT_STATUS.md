@@ -1,3 +1,23 @@
+## 2026-10-05 — Sealed holdout image and startup delivery implemented
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings Story #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #321 is merged with green CI. The [execution packaging chunk](../ml/transformer-holdout-execution-package.md)
+preserves the verified comparison image's 13 numerical files and 48 installed
+packages, seals the original portable package, bounds compressed request injection,
+and adds external approval plus observed-Job context binding/delivery.
+391 inert regressions pass without skips; 48 new packaging cases. Static image
+imports pass with networking disabled and Torch absent. No model execution.
+
+Verified archived metadata recovers exact original G8 prediction version/hash
+receipts. Fresh remote availability and final sequence/shard inventory are pending.
+Next: review this packaging chunk; complete exact metadata/reference/access pins,
+registry digest, provider dry-run and scoped estimate, then request separate
+final-access/run/spend approval. Proposed one-hour L40S / $6.25 additional cap
+excluding VAT remains unapproved. No Job, final payload read or new permission.
+G8/G9 stay closed. Earlier sections are dated implementation snapshots.
+
 ## 2026-10-05 — Holdout measurement review correction
 
 [PR #321](https://github.com/khab40/lob-arena/pull/321) addresses
@@ -9,8 +29,8 @@ mismatches. 343 inert regressions pass without skips; 51 cases were added for
 this correction. Producer telemetry is checked for consistency, not independently
 remeasured. No model/cloud run or final payload access occurred.
 
-Next: corrected-head CI and human review, then the exact metadata/image/context
-execution package and separate final-access/run/spend authorization described below.
+PR #321 is now merged with green CI; Bug #322 is closed. The exact metadata/image/
+context package and separate authorization are the active next work above.
 
 ## 2026-10-05 — Holdout consumer implemented; exact execution package is next
 
@@ -29,7 +49,7 @@ was generated from seven actual retained development artifacts: 134,645 bytes,
 no embedded weights, zero cloud reads and no model execution.
 These are code/package checks, not CUDA parity or December results.
 
-Next: review/CI this consumer PR, then authenticate exact final metadata/G8
+Consumer/review correction merged in PR #321. Next: authenticate exact final metadata/G8
 receipts, complete image/entrypoint/context-delivery packaging, dependency/source
 checks and exact Nebius dry-run. Obtain fresh final-access/run/spend authorization
 before one inference-only GPU Job. Proposed one-hour L40S / $6.25 excluding VAT
