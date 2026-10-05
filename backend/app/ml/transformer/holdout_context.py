@@ -58,5 +58,7 @@ def check_parity(request, context, saved_raw, target_ids, labels, logits):
     parity = {"passed": True, "rows": len(saved), "targets_sha256": request.reference_targets_sha256,
               "reference_sha256": digest(saved_raw), "actual_logits_sha256": digest(canonical(actual.tolist())),
               "maximum_absolute_error": float(np.max(np.abs(actual - expected))),
-              "atol": request.reference_atol, "rtol": request.reference_rtol}
+              "atol": request.reference_atol, "rtol": request.reference_rtol,
+              "target_ids": list(target_ids), "labels": list(map(int, labels)),
+              "actual_logits": actual.tolist()}
     return HoldoutGate(request.sha256(), context["job_id"], context, parity)
