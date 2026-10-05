@@ -1,3 +1,17 @@
+## 2026-10-05 — Holdout measurement review correction
+
+[PR #321](https://github.com/khab40/lob-arena/pull/321) addresses
+[Bug #322](https://github.com/khab40/lob-arena/issues/322) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+Independent readback now rejects missing/malformed runtime measurements,
+out-of-bounds timing, inconsistent GPU peaks, and batch/count/target-order
+mismatches. 343 inert regressions pass without skips; 51 cases were added for
+this correction. Producer telemetry is checked for consistency, not independently
+remeasured. No model/cloud run or final payload access occurred.
+
+Next: corrected-head CI and human review, then the exact metadata/image/context
+execution package and separate final-access/run/spend authorization described below.
+
 ## 2026-10-05 — Holdout consumer implemented; exact execution package is next
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),

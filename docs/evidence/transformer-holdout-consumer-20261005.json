@@ -48,5 +48,16 @@
     "fresh_final_access_run_and_spend_authorization",
     "one_inference_job_then_independent_report_and_operator_decision"
   ],
+  "review_correction": {
+    "bug": "https://github.com/khab40/lob-arena/issues/322",
+    "implementation_commit": "add2334bba30826bdef4020a794020475388c38a",
+    "before": "missing_measurements_accepted_by_inert_fixture",
+    "after": "exact_structure_bounds_counts_and_target_digest_required",
+    "focused_regressions": 343,
+    "added_cases": 51,
+    "skips": 0,
+    "telemetry_independently_remeasured": false,
+    "durable_evidence": "outputs/transformer-holdout-consumer-20261005/review-correction/"
+  },
   "durable_evidence": "outputs/transformer-holdout-consumer-20261005/"
 }

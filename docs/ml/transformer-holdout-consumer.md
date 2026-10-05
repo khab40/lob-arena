@@ -71,6 +71,15 @@ Reuse Bug #317's maximum-eight-ULP rule for named float64 reductions; hashes,
 probabilities, rows, counts, thresholds, structure and decisions remain exact.
 Unsupported precision/recall/AP remain null with explicit reasons.
 
+[Bug #322](https://github.com/khab40/lob-arena/issues/322) also requires the
+eight runtime measurement fields. Readback rejects nonfinite/negative elapsed
+time or time above the approved timeout; noninteger/mismatched batch size or row
+count; negative/noninteger GPU peaks or reserved memory below allocated memory;
+and a target digest that differs from the ordered ledger. The H2D flag must be
+true and the latency marker must state that saved LightGBM predictions were reused.
+The receipt records `measurements_verified`. This validates recorded telemetry's
+structure and consistency; it does not independently remeasure GPU memory or time.
+
 The library uses a shared 10,000-request / 16-GiB read / 2-GiB publication budget,
 one-attempt conditional writes, absolute execution deadline and publication reserve.
 Transient version-pinned GETs use 30/60/90/120-second attempt bounds (three retries
@@ -105,6 +114,11 @@ Feature: Separately authorized fixed Transformer holdout
     When independent readback finds a changed version, checksum or metric
     Then the result is not accepted
     And no replacement Job starts automatically
+
+  Scenario: Reject inconsistent runtime evidence
+    Given a published result with valid lineage and comparison metrics
+    When measurements are missing or violate the request or ordered target ledger
+    Then independent readback rejects the result
 ```
 
 ## Remaining execution packaging
