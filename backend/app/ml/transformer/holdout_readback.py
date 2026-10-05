@@ -5,6 +5,8 @@ import io
 import numpy as np
 import pyarrow.parquet as pq
 
+from app.market_data.projections import TabularProjectionManifest
+
 from .holdout_baseline import pair_saved_predictions
 from .holdout_context import check_parity, verify_context
 from .holdout_metrics import fixed_comparison, paired_bootstrap
@@ -22,7 +24,7 @@ class SavedPopulation:
         return iter(self.rows)
 
 
-def verify_result(store, success, release, *, approved_request_sha256, trusted_public_key, root, tabular):
+def verify_result(store, success, release, *, approved_request_sha256, trusted_public_key, root):
     request = store.request
     if release.sha256() != request.settings_sha256:
         raise ValueError("independent settings differ")
@@ -38,6 +40,14 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
     gate = check_parity(request, context, reference, parity["target_ids"], parity["labels"], parity["actual_logits"])
     if canonical(gate.parity) != canonical(parity):
         raise ValueError("saved reference parity differs from independent calculation")
+    raw = store.input(request.input(request.tabular_path), gate).data
+    tabular = TabularProjectionManifest.model_validate_json(raw)
+    if (tabular.access_scope != "final_test" or tabular.root_sha256 != root.canonical_hash()
+            or tabular.assignment_sha256 != root.assignment_sha256
+            or tabular.feature_release_sha256 != root.feature_release_sha256
+            or tabular.protocol_sha256 != root.protocol_sha256
+            or tabular.corpus_sha256 != root.corpus_sha256 or tabular.root_release_id != root.release_id):
+        raise ValueError("independent final manifest lineage differs")
     result = json_record(files["result.json"])
     ledger = json_record(files["target-ledger.json"])
     predictions = json_record(files["predictions.json"])
@@ -46,8 +56,7 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
             or result["parity"] != parity or result["final_test_access"] is not True
             or result["fitting"] is not False or result["baseline_rescored"] is not False
             or len(predictions) != len(ledger) or len({r["target_id"] for r in ledger}) != len(ledger)
-            or root.canonical_hash() != release.lineage.root_sha256
-            or tabular.canonical_hash() != request.input(request.tabular_path).reference.sha256):
+            or root.canonical_hash() != release.lineage.root_sha256):
         raise ValueError("holdout result lineage or population differs")
     saved = [row for path in request.baseline_paths
              for row in pq.read_table(io.BytesIO(store.input(request.input(path), gate).data)).to_pylist()]
