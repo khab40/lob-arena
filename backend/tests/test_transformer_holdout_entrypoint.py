@@ -22,16 +22,20 @@ def startup(tmp_path):
     path.write_bytes(encode_request(req))
     s3 = FakeS3()
     s3.objects[(req.output_bucket, context_key(req))] = canonical(envelope)
-    env = {"HOLDOUT_APPROVED_REQUEST_SHA256": req.sha256(),
-           "HOLDOUT_TRUSTED_PUBLIC_KEY": req.context_public_key}
-    return req, envelope, path, s3, env
+    pins = tmp_path / "approval.json"
+    pins.write_bytes(canonical({"approved_request_sha256": req.sha256(),
+                               "trusted_public_key": req.context_public_key}))
+    return req, envelope, path, s3, pins
 
 
 @pytest.mark.parametrize("defect", ["approval", "key", "source", "package", "runtime"])
 def test_failed_startup_never_constructs_client_or_consumer(tmp_path, defect):
-    _, _, path, _, env = startup(tmp_path)
+    _, _, path, _, pins = startup(tmp_path)
     if defect in ("approval", "key"):
-        del env["HOLDOUT_APPROVED_REQUEST_SHA256" if defect == "approval" else "HOLDOUT_TRUSTED_PUBLIC_KEY"]
+        from app.ml.transformer.settings_release import json_record
+        value = json_record(pins.read_bytes())
+        del value["approved_request_sha256" if defect == "approval" else "trusted_public_key"]
+        pins.write_bytes(canonical(value))
     elif defect == "source":
         (tmp_path / "source-commit").write_text("0" * 40)
     elif defect == "package":
@@ -42,12 +46,12 @@ def test_failed_startup_never_constructs_client_or_consumer(tmp_path, defect):
     def never():
         pytest.fail("client constructed before admission")
     with pytest.raises(ValueError):
-        run(tmp_path, path, env=env, inspect=inspect, client_factory=never)
+        run(tmp_path, path, pins_path=pins, inspect=inspect, client_factory=never)
 
 
 @pytest.mark.parametrize("defect", [None, "signature", "nonce", "noncanonical"])
 def test_context_is_verified_before_consumer_and_shares_execution_budget(tmp_path, defect):
-    req, envelope, path, s3, env = startup(tmp_path)
+    req, envelope, path, s3, pins = startup(tmp_path)
     if defect == "signature":
         envelope["signature"] = "0" * 128
     elif defect == "nonce":
@@ -63,7 +67,7 @@ def test_context_is_verified_before_consumer_and_shares_execution_budget(tmp_pat
         assert store.expires <= started + req.timeout_seconds + .1
         assert store.artifacts == {}
         return {"declared": True}
-    args = dict(env=env, inspect=lambda root: None, client_factory=lambda: s3, execute_fn=execute)
+    args = dict(pins_path=pins, inspect=lambda root: None, client_factory=lambda: s3, execute_fn=execute)
     if defect:
         with pytest.raises(Exception):
             run(tmp_path, path, **args)

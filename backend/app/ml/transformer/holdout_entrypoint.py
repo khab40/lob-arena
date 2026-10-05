@@ -1,5 +1,4 @@
 """Authorize and inspect startup before constructing the inference consumer."""
-import os
 from pathlib import Path
 import time
 
@@ -36,11 +35,14 @@ def wait_context(store, *, pause=time.sleep):
     raise TimeoutError("holdout context delivery expired")
 
 
-def run(root, request_path, *, env=None, client_factory=client, inspect=inspect_runtime, execute_fn=None):
-    root, env = Path(root), os.environ if env is None else env
+def run(root, request_path, *, pins_path="/opt/research/holdout-approval.json",
+        client_factory=client, inspect=inspect_runtime, execute_fn=None):
+    root = Path(root)
     request = load_request(request_path)
-    approved = env.get("HOLDOUT_APPROVED_REQUEST_SHA256")
-    trusted = env.get("HOLDOUT_TRUSTED_PUBLIC_KEY")
+    pins = json_record(bounded_read(pins_path, 1024))
+    if set(pins) != {"approved_request_sha256", "trusted_public_key"}:
+        raise ValueError("external approval pins differ")
+    approved, trusted = pins["approved_request_sha256"], pins["trusted_public_key"]
     source = bounded_read(root / "source-commit", 40).decode()
     package = bounded_read(root / "portable-package.json", 512 * 1024)
     if (approved != request.sha256() or trusted != request.context_public_key

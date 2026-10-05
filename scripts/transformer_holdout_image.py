@@ -10,6 +10,7 @@ PACKAGE_SHA = "612a904b055fb18da45f5b7fcbd7e7e4f5556e9f184b6368c381726c6d7dc9e2"
 OVERLAY = ("holdout_spec.py", "holdout_context.py", "holdout_data.py", "holdout_baseline.py",
            "holdout_metrics.py", "holdout_storage.py", "holdout_worker.py", "holdout_gpu.py",
            "holdout_readback.py", "holdout_measurements.py", "holdout_runtime.py", "holdout_entrypoint.py",
+           "holdout_delivery.py",
            "settings_schema.py", "settings_release.py", "research_comparison_readback.py")
 
 
