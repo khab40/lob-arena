@@ -23,6 +23,12 @@ local paths and scopes, source, digest image, sealed evidence package, provider
 specification digest, signing key, nonce, output prefix and fixed bounds.
 Requests themselves are metadata, not approval.
 
+`scripts/prepare_transformer_holdout_package.py` verifies the seven retained
+development blobs against the settings and independent trust pins. It writes a
+private portable package containing settings and four content-addressed evidence
+records, without embedding weights or reading cloud/final objects. Keep that file
+in root outputs custody; only its checksum/size belong in public evidence.
+
 `holdout_worker.execute` checks an **external approved-request hash**, trusted
 signing key, signed observed-Job context, source commit and sealed package hash
 before any IO. The attester must obtain approval and independently verify the
