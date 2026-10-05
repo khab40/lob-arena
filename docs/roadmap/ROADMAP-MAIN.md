@@ -41,9 +41,13 @@ for Transformer versus 0.545/0.436 for frozen LightGBM. Recommendation is
 The approved next study uses the same prepared December Nasdaq data with candidate
 choices locked before access. [Settings #314](../ml/transformer-settings-release.md)
 and the [prospective protocol](../ml/transformer-holdout-protocol-20261005.md) are
-implemented in the current chunk. Next: separate holdout consumer/package, exact
-final-access/run/spend approval, one GPU inference evaluation and independent
-report/decision. Historical LightGBM December exposure remains disclosed; online
+merged in PR #319. The [separate consumer](../ml/transformer-holdout-consumer.md)
+now implements authorization/parity, exact inputs/pairing and publication/readback;
+292 inert regressions pass and seven retained artifacts form the portable package.
+Consumer review/CI and actual CUDA parity remain pending. Next: exact final metadata,
+sealed image/entrypoint/context delivery and dry-run, fresh final-access/run/spend
+approval, one GPU inference evaluation and independent report/decision.
+Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
 billing. No holdout Job or final-test access is authorized by this plan.
 

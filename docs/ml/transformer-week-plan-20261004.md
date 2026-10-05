@@ -85,12 +85,13 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    replacement Job fitted temperature only on C (5,490 rows), selected declared
    operating points and compared identical O targets (2,470 rows). Frozen
    LightGBM predictions/calibrator/thresholds were reused; no refit or final access.
-3. **5–6 October — save settings and lock holdout protocol: current chunk.**
+3. **5–6 October — save settings and lock holdout protocol: complete.**
    Operator chose continue_research and approved this implementation plan. #314
    saves the exact original seed-42/epoch-4 model and feature settings against
    seven retained artifact receipts. [Protocol](transformer-holdout-protocol-20261005.md)
    fixes prepared December C4 data, calibration and thresholds before access.
-4. **6–7 October — implement a separate holdout consumer/package.** Preserve
+   PR #319 merged with green CI; seven retained artifacts reload identically.
+4. **5–7 October — separate holdout consumer/package: implemented, review next.** Preserve
    development final-access denials; authenticate final sequence/tabular manifests
    and original saved G8 baseline predictions. Verify identities, labels, causal
    cutoffs, masks, missingness and unchanged normalization; test rejection paths.

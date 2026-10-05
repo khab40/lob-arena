@@ -1,3 +1,42 @@
+## 2026-10-05 — Holdout measurement review correction
+
+[PR #321](https://github.com/khab40/lob-arena/pull/321) addresses
+[Bug #322](https://github.com/khab40/lob-arena/issues/322) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+Independent readback now rejects missing/malformed runtime measurements,
+out-of-bounds timing, inconsistent GPU peaks, and batch/count/target-order
+mismatches. 343 inert regressions pass without skips; 51 cases were added for
+this correction. Producer telemetry is checked for consistency, not independently
+remeasured. No model/cloud run or final payload access occurred.
+
+Next: corrected-head CI and human review, then the exact metadata/image/context
+execution package and separate final-access/run/spend authorization described below.
+
+## 2026-10-05 — Holdout consumer implemented; exact execution package is next
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings Story #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #319 is merged with green CI. The approved next chunk implements a
+[separate holdout consumer](../ml/transformer-holdout-consumer.md): externally
+pinned authorization and signed Job context, development-reference parity before
+final reads, unchanged development denial, exact causal windows and saved G8
+prediction pairing, fixed metrics and versioned publication/readback.
+
+292 focused inert regressions pass, including 63 new consumer/package cases;
+the five metadata-package tests also pass without NumPy. The portable package
+was generated from seven actual retained development artifacts: 134,645 bytes,
+no embedded weights, zero cloud reads and no model execution.
+These are code/package checks, not CUDA parity or December results.
+
+Next: review/CI this consumer PR, then authenticate exact final metadata/G8
+receipts, complete image/entrypoint/context-delivery packaging, dependency/source
+checks and exact Nebius dry-run. Obtain fresh final-access/run/spend authorization
+before one inference-only GPU Job. Proposed one-hour L40S / $6.25 excluding VAT
+remains unapproved. Independently verify/report and obtain the research decision.
+G8/G9 remain closed; production serving and online MLflow acceptance remain open.
+Earlier dated sections below are historical snapshots.
+
 ## 2026-10-05 — Continue research approved; settings saved and holdout protocol locked
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
