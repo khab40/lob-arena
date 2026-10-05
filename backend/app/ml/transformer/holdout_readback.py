@@ -62,6 +62,16 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
              for row in pq.read_table(io.BytesIO(store.input(request.input(path), gate).data)).to_pylist()]
     population = SavedPopulation(root, tabular, ledger)
     _, baseline, families, symbols = pair_saved_predictions(population, saved)
+    for shard in tabular.shards:
+        ids = [r["target_id"] for r in ledger if r["run_id"] == shard.run_id]
+        if (len(ids) != shard.supervised_row_count
+                or digest("".join(target + "\n" for target in ids).encode()) != shard.row_identity_sha256):
+            raise ValueError("readback row ledger differs from frozen manifest")
+    execution = result["execution_bindings"]
+    if execution != {"source_commit": request.source_commit, "image_digest": request.image_digest,
+                     "tabular_sha256": request.input(request.tabular_path).reference.sha256,
+                     "sequence_sha256": request.input(request.sequence_path).reference.sha256}:
+        raise ValueError("readback execution bindings differ")
     logits = [row["logit"] for row in predictions]
     for row, expected, p, family, symbol in zip(predictions, ledger, baseline, families, symbols, strict=True):
         if ({key: row[key] for key in expected} != expected or row["baseline_probability"] != p

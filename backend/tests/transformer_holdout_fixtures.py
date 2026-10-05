@@ -1,7 +1,6 @@
 """Tiny declared records and fake IO; never train or execute a detector."""
 import io
 import json
-from pathlib import Path
 
 import pyarrow.parquet as pq
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -70,6 +69,7 @@ def baseline_rows(dataset):
             "fold": "test", "base_session_id": "2019-12-30-aapl", "campaign_id": None,
             "instrument": "AAPL", "attack_family": "spoofing_like_wall" if row["label"] else None,
             "calibrated_probability": .9 if row["label"] else .1,
+            "threshold": 0.5769230769230769, "alert": bool(row["label"]),
             **{key: row[key] for key in ("run_id", "sequence", "prediction_timestamp_ns", "label")}}
 
 

@@ -35,6 +35,8 @@ def pair_saved_predictions(dataset, prediction_rows):
         if (type(probability) not in (float, int) or not np.isfinite(probability)
                 or not 0 <= probability <= 1):
             raise ValueError("original calibrated G8 probability required")
+        if row.get("threshold") != 0.5769230769230769 or row.get("alert") is not (probability >= row["threshold"]):
+            raise ValueError("saved G8 balanced threshold or alert differs")
         families.append(row["attack_family"] or "control")
         symbols.append(row["instrument"])
         probabilities.append(float(probability))

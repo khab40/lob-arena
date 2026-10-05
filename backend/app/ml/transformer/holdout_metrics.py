@@ -84,10 +84,15 @@ def paired_bootstrap(ledger, logits, baseline, release):
     baseline = np.asarray(baseline)
     rng = np.random.default_rng(20260828)
     draws = {"average_precision": [], "log_loss": []}
+    cache = {}
     for _ in range(2000):
-        indices = np.concatenate([groups[i] for i in rng.integers(0, len(groups), size=len(groups))])
-        t = defined_metrics(labels[indices], probabilities[indices], release.operating_points[1].threshold)
-        b = defined_metrics(labels[indices], baseline[indices], BASELINE_THRESHOLDS[1])
+        choice = tuple(map(int, rng.integers(0, len(groups), size=len(groups))))
+        if choice not in cache:
+            indices = np.concatenate([groups[i] for i in choice])
+            cache[choice] = (
+                defined_metrics(labels[indices], probabilities[indices], release.operating_points[1].threshold),
+                defined_metrics(labels[indices], baseline[indices], BASELINE_THRESHOLDS[1]))
+        t, b = cache[choice]
         for name in draws:
             draws[name].append(None if t[name] is None or b[name] is None else t[name] - b[name])
     return {"draws": 2000, "seed": 20260828, "unit": "whole_base_session", "paired": True,
