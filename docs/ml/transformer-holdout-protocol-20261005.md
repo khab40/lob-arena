@@ -26,6 +26,10 @@ Width 128 / rate 0.0003 / seed 42 / epoch 4, original checkpoint, all 60 feature
 64-step windows, train-only normalization, C-only temperature and O thresholds
 remain fixed. Primary operating mode is balanced; other named modes and 0.5
 diagnostics are predeclared. No choice is made using December outcomes.
+The protocol-lock regression compares every duplicated candidate field (width,
+learning rate, seed, epoch and checkpoint checksum) with the immutable settings.
+[Bug #320](https://github.com/khab40/lob-arena/issues/320) closes the missing
+width/rate/seed assertions; isolated mutations of those fields must fail.
 
 Use prepared C4 **2019-12-30 AAPL/MSFT/NVDA, 10:00–10:30 ET**. Existing G8
 evidence expects 15,160 retained rows, 135 positives, 15,025 research-control

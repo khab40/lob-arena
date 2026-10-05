@@ -15,8 +15,13 @@ def test_protocol_binds_exact_research_settings_before_any_holdout_access():
     settings = SettingsRelease.model_validate_json(raw)
     assert protocol["settings_sha256"] == hashlib.sha256(raw).hexdigest() == settings.sha256()
     assert settings.preprocessing.ordered_features == FEATURE_COLUMNS
-    assert protocol["candidate"]["checkpoint_sha256"] == settings.artifacts.checkpoint.sha256
-    assert protocol["candidate"]["epoch"] == settings.lineage.selected_epoch
+    assert protocol["candidate"] == {
+        "width": settings.training.width,
+        "learning_rate": settings.training.learning_rate,
+        "seed": settings.training.seed,
+        "epoch": settings.lineage.selected_epoch,
+        "checkpoint_sha256": settings.artifacts.checkpoint.sha256,
+    }
     assert protocol["fixed_thresholds"]["transformer"] == {p.mode: p.threshold for p in settings.operating_points}
     assert protocol["selected_mode"] == settings.selected_mode
     assert protocol["fitting_allowed"] is False
