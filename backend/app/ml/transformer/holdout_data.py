@@ -1,5 +1,5 @@
 """Distinct gated final adapter; the development adapter remains unchanged."""
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from app.market_data.projections import (
@@ -19,6 +19,7 @@ class HoldoutInputs:
     contract: object  # Original development contract: never relabel checkpoint bindings.
     request: object
     gate: object
+    verified_ledger: tuple = ()
 
     @classmethod
     def open(cls, *, request, gate, contract, artifact_root):
@@ -56,9 +57,14 @@ class HoldoutInputs:
         if consumed != set(approved):
             raise ValueError("unaccounted final inputs in approved inventory")
         result = cls(contract.root, tabular, sequences, artifact_root, contract, request, gate)
-        for _ in result.windows():
-            pass  # Complete verification before the first inference batch.
-        return result
+        shards = {s.run_id: s for s in tabular.shards}
+        ledger = []
+        for window in result.windows():  # Complete verification before inference.
+            shard = shards[window.run_id]
+            ledger.append({"target_id": window.target_id, "label": window.label, "run_id": window.run_id,
+                "base_session_id": shard.base_session_id, "campaign_id": shard.campaign_id,
+                "prediction_timestamp_ns": int(window.timestamps_ns[-1])})
+        return replace(result, verified_ledger=tuple(ledger))
 
     def windows(self, fold=None):
         self.gate.require(self.request)
@@ -71,9 +77,6 @@ class HoldoutInputs:
             yield from verified_windows(rows(source), rows(history), root=self.root, shard=shard)
 
     def ledger(self):
-        shards = {s.run_id: s for s in self.tabular.shards}
-        for window in self.windows():
-            shard = shards[window.run_id]
-            yield {"target_id": window.target_id, "label": window.label, "run_id": window.run_id,
-                   "base_session_id": shard.base_session_id, "campaign_id": shard.campaign_id,
-                   "prediction_timestamp_ns": int(window.timestamps_ns[-1])}
+        self.gate.require(self.request)
+        for row in self.verified_ledger:
+            yield dict(row)  # Pairing cannot mutate the validated metadata cache.

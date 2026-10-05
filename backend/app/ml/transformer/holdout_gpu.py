@@ -26,7 +26,8 @@ class FixedGpuConsumer:
         ids, labels, logits = [], [], []
         torch.cuda.synchronize()
         started = time.monotonic()
-        for batch in iter_batches(dataset, normalizer, batch_size=64):
+        for batch in iter_batches(dataset, normalizer, batch_size=64,
+                                  fold="validation" if targets is not None else "test"):
             indices = np.asarray([i for i, target in enumerate(batch.target_ids)
                                   if wanted is None or target in wanted], dtype=np.int64)
             if not len(indices):
