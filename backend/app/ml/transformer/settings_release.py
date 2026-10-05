@@ -66,6 +66,8 @@ def build_release(artifacts: Artifacts, reader, *, verification_sha256, decision
     execution = result["execution_bindings"]
     selected = selection["result"]
     if (selection["status"] != "verified" or selected["status"] != "verified"
+            or selected["kind"] != "trial" or selected["final_test_access"] is not False
+            or selected["selected_epoch"] != origin["checkpoint"]["epoch"]
             or selected["trial"] != MANIFEST["selected"]["trial"]
             or selected["trial_sha256"] != origin["trial_sha256"]
             or selected["selected_checkpoint"] != origin["checkpoint"] or selected["bindings"] != bindings

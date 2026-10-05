@@ -80,6 +80,7 @@ class SettingsFixture:
         result = self.report["result"]
         origin = result["checkpoint_origin"]
         selection = reference(encode({"status": "verified", "result": {"status": "verified",
+            "kind": "trial", "final_test_access": False, "selected_epoch": origin["checkpoint"]["epoch"],
             "job_id": "fixture-training-job", "request_sha256": origin["request_sha256"],
             "trial": MANIFEST["selected"]["trial"], "trial_sha256": origin["trial_sha256"],
             "selected_checkpoint": origin["checkpoint"], "bindings": origin["bindings"]},

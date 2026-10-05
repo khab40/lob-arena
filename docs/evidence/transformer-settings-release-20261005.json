@@ -39,8 +39,8 @@
   "retained_evidence_root": "outputs/transformer-settings-release-20261005/",
   "base_commit": "4cd77d2be44ca60a86e9597807dcf176208b0485",
   "validation": {
-    "new_metadata_tests_passed": 90,
-    "regression_tests_passed": 226,
+    "new_metadata_tests_passed": 93,
+    "regression_tests_passed": 229,
     "regression_skipped": 0,
     "ruff": "passed",
     "markdown_links": "passed",

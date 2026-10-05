@@ -9,7 +9,7 @@ The [selected settings module](../ml/transformer-settings-release.md) retains th
 original seed-42/epoch-4 checkpoint, model/feature settings, normalizer, calibration
 and operating points against seven hash-pinned retained artifacts. Research-only;
 GPU inference consumer parity and online MLflow remain pending. #314 is In Progress.
-90 new metadata tests and 226 regression tests pass without skips; Ruff and
+93 new metadata tests and 229 regression tests pass without skips; Ruff and
 Markdown links pass. The preserved seven-blob bundle reloads identically.
 
 The [locked December protocol](../ml/transformer-holdout-protocol-20261005.md)

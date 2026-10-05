@@ -1,4 +1,5 @@
 """Gate failures and publication interruption must preserve research evidence."""
+import json
 import os
 
 import pytest
@@ -119,7 +120,6 @@ def test_interrupted_publication_exposes_no_manifest_or_temporary_file(tmp_path,
 def test_contradictory_original_checkpoint_version_rejected():
     fixture = SettingsFixture().prepare()
     ref = fixture.artifacts.selection_verification
-    import json
     report = json.loads(fixture.reads[ref.uri].data)
     report["inventory"]["search-128-0003-epoch-04.pt"]["version_id"] = "2"
     raw = encode(report)
@@ -138,3 +138,18 @@ def test_large_metadata_rejected_before_reader_is_called():
     with pytest.raises(ValueError, match="read bound"):
         build_release(fixture.artifacts, fixture.reader, **fixture.pins)
     assert fixture.calls == []
+
+
+@pytest.mark.parametrize("field,value", [("kind", "inference"), ("final_test_access", True), ("selected_epoch", 5)])
+def test_contradictory_training_provenance_rejected(field, value):
+    fixture = SettingsFixture().prepare()
+    ref = fixture.artifacts.selection_verification
+    report = json.loads(fixture.reads[ref.uri].data)
+    report["result"][field] = value
+    raw = encode(report)
+    replacement = ref.model_copy(update={"uri": "evidence:sha256:" + sha(raw), "sha256": sha(raw),
+                                         "size_bytes": len(raw)})
+    fixture.reads[replacement.uri] = ArtifactRead(raw, replacement.version_id)
+    fixture.artifacts = fixture.artifacts.model_copy(update={"selection_verification": replacement})
+    with pytest.raises(ValueError, match="selection receipt"):
+        build_release(fixture.artifacts, fixture.reader, **{**fixture.pins, "selection_sha256": replacement.sha256})
