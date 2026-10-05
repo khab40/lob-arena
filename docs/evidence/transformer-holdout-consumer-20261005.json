@@ -1,0 +1,52 @@
+{
+  "schema_version": "transformer_holdout_consumer_implementation_v1",
+  "date": "2026-10-05",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "settings_story": "https://github.com/khab40/lob-arena/issues/314",
+  "project": "https://github.com/users/khab40/projects/3",
+  "base_commit": "4ee4fcf5768556b0f52fbc2c281ae9dff07ea642",
+  "implementation_commit": "5ba71d6",
+  "approved_plan_sha256": "33af32662e8c496f2ae6c66c8854d81401625caae155f37abbaa388b4bb6b08e",
+  "settings_sha256": "2efbed46a82470d86107886041c5eab05265aa89c390f10bce557a9c838b05ab",
+  "protocol_sha256": "9ca25496c6c1ca82f7bed064e291060b334ab510c0c7c4571230360ab3f2639e",
+  "portable_package": {
+    "sha256": "612a904b055fb18da45f5b7fcbd7e7e4f5556e9f184b6368c381726c6d7dc9e2",
+    "size_bytes": 134645,
+    "verified_retained_development_artifacts": 7,
+    "checkpoint_embedded": false,
+    "custody": "outputs/transformer-holdout-consumer-20261005/portable-package.json"
+  },
+  "verification": {
+    "focused_regressions": 292,
+    "new_inert_cases": 63,
+    "skips": 0,
+    "minimal_metadata_package_cases": 5,
+    "ruff": "passed",
+    "markdown_links": "passed",
+    "development_contract_and_denial_unchanged": true,
+    "model_architecture_and_training_runtime_unchanged": true,
+    "settings_and_protocol_bytes_unchanged": true,
+    "readback_fixture": "declared_15160_rows_not_market_data",
+    "actual_gpu_parity": "pending_authorized_job",
+    "final_inventory_verification": "pending_exact_metadata_packaging"
+  },
+  "scope": {
+    "new_jobs": 0,
+    "cloud_gets": 0,
+    "model_execution": false,
+    "final_payload_access": false,
+    "g8_rerun": false,
+    "fitting": false,
+    "execution_authorized": false,
+    "production_serving": false,
+    "mlflow": "later_reconciliation"
+  },
+  "next": [
+    "consumer_review_and_ci",
+    "exact_final_metadata_and_saved_g8_receipts",
+    "sealed_image_entrypoint_context_delivery_and_exact_dry_run",
+    "fresh_final_access_run_and_spend_authorization",
+    "one_inference_job_then_independent_report_and_operator_decision"
+  ],
+  "durable_evidence": "outputs/transformer-holdout-consumer-20261005/"
+}
