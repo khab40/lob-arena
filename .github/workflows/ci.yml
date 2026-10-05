@@ -174,6 +174,8 @@ jobs:
           tests/test_transformer_comparison_replacement.py
           tests/test_transformer_comparison_prepare.py
           tests/test_transformer_comparison_observer.py
+          tests/test_transformer_settings_release.py tests/test_transformer_settings_gates.py
+          tests/test_transformer_settings_export.py tests/test_transformer_holdout_protocol.py
 
       - name: Verify governed image submission contracts (inert metadata only)
         working-directory: backend
