@@ -27,7 +27,7 @@ def defined_metrics(labels, probabilities, threshold):
     cumulative = np.cumsum(labels[order])[ends]
     recall = cumulative / max(1, int(labels.sum()))
     bins, ece = [], 0.
-    assignments = np.minimum((probabilities * 10).astype(int), 9)
+    assignments = np.clip(np.searchsorted(np.linspace(0., 1., 11), probabilities, side="right") - 1, 0, 9)
     for index in range(10):
         selected = assignments == index
         count = int(selected.sum())
@@ -41,7 +41,8 @@ def defined_metrics(labels, probabilities, threshold):
         "f1": 2 * tp / max(1, 2 * tp + fp + fn),
         "average_precision": float(np.sum(np.diff(np.r_[0, recall]) * cumulative / (ends + 1))),
         "log_loss": float(-np.mean(labels * np.log(clipped) + (1 - labels) * np.log1p(-clipped))),
-        "brier": float(np.mean((probabilities - labels) ** 2)), "ece": float(ece), "reliability_bins": bins}
+        "brier_score": float(np.mean((probabilities - labels) ** 2)),
+        "expected_calibration_error": float(ece), "reliability_bins": bins}
     reasons = {}
     for name, denominator in (("precision", tp + fp), ("recall", tp + fn), ("f1", 2 * tp + fp + fn)):
         if denominator == 0:

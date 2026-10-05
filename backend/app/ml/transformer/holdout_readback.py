@@ -10,7 +10,9 @@ from app.market_data.projections import TabularProjectionManifest
 from .holdout_baseline import pair_saved_predictions
 from .holdout_context import check_parity, verify_context
 from .holdout_metrics import fixed_comparison, paired_bootstrap
-from .settings_release import json_record
+from .research_comparison_readback import arithmetic_matches
+from .settings_release import checked_read, json_record, load_release
+from .holdout_worker import TRUST
 from .verification_spec import canonical, digest
 
 
@@ -24,10 +26,13 @@ class SavedPopulation:
         return iter(self.rows)
 
 
-def verify_result(store, success, release, *, approved_request_sha256, trusted_public_key, root):
+def verify_result(store, success, release, *, approved_request_sha256, trusted_public_key, settings_reader):
     request = store.request
-    if release.sha256() != request.settings_sha256:
-        raise ValueError("independent settings differ")
+    release = load_release(release.canonical_bytes(), settings_reader,
+                           expected_sha256=request.settings_sha256, **TRUST)
+    from .contracts import InputContract
+    root = InputContract.model_validate_json(checked_read(release.artifacts.contract, settings_reader)).root
+    original = json_record(checked_read(release.artifacts.selection_verification, settings_reader))["result"]["bindings"]
     files, inventory = store.reconcile(success)
     if set(files) != {"execution-context.json", "reference-parity.json",
                       "predictions.json", "target-ledger.json", "result.json"}:
@@ -55,6 +60,7 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
             or result["settings_sha256"] != release.sha256() or result["context"] != context
             or result["parity"] != parity or result["final_test_access"] is not True
             or result["fitting"] is not False or result["baseline_rescored"] is not False
+            or result["original_checkpoint_bindings"] != original
             or len(predictions) != len(ledger) or len({r["target_id"] for r in ledger}) != len(ledger)
             or root.canonical_hash() != release.lineage.root_sha256):
         raise ValueError("holdout result lineage or population differs")
@@ -62,6 +68,12 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
              for row in pq.read_table(io.BytesIO(store.input(request.input(path), gate).data)).to_pylist()]
     population = SavedPopulation(root, tabular, ledger)
     _, baseline, families, symbols = pair_saved_predictions(population, saved)
+    if (len(ledger) != 15160 or sum(row["label"] for row in ledger) != 135
+            or set(symbols) != {"AAPL", "MSFT", "NVDA"} or len(tabular.shards) != 30
+            or len({row["base_session_id"] for row in ledger}) != 3
+            or len({row["campaign_id"] for row in ledger if row["campaign_id"]}) != 27
+            or any("2019-12-30" not in row["base_session_id"] for row in ledger)):
+        raise ValueError("independent December population differs")
     for shard in tabular.shards:
         ids = [r["target_id"] for r in ledger if r["run_id"] == shard.run_id]
         if (len(ids) != shard.supervised_row_count
@@ -80,8 +92,9 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
     comparison, probabilities = fixed_comparison(ledger, logits, baseline, families, symbols, release)
     comparison["bootstrap"] = paired_bootstrap(ledger, logits, baseline, release)
     if (not np.array_equal(probabilities, np.asarray([r["probability"] for r in predictions]))
-            or canonical(comparison) != canonical(result["comparison"])):
+            or not arithmetic_matches(result["comparison"], comparison)):
         raise ValueError("saved holdout metrics differ from independent arithmetic")
     return {"status": "verified", "request_sha256": request.sha256(), "job_id": context["job_id"],
         "rows": len(ledger), "result_sha256": digest(files["result.json"]), "inventory": inventory,
-        "model_execution": False, "baseline_rescored": False, "production_qualified": False}
+        "model_execution": False, "baseline_rescored": False, "production_qualified": False,
+        "arithmetic_policy": "named_float64_reductions_max_8_ulp"}
