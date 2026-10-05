@@ -21,7 +21,7 @@ The original verifier rejected a one-ULP aggregate difference; [Bug #317](https:
 adds bounded arithmetic reconciliation with exact hashes/rows/thresholds intact.
 No model rerun. C-only temperature is 0.998497; on identical O rows Transformer
 F1/AP are 1.00/1.00 versus LightGBM 0.545/0.436. Recommendation is
-**continue_research**, pending operator decision. Perfect development scores
+**continue_research**, accepted by the operator after PR #318 merged. Perfect development scores
 require an unseen protocol and leakage/robustness review before broader claims.
 The full $6.25 remains held; actual billing and online MLflow are unreconciled.
 The dated execution snapshot below is historical.
@@ -85,28 +85,27 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    replacement Job fitted temperature only on C (5,490 rows), selected declared
    operating points and compared identical O targets (2,470 rows). Frozen
    LightGBM predictions/calibrator/thresholds were reused; no refit or final access.
-3. **5–6 October — review and decide.** Independent prediction/calibration,
-   threshold/family, hash/lineage and resource verification is complete with the
-   rounding reconciliation above. Review the result/repair PR and record
-   `continue_research`, `stop_transformer` or `inconclusive`. The recommendation
-   is continue_research; operator disposition remains pending.
-4. **7 October — retain the decision package.** Bind selected weights, input
-   contract, normalization, configuration, calibration, thresholds, predictions,
-   plots, resource/cost disposition and independent receipts. Freeze a candidate
-   only after operator disposition and existing gates pass. Selected-settings
-   export is [Story #314](https://github.com/khab40/lob-arena/issues/314); prepare
-   its approved implementation plan before coding. Preserve failed attempts.
-5. **8–9 October — reconcile MLflow after the research decision.** Index the same
-   retained runs/artifacts without retraining. Keep online registration/alias and
-   restoration acceptance separately visible under [#19](https://github.com/khab40/lob-arena/issues/19).
-   Resume prioritized [#20](https://github.com/khab40/lob-arena/issues/20)/
-   [#21](https://github.com/khab40/lob-arena/issues/21) work after research, without
-   promising all platform acceptance within this week.
-6. **10 October — review the outcome and reforecast.** Reserve this day for
-   evidence/review delays and the next plan. Keep [#25](https://github.com/khab40/lob-arena/issues/25)
-   Todo unless the decision justifies a separately approved cascade study.
-   Reforecast #90/#91 around the selected detector approach. M3's 9 October
-   date remains a baseline; a research decision alone does not close all of #24.
+3. **5–6 October — save settings and lock holdout protocol: current chunk.**
+   Operator chose continue_research and approved this implementation plan. #314
+   saves the exact original seed-42/epoch-4 model and feature settings against
+   seven retained artifact receipts. [Protocol](transformer-holdout-protocol-20261005.md)
+   fixes prepared December C4 data, calibration and thresholds before access.
+4. **6–7 October — implement a separate holdout consumer/package.** Preserve
+   development final-access denials; authenticate final sequence/tabular manifests
+   and original saved G8 baseline predictions. Verify identities, labels, causal
+   cutoffs, masks, missingness and unchanged normalization; test rejection paths.
+5. **7–8 October — exact authorization, then one GPU inference Job.** Pin source,
+   image, settings/protocol and exact key/version inventories. Complete dependency,
+   context/publication checks and Nebius dry-run before requesting fresh combined
+   final-access/run/spend approval. Proposed one-hour L40S / $6.25 additional cap
+   is not approved yet. Reference parity must pass before December payload access.
+6. **8–10 October — independent report/decision, then MLflow.** Recompute paired
+   saved metrics and weak three-session uncertainty summaries; retain one Markdown
+   report with plots, resources and limitations. December is a Transformer holdout,
+   not a globally blind benchmark. No automatic retraining/reselection. Reconcile
+   retained artifacts later under #19; platform #20/#21 follows research. #25 stays
+   Todo until a separate justified cascade proposal. Reforecast #90/#91 after the
+   outcome; 9 October remains a baseline, not a promise that all #24 acceptance closes.
 
 ## Bounds and interpretation
 
@@ -132,7 +131,8 @@ O is also used for threshold selection, LightGBM calibration previously saw the
 validation fold, and labels remain synthetic/research controls. Report these
 limits; neither untouched holdout performance nor a LightGBM speedup is established.
 G8/G9 remain closed. Platform work and cascade implementation do not precede the
-research decision. Any later qualification protocol requires separate data/scope.
+research decision. The separately authorized fixed-candidate December protocol does not establish
+production qualification; broader claims require a later unseen corpus.
 
 Evidence: [grid results](transformer-training-grid-results.md),
 [per-run reports](experiments/transformer-grid-20261003/index.md),

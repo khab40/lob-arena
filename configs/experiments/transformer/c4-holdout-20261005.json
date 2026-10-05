@@ -1,0 +1,118 @@
+{
+  "schema_version": "transformer_fixed_holdout_protocol_v1",
+  "date": "2026-10-05",
+  "status": "protocol_locked_execution_unapproved",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "settings_story": "https://github.com/khab40/lob-arena/issues/314",
+  "project": "https://github.com/users/khab40/projects/3",
+  "settings_sha256": "2efbed46a82470d86107886041c5eab05265aa89c390f10bce557a9c838b05ab",
+  "candidate": {
+    "width": 128,
+    "learning_rate": 0.0003,
+    "seed": 42,
+    "epoch": 4,
+    "checkpoint_sha256": "e2cc94d8e11ad3ad644e52d5283fd958c5458717efd7cfe02ccc30f8f82e6b2b"
+  },
+  "holdout": {
+    "release": "existing_frozen_C4",
+    "date": "2019-12-30",
+    "symbols": [
+      "AAPL",
+      "MSFT",
+      "NVDA"
+    ],
+    "window_et": [
+      "10:00",
+      "10:30"
+    ],
+    "expected_counts": {
+      "rows": 15160,
+      "positives": 135,
+      "negatives": 15025,
+      "observed_campaigns": 27,
+      "base_sessions": 3,
+      "replay_domains": 30
+    },
+    "inventory_verified": false,
+    "transformer_exclusion_check": "required_before_final_payload_access",
+    "global_blindness": false,
+    "historical_lightgbm_exposure": "December evaluated in G8; results known"
+  },
+  "paired_baseline": "original_G8_saved_predictions_no_rescoring",
+  "fitting_allowed": false,
+  "selected_mode": "balanced",
+  "fixed_thresholds": {
+    "transformer": {
+      "high_precision": 0.996423148187864,
+      "balanced": 0.996423148187864,
+      "high_recall": 0.996423148187864
+    },
+    "lightgbm": {
+      "high_precision": 1.0,
+      "balanced": 0.5769230769230769,
+      "high_recall": 0.01296456352636128
+    },
+    "diagnostic": 0.5,
+    "comparison": "probability_greater_or_equal_threshold"
+  },
+  "primary_metrics": [
+    "average_precision",
+    "log_loss"
+  ],
+  "secondary_metrics": [
+    "precision",
+    "recall",
+    "f1",
+    "confusion",
+    "brier",
+    "ece",
+    "per_symbol_and_family_support_recall",
+    "negative_row_false_positives",
+    "observed_campaign_coverage"
+  ],
+  "bootstrap": {
+    "draws": 2000,
+    "seed": 20260828,
+    "unit": "whole_base_session",
+    "paired": true,
+    "preserve_all_replay_variants": true,
+    "interpretation": "weak_conditional_summary_three_clusters_one_date",
+    "undefined_metrics": "null_with_reason"
+  },
+  "research_gates": {
+    "high_precision_precision_floor": 0.9,
+    "high_recall_recall_floor": 0.9,
+    "passing_is_production_qualification": false,
+    "decision": "operator_after_verified_results",
+    "lineage_or_execution_failure": "inconclusive",
+    "quality_failure": "retain_no_automatic_refit"
+  },
+  "proposed_execution": {
+    "jobs": 1,
+    "platform": "gpu-l40s-a",
+    "preset": "1gpu-8vcpu-32gb",
+    "disk_gib": 100,
+    "batch_size": 64,
+    "timeout_seconds": 3600,
+    "startup_seconds": 600,
+    "create_to_terminal_seconds": 7200,
+    "restart": "never",
+    "concurrency": 1,
+    "preemptible": false,
+    "publication_max_gib": 2,
+    "collection_egress_max_gib": 16,
+    "requests_max": 10000,
+    "retention_review_days": 90,
+    "additional_cap_usd_excluding_vat": 6.25,
+    "authorized": false
+  },
+  "authorization_gate": "exact_final_keys_versions_image_source_settings_protocol_price_scope_and_cleanup_review",
+  "limitations": [
+    "candidate_holdout_not_globally_blind",
+    "one_date_three_source_clusters",
+    "synthetic_positive_unadjudicated_negative_labels",
+    "baseline_latency_not_measured"
+  ],
+  "g8_g9_reopened": false,
+  "mlflow": "later_reconciliation_under_19"
+}

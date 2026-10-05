@@ -37,10 +37,15 @@ records independently reconciled temperature/operating points and all 244 artifa
 [Bug #317](https://github.com/khab40/lob-arena/issues/317) resolves a single-ULP
 aggregate mismatch without rerunning the model. O development F1/AP are 1.00/1.00
 for Transformer versus 0.545/0.436 for frozen LightGBM. Recommendation is
-continue_research, pending operator disposition; perfect scores need an unseen
-protocol and leakage/robustness review. Next: review results and record the
-research decision, then retain settings #314 and reconcile MLflow. Both $6.25
-comparison commitments remain held pending billing. No final-test run is authorized.
+**continue_research**, accepted by the operator after PR #318 merged with green CI.
+The approved next study uses the same prepared December Nasdaq data with candidate
+choices locked before access. [Settings #314](../ml/transformer-settings-release.md)
+and the [prospective protocol](../ml/transformer-holdout-protocol-20261005.md) are
+implemented in the current chunk. Next: separate holdout consumer/package, exact
+final-access/run/spend approval, one GPU inference evaluation and independent
+report/decision. Historical LightGBM December exposure remains disclosed; online
+MLflow follows research. Both $6.25 comparison commitments remain held pending
+billing. No holdout Job or final-test access is authorized by this plan.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
