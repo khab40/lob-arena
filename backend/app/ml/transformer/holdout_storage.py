@@ -4,6 +4,7 @@ import time
 
 from .holdout_spec import MAX_OUTPUT, MAX_READ, object_location
 from .role_execution_transport import PublicationUncertain, _body, verify_sha_metadata
+from .role_deadline import deadline
 from .settings_release import ArtifactRead, json_record
 from .verification_spec import canonical, digest
 
@@ -30,12 +31,31 @@ class HoldoutStore:
             gate.require(self.request)
         ref = item.reference
         bucket, key = object_location(ref)
-        self.start()
-        response = self.s3.get_object(Bucket=bucket, Key=key, VersionId=ref.version_id)
-        raw, observed = self.consume(response, ref.size_bytes, ref.version_id)
+        raw, observed = self.get({"Bucket": bucket, "Key": key, "VersionId": ref.version_id},
+                                 ref.size_bytes, metadata=False)
         if observed != {k: getattr(ref, k) for k in ("size_bytes", "version_id", "sha256")}:
             raise ValueError("input bytes differ from approved version")
         return ArtifactRead(raw, observed["version_id"])
+
+    def get(self, args, limit, *, metadata):
+        # Retry only transient reads. Never retry a PUT or a validation/authentication
+        # failure; every failed attempt retains its request and byte reservation.
+        for timeout in (30, 60, 90, 120):
+            self.start()
+            try:
+                with deadline(min(timeout, self.expires - time.monotonic())):
+                    response = self.s3.get_object(**args)
+                    raw, observed = self.consume(response, limit, args["VersionId"])
+                    if metadata:
+                        verify_sha_metadata(response, observed["sha256"])
+                    return raw, observed
+            except Exception as error:
+                code = getattr(error, "response", {}).get("Error", {}).get("Code")
+                transient = isinstance(error, TimeoutError) or type(error).__name__ in {
+                    "ReadTimeoutError", "ConnectTimeoutError", "EndpointConnectionError", "ConnectionClosedError"}
+                transient = transient or code in {"SlowDown", "RequestTimeout", "InternalError", "ServiceUnavailable"}
+                if not transient or timeout == 120 or time.monotonic() >= self.expires:
+                    raise
 
     def consume(self, response, limit, version):
         # Reserve worst-case bytes before streaming, including failed partial reads.
@@ -54,11 +74,8 @@ class HoldoutStore:
     def read(self, name, expected):
         from .research_execution_spec import receipt
         receipt(expected)
-        self.start()
-        response = self.s3.get_object(Bucket=self.request.output_bucket, Key=self.key(name),
-                                     VersionId=expected["version_id"])
-        raw, observed = self.consume(response, expected["size_bytes"], expected["version_id"])
-        verify_sha_metadata(response, observed["sha256"])
+        raw, observed = self.get({"Bucket": self.request.output_bucket, "Key": self.key(name),
+                                 "VersionId": expected["version_id"]}, expected["size_bytes"], metadata=True)
         if observed != expected:
             raise ValueError("holdout result version, size or checksum differs")
         return raw

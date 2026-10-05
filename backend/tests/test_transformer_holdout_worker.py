@@ -31,6 +31,14 @@ def prepared(tmp_path, monkeypatch):
                            ("checkpoint", "selected.pt"), ("selection_verification", "selection.json"))})
     release = SimpleNamespace(artifacts=artifacts, require_research_inference=lambda: None)
     monkeypatch.setattr("app.ml.transformer.holdout_worker.load_release", lambda *a, **k: release)
+    # Declared development fixture uses short domain names; isolate its calendar
+    # metadata without invoking any model or changing its verified contract bytes.
+    original = data.tabular.shards
+    dated = tuple(shard.model_copy(update={"base_session_id": "2019-01-30" if shard.fold == "train" else "2019-10-30",
+        "run_id": "2019-01-30" if shard.fold == "train" else "2019-10-30"}) for shard in original)
+    from dataclasses import replace
+    monkeypatch.setattr("app.ml.transformer.holdout_worker.DevelopmentInputs.open",
+        lambda **kwargs: replace(data, tabular=data.tabular.model_copy(update={"shards": dated})))
     final = [reference("tabular.json", b"no final read"), reference("sequence.json", b"no final read"),
              reference("baseline.parquet", b"no final read", uri=G8_PREFIX + "predictions.parquet")]
     package = canonical({"settings": "{}", "evidence": {}})

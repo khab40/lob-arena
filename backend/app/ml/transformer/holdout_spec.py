@@ -73,6 +73,10 @@ class HoldoutRequest(SettingsRecord):
             raise ValueError("duplicate input paths or object identities")
         if sum(item.reference.size_bytes for item in self.inputs) > MAX_READ:
             raise ValueError("input envelope exceeds read budget")
+        if any(item.scope == "development" and any(marker in item.reference.uri.lower()
+               for marker in ("/final/", "wave1-final-", "2019-12-30", "sequence-final", "tabular-final"))
+               for item in self.inputs):
+            raise ValueError("final or December key cannot be declared development")
         final = (self.tabular_path, self.sequence_path, *self.baseline_paths)
         if (len(set(final)) != len(final) or any(p not in paths for p in final)
                 or any(paths[p].scope != "final_test" for p in final)

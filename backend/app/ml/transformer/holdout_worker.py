@@ -72,6 +72,10 @@ def execute(s3, request, package_raw, envelope, *, approved_request_sha256, trus
                 sequence_path=work / "development-sequences.json", sequence_sha256=contract.sequence_manifest_sha256)
             if dataset.contract.canonical_bytes() != contract.canonical_bytes():
                 raise ValueError("development parity contract differs from checkpoint")
+            for shard in dataset.tabular.shards:
+                allowed = ("2019-01-30", "2019-03-27") if shard.fold == "train" else ("2019-10-30",)
+                if not any(day in shard.base_session_id and day in shard.run_id for day in allowed):
+                    raise ValueError("consumed development inventory lacks chronological exclusion proof")
             checkpoint = next(item for item in request.inputs if item.reference == release.artifacts.checkpoint)
             selection = json_record(checked_read(release.artifacts.selection_verification, reader))
             stage = "reference_parity"

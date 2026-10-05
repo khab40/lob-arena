@@ -67,6 +67,9 @@ Unsupported precision/recall/AP remain null with explicit reasons.
 
 The library uses a shared 10,000-request / 16-GiB read / 2-GiB publication budget,
 one-attempt conditional writes, absolute execution deadline and publication reserve.
+Transient version-pinned GETs use 30/60/90/120-second attempt bounds (three retries
+maximum), clamped to the enclosing deadline. Validation/authentication failures and
+mutations never retry. The sealed image must also disable hidden SDK retries.
 CUDA execution is restricted to the later approved Nebius Job. Local tests use
 declared records and fake IO, including a 15,160-row *inert* publication fixture.
 That fixture is neither Nasdaq data nor qualification evidence.

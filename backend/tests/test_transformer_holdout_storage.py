@@ -83,3 +83,28 @@ def test_changed_published_bytes_rejected_even_with_same_version(tmp_path):
     store.s3.objects[(store.request.output_bucket, store.key("predictions.json"))] = b"tampered"
     with pytest.raises(ValueError):
         store.reconcile(success)
+
+
+def test_three_transient_get_retries_have_increasing_bounded_timeouts(tmp_path, monkeypatch):
+    from contextlib import contextmanager
+    store, gate = setup(tmp_path)
+    store.expires = time.monotonic() + 3600
+    timeouts = []
+    @contextmanager
+    def observe(seconds):
+        timeouts.append(seconds)
+        yield
+    monkeypatch.setattr("app.ml.transformer.holdout_storage.deadline", observe)
+    original = store.s3.get_object
+    attempts = []
+    def intermittent(**args):
+        attempts.append(args)
+        if len(attempts) <= 3:
+            raise TimeoutError("declared transient read")
+        return original(**args)
+    store.s3.get_object = intermittent
+    store.input(store.request.input("tabular.json"), gate)
+    assert len(attempts) == 4
+    assert timeouts == [30, 60, 90, 120]
+    assert len({args["VersionId"] for args in attempts}) == 1
+    assert store.calls == 4
