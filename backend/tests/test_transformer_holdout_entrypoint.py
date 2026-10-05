@@ -2,12 +2,16 @@ import time
 
 import pytest
 
-from app.ml.transformer.holdout_entrypoint import context_key, run, wait_context
-from app.ml.transformer.holdout_runtime import encode_request
-from app.ml.transformer.holdout_spec import G8_PREFIX
-from app.ml.transformer.holdout_storage import HoldoutStore
-from app.ml.transformer.verification_spec import canonical, digest
-from transformer_holdout_fixtures import FakeS3, reference, request
+pytest.importorskip("numpy")
+pytest.importorskip("cryptography")
+pytest.importorskip("pyarrow")
+
+from app.ml.transformer.holdout_entrypoint import context_key, run, wait_context  # noqa: E402
+from app.ml.transformer.holdout_runtime import encode_request  # noqa: E402
+from app.ml.transformer.holdout_spec import G8_PREFIX  # noqa: E402
+from app.ml.transformer.holdout_storage import HoldoutStore  # noqa: E402
+from app.ml.transformer.verification_spec import canonical, digest  # noqa: E402
+from transformer_holdout_fixtures import FakeS3, reference, request  # noqa: E402
 
 
 def startup(tmp_path):

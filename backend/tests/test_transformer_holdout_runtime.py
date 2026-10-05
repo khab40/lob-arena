@@ -6,13 +6,22 @@ from app.ml.transformer.holdout_runtime import (
     MAX_INJECTION, MAX_REQUEST, bounded_read, encode_request, inspect_runtime, load_request,
 )
 from app.ml.transformer.verification_spec import canonical, digest
-from app.ml.transformer.holdout_spec import G8_PREFIX
-from transformer_holdout_fixtures import reference, request
+from app.ml.transformer.holdout_spec import G8_PREFIX, HoldoutRequest, InputObject, OUTPUT_ROOT
+from app.ml.transformer.settings_schema import Artifact
 
 
 def fixture_request():
-    return request([reference("tabular.json", b"metadata"), reference("sequence.json", b"metadata"),
-                    reference("baseline.parquet", b"metadata", uri=G8_PREFIX + "predictions.parquet")])[0]
+    def item(path, scope="final_test", uri=None):
+        return InputObject(path=path, scope=scope, reference=Artifact(uri=uri or "s3://fixture/" + path,
+            sha256="a" * 64, version_id="1", size_bytes=1))
+    return HoldoutRequest(run_id="transformer-holdout-fixture", source_commit="1" * 40,
+        image_repository="cr.eu-north1.nebius.cloud/fixture/tr", image_digest="sha256:" + "2" * 64,
+        context_public_key="3" * 64, nonce="4" * 32, package_sha256="5" * 64,
+        provider_spec_sha256="6" * 64, inputs=(item("tabular.json"), item("sequence.json"),
+            item("baseline.parquet", uri=G8_PREFIX + "predictions.parquet"), item("reference.json", "development")),
+        tabular_path="tabular.json", sequence_path="sequence.json", baseline_paths=("baseline.parquet",),
+        reference_logits_path="reference.json", reference_targets_sha256="7" * 64, reference_rows=1,
+        output_prefix=OUTPUT_ROOT + "transformer-holdout-fixture/")
 
 
 def test_compressed_request_roundtrip_is_canonical_and_deterministic(tmp_path):

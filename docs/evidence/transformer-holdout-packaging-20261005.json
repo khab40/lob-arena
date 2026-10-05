@@ -58,5 +58,19 @@
     "Resolve exact approved final/development credential selectors and access/removal handoff.",
     "Publish immutable image and complete request/provider dry-run with scoped cost estimate.",
     "Obtain fresh exact final-access/run/spend approval before one inference-only Job."
-  ]
+  ],
+  "ci_repair": {
+    "bug": "https://github.com/khab40/lob-arena/issues/324",
+    "initial_failed_run": "https://github.com/khab40/lob-arena/actions/runs/37327827650",
+    "cause": "test collection imported optional ML dependencies in base backend installation",
+    "base_packaging_tests": {
+      "passed": 21,
+      "module_skips": 2
+    },
+    "full_ml_packaging_tests": {
+      "passed": 48,
+      "skipped": 0
+    },
+    "sealed_image_changed": false
+  }
 }

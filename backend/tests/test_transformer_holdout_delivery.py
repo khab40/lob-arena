@@ -3,14 +3,18 @@ import time
 
 import pytest
 
-from app.ml.transformer.holdout_context import verify_context
-from app.ml.transformer.holdout_delivery import context_for_job, deliver_context, provider_spec
-from app.ml.transformer.holdout_entrypoint import wait_context
-from app.ml.transformer.holdout_storage import HoldoutStore
-from app.ml.transformer.role_execution_spec import PROJECT
-from app.ml.transformer.role_execution_transport import PublicationUncertain
-from app.ml.transformer.verification_spec import canonical, digest
-from test_transformer_holdout_entrypoint import startup
+pytest.importorskip("numpy")
+pytest.importorskip("cryptography")
+pytest.importorskip("pyarrow")
+
+from app.ml.transformer.holdout_context import verify_context  # noqa: E402
+from app.ml.transformer.holdout_delivery import context_for_job, deliver_context, provider_spec  # noqa: E402
+from app.ml.transformer.holdout_entrypoint import wait_context  # noqa: E402
+from app.ml.transformer.holdout_storage import HoldoutStore  # noqa: E402
+from app.ml.transformer.role_execution_spec import PROJECT  # noqa: E402
+from app.ml.transformer.role_execution_transport import PublicationUncertain  # noqa: E402
+from app.ml.transformer.verification_spec import canonical, digest  # noqa: E402
+from test_transformer_holdout_entrypoint import startup  # noqa: E402
 
 
 def observed(tmp_path):

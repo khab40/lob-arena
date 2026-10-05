@@ -71,6 +71,11 @@ read, then pairs final rows with original G8 predictions and publishes SUCCESS l
 391 inert regressions pass without skips, including 48 new packaging cases.
 The rebuilt image passed static imports with networking disabled and a read-only
 filesystem; Torch was not imported. These checks do not prove CUDA parity.
+Initial backend CI exposed optional-dependency collection errors in the new tests.
+[Bug #324](https://github.com/khab40/lob-arena/issues/324) removes the metadata
+fixture's ML dependencies and guards the two optional-ML modules. The base
+installation passes all 21 metadata/image cases with two module skips; the full
+ML installation passes all 48 packaging cases without skips. Image bytes remain unchanged.
 The original G9 metadata archive's checksum and two restored records authenticate
 the saved G8 prediction key, version, size and checksum. No final payload was
 read, and historical receipts do not prove current remote availability.
