@@ -1,0 +1,15 @@
+{
+  "source": "Nebius billing v1alpha1 calculator estimate",
+  "observed_date": "2026-10-06",
+  "platform": "gpu-l40s-a",
+  "preset": "1gpu-8vcpu-32gb",
+  "disk_gib": 100,
+  "currency": "USD",
+  "excludes_vat": true,
+  "compute_hourly": "1.5484",
+  "disk_hourly": "0.0097222",
+  "maximum_create_to_terminal_seconds": 7200,
+  "compute_disk_two_hour_estimate": "3.1162444",
+  "proposed_additional_cap": "6.25",
+  "job_count": 1
+}
