@@ -1,3 +1,25 @@
+## 2026-10-06 — December metadata audit complete; permissions restored
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #328 merged with all 25 checks passed. The exactly approved audit completed:
+**3 JSON GETs + 62 HEADs**, 30 December runs / **15,160 aligned rows**,
+all object versions `1`. Independent evidence/publication reviews found no
+actionable P0/P1/P2. [Result and exact inventory](../ml/transformer-holdout-metadata-results-20261006.md).
+Both temporary grants are removed; independent readbacks restore original rules
+at final version **10** / 2 rules and results version **11** / 9 rules.
+Access lasted 36m36s, within the approved hour. No Parquet bodies or models ran;
+HEAD checks do not verify fresh payload hashes. Actual cost remains unreconciled.
+
+Next: publish the saved development reference with an immutable version receipt,
+pin remaining credentials/access and the execution request, publish the sealed
+image by digest, then run the exact provider dry-run. Obtain fresh final-access,
+one-Job and spend authorization before GPU inference. Proposed bound remains
+one L40S / one hour / $6.25 additional excluding VAT, not yet approved. CUDA
+reference parity must pass before December payload reads. G8/G9 remain closed.
+Earlier dated preparation snapshots below describe their then-current state.
+
 ## 2026-10-06 — P1 metadata credential imports corrected
 
 [Bug #329](https://github.com/khab40/lob-arena/issues/329), attached under

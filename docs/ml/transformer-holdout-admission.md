@@ -35,8 +35,11 @@ The corrected proposal SHA-256 is
 Only source pins changed from the approved `e73297b4…` proposal; exact keys,
 request/access limits, policy hashes, cleanup and $0.01 cap remain identical.
 Both proposals, the approval reply and the scope comparison are retained in the
-project-root evidence folder. Finish corrected-head CI before the operator
-applies the already-approved grants. No grant or live audit has occurred.
+project-root evidence folder. PR #328 merged with all 25 checks passed. The
+[completed audit](transformer-holdout-metadata-results-20261006.md) independently
+verified all 65 metadata receipts; both temporary grants are removed. The
+operator delegated the approved CLI updates with an explicit `run` instruction;
+Nebius MCP supplied independent policy readbacks. No Parquet bodies or models ran.
 
 ## Saved reference preparation
 
@@ -50,23 +53,25 @@ Local receipts and the saved reference are retained in
 `outputs/transformer-holdout-admission-20261006/reference/` in the project root.
 No reference object has been published; its S3 URI/version and CUDA parity remain pending.
 
-## Exact metadata audit proposed for approval
+## Exact metadata audit — approved and completed
 
 The [proposal](../evidence/transformer-holdout-metadata-proposal-20261006.json)
-allows one attempt: three frozen JSON manifest GETs, 60 December shard HEADs
+allowed one attempt, now consumed: three frozen JSON manifest GETs, 60 December shard HEADs
 and two version-pinned original G8 prediction HEADs. Each JSON is at most
 256 KiB; total collection is at most five minutes, with no automatic retries.
-Proposed additional spend cap: **$0.01 excluding VAT**, under the existing
+Approved additional spend cap: **$0.01 excluding VAT**, under the existing
 operator-managed cost policy. Zero Jobs. Any failed attempt stops and preserves receipts.
 
-Temporary `storage.viewer` access covers 63 exact final-bucket keys and two exact
+The removed temporary `storage.viewer` access covered 63 exact final-bucket keys and two exact
 results-bucket keys for the existing development group. The role permits object
 bodies, but this approved collector uses GET only for three JSON manifests and
 HEAD for the remaining 62 objects; it never fetches Parquet bodies.
-Seven added rules leave the final bucket at nine rules; one added rule leaves
-results at ten. Each added rule has at most ten paths, with no wildcards.
+Seven added rules left the final bucket at nine rules; one added rule left
+results at ten. Each added rule had at most ten paths, with no wildcards.
 
-Nebius MCP safe mode requires operator grant/removal. Before any grant, rerun
+The following procedure describes the consumed audit, not a new authorization.
+Nebius MCP safe mode excludes policy updates; the operator delegated the approved
+CLI grant/removal commands explicitly. Before any grant, rerun
 the offline `--preflight` and independently read both current bucket policies.
 Use fresh resource versions and verify the approved exact added rules before
 collection. Keep access at most one hour; after success or any abort, remove
@@ -122,9 +127,9 @@ Feature: Fixed Transformer holdout admission
     And independent readback confirms removal
 ```
 
-Next: finish corrected-head CI, apply approved access, audit/remove access and bind
-verified metadata into the exact request,
-publish reference and immutable image, complete provider dry-run and scoped cost
-estimate, then obtain fresh final-access/run/spend approval. Proposed GPU bounds
+Next: bind the verified inventory into the exact request, publish/pin the saved
+development reference, finish credential/access pins and publish the immutable
+image. Complete provider dry-run and scoped cost estimate, then obtain fresh
+final-access/run/spend approval. The audit approval is consumed; do not repeat it. Proposed GPU bounds
 remain one L40S, one hour, $6.25 additional excluding VAT. They are unapproved.
 G8/G9 remain closed. December results and the research decision remain pending.
