@@ -26,7 +26,7 @@ def retain(directory, item, raw):
 
 
 def execute(s3, request, package_raw, envelope, *, approved_request_sha256, trusted_public_key,
-            work, source_commit, consumer_factory=None):
+            work, source_commit, consumer_factory=None, store=None):
     if (source_commit != request.source_commit or len(package_raw) > 512 * 1024
             or digest(package_raw) != request.package_sha256):
         raise ValueError("holdout image source or sealed package differs")
@@ -35,12 +35,15 @@ def execute(s3, request, package_raw, envelope, *, approved_request_sha256, trus
     package = json_record(package_raw)
     if set(package) != {"settings", "evidence"}:
         raise ValueError("invalid holdout package")
-    expires = time.monotonic() + request.timeout_seconds
-    store = HoldoutStore(s3, request, expires=expires)
+    if store is None:
+        store = HoldoutStore(s3, request, expires=time.monotonic() + request.timeout_seconds)
+    if store.s3 is not s3 or store.request != request or store.artifacts:
+        raise ValueError("startup IO budget belongs to another execution")
+    expires = store.expires
     work = Path(work)
     work.mkdir(parents=True, exist_ok=False)
     stage = "claim"
-    with deadline(request.timeout_seconds):
+    with deadline(expires - time.monotonic()):
         store.claim()
         try:
             store.put("execution-context.json", canonical(envelope))

@@ -5,7 +5,7 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-10-05. See [current status and evidence](CURRENT_STATUS.md)
+Status date: 2026-10-06. See [current status and evidence](CURRENT_STATUS.md)
 and the [4–10 October research plan](../ml/transformer-week-plan-20261004.md).
 
 Operator-approved priority: [Transformer versus LightGBM research](../ml/transformer-research-fork.md)
@@ -42,10 +42,13 @@ The approved next study uses the same prepared December Nasdaq data with candida
 choices locked before access. [Settings #314](../ml/transformer-settings-release.md)
 and the [prospective protocol](../ml/transformer-holdout-protocol-20261005.md) are
 merged in PR #319. The [separate consumer](../ml/transformer-holdout-consumer.md)
-now implements authorization/parity, exact inputs/pairing and publication/readback;
-292 inert regressions pass and seven retained artifacts form the portable package.
-Consumer review/CI and actual CUDA parity remain pending. Next: exact final metadata,
-sealed image/entrypoint/context delivery and dry-run, fresh final-access/run/spend
+is merged in PR #321 with authorization/parity, exact inputs/pairing and verified
+measurement/publication readback. The [sealed execution image/startup chunk](../ml/transformer-holdout-execution-package.md)
+preserves 13 numerical files and 48 installed packages; 403 inert regressions pass.
+P1 Bug #325 binds the copied overlay to a clean matching Git commit and verifies
+all 20 context files in the rebuilt image; PR #323 review/CI remains the next gate.
+Actual CUDA parity remains pending. Next: exact final metadata, reference/access
+pins, published image and provider dry-run, fresh final-access/run/spend
 approval, one GPU inference evaluation and independent report/decision.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
