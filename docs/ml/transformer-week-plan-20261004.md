@@ -106,19 +106,26 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    PR #331 and post-merge CI passed. The saved reference is published/versioned,
    image digest is published, and the [exact 252-input run package](transformer-holdout-run-20261006.md)
    passes SDK/local-CLI preflight, 258 inert holdout tests and provider dry-run.
-5. **6 October — exact authorization, then one GPU inference Job.** Operator asked
-   to bring research closure and the first demo forward to today. Fresh combined
-   final-access/run/spend approval is still required for this sealed proposal.
-   One-hour L40S / $6.25 additional cap remains unapproved. Reference parity must
-   pass before December payload access; no replacement or reselection is authorized.
+5. **6 October — approval received; first Job admission repaired.** PR #337 merged
+   with green CI and exact run/access/spend/signing/removal approval was received.
+   Both grants were independently verified at final11/results12. The standalone
+   watcher expired before separate submission; the guard rejected creation before
+   intent or mutation. All 23 observations and fresh MCP reconciliation show the
+   Job absent; no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
+   adds coordinated same-process admission, durable intent and reserved observation
+   time; 46 focused inert cases pass with independent review. Preserve old history,
+   finish operator grant removal/readback, then complete the corrected exact package,
+   dry-run and recovery approval before the first evaluation. Retain the existing
+   $6.25 reservation; no cap increase. Reference parity still precedes December reads.
 6. **6 October target; 7–10 October contingency — report and first demo, then MLflow.** Recompute paired
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,
    not a globally blind benchmark. No automatic retraining/reselection. Reconcile
    retained artifacts later under #19; platform #20/#21 follows research. #25 stays
-   Todo until a separate justified cascade proposal. Prepare #90/#91's first mock
-   while run approval is pending: saved research-score playback, detector/source
-   selection, pacing and exact alert/threshold identity. Verify backend/GUI flow;
+   Todo until a separate justified cascade proposal. After Transformer research
+   verification and the operator decision, prepare #90/#91's first mock: saved
+   research-score playback, detector/source selection, pacing and exact alert/threshold
+   identity. Verify backend/GUI flow;
    broader secure demo acceptance and full #24 closure remain separately assessed.
 
 ## Bounds and interpretation

@@ -1,3 +1,34 @@
+## 2026-10-06 — First holdout Job pending; coordinated admission repaired
+
+[Bug #339](https://github.com/khab40/lob-arena/issues/339) is under
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24) in
+[Project #3](https://github.com/users/khab40/projects/3). PR #337 merged with
+green CI. The operator approved its exact run/access/spend/signing/removal scope;
+authentication recovered and both temporary policies were independently verified
+at final version 11 and results version 12.
+
+The standalone watcher expired after 120 seconds while the agent delayed the
+separate creation tool call. Its stale-heartbeat guard rejected submission before
+any creation intent or provider mutation. All 23 observations were absent; fresh
+MCP reconciliation returned NotFound. **No GPU Job or December payload read ran.**
+The original proposal and failed observer history remain immutable. Reviewed
+operator removal of both grants is pending; the $6.25 reservation remains held
+with actual billing unreconciled.
+
+[Coordinated admission](../operations/transformer-coordinated-admission.md) now
+submits directly from supervision after verified absence. Durable exclusive
+creation intent, 30-second observation reserve, exact captured command hashes,
+access-expiry checks and continued observation after outcome-receipt failure are
+covered by 46 focused inert cases and separate-agent reviews. Numerical code,
+request, model, reference, signing identity and immutable image are unchanged.
+
+Next: verify policy restoration; complete the corrected package/dry-run and exact
+recovery approval in a separate evidence directory, then run the first frozen
+evaluation, independently verify/report and obtain the research decision. No
+automatic restart, replacement, refitting or cap increase. Complete Transformer
+research before #90/#91 demo implementation; online MLflow/platform work follows.
+G8/G9 remain closed. The following dated entries are historical snapshots.
+
 ## 2026-10-06 — Exact GPU package ready; first replay demo next
 
 [Transformer #24](https://github.com/khab40/lob-arena/issues/24),

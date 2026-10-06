@@ -59,13 +59,23 @@ version `1`; the sealed image is published by immutable digest. The
 [252-input execution package](../ml/transformer-holdout-run-20261006.md) binds exact
 access/credential/request pins, bounded supervision and original-policy restoration.
 Actual SDK/local-CLI preflight, 258 inert holdout tests and the exact provider dry-run pass.
-Next: fresh exact final-access/run/spend approval, one GPU inference evaluation and
-independent decision. Today's operator priority also includes #90/#91's first
-honest backend/GUI saved-score replay mock; broader story acceptance remains open.
+PR #337 merged with green CI and the operator approved the exact package. Both
+grants were verified at final11/results12, but the standalone watcher expired
+before a separate creation tool call; the submission guard stopped before intent
+or mutation. All 23 observations and fresh MCP reconciliation show Job absence;
+no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
+repairs this with [same-process admission](../operations/transformer-coordinated-admission.md),
+durable intent and reserved observation time; 46 focused inert cases pass.
+Original history is preserved; operator grant removal/readback remains pending.
+Next: restoration, corrected exact recovery package/dry-run/approval, then the
+first GPU inference evaluation, independent result verification and decision.
+The existing $6.25 holdout reservation is retained; no extra cap is proposed.
+Complete Transformer research before #90/#91 demo implementation.
 Actual CUDA reference parity remains pending and must precede holdout payload reads.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
-billing. No holdout Job or final-test access is authorized by this plan.
+billing. This roadmap grants no execution or access authority; the aborted
+package will not be restarted and the corrected package needs exact approval.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
