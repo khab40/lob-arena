@@ -2,6 +2,9 @@ from datetime import datetime, timezone
 
 import pytest
 
+pytest.importorskip("numpy")
+pytest.importorskip("cryptography")
+
 from app.ml.transformer.holdout_delivery import provider_spec
 from app.ml.transformer.holdout_supervision import supervise
 from app.ml.transformer.verification_spec import canonical, digest

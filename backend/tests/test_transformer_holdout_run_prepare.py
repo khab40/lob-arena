@@ -5,6 +5,9 @@ import stat
 
 import pytest
 
+pytest.importorskip("numpy")
+pytest.importorskip("cryptography")
+
 from app.ml.transformer.holdout_runtime import load_request
 from app.ml.transformer.holdout_spec import G8_PREFIX, InputObject
 from app.ml.transformer.verification_spec import canonical, digest
