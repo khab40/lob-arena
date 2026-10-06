@@ -1,3 +1,17 @@
+## 2026-10-06 — P1 holdout source provenance corrected in PR #323
+
+[Bug #325](https://github.com/khab40/lob-arena/issues/325) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3 fixes
+unverified source attribution. Context preparation now requires a clean matching
+Git commit and checks copied bytes against commit objects. The Docker build
+argument is removed; static runtime inspection verifies 20 copied context files.
+403 inert regressions pass without skips; base metadata/image checks pass 33 cases
+with two optional-ML module skips. The rebuilt image preserves 13 numerical files
+and 48 dependencies; network-disabled static imports do not import Torch.
+Corrected source is `fe5eaaa`; previous image/context evidence is retained as superseded.
+Next: corrected-head CI/human review, then the unchanged exact inventory/access/
+dry-run and separate final-access/run/spend gate. No Job or final payload access.
+
 ## 2026-10-05 — Sealed holdout image and startup delivery implemented
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),

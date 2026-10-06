@@ -4,18 +4,18 @@
   "story": "https://github.com/khab40/lob-arena/issues/24",
   "settings_story": "https://github.com/khab40/lob-arena/issues/314",
   "base_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:56ccf4ee7c7bdc7c06f9971223a6158c1080095562e60ca128e0e683e1b6d460",
-  "image_source_commit": "d5e952d8c00a42460b972a0b3d513ecffd11f5bb",
-  "local_image_id": "sha256:59a3461381035686f975cddda162cb1130dbcdee13446a10cc74d49b7663d894",
+  "image_source_commit": "fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508",
+  "local_image_id": "sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e",
   "registry_published": false,
   "installed_dependencies_verified": 48,
   "numerical_files_verified": 13,
   "portable_package_sha256": "612a904b055fb18da45f5b7fcbd7e7e4f5556e9f184b6368c381726c6d7dc9e2",
   "portable_package_bytes": 134645,
-  "image_context_sha256": "82f95bc50f5053e6c79def7285dd26a1cb1adcb94a1a6fa1af3baea63e4c9d86",
+  "image_context_sha256": "c64aa20cadb405b46a47a097e76192b28226b652a3d4ddb8e02fc926c255e028",
   "inert_regressions": {
-    "passed": 391,
+    "passed": 403,
     "skipped": 0,
-    "new_cases": 48
+    "new_cases": 60
   },
   "static_image_imports": {
     "network": "none",
@@ -72,5 +72,19 @@
       "skipped": 0
     },
     "sealed_image_changed": false
+  },
+  "last_updated_date": "2026-10-06",
+  "source_provenance_repair": {
+    "bug": "https://github.com/khab40/lob-arena/issues/325",
+    "clean_matching_git_head_required": true,
+    "copied_repository_bytes_checked_against_git_objects": true,
+    "free_form_source_build_argument": false,
+    "context_files_verified": 20,
+    "new_cases": 12,
+    "base_packaging_tests": {
+      "passed": 33,
+      "module_skips": 2
+    },
+    "supersedes_local_image_id": "sha256:59a3461381035686f975cddda162cb1130dbcdee13446a10cc74d49b7663d894"
   }
 }

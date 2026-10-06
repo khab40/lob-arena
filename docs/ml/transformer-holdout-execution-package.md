@@ -1,6 +1,7 @@
 # Sealed Transformer holdout execution packaging
 
-Date: 2026-10-05. Status: image/startup packaging implemented; exact inventory,
+Date: 2026-10-05; source-provenance correction verified 2026-10-06.
+Status: image/startup packaging implemented; exact inventory,
 provider dry-run and execution authorization pending.
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [settings Story #314](https://github.com/khab40/lob-arena/issues/314),
@@ -29,7 +30,7 @@ are installed or upgraded. Its runtime lock verifies all 48 installed distributi
 and 13 pinned numerical source files. Only explicit holdout/settings modules are
 overlaid. The 134,645-byte portable package remains hash-identical and contains
 metadata, not weights. The original checkpoint is a separately pinned input.
-Source commit `d5e952d8c00a42460b972a0b3d513ecffd11f5bb` identifies the built
+Source commit `fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508` identifies the corrected built
 code; later documentation/CI commits do not change the sealed image contents.
 The receipt's local Docker image ID is **not** a published registry digest.
 
@@ -37,6 +38,16 @@ The builder rejects an image repository longer than 64 characters, a mutable
 base, changed portable package, numerical-file overlay or an existing output
 directory. The request uses deterministic gzip, bounded to 64 KiB compressed
 and 256 KiB expanded, with canonical JSON required after decoding.
+
+[P1 Bug #325](https://github.com/khab40/lob-arena/issues/325) fixes false source
+attribution. Preparation requires `--source-commit` to match a clean tracked Git
+checkout and compares every captured repository file with its immutable commit
+blob before creating output. Staged/unstaged changes, a wrong commit or raced
+file capture fail. The source file is generated from that verified commit;
+Docker no longer accepts a free-form `SOURCE_COMMIT` build argument.
+The image verifies all 20 copied context files, sizes and hashes against its
+manifest, including source identity, overlay, Dockerfile and portable package.
+The earlier local image remains preserved as superseded evidence.
 
 ## Startup and context delivery
 
@@ -68,14 +79,15 @@ read, then pairs final rows with original G8 predictions and publishes SUCCESS l
 
 ## Evidence and remaining admission work
 
-391 inert regressions pass without skips, including 48 new packaging cases.
+403 inert regressions pass without skips, including 60 new packaging cases.
 The rebuilt image passed static imports with networking disabled and a read-only
 filesystem; Torch was not imported. These checks do not prove CUDA parity.
 Initial backend CI exposed optional-dependency collection errors in the new tests.
 [Bug #324](https://github.com/khab40/lob-arena/issues/324) removes the metadata
 fixture's ML dependencies and guards the two optional-ML modules. The base
-installation passes all 21 metadata/image cases with two module skips; the full
-ML installation passes all 48 packaging cases without skips. Image bytes remain unchanged.
+installation now passes all 33 metadata/image cases with two module skips; the full
+ML installation exercises all packaging cases without skips. The collection-only
+repair preserved its image; the separate P1 correction rebuilds the image with verified source bindings.
 The original G9 metadata archive's checksum and two restored records authenticate
 the saved G8 prediction key, version, size and checksum. No final payload was
 read, and historical receipts do not prove current remote availability.
@@ -98,6 +110,11 @@ Feature: Sealed fixed-candidate holdout startup
     Given an externally approved request and trusted signing key
     When observed Job resources, credential versions or injected paths differ
     Then no execution context is accepted for that Job
+
+  Scenario: Reject mislabelled build source
+    Given a declared Git commit for the holdout code
+    When the checkout is dirty or belongs to a different commit
+    Then no build context is created
 
   Scenario: Preserve an uncertain context publication
     Given a verified signed context and an unused nonce-scoped control key
