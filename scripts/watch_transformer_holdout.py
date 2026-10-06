@@ -84,7 +84,7 @@ def preflight(output, proposal_sha):
     from collect_transformer_lineage_metadata import runtime_probe, verify_imports
     from app.ml.transformer.verification_transport import client
     from app.ml.transformer.holdout_runtime import load_request
-    from app.ml.transformer.holdout_delivery import context_for_job, deliver_context
+    from app.ml.transformer.holdout_delivery import deliver_context
     from app.ml.transformer.holdout_storage import HoldoutStore
     from app.ml.transformer.holdout_supervision import supervise
     verify_imports(ROOT)
