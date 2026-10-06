@@ -48,14 +48,16 @@ preserves 13 numerical files and 48 installed packages; 403 inert regressions pa
 P1 Bug #325 binds the copied overlay to a clean matching Git commit and verifies
 all 20 context files in the rebuilt image; PR #323 and review-policy PR #326 are
 merged with green CI. [Admission preparation](../ml/transformer-holdout-admission.md)
-authenticates a saved 64-row reference and proposes three JSON GETs plus 62 HEADs,
-with exact temporary access/removal and a $0.01 additional cap. The operator
-approved this scope conditional on P1 #329 repair. The metadata-only credential
-helper and complete source-pin checks pass 51 inert tests and independent review.
-Corrected-head CI/operator handoffs remain; no December rows are read.
-Actual CUDA parity remains pending. Next: audit/removal, exact reference/access pins, published
-image and provider dry-run, fresh final-access/run/spend
-approval, one GPU inference evaluation and independent report/decision.
+authenticates a saved 64-row reference. PR #328 merged with all 25 checks passed;
+P1 #329 is closed. The approved three-JSON/62-HEAD metadata audit completed and
+[passed independent verification](../ml/transformer-holdout-metadata-results-20261006.md):
+30 December runs / 15,160 aligned rows, all versions `1`. Both grants are removed
+and original policies verified at final version 10 / results version 11.
+No December rows were read; HEAD checks do not verify fresh payload hashes.
+Next: publish/pin the development reference, finish access/credential/request
+pins, publish the sealed image and run exact provider dry-run. Fresh final-access,
+run/spend approval precedes one GPU inference evaluation and independent decision.
+Actual CUDA reference parity remains pending and must precede holdout payload reads.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
 billing. No holdout Job or final-test access is authorized by this plan.
