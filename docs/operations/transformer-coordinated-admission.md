@@ -44,6 +44,23 @@ creation to the remaining admission time minus the 30-second observation reserve
 Ambiguity consumes the attempt. Existing ownership checks, one context delivery,
 the two-hour accounting bound and cancellation reserve remain unchanged.
 
-The coordinated CLI wiring and corrected exact package are pending. No runtime
-authorization is granted by this document, and aborted attempt receipts must
-never be renamed or removed to restart an unchanged package.
+The watcher now supports `--submit` to invoke creation from its admission
+callback. Its proposal must explicitly bind `submission.mode=coordinated_v1`,
+120-second admission, 90-second creation maximum, 30-second observation reserve
+and 300-second access reserve beyond the two-hour accounting ceiling. The exact
+create argv is invoked directly; the workload `--timeout 1h` is not replaced by
+an orchestration timeout. File and parent-directory fsync precede dispatch;
+reserve checks repeat after durability. An exclusive intent consumes the attempt
+even on timeout, nonzero exit, malformed response, process interruption or missing
+provider receipt. Supervision continues observation after uncertain responses.
+
+Fresh policy readbacks must match both exact rule sets and the resource versions
+immediately after the approved grants. The earliest grant timestamp starts the
+three-hour access window. Remaining access is checked before signing-key custody
+is opened and again before creation. Credentials remain inside the existing
+approved context-delivery helper and are not accessed until an exact live Job
+is observed.
+
+The corrected exact package is pending. No runtime authorization is granted by
+this document, and aborted attempt receipts must never be renamed or removed to
+restart an unchanged package.
