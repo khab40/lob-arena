@@ -133,15 +133,14 @@
     "pydantic": "2.13.5"
   },
   "operator_files_sha256": {
-    "scripts/collect_transformer_holdout_metadata.py": "1b94e3a0208b9fa1daafb43074ee7c8d6a992abdab3fb7d43da32a41deb97648",
+    "scripts/collect_transformer_holdout_metadata.py": "da7912cc30a4f0b60865559dae16c4b3c4619ef873bbcd1715408e7aefdf4a1e",
     "scripts/collect_transformer_lineage_metadata.py": "e7ecde02db6fda7c63476a837f655bcfc7626091e4a38cd7bfe9586584561a64",
-    "scripts/transformer_research_operator.py": "15f15285331a6fec3bc148616e0ad680bd3d48ff6f43f8be601c35c561600230",
+    "backend/app/ml/__init__.py": "478da8a441014c9a03ed7176fdf35d90b63570f0a5d95f7b544d691fb679faa0",
+    "backend/app/ml/transformer/__init__.py": "d2402cdded92a0a1a64e0706e57923e51ff45e47293abf744351cea569457990",
     "backend/app/ml/transformer/holdout_metadata.py": "27f591b4e3b5bb5636a5797e37dfca416cd74fc71e79733b91f922dde3410e9b",
     "backend/app/ml/transformer/holdout_reference.py": "811920bcc41c4afa96155f7611b081343ce871d15b0954b0c06efb66bd0cba46",
     "backend/app/ml/transformer/verification_spec.py": "9e228890eaead3844cabdaeb36ce4b23ccb6e5812be4223b75b32fa1366c4b7d",
-    "backend/app/ml/transformer/verification_transport.py": "6912af5701ccd0a22d66623bcd8e17c90ae22fcec140f0750cfed6bc005e824c",
-    "backend/app/ml/transformer/role_execution_spec.py": "54a717afc258454a002ac96b9e52c79bb8f85ec0617601f5865231a73bd1a111",
-    "backend/app/ml/transformer/role_execution_transport.py": "f5aa75f56babb0ad924d06ae3b3bac8ecc3022d80e30a48977364b2c9814f87e"
+    "backend/app/ml/transformer/verification_transport.py": "6912af5701ccd0a22d66623bcd8e17c90ae22fcec140f0750cfed6bc005e824c"
   },
   "preflight_required_before_grant": true,
   "key_source": "Exact C4 producer run/path contract and archived G9 prediction receipts; reject a differing authenticated final manifest inventory."
