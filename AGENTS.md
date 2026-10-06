@@ -39,6 +39,30 @@
   the commit-size limit. Use isolated worktrees when the root checkout is in
   concurrent use.
 
+# Independent review after each iteration
+
+- Operator instruction (2026-10-06): after every small coherent iteration,
+  obtain a review from a separate agent before starting the next iteration,
+  publishing changes, building/uploading an execution image or running cloud work.
+  An iteration includes its implementation, focused tests and relevant docs,
+  configuration or execution packaging; review corrections are iterations too.
+- The reviewer must be independent of the author of the changes and review the
+  exact commit or captured diff, acceptance criteria and applicable environment
+  constraints. Check failure/boundary cases, source/artifact lineage and resource,
+  API or permission limits where relevant. Keep the review narrowly scoped.
+- Give the reviewer a read-only task. It may inspect code/evidence and run inert
+  checks; it must not mutate Git/cloud resources, read credentials/final payloads,
+  or execute model training/scoring. Existing Nebius workload rules still apply.
+- Retain a review receipt in the project root's `outputs/`: reviewer identity,
+  reviewed commit/diff hash, scope, findings, verification and disposition.
+  A review with no actionable findings must be recorded explicitly.
+- Resolve actionable P1/P2 findings and obtain a separate-agent re-review of the
+  correction before proceeding. Record why any reported finding is inapplicable;
+  do not silently dismiss it or treat an unreviewed change as approved.
+- Require this review in addition to focused tests, CI and human approval gates.
+  Keep related iterations and corrections in the same open PR. Do not merge,
+  delete resources or expand execution/access authorization through this process.
+
 # Project tickets and hierarchy
 
 - Always link work to its corresponding ticket in
