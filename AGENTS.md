@@ -56,7 +56,7 @@
 - Retain a review receipt in the project root's `outputs/`: reviewer identity,
   reviewed commit/diff hash, scope, findings, verification and disposition.
   A review with no actionable findings must be recorded explicitly.
-- Resolve actionable P1/P2 findings and obtain a separate-agent re-review of the
+- Resolve actionable P0/P1/P2 findings and obtain a separate-agent re-review of the
   correction before proceeding. Record why any reported finding is inapplicable;
   do not silently dismiss it or treat an unreviewed change as approved.
 - Require this review in addition to focused tests, CI and human approval gates.
