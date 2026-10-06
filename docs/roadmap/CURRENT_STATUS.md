@@ -1,3 +1,31 @@
+## 2026-10-06 — Exact GPU package ready; first replay demo next
+
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24),
+[settings #314](https://github.com/khab40/lob-arena/issues/314),
+[backend #90](https://github.com/khab40/lob-arena/issues/90),
+[GUI #91](https://github.com/khab40/lob-arena/issues/91), Project #3.
+PR #331 merged; all 25 PR checks and both post-merge workflows passed.
+The sealed image is published by immutable digest; the saved 64-row reference
+is published at version `1` with checksum/byte readback. The 252-input request
+binds exact versions and repaired manifest-relative paths. Nebius accepted the
+exact one-L40S request in dry-run without creating a Job.
+
+[Execution proposal and runbook](../ml/transformer-holdout-run-20261006.md)
+retain exact temporary access, original-policy restoration, pinned credential
+selectors, source closure and SDK/local-CLI preflight. Independent reviews
+corrected #332–#336; all 258 inert holdout regressions pass. Proposed bound:
+one attempt / one hour / two-hour create-to-terminal ceiling / $6.25 additional
+excluding VAT. Fresh exact final-access/run approval remains required; no model
+or December payload ran, and both bucket policies remain restored.
+
+Today's operator priority is verified Transformer research plus a first
+backend/GUI demo mock. Prepare #90/#91 saved-score replay concurrently with the
+authorization gate: choose detector/source run, play/pause/resume/speed, show
+alerts and exact frozen identity. Clearly identify retained research scores and
+historical versus synthetic-overlay provenance. This does not close full story
+acceptance or establish fresh real-time inference. G8/G9 remain closed;
+MLflow/platform reconciliation follows research.
+
 ## 2026-10-06 — December metadata audit complete; permissions restored
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),

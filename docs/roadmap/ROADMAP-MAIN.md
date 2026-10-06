@@ -54,9 +54,14 @@ P1 #329 is closed. The approved three-JSON/62-HEAD metadata audit completed and
 30 December runs / 15,160 aligned rows, all versions `1`. Both grants are removed
 and original policies verified at final version 10 / results version 11.
 No December rows were read; HEAD checks do not verify fresh payload hashes.
-Next: publish/pin the development reference, finish access/credential/request
-pins, publish the sealed image and run exact provider dry-run. Fresh final-access,
-run/spend approval precedes one GPU inference evaluation and independent decision.
+PR #331 and both post-merge workflows passed. The reference is now published at
+version `1`; the sealed image is published by immutable digest. The
+[252-input execution package](../ml/transformer-holdout-run-20261006.md) binds exact
+access/credential/request pins, bounded supervision and original-policy restoration.
+Actual SDK/local-CLI preflight, 258 inert holdout tests and the exact provider dry-run pass.
+Next: fresh exact final-access/run/spend approval, one GPU inference evaluation and
+independent decision. Today's operator priority also includes #90/#91's first
+honest backend/GUI saved-score replay mock; broader story acceptance remains open.
 Actual CUDA reference parity remains pending and must precede holdout payload reads.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending

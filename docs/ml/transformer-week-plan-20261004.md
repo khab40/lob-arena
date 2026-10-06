@@ -103,20 +103,23 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    [Evidence and exact inventory](transformer-holdout-metadata-results-20261006.md).
    Both temporary grants are removed and original policies independently verified.
    No December payloads or models ran; actual $0.01-cap billing is unreconciled.
-   Remaining: development reference publication/version, access/credential/request
-   pins, immutable image publication and exact provider dry-run.
-5. **7–8 October — exact authorization, then one GPU inference Job.** Pin source,
-   image, settings/protocol and exact key/version inventories. Complete dependency,
-   context/publication checks and Nebius dry-run before requesting fresh combined
-   final-access/run/spend approval. Proposed one-hour L40S / $6.25 additional cap
-   is not approved yet. Reference parity must pass before December payload access.
-6. **8–10 October — independent report/decision, then MLflow.** Recompute paired
+   PR #331 and post-merge CI passed. The saved reference is published/versioned,
+   image digest is published, and the [exact 252-input run package](transformer-holdout-run-20261006.md)
+   passes SDK/local-CLI preflight, 258 inert holdout tests and provider dry-run.
+5. **6 October — exact authorization, then one GPU inference Job.** Operator asked
+   to bring research closure and the first demo forward to today. Fresh combined
+   final-access/run/spend approval is still required for this sealed proposal.
+   One-hour L40S / $6.25 additional cap remains unapproved. Reference parity must
+   pass before December payload access; no replacement or reselection is authorized.
+6. **6 October target; 7–10 October contingency — report and first demo, then MLflow.** Recompute paired
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,
    not a globally blind benchmark. No automatic retraining/reselection. Reconcile
    retained artifacts later under #19; platform #20/#21 follows research. #25 stays
-   Todo until a separate justified cascade proposal. Reforecast #90/#91 after the
-   outcome; 9 October remains a baseline, not a promise that all #24 acceptance closes.
+   Todo until a separate justified cascade proposal. Prepare #90/#91's first mock
+   while run approval is pending: saved research-score playback, detector/source
+   selection, pacing and exact alert/threshold identity. Verify backend/GUI flow;
+   broader secure demo acceptance and full #24 closure remain separately assessed.
 
 ## Bounds and interpretation
 
