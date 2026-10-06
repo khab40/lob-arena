@@ -1,0 +1,13 @@
+{
+  "artifact": {
+    "uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-research-20260816/development/transformer-holdout-reference-20261006/reference-logits.json",
+    "version_id": "1",
+    "size_bytes": 7544,
+    "sha256": "220a2cf373290c846e1da29252ed149156b3f74d6598d2da4e9863bfbca364a5"
+  },
+  "conditional_puts": 1,
+  "head_calls": 1,
+  "versioned_gets": 1,
+  "model_execution": false,
+  "final_payload_reads": 0
+}
