@@ -15,7 +15,14 @@ def supervise(request, selectors, pins, *, read, deliver, cancel, emit,
     cancel_at, stop_at = None, started + 120
     try:
         while True:
-            job = read()
+            if cancel_at and now() >= cancel_at and owned_live and not cancel_started:
+                cancel_started = True
+                cancel(identity)
+            expires = stop_at if cancel_started else (cancel_at or stop_at)
+            remaining = expires - now()
+            if remaining <= 0:
+                raise TimeoutError("provider observation deadline exhausted")
+            job = read(remaining)
             checked = now()
             if job is None:
                 if identity or checked >= stop_at:
@@ -53,9 +60,10 @@ def supervise(request, selectors, pins, *, read, deliver, cancel, emit,
                     raise TimeoutError("operator must reconcile terminal state")
             elif not delivered:
                 # Sign the actual live observation, not the terminal-validation copy.
-                deliver(context_for_job(job, request, selectors, **pins))
+                deliver(context_for_job(job, request, selectors, **pins), min(120, cancel_at - now()))
                 delivered = True
-            pause(min(10, max(0, stop_at - now())))
+            next_action = stop_at if cancel_started else cancel_at
+            pause(min(10, max(0, next_action - now())))
     except Exception:
         if identity and owned_live and not cancel_started:
             cancel_started = True
