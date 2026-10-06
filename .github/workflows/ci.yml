@@ -183,6 +183,8 @@ jobs:
           tests/test_transformer_holdout_package.py
           tests/test_transformer_holdout_runtime.py tests/test_transformer_holdout_entrypoint.py
           tests/test_transformer_holdout_delivery.py tests/test_transformer_holdout_image.py
+          tests/test_transformer_holdout_reference.py tests/test_transformer_holdout_metadata.py
+          tests/test_transformer_holdout_operator.py
 
       - name: Verify governed image submission contracts (inert metadata only)
         working-directory: backend

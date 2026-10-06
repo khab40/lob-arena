@@ -1,3 +1,41 @@
+## 2026-10-06 — P1 metadata credential imports corrected
+
+[Bug #329](https://github.com/khab40/lob-arena/issues/329), attached under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) in Project #3, is fixed
+in PR #328. The audit wrapper uses the metadata-only credential helper and checks
+the pinned first-party import closure before and after SDK preflight, before
+credential lookup. Fourteen new inert cases; 51 focused tests and actual offline
+SDK preflight pass. Independent correction review found no actionable P0/P1/P2.
+
+Operator approved the exact audit/handoffs conditional on fixing P1. Corrected
+source binding is `8f1b8cef787026a60a9dc9c29aa9ea77c320c387960b51bd276f60b98ceb38ef`;
+only source pins changed. Exact keys, limits, policy hashes, cleanup and $0.01 cap
+are unchanged. Next: corrected-head CI, fresh policy readback and operator grants,
+then one bounded audit and removal. No grant, credentials or object reads occurred.
+GPU packaging/dry-run and separate final-access/run/spend approval still follow.
+
+## 2026-10-06 — Saved reference prepared; exact metadata audit proposed
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings #314](https://github.com/khab40/lob-arena/issues/314), Project #3.
+PR #323 and review-policy PR #326 are merged with green CI. The next
+[admission chunk](../ml/transformer-holdout-admission.md) authenticates all saved
+calibration logits before retaining a 64-row raw-logit reference; no model rerun.
+The 7,544-byte reference is retained locally; publication and CUDA parity are pending.
+37 inert tests and the actual offline SDK preflight pass. The reference and
+collector iterations received separate-agent review with no actionable findings.
+
+Prepared approval scope: three frozen JSON GETs, 60 final-shard HEADs and two
+original G8 prediction HEADs; no Parquet bodies. Temporary exact-key access on
+two buckets, five-minute collection, no retries, one-hour access ceiling and
+proposed $0.01 additional cap excluding VAT require fresh approval and operator
+grant/removal with independent readback. This proposal snapshot preceded the
+conditional operator approval and P1 correction recorded above; no audit started.
+Next: audit approval/completion/removal, then exact reference/access/image pins,
+provider dry-run and separate final-access/run/spend authorization before one
+GPU inference evaluation. Proposed one-hour L40S / $6.25 cap remains unapproved.
+G8/G9 stay closed; no new permission, cloud object read, Job or model execution.
+
 ## 2026-10-06 — P1 holdout source provenance corrected in PR #323
 
 [Bug #325](https://github.com/khab40/lob-arena/issues/325) under
@@ -9,7 +47,7 @@ argument is removed; static runtime inspection verifies 20 copied context files.
 with two optional-ML module skips. The rebuilt image preserves 13 numerical files
 and 48 dependencies; network-disabled static imports do not import Torch.
 Corrected source is `fe5eaaa`; previous image/context evidence is retained as superseded.
-Next: corrected-head CI/human review, then the unchanged exact inventory/access/
+PR #323 subsequently merged with green CI. Next: the unchanged exact inventory/access/
 dry-run and separate final-access/run/spend gate. No Job or final payload access.
 
 ## 2026-10-05 — Sealed holdout image and startup delivery implemented

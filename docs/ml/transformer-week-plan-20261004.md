@@ -91,13 +91,19 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    seven retained artifact receipts. [Protocol](transformer-holdout-protocol-20261005.md)
    fixes prepared December C4 data, calibration and thresholds before access.
    PR #319 merged with green CI; seven retained artifacts reload identically.
-4. **5–7 October — consumer merged; image/startup packaging implemented.** PR #321
-   merged with green CI and Bug #322 closed. The [sealed runtime and delivery](transformer-holdout-execution-package.md)
+4. **5–7 October — consumer/image merged; admission preparation active.** PR #321,
+   #323 and review-policy #326 merged with green CI. The [sealed runtime and delivery](transformer-holdout-execution-package.md)
    preserve 13 numerical files and 48 dependencies; 403 inert regressions pass.
    P1 #325 now binds source identity to copied Git bytes and verifies 20 context files.
-   Archived receipts authenticate original G8 prediction versions/hashes. Review
-   this packaging chunk, then complete exact final manifests/shards, saved bounded
-   reference logits, access/credential pins and fresh metadata availability.
+   Archived receipts authenticate original G8 prediction versions/hashes. The
+   [admission chunk](transformer-holdout-admission.md) prepares authenticated saved
+   64-row reference logits and proposes one three-JSON/62-HEAD metadata audit.
+   37 inert tests, offline SDK preflight and two independent iteration reviews
+   pass. Operator approved exact grants/$0.01 cap conditional on P1 #329 repair.
+   The metadata-only credential helper and source-closure guard now pass 51 inert
+   tests and independent correction review. Finish corrected-head CI/handoffs;
+   audit/removal, remaining
+   access/credential pins, reference publication and fresh metadata are pending.
 5. **7–8 October — exact authorization, then one GPU inference Job.** Pin source,
    image, settings/protocol and exact key/version inventories. Complete dependency,
    context/publication checks and Nebius dry-run before requesting fresh combined
