@@ -3,6 +3,7 @@ import gzip
 import importlib.metadata
 import io
 from pathlib import Path
+import re
 
 from .holdout_spec import HoldoutRequest
 from .settings_release import json_record
@@ -43,6 +44,19 @@ def load_request(path):
 def inspect_runtime(root, *, installed=None):
     root = Path(root)
     lock = json_record(bounded_read(root / "runtime-lock.json", MAX_INJECTION))
+    manifest = json_record(bounded_read(root / "context-manifest.json", MAX_INJECTION))
+    source = bounded_read(root / "source-commit", 40).decode()
+    if (not re.fullmatch(r"[0-9a-f]{40}", source) or manifest["source_commit"] != source
+            or manifest["base_image"] != lock["base_image"] or not manifest["files"]
+            or "source-commit" not in manifest["files"]):
+        raise ValueError("image source identity differs from verified build context")
+    for name, expected in manifest["files"].items():
+        path = (root / name).resolve()
+        if not path.is_relative_to(root.resolve()):
+            raise ValueError("build context file escapes runtime root")
+        raw = bounded_read(path, 512 * 1024)
+        if expected != {"sha256": digest(raw), "size_bytes": len(raw)}:
+            raise ValueError("copied build context bytes differ")
     actual = installed if installed is not None else {
         dist.metadata["Name"].lower(): dist.version for dist in importlib.metadata.distributions()}
     if actual != lock["dependencies"]:
@@ -52,7 +66,8 @@ def inspect_runtime(root, *, installed=None):
         if not path.is_relative_to(root.resolve()) or digest(bounded_read(path, 1024**2)) != expected:
             raise ValueError("trained numerical source differs")
     return {"base_image": lock["base_image"], "files": len(lock["files"]),
-            "dependencies": len(actual), "model_execution": False}
+            "dependencies": len(actual), "model_execution": False,
+            "source_commit": source, "context_files": len(manifest["files"])}
 
 
 if __name__ == "__main__":

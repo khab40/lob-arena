@@ -24,6 +24,14 @@ def fixture_request():
         output_prefix=OUTPUT_ROOT + "transformer-holdout-fixture/")
 
 
+def manifest(root):
+    (root / "source-commit").write_text("1" * 40)
+    value = {"source_commit": "1" * 40, "base_image": "digest-pinned-fixture", "files": {
+        name: {"sha256": digest((root / name).read_bytes()), "size_bytes": (root / name).stat().st_size}
+        for name in ("source-commit", "numerical.py")}}
+    (root / "context-manifest.json").write_bytes(canonical(value))
+
+
 def test_compressed_request_roundtrip_is_canonical_and_deterministic(tmp_path):
     req = fixture_request()
     raw = encode_request(req)
@@ -72,11 +80,36 @@ def test_runtime_inspection_checks_trained_bytes_and_all_dependencies(tmp_path, 
     elif defect == "escape":
         lock["files"] = {"../outside.py": digest(b"outside")}
     (tmp_path / "runtime-lock.json").write_bytes(canonical(lock))
+    manifest(tmp_path)
     if defect:
         with pytest.raises(ValueError):
             inspect_runtime(tmp_path, installed=actual)
     else:
         assert inspect_runtime(tmp_path, installed=actual)["model_execution"] is False
+
+
+@pytest.mark.parametrize("defect", ["source", "overlay", "size", "escape", "missing_manifest"])
+def test_post_preparation_corruption_fails_static_inspection(tmp_path, defect):
+    (tmp_path / "numerical.py").write_bytes(b"original static source")
+    (tmp_path / "runtime-lock.json").write_bytes(canonical({"base_image": "digest-pinned-fixture",
+        "files": {}, "dependencies": {}}))
+    manifest(tmp_path)
+    if defect == "source":
+        (tmp_path / "source-commit").write_text("2" * 40)
+    elif defect == "overlay":
+        (tmp_path / "numerical.py").write_bytes(b"tampered source")
+    elif defect == "missing_manifest":
+        (tmp_path / "context-manifest.json").rename(tmp_path / "retained-manifest.json")
+    else:
+        from app.ml.transformer.settings_release import json_record
+        value = json_record((tmp_path / "context-manifest.json").read_bytes())
+        if defect == "size":
+            value["files"]["numerical.py"]["size_bytes"] += 1
+        else:
+            value["files"]["../outside.py"] = value["files"].pop("numerical.py")
+        (tmp_path / "context-manifest.json").write_bytes(canonical(value))
+    with pytest.raises((ValueError, FileNotFoundError)):
+        inspect_runtime(tmp_path, installed={})
 
 
 @pytest.mark.parametrize("raw", [b"", b"a" * 4])
