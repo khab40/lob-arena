@@ -1,3 +1,19 @@
+## 2026-10-06 — P1 metadata credential imports corrected
+
+[Bug #329](https://github.com/khab40/lob-arena/issues/329), attached under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) in Project #3, is fixed
+in PR #328. The audit wrapper uses the metadata-only credential helper and checks
+the pinned first-party import closure before and after SDK preflight, before
+credential lookup. Fourteen new inert cases; 51 focused tests and actual offline
+SDK preflight pass. Independent correction review found no actionable P0/P1/P2.
+
+Operator approved the exact audit/handoffs conditional on fixing P1. Corrected
+source binding is `8f1b8cef787026a60a9dc9c29aa9ea77c320c387960b51bd276f60b98ceb38ef`;
+only source pins changed. Exact keys, limits, policy hashes, cleanup and $0.01 cap
+are unchanged. Next: corrected-head CI, fresh policy readback and operator grants,
+then one bounded audit and removal. No grant, credentials or object reads occurred.
+GPU packaging/dry-run and separate final-access/run/spend approval still follow.
+
 ## 2026-10-06 — Saved reference prepared; exact metadata audit proposed
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
@@ -13,7 +29,8 @@ Prepared approval scope: three frozen JSON GETs, 60 final-shard HEADs and two
 original G8 prediction HEADs; no Parquet bodies. Temporary exact-key access on
 two buckets, five-minute collection, no retries, one-hour access ceiling and
 proposed $0.01 additional cap excluding VAT require fresh approval and operator
-grant/removal with independent readback. No audit is authorized or started.
+grant/removal with independent readback. This proposal snapshot preceded the
+conditional operator approval and P1 correction recorded above; no audit started.
 Next: audit approval/completion/removal, then exact reference/access/image pins,
 provider dry-run and separate final-access/run/spend authorization before one
 GPU inference evaluation. Proposed one-hour L40S / $6.25 cap remains unapproved.

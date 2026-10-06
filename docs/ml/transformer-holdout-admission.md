@@ -17,6 +17,27 @@ Parquet body reads, image publication and production promotion.
 Verification: inert boundary tests, offline SDK preflight, separate-agent review;
 remote metadata verification requires the exact approval below.
 
+## P1 credential-boundary correction
+
+[Bug #329](https://github.com/khab40/lob-arena/issues/329) under Story #24 repairs
+the full research-operator import after preflight. Credential lookup now uses the
+existing metadata-only helper. The proposal pins both package initializers and
+every loaded first-party module; origin/hash checks run before and after SDK
+preflight, before credentials. Research execution/readback/storage modules are
+not imported. Fourteen fresh-process regressions cover changed files, an unknown
+module, a wrong helper origin and a post-preflight source change.
+51 focused inert tests and the real offline SDK preflight pass; independent
+correction review found no actionable P0/P1/P2 issues.
+
+The operator approved the exact audit and handoffs conditional on fixing P1.
+The corrected proposal SHA-256 is
+`8f1b8cef787026a60a9dc9c29aa9ea77c320c387960b51bd276f60b98ceb38ef`.
+Only source pins changed from the approved `e73297b4…` proposal; exact keys,
+request/access limits, policy hashes, cleanup and $0.01 cap remain identical.
+Both proposals, the approval reply and the scope comparison are retained in the
+project-root evidence folder. Finish corrected-head CI before the operator
+applies the already-approved grants. No grant or live audit has occurred.
+
 ## Saved reference preparation
 
 `scripts/prepare_transformer_holdout_reference.py` authenticates selected settings,
@@ -89,6 +110,11 @@ Feature: Fixed Transformer holdout admission
     When the operator wrapper is invoked
     Then it stops before obtaining credentials or making cloud calls
 
+  Scenario: Reject changed credential-path source
+    Given a changed or unpinned module in the metadata operator's import closure
+    When the audit wrapper checks source and origins before credential lookup
+    Then it stops before credentials or object requests
+
   Scenario: Remove access after an interrupted audit
     Given the audit stops at a manifest or object mismatch
     When the operator performs the approved cleanup
@@ -96,7 +122,8 @@ Feature: Fixed Transformer holdout admission
     And independent readback confirms removal
 ```
 
-Next: approve/audit/remove access, bind verified metadata into the exact request,
+Next: finish corrected-head CI, apply approved access, audit/remove access and bind
+verified metadata into the exact request,
 publish reference and immutable image, complete provider dry-run and scoped cost
 estimate, then obtain fresh final-access/run/spend approval. Proposed GPU bounds
 remain one L40S, one hour, $6.25 additional excluding VAT. They are unapproved.

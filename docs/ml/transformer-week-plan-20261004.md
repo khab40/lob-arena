@@ -99,7 +99,10 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    [admission chunk](transformer-holdout-admission.md) prepares authenticated saved
    64-row reference logits and proposes one three-JSON/62-HEAD metadata audit.
    37 inert tests, offline SDK preflight and two independent iteration reviews
-   pass. Exact temporary grants/$0.01 cap await approval; audit/removal, remaining
+   pass. Operator approved exact grants/$0.01 cap conditional on P1 #329 repair.
+   The metadata-only credential helper and source-closure guard now pass 51 inert
+   tests and independent correction review. Finish corrected-head CI/handoffs;
+   audit/removal, remaining
    access/credential pins, reference publication and fresh metadata are pending.
 5. **7–8 October — exact authorization, then one GPU inference Job.** Pin source,
    image, settings/protocol and exact key/version inventories. Complete dependency,
