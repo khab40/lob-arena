@@ -46,9 +46,13 @@ is merged in PR #321 with authorization/parity, exact inputs/pairing and verifie
 measurement/publication readback. The [sealed execution image/startup chunk](../ml/transformer-holdout-execution-package.md)
 preserves 13 numerical files and 48 installed packages; 403 inert regressions pass.
 P1 Bug #325 binds the copied overlay to a clean matching Git commit and verifies
-all 20 context files in the rebuilt image; PR #323 review/CI remains the next gate.
-Actual CUDA parity remains pending. Next: exact final metadata, reference/access
-pins, published image and provider dry-run, fresh final-access/run/spend
+all 20 context files in the rebuilt image; PR #323 and review-policy PR #326 are
+merged with green CI. [Admission preparation](../ml/transformer-holdout-admission.md)
+authenticates a saved 64-row reference and proposes three JSON GETs plus 62 HEADs,
+with exact temporary access/removal and a $0.01 additional cap. This audit awaits
+fresh approval; no December rows are read. Actual CUDA parity remains pending.
+Next: metadata approval/audit/removal, exact reference/access pins, published
+image and provider dry-run, fresh final-access/run/spend
 approval, one GPU inference evaluation and independent report/decision.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
