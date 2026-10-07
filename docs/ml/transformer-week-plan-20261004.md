@@ -136,7 +136,8 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    95.35% versus LightGBM 74.48%, with zero Transformer false positives. The
    high-recall tradeoff and one-date/three-session limitations remain explicit.
    No GPU rerun is required.
-6. **7 October — verified report and research decision; demo, then MLflow.** Publish reviewed
+6. **7 October — verified report and research decision; demo, then MLflow.** Review the
+   [verified report and plots](transformer-holdout-report-20261007.md). Publish reviewed
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,
    not a globally blind benchmark. No automatic retraining/reselection. Reconcile

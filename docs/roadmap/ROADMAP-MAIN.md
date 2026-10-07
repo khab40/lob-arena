@@ -81,7 +81,8 @@ equivalence and durable readback under [this recovery plan](../ml/transformer-ho
 PR #346's repair and full verification are independently reviewed. Frozen balanced
 F1 is 95.35% for Transformer versus 74.48% for LightGBM; Transformer has zero
 false positives and 91.11% recall. LightGBM's high-recall point reaches 93.33%
-recall with 851 false positives. Next: reviewed report/plots and operator decision
+recall with 851 false positives. Next: review the [verified report and plots](../ml/transformer-holdout-report-20261007.md)
+and record the operator decision
 on research/demo use. One date and three sessions do not establish production quality.
 The $6.25 holdout reservation remains held with billing unreconciled; no GPU
 rerun is required. Complete Transformer research before #90/#91 demo implementation.

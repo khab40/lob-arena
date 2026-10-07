@@ -23,7 +23,8 @@ failed receipts and post-hoc one-ULP probability/eight-ULP reduction policy rema
 disclosed; frozen outputs were not changed. Actual billing remains unreconciled
 within the held $6.25 Job reservation and existing $0.01 recovery cap.
 
-Next: reviewed report/plots and operator research decision, then #90/#91 demo
+Next: operator review of the [verified report and plots](../ml/transformer-holdout-report-20261007.md)
+and research decision, then #90/#91 demo
 work using a clearly labelled research detector. MLflow/platform reconciliation
 follows research. No new GPU run or production promotion is authorized; G8/G9
 remain closed. Earlier entries below are historical snapshots.
