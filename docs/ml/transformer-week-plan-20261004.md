@@ -117,6 +117,9 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    finish operator grant removal/readback, then complete the corrected exact package,
    dry-run and recovery approval before the first evaluation. Retain the existing
    $6.25 reservation; no cap increase. Reference parity still precedes December reads.
+   On 7 October, all 25 PR #340 checks passed on 447d3ac; fresh MCP readback still finds both
+   grants active at final11/results12 after the three-hour access window ended.
+   Urgent operator restoration/readback is required; no execution may use expired access.
 6. **6 October target; 7–10 October contingency — report and first demo, then MLflow.** Recompute paired
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,

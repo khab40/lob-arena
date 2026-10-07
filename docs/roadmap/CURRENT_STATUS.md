@@ -1,3 +1,24 @@
+## 2026-10-07 — Repair CI green; expired temporary access needs removal
+
+Draft [PR #340](https://github.com/khab40/lob-arena/pull/340) repairs
+[Bug #339](https://github.com/khab40/lob-arena/issues/339) under
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+All 25 checks passed on 447d3ac, including CodeQL and GitGuardian; 290 inert
+holdout regressions and independent reviews are clear. No GPU Job was created.
+
+Fresh Nebius MCP readback on 7 October still shows the original temporary grants
+at final version 11 / 9 rules and results version 12 / 6 rules. Their approved
+three-hour window ended at 20:53:33 UTC on 6 October; these rules do not expire
+automatically. Operator restoration of both original policies is urgent and
+remains independently unverified. The exact Job name remains NotFound; no
+December payload read, signature delivery or model execution occurred.
+
+No execution may proceed under the expired access. After verified restoration,
+complete the corrected same-input package/dry-run and exact recovery approval in
+this draft PR, then evaluate once, verify/report and obtain the research decision.
+The existing $6.25 reservation remains held, with billing unreconciled. Demo and
+MLflow/platform work retain the ordering below; G8/G9 stay closed.
+
 ## 2026-10-06 — First holdout Job pending; coordinated admission repaired
 
 [Bug #339](https://github.com/khab40/lob-arena/issues/339) is under

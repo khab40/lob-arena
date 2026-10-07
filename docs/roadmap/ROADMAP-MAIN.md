@@ -66,7 +66,10 @@ or mutation. All 23 observations and fresh MCP reconciliation show Job absence;
 no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
 repairs this with [same-process admission](../operations/transformer-coordinated-admission.md),
 durable intent and reserved observation time; 46 focused inert cases pass.
-Original history is preserved; operator grant removal/readback remains pending.
+Draft PR #340 has all 25 checks passed on 447d3ac. Original history is preserved. Fresh
+7 October readback still shows both grants at final11/results12 after the approved
+three-hour window ended; policy rules do not expire automatically. Urgent operator
+restoration and independent readback precede any corrected execution package.
 Next: restoration, corrected exact recovery package/dry-run/approval, then the
 first GPU inference evaluation, independent result verification and decision.
 The existing $6.25 holdout reservation is retained; no extra cap is proposed.
