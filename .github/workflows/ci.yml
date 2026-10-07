@@ -177,6 +177,7 @@ jobs:
           tests/test_transformer_settings_release.py tests/test_transformer_settings_gates.py
           tests/test_transformer_settings_export.py tests/test_transformer_holdout_protocol.py
           tests/test_transformer_holdout_consumer.py tests/test_transformer_holdout_metrics.py
+          tests/test_transformer_holdout_probability.py tests/test_transformer_holdout_retention.py
           tests/test_transformer_holdout_storage.py tests/test_transformer_holdout_worker.py
           tests/test_transformer_holdout_readback.py
           tests/test_transformer_holdout_measurements.py
