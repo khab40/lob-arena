@@ -113,13 +113,16 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    intent or mutation. All 23 observations and fresh MCP reconciliation show the
    Job absent; no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
    adds coordinated same-process admission, durable intent and reserved observation
-   time; 46 focused inert cases pass with independent review. Preserve old history,
-   finish operator grant removal/readback, then complete the corrected exact package,
-   dry-run and recovery approval before the first evaluation. Retain the existing
+   time; 46 focused inert cases pass with independent review. Preserve old history
+   and require exact recovery approval before the first evaluation. Retain the existing
    $6.25 reservation; no cap increase. Reference parity still precedes December reads.
-   On 7 October, all 25 PR #340 checks passed on 447d3ac; fresh MCP readback still finds both
-   grants active at final11/results12 after the three-hour access window ended.
-   Urgent operator restoration/readback is required; no execution may use expired access.
+   On 7 October, all 25 PR #340 checks passed on 8cde2d1. Both originals are
+   independently restored at final12/2 rules and results13/9 rules. Removal at
+   01:09 UTC followed the three-hour window's expiry; that overrun is recorded.
+   The [same-input recovery](transformer-holdout-first-run-recovery-20261007.md)
+   in root `outputs/transformer-holdout-first-run-recovery-20261007/` passes
+   offline preflight and fresh provider dry-run without creation. Fresh approval
+   precedes grants/evaluation; prompt removal precedes reporting and decision.
 6. **6 October target; 7–10 October contingency — report and first demo, then MLflow.** Recompute paired
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,

@@ -14,6 +14,14 @@
   "final_payload_reads": 0,
   "temporary_policy_versions": {"final": "11", "results": "12"},
   "original_policy_restoration": "operator removal and independent readback pending",
+  "restoration_follow_up_20261007": {
+    "status": "both original full policies independently verified restored",
+    "final": {"resource_version": "12", "rules": 2, "updated_at": "2026-10-07T01:09:08.561593Z"},
+    "results": {"resource_version": "13", "rules": 9, "updated_at": "2026-10-07T01:09:18.656381Z"},
+    "approved_window_expiry_utc": "2026-10-06T20:53:33.927202Z",
+    "access_overrun_disclosed": true,
+    "original_package_restart_allowed": false
+  },
   "spend_reservation_usd_excluding_vat": "6.25",
   "actual_cost": "unreconciled",
   "original_evidence_root": "outputs/transformer-holdout-run-package-20261006/",

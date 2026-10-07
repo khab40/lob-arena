@@ -66,12 +66,14 @@ or mutation. All 23 observations and fresh MCP reconciliation show Job absence;
 no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
 repairs this with [same-process admission](../operations/transformer-coordinated-admission.md),
 durable intent and reserved observation time; 46 focused inert cases pass.
-Draft PR #340 has all 25 checks passed on 447d3ac. Original history is preserved. Fresh
-7 October readback still shows both grants at final11/results12 after the approved
-three-hour window ended; policy rules do not expire automatically. Urgent operator
-restoration and independent readback precede any corrected execution package.
-Next: restoration, corrected exact recovery package/dry-run/approval, then the
-first GPU inference evaluation, independent result verification and decision.
+Draft PR #340 has all 25 checks passed on 8cde2d1. Original history is preserved.
+Independent 7 October readbacks restore exact originals at final12/2 rules and
+results13/9 rules. Removal at 01:09 UTC followed the expired three-hour window;
+that access overrun is disclosed. The [corrected first-Job package](../ml/transformer-holdout-first-run-recovery-20261007.md)
+in root `outputs/transformer-holdout-first-run-recovery-20261007/` passes offline
+SDK/CLI/source preflight and fresh provider dry-run without creation. Next: fresh
+exact recovery approval and verified grants, first GPU inference evaluation,
+independent result verification, prompt policy restoration, report and decision.
 The existing $6.25 holdout reservation is retained; no extra cap is proposed.
 Complete Transformer research before #90/#91 demo implementation.
 Actual CUDA reference parity remains pending and must precede holdout payload reads.

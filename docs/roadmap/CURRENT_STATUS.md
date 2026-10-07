@@ -1,21 +1,24 @@
-## 2026-10-07 — Repair CI green; expired temporary access needs removal
+## 2026-10-07 — Policies restored; corrected first holdout package ready
 
 Draft [PR #340](https://github.com/khab40/lob-arena/pull/340) repairs
 [Bug #339](https://github.com/khab40/lob-arena/issues/339) under
 [Transformer #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
-All 25 checks passed on 447d3ac, including CodeQL and GitGuardian; 290 inert
+All 25 checks passed on 8cde2d1, including CodeQL and GitGuardian; 290 inert
 holdout regressions and independent reviews are clear. No GPU Job was created.
 
-Fresh Nebius MCP readback on 7 October still shows the original temporary grants
-at final version 11 / 9 rules and results version 12 / 6 rules. Their approved
-three-hour window ended at 20:53:33 UTC on 6 October; these rules do not expire
-automatically. Operator restoration of both original policies is urgent and
-remains independently unverified. The exact Job name remains NotFound; no
-December payload read, signature delivery or model execution occurred.
+Independent Nebius MCP readback confirms both original policies restored:
+final version **12 / 2 rules**, results version **13 / 9 rules**, exact full-rule
+equality. Removal finished at 01:09:08/01:09:18 UTC on 7 October, after the
+three-hour window ended at 20:53:33 UTC on 6 October. The access overrun is
+recorded; policy rules do not expire automatically. The exact Job name remains
+NotFound; no December payload read, signature delivery or model execution occurred.
 
-No execution may proceed under the expired access. After verified restoration,
-complete the corrected same-input package/dry-run and exact recovery approval in
-this draft PR, then evaluate once, verify/report and obtain the research decision.
+The [corrected same-input recovery package](../ml/transformer-holdout-first-run-recovery-20261007.md)
+passes pinned offline SDK/CLI/source preflight and a fresh provider dry-run with
+no resource created. It uses one process for supervision and submission, keeps
+old attempt history immutable and needs fresh exact recovery approval. Next:
+approve the exact package, verify fresh grants, evaluate once, independently
+verify results, restore permissions promptly, then report and obtain the decision.
 The existing $6.25 reservation remains held, with billing unreconciled. Demo and
 MLflow/platform work retain the ordering below; G8/G9 stay closed.
 
