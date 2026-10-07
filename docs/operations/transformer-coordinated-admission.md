@@ -10,7 +10,8 @@ So that tool dispatch cannot exhaust the admission window before submission.
 
 The original 6 October observer-only attempt expired before creation. Its
 proposal, 23 absent observations and no-creation reconciliation remain immutable.
-Restore its temporary policies after the abort. A corrected package needs fresh
+Both original policies are restored at final12/results13; late removal after the
+three-hour window is disclosed. The [corrected package](../ml/transformer-holdout-first-run-recovery-20261007.md) needs fresh
 exact recovery authorization and a separate evidence directory; it still proposes
 the first GPU holdout evaluation, with unchanged numerical inputs and image.
 
@@ -61,6 +62,7 @@ is opened and again before creation. Credentials remain inside the existing
 approved context-delivery helper and are not accessed until an exact live Job
 is observed.
 
-The corrected exact package is pending. No runtime authorization is granted by
+The corrected package passes offline preflight and fresh provider dry-run without
+creation. No runtime authorization is granted by
 this document, and aborted attempt receipts must never be renamed or removed to
 restart an unchanged package.

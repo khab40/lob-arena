@@ -1,5 +1,12 @@
 # Exact frozen Transformer holdout — 6 October 2026
 
+> Historical execution package: approved, then aborted before Job creation.
+> Both original policies were independently restored on 7 October at
+> final12/results13; late removal is disclosed. Do not execute the instructions
+> below or restart the original evidence directory. Use the separate
+> [corrected recovery runbook](transformer-holdout-first-run-recovery-20261007.md),
+> which requires fresh exact approval. The remaining text is the original snapshot.
+
 Tracking: [Transformer #24](https://github.com/khab40/lob-arena/issues/24),
 [settings #314](https://github.com/khab40/lob-arena/issues/314),
 [Project #3](https://github.com/users/khab40/projects/3).
