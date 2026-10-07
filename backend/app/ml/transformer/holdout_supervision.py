@@ -9,8 +9,9 @@ TERMINAL = {"COMPLETED", "FAILED", "CANCELLED", "CANCELED"}
 
 
 def supervise(request, selectors, pins, *, read, deliver, cancel, emit,
-              now=time.time, pause=time.sleep):
+              now=time.time, pause=time.sleep, admit=None):
     started, identity, delivered, cancel_started = now(), None, False, False
+    creation_requested = False
     owned_live = False
     cancel_at, stop_at = None, started + 120
     try:
@@ -27,9 +28,20 @@ def supervise(request, selectors, pins, *, read, deliver, cancel, emit,
             if job is None:
                 if identity or checked >= stop_at:
                     raise TimeoutError("Job absent outside admission window")
-                emit({"state": "absent", "observed_at": checked, "admission_ready": True})
+                absent = {"state": "absent", "observed_at": checked, "admission_ready": not creation_requested}
+                emit(absent)
+                if admit is not None and not creation_requested:
+                    remaining = stop_at - now()
+                    if remaining <= 30:
+                        raise TimeoutError("insufficient creation observation reserve")
+                    creation_requested = True  # An ambiguous mutation is never repeated.
+                    emit({**absent, "admission_ready": False, "creation_requested": True})
+                    admit(remaining)
+                    continue  # Observe immediately; no external tool/dispatch boundary.
                 pause(5)
                 continue
+            if admit is not None and not creation_requested:
+                raise ValueError("coordinated admission requires an absent Job")
             state = job["status"]["state"]
             if state not in LIVE_STATES | TERMINAL:
                 raise ValueError("unknown provider state")
