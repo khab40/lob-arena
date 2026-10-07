@@ -66,17 +66,19 @@ or mutation. All 23 observations and fresh MCP reconciliation show Job absence;
 no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
 repairs this with [same-process admission](../operations/transformer-coordinated-admission.md),
 durable intent and reserved observation time; 46 focused inert cases pass.
-Draft PR #340 has all 25 checks passed on 8cde2d1. Original history is preserved.
-Independent 7 October readbacks restore exact originals at final12/2 rules and
-results13/9 rules. Removal at 01:09 UTC followed the expired three-hour window;
-that access overrun is disclosed. The [corrected first-Job package](../ml/transformer-holdout-first-run-recovery-20261007.md)
-in root `outputs/transformer-holdout-first-run-recovery-20261007/` passes offline
-SDK/CLI/source preflight and fresh provider dry-run without creation. Next: fresh
-exact recovery approval and verified grants, first GPU inference evaluation,
-independent result verification, prompt policy restoration, report and decision.
-The existing $6.25 holdout reservation is retained; no extra cap is proposed.
-Complete Transformer research before #90/#91 demo implementation.
-Actual CUDA reference parity remains pending and must precede holdout payload reads.
+PR #340 and public-evidence prevention #342 are merged with green checks.
+Original observer history and the prior access overrun remain disclosed. The
+approved [first-Job recovery](../ml/transformer-holdout-first-run-recovery-20261007.md)
+completed as aijob-e00gvk2fdn6cmjxvkg, passed CUDA reference parity and published
+all seven outputs. Independent verification aborted on cross-platform rounding.
+Both complete original policies are restored at final14/2 rules and results15/9
+rules; grants lasted about 1,691 seconds within the three-hour window.
+[Bug #345](https://github.com/khab40/lob-arena/issues/345) repairs probability
+equivalence and durable readback under [this recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
+Next: reviewed repair and separately authorized recovery of one missing original
+LightGBM prediction artifact, then offline verification, report and decision.
+The $6.25 holdout reservation remains held with billing unreconciled; no GPU
+rerun is required. Complete Transformer research before #90/#91 demo implementation.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
 billing. This roadmap grants no execution or access authority; the aborted

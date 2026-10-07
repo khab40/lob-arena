@@ -123,7 +123,15 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    in root `outputs/transformer-holdout-first-run-recovery-20261007/` passes
    offline preflight and fresh provider dry-run without creation. Fresh approval
    precedes grants/evaluation; prompt removal precedes reporting and decision.
-6. **6 October target; 7–10 October contingency — report and first demo, then MLflow.** Recompute paired
+   On 7 October, the exact recovery was approved and Job aijob-e00gvk2fdn6cmjxvkg
+   completed, passed CUDA parity and published all seven outputs. Original policies
+   are restored at final14/results15 after about 1,691 seconds of access.
+   Independent readback aborted on harmless probability rounding amplified in
+   reductions. [Bug #345 and repair plan](transformer-holdout-verification-repair-20261007.md)
+   preserve frozen outputs and the eight-ULP reduction bound. One original saved
+   LightGBM prediction artifact is missing locally and needs separately authorized
+   recovery before complete offline verification. No GPU rerun is required.
+6. **7 October — verification recovery; report and first demo, then MLflow.** Recompute paired
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,
    not a globally blind benchmark. No automatic retraining/reselection. Reconcile

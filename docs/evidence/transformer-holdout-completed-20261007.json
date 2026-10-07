@@ -1,0 +1,34 @@
+{
+  "schema_version": "transformer_holdout_completed_pending_verification_v1",
+  "ticket": "https://github.com/khab40/lob-arena/issues/345",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "job_id": "aijob-e00gvk2fdn6cmjxvkg",
+  "provider_terminal_state": "COMPLETED",
+  "context_delivered": true,
+  "publication_status": "published",
+  "collected_objects": 7,
+  "independent_verification": "aborted_ValueError",
+  "passing_verification_receipt": false,
+  "research_decision": "pending",
+  "request_sha256": "fbf88f60fbfcf7f41f38a33ec6483b7aa03138ca28c337d8957892431b3fee66",
+  "frozen_image_digest": "sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e",
+  "execution_source_commit": "fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508",
+  "collection_receipts": {
+    "SUCCESS": "3cb046d544d630d5169fb8cdf4607d2de308d7a6984ef9e3f3e7249c207cd188",
+    "checksums.json": "8883aa6e2f7a9c4afc48eea8520dfb3e671b739e2fd9dc92f7a477f9e329272b",
+    "result.json": "54ae02058e0e3e75bd193b80399a9c010e2cb973a30c4aba7c690d53a7c9bd94",
+    "io-receipt.json": "078f5762b51ad8387f1aeacbb52add1be7be537deff98796181c585678833901"
+  },
+  "temporary_access": {
+    "state": "removed",
+    "original_complete_arrays_match": true,
+    "final": {"version": "14", "rules": 2, "duration_seconds": 1691.024533},
+    "results": {"version": "15", "rules": 9, "duration_seconds": 1691.014048},
+    "removal_receipt_sha256": "97c6782eb6aef049b1ad39711840cad674360d4c1b8e6f6fc3e1297a215e5dca"
+  },
+  "additional_gpu_jobs_authorized": 0,
+  "existing_execution_reservation_usd_excluding_vat": 6.25,
+  "actual_cost": "unreconciled",
+  "baseline_rescored": false,
+  "production_qualified": false
+}
