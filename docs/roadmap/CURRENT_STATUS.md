@@ -1,3 +1,33 @@
+## 2026-10-07 — Transformer holdout independently verified
+
+The completed frozen Job **aijob-e00gvk2fdn6cmjxvkg** is now independently verified
+for **15,160 rows / 135 positives**. Reviewed offline replay verified the exact
+seven published objects, original saved LightGBM predictions, signed Job/context,
+frozen settings and source lineage. No additional model execution occurred.
+[Bug #345](https://github.com/khab40/lob-arena/issues/345) is repaired in
+[PR #346](https://github.com/khab40/lob-arena/pull/346), under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+
+At the frozen balanced points, Transformer **precision 100%, recall 91.11%,
+F1 95.35%, 0 false positives** compares with LightGBM **85.58%, 65.93%,
+74.48%, 15 false positives**. LightGBM's high-recall point has higher recall
+(93.33%) with 851 false positives. Both detected all 27 labelled campaigns.
+This supports continuing research; it does not establish production quality.
+The population covers one date and three source sessions, with research attack
+labels and historical LightGBM test exposure. Operator decision remains pending.
+
+One approved GET recovered the pinned baseline; the exact original results policy
+is restored at **19 / 9 rules**, after **139.547514 seconds** of access. Final
+remains **14 / 2 rules**. Offline verification made no cloud calls. The original
+failed receipts and post-hoc one-ULP probability/eight-ULP reduction policy remain
+disclosed; frozen outputs were not changed. Actual billing remains unreconciled
+within the held $6.25 Job reservation and existing $0.01 recovery cap.
+
+Next: reviewed report/plots and operator research decision, then #90/#91 demo
+work using a clearly labelled research detector. MLflow/platform reconciliation
+follows research. No new GPU run or production promotion is authorized; G8/G9
+remain closed. Earlier entries below are historical snapshots.
+
 ## 2026-10-07 — GPU holdout completed; independent verification repair
 
 The authorized frozen-inference Job **aijob-e00gvk2fdn6cmjxvkg** completed and

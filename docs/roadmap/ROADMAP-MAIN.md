@@ -70,16 +70,19 @@ PR #340 and public-evidence prevention #342 are merged with green checks.
 Original observer history and the prior access overrun remain disclosed. The
 approved [first-Job recovery](../ml/transformer-holdout-first-run-recovery-20261007.md)
 completed as aijob-e00gvk2fdn6cmjxvkg, passed CUDA reference parity and published
-all seven outputs. Independent verification aborted on cross-platform rounding.
+all seven outputs. Original verification aborted on cross-platform rounding;
+reviewed offline replay now verifies all 15,160 rows against the original baseline.
 The Job grants were removed after about 1,691 seconds within the three-hour window.
-The later one-file recovery stopped before credentials/GET and its rule was removed
-within one hour. Both complete original policies now match at final14/2 rules
-and results17/9 rules; the original baseline bytes remain missing.
+After an earlier before-credential recovery failure, the corrected approved
+one-file recovery used one GET and restored the original results policy in
+139.547514 seconds. Current complete policies match at final14/2 and results19/9.
 [Bug #345](https://github.com/khab40/lob-arena/issues/345) repairs probability
 equivalence and durable readback under [this recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
-PR #346's repair passed CI. Next: separately authorize the reviewed exact-current
-one-file recovery after tool permission/preflight, then offline verification,
-report and decision. Admission diagnostics and fresh readback remain required.
+PR #346's repair and full verification are independently reviewed. Frozen balanced
+F1 is 95.35% for Transformer versus 74.48% for LightGBM; Transformer has zero
+false positives and 91.11% recall. LightGBM's high-recall point reaches 93.33%
+recall with 851 false positives. Next: reviewed report/plots and operator decision
+on research/demo use. One date and three sessions do not establish production quality.
 The $6.25 holdout reservation remains held with billing unreconciled; no GPU
 rerun is required. Complete Transformer research before #90/#91 demo implementation.
 Historical LightGBM December exposure remains disclosed; online

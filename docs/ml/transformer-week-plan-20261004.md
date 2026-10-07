@@ -129,12 +129,14 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    Independent readback aborted on harmless probability rounding amplified in
    reductions. [Bug #345 and repair plan](transformer-holdout-verification-repair-20261007.md)
    preserve frozen outputs and the eight-ULP reduction bound. One original saved
-   LightGBM prediction artifact is missing locally. Its approved one-file recovery
-   stopped before credentials/GET; its grant was removed within one hour, restoring
-   results17/9 rules. PR #346's verifier repair passed CI. The exact-current
-   recovery needs new approval, with tool permission/preflight before access,
-   fresh readback and safe admission diagnostics. No GPU rerun is required.
-6. **7 October — verification recovery; report and first demo, then MLflow.** Recompute paired
+   LightGBM prediction artifact was recovered with one exactly approved GET after
+   the earlier before-credential recovery failure. The corrected grant was removed
+   in 139.547514 seconds, restoring results19/9 rules. PR #346's reviewed offline
+   replay now independently verifies all 15,160 rows. Frozen balanced F1 is
+   95.35% versus LightGBM 74.48%, with zero Transformer false positives. The
+   high-recall tradeoff and one-date/three-session limitations remain explicit.
+   No GPU rerun is required.
+6. **7 October — verified report and research decision; demo, then MLflow.** Publish reviewed
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,
    not a globally blind benchmark. No automatic retraining/reselection. Reconcile
