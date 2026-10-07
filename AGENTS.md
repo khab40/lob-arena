@@ -2,6 +2,13 @@
 
 # Operator execution preferences
 
+- For new public Job evidence, export a separate non-executable view with
+  `scripts/public_job_evidence.py`; preserve the exact approved package and its
+  hashes in the authorized evidence store. Keep repository-scoped Gitleaks and
+  ggshield publication hooks enabled; never scan private custody with the API or
+  bypass a failed scan. See `docs/operations/public-evidence-secret-prevention.md`
+  and Bug #341 (operator prevention approval, 2026-10-07).
+
 - Before building, uploading or submitting a Nebius Job image, verify that the
   repository portion is at most 64 characters. Keep the full immutable digest
   in the Job image reference; use separate repository and 64-character digest

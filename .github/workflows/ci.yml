@@ -538,3 +538,13 @@ jobs:
 
       - name: Verify public checksum exception survives squash
         run: python3 scripts/check_gitleaks_proposal_exception.py "$RUNNER_TEMP/gitleaks-regression/gitleaks"
+
+      - name: Verify publication gate rejects planted credentials before API calls
+        run: python3 scripts/check_publication_secret_gate.py "$RUNNER_TEMP/gitleaks-regression/gitleaks"
+
+      - name: Verify pinned ggshield projection and complete coverage without API access
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ggshield-regression"
+          "$RUNNER_TEMP/ggshield-regression/bin/python" -m pip install \
+            --disable-pip-version-check ggshield==1.55.0
+          "$RUNNER_TEMP/ggshield-regression/bin/python" scripts/check_ggshield_projection.py
