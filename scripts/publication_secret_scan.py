@@ -127,3 +127,82 @@ def captured(repo: Path, mode: str, remote: str, updates: str) -> dict[str, byte
     return material
 
 
+def scan(repo: Path, material: dict[str, bytes], gitleaks: str, ggshield: str) -> None:
+    if not material:
+        return
+    for binary in (gitleaks, ggshield):
+        if not shutil.which(binary):
+            raise ScanFailure("required scanner missing; publication blocked")
+    # Both engines see the same captured text at its original repository path.
+    with (tempfile.TemporaryDirectory(prefix="lob-publication-") as temporary,
+          tempfile.TemporaryDirectory(prefix="lob-scan-config-") as configuration):
+        snapshot = Path(temporary)
+        for name, content in material.items():
+            target = snapshot / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
+        saved_env = os.environ.copy()
+        try:
+            for key in list(os.environ):
+                if (key in {"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR"}
+                        or key.startswith("GG_")
+                        or key.startswith("GITGUARDIAN_") and key != "GITGUARDIAN_API_KEY"):
+                    os.environ.pop(key)
+            git(snapshot, "init", "-q")
+            # info/attributes outranks captured/global attributes; no filters or byte conversion.
+            (snapshot / ".git/info/attributes").write_text(
+                "* -filter -text -working-tree-encoding diff\n")
+            git(snapshot, "add", "--force", "--all")
+            for name, content in material.items():
+                if git(snapshot, "show", f":{name}") != content:
+                    raise ScanFailure("snapshot index changed captured bytes")
+            run([gitleaks, "git", "--pre-commit", "--staged", "--redact=100",
+                 "--ignore-gitleaks-allow", "--no-banner", "--config", str(repo / ".gitleaks.toml"),
+                 "--gitleaks-ignore-path", str(repo / ".gitleaksignore"), str(snapshot)], snapshot)
+            config = Path(configuration) / "ggshield.yaml"
+            config.write_text(GG_CONFIG)
+            # Neutral explicit .txt paths prevent extension skips, options and @file expansion.
+            gg_paths = []
+            for index, content in enumerate(material.values()):
+                name = f"document-{index}.txt"
+                (Path(configuration) / name).write_bytes(content)
+                gg_paths.append(name)
+            report = run([ggshield, "--config-path", str(config), "--no-check-for-updates",
+                          "secret", "scan", "path", "--yes", "--json",
+                          *[f"./{name}" for name in gg_paths]], Path(configuration))
+            try:
+                result = json.loads(report)
+                scanned = [entry["filename"] for entry in result["entities_with_incidents"]]
+                expected = sorted(str((Path(configuration) / name).resolve()) for name in gg_paths)
+                complete = not result.get("errors") and sorted(scanned) == expected
+            except (ValueError, KeyError, TypeError):
+                complete = False
+            if not complete:
+                raise ScanFailure("ggshield scan coverage incomplete; publication blocked")
+        finally:
+            os.environ.clear()
+            os.environ.update(saved_env)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("mode", choices=("pre-commit", "pre-push"))
+    parser.add_argument("remote", nargs="?", default="origin")
+    parser.add_argument("remote_url", nargs="?")
+    parser.add_argument("--gitleaks", required=True)
+    parser.add_argument("--ggshield", required=True)
+    args = parser.parse_args()
+    try:
+        repo = Path(git(Path.cwd(), "rev-parse", "--show-toplevel").decode().strip())
+        material = captured(repo, args.mode, args.remote_url or args.remote,
+                            sys.stdin.read() if args.mode == "pre-push" else "")
+        scan(repo, material, args.gitleaks, args.ggshield)
+    except ScanFailure as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(f"Publication scan passed: {len(material)} captured text paths.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
