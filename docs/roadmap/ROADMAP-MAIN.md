@@ -71,12 +71,15 @@ Original observer history and the prior access overrun remain disclosed. The
 approved [first-Job recovery](../ml/transformer-holdout-first-run-recovery-20261007.md)
 completed as aijob-e00gvk2fdn6cmjxvkg, passed CUDA reference parity and published
 all seven outputs. Independent verification aborted on cross-platform rounding.
-Both complete original policies are restored at final14/2 rules and results15/9
-rules; grants lasted about 1,691 seconds within the three-hour window.
+The Job grants were removed after about 1,691 seconds within the three-hour window.
+The later one-file recovery stopped before credentials/GET and its rule was removed
+within one hour. Both complete original policies now match at final14/2 rules
+and results17/9 rules; the original baseline bytes remain missing.
 [Bug #345](https://github.com/khab40/lob-arena/issues/345) repairs probability
 equivalence and durable readback under [this recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
-Next: reviewed repair and separately authorized recovery of one missing original
-LightGBM prediction artifact, then offline verification, report and decision.
+PR #346's repair passed CI. Next: separately authorize the reviewed exact-current
+one-file recovery after tool permission/preflight, then offline verification,
+report and decision. Admission diagnostics and fresh readback remain required.
 The $6.25 holdout reservation remains held with billing unreconciled; no GPU
 rerun is required. Complete Transformer research before #90/#91 demo implementation.
 Historical LightGBM December exposure remains disclosed; online

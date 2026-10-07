@@ -8,13 +8,20 @@ under [Story #24](https://github.com/khab40/lob-arena/issues/24) repairs bounded
 probability equivalence and durable input retention. [Diagnosis and recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
 
 Both complete original policies are restored: **final14 / 2 rules**,
-**results15 / 9 rules**, independently checked through Nebius MCP. Grants lasted
-about 1,691 seconds, within the approved three hours. The frozen candidate,
+**results17 / 9 rules**, independently checked through Nebius MCP. The Job grants
+lasted about 1,691 seconds, within the approved three hours. A later approved
+one-file recovery stopped before credentials/GET; its grant was removed after
+1,245.650055 seconds, within one hour. The baseline bytes remain missing.
+The frozen candidate,
 request, image and published bytes remain unchanged; no GPU rerun is required.
 Actual cost is unreconciled within the retained $6.25 reservation.
 
-Next: reviewed verifier repair, separately authorized recovery of the single
-original LightGBM prediction file missing locally, then complete offline
+PR #346's reviewed verifier repair passed CI. The recovery observation became
+stale while tool permission was pending; the exact failure stage was not recorded.
+The corrected package requires permission/preflight before granting access and
+records admission stages without credential values. Next: review and separately
+authorize exact-current recovery of the single original LightGBM prediction file,
+then complete offline
 verification, plots/report and the operator decision. Complete Transformer
 research before #90/#91 demo work; MLflow/platform follows. G8/G9 remain closed.
 Earlier dated entries below are historical snapshots.

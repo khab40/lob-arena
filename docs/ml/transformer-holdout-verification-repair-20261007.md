@@ -9,10 +9,11 @@ model, calibration and operating points remain frozen. No training, selection,
 LightGBM rescoring or G8 rerun occurred. Independent readback **aborted**;
 there is no passing verification receipt or research decision yet.
 
-All temporary access is removed. Nebius MCP independently confirmed the complete
-original policies at final version **14 / 2 rules** and results version
-**15 / 9 rules**. Each grant lasted about 1,691 seconds, within the approved
-three-hour window. The $6.25 execution reservation remains held with actual
+All temporary access is removed. The completed Job's grants were restored at
+final version **14 / 2 rules** and results version **15 / 9 rules** after about
+1,691 seconds, within the approved three-hour window. After the later one-file
+recovery handoff, Nebius MCP confirmed the complete original results policy at
+**17 / 9 rules**. The $6.25 execution reservation remains held with actual
 billing unreconciled. Earlier dated execution snapshots describe their then-current
 state; the prior observer attempt and access overrun remain disclosed.
 
@@ -71,8 +72,25 @@ Its pinned identity is version `1`, **931,523 bytes**, SHA-256
 `05298a29c1875a26b638bda26be43d6e79e0c978818779502ee964db1f5ead9f`.
 A read-only archive search found historical verification metadata, not its bytes.
 
-Next: independently review the repairs, obtain separate authorization to recover
-that one exact saved prediction object, remove its temporary grant, then complete
+The reviewed verifier repair is in [PR #346](https://github.com/khab40/lob-arena/pull/346).
+The first one-file recovery proposal was approved and its grant applied, but
+the helper stopped with a validation error before its exclusive collection
+directory, credential lookup or S3 GET. Independent review confirmed those
+boundaries. The operator removed the rule; exact original-policy restoration
+was verified after **1,245.650055 seconds**, within its one-hour access bound.
+The one-file bytes are still missing; there is no recovery success receipt.
+
+The retained grant observation aged beyond its 120-second admission limit while
+tool permission was pending. Local package and approval checks pass, and the
+stale observation is rejected. This is consistent with the failure, but the
+original helper recorded no admission stage, so its exact cause is unproven.
+The corrected package records safe admission stages and requires outside-sandbox
+offline permission/preflight before a new grant, then fresh readback immediately
+before collection. It preserves the freshness, access, GET and spend bounds.
+The restored resource version changed; this package needs new exact authorization.
+
+Next: authorize the reviewed exact-current one-file recovery, remove its grant,
+then complete
 offline verification and the report. No GPU replacement is required. Research
 interpretation and the operator decision must precede #90/#91 demo work.
 December represents only three source sessions on one date with research labels;

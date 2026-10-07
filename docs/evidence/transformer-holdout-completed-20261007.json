@@ -27,6 +27,22 @@
     "removal_receipt_sha256": "97c6782eb6aef049b1ad39711840cad674360d4c1b8e6f6fc3e1297a215e5dca"
   },
   "additional_gpu_jobs_authorized": 0,
+  "baseline_recovery": {
+    "proposal_approved": true,
+    "collector_returned": "failed_ValueError",
+    "admission_stage_recorded": false,
+    "collection_directory_created": false,
+    "credentials_reached": false,
+    "s3_gets_reached": false,
+    "baseline_retained": false,
+    "temporary_access": "removed",
+    "results_restored_version": "17",
+    "results_restored_rules": 9,
+    "original_complete_array_matches": true,
+    "access_duration_seconds": 1245.650055,
+    "removal_readback_sha256": "744f12d10fae92a53516a1756d91e9b8d73d83306d1a142719cf4b7af4325a66",
+    "replacement_authorization": "pending"
+  },
   "existing_execution_reservation_usd_excluding_vat": 6.25,
   "actual_cost": "unreconciled",
   "baseline_rescored": false,
