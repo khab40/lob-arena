@@ -7,6 +7,8 @@
 
 Status date: 2026-10-08. See [current status and evidence](CURRENT_STATUS.md)
 and the [4–10 October research plan](../ml/transformer-week-plan-20261004.md).
+Tracking cleanup: [Bug #355](https://github.com/khab40/lob-arena/issues/355) /
+[Project #3](https://github.com/users/khab40/projects/3).
 
 Operator-approved priority: [Transformer versus LightGBM research](../ml/transformer-research-fork.md)
 under [#24](https://github.com/khab40/lob-arena/issues/24), before platform maintenance
@@ -89,7 +91,8 @@ Explicit retained-reference calibration/decision acceptance completes #314's sco
 Next: the [saved-score mock and fresh-inference sequence](../ml/transformer-research-disposition-20261008.md#next-medium-prs)
 under #90/#91. One date and three sessions do not establish production quality.
 The $6.25 holdout reservation remains held with billing unreconciled; no GPU
-rerun is required. Complete Transformer research before #90/#91 demo implementation.
+rerun is required. Full #24 acceptance remains open alongside the approved first
+#90/#91 saved-score mock; fresh scoring follows separately reviewed packaging.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
 billing. This roadmap grants no execution or access authority. Consumed attempts
@@ -103,7 +106,7 @@ deployment, security verification, rehearsal, and final acceptance.
 
 Critical path:
 
-`Transformer/LightGBM research decision -> selected detector approach -> integrated evidence -> secure CEO UI -> final demo`
+`Recorded continue_research -> saved-score mock -> causal inference integration -> integrated evidence -> secure CEO UI -> final demo`
 
 ## Current Position
 
@@ -253,8 +256,10 @@ Remaining critical path:
 
 The September 28 maintenance-first ordering is historical and was superseded by
 the operator's October 2 [research-first decision](../ml/transformer-research-fork.md).
-Complete the Transformer/LightGBM comparison before platform acceptance under
-#19–#21. The [MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md)
+The Transformer/LightGBM comparison and authorized December evaluation are
+independently verified, and the bounded continuation decision is recorded.
+The #90/#91 saved-score mock is next; platform acceptance under #19–#21 remains
+deferred. The [MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md)
 passed; remaining recovery/registration, infrastructure and observability work
 is deferred. Preserve durable research artifacts and reconcile MLflow afterward.
 None requires reopening G8 or altering the signed G9 decision.
@@ -296,8 +301,11 @@ and merge are complete. Tracking reconciliation is [Bug #229](https://github.com
    remain deferred; retained S3 artifacts and replayable events preserve results.
    Research-control negative labels remain assumptions and positive labels remain
    synthetic. The [grid result](../ml/transformer-training-grid-results.md) advances
-   #24's research campaign; [confirmation stability passed](../ml/transformer-confirmation-results-20261004.md),
-   while calibration and comparison remain open.
+   #24's research campaign; [confirmation stability passed](../ml/transformer-confirmation-results-20261004.md).
+   Calibration, exact-row comparison and the authorized December holdout are
+   independently verified. The [recorded continuation](../ml/transformer-research-disposition-20261008.md)
+   completes scoped #314 acceptance; full #24 still needs MLflow lineage,
+   dedicated serving-path and resource/cost acceptance.
 2. Reforecast downstream dates. The gated September 24 start was missed;
    October 9 remains a baseline target, not a forecast. Preserve the frozen
    LightGBM result; future qualification claims need untouched held-out evaluation data.
@@ -321,9 +329,12 @@ governed-data runtime checks. The replacement smoke and
 [four sequential grid trials](../ml/transformer-training-grid-results.md) are
 independently verified. Width 128 / learning rate 0.0003 is the selection-fold
 winner; both confirmation seeds are verified and three-seed stability passed.
-Checkpoint compatibility, C-only temperature fitting and identical-row O
-comparison are independently reconciled. Next: review the result and record the
-research decision before settings retention/MLflow and any broader study.
+Checkpoint compatibility, C-only temperature fitting, identical-row O comparison
+and the locked December holdout are independently verified. The operator's bounded
+`continue_research` decision is recorded, and #314 is closed after merged PR #354.
+Next: #90/#91 private saved-score playback, then the research inference adapter
+and causal event integration. Full #24 remains open for MLflow lineage,
+dedicated serving-path and resource/cost acceptance.
 Preserve prior development exposure, O threshold selection and the LightGBM
 calibrator's prior validation exposure as comparison limitations.
 
@@ -331,7 +342,8 @@ The approved [research fork](../ml/transformer-research-fork.md) supersedes the
 original CPU-first/MLflow-first ordering. The failed first smoke and approved
 replacement remain consumed attempts; neither the original eight-slot plan nor
 the completed four-trial authorization permits automatic replacements or later
-slots. Reforecast after the research decision; October 9 remains a baseline.
+slots. Reforecast against the remaining integration and acceptance work;
+October 9 remains a baseline, not a verified full-story completion forecast.
 
 Deliverables:
 
@@ -347,7 +359,8 @@ Deliverables:
 - GPU hours, cost, memory, throughput, and inference latency.
 
 The Transformer may be approved as a feature producer even if it does not beat
-LightGBM as a standalone model.
+LightGBM as a standalone model. The current continuation does not grant that
+approval or authorize #25's separate hybrid study.
 
 ## Phase 4 - Transformer-To-LightGBM Hybrid
 
@@ -414,7 +427,7 @@ justified, and why the evidence is research-only.
 
 ## GitHub Project Reconciliation
 
-Research progress updated on **2026-10-05** for
+Research progress reconciled on **2026-10-08** for
 [GitHub Project #3](https://github.com/users/khab40/projects/3):
 
 - [#22](https://github.com/khab40/lob-arena/issues/22) records completed C0-C4,
@@ -423,10 +436,17 @@ Research progress updated on **2026-10-05** for
   Merged #231 records the signed `research_baseline_qualified` disposition.
   Historical attempts and the frozen candidate remain preserved.
 - [#24](https://github.com/khab40/lob-arena/issues/24) remains In Progress after
-  verified GPU smoke, four-trial training and both seed confirmations. Stability
-  passed; calibration and exact-row comparison are verified, operator decision
-  and later settings/MLflow/qualification acceptance remain. G9 permits no
-  production promotion or G8 rerun.
+  verified GPU smoke, four-trial training, both seed confirmations, calibration,
+  comparison and the authorized December holdout. Bounded `continue_research`
+  is recorded; [#314](https://github.com/khab40/lob-arena/issues/314) is closed.
+  MLflow lineage, dedicated serving-path and resource/cost acceptance remain.
+  G9 permits no production promotion or G8 rerun.
+- [#25](https://github.com/khab40/lob-arena/issues/25) remains Todo. A hybrid study
+  needs separate justification and approval; continuation does not start it.
+- [#90](https://github.com/khab40/lob-arena/issues/90) and
+  [#91](https://github.com/khab40/lob-arena/issues/91) remain Todo. Their next
+  approved chunk is local-only playback of verified saved scores, not fresh
+  model execution or complete three-model/LOBSTER/secure-demo acceptance.
 - [#28](https://github.com/khab40/lob-arena/issues/28) is Todo until #25 and #27
   complete.
 - [#19](https://github.com/khab40/lob-arena/issues/19) is reopened/In Progress
@@ -436,6 +456,9 @@ Research progress updated on **2026-10-05** for
 - Seven dated GitHub milestones now encode the targets in this document. The
   critical-path issues and supporting platform/Investigator issues are assigned
   to their expected exit milestone.
+  All seven remain open under their existing acceptance scope and due baselines.
+  [The project-wide reconciliation](project-tracking-reconciliation-20261008.md)
+  records the assigned counts, unchanged backlog and closed-bug board correction.
 
 The AI Investigator lane—[#26](https://github.com/khab40/lob-arena/issues/26),
 [#27](https://github.com/khab40/lob-arena/issues/27), and
