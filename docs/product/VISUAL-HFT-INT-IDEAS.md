@@ -362,3 +362,193 @@ Real-time surveillance can confuse data failures with market anomalies.
 
 Example:
 
+```text
+missing feed messages
+      ↓
+apparent liquidity disappearance
+      ↓
+detector fires
+      ↓
+false manipulation alert
+```
+
+Every event/session should preserve feed-health metadata such as:
+
+```yaml
+data_quality_score:
+feed_gap:
+sequence_valid:
+snapshot_resync:
+reconnect_recently:
+book_crossed:
+stale_feed:
+clock_quality:
+receive_latency_ms:
+exchange_latency_ms:
+malformed_event_count:
+dropped_event_count:
+```
+
+Alerting should distinguish:
+
+- market anomaly;
+- data anomaly;
+- uncertain because of feed quality.
+
+This is likely to improve production false-positive behavior materially.
+
+---
+
+## 8. Timestamp Integrity
+
+Do not collapse all timing into one generic `timestamp`.
+
+Preserve at least:
+
+```yaml
+exchange_timestamp:
+receive_timestamp:
+normalized_timestamp:
+sequence_number:
+venue:
+symbol:
+source:
+```
+
+Optional:
+
+```yaml
+source_timestamp_quality:
+clock_offset_estimate:
+ingest_latency_us:
+processing_latency_us:
+```
+
+Why this matters:
+
+A claim such as:
+
+> “Binance led Gemini by 14 ms”
+
+may reflect network/clock differences rather than market causality.
+
+Lead/lag and propagation features are only trustworthy when timestamp semantics and timestamp quality are explicit.
+
+---
+
+## 9. L2 Now, L3 Later
+
+Public multi-venue feeds are mainly L2 price-level depth.
+
+L2 already supports:
+
+- imbalance;
+- spread;
+- depth changes;
+- replenishment;
+- cancellation approximations;
+- liquidity gaps;
+- resilience;
+- cross-venue divergence;
+- sequence-model experiments.
+
+L3/order-level data later enables:
+
+- individual order lifetime;
+- cancel/re-add sequences;
+- order replacement;
+- queue behavior;
+- persistent layering signatures;
+- richer order-level temporal patterns.
+
+Design the normalized event model so future L3 support does not require a full pipeline rewrite.
+
+---
+
+## 10. Surveillance Wording / Attribution Caution
+
+Public crypto order-book data usually supports behavioral inference, not participant attribution.
+
+Use wording such as:
+
+- suspected spoofing pattern;
+- manipulation-like behavior;
+- anomalous order-book activity;
+- suspicious layering signature;
+- surveillance alert;
+- detector score.
+
+Avoid claiming:
+
+- confirmed manipulation;
+- identified manipulator;
+- proven market abuse;
+
+unless participant/account evidence and an appropriate investigative process exist.
+
+---
+
+## 11. Build a LOB Arena Surveillance Plugin for VisualHFT
+
+A collaboration artifact could be a VisualHFT study/plugin showing LOB Arena results.
+
+Example:
+
+```text
+┌──────────────────────────────┐
+│ LOB Arena Surveillance       │
+│                              │
+│        0.87 HIGH             │
+│                              │
+│ Suspected: Layering          │
+│ Ensemble: 3/3                │
+│                              │
+│ LightGBM      0.91           │
+│ Transformer   0.84           │
+│ Rule engine   0.77           │
+│                              │
+│ Cross venue   ANOMALOUS      │
+│ Data quality  GOOD           │
+└──────────────────────────────┘
+```
+
+Click-through could show:
+
+- event timeline;
+- order-book visualization;
+- venue comparison;
+- detector feature values;
+- model probabilities;
+- evidence window;
+- replay button;
+- explanation / analyst notes.
+
+### Product division
+
+**VisualHFT**
+
+- trader/analyst workstation;
+- visualization;
+- market-data connectors;
+- microstructure studies;
+- replay;
+- operational feed monitoring.
+
+**LOB Arena**
+
+- surveillance intelligence;
+- detector stack;
+- attack injection;
+- adversarial replay;
+- benchmark/evaluation harness;
+- model comparison;
+- evidence generation.
+
+This is better than rebuilding an entire trading-style GUI inside LOB Arena.
+
+---
+
+## 12. Trigger / Webhook Integration
+
+A simple first integration could be:
+
