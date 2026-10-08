@@ -1,0 +1,67 @@
+{
+  "schema_version": "transformer_holdout_metadata_result_v1",
+  "date": "2026-10-06",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "settings_story": "https://github.com/khab40/lob-arena/issues/314",
+  "source_pr": 328,
+  "source_commit": "a2a0cd41596cda3d56d4b0d50905c1a31d638d7b",
+  "merged_commit": "23ceb7c8209b52d057c497b126fc68393073bdc9",
+  "proposal_sha256": "8f1b8cef787026a60a9dc9c29aa9ea77c320c387960b51bd276f60b98ceb38ef",
+  "status": "verified_metadata",
+  "evidence_sha256": {
+    "live-audit/frozen-root.json": "642c7258b3424de05bbe8054a0b5c963b3f9fc9c2af65e1892e906c68fe0e7b9",
+    "live-audit/tabular-projection.json": "2464d7b4e952ee5b007f06e1809eba66e7502efb1484ab1e7f4e034be32e13e7",
+    "live-audit/sequence-projection.json": "bd26a35b3042ec7afbf9c16f26a913a0f51a6389e17a48cbe8838f520094ebfb",
+    "live-audit/verification.json": "575b504b7669c7d9df7cce85ee98d862f7ee37cf3742b2747d47ba675f7fdfe7",
+    "live-audit/receipts.json": "362711a5510c46f99648b5e2690c563834741696b2e68c406fee832edd3d3bca",
+    "active-policy-verification.json": "d1a0b6a8b7c33da4e1abe39f3a62940cb936d87436986af467ebee422708007e",
+    "audit-cleanup-verification.json": "ed8f426dc89f6fca10bd169badd9fc1f9125a75d1c7ceb9677fbd081ecfe90da",
+    "audit-attempt.json": "afc473085a259647b43072a9279acfc7fca17ef991dbf63d814bd9627e55e036",
+    "audit-approval-20261006.json": "6042d0e448f120bb1a79c3e454d4e348171714f3130ffa25537355f5b0f67405",
+    "p1-approval-scope-comparison.json": "7fc4961c466fdba24e8cd74c6c8a3768e01ffac7d374f9621e5095907aa55bba"
+  },
+  "independent_review_sha256": "e3981a3ba75ae67ab6d6d7a904b94203203b90b9ac95dbbdf7ac0210cb53011b",
+  "inventory_file": "transformer-holdout-object-inventory-20261006.json",
+  "inventory_sha256": "57522beed715d63b28e02d0e21530fc3060f158b09ebfcd65dba9e0b066edb3f",
+  "request_counts": {
+    "GET": 3,
+    "HEAD": 62
+  },
+  "aligned_manifest_rows": 15160,
+  "run_count": 30,
+  "sequence_length": 64,
+  "all_object_version_ids": "1",
+  "frozen_root_identity": "eec7f9801ec0131ee88e51ace855fc0e0c22fb525de0432c281d8f80025c4803",
+  "final_payload_reads": 0,
+  "fresh_payload_integrity_verified": false,
+  "model_execution": false,
+  "execution_authorized": false,
+  "temporary_grants_removed": true,
+  "restored_buckets": [
+    {
+      "name": "final",
+      "resource_version": "10",
+      "original_rule_count": 2
+    },
+    {
+      "name": "results",
+      "resource_version": "11",
+      "original_rule_count": 9
+    }
+  ],
+  "permission_started_at": "2026-10-06T05:39:00.130903Z",
+  "permission_ended_at": "2026-10-06T06:15:36.116042Z",
+  "permission_window_seconds": 2195.986,
+  "permission_window_rounding": "Conservative ceiling to milliseconds",
+  "approved_additional_cap_usd_excluding_vat": "0.01",
+  "actual_cost_reconciled": false,
+  "retained_evidence_directory": "outputs/transformer-holdout-admission-20261006/",
+  "pending": [
+    "Development reference publication and immutable version receipt",
+    "Remaining credential/access pins and sealed request",
+    "Immutable image publication and exact provider dry-run",
+    "Fresh final-access/run/spend authorization",
+    "CUDA parity before holdout payload reads",
+    "One GPU inference evaluation and independent report"
+  ]
+}

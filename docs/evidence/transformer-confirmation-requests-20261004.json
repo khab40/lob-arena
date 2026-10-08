@@ -1,0 +1,43 @@
+{
+  "schema_version": "transformer_confirmation_requests_v1",
+  "trials": [
+    {
+      "slot": "seed-7",
+      "trial": {
+        "width": 128,
+        "learning_rate": 0.0003,
+        "seed": 7,
+        "max_epochs": 30,
+        "batch_size": 64,
+        "patience": 5
+      },
+      "trial_sha256": "dec655d4acf17cb829e82468595c17a097d9ac1a1fcbdb1eff7475095feca0d3",
+      "run_id": "transformer-research-c4-20261003-r2-seed-7",
+      "request_path": "outputs/transformer-startup-repair-20261003/p2/execution/seed-7/request.json",
+      "request_sha256": "de263eb34c41b541836cce505f6f35ef56cdc02d24b14e66ebc554f5deb6e6bb",
+      "request_bytes": 2736,
+      "output_bucket": "aimada-wave1-results-e00g6zvxpr00",
+      "output_prefix": "campaigns/wave1-research-20260816/development/transformer-research-c4-20261003-r2/seed-7/",
+      "create_command": "nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-research-c4-20261003-r2-seed-7 --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 2h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-startup-repair-20261003/p2/execution/seed-7/request.json:/opt/research/request.json"
+    },
+    {
+      "slot": "seed-2027",
+      "trial": {
+        "width": 128,
+        "learning_rate": 0.0003,
+        "seed": 2027,
+        "max_epochs": 30,
+        "batch_size": 64,
+        "patience": 5
+      },
+      "trial_sha256": "5c8db23237fc4f8ec50e85fa7829a2932e15f6df7c8bc24c0987f8daa295a675",
+      "run_id": "transformer-research-c4-20261003-r2-seed-2027",
+      "request_path": "outputs/transformer-startup-repair-20261003/p2/execution/seed-2027/request.json",
+      "request_sha256": "edf0dce8ebcacae5aca95f5a32cc072da3e2a19af7073222c15760d01b8759de",
+      "request_bytes": 2745,
+      "output_bucket": "aimada-wave1-results-e00g6zvxpr00",
+      "output_prefix": "campaigns/wave1-research-20260816/development/transformer-research-c4-20261003-r2/seed-2027/",
+      "create_command": "nebius ai job create --parent-id project-e00g6zvxpr00waz8t3y51k --name transformer-research-c4-20261003-r2-seed-2027 --image cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9 --platform gpu-l40s-a --preset 1gpu-8vcpu-32gb --timeout 2h --disk-size 100Gi --shm-size 1Gi --subnet-id vpcsubnet-e00ppzc4353dxv210j --restart-policy never --on-demand --env-secret AWS_ACCESS_KEY_ID=mbsec-e00arhndyprqr8egjw@mbsecver-e00rjzerny1pf9qhna --env-secret AWS_SECRET_ACCESS_KEY=mbsec-e00s7qtjj5n9ghacnh@mbsecver-e00yfn5w54jc1ybkwv --inject-file /Users/akhabalov-da_1/Documents/STUDY/nebius-ai-performance-engineering/code/ai-market-abuse-detection-arena/outputs/transformer-startup-repair-20261003/p2/execution/seed-2027/request.json:/opt/research/request.json"
+    }
+  ]
+}

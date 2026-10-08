@@ -2,6 +2,27 @@
 
 # Operator execution preferences
 
+- For future Transformer holdout execution packages, explicitly select
+  `RetainingReadbackStore` for independent result collection and verification.
+  Retain verified publication bytes and their original version/size/SHA-256
+  receipts, plus the exact request verifier-input responses, before returning
+  them to the verifier. Use a new private directory per authorized collection
+  under root `outputs/` or the approved external evidence store, outside
+  disposable worktrees; keep retained payloads out of public publication.
+  Recovery uses `OfflineReadbackStore` with separately retained pinned settings.
+  Keep the original frozen collector, approved package identities/hashes and
+  historical evidence unchanged. This rule grants no additional access, run,
+  replacement or spend authorization. See
+  `docs/ml/transformer-holdout-execution-package.md`
+  (operator instruction, 2026-10-08).
+
+- For new public Job evidence, export a separate non-executable view with
+  `scripts/public_job_evidence.py`; preserve the exact approved package and its
+  hashes in the authorized evidence store. Keep repository-scoped Gitleaks and
+  ggshield publication hooks enabled; never scan private custody with the API or
+  bypass a failed scan. See `docs/operations/public-evidence-secret-prevention.md`
+  and Bug #341 (operator prevention approval, 2026-10-07).
+
 - Before building, uploading or submitting a Nebius Job image, verify that the
   repository portion is at most 64 characters. Keep the full immutable digest
   in the Job image reference; use separate repository and 64-character digest
@@ -38,6 +59,30 @@
   commits as needed. Do not split one change across multiple PRs merely to satisfy
   the commit-size limit. Use isolated worktrees when the root checkout is in
   concurrent use.
+
+# Independent review after each iteration
+
+- Operator instruction (2026-10-06): after every small coherent iteration,
+  obtain a review from a separate agent before starting the next iteration,
+  publishing changes, building/uploading an execution image or running cloud work.
+  An iteration includes its implementation, focused tests and relevant docs,
+  configuration or execution packaging; review corrections are iterations too.
+- The reviewer must be independent of the author of the changes and review the
+  exact commit or captured diff, acceptance criteria and applicable environment
+  constraints. Check failure/boundary cases, source/artifact lineage and resource,
+  API or permission limits where relevant. Keep the review narrowly scoped.
+- Give the reviewer a read-only task. It may inspect code/evidence and run inert
+  checks; it must not mutate Git/cloud resources, read credentials/final payloads,
+  or execute model training/scoring. Existing Nebius workload rules still apply.
+- Retain a review receipt in the project root's `outputs/`: reviewer identity,
+  reviewed commit/diff hash, scope, findings, verification and disposition.
+  A review with no actionable findings must be recorded explicitly.
+- Resolve actionable P0/P1/P2 findings and obtain a separate-agent re-review of the
+  correction before proceeding. Record why any reported finding is inapplicable;
+  do not silently dismiss it or treat an unreviewed change as approved.
+- Require this review in addition to focused tests, CI and human approval gates.
+  Keep related iterations and corrections in the same open PR. Do not merge,
+  delete resources or expand execution/access authorization through this process.
 
 # Project tickets and hierarchy
 

@@ -1,16 +1,41 @@
 """Recompute reported comparison arithmetic; never train, score weights or fit."""
+import json
 import math
 from types import SimpleNamespace
 
 import numpy as np
 
 from .research_baseline import align, load
+from .research_comparison_contract import checkpoint_origin, is_comparison
 from .research_evaluation import compare, family_comparison, sigmoid
 from .research_policy import Trial, seed_stability, select_grid
 from .verification_spec import canonical
 
 
-def verify(result, artifacts, metadata, prior, predictions):
+AGGREGATES = {"log_loss", "brier_score", "expected_calibration_error", "mean_probability", "delta_log_loss"}
+MAX_AGGREGATE_ULPS = 8
+
+
+def arithmetic_matches(saved, expected, field=""):
+    """Only named float64 reductions may differ; structure and decisions are exact."""
+    if type(saved) is not type(expected):
+        return False
+    if isinstance(expected, dict):
+        return saved.keys() == expected.keys() and all(
+            arithmetic_matches(saved[key], value, key) for key, value in expected.items())
+    if isinstance(expected, list):
+        return len(saved) == len(expected) and all(
+            arithmetic_matches(a, b, field) for a, b in zip(saved, expected))
+    if isinstance(expected, float):
+        if not math.isfinite(saved) or not math.isfinite(expected):
+            return False
+        if saved == expected:
+            return True
+        return field in AGGREGATES and abs(saved - expected) <= MAX_AGGREGATE_ULPS * math.ulp(expected)
+    return saved == expected
+
+
+def verify(result, artifacts, metadata, prior, predictions, *, request=None):
     baseline, thresholds, _ = load(artifacts["baseline-predictions.parquet"],
                                     artifacts["baseline-calibration.json"], metadata)
     winner = select_grid([prior[name]["result"] for name in prior if name.startswith("search-")])
@@ -19,6 +44,13 @@ def verify(result, artifacts, metadata, prior, predictions):
     stability = seed_stability([winner, prior["seed-7"]["result"], prior["seed-2027"]["result"]], Trial(**winner["trial"]))
     if canonical(stability) != canonical(result["stability"]):
         raise ValueError("confirmation stability differs")
+    if request is not None and is_comparison(request):
+        origin = checkpoint_origin(request, prior, result["execution_bindings"])
+        inputs = [json.loads(raw)["payload"]["bindings"] for name, raw in artifacts.items()
+                  if name.startswith("event-") and json.loads(raw)["kind"] == "inputs_verified"]
+        if (not stability["passed"] or canonical(origin) != canonical(result["checkpoint_origin"])
+                or len(inputs) != 1 or canonical(inputs[0]) != canonical(result["execution_bindings"])):
+            raise ValueError("comparison checkpoint or execution provenance differs")
     calibration = result["calibration"]
     temperature = calibration["temperature"]
     if (not .05 <= temperature <= 20 or calibration["fitting_role"] != "calibration"
@@ -45,14 +77,15 @@ def verify(result, artifacts, metadata, prior, predictions):
     frozen = b["frozen_calibration"]
     probabilities = np.interp(b["raw_probabilities"], frozen["isotonic_x"], frozen["isotonic_y"])
     comparison = compare(split, z, temperature, b["target_ids"], b["labels"], probabilities, thresholds)
-    if canonical(comparison) != canonical(result["comparison"]):
+    if not arithmetic_matches(result["comparison"], comparison):
         raise ValueError("reported comparison differs from frozen predictions")
     families = family_comparison(y, b["families"], sigmoid(z / temperature), probabilities)
-    if canonical(families) != canonical(result["per_family"]):
+    if not arithmetic_matches(result["per_family"], families):
         raise ValueError("per-family metrics differ from saved predictions")
     if result["freeze_blocked"] != (comparison["freeze_blocked"] or not stability["passed"]):
         raise ValueError("research freeze disposition differs")
     duration = result["inference"]["elapsed_seconds"]
     if not math.isfinite(duration) or duration <= 0 or result["inference"]["rows"] != len(y):
         raise ValueError("invalid inference measurement")
-    return {"comparison_verified": True, "calibration_optimum_checked_without_fitting": True}
+    return {"comparison_verified": True, "calibration_optimum_checked_without_fitting": True,
+            "aggregate_arithmetic_policy": "named_float64_reductions_max_8_ulp"}

@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-07",
+  "command": "Exact create-argv.json plus --dry-run",
+  "create_argv_sha256": "4efda4a46dab963eedc8017654c08806ff2b7aef86ed94d57d1f65dacca9c32e",
+  "request_sha256": "fbf88f60fbfcf7f41f38a33ec6483b7aa03138ca28c337d8957892431b3fee66",
+  "provider_spec_sha256": "5c1d2169b845b51d7c0af4bce59767ec234a836be7d63e0c2895ab988bf03ec8",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e",
+  "returncode": 0,
+  "result": "Job validation succeeded; no resource was created.",
+  "cli_version": "0.12.283",
+  "subprocess_timeout_seconds": 120,
+  "jobs_created": 0,
+  "prior_sandbox_validation": "DNS lookup unavailable in restricted sandbox; validation rerun with authorized network escalation; no mutation"
+}

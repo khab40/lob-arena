@@ -1,5 +1,7 @@
 """Saved-logit arithmetic fixtures; no fitting or weight execution."""
 from types import SimpleNamespace
+import json
+from pathlib import Path
 
 import pytest
 
@@ -38,6 +40,38 @@ def fixture(monkeypatch):
 
 def test_independent_comparison_accepts_saved_arithmetic(monkeypatch):
     assert readback.verify(*fixture(monkeypatch))["comparison_verified"]
+
+
+@pytest.mark.parametrize("change", [None, "origin", "bindings", "event", "missing", "duplicate"])
+def test_comparison_binds_original_checkpoint_to_observed_inputs(monkeypatch, change):
+    from app.ml.transformer.research_execution_spec import comparison_template
+    from app.ml.transformer.research_confirmation_contract import CONTEXT_PUBLIC_KEY
+    previous = json.loads((Path(__file__).parent / "fixtures/transformer_selected_origin.json").read_bytes())
+    request = comparison_template("a" * 40, "sha256:" + "b" * 64, CONTEXT_PUBLIC_KEY, "c" * 32)
+    args = fixture(monkeypatch)
+    result, artifacts, _, prior, _ = args
+    prior["search-128-0003"] = previous
+    bindings = {**previous["result"]["bindings"], "source_commit": request["source_commit"],
+                "image_digest": request["image_digest"]}
+    result.update(execution_bindings=bindings, checkpoint_origin=readback.checkpoint_origin(request, prior, bindings))
+    event = {"kind": "inputs_verified", "payload": {"bindings": bindings}}
+    artifacts["event-0001.json"] = json.dumps(event).encode()
+    if change == "origin":
+        result["checkpoint_origin"]["checkpoint"]["epoch"] = 5
+    elif change == "bindings":
+        result["execution_bindings"]["normalization_sha256"] = "f" * 64
+    elif change == "event":
+        event["payload"]["bindings"] = {}
+        artifacts["event-0001.json"] = json.dumps(event).encode()
+    elif change == "missing":
+        del artifacts["event-0001.json"]
+    elif change == "duplicate":
+        artifacts["event-0002.json"] = artifacts["event-0001.json"]
+    if change is None:
+        assert readback.verify(*args, request=request)["comparison_verified"]
+    else:
+        with pytest.raises(ValueError):
+            readback.verify(*args, request=request)
 
 
 @pytest.mark.parametrize("field", ["family", "positive_only", "nan", "objective", "winner", "duration", "freeze"])

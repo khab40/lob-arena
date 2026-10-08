@@ -1,8 +1,8 @@
 # ARD-0042: Transformer and LightGBM Research Sequence
 
-Status: Accepted research ordering; comparison outcome pending.
+Status: Accepted research ordering; operator continuation approved, holdout execution pending.
 
-Date: 2026-10-03. Records the operator-approved fork of 2026-10-02.
+Date: 2026-10-03; updated 2026-10-05. Records the operator-approved research forks.
 
 Tickets: [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Feature #16](https://github.com/khab40/lob-arena/issues/16),
@@ -34,6 +34,25 @@ Value: test the hypothesis before investing in serving or a cascade.
 Out of scope: new corpus, final fold, LightGBM refit, deployment and promotion.
 Verification: exact ordered identities and labels, complete trial receipts,
 independent recomputation from saved predictions and explicit limitations.
+
+## Holdout extension — 5 October 2026
+
+PR #318 merged with verified C/O results; the operator chose **continue_research**
+and approved the later-date implementation plan. [Settings #314](../ml/transformer-settings-release.md)
+retain the original seed-42/epoch-4 candidate as research-only metadata. The
+[locked protocol](../ml/transformer-holdout-protocol-20261005.md) extends the original
+development-only fork with separately authorized December inference. It does not
+change the original experiment's exclusion of final data or reopen LightGBM G8/G9.
+
+Order: settings/protocol → separate holdout adapter/package → exact dry-run and
+final-access/run/spend approval → one GPU reference-parity/holdout Job → independent
+paired report → operator decision → later MLflow reconciliation. Preserve all
+weights, feature order, normalizer, temperature and operating points. Read saved
+G8 baseline predictions; never rescore LightGBM. Historical December exposure is
+disclosed, so this cannot be called a globally blind benchmark. No training,
+calibration fitting, threshold search or automatic replacement follows the holdout.
+The remaining text describes the original development study; its final-fold
+exclusion remains enforced by all existing development consumers.
 
 ## Experiment sequence
 
@@ -143,10 +162,35 @@ registry aliases and platform #19–#21 acceptance are separate completion state
 Status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
 the separately authorized replacement and [four grid trials](../ml/transformer-training-grid-results.md)
 are independently verified. The selection winner is width 128 / rate 0.0003 /
-seed 42 / epoch 4; this does not establish an advantage over LightGBM. The
-[current week plan](../ml/transformer-week-plan-20261004.md) calls for exact
-authorization of two seed Jobs and one inference/calibration Job before execution.
+seed 42 / epoch 4. Both [replacement confirmations](../ml/transformer-confirmation-results-20261004.md)
+are independently verified and three-seed stability passed: selection-loss range
+0.002395075568322679 and F1 range 0.0. Seed 42 remains the candidate; this does not
+establish an advantage over LightGBM. The [current week plan](../ml/transformer-week-plan-20261004.md)
+next requires checkpoint-origin compatibility and separate exact run/spend approval
+for one inference/calibration Job, at most one hour. Calibration/comparison has not run.
 Research decision precedes MLflow/platform maintenance and any conditional cascade.
+
+## Replacement lineage decision — 4 October 2026
+
+After seed 7 failed before training, its prefix remains consumed. The original
+v1 schema fixes campaign/name/prefix, so a new name alone cannot safely replace
+that attempt. The [confirmation-only v2 package](../ml/transformer-confirmation-r2-20261004.md)
+uses a fresh fixed namespace and exactly five pinned legacy publications.
+Cross-image compatibility applies only to those smoke/grid references, requiring
+their original source, image, signing key and request/SUCCESS hashes. Own-result
+verification still requires the new exact assembly identity and trial.
+
+The new image retains the original sealed image layers; only four execution
+modules and the source marker change. Numerical source and assembly source are
+separate provenance fields. Model, training, selection, inputs, dependencies and
+baseline bytes stay unchanged. Supervised attester readiness precedes async
+submission, retaining failure diagnostics without automatically retrying a write.
+
+This compatibility does not authorize inference or silently migrate checkpoints.
+The later inference package must recognize the selected seed-42 checkpoint's
+original bindings and record its own execution identity separately. Never rewrite
+checkpoint bindings to satisfy a newer runtime. This keeps the comparison design
+unchanged while making replacement provenance explicit and testable.
 
 ## Comparison versus combination
 

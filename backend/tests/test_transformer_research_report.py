@@ -27,12 +27,13 @@ def dump(path, value):
     return {"sha256": hashlib.sha256(raw).hexdigest(), "size_bytes": len(raw), "version_id": "1"}
 
 
-def evidence(base, change=None):
+def evidence(base, change=None, request_fields=None):
     directory = base / SLOT
     artifacts = directory / "artifacts"
     artifacts.mkdir(parents=True)
     request = {"slot": SLOT, "run_id": "inert-report-fixture", "source_commit": "a" * 40,
                "image_digest": "sha256:" + "b" * 64, "output_bucket": "fixture-bucket", "output_prefix": "runs/fixture/"}
+    request.update(request_fields or {})
     request_hash = dump(directory / "request.json", request)["sha256"]
     rows = [{"target_id": str(i), "label": label, "logit": logit}
             for i, (label, logit) in enumerate([(0, -2.), (0, 0.), (1, -1.), (1, 2.)])]
@@ -175,3 +176,38 @@ def test_failed_collector_is_not_repeated_before_any_artifact(tmp_path, monkeypa
         report.main(collect_args(tmp_path))
     assert len(calls) == 1
     assert not (tmp_path / SLOT / "artifacts").exists()
+
+
+def test_v1_report_preserves_source_and_image_labels(tmp_path):
+    text = report.markdown(report.load(evidence(tmp_path)))
+    lineage = text.split("## Lineage\n\n", 1)[1].split("- Request SHA-256:", 1)[0]
+    assert lineage == ("- Run: `inert-report-fixture`\n- Job: `aijob-fixture`\n"
+                       f'- Source: `{"a" * 40}`\n- Image: `sha256:{"b" * 64}`\n')
+
+
+def confirmation_fields():
+    return {"schema_version": "transformer_research_execution_v2",
+            "numerical_source_commit": "c" * 40, "base_image_digest": "sha256:" + "d" * 64,
+            "compatibility_sha256": "e" * 64}
+
+
+def test_v2_report_distinguishes_assembly_and_numerical_provenance(tmp_path):
+    directory = evidence(tmp_path, request_fields=confirmation_fields())
+    text = report.generate(directory, tmp_path / "report").read_text()
+    assert f'- Assembly source: `{"a" * 40}`' in text
+    assert f'- Executed image: `sha256:{"b" * 64}`' in text
+    assert f'- Numerical source: `{"c" * 40}`' in text
+    assert f'- Base image: `sha256:{"d" * 64}`' in text
+    assert f'- Compatibility manifest SHA-256: `{"e" * 64}`' in text
+    assert "\n- Source:" not in text and "\n- Image:" not in text
+
+
+@pytest.mark.parametrize("field", ["numerical_source_commit", "base_image_digest", "compatibility_sha256"])
+@pytest.mark.parametrize("value", [None, "invalid"])
+def test_v2_report_requires_complete_provenance_before_rendering(tmp_path, field, value):
+    fields = confirmation_fields()
+    fields[field] = value
+    directory = evidence(tmp_path, request_fields=fields)
+    with pytest.raises(ValueError, match="confirmation report provenance"):
+        report.generate(directory, tmp_path / "report")
+    assert not (tmp_path / "report").exists()
