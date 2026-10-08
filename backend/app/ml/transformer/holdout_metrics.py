@@ -1,12 +1,21 @@
 """Fixed operating points and paired source-session summaries; never optimize."""
 import numpy as np
 
+from .holdout_probability import verified_probabilities
+
 MODES = ("high_precision", "balanced", "high_recall")
 BASELINE_THRESHOLDS = (1.0, 0.5769230769230769, 0.01296456352636128)
 
 
 def sigmoid(logits):
     return np.exp(-np.logaddexp(0., -np.asarray(logits, dtype=np.float64)))
+
+
+def calibrated_probabilities(logits, release, published):
+    expected = sigmoid(logits / release.temperature)
+    if published is None:
+        return expected
+    return verified_probabilities(expected, published, (point.threshold for point in release.operating_points))
 
 
 def defined_metrics(labels, probabilities, threshold):
@@ -59,7 +68,7 @@ def defined_metrics(labels, probabilities, threshold):
     return result
 
 
-def fixed_comparison(ledger, logits, baseline, families, symbols, release):
+def fixed_comparison(ledger, logits, baseline, families, symbols, release, *, published_probabilities=None):
     release.require_research_inference()
     labels = np.asarray([row["label"] for row in ledger], dtype=np.int64)
     logits, baseline = np.asarray(logits, dtype=np.float64), np.asarray(baseline, dtype=np.float64)
@@ -68,7 +77,7 @@ def fixed_comparison(ledger, logits, baseline, families, symbols, release):
             or not np.isfinite(logits).all() or not np.isfinite(baseline).all()
             or np.any((baseline < 0) | (baseline > 1))):
         raise ValueError("holdout metric population differs or is nonfinite")
-    probability = sigmoid(logits / release.temperature)
+    probability = calibrated_probabilities(logits, release, published_probabilities)
     transform = tuple(point.threshold for point in release.operating_points)
     modes = {mode: {"transformer": defined_metrics(labels, probability, t),
                     "lightgbm": defined_metrics(labels, baseline, b)}
@@ -104,14 +113,14 @@ def fixed_comparison(ledger, logits, baseline, families, symbols, release):
         "decision": "operator_review_required", "production_qualified": False}, probability
 
 
-def paired_bootstrap(ledger, logits, baseline, release):
+def paired_bootstrap(ledger, logits, baseline, release, *, published_probabilities=None):
     """Keep every variant of each base session together in every paired draw."""
     sessions = np.asarray([row["base_session_id"] for row in ledger])
     groups = [np.flatnonzero(sessions == value) for value in sorted(set(sessions))]
     if len(groups) != 3:
         raise ValueError("December protocol requires three source clusters")
     labels = np.asarray([row["label"] for row in ledger])
-    probabilities = sigmoid(np.asarray(logits) / release.temperature)
+    probabilities = calibrated_probabilities(np.asarray(logits), release, published_probabilities)
     baseline = np.asarray(baseline)
     rng = np.random.default_rng(20260828)
     draws = {"average_precision": [], "log_loss": []}

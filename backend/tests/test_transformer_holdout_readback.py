@@ -11,6 +11,7 @@ np = pytest.importorskip("numpy")
 from app.market_data.projections import supervised_row_id  # noqa: E402
 from app.ml.transformer.holdout_metrics import fixed_comparison, paired_bootstrap  # noqa: E402
 from app.ml.transformer.holdout_readback import verify_result  # noqa: E402
+from app.ml.transformer.holdout_probability import PROBABILITY_POLICY  # noqa: E402
 from app.ml.transformer.holdout_spec import G8_PREFIX, object_location  # noqa: E402
 from app.ml.transformer.holdout_storage import HoldoutStore  # noqa: E402
 from app.ml.transformer.settings_release import ArtifactRead  # noqa: E402
@@ -135,3 +136,44 @@ def test_independent_end_to_end_readback_of_declared_artifacts(tmp_path, monkeyp
         assert receipt["status"] == "verified" and receipt["rows"] == 15160
         assert receipt["model_execution"] is False
         assert receipt["measurements_verified"] is True
+
+
+@pytest.mark.parametrize("defect", [None, "two_ulp", "nonnumeric", "nine_ulp_metric"])
+def test_readback_checks_portable_probabilities_before_reducing_saved_artifacts(tmp_path, monkeypatch, defect):
+    from app.ml.transformer.settings_release import json_record
+    store, settings, result = publication(tmp_path, monkeypatch)
+    location = (store.request.output_bucket, store.key("predictions.json"))
+    predictions = json_record(store.s3.objects[location])
+    published = np.nextafter(np.asarray([row["probability"] for row in predictions]), 1.)
+    ledger = json_record(store.s3.objects[(store.request.output_bucket, store.key("target-ledger.json"))])
+    logits = [row["logit"] for row in predictions]
+    baseline = [row["baseline_probability"] for row in predictions]
+    result["comparison"], _ = fixed_comparison(ledger, logits, baseline,
+        [row["family"] for row in predictions], [row["symbol"] for row in predictions], settings,
+        published_probabilities=published)
+    result["comparison"]["bootstrap"] = paired_bootstrap(
+        ledger, logits, baseline, settings, published_probabilities=published)
+    if defect == "two_ulp":
+        published = np.nextafter(published, 1.)
+    for row, probability in zip(predictions, published, strict=True):
+        row["probability"] = float(probability)
+    if defect == "nonnumeric":
+        predictions[0]["probability"] = str(predictions[0]["probability"])
+    if defect == "nine_ulp_metric":
+        metrics = result["comparison"]["modes"]["balanced"]["transformer"]
+        for _ in range(9):
+            metrics["log_loss"] = float(np.nextafter(metrics["log_loss"], np.inf))
+    raw = canonical(predictions)
+    store.s3.objects[location] = raw
+    store.artifacts["predictions.json"] = {"sha256": digest(raw), "size_bytes": len(raw), "version_id": "1"}
+    success = store.finish(result)
+    args = dict(approved_request_sha256=store.request.sha256(),
+                trusted_public_key=store.request.context_public_key, settings_reader=lambda ref: ArtifactRead(b"", "1"))
+    if defect:
+        with pytest.raises(ValueError):
+            verify_result(store, success, settings, **args)
+    else:
+        receipt = verify_result(store, success, settings, **args)
+        assert receipt["status"] == "verified" and receipt["model_execution"] is False
+        assert receipt["probability_policy"] == PROBABILITY_POLICY
+        assert receipt["arithmetic_policy"] == "named_float64_reductions_max_8_ulp"

@@ -1,3 +1,62 @@
+## 2026-10-07 — Transformer holdout independently verified
+
+The completed frozen Job **aijob-e00gvk2fdn6cmjxvkg** is now independently verified
+for **15,160 rows / 135 positives**. Reviewed offline replay verified the exact
+seven published objects, original saved LightGBM predictions, signed Job/context,
+frozen settings and source lineage. No additional model execution occurred.
+[Bug #345](https://github.com/khab40/lob-arena/issues/345) is repaired in
+[PR #346](https://github.com/khab40/lob-arena/pull/346), under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+
+At the frozen balanced points, Transformer **precision 100%, recall 91.11%,
+F1 95.35%, 0 false positives** compares with LightGBM **85.58%, 65.93%,
+74.48%, 15 false positives**. LightGBM's high-recall point has higher recall
+(93.33%) with 851 false positives. Both detected all 27 labelled campaigns.
+This supports continuing research; it does not establish production quality.
+The population covers one date and three source sessions, with research attack
+labels and historical LightGBM test exposure. Operator decision remains pending.
+
+One approved GET recovered the pinned baseline; the exact original results policy
+is restored at **19 / 9 rules**, after **139.547514 seconds** of access. Final
+remains **14 / 2 rules**. Offline verification made no cloud calls. The original
+failed receipts and post-hoc one-ULP probability/eight-ULP reduction policy remain
+disclosed; frozen outputs were not changed. Actual billing remains unreconciled
+within the held $6.25 Job reservation and existing $0.01 recovery cap.
+
+Next: operator review of the [verified report and plots](../ml/transformer-holdout-report-20261007.md)
+and research decision, then #90/#91 demo
+work using a clearly labelled research detector. MLflow/platform reconciliation
+follows research. No new GPU run or production promotion is authorized; G8/G9
+remain closed. Earlier entries below are historical snapshots.
+
+## 2026-10-07 — GPU holdout completed; independent verification repair
+
+The authorized frozen-inference Job **aijob-e00gvk2fdn6cmjxvkg** completed and
+published seven objects. PR #340 and #342 are merged with green checks.
+Readback aborted on cross-platform calibrated-probability rounding; no passing
+verification receipt or research decision exists. [Bug #345](https://github.com/khab40/lob-arena/issues/345)
+under [Story #24](https://github.com/khab40/lob-arena/issues/24) repairs bounded
+probability equivalence and durable input retention. [Diagnosis and recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
+
+Both complete original policies are restored: **final14 / 2 rules**,
+**results17 / 9 rules**, independently checked through Nebius MCP. The Job grants
+lasted about 1,691 seconds, within the approved three hours. A later approved
+one-file recovery stopped before credentials/GET; its grant was removed after
+1,245.650055 seconds, within one hour. The baseline bytes remain missing.
+The frozen candidate,
+request, image and published bytes remain unchanged; no GPU rerun is required.
+Actual cost is unreconciled within the retained $6.25 reservation.
+
+PR #346's reviewed verifier repair passed CI. The recovery observation became
+stale while tool permission was pending; the exact failure stage was not recorded.
+The corrected package requires permission/preflight before granting access and
+records admission stages without credential values. Next: review and separately
+authorize exact-current recovery of the single original LightGBM prediction file,
+then complete offline
+verification, plots/report and the operator decision. Complete Transformer
+research before #90/#91 demo work; MLflow/platform follows. G8/G9 remain closed.
+Earlier dated entries below are historical snapshots.
+
 ## 2026-10-07 — Policies restored; corrected first holdout package ready
 
 Draft [PR #340](https://github.com/khab40/lob-arena/pull/340) repairs
