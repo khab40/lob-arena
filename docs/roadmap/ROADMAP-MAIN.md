@@ -5,14 +5,15 @@
 > The September 23 exit target was missed; later dates remain baseline targets
 > pending reforecast. See the [signed closure](../operations/g8/g9-closure-20260927.md).
 
-Status date: 2026-10-06. See [current status and evidence](CURRENT_STATUS.md)
+Status date: 2026-10-08. See [current status and evidence](CURRENT_STATUS.md)
 and the [4–10 October research plan](../ml/transformer-week-plan-20261004.md).
 
 Operator-approved priority: [Transformer versus LightGBM research](../ml/transformer-research-fork.md)
 under [#24](https://github.com/khab40/lob-arena/issues/24), before platform maintenance
-#19–#21. PR #283's reusable repairs are merged. Decide whether Transformer merits
-further work; stopping it and retaining LightGBM is a valid outcome. Hybrid work
-and later Transformer deliverables are conditional on that research decision.
+#19–#21. PR #283's reusable repairs are merged. The operator continues bounded
+research after verified December results; see the [current disposition](../ml/transformer-research-disposition-20261008.md).
+Next is #90/#91 saved-score mock integration, then fresh inference. Hybrid work
+and broader quality claims still require a separately justified study.
 Existing dates below remain baseline targets pending evidence-based reforecast.
 
 The Transformer implementation, replacement GPU smoke and all four fixed-grid
@@ -53,7 +54,8 @@ P1 #329 is closed. The approved three-JSON/62-HEAD metadata audit completed and
 [passed independent verification](../ml/transformer-holdout-metadata-results-20261006.md):
 30 December runs / 15,160 aligned rows, all versions `1`. Both grants are removed
 and original policies verified at final version 10 / results version 11.
-No December rows were read; HEAD checks do not verify fresh payload hashes.
+At that metadata stage, no December rows were read; HEAD checks did not verify
+fresh payload hashes. The later authorized evaluation is recorded below.
 PR #331 and both post-merge workflows passed. The reference is now published at
 version `1`; the sealed image is published by immutable digest. The
 [252-input execution package](../ml/transformer-holdout-run-20261006.md) binds exact
@@ -81,15 +83,17 @@ equivalence and durable readback under [this recovery plan](../ml/transformer-ho
 PR #346's repair and full verification are independently reviewed. Frozen balanced
 F1 is 95.35% for Transformer versus 74.48% for LightGBM; Transformer has zero
 false positives and 91.11% recall. LightGBM's high-recall point reaches 93.33%
-recall with 851 false positives. Next: review the [verified report and plots](../ml/transformer-holdout-report-20261007.md)
-and record the operator decision
-on research/demo use. One date and three sessions do not establish production quality.
+recall with 851 false positives. The [verified report and plots](../ml/transformer-holdout-report-20261007.md)
+and operator's 8 October continuation support bounded research/demo engineering.
+Explicit retained-reference calibration/decision acceptance completes #314's scope.
+Next: the [saved-score mock and fresh-inference sequence](../ml/transformer-research-disposition-20261008.md#next-medium-prs)
+under #90/#91. One date and three sessions do not establish production quality.
 The $6.25 holdout reservation remains held with billing unreconciled; no GPU
 rerun is required. Complete Transformer research before #90/#91 demo implementation.
 Historical LightGBM December exposure remains disclosed; online
 MLflow follows research. Both $6.25 comparison commitments remain held pending
-billing. This roadmap grants no execution or access authority; the aborted
-package will not be restarted and the corrected package needs exact approval.
+billing. This roadmap grants no execution or access authority. Consumed attempts
+stay retained; no GPU rerun is needed. Future workloads need fresh exact approval.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.

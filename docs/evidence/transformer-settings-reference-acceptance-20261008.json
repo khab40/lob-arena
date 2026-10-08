@@ -1,0 +1,39 @@
+{
+  "atol": 1e-05,
+  "calculator_sha256": "68af1fac792ccc0293e1b5c2bcacd00f36e3ae504d77e359d2cb1d1d3022e87c",
+  "cloud_calls": 0,
+  "direct_original_job_probability_comparison": false,
+  "evidence_kind": "offline_derived_from_authenticated_CUDA_logits",
+  "exact_decisions": true,
+  "holdout_arithmetic_policy_changed": false,
+  "maximum_derived_probability_absolute_error": 2.7711841110722446e-07,
+  "maximum_logit_absolute_error": 1.9073486328125e-06,
+  "maximum_propagated_probability_bound": 4.5920338898089e-06,
+  "model_execution": false,
+  "operating_points": {
+    "balanced": 0.996423148187864,
+    "high_precision": 0.996423148187864,
+    "high_recall": 0.996423148187864
+  },
+  "original_collector_unchanged": true,
+  "parity_sha256": "11af7a320b7aa87a74241c5ed6ae3ec6893079318afae8b1264a3b58a0f07d55",
+  "parity_version_id": "1",
+  "probability_bound": "(atol+rtol*abs(reference_logit))/(4*T)+2*max_ulp",
+  "probability_formula": "exp(-max(0,-logit/T)-log1p(exp(-abs(logit/T))))",
+  "production_qualified": false,
+  "reference_alert_counts": {
+    "balanced": 2,
+    "high_precision": 2,
+    "high_recall": 2
+  },
+  "reference_sha256": "220a2cf373290c846e1da29252ed149156b3f74d6598d2da4e9863bfbca364a5",
+  "reference_version_id": "1",
+  "rows": 64,
+  "rtol": 1e-06,
+  "schema": "transformer_settings_reference_acceptance_v1",
+  "settings_sha256": "2efbed46a82470d86107886041c5eab05265aa89c390f10bce557a9c838b05ab",
+  "source_sha256": "9f56b87ff9c61b80c3321d5da8317fb5e9f50c70de9903026cc076c18d555fff",
+  "status": "passed",
+  "temperature": 0.9984971167248549,
+  "verification_sha256": "329158009e8de6b73ff7571acd414cab5cbcfcc760edd8963d61884349a81869"
+}
