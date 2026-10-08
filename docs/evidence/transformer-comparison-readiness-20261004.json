@@ -1,0 +1,76 @@
+{
+  "schema_version": "transformer_comparison_readiness_v1",
+  "date": "2026-10-04",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "local_prerequisites": {
+    "status": "verified",
+    "artifact_count": 229,
+    "stability": {
+      "selection_log_loss_range": 0.002395075568322679,
+      "selection_f1_at_half_range": 0.0,
+      "passed": true,
+      "candidate_seed": 42
+    },
+    "slots": [
+      "smoke",
+      "search-64-0003",
+      "search-64-001",
+      "search-128-0003",
+      "search-128-001",
+      "seed-7",
+      "seed-2027"
+    ],
+    "model_execution": false
+  },
+  "provider_preflight": {
+    "checked_at": "2026-10-04T13:51:37.833756+00:00",
+    "output_empty": true,
+    "slot_absent": true,
+    "jobs_created": 0
+  },
+  "provider_dry_run": {
+    "status": "passed",
+    "output_sha256": "ff6365c6f70bb7862e1d0239e799239b1cd1a4e6456dc98d94d7545afb197071"
+  },
+  "image_request_validation": {
+    "status": "valid",
+    "request_sha256": "d5b28eb967d59700182d8003e6b08e73264a2ed06ba0e3c6cb4b94160a9b4deb",
+    "network_enabled": false,
+    "model_execution": false
+  },
+  "existing_access": {
+    "bucket_id": "storagebucket-e009132243970085528999",
+    "resource_version": "9",
+    "path": "campaigns/wave1-research-20260816/development/*",
+    "role": "storage.object-editor",
+    "group": "group-e00wb5ptvpq0q7dpaf",
+    "versioning": "ENABLED",
+    "new_grant": false
+  },
+  "validation": {
+    "inert_tests_passed": 289,
+    "ruff": "passed",
+    "checkpoint_weights_executed_locally": false
+  },
+  "pricing": {
+    "currency": "USD",
+    "vat": "excluded",
+    "source": "Nebius MCP billing calculator",
+    "checked_on": "2026-10-04",
+    "hourly_compute_usd": "1.5484",
+    "hourly_disk_usd": "0.0097222",
+    "quote_receipt_sha256": "795b4a0e6f04e2af0731b7054e222bc0fdac60c3dd89b318015e775f6472925c",
+    "storage_source": "https://docs.nebius.com/object-storage/resources/pricing",
+    "components_usd": {
+      "compute_disk_two_billing_hours": "3.1162444",
+      "artifact_storage_2gib_90days": "0.08699178082191780821917808219",
+      "egress_16gib": "0.240",
+      "requests_10000_at_class_a_rate": "0.0340"
+    },
+    "subtotal_usd": "3.477236180821917808219178082",
+    "contingency_usd": "2.772763819178082191780821918"
+  },
+  "jobs_created": 0,
+  "attester_started": false,
+  "authorization_status": "pending"
+}

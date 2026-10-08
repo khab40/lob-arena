@@ -3,16 +3,18 @@ import json
 from pathlib import Path
 import re
 
+from .research_publication_contract import artifact_prefix, is_compatible
 from .research_execution_spec import MAX_OBJECT, MAX_OUTPUT, PREFIX, SLOTS, receipt, request_sha, validate
 from .role_execution_transport import PublicationUncertain, _body, verify_sha_metadata
 from .verification_spec import OUTPUT_BUCKET, canonical, digest
 
 
-def key(slot, name):
+def key(slot, name, request=None):
     if (slot not in SLOTS or not isinstance(name, str)
             or not re.fullmatch(r"[a-zA-Z0-9][a-zA-Z0-9_.-]{0,127}", name)):
         raise ValueError("research artifact leaves its fixed slot")
-    return PREFIX + slot + "/" + name
+    prefix = artifact_prefix(request, slot) if request is not None and is_compatible(request) else PREFIX + slot + "/"
+    return prefix + name
 
 
 class Store:
@@ -27,7 +29,7 @@ class Store:
             raise ValueError("research readback budget exhausted")
         if not 0 < limit <= MAX_OBJECT:
             raise ValueError("invalid read size")
-        args = {"Bucket": OUTPUT_BUCKET, "Key": key(slot, name)}
+        args = {"Bucket": OUTPUT_BUCKET, "Key": key(slot, name, self.request)}
         if expected is not None:
             receipt(expected)
             args["VersionId"] = expected["version_id"]
@@ -42,7 +44,7 @@ class Store:
         return raw, observed
 
     def put(self, name, raw, *, artifact=True):
-        object_key = key(self.request["slot"], name)
+        object_key = key(self.request["slot"], name, self.request)
         if (not isinstance(raw, bytes) or not 0 < len(raw) <= MAX_OBJECT
                 or self.written + len(raw) > MAX_OUTPUT or len(self.artifacts) >= 512
                 or name in self.artifacts):
@@ -62,7 +64,7 @@ class Store:
 
     def claim(self):
         response = self.s3.list_objects_v2(Bucket=OUTPUT_BUCKET,
-            Prefix=PREFIX + self.request["slot"] + "/", MaxKeys=1)
+            Prefix=key(self.request["slot"], "INTENT", self.request).removesuffix("INTENT"), MaxKeys=1)
         if response.get("Contents") or response.get("KeyCount", 0) or response.get("IsTruncated"):
             raise ValueError("research slot already has evidence; no automatic replacement")
         return self.put("INTENT", canonical(self.request), artifact=False)
@@ -103,7 +105,7 @@ class Store:
         if not isinstance(inventory, dict) or len(inventory) != terminal["files"] or len(inventory) > 512:
             raise ValueError("invalid publication inventory")
         for name, item in inventory.items():
-            key(slot, name)
+            key(slot, name, self.request)
             receipt(item)
         if sum(i["size_bytes"] for i in inventory.values()) > MAX_OUTPUT:
             raise ValueError("published inventory exceeds slot budget")

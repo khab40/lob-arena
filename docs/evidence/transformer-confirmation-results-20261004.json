@@ -1,0 +1,188 @@
+{
+  "schema_version": "transformer_confirmation_results_v1",
+  "date": "2026-10-04",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "pr": "https://github.com/khab40/lob-arena/pull/308",
+  "execution_proposal_sha256": "2ebf7ff1ec6250b91fbf69a2bf8c4be2280022d1d14ad16792a9db81964f1fc8",
+  "execution_approval_reply": "Approve exact replacement package within existing $25 cap",
+  "executed_package_head": "d0af2553bd5fcb80bbd4eab7aa03ae7338e37f50",
+  "package_ci_successful_checks": 25,
+  "assembly_source_commit": "7b88ea213b0e38b8e453e40943dd8403ded79fb4",
+  "numerical_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image_digest": "sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952",
+  "base_image_digest": "sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "trial_width": 128,
+  "trial_learning_rate": 0.0003,
+  "runs": [
+    {
+      "slot": "seed-7",
+      "job_id": "aijob-e00vjqjfhgp7s79mj4",
+      "provider_state": "COMPLETED",
+      "run_id": "transformer-confirm-c4-20261004-r1-seed-7",
+      "request_sha256": "98375419ad9697f2278af7a71adb42a2dd33db130e5814aa80c2dded083c90e1",
+      "verification_sha256": "5b1703e2a5689f284d0c67cb059c42014689438b78da4a2a2f003a8fd43e2737",
+      "success": {"sha256": "1ed3dfc88c7039a9b4822ecedc8b1880f4efd2e2b643b3bba6d7c4cd9f051cab", "size_bytes": 221, "version_id": "1"},
+      "created_at": "2026-10-04T11:52:15.319103Z",
+      "started_at": "2026-10-04T11:56:03.314044608Z",
+      "finished_at": "2026-10-04T12:02:02.107705849Z",
+      "provider_runtime_seconds": 358.793661,
+      "create_to_terminal_seconds": 586.788602,
+      "compute_disk_estimate_usd_excluding_vat": "0.2539689854119901111111111111",
+      "metrics": {"precision": 1.0, "recall": 1.0, "f1": 1.0, "log_loss": 4.275791091924218e-05},
+      "counts": {"tn": 1205, "fp": 0, "fn": 0, "tp": 45},
+      "selected_epoch": 11,
+      "stopped_epoch": 16,
+      "selected_checkpoint": {
+        "epoch": 11,
+        "name": "epoch-11.pt",
+        "object_name": "seed-7-epoch-11.pt",
+        "sha256": "b151df40a5eb7e6014b4a59ec9a6a10dedc904704a7ca9063cd68e36b18e965e",
+        "size_bytes": 5034377,
+        "version_id": "1"
+      },
+      "artifact_count": 44,
+      "artifact_bytes": 82082477,
+      "training_loop_seconds": 71.82370775600003,
+      "measurements": {
+        "cost": "unknown_operator_managed",
+        "cpu_seconds": 353.497320587,
+        "elapsed_seconds": 356.77430543700007,
+        "peak_rss_kib": 2801540,
+        "transfer": {
+          "get_attempts": 185,
+          "response_bytes": 30034660
+        }
+      },
+      "peak_allocated_gpu_bytes": 191520768,
+      "peak_reserved_gpu_bytes": 205520896,
+      "report_manifest_sha256": "77a9dec758fb69bcafbb0e89d5a06f0993617464ea231daa06f3f687e069cbdb"
+    },
+    {
+      "slot": "seed-2027",
+      "job_id": "aijob-e00kq6q1fnv1kkn40p",
+      "provider_state": "COMPLETED",
+      "run_id": "transformer-confirm-c4-20261004-r1-seed-2027",
+      "request_sha256": "21891f90c63922a2f5fe36c2330e571b429b5f3c967a53772738dbb58da5a6fa",
+      "verification_sha256": "3301c1e05dcda8515793576fdfb63ce21f3eee039c442c5d29d65e1ec5a18ee1",
+      "success": {"sha256": "aae2636e24d8bf6536cd347ebb8e231c2b43d1ed62f6960275eca6d354dfe708", "size_bytes": 221, "version_id": "1"},
+      "created_at": "2026-10-04T12:31:20.425759Z",
+      "started_at": "2026-10-04T12:35:04.790932738Z",
+      "finished_at": "2026-10-04T12:40:48.746650719Z",
+      "provider_runtime_seconds": 343.955718,
+      "create_to_terminal_seconds": 568.320891,
+      "compute_disk_estimate_usd_excluding_vat": "0.2459759436085778333333333334",
+      "metrics": {"precision": 1.0, "recall": 1.0, "f1": 1.0, "log_loss": 0.00023108921360486776},
+      "counts": {"tn": 1205, "fp": 0, "fn": 0, "tp": 45},
+      "selected_epoch": 8,
+      "stopped_epoch": 13,
+      "selected_checkpoint": {
+        "epoch": 8,
+        "name": "epoch-08.pt",
+        "object_name": "seed-2027-epoch-08.pt",
+        "sha256": "e17159eddd29d226b330f0a94ab385b827c572e301a1f75e47c1a7340eea5c1b",
+        "size_bytes": 5034185,
+        "version_id": "1"
+      },
+      "artifact_count": 38,
+      "artifact_bytes": 66975060,
+      "training_loop_seconds": 57.603835403000005,
+      "measurements": {
+        "cost": "unknown_operator_managed",
+        "cpu_seconds": 343.430960452,
+        "elapsed_seconds": 341.98459055800004,
+        "peak_rss_kib": 2823772,
+        "transfer": {
+          "get_attempts": 185,
+          "response_bytes": 30034660
+        }
+      },
+      "peak_allocated_gpu_bytes": 191520768,
+      "peak_reserved_gpu_bytes": 205520896,
+      "report_manifest_sha256": "3691d8bd0b99a901b3b8e935dcd6a42e7226baa32169dcb3fff0a91486d70a7e"
+    }
+  ],
+  "stability": {
+    "status": "verified",
+    "stability": {
+      "selection_log_loss_range": 0.002395075568322679,
+      "selection_f1_at_half_range": 0.0,
+      "passed": true,
+      "candidate_seed": 42
+    },
+    "seeds": [
+      {
+        "seed": 42,
+        "selected_epoch": 4,
+        "stopped_epoch": 9,
+        "selection_log_loss": 0.002437833479241921,
+        "selection_f1_at_half": 1.0,
+        "verification_sha256": "e26e8212dd147f5feb28bf1093aa5e3bbbea530327f67a992e32626cba7ace33"
+      },
+      {
+        "seed": 7,
+        "selected_epoch": 11,
+        "stopped_epoch": 16,
+        "selection_log_loss": 4.275791091924207e-05,
+        "selection_f1_at_half": 1.0,
+        "verification_sha256": "5b1703e2a5689f284d0c67cb059c42014689438b78da4a2a2f003a8fd43e2737"
+      },
+      {
+        "seed": 2027,
+        "selected_epoch": 8,
+        "stopped_epoch": 13,
+        "selection_log_loss": 0.00023108921360486795,
+        "selection_f1_at_half": 1.0,
+        "verification_sha256": "3301c1e05dcda8515793576fdfb63ce21f3eee039c442c5d29d65e1ec5a18ee1"
+      }
+    ]
+  },
+  "spend": {
+    "cap_usd_excluding_vat": 25,
+    "old_failed_attempt_commitment": 12.5,
+    "reservation_each": 6.25,
+    "total_commitment_held": 25,
+    "actual_bill_reconciled": false,
+    "new_jobs_compute_disk_estimate_usd_excluding_vat": "0.4999449290205679444444444445",
+    "estimate_excludes": [
+      "object_storage",
+      "requests",
+      "egress",
+      "VAT"
+    ],
+    "estimated_savings_released": false
+  },
+  "scope": {
+    "new_jobs": 2,
+    "attempts_each": 1,
+    "sequential": true,
+    "context_delivered_each": true,
+    "all_artifacts_verified": true,
+    "final_access": false,
+    "calibration_executed": false,
+    "comparison_executed": false,
+    "online_mlflow": "pending_retained_artifacts"
+  },
+  "local_recovery": {
+    "operator_environment": "same exact dependency pins restored before attester or Job creation",
+    "metadata_bundle_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+    "metadata_bundle_source": "approved local digest image; identical bytes restored before result GETs",
+    "report_environment": "matplotlib 3.11.2 restored; presentation only"
+  },
+  "limits": [
+    "Selection fold was used for tuning: 1250 rows, 45 positives, 2019-10-30 NVDA.",
+    "Synthetic positives and research-control negatives do not establish real-world detection.",
+    "No superiority to LightGBM, calibrated quality, inference latency or actual spend claim.",
+    "Retain seed42 epoch4; confirmation scores cannot select a replacement candidate."
+  ],
+  "next": "Review checkpoint-origin compatibility and exact calibration/comparison package; obtain separate run/spend approval.",
+  "monitoring": {
+    "first_retained_post_context_observation_gap_seconds": [
+      119.48,
+      72.68
+    ],
+    "later_saved_gaps_below_seconds": 22,
+    "full_30_second_cadence_proven": false,
+    "next_package_requirement": "Start observer before submission"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "schema_version": "transformer_holdout_verified_v1",
+  "ticket": "https://github.com/khab40/lob-arena/issues/345",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "job_id": "aijob-e00gvk2fdn6cmjxvkg",
+  "provider_terminal_state": "COMPLETED",
+  "context_delivered": true,
+  "publication_status": "published",
+  "collected_objects": 7,
+  "independent_verification": "verified_offline",
+  "original_independent_verification": "aborted_ValueError",
+  "passing_verification_receipt": true,
+  "research_decision": "pending",
+  "request_sha256": "fbf88f60fbfcf7f41f38a33ec6483b7aa03138ca28c337d8957892431b3fee66",
+  "frozen_image_digest": "sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e",
+  "execution_source_commit": "fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508",
+  "collection_receipts": {
+    "SUCCESS": "3cb046d544d630d5169fb8cdf4607d2de308d7a6984ef9e3f3e7249c207cd188",
+    "checksums.json": "8883aa6e2f7a9c4afc48eea8520dfb3e671b739e2fd9dc92f7a477f9e329272b",
+    "result.json": "54ae02058e0e3e75bd193b80399a9c010e2cb973a30c4aba7c690d53a7c9bd94",
+    "io-receipt.json": "078f5762b51ad8387f1aeacbb52add1be7be537deff98796181c585678833901"
+  },
+  "temporary_access": {
+    "state": "removed",
+    "original_complete_arrays_match": true,
+    "final": {"version": "14", "rules": 2, "duration_seconds": 1691.024533},
+    "results": {"version": "15", "rules": 9, "duration_seconds": 1691.014048},
+    "removal_receipt_sha256": "97c6782eb6aef049b1ad39711840cad674360d4c1b8e6f6fc3e1297a215e5dca"
+  },
+  "additional_gpu_jobs_authorized": 0,
+  "first_baseline_recovery": {
+    "proposal_approved": true,
+    "collector_returned": "failed_ValueError",
+    "admission_stage_recorded": false,
+    "collection_directory_created": false,
+    "credentials_reached": false,
+    "s3_gets_reached": false,
+    "baseline_retained": false,
+    "temporary_access": "removed",
+    "results_restored_version": "17",
+    "results_restored_rules": 9,
+    "original_complete_array_matches": true,
+    "access_duration_seconds": 1245.650055,
+    "removal_readback_sha256": "744f12d10fae92a53516a1756d91e9b8d73d83306d1a142719cf4b7af4325a66",
+    "replacement_authorization": "approved_exact_corrected_proposal"
+  },
+  "baseline_recovery": {
+    "proposal_sha256": "1ab42ebbf3d6afe79c3ea5d146bfa1f5e0ad1e33e954cc125a3c4ae2163c46aa",
+    "status": "retained_exact_baseline",
+    "s3_gets": 1,
+    "baseline_bytes": 931523,
+    "baseline_version": "1",
+    "baseline_sha256": "05298a29c1875a26b638bda26be43d6e79e0c978818779502ee964db1f5ead9f",
+    "collection_elapsed_seconds": 2.1803868749993853,
+    "temporary_access": "removed",
+    "results_restored_version": "19",
+    "results_restored_rules": 9,
+    "original_complete_array_matches": true,
+    "access_duration_seconds": 139.547514,
+    "removal_readback_sha256": "1c68f2af3b19ffdc52a089d599c600ebed6b5ba6201767121bd57e4ec7c67a07"
+  },
+  "offline_verification": {
+    "status": "verified",
+    "rows": 15160,
+    "receipt_sha256": "329158009e8de6b73ff7571acd414cab5cbcfcc760edd8963d61884349a81869",
+    "reviewed_verifier_commit": "da50440846d3afd05d94b93fad0a8606720d4ca9",
+    "probability_policy": "calibrated_sigmoid_max_1_float64_ulp_exact_decisions_ranking_ties_bins",
+    "arithmetic_policy": "named_float64_reductions_max_8_ulp",
+    "cloud_gets": 0,
+    "model_execution": false,
+    "baseline_rescored": false,
+    "independent_review": "clear"
+  },
+  "research_comparison": {
+    "positives": 135,
+    "source_sessions": 3,
+    "dates": ["2019-12-30"],
+    "labelled_campaigns": 27,
+    "research_labels": true,
+    "historical_lightgbm_test_exposure": true,
+    "frozen_balanced": {
+      "transformer": {"precision": 1.0, "recall": 0.9111111111111111, "f1": 0.9534883720930233, "tp": 123, "fp": 0, "fn": 12},
+      "lightgbm": {"precision": 0.8557692307692307, "recall": 0.6592592592592592, "f1": 0.7447698744769874, "tp": 89, "fp": 15, "fn": 46}
+    },
+    "interpretation": "promising_limited_research_evidence_operator_decision_pending"
+  },
+  "existing_execution_reservation_usd_excluding_vat": 6.25,
+  "actual_cost": "unreconciled",
+  "baseline_rescored": false,
+  "production_qualified": false
+}

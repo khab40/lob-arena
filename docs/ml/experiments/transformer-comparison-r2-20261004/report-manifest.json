@@ -1,0 +1,13 @@
+{
+  "verification_sha256": "22f65037c0533cf10d8b4693033b3b80e388bf1e6743692d16140e863e14de98",
+  "generator_sha256": "61b71406843181fbad159f0f2f4ebf5d8b41f062cadd93b33462cb6672e2ac78",
+  "source_data_sha256": "475910c9548373548f1737e09b9162409b3e6cc6cbc71bd6d8051816ff543bd5",
+  "model_execution": false,
+  "files": {
+    "confusion-matrices.png": "ca9465006d921f35f9e3b17c573484ecba148848824323e02505e3b9e5e9332b",
+    "family-recall.png": "2e0909c8ad05d6c5066d574758e7358677724a14acd4fc720ff8da0c73248153",
+    "precision-recall.png": "3c4c093ab5474dd4e20efd0453d70419e6c7b35dced562d03387ac9bb4353e1c",
+    "reliability.png": "e4ac2c0ed4d042fad3f43c6db8349ad0a4bf5e5ec9f13f99603137ebee465ea4",
+    "report.md": "f08492d6efa9ebe89c9f428178f609eae955efc0e0e8e896c32587e30265eec8"
+  }
+}

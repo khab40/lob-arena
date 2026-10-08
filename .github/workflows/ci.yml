@@ -163,7 +163,32 @@ jobs:
           tests/test_transformer_research_stability.py
           tests/test_transformer_research_storage.py tests/test_transformer_research_readback.py
           tests/test_transformer_research_operator.py
+          tests/test_transformer_operator_diagnostics.py
+          tests/test_transformer_confirmation_contract.py tests/test_transformer_confirmation_contract_readback.py
+          tests/test_transformer_confirmation_supervisor.py tests/test_transformer_confirmation_supervisor_cli.py
+          tests/test_transformer_confirmation_supervisor_admission.py
+          tests/test_transformer_confirmation_prepare.py
           tests/test_transformer_research_comparison_readback.py
+          tests/test_transformer_comparison_arithmetic.py
+          tests/test_transformer_comparison_contract.py
+          tests/test_transformer_comparison_replacement.py
+          tests/test_transformer_comparison_prepare.py
+          tests/test_transformer_comparison_observer.py
+          tests/test_transformer_settings_release.py tests/test_transformer_settings_gates.py
+          tests/test_transformer_settings_export.py tests/test_transformer_holdout_protocol.py
+          tests/test_transformer_holdout_consumer.py tests/test_transformer_holdout_metrics.py
+          tests/test_transformer_holdout_probability.py tests/test_transformer_holdout_retention.py
+          tests/test_transformer_holdout_storage.py tests/test_transformer_holdout_worker.py
+          tests/test_transformer_holdout_readback.py
+          tests/test_transformer_holdout_measurements.py
+          tests/test_transformer_holdout_package.py
+          tests/test_transformer_holdout_runtime.py tests/test_transformer_holdout_entrypoint.py
+          tests/test_transformer_holdout_delivery.py tests/test_transformer_holdout_image.py
+          tests/test_transformer_holdout_reference.py tests/test_transformer_holdout_metadata.py
+          tests/test_transformer_holdout_operator.py
+          tests/test_transformer_holdout_preparation.py tests/test_transformer_holdout_policy.py
+          tests/test_transformer_holdout_run_prepare.py
+          tests/test_transformer_holdout_supervision.py tests/test_transformer_holdout_watch.py
 
       - name: Verify governed image submission contracts (inert metadata only)
         working-directory: backend
@@ -514,3 +539,13 @@ jobs:
 
       - name: Verify public checksum exception survives squash
         run: python3 scripts/check_gitleaks_proposal_exception.py "$RUNNER_TEMP/gitleaks-regression/gitleaks"
+
+      - name: Verify publication gate rejects planted credentials before API calls
+        run: python3 scripts/check_publication_secret_gate.py "$RUNNER_TEMP/gitleaks-regression/gitleaks"
+
+      - name: Verify pinned ggshield projection and complete coverage without API access
+        run: |
+          python3 -m venv "$RUNNER_TEMP/ggshield-regression"
+          "$RUNNER_TEMP/ggshield-regression/bin/python" -m pip install \
+            --disable-pip-version-check ggshield==1.55.0
+          "$RUNNER_TEMP/ggshield-regression/bin/python" scripts/check_ggshield_projection.py

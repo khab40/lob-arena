@@ -1,3 +1,448 @@
+## 2026-10-07 — Transformer holdout independently verified
+
+The completed frozen Job **aijob-e00gvk2fdn6cmjxvkg** is now independently verified
+for **15,160 rows / 135 positives**. Reviewed offline replay verified the exact
+seven published objects, original saved LightGBM predictions, signed Job/context,
+frozen settings and source lineage. No additional model execution occurred.
+[Bug #345](https://github.com/khab40/lob-arena/issues/345) is repaired in
+[PR #346](https://github.com/khab40/lob-arena/pull/346), under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+
+At the frozen balanced points, Transformer **precision 100%, recall 91.11%,
+F1 95.35%, 0 false positives** compares with LightGBM **85.58%, 65.93%,
+74.48%, 15 false positives**. LightGBM's high-recall point has higher recall
+(93.33%) with 851 false positives. Both detected all 27 labelled campaigns.
+This supports continuing research; it does not establish production quality.
+The population covers one date and three source sessions, with research attack
+labels and historical LightGBM test exposure. Operator decision remains pending.
+
+One approved GET recovered the pinned baseline; the exact original results policy
+is restored at **19 / 9 rules**, after **139.547514 seconds** of access. Final
+remains **14 / 2 rules**. Offline verification made no cloud calls. The original
+failed receipts and post-hoc one-ULP probability/eight-ULP reduction policy remain
+disclosed; frozen outputs were not changed. Actual billing remains unreconciled
+within the held $6.25 Job reservation and existing $0.01 recovery cap.
+
+Next: operator review of the [verified report and plots](../ml/transformer-holdout-report-20261007.md)
+and research decision, then #90/#91 demo
+work using a clearly labelled research detector. MLflow/platform reconciliation
+follows research. No new GPU run or production promotion is authorized; G8/G9
+remain closed. Earlier entries below are historical snapshots.
+
+## 2026-10-07 — GPU holdout completed; independent verification repair
+
+The authorized frozen-inference Job **aijob-e00gvk2fdn6cmjxvkg** completed and
+published seven objects. PR #340 and #342 are merged with green checks.
+Readback aborted on cross-platform calibrated-probability rounding; no passing
+verification receipt or research decision exists. [Bug #345](https://github.com/khab40/lob-arena/issues/345)
+under [Story #24](https://github.com/khab40/lob-arena/issues/24) repairs bounded
+probability equivalence and durable input retention. [Diagnosis and recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
+
+Both complete original policies are restored: **final14 / 2 rules**,
+**results17 / 9 rules**, independently checked through Nebius MCP. The Job grants
+lasted about 1,691 seconds, within the approved three hours. A later approved
+one-file recovery stopped before credentials/GET; its grant was removed after
+1,245.650055 seconds, within one hour. The baseline bytes remain missing.
+The frozen candidate,
+request, image and published bytes remain unchanged; no GPU rerun is required.
+Actual cost is unreconciled within the retained $6.25 reservation.
+
+PR #346's reviewed verifier repair passed CI. The recovery observation became
+stale while tool permission was pending; the exact failure stage was not recorded.
+The corrected package requires permission/preflight before granting access and
+records admission stages without credential values. Next: review and separately
+authorize exact-current recovery of the single original LightGBM prediction file,
+then complete offline
+verification, plots/report and the operator decision. Complete Transformer
+research before #90/#91 demo work; MLflow/platform follows. G8/G9 remain closed.
+Earlier dated entries below are historical snapshots.
+
+## 2026-10-07 — Policies restored; corrected first holdout package ready
+
+Draft [PR #340](https://github.com/khab40/lob-arena/pull/340) repairs
+[Bug #339](https://github.com/khab40/lob-arena/issues/339) under
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+All 25 checks passed on 8cde2d1, including CodeQL and GitGuardian; 290 inert
+holdout regressions and independent reviews are clear. No GPU Job was created.
+
+Independent Nebius MCP readback confirms both original policies restored:
+final version **12 / 2 rules**, results version **13 / 9 rules**, exact full-rule
+equality. Removal finished at 01:09:08/01:09:18 UTC on 7 October, after the
+three-hour window ended at 20:53:33 UTC on 6 October. The access overrun is
+recorded; policy rules do not expire automatically. The exact Job name remains
+NotFound; no December payload read, signature delivery or model execution occurred.
+
+The [corrected same-input recovery package](../ml/transformer-holdout-first-run-recovery-20261007.md)
+passes pinned offline SDK/CLI/source preflight and a fresh provider dry-run with
+no resource created. It uses one process for supervision and submission, keeps
+old attempt history immutable and needs fresh exact recovery approval. Next:
+approve the exact package, verify fresh grants, evaluate once, independently
+verify results, restore permissions promptly, then report and obtain the decision.
+The existing $6.25 reservation remains held, with billing unreconciled. Demo and
+MLflow/platform work retain the ordering below; G8/G9 stay closed.
+
+## 2026-10-06 — First holdout Job pending; coordinated admission repaired
+
+[Bug #339](https://github.com/khab40/lob-arena/issues/339) is under
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24) in
+[Project #3](https://github.com/users/khab40/projects/3). PR #337 merged with
+green CI. The operator approved its exact run/access/spend/signing/removal scope;
+authentication recovered and both temporary policies were independently verified
+at final version 11 and results version 12.
+
+The standalone watcher expired after 120 seconds while the agent delayed the
+separate creation tool call. Its stale-heartbeat guard rejected submission before
+any creation intent or provider mutation. All 23 observations were absent; fresh
+MCP reconciliation returned NotFound. **No GPU Job or December payload read ran.**
+The original proposal and failed observer history remain immutable. Reviewed
+operator removal of both grants is pending; the $6.25 reservation remains held
+with actual billing unreconciled.
+
+[Coordinated admission](../operations/transformer-coordinated-admission.md) now
+submits directly from supervision after verified absence. Durable exclusive
+creation intent, 30-second observation reserve, exact captured command hashes,
+access-expiry checks and continued observation after outcome-receipt failure are
+covered by 46 focused inert cases and separate-agent reviews. Numerical code,
+request, model, reference, signing identity and immutable image are unchanged.
+
+Next: verify policy restoration; complete the corrected package/dry-run and exact
+recovery approval in a separate evidence directory, then run the first frozen
+evaluation, independently verify/report and obtain the research decision. No
+automatic restart, replacement, refitting or cap increase. Complete Transformer
+research before #90/#91 demo implementation; online MLflow/platform work follows.
+G8/G9 remain closed. The following dated entries are historical snapshots.
+
+## 2026-10-06 — Exact GPU package ready; first replay demo next
+
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24),
+[settings #314](https://github.com/khab40/lob-arena/issues/314),
+[backend #90](https://github.com/khab40/lob-arena/issues/90),
+[GUI #91](https://github.com/khab40/lob-arena/issues/91), Project #3.
+PR #331 merged; all 25 PR checks and both post-merge workflows passed.
+The sealed image is published by immutable digest; the saved 64-row reference
+is published at version `1` with checksum/byte readback. The 252-input request
+binds exact versions and repaired manifest-relative paths. Nebius accepted the
+exact one-L40S request in dry-run without creating a Job.
+
+[Execution proposal and runbook](../ml/transformer-holdout-run-20261006.md)
+retain exact temporary access, original-policy restoration, pinned credential
+selectors, source closure and SDK/local-CLI preflight. Independent reviews
+corrected #332–#336; all 258 inert holdout regressions pass. Proposed bound:
+one attempt / one hour / two-hour create-to-terminal ceiling / $6.25 additional
+excluding VAT. Fresh exact final-access/run approval remains required; no model
+or December payload ran, and both bucket policies remain restored.
+
+Today's operator priority is verified Transformer research plus a first
+backend/GUI demo mock. Prepare #90/#91 saved-score replay concurrently with the
+authorization gate: choose detector/source run, play/pause/resume/speed, show
+alerts and exact frozen identity. Clearly identify retained research scores and
+historical versus synthetic-overlay provenance. This does not close full story
+acceptance or establish fresh real-time inference. G8/G9 remain closed;
+MLflow/platform reconciliation follows research.
+
+## 2026-10-06 — December metadata audit complete; permissions restored
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #328 merged with all 25 checks passed. The exactly approved audit completed:
+**3 JSON GETs + 62 HEADs**, 30 December runs / **15,160 aligned rows**,
+all object versions `1`. Independent evidence/publication reviews found no
+actionable P0/P1/P2. [Result and exact inventory](../ml/transformer-holdout-metadata-results-20261006.md).
+Both temporary grants are removed; independent readbacks restore original rules
+at final version **10** / 2 rules and results version **11** / 9 rules.
+Access lasted 36m36s, within the approved hour. No Parquet bodies or models ran;
+HEAD checks do not verify fresh payload hashes. Actual cost remains unreconciled.
+
+Next: publish the saved development reference with an immutable version receipt,
+pin remaining credentials/access and the execution request, publish the sealed
+image by digest, then run the exact provider dry-run. Obtain fresh final-access,
+one-Job and spend authorization before GPU inference. Proposed bound remains
+one L40S / one hour / $6.25 additional excluding VAT, not yet approved. CUDA
+reference parity must pass before December payload reads. G8/G9 remain closed.
+Earlier dated preparation snapshots below describe their then-current state.
+
+## 2026-10-06 — P1 metadata credential imports corrected
+
+[Bug #329](https://github.com/khab40/lob-arena/issues/329), attached under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) in Project #3, is fixed
+in PR #328. The audit wrapper uses the metadata-only credential helper and checks
+the pinned first-party import closure before and after SDK preflight, before
+credential lookup. Fourteen new inert cases; 51 focused tests and actual offline
+SDK preflight pass. Independent correction review found no actionable P0/P1/P2.
+
+Operator approved the exact audit/handoffs conditional on fixing P1. Corrected
+source binding is `8f1b8cef787026a60a9dc9c29aa9ea77c320c387960b51bd276f60b98ceb38ef`;
+only source pins changed. Exact keys, limits, policy hashes, cleanup and $0.01 cap
+are unchanged. Next: corrected-head CI, fresh policy readback and operator grants,
+then one bounded audit and removal. No grant, credentials or object reads occurred.
+GPU packaging/dry-run and separate final-access/run/spend approval still follow.
+
+## 2026-10-06 — Saved reference prepared; exact metadata audit proposed
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings #314](https://github.com/khab40/lob-arena/issues/314), Project #3.
+PR #323 and review-policy PR #326 are merged with green CI. The next
+[admission chunk](../ml/transformer-holdout-admission.md) authenticates all saved
+calibration logits before retaining a 64-row raw-logit reference; no model rerun.
+The 7,544-byte reference is retained locally; publication and CUDA parity are pending.
+37 inert tests and the actual offline SDK preflight pass. The reference and
+collector iterations received separate-agent review with no actionable findings.
+
+Prepared approval scope: three frozen JSON GETs, 60 final-shard HEADs and two
+original G8 prediction HEADs; no Parquet bodies. Temporary exact-key access on
+two buckets, five-minute collection, no retries, one-hour access ceiling and
+proposed $0.01 additional cap excluding VAT require fresh approval and operator
+grant/removal with independent readback. This proposal snapshot preceded the
+conditional operator approval and P1 correction recorded above; no audit started.
+Next: audit approval/completion/removal, then exact reference/access/image pins,
+provider dry-run and separate final-access/run/spend authorization before one
+GPU inference evaluation. Proposed one-hour L40S / $6.25 cap remains unapproved.
+G8/G9 stay closed; no new permission, cloud object read, Job or model execution.
+
+## 2026-10-06 — P1 holdout source provenance corrected in PR #323
+
+[Bug #325](https://github.com/khab40/lob-arena/issues/325) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3 fixes
+unverified source attribution. Context preparation now requires a clean matching
+Git commit and checks copied bytes against commit objects. The Docker build
+argument is removed; static runtime inspection verifies 20 copied context files.
+403 inert regressions pass without skips; base metadata/image checks pass 33 cases
+with two optional-ML module skips. The rebuilt image preserves 13 numerical files
+and 48 dependencies; network-disabled static imports do not import Torch.
+Corrected source is `fe5eaaa`; previous image/context evidence is retained as superseded.
+PR #323 subsequently merged with green CI. Next: the unchanged exact inventory/access/
+dry-run and separate final-access/run/spend gate. No Job or final payload access.
+
+## 2026-10-05 — Sealed holdout image and startup delivery implemented
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings Story #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #321 is merged with green CI. The [execution packaging chunk](../ml/transformer-holdout-execution-package.md)
+preserves the verified comparison image's 13 numerical files and 48 installed
+packages, seals the original portable package, bounds compressed request injection,
+and adds external approval plus observed-Job context binding/delivery.
+391 inert regressions pass without skips; 48 new packaging cases. Static image
+imports pass with networking disabled and Torch absent. No model execution.
+
+Verified archived metadata recovers exact original G8 prediction version/hash
+receipts. Fresh remote availability and final sequence/shard inventory are pending.
+Next: review this packaging chunk; complete exact metadata/reference/access pins,
+registry digest, provider dry-run and scoped estimate, then request separate
+final-access/run/spend approval. Proposed one-hour L40S / $6.25 additional cap
+excluding VAT remains unapproved. No Job, final payload read or new permission.
+G8/G9 stay closed. Earlier sections are dated implementation snapshots.
+
+## 2026-10-05 — Holdout measurement review correction
+
+[PR #321](https://github.com/khab40/lob-arena/pull/321) addresses
+[Bug #322](https://github.com/khab40/lob-arena/issues/322) under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+Independent readback now rejects missing/malformed runtime measurements,
+out-of-bounds timing, inconsistent GPU peaks, and batch/count/target-order
+mismatches. 343 inert regressions pass without skips; 51 cases were added for
+this correction. Producer telemetry is checked for consistency, not independently
+remeasured. No model/cloud run or final payload access occurred.
+
+PR #321 is now merged with green CI; Bug #322 is closed. The exact metadata/image/
+context package and separate authorization are the active next work above.
+
+## 2026-10-05 — Holdout consumer implemented; exact execution package is next
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[settings Story #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #319 is merged with green CI. The approved next chunk implements a
+[separate holdout consumer](../ml/transformer-holdout-consumer.md): externally
+pinned authorization and signed Job context, development-reference parity before
+final reads, unchanged development denial, exact causal windows and saved G8
+prediction pairing, fixed metrics and versioned publication/readback.
+
+292 focused inert regressions pass, including 63 new consumer/package cases;
+the five metadata-package tests also pass without NumPy. The portable package
+was generated from seven actual retained development artifacts: 134,645 bytes,
+no embedded weights, zero cloud reads and no model execution.
+These are code/package checks, not CUDA parity or December results.
+
+Consumer/review correction merged in PR #321. Next: authenticate exact final metadata/G8
+receipts, complete image/entrypoint/context-delivery packaging, dependency/source
+checks and exact Nebius dry-run. Obtain fresh final-access/run/spend authorization
+before one inference-only GPU Job. Proposed one-hour L40S / $6.25 excluding VAT
+remains unapproved. Independently verify/report and obtain the research decision.
+G8/G9 remain closed; production serving and online MLflow acceptance remain open.
+Earlier dated sections below are historical snapshots.
+
+## 2026-10-05 — Continue research approved; settings saved and holdout protocol locked
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Story #314](https://github.com/khab40/lob-arena/issues/314),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #318 merged with all 25 checks passed; Bug #317 is closed. The operator chose
+**continue_research** and approved implementation of the later-date validation plan.
+The [selected settings module](../ml/transformer-settings-release.md) retains the
+original seed-42/epoch-4 checkpoint, model/feature settings, normalizer, calibration
+and operating points against seven hash-pinned retained artifacts. Research-only;
+GPU inference consumer parity and online MLflow remain pending. #314 is In Progress.
+93 new metadata tests and 229 regression tests pass without skips; Ruff and
+Markdown links pass. The preserved seven-blob bundle reloads identically.
+
+The [locked December protocol](../ml/transformer-holdout-protocol-20261005.md)
+reuses prepared 2019-12-30 C4 Nasdaq rows and saved G8 LightGBM predictions.
+December is unseen by this Transformer, but historical baseline results are known.
+Balanced is primary; no training, normalization/calibration fitting or threshold
+selection is permitted. No final payload was read and no new Job was submitted.
+
+Next medium PR: distinct holdout adapter/request/worker/readback, preserving all
+existing development final-access denials. Then pin exact artifacts/image, dry-run
+and obtain fresh combined final-access/run/spend authorization; proposed one-hour
+L40S / $6.25 additional cap is not yet approved. Independently verify/report before
+another research decision; MLflow/platform maintenance follows research. G8/G9 stay
+closed and #25 stays Todo. Earlier entries below are historical snapshots.
+
+## 2026-10-05 — Comparison completed and independently reconciled; research decision pending
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+PR #315 merged with green CI; the operator approved its exact one-hour L40S
+package and $6.25 additional cap excluding VAT. One Job `aijob-e00acpmmjmp4rfnrf3`
+completed in 324.59 seconds. Signed context and continuous provider observations
+are retained; fresh independent provider readback confirms COMPLETED.
+
+All 15 new artifacts and 229 prerequisites passed offline reconciliation.
+[Bug #317](https://github.com/khab40/lob-arena/issues/317) repairs the original
+strict readback's single-ULP log-loss mismatch with bounded aggregate rounding;
+hashes, rows, counts, thresholds and decisions remain exact. The failure is
+preserved; no model rerun occurred. [Report and four plots](../ml/experiments/transformer-comparison-r2-20261004/report.md)
+and [bound evidence](../evidence/transformer-comparison-results-r2-20261005.json).
+
+On O's 2,470 development rows / 45 positives, calibrated Transformer F1/AP are
+1.00/1.00 versus frozen LightGBM 0.545/0.436; log loss is 0.000502 versus 0.046880.
+Temperature 0.998497 was fitted only on C. Candidate remains width 128 / rate
+0.0003 / seed 42 / epoch 4. Recommendation: **continue_research**; operator
+decision is pending. Prior exposure, scenario labels, one source group per role
+and O threshold selection limit interpretation; an unseen protocol and leakage
+review are needed before broader claims. No freeze or production promotion.
+
+Next: review result/repair PR and record continue/stop/inconclusive; then retain
+the selected settings under #314 and reconcile online MLflow. Story #24 stays
+In Progress; G8/G9 stay closed. Full $6.25 and prior commitments remain held
+pending actual billing. No further Job is needed for this comparison.
+Earlier dated entries below are historical snapshots.
+
+## 2026-10-04 — Observer repair merged; corrected comparison awaited authorization
+
+[PR #313](https://github.com/khab40/lob-arena/pull/313) merged as `ae7145e`
+after all 25 checks passed, closing [Bug #312](https://github.com/khab40/lob-arena/issues/312).
+The [fresh r2 package](../ml/transformer-comparison-r2-20261004.md) preserves
+seed 42 / width 128 / rate 0.0003 / epoch 4 and the seven verified publications.
+252 inert tests passed, one expected skip; 229 artifacts, immutable image,
+in-image request validation, exact Nebius dry-run and unused-name/prefix checks passed.
+
+Next: review package/CI, authorize its exact one-attempt one-hour L40S request
+and proposed **$6.25 additional cap excluding VAT**, then independently verify
+calibration and the identical-row LightGBM comparison. Zero r2 Jobs created.
+The consumed r1 $6.25 stays held pending billing; no model-quality conclusion
+exists yet. Story #24 stays In Progress; G8/G9 remain closed. Later settings
+export is tracked separately in [Story #314](https://github.com/khab40/lob-arena/issues/314).
+
+## 2026-10-04 — Earlier comparison attempt cancelled; observer repair required
+
+The operator approved PR #311's exact one-hour L40S comparison and $6.25
+additional cap. Job `aijob-e00ma26ee5bavrb8nb` was cancelled after the observer
+rejected supported IMAGE_PULLING. Its S3 prefix is empty; no signed context or
+comparison result was published. [Failure report](../ml/transformer-comparison-abort-20261004.md)
+and [Bug #312](https://github.com/khab40/lob-arena/issues/312).
+
+The repair shares the existing provider state set, preserves one startup budget
+across image download and adds the real snapshot regression. 75 inert tests pass.
+Next: review repair, prepare a fresh replacement package and obtain separate
+exact authorization. Keep the full $6.25 reservation held pending billing; the
+one-attempt approval is consumed. Seed 42 remains unchanged; model-quality
+outcome is inconclusive. Story #24 remains In Progress; G8/G9 stay closed.
+
+## 2026-10-04 — Checkpoint compatibility prepared; comparison approval pending
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24): the
+[comparison package](../ml/transformer-comparison-20261004.md) binds all seven
+verified publications and 229 local artifacts to unchanged seed 42 / epoch 4.
+289 inert tests, image equivalence, exact Nebius dry-run and unused-name/prefix
+checks passed. No comparison Job was created. Request metadata validates inside
+the image; actual CUDA checkpoint loading remains part of the authorized Job.
+
+Next: review the package/CI and separately authorize its exact one-attempt,
+one-hour L40S calibration/LightGBM comparison with a proposed **$6.25 additional
+cap excluding VAT**. Keep the full $25 confirmation commitment reserved pending
+billing. Independently verify results, retain the comparison report/plots, then
+decide continue/stop/inconclusive. No further training, final-test access or
+production promotion; G8/G9 stay closed and platform maintenance follows research.
+
+## 2026-10-04 — Both replacement confirmations verified; seed stability passed
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The exactly approved replacement Jobs for seeds 7 and 2027 both reached COMPLETED
+and passed independent artifact readback. Three-seed stability passed: selection
+log-loss range **0.002395075568322679**, F1-at-0.5 range **0.0**; both limits are
+0.05. Width 128 / learning rate 0.0003 / seed 42 / epoch 4 remains the candidate.
+[Results](../ml/transformer-confirmation-results-20261004.md) and
+[evidence](../evidence/transformer-confirmation-results-20261004.json).
+
+Calibration and exact-row LightGBM comparison have not run. Next: prepare the
+checkpoint-origin compatibility package and obtain separate exact run/spend
+approval for one calibration/inference Job, at most one hour. The full $25
+confirmation commitment remains held pending billing reconciliation, including
+the failed attempt; earlier $50 commitments are unchanged. PR #308 is merged with green CI.
+Story #24 remains In Progress; G8/G9 remain closed. No final-test access or
+promotion is authorized, and platform maintenance follows the research decision.
+
+## 2026-10-04 — Earlier replacement preparation snapshot; approval was pending
+
+[PR #307](https://github.com/khab40/lob-arena/pull/307) merged with green CI.
+The [replacement package](../ml/transformer-confirmation-r2-20261004.md) preserves
+the failed seed-7 attempt and verified grid, adds a fresh two-seed namespace and
+supervised context delivery, and keeps the original numerical runtime unchanged.
+Both exact Nebius dry-runs and unused-name/prefix checks passed. Image inspection
+verified 14 preserved base layers and 269 unchanged runtime files.
+
+Next: review this package/CI and approve its exact proposal; then run seeds 7 and
+2027 sequentially, at most two hours each, with independent verification between
+them. Proposed reservations are $6.25 each within the existing $25 excluding-VAT
+cap; the failed attempt's $12.50 remains committed pending billing reconciliation.
+No new Job or context was published. Calibration/comparison requires a separate
+checkpoint-origin compatibility package after stability passes. Story #24 remains
+In Progress; G8/G9 remain closed and platform maintenance follows research.
+
+## 2026-10-04 — Earlier seed-7 failure; confirmation sequence stopped
+
+PR #296 merged and the operator approved its exact two-seed package and $25
+additional cap excluding VAT. Seed-7 Job `aijob-e00k6zkjr3hqc15dhb` reached FAILED
+at context delivery; the local attester exited with AttributeError and no signed
+context was published. Only INTENT and FAILED are present; no training result.
+Seed 2027 was not submitted; no retry or replacement was performed.
+[Run report](../ml/experiments/transformer-confirmation-20261004/seed-7.md) and
+[evidence](../evidence/transformer-confirmation-failure-20261004.json).
+
+[Bug #306](https://github.com/khab40/lob-arena/issues/306) repairs the missing
+safe diagnostic evidence and startup-path tests; the incident's underlying
+AttributeError cause is not yet established. The diagnostic repair merged in
+PR #307; its replacement package is above. Keep $12.50
+reserved pending billing reconciliation. Story #24 remains In Progress;
+stability, calibration and LightGBM comparison remain outstanding. G8/G9 closed.
+
+## 2026-10-04 — Earlier two-seed preparation snapshot
+
+[Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Project #3](https://github.com/users/khab40/projects/3).
+The [two-seed package](../ml/transformer-confirmation-20261004.md) binds seeds
+7/2027, width 128, learning rate 0.0003, sequential two-hour Jobs to the verified
+grid source/image. Both provider dry-runs and unused-name/prefix checks passed;
+147 prerequisite artifacts and 58 inert tests verified. No Job was created.
+Exact proposal/run approval and a separate proposed $25 cap excluding VAT remain
+pending. The prior $50 grid reservation stays committed until billing reconciliation.
+After approval: execute/verify each seed, report stability, then separately
+authorize calibration/comparison. G8/G9 remain closed; no additional search.
+
 ## 2026-10-04 — Week plan and GitHub tracking reconciliation
 
 [4–10 October plan](../ml/transformer-week-plan-20261004.md),

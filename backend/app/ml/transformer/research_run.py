@@ -5,6 +5,7 @@ import time
 import numpy as np
 import torch
 
+from .research_comparison_contract import checkpoint_origin, is_comparison
 from .research_evaluation import compare, family_comparison, fit_temperature, sigmoid
 from .research_model import SequenceClassifier
 from .research_policy import Trial, class_session_weights, seed_stability, select_grid
@@ -83,12 +84,17 @@ def run(slot, splits, bindings, baseline, thresholds, prior, store, work, expire
         logits_artifact(store, "selection", splits["selection"], logits)
         return {**result, "kind": "trial", "selected_checkpoint": checkpoint}
     stability = seed_stability([winner, prior["seed-7"]["result"], prior["seed-2027"]["result"]], trial)
+    origin = None
+    if is_comparison(store.request):
+        if not stability["passed"]:
+            raise ValueError("comparison requires passed seed stability")
+        origin = checkpoint_origin(store.request, prior, bindings)
     winner_slot = next(name for name in prior if prior[name]["result"].get("trial_sha256") == winner["trial_sha256"])
     item = winner["selected_checkpoint"]
     raw, _ = store.read(winner_slot, item["object_name"], {k: item[k] for k in ("sha256", "size_bytes", "version_id")})
     checkpoint = work / "selected.pt"
     checkpoint.write_bytes(raw)
-    model = selected_model(checkpoint, item["sha256"], trial, bindings)
+    model = selected_model(checkpoint, item["sha256"], trial, origin["bindings"] if origin else bindings)
     logits = {role: predict(model, splits[role], expires=expires - 600) for role in ("calibration", "operating_point")}
     for role, values in logits.items():
         logits_artifact(store, role, splits[role], values)
@@ -106,6 +112,7 @@ def run(slot, splits, bindings, baseline, thresholds, prior, store, work, expire
     predict(model, splits["operating_point"], expires=expires - 120)
     torch.cuda.synchronize()
     return {"kind": "inference", "winner_trial_sha256": winner["trial_sha256"], "stability": stability,
+        **({"checkpoint_origin": origin, "execution_bindings": bindings} if origin else {}),
         "calibration": calibration, "comparison": comparison, "per_family": families,
         "inference": {"batch_size": 64, "rows": len(splits["operating_point"]),
             "elapsed_seconds": time.monotonic() - started, "includes_host_to_device": True,

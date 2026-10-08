@@ -1,0 +1,175 @@
+{
+  "schema_version": "transformer_confirmation_r2_proposal_v1",
+  "date": "2026-10-04",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "authorization": {
+    "status": "awaiting_exact_replacement_run_and_spend_approval",
+    "new_jobs_authorized": 0,
+    "approval_binding": "SHA-256 of this exact JSON and every referenced file hash",
+    "scope_if_approved": "two listed unique replacement Jobs, one attempt per seed, supervised context delivery, independent readback/reporting; cancellation of exact created Jobs to enforce bounds",
+    "prior_approval_is_not_replacement_authority": true
+  },
+  "supersedes_unsubmitted_request_sha256": "edf0dce8ebcacae5aca95f5a32cc072da3e2a19af7073222c15760d01b8759de",
+  "preserved_failed_job_id": "aijob-e00k6zkjr3hqc15dhb",
+  "diagnostic_repair_merge_commit": "6a61a6f3756cf2f28993c37c00dc86a61d846f72",
+  "assembly_source_commit": "7b88ea213b0e38b8e453e40943dd8403ded79fb4",
+  "numerical_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952",
+  "base_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "repository_characters": 47,
+  "compatibility_sha256": "c6c2e66b4968468fca5ab92aeb39ed0b50f7bf47e719ef05464b542896d5a0f7",
+  "requests_file": {
+    "path": "docs/evidence/transformer-confirmation-r2-requests-20261004.json",
+    "sha256": "5e9dd0c41504e87653fbc3efdf9cde7d6217d821e6671233a5cdc8f6f4f371a7"
+  },
+  "readiness_file": {
+    "path": "docs/evidence/transformer-confirmation-r2-readiness-20261004.json",
+    "sha256": "79c42731654a681aaa91d7719ab92edf05b997859d3a24d3bc5ae0ad450f896b"
+  },
+  "image_equivalence_file": {
+    "path": "docs/evidence/transformer-confirmation-r2-image-20261004.json",
+    "sha256": "c305f9486b332f63709651ecf1ce0f7934ea6e887af8dce13752195da7f4896b"
+  },
+  "runbook_file": {
+    "path": "docs/ml/transformer-confirmation-r2-20261004.md",
+    "sha256": "58cfae762767a88d723775df07eb24f9ce80e7957fd8274d8eb854ae4b3aaa02"
+  },
+  "grid_results_file": {
+    "path": "docs/evidence/transformer-training-grid-results-20261003.json",
+    "sha256": "0838247099ab0ae77a2c32a461a10357afd442e4c0ff91aec098b607564f13bf"
+  },
+  "operator_files": [
+    {
+      "path": "scripts/transformer_confirmation_prepare.py",
+      "sha256": "04024eba2e60fb6c8712728f7ec0ca4d90ec5d8be6a1b94cefd1f914b16e003f"
+    },
+    {
+      "path": "scripts/transformer_confirmation_supervisor.py",
+      "sha256": "09155e13cf7629b454d071a628137738b12422a5045834f09aff3c69c8d68ee3"
+    },
+    {
+      "path": "scripts/transformer_research_operator.py",
+      "sha256": "15f15285331a6fec3bc148616e0ad680bd3d48ff6f43f8be601c35c561600230"
+    },
+    {
+      "path": "scripts/transformer_report_data.py",
+      "sha256": "e2facffa814bd672b4477061ff3ef464de2aacdb21495ac623408c95adf988b4"
+    },
+    {
+      "path": "scripts/transformer_report_plots.py",
+      "sha256": "4df7eb04ed5f1c66dc0e2a2acc253a77694a239a5ee7878cfc5619c520874501"
+    },
+    {
+      "path": "scripts/transformer_research_report.py",
+      "sha256": "3227ac68eb32ad27d7bc34b9434fbeafa2500c69d62158194b80e40d0fe889f3"
+    }
+  ],
+  "operator_python": "outputs/transformer-lineage-replacement-r2-reviewed-20260929/operator-venv/bin/python",
+  "operator_sdk_pins": {
+    "botocore": "1.43.103",
+    "cryptography": "50.0.0",
+    "numpy": "2.4.6",
+    "pyarrow": "25.0.0",
+    "pydantic": "2.13.5"
+  },
+  "custody_path": "outputs/transformer-startup-repair-20261003/p2/execution/context-private.key",
+  "execution_evidence_path": "outputs/transformer-confirmation-r2-20261004/execution",
+  "seeds_in_order": [
+    7,
+    2027
+  ],
+  "candidate_seed_retained": 42,
+  "width": 128,
+  "learning_rate": 0.0003,
+  "winner_trial_sha256": "cd7c973e11dc6706490f0aa412f774e1642ffd11b6111af5ecb3c10ddf01e7db",
+  "max_epochs": 30,
+  "batch_size": 64,
+  "patience": 5,
+  "max_jobs": 2,
+  "max_concurrent_jobs": 1,
+  "max_timeout_gpu_hours": 4,
+  "resources_per_job": {
+    "disk_gib": 100,
+    "max_output_bytes": 2147483648,
+    "platform": "gpu-l40s-a",
+    "preemptible": false,
+    "preset": "1gpu-8vcpu-32gb",
+    "publication_reserve_seconds": 600,
+    "restart_policy": "never",
+    "shm_bytes": 1073741824,
+    "timeout_seconds": 7200
+  },
+  "max_create_to_terminal_seconds": 10800,
+  "supervisor_initial_ready_seconds": 120,
+  "supervisor_max_heartbeat_age_seconds": 3,
+  "sequence_gate": "seed-7 provider COMPLETED and independent verified result before seed-2027; stop on failure/uncertainty or exhausted reservation",
+  "sequence_enforcement": "operator admission, not seed-to-seed dependency graph; require inspect.admission_ready true immediately before create",
+  "stability_gate": "selection loss and F1 ranges across seeds 42/7/2027 each <=0.05; never select luckiest confirmation",
+  "cost": {
+    "currency": "USD",
+    "vat": "excluded",
+    "policy": "operator-managed admission ledger, not provider monetary cutoff",
+    "existing_confirmation_cap": 25,
+    "proposed_confirmation_cap": 25,
+    "additional_cap_increase": 0,
+    "failed_attempt_reservation_retained": 12.5,
+    "replacement_reservation_each": 6.25,
+    "replacement_reservations_total": 12.5,
+    "prior_ledger_sha256": "6070822f5c9035f82e1334672867e0d8d4937daa7e1a35c40d752c827d039d69",
+    "historical_operator_baseline": 300,
+    "prior_grid_reservation_retained": 50,
+    "baseline_plus_reserved_allowances": 375,
+    "current_actual_account_spend": "not_reconciled",
+    "planning_envelope_is_current_bill": false,
+    "max_runtime_hours_per_job": 2,
+    "extra_billing_hours_reserved_per_job": 1,
+    "extra_hour_is_runtime_extension": false,
+    "artifact_gib_reserved_per_job": 2,
+    "retention_days_reserved": 90,
+    "egress_gib_reserved_per_job": 16,
+    "requests_reserved_per_job": 10000,
+    "gate_before_each_create": "accounted confirmation charges + outstanding commitments + next 6.25 reservation <=25; refreshed scoped estimate <=6.25; block unknown/unbounded components",
+    "release_policy": "no estimated savings released; hold submitted reservations until actual charges reconcile",
+    "anomaly_policy": "cancel exact active Job and stop sequence; reconcile before any later create",
+    "retention_review_date": "2027-01-02",
+    "retention_review_authorizes_deletion": false,
+    "after_retention_review": "separate operator cost/disposition approval; no automatic deletion",
+    "ledger_path": "outputs/transformer-confirmation-r2-20261004/spend-ledger.json"
+  },
+  "read_only_retry_policy": {
+    "initial_seconds": 30,
+    "retry_timeouts_seconds": [
+      60,
+      90,
+      120
+    ],
+    "mutations": "no automatic Job or attester restart; reconcile uncertain create/context PUT without retry"
+  },
+  "outputs": [
+    "versioned config and composite lineage",
+    "normalization and target ledger",
+    "epoch metrics and checkpoints",
+    "selected checkpoint and predictions",
+    "resource measurements",
+    "replayable MLflow events",
+    "independent verification",
+    "per-run Markdown and loss/F1/confusion plots",
+    "three-seed stability summary"
+  ],
+  "logging": "preserved numerical runtime; newer live epoch logger is not included; report saved epoch artifacts",
+  "mlflow_online_required": false,
+  "original_attribute_error_root_cause": "not_established",
+  "out_of_scope": [
+    "grid or smoke reruns",
+    "additional replacements",
+    "further search",
+    "inference/calibration",
+    "final-test access",
+    "new IAM permissions",
+    "G8/G9 rerun",
+    "production promotion",
+    "merge",
+    "deletion"
+  ]
+}

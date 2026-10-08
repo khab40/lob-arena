@@ -1,0 +1,121 @@
+{
+  "schema_version": "transformer_two_seed_proposal_v1",
+  "date": "2026-10-04",
+  "timezone": "Asia/Tbilisi",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "authorization": {
+    "status": "awaiting_exact_run_and_spend_approval",
+    "new_jobs_authorized": 0,
+    "preparation_instruction": "Prepare the two-seed execution package: seeds 7 and 2027, width 128, learning rate 0.0003; sequential, maximum 2 hours each. Obtain exact run/spend approval.",
+    "approval_binding": "SHA-256 of this exact JSON file, including all referenced file hashes",
+    "execution_status": "not_started",
+    "scope_if_approved": "two unique Jobs, one attempt per listed seed; bounded signed-context delivery, independent readback and reports; cancellation only to enforce these bounds"
+  },
+  "packaging_base_commit": "3f91febb230ce5d89d743eb2138b605d1579e72e",
+  "runtime_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "repository_characters": 47,
+  "requests_file": {
+    "path": "docs/evidence/transformer-confirmation-requests-20261004.json",
+    "sha256": "9f457f2cee26da694104af35e08f0874e1fd94b9d25dae93ae9c7dd688ce4527"
+  },
+  "readiness_file": {
+    "path": "docs/evidence/transformer-confirmation-readiness-20261004.json",
+    "sha256": "d835d7374e77ed85d74d3ea8935746fa5fc65f87c6fab560760676b0e37e2c74"
+  },
+  "grid_results_file": {
+    "path": "docs/evidence/transformer-training-grid-results-20261003.json",
+    "sha256": "0838247099ab0ae77a2c32a461a10357afd442e4c0ff91aec098b607564f13bf"
+  },
+  "winner_trial_sha256": "cd7c973e11dc6706490f0aa412f774e1642ffd11b6111af5ecb3c10ddf01e7db",
+  "width": 128,
+  "learning_rate": 0.0003,
+  "seeds_in_order": [
+    7,
+    2027
+  ],
+  "candidate_seed_retained": 42,
+  "max_epochs": 30,
+  "batch_size": 64,
+  "patience": 5,
+  "resources_per_job": {
+    "disk_gib": 100,
+    "max_output_bytes": 2147483648,
+    "platform": "gpu-l40s-a",
+    "preemptible": false,
+    "preset": "1gpu-8vcpu-32gb",
+    "publication_reserve_seconds": 600,
+    "restart_policy": "never",
+    "shm_bytes": 1073741824,
+    "timeout_seconds": 7200
+  },
+  "max_jobs": 2,
+  "max_concurrent_jobs": 1,
+  "max_timeout_gpu_hours": 4,
+  "sequence_gate": "seed-7 must be provider COMPLETED and independently verified before seed-2027; stop on failure, uncertainty or exhausted reservation",
+  "sequence_enforcement": "operator admission gate; request dependency graph binds smoke and grid, not seed-to-seed ordering",
+  "stability_gate": "compare saved selection loss and F1 for seeds 42, 7, 2027; each range must be <=0.05; never select the luckiest seed or expand search",
+  "cost": {
+    "currency": "USD",
+    "vat": "excluded",
+    "policy": "operator-managed admission ledger, not provider monetary cutoff",
+    "proposed_incremental_cap": 25,
+    "proposed_per_job_reservation": 12.5,
+    "baseline_operator_report_20261003": 300,
+    "prior_grid_reservation_still_committed": 50,
+    "prior_grid_ledger_sha256": "8240a1af250720b5a86a32c3dd97cb9f90dc294c4572fe769f644bb1c4f34b00",
+    "proposed_baseline_plus_reserved_allowances": 375,
+    "current_actual_account_spend": "not_reconciled",
+    "planning_envelope_is_current_bill": false,
+    "reuse_grid_savings": false,
+    "max_runtime_hours_per_job": 2,
+    "extra_billing_hours_reserved_per_job": 1,
+    "extra_hour_is_runtime_extension": false,
+    "artifact_gib_reserved_per_job": 2,
+    "retention_days_reserved": 90,
+    "egress_gib_reserved_per_job": 16,
+    "requests_reserved_per_job": 10000,
+    "reservation_components_and_prices": "docs/evidence/transformer-confirmation-readiness-20261004.json",
+    "gate_before_each_create": "accounted confirmation charges + outstanding confirmation commitments + next reservation <=25; refresh quotes and reject unknown/unbounded components",
+    "release_policy": "retain full 12.50 per submitted Job until actual charges reconcile; no savings authorize extra Jobs",
+    "anomaly_policy": "cancel this stage's active Job and stop sequence if runtime/spend assumptions fail; reconcile before another create",
+    "retention_review_date": "2027-01-02",
+    "retention_review_authorizes_deletion": false,
+    "after_retention_review": "separate operator disposition and cost authorization required; no automatic deletion",
+    "ledger_path": "outputs/transformer-confirmation-20261004/spend-ledger.json"
+  },
+  "read_only_retry_policy": {
+    "initial_seconds": 30,
+    "retry_timeouts_seconds": [
+      60,
+      90,
+      120
+    ],
+    "mutations": "no retry after ambiguous create/publication; reconcile first; no replacement Job"
+  },
+  "outputs": [
+    "versioned configuration and lineage",
+    "training normalization and target ledger",
+    "epoch metrics and checkpoints",
+    "selected checkpoint and selection predictions",
+    "resource measurements",
+    "replayable MLflow events",
+    "independent verification receipt",
+    "per-run Markdown and loss/F1/confusion plots",
+    "three-seed stability summary"
+  ],
+  "logging": "reuse sealed grid runtime; newer live epoch logging is not deployed; derive per-run reports from verified epoch artifacts",
+  "mlflow_online_required": false,
+  "out_of_scope": [
+    "new image or permissions",
+    "replacement Jobs",
+    "further grid search",
+    "calibration or inference Job",
+    "final-test access",
+    "G8/G9 rerun",
+    "production promotion",
+    "merge",
+    "deletion"
+  ]
+}
