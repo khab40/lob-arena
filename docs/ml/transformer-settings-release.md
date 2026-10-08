@@ -1,6 +1,6 @@
 # Selected Transformer settings release
 
-Date: 2026-10-05. [Story #314](https://github.com/khab40/lob-arena/issues/314),
+Date: 2026-10-05; updated 2026-10-08. [Story #314](https://github.com/khab40/lob-arena/issues/314),
 under [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
 [Project #3](https://github.com/users/khab40/projects/3).
@@ -13,7 +13,8 @@ So that later inference reproduces the verified candidate without manual configu
 Actor: detector developer. Goal: one immutable, complete research settings release.
 Value: prevent drift between research and later inference.
 Out of scope: training, final payload reads, Jobs, live serving, promotion and online MLflow.
-Verification: metadata-only persistence/adversarial tests; GPU inference parity later.
+Verification: metadata/adversarial tests, authorized CUDA logit parity and retained
+reference calibration/decision arithmetic acceptance.
 Operator approved chunk 1 of the unseen-validation plan on 5 October.
 
 ## Retained candidate and trust boundary
@@ -46,7 +47,8 @@ Always consume the result of `load_release`, then call `require_research_inferen
 before loading weights. Direct Pydantic construction is schema validation only.
 Research eligibility is not run/final-access authority. `require_serving` rejects
 production use even when development gates pass. Real-time feature equivalence,
-GPU inference parity, online MLflow and production qualification remain open.
+online MLflow and production qualification remain open. Authorized GPU reference
+parity is verified; it does not prove streaming feature equivalence.
 
 `save_release` writes and fsyncs a temporary file, then atomically links it to a
 new destination. Existing files/symlinks are retained. Incomplete temporary writes
@@ -93,7 +95,19 @@ NumPy, PyTorch, cloud reads or synthetic training. The CLI is
 set `PYTHONPATH=backend`, supply `--artifact-map`, `--output` and the three trusted
 `--verification-sha256`, `--selection-sha256`, `--decision-sha256` pins.
 
-Next: [the locked holdout protocol](transformer-holdout-protocol-20261005.md),
-a separate final-input adapter/request/worker/readback package, followed by exact
-data/run/spend authorization. Story #314 stays open until authorized inference
-consumer parity passes; it does not authorize real-time serving.
+## Reference acceptance and next work — 8 October
+
+The [authorized holdout](transformer-holdout-report-20261007.md) passed ordered
+CUDA logit parity on 64 saved development windows. The [additional aggregate
+receipt](../evidence/transformer-settings-reference-acceptance-20261008.json)
+applies unchanged calibration/thresholds to both retained logit streams:
+probabilities satisfy the original logit tolerance's propagated sigmoid bound,
+and decisions match exactly at all three operating points. This is derived
+offline arithmetic, not direct original-Job probability capture or a new run.
+Seven inert tests and independent review pass; the frozen collector and heldout
+probability/reduction policy are unchanged.
+
+#314's in-scope scenarios are satisfied; closure follows reconciliation merge.
+Its real-time-serving/MLflow exclusions remain in force. Next is the
+[bounded first mock and later fresh inference plan](transformer-research-disposition-20261008.md#next-medium-prs)
+under #24/#90/#91. No rerun, promotion or new access is authorized.

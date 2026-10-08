@@ -1,3 +1,28 @@
+## 2026-10-08 — Research continuation; settings acceptance complete
+
+The operator's current instruction records **continue_research** and continuation
+of the previously scoped backend/GUI first mock. Frozen training, confirmation,
+calibration, comparison and December evaluation are independently verified;
+no further GPU rerun is needed. [Disposition and numbered integration plan](../ml/transformer-research-disposition-20261008.md).
+[Bug #353](https://github.com/khab40/lob-arena/issues/353) reconciles tracking under
+[Story #24](https://github.com/khab40/lob-arena/issues/24) / Project #3.
+
+The retained 64-window CUDA reference also passes explicit offline derived
+calibration and exact decisions at all three frozen thresholds. Seven inert tests
+and independent review pass. This completes [#314's](https://github.com/khab40/lob-arena/issues/314)
+scoped settings/reference acceptance; closure follows reconciliation merge.
+It is not a fresh inference run or direct original-Job probability capture.
+Real-time serving and online MLflow are separate #24/#90/#91 gates.
+
+Next: [#90](https://github.com/khab40/lob-arena/issues/90)/[#91](https://github.com/khab40/lob-arena/issues/91)
+saved-score playback mock, then dedicated fresh inference and causal event integration.
+Scores retain frozen calibration, threshold and research provenance; unsupported
+detectors/sources remain unavailable. One date/three sessions and synthetic labels
+still limit the result. Costs stay unreconciled within held reservations; no new
+run/access/spend, production promotion or cascade is approved. G8/G9 remain closed.
+PR #346/#349/#350 are merged; main CI passed on afb6e76. Earlier entries below
+are dated historical snapshots, including superseded pending-decision wording.
+
 ## 2026-10-07 — Transformer holdout independently verified
 
 The completed frozen Job **aijob-e00gvk2fdn6cmjxvkg** is now independently verified
