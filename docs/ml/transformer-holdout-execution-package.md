@@ -18,6 +18,27 @@ Job submission, production promotion, online MLflow, merge and deletion.
 Verification: inert tests, static image inspection and retained metadata hashes;
 CUDA reference parity and final inference require a separately authorized Job.
 
+## Future readback packages — 8 October 2026
+
+Future Transformer holdout packages must explicitly select
+`RetainingReadbackStore` for independent collection and verification. This
+requirement applies to future packaging; the completed run's original frozen
+collector, approved request/image/source identities and evidence stay unchanged.
+It does not authorize another execution or any access or spend.
+
+Each authorized collection uses a new, nonexistent private destination whose
+parent already exists, under root `outputs/` or the approved external evidence
+store, outside disposable worktrees. The store retains validated publication
+bytes and original version/size/SHA-256 receipts and the exact request verifier
+inputs before returning them. Preserve pinned settings artifacts separately:
+`settings_reader` is not captured by this store. Keep retained payloads private.
+Readiness review must cover interrupted verification followed by
+`OfflineReadbackStore` recovery, with the original pinned request, SUCCESS
+receipt, approval hash, trusted public key, release and settings reader.
+See the [verification repair](transformer-holdout-verification-repair-20261007.md)
+and its existing inert retention regressions. Neither readback store can publish
+or claim an execution; offline replay cannot call the cloud.
+
 ## Delivered
 
 PR #321's consumer and measurement correction are merged. This chunk adds

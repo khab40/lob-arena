@@ -2,6 +2,20 @@
 
 # Operator execution preferences
 
+- For future Transformer holdout execution packages, explicitly select
+  `RetainingReadbackStore` for independent result collection and verification.
+  Retain verified publication bytes and their original version/size/SHA-256
+  receipts, plus the exact request verifier-input responses, before returning
+  them to the verifier. Use a new private directory per authorized collection
+  under root `outputs/` or the approved external evidence store, outside
+  disposable worktrees; keep retained payloads out of public publication.
+  Recovery uses `OfflineReadbackStore` with separately retained pinned settings.
+  Keep the original frozen collector, approved package identities/hashes and
+  historical evidence unchanged. This rule grants no additional access, run,
+  replacement or spend authorization. See
+  `docs/ml/transformer-holdout-execution-package.md`
+  (operator instruction, 2026-10-08).
+
 - For new public Job evidence, export a separate non-executable view with
   `scripts/public_job_evidence.py`; preserve the exact approved package and its
   hashes in the authorized evidence store. Keep repository-scoped Gitleaks and
