@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 import io
 
-import numpy as np
 import pyarrow.parquet as pq
 
 from app.market_data.projections import TabularProjectionManifest
@@ -10,6 +9,7 @@ from app.market_data.projections import TabularProjectionManifest
 from .holdout_baseline import pair_saved_predictions
 from .holdout_context import check_parity, verify_context
 from .holdout_metrics import fixed_comparison, paired_bootstrap
+from .holdout_probability import PROBABILITY_POLICY
 from .holdout_measurements import validate_measurements
 from .research_comparison_readback import arithmetic_matches
 from .settings_release import checked_read, json_record, load_release
@@ -91,13 +91,16 @@ def verify_result(store, success, release, *, approved_request_sha256, trusted_p
         if ({key: row[key] for key in expected} != expected or row["baseline_probability"] != p
                 or row["family"] != family or row["symbol"] != symbol):
             raise ValueError("published predictions differ from exact paired baseline")
-    comparison, probabilities = fixed_comparison(ledger, logits, baseline, families, symbols, release)
-    comparison["bootstrap"] = paired_bootstrap(ledger, logits, baseline, release)
-    if (not np.array_equal(probabilities, np.asarray([r["probability"] for r in predictions]))
-            or not arithmetic_matches(result["comparison"], comparison)):
+    published = [row["probability"] for row in predictions]
+    comparison, _ = fixed_comparison(ledger, logits, baseline, families, symbols, release,
+                                    published_probabilities=published)
+    comparison["bootstrap"] = paired_bootstrap(ledger, logits, baseline, release,
+                                               published_probabilities=published)
+    if not arithmetic_matches(result["comparison"], comparison):
         raise ValueError("saved holdout metrics differ from independent arithmetic")
     return {"status": "verified", "request_sha256": request.sha256(), "job_id": context["job_id"],
         "rows": len(ledger), "result_sha256": digest(files["result.json"]), "inventory": inventory,
         "model_execution": False, "baseline_rescored": False, "production_qualified": False,
         "measurements_verified": True,
+        "probability_policy": PROBABILITY_POLICY,
         "arithmetic_policy": "named_float64_reductions_max_8_ulp"}
