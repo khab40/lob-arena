@@ -1,6 +1,6 @@
 # Transformer research week: 4–10 October 2026
 
-Reconciled 6 October, Asia/Tbilisi, against verified grid/confirmation/comparison results and live
+Reconciled 8 October, Asia/Tbilisi, against verified grid/confirmation/comparison/holdout results and live
 GitHub tracking. [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
@@ -91,7 +91,7 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    seven retained artifact receipts. [Protocol](transformer-holdout-protocol-20261005.md)
    fixes prepared December C4 data, calibration and thresholds before access.
    PR #319 merged with green CI; seven retained artifacts reload identically.
-4. **5–7 October — consumer/image merged; admission preparation active.** PR #321,
+4. **5–7 October — consumer/image and admission preparation complete.** PR #321,
    #323 and review-policy #326 merged with green CI. The [sealed runtime and delivery](transformer-holdout-execution-package.md)
    preserve 13 numerical files and 48 dependencies; 403 inert regressions pass.
    P1 #325 now binds source identity to copied Git bytes and verifies 20 context files.
@@ -136,17 +136,27 @@ day or weaken checks to meet one. Keep related work in medium, reviewable PRs.
    95.35% versus LightGBM 74.48%, with zero Transformer false positives. The
    high-recall tradeoff and one-date/three-session limitations remain explicit.
    No GPU rerun is required.
-6. **7 October — verified report and research decision; demo, then MLflow.** Review the
-   [verified report and plots](transformer-holdout-report-20261007.md). Publish reviewed
+6. **7–8 October — verified report and bounded continuation recorded.** The
+   [verified report and plots](transformer-holdout-report-20261007.md) and
+   [operator disposition](transformer-research-disposition-20261008.md) complete the
+   current research decision. #314's scoped settings/reference acceptance is met;
+   closure follows reconciliation merge. Publish reviewed
    saved metrics and weak three-session uncertainty summaries; retain one Markdown
    report with plots, resources and limitations. December is a Transformer holdout,
    not a globally blind benchmark. No automatic retraining/reselection. Reconcile
    retained artifacts later under #19; platform #20/#21 follows research. #25 stays
    Todo until a separate justified cascade proposal. After Transformer research
-   verification and the operator decision, prepare #90/#91's first mock: saved
+   verification and the recorded operator continuation, prepare #90/#91's first mock: saved
    research-score playback, detector/source selection, pacing and exact alert/threshold
    identity. Verify backend/GUI flow;
    broader secure demo acceptance and full #24 closure remain separately assessed.
+
+Remaining 8–10 October working sequence: first a medium #90/#91 saved-score mock
+PR; then #24/#90 research adapter and causal feature/sequence integration PRs.
+Fresh scoring rehearsal requires reviewed exact packaging/dry-run and separate
+data/run/spend approval, so these dates are targets, not an execution commitment.
+Keep MLflow, cost reconciliation and broader demo acceptance visible after that
+sequence; do not claim completion merely from a working playback screen.
 
 ## Bounds and interpretation
 
