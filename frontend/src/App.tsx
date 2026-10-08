@@ -1,6 +1,6 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Navigate, NavLink, Route, Routes, useLocation, useMatch } from "react-router";
 import "./App.css";
 import { AboutPage } from "@/pages/AboutPage";
 import { getNebiusStatus } from "@/api/client";
@@ -8,6 +8,7 @@ import { ArenaPage } from "@/pages/ArenaPage";
 import { AttackScenarioGeneratorPage } from "@/pages/AttackScenarioGeneratorPage";
 import { DataIngestionPage } from "@/pages/DataIngestionPage";
 import { NebiusControlPanelPage } from "@/pages/NebiusControlPanelPage";
+import { SavedScoreResearchPage } from "@/pages/SavedScoreResearchPage";
 import {
   getStoredRuntimeMode,
   runtimeComponents,
@@ -154,6 +155,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/nebius" replace />} />
             <Route path="/arena" element={<ArenaPage />} />
+            <Route path="/research-predictions" element={<SavedScoreResearchPage />} />
             <Route path="/data-ingestion" element={<DataIngestionPage />} />
             <Route path="/attack-scenarios" element={<AttackScenarioGeneratorPage />} />
             <Route path="/nebius" element={<NebiusControlPanelPage />} />
@@ -282,6 +284,10 @@ const workspaceBanners: Record<string, { title: string; description: string }> =
     title: "Arena",
     description: "Generate synthetic market workloads, inspect order-book pressure, and review incident evidence in one live cockpit."
   },
+  "/research-predictions": {
+    title: "Saved Research Predictions",
+    description: "Inspect verified Transformer and LightGBM scores with frozen threshold alerts in local-only ordered playback."
+  },
   "/data-ingestion": {
     title: "Data Ingestion",
     description: "Validate and register local historical market datasets for replay in Arena."
@@ -294,6 +300,7 @@ const workspaceBanners: Record<string, { title: string; description: string }> =
 const sidebarItems: SidebarItem[] = [
   { icon: "database", label: "Data Ingestion", shortLabel: "DI", to: "/data-ingestion" },
   { icon: "arena", label: "Arena", shortLabel: "AR", to: "/arena" },
+  { icon: "arena", label: "Saved Research", shortLabel: "SR", to: "/research-predictions" },
   { icon: "cloud", label: "Control Panel", shortLabel: "CP", to: "/nebius" },
   { icon: "about", label: "About", shortLabel: "AB", to: "/about" }
 ];
@@ -393,20 +400,21 @@ function DrawerToggleIcon({ expanded }: { expanded: boolean }) {
 }
 
 function RuntimePanel() {
+  const researchPlayback = Boolean(useMatch("/research-predictions"));
   const [menuOpen, setMenuOpen] = useState(false);
   const panelRef = useRef<HTMLElement>(null);
   const [runtimeMode, setRuntimeMode] = useState<RuntimeMode>(() => getStoredRuntimeMode());
   const [cloudMessage, setCloudMessage] = useState("Checking live Nebius services...");
   const [runtimeOverrides, setRuntimeOverrides] = useState<Partial<Record<RuntimeMode, Partial<Record<RuntimeComponent, RuntimeStatus>>>>>({});
   const runtime = visibleRuntimeOptions.find((option) => option.value === runtimeMode) ?? visibleRuntimeOptions[0];
-  const runtimeMessage = runtimeMode === "local-demo"
+  const runtimeMessage = researchPlayback ? "Saved research playback is local only. Cloud status probes are paused." : runtimeMode === "local-demo"
     ? "Local Demo is ready. Mock AI fallback is active."
     : cloudMessage;
 
   useEffect(() => {
     storeRuntimeMode(runtimeMode);
-    void refreshNebiusRuntimeStatus();
-  }, [runtimeMode]);
+    if (!researchPlayback) void refreshNebiusRuntimeStatus();
+  }, [runtimeMode, researchPlayback]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -501,6 +509,7 @@ function RuntimePanel() {
   }
 
   async function testNebiusConnection() {
+    if (researchPlayback) return;
     if (runtimeMode === "local-demo") {
       setCloudMessage("Switch to Nebius Cloud to view the live probe result.");
       return;
@@ -571,7 +580,7 @@ function RuntimePanel() {
             >
               Nebius Cloud
             </button>
-            <button onClick={testNebiusConnection} type="button">Test</button>
+            <button disabled={researchPlayback} onClick={testNebiusConnection} type="button">Test</button>
           </div>
           <p className="runtime-fallback-note">{runtimeMessage}</p>
         </div>
