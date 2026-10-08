@@ -65,6 +65,16 @@ full declared-population verification followed by offline replay, changed versio
 bytes, probability boundaries and symlink paths. Reviews and corrections are
 retained in root `outputs/transformer-holdout-verifier-repair-20261007/`.
 
+Future execution packages must explicitly select `RetainingReadbackStore`;
+the completed run's original frozen collector remains unchanged. Use a fresh
+private destination per authorized collection outside disposable worktrees.
+The current package's three request verifier inputs and seven publication
+objects are retained with their exact identities; settings-release artifacts
+still require the separately supplied `settings_reader`. Recovery uses
+`OfflineReadbackStore`, with all pinned verification context retained separately.
+This is a future packaging requirement, not an automatic change to existing
+entrypoints or approval. See [execution-package guidance](transformer-holdout-execution-package.md#future-readback-packages--8-october-2026).
+
 Seven actual published outputs remain under root
 `outputs/transformer-holdout-first-run-recovery-20261007/collected/`.
 The original collector fetched three verifier inputs but kept their responses
