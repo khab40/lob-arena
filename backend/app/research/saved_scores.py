@@ -68,16 +68,21 @@ class SavedCampaign:
         return groups
 
     def catalog(self):
+        sessions = []
+        for session, rows in self.grouped().items():
+            families = sorted({row["family"] for _, row in rows})
+            sessions.append({"id": session, "rows": len(rows), "symbol": rows[0][1]["symbol"],
+                             "family": "mixed" if len(families) > 1 else families[0], "families": families})
         return {"kind": "saved_research_predictions", "campaign_id": CAMPAIGN_ID,
             "label_context": "synthetic_research_labels", "provenance": self.provenance,
             "limitations": ["One December date and three base sessions with synthetic research labels.",
+                "Control-negative labels are a research assumption; real market abuse was not adjudicated.",
                 "Saved predictions only; no fresh inference, order-book replay or production qualification.",
                 "Transformer: 60 features plus history; LightGBM: 31 features. Attention gains are not isolated.",
                 "MLflow reconciliation and complete event-to-alert measurements remain pending."],
             "detectors": [{"id": name, "threshold": value, "mode": "balanced"}
                           for name, value in THRESHOLDS.items()],
-            "sessions": [{"id": session, "rows": len(rows), "symbol": rows[0][1]["symbol"],
-                          "family": rows[0][1]["family"]} for session, rows in self.grouped().items()]}
+            "sessions": sessions}
 
     def page(self, session_id, detector, offset, limit):
         groups = self.grouped()

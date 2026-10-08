@@ -32,6 +32,18 @@ def test_both_detectors_preserve_targets_and_frozen_threshold_equality(tmp_path)
     assert first["provenance"] == baseline["provenance"] == catalog["provenance"]
 
 
+def test_control_and_attack_families_are_preserved_in_one_shard(tmp_path):
+    directory, pin = evidence(tmp_path, mutation=lambda ledger, predictions, result:
+                              predictions[1].update(family="spoofing_like_wall"))
+    campaign = load(directory, pin, tmp_path)
+    session = campaign.catalog()["sessions"][0]
+    assert session["family"] == "mixed"
+    assert session["families"] == ["control", "spoofing_like_wall"]
+    page = campaign.page(session["id"], "transformer", 0, 3)
+    assert [row["family"] for row in page["rows"]] == ["control", "spoofing_like_wall", "control"]
+    assert page["rows"][1]["alert"] is True
+
+
 @pytest.mark.parametrize("name", ["verification.json", "result.json", "predictions.json", "target-ledger.json",
                                  "receipts/predictions.json.json"])
 def test_corruption_or_missing_receipt_fails_closed(tmp_path, name):

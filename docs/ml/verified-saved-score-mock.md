@@ -24,6 +24,12 @@ Feature: Verified saved-score research playback
     Then playback continues in order without running a model
     And changing the selected session or detector resets playback to paused
 
+  Scenario: Inspect a mixed replay shard
+    Given an authenticated shard contains control and synthetic attack-window rows
+    When the reviewer plays its saved predictions
+    Then the catalog identifies its observed families
+    And each row preserves its original family and target order
+
   Scenario: Reject invalid custody
     Given retained bytes, receipts, row alignment or verification identity differ
     When saved predictions are requested
@@ -63,6 +69,8 @@ Open `http://127.0.0.1:5173/research-predictions`. Do not use a tunnel, shared p
 The reviewed verification SHA-256 is `329158009e8de6b73ff7571acd414cab5cbcfcc760edd8963d61884349a81869`; selected-settings SHA-256 is `2efbed46a82470d86107886041c5eab05265aa89c390f10bce557a9c838b05ab`. These pins come from maintained source, not self-declared local manifests or client input. The verified inventory binds every publication's original version, size and SHA-256, including its local receipt. The loader authenticates all required bytes before exposing any row, checks exact ledger pairing, unique targets and the ordered population digest, and never loads weights or final-input artifacts.
 
 `GET /api/research/saved-scores/campaigns` returns the single allowlisted campaign, opaque session IDs, both detector thresholds and provenance. `GET /api/research/saved-scores/campaigns/{campaign_id}/rows?session_id=…&detector=transformer&offset=0&limit=100` returns at most 100 rows. It preserves original per-shard order and timestamp ties; nanosecond timestamps are decimal strings to avoid browser precision loss. `source_ordinal` and `target_id` trace a row to the original paired file. Invalid evidence returns 503, disabled access 404, nonlocal/proxied access 403 and invalid page bounds 422. Successful responses use `Cache-Control: no-store`.
+
+Catalog `sessions` identifies replay shards, not independent base sessions. Each shard lists its observed `families`; control and attack-window rows can coexist, so its descriptor is `mixed` when needed ([Bug #361](https://github.com/khab40/lob-arena/issues/361)). Per-row families remain visible. The runtime guard uses the same case/trailing-slash route matching as the router ([Bug #360](https://github.com/khab40/lob-arena/issues/360)).
 
 Both detectors' scores come from the same authenticated paired prediction file. The checkpoint hash shown belongs to Transformer; the original frozen G8 LightGBM probabilities were independently paired by the historical verifier. No baseline rescoring occurs. Alert equality uses `probability >= threshold`: Transformer `0.996423148187864`, LightGBM `0.5769230769230769`. Only balanced mode is supported by this first mock.
 
