@@ -1,0 +1,109 @@
+{
+  "schema_version": "transformer_confirmation_failure_v1",
+  "date": "2026-10-04",
+  "timezone": "Asia/Tbilisi",
+  "ticket": "https://github.com/khab40/lob-arena/issues/306",
+  "parent_story": "https://github.com/khab40/lob-arena/issues/24",
+  "proposal_sha256": "8aa272fe9c16fc5cd50fa16e3b29ebc448f93ff1a7196b319a934dc8031a7871",
+  "operator_reply": "Approve the exact package and **$25 additional cap excluding VAT**",
+  "approved_incremental_cap_usd_ex_vat": 25,
+  "prior_grid_reservation_retained_usd": 50,
+  "job_id": "aijob-e00k6zkjr3hqc15dhb",
+  "run_id": "transformer-research-c4-20261003-r2-seed-7",
+  "request_sha256": "de263eb34c41b541836cce505f6f35ef56cdc02d24b14e66ebc554f5deb6e6bb",
+  "provider_state": "FAILED",
+  "provider_state_details": {
+    "code": "ContainerFailed",
+    "message": "Container exited with non-zero exit code."
+  },
+  "created_at": "2026-10-04T06:38:38.879610Z",
+  "started_at": "2026-10-04T06:42:23.326323980Z",
+  "finished_at": "2026-10-04T06:47:25.104263700Z",
+  "created_to_terminal_seconds": 526.224653,
+  "worker_failure": {
+    "status": "failed",
+    "stage": "context",
+    "error_type": "TimeoutError",
+    "cause_type": null
+  },
+  "attester_failure": {
+    "status": "failed",
+    "error_type": "AttributeError",
+    "exit_code": 1,
+    "stage": "not_retained",
+    "traceback": "not_retained"
+  },
+  "output_observation": {
+    "checked_at_utc": "2026-10-04T06:57:28.735933+00:00",
+    "keys": [
+      "FAILED",
+      "INTENT"
+    ],
+    "truncated": false,
+    "intent_matches_approved_request": true,
+    "context_read_error_code": "NoSuchKey"
+  },
+  "model_training_started": false,
+  "seed_2027_submitted": false,
+  "replacement_submitted": false,
+  "context_published": false,
+  "model_results_available": false,
+  "cost_disposition": {
+    "reservation_retained_usd": 12.5,
+    "actual_bill_reconciled": false,
+    "current_account_spend_known": false,
+    "quote_usd_per_hour_compute_and_disk": 1.5581222,
+    "created_to_terminal_estimate_usd": 0.227756,
+    "estimate_scope": "created-to-terminal compute/disk estimate only; not invoice or total charge",
+    "next_job_admission": "blocked_after_failure"
+  },
+  "root_cause_status": "attester AttributeError origin unknown; safe stage/frame diagnostics absent",
+  "ruled_out": [
+    "saved provider spec mismatch",
+    "missing INTENT after terminal failure",
+    "persistent malformed missing-key response in bounded diagnostic read"
+  ],
+  "local_receipts": {
+    "execution-authorization.json": {
+      "path": "outputs/transformer-confirmation-20261004/execution-authorization.json",
+      "sha256": "5263b5614839d3fd209fcd8f5b7832c8c826a6e14d8545e21818247e281ee4fd",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/execution-authorization.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "5263b5614839d3fd209fcd8f5b7832c8c826a6e14d8545e21818247e281ee4fd"
+    },
+    "seed-7-provider-failed.json": {
+      "path": "outputs/transformer-confirmation-20261004/seed-7-provider-failed.json",
+      "sha256": "146d917098c026289c847693541ea97c577b22352f4d4e246da7183e6f3c0849",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-provider-failed.json",
+      "tracked_copy_transform": "provider projection: environment_variables and injected_files omitted; complete original remains at root path",
+      "tracked_copy_sha256": "1982333a1e10333dfef41864d6be02de58b13c28b45ff05ef86343b18eb0158b"
+    },
+    "seed-7-attester-failure.json": {
+      "path": "outputs/transformer-confirmation-20261004/seed-7-attester-failure.json",
+      "sha256": "cb3b796cc361222cc4b5b4a2439de7d7ab5b717afbe5696eac3ecb4f96cf1d53",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-attester-failure.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "cb3b796cc361222cc4b5b4a2439de7d7ab5b717afbe5696eac3ecb4f96cf1d53"
+    },
+    "seed-7-terminal-logs.json": {
+      "path": "outputs/transformer-confirmation-20261004/seed-7-terminal-logs.json",
+      "sha256": "26adb2fa803d1e39b99191ba880245614de3c40605b5ba4b1624c3f557f61f92",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-terminal-logs.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "26adb2fa803d1e39b99191ba880245614de3c40605b5ba4b1624c3f557f61f92"
+    },
+    "seed-7-output-diagnosis.json": {
+      "path": "outputs/transformer-confirmation-20261004/seed-7-output-diagnosis.json",
+      "sha256": "74b989a6bf49fdc50de9ff5125fd7984716bee9a189c9417b5b8a19f2a8c523f",
+      "tracked_copy": "docs/evidence/transformer-confirmation-20261004/seed-7-output-diagnosis.json",
+      "tracked_copy_transform": "verbatim",
+      "tracked_copy_sha256": "74b989a6bf49fdc50de9ff5125fd7984716bee9a189c9417b5b8a19f2a8c523f"
+    }
+  },
+  "next_steps": [
+    "repair safe attester diagnostics and cover startup transitions with inert tests",
+    "review repair and CI before revised execution packaging",
+    "prepare unused replacement identity and seek exact run/spend authorization; do not restart consumed slot"
+  ],
+  "provider_runtime_seconds": 301.77794
+}

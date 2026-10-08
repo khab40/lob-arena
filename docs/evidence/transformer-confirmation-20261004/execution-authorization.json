@@ -1,0 +1,17 @@
+{
+  "recorded_at_utc": "2026-10-04T06:35:42.763296+00:00",
+  "operator_reply": "Approve the exact package and **$25 additional cap excluding VAT**",
+  "proposal_sha256": "8aa272fe9c16fc5cd50fa16e3b29ebc448f93ff1a7196b319a934dc8031a7871",
+  "pr": "https://github.com/khab40/lob-arena/pull/296",
+  "seeds_in_order": [
+    7,
+    2027
+  ],
+  "max_jobs": 2,
+  "max_concurrent_jobs": 1,
+  "timeout_seconds_per_job": 7200,
+  "approved_incremental_cap_usd_ex_vat": 25,
+  "per_job_reservation_usd": 12.5,
+  "replacement_jobs_authorized": 0,
+  "merge_or_deletion_authorized": false
+}

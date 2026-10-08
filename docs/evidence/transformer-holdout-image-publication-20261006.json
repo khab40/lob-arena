@@ -1,0 +1,10 @@
+{
+  "repository": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr",
+  "repository_length": 47,
+  "image_digest": "sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e",
+  "source_commit": "fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508",
+  "linux_amd64_manifest": "sha256:7300ac60e1e87ad37f1894bb5f782e3e830ff76caa5e639b0eb1dfe6e3e54f76",
+  "transport_tag": "holdout-fe5eaaa",
+  "digest_readback_verified": true,
+  "model_execution": false
+}

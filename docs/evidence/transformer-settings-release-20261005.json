@@ -1,0 +1,52 @@
+{
+  "schema_version": "transformer_settings_export_receipt_v1",
+  "date": "2026-10-05",
+  "story": "https://github.com/khab40/lob-arena/issues/314",
+  "dependency": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "release_id": "transformer-research-2efbed46a82470d86107886041c5eab05265aa89c390f10bce557a9c838b05ab",
+  "settings_path": "configs/releases/transformer/selected-settings-20261005.json",
+  "settings_sha256": "2efbed46a82470d86107886041c5eab05265aa89c390f10bce557a9c838b05ab",
+  "trusted_evidence_pins": {
+    "verification_sha256": "22f65037c0533cf10d8b4693033b3b80e388bf1e6743692d16140e863e14de98",
+    "selection_sha256": "e26e8212dd147f5feb28bf1093aa5e3bbbea530327f67a992e32626cba7ace33",
+    "decision_sha256": "88c750864434bea09fd0136a9779b2b8d136ad4c8e1a248fcda6f4cc3dd10823"
+  },
+  "implementation_plan_sha256": "33af32662e8c496f2ae6c66c8854d81401625caae155f37abbaa388b4bb6b08e",
+  "operator_implementation_reply": "start to work on this plan.",
+  "operator_research_decision": "continue_research",
+  "scope": "research_only",
+  "research_inference_gates_passed": true,
+  "serving_eligible": false,
+  "gpu_inference_parity": "pending_separately_authorized_job",
+  "checkpoint_sha256": "e2cc94d8e11ad3ad644e52d5283fd958c5458717efd7cfe02ccc30f8f82e6b2b",
+  "selected_epoch": 4,
+  "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+  "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+  "temperature": 0.9984971167248549,
+  "thresholds": {
+    "high_precision": 0.996423148187864,
+    "balanced": 0.996423148187864,
+    "high_recall": 0.996423148187864
+  },
+  "calibration_source": "hash-pinned independently verified comparison receipt; fitting_role=calibration",
+  "mlflow": "pending_reconciliation",
+  "local_artifacts_verified": 7,
+  "model_execution": false,
+  "cloud_gets": 0,
+  "new_jobs": 0,
+  "final_payload_access": false,
+  "retained_evidence_root": "outputs/transformer-settings-release-20261005/",
+  "base_commit": "4cd77d2be44ca60a86e9597807dcf176208b0485",
+  "validation": {
+    "protocol_candidate_binding_bug": "https://github.com/khab40/lob-arena/issues/320",
+    "candidate_drift_probes": "width, learning_rate, seed: previously accepted; now rejected",
+    "new_metadata_tests_passed": 93,
+    "regression_tests_passed": 229,
+    "regression_skipped": 0,
+    "ruff": "passed",
+    "markdown_links": "passed",
+    "gpu_parity": "pending"
+  },
+  "protocol_sha256": "9ca25496c6c1ca82f7bed064e291060b334ab510c0c7c4571230360ab3f2639e"
+}

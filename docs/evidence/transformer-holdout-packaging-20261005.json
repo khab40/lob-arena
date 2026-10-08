@@ -1,0 +1,90 @@
+{
+  "schema_version": "transformer_holdout_execution_packaging_v1",
+  "date": "2026-10-05",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "settings_story": "https://github.com/khab40/lob-arena/issues/314",
+  "base_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:56ccf4ee7c7bdc7c06f9971223a6158c1080095562e60ca128e0e683e1b6d460",
+  "image_source_commit": "fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508",
+  "local_image_id": "sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e",
+  "registry_published": false,
+  "installed_dependencies_verified": 48,
+  "numerical_files_verified": 13,
+  "portable_package_sha256": "612a904b055fb18da45f5b7fcbd7e7e4f5556e9f184b6368c381726c6d7dc9e2",
+  "portable_package_bytes": 134645,
+  "image_context_sha256": "c64aa20cadb405b46a47a097e76192b28226b652a3d4ddb8e02fc926c255e028",
+  "inert_regressions": {
+    "passed": 403,
+    "skipped": 0,
+    "new_cases": 60
+  },
+  "static_image_imports": {
+    "network": "none",
+    "read_only": true,
+    "entrypoint": true,
+    "provider_binding": true,
+    "delivery": true,
+    "worker": true,
+    "torch_imported": false
+  },
+  "retained_g8_receipt_sha256": "36b06bd0e07b18a536ee929d655fc36becb44ceff5ee202e00ca4d25943c8304",
+  "retained_g8_prediction_objects": [
+    {
+      "path": "artifacts/prediction/prediction-manifest.json",
+      "sha256": "7909c017ff2f0bbbbf5fbaf821b550047ccdefcbb9f0359f370818bbb5d3736d",
+      "size_bytes": 13416,
+      "version_id": "1",
+      "verified": true,
+      "uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/final/nasdaq-g8-replacement-r5-20260917/artifacts/prediction/prediction-manifest.json"
+    },
+    {
+      "path": "artifacts/prediction/predictions.parquet",
+      "sha256": "05298a29c1875a26b638bda26be43d6e79e0c978818779502ee964db1f5ead9f",
+      "size_bytes": 931523,
+      "version_id": "1",
+      "verified": true,
+      "uri": "s3://aimada-wave1-results-e00g6zvxpr00/campaigns/nasdaq-g6-development-20260907/final/nasdaq-g8-replacement-r5-20260917/artifacts/prediction/predictions.parquet"
+    }
+  ],
+  "fresh_payload_availability_verified": false,
+  "final_payload_reads": 0,
+  "cloud_object_gets": 0,
+  "model_execution": false,
+  "jobs_created": 0,
+  "dry_run_complete": false,
+  "execution_authorized": false,
+  "remaining": [
+    "Authenticate final sequence/tabular metadata and exact shard versions/hashes.",
+    "Seal deterministic saved development-reference logits and a versioned publication receipt.",
+    "Resolve exact approved final/development credential selectors and access/removal handoff.",
+    "Publish immutable image and complete request/provider dry-run with scoped cost estimate.",
+    "Obtain fresh exact final-access/run/spend approval before one inference-only Job."
+  ],
+  "ci_repair": {
+    "bug": "https://github.com/khab40/lob-arena/issues/324",
+    "initial_failed_run": "https://github.com/khab40/lob-arena/actions/runs/37327827650",
+    "cause": "test collection imported optional ML dependencies in base backend installation",
+    "base_packaging_tests": {
+      "passed": 21,
+      "module_skips": 2
+    },
+    "full_ml_packaging_tests": {
+      "passed": 48,
+      "skipped": 0
+    },
+    "sealed_image_changed": false
+  },
+  "last_updated_date": "2026-10-06",
+  "source_provenance_repair": {
+    "bug": "https://github.com/khab40/lob-arena/issues/325",
+    "clean_matching_git_head_required": true,
+    "copied_repository_bytes_checked_against_git_objects": true,
+    "free_form_source_build_argument": false,
+    "context_files_verified": 20,
+    "new_cases": 12,
+    "base_packaging_tests": {
+      "passed": 33,
+      "module_skips": 2
+    },
+    "supersedes_local_image_id": "sha256:59a3461381035686f975cddda162cb1130dbcdee13446a10cc74d49b7663d894"
+  }
+}

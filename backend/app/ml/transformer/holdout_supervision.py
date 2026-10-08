@@ -1,0 +1,83 @@
+"""Observe one approved identity, deliver context once and enforce its accounting bound."""
+from datetime import datetime
+import time
+
+from .holdout_delivery import context_for_job
+from .role_execution_context import LIVE_STATES
+
+TERMINAL = {"COMPLETED", "FAILED", "CANCELLED", "CANCELED"}
+
+
+def supervise(request, selectors, pins, *, read, deliver, cancel, emit,
+              now=time.time, pause=time.sleep, admit=None):
+    started, identity, delivered, cancel_started = now(), None, False, False
+    creation_requested = False
+    owned_live = False
+    cancel_at, stop_at = None, started + 120
+    try:
+        while True:
+            if cancel_at and now() >= cancel_at and owned_live and not cancel_started:
+                cancel_started = True
+                cancel(identity)
+            expires = stop_at if cancel_started else (cancel_at or stop_at)
+            remaining = expires - now()
+            if remaining <= 0:
+                raise TimeoutError("provider observation deadline exhausted")
+            job = read(remaining)
+            checked = now()
+            if job is None:
+                if identity or checked >= stop_at:
+                    raise TimeoutError("Job absent outside admission window")
+                absent = {"state": "absent", "observed_at": checked, "admission_ready": not creation_requested}
+                emit(absent)
+                if admit is not None and not creation_requested:
+                    remaining = stop_at - now()
+                    if remaining <= 30:
+                        raise TimeoutError("insufficient creation observation reserve")
+                    creation_requested = True  # An ambiguous mutation is never repeated.
+                    emit({**absent, "admission_ready": False, "creation_requested": True})
+                    admit(remaining)
+                    continue  # Observe immediately; no external tool/dispatch boundary.
+                pause(5)
+                continue
+            if admit is not None and not creation_requested:
+                raise ValueError("coordinated admission requires an absent Job")
+            state = job["status"]["state"]
+            if state not in LIVE_STATES | TERMINAL:
+                raise ValueError("unknown provider state")
+            # Terminal observations never create a signature. Validate the same
+            # ordinary spec through the existing live-state validator only.
+            ordinary = {**job, "status": {**job["status"], "state": "RUNNING"}}
+            context = context_for_job(ordinary, request, selectors, **pins)
+            if identity and identity != context["job_id"]:
+                raise ValueError("Job identity changed")
+            created = datetime.fromisoformat(job["metadata"]["created_at"].replace("Z", "+00:00")).timestamp()
+            if created > checked + 5:
+                raise ValueError("provider accounting observation outside bound")
+            identity = context["job_id"]
+            owned_live = state in LIVE_STATES
+            if checked - created > request.create_to_terminal_seconds:
+                raise ValueError("provider accounting observation outside bound")
+            stop_at = created + request.create_to_terminal_seconds
+            cancel_at = stop_at - 120  # Reserve cancellation/readback time.
+            emit({"state": state, "job_id": identity, "observed_at": checked,
+                  "admission_ready": False, "created_at": created, "context_delivered": delivered})
+            if state in TERMINAL:
+                return {"state": state, "job_id": identity, "context_delivered": delivered}
+            if checked >= cancel_at:
+                if not cancel_started:
+                    cancel_started = True  # Ambiguous cancellation is never retried.
+                    cancel(identity)
+                if now() >= stop_at:
+                    raise TimeoutError("operator must reconcile terminal state")
+            elif not delivered:
+                # Sign the actual live observation, not the terminal-validation copy.
+                deliver(context_for_job(job, request, selectors, **pins), min(120, cancel_at - now()))
+                delivered = True
+            next_action = stop_at if cancel_started else cancel_at
+            pause(min(10, max(0, next_action - now())))
+    except Exception:
+        if identity and owned_live and not cancel_started:
+            cancel_started = True
+            cancel(identity)
+        raise

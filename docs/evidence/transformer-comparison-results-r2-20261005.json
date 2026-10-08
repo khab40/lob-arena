@@ -1,0 +1,165 @@
+{
+  "schema_version": "transformer_comparison_results_v1",
+  "date": "2026-10-05",
+  "story": "https://github.com/khab40/lob-arena/issues/24",
+  "bug": "https://github.com/khab40/lob-arena/issues/317",
+  "project": "https://github.com/users/khab40/projects/3",
+  "executed_package_pr": "https://github.com/khab40/lob-arena/pull/315",
+  "proposal_sha256": "eaea75d9573d03d186cdc34d3663dd25f1fc6151dfd2d3f526043b9f2a46d0a6",
+  "approval_reply": "approve one one-hour L40S comparison Job, $6.25 additional cap excluding VAT",
+  "authorization_sha256": "2af16311ffc3634910f65bf43c713592c7324f1ce0c6641a1b8454a9be802e99",
+  "request_sha256": "e8f049ee86b32cfb1991b48e94508719e2b11e8b2a61e8d7763fbf69bedad68d",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:56ccf4ee7c7bdc7c06f9971223a6158c1080095562e60ca128e0e683e1b6d460",
+  "assembly_source_commit": "73984fc53f640bc89e39a883165ef4c81be414b5",
+  "numerical_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "job_id": "aijob-e00acpmmjmp4rfnrf3",
+  "provider_state": "COMPLETED",
+  "created_at": "2026-10-04T16:16:41.114138Z",
+  "started_at": "2026-10-04T16:20:34.739804621Z",
+  "finished_at": "2026-10-04T16:25:59.329631951Z",
+  "provider_runtime_seconds": 324.589827,
+  "create_to_terminal_seconds": 558.215493,
+  "provider_terminal_sha256": "09e6acf2a718b3d8b260c6951ff866f511ecca71c4f5bfc523acbfd8a185653d",
+  "monitoring": {
+    "started_before_create": true,
+    "observations": 56,
+    "max_saved_gap_seconds": 10.855747938156128,
+    "continuous_to_terminal": true,
+    "context_delivered": true
+  },
+  "candidate": {
+    "width": 128,
+    "learning_rate": 0.0003,
+    "seed": 42,
+    "epoch": 4,
+    "checkpoint": {"epoch": 4, "name": "epoch-04.pt", "object_name": "search-128-0003-epoch-04.pt", "sha256": "e2cc94d8e11ad3ad644e52d5283fd958c5458717efd7cfe02ccc30f8f82e6b2b", "size_bytes": 5033993, "version_id": "1"},
+    "reselected": false
+  },
+  "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+  "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+  "contract_sha256": "c28cacdf981c6c4ec7fb32f93a6349aec386ca883f9282cda6bbc588e1ae1c73",
+  "normalization_sha256": "339e4a2b5738d4219a0fe64768e7d5babb86934cd61f2224c76c6a1b295433bc",
+  "ordered_targets_sha256": {
+    "calibration": "576b86e9a3dfc4ee68a741c56fc66832ded71c833cd74649798ebf59749ad777",
+    "operating_point": "3e56bbf57d4ca5c8b3c49dee298f6e7ceaaeabf9f6a1a42f181808b691f43961",
+    "selection": "b0a606caea2e39e33cd98a611a72043b99c080f4002239f5ab46d9a0be6fb566",
+    "train": "0df7723f4609826df918590d1f2ec17b0bbe869a013fc250a66bf8296cad5dad"
+  },
+  "calibration": {
+    "boundary_hit": false,
+    "converged": true,
+    "evaluations": 39,
+    "fitting_role": "calibration",
+    "objective_log_loss": 0.010256093004567545,
+    "solver": "golden_section_v1",
+    "temperature": 0.9984971167248549,
+    "tolerance": 1e-06
+  },
+  "support": {
+    "calibration": {"rows": 5490, "positives": 45, "negatives": 5445},
+    "operating_point": {"rows": 2470, "positives": 45, "negatives": 2425}
+  },
+  "operating_point_metrics": {
+    "raw_transformer": {"log_loss": 0.0005067766777381927, "pr_auc_average_precision": 1.0, "precision": 1.0, "recall": 1.0, "f1": 1.0, "brier_score": 1.0010936706318633e-05, "expected_calibration_error": 0.0005013308123785178, "true_positive": 45, "false_positive": 0, "false_negative": 0},
+    "calibrated_transformer": {"log_loss": 0.0005018953910326448, "pr_auc_average_precision": 1.0, "precision": 1.0, "recall": 1.0, "f1": 1.0, "brier_score": 9.951289401736455e-06, "expected_calibration_error": 0.0004964827258141226, "true_positive": 45, "false_positive": 0, "false_negative": 0},
+    "frozen_lightgbm": {"log_loss": 0.04687997510416801, "pr_auc_average_precision": 0.4361517679301588, "precision": 0.4342105263157895, "recall": 0.7333333333333333, "f1": 0.5454545454545454, "brier_score": 0.013062486969679715, "expected_calibration_error": 0.008160510855603568, "true_positive": 33, "false_positive": 43, "false_negative": 12}
+  },
+  "deltas": {
+    "delta_log_loss": -0.046378079713135366,
+    "delta_average_precision": 0.5638482320698412
+  },
+  "stability": {
+    "candidate_seed": 42,
+    "passed": true,
+    "selection_f1_at_half_range": 0.0,
+    "selection_log_loss_range": 0.002395075568322679
+  },
+  "freeze_blocked": false,
+  "worker_decision": "operator_review_required",
+  "recommendation": "continue_research",
+  "operator_decision": "pending",
+  "candidate_frozen_or_promoted": false,
+  "inference": {
+    "batch_size": 64,
+    "elapsed_seconds": 0.09436568999996098,
+    "includes_host_to_device": true,
+    "lightgbm_latency": "not_measured_saved_predictions_reused",
+    "rows": 2470
+  },
+  "measurements": {
+    "cost": "unknown_operator_managed",
+    "cpu_seconds": 324.05820765299995,
+    "elapsed_seconds": 322.56268351100005,
+    "peak_rss_kib": 2675216,
+    "transfer": {"get_attempts": 185, "response_bytes": 30034660}
+  },
+  "publication": {
+    "success": {"sha256": "f060d7db3833a9089370893bb19c323d3686d9ac79e333a9236aab1c7d50c20b", "size_bytes": 221, "version_id": "1"},
+    "checksums": {"sha256": "ae0cbd78acd432ca478909a4c9134513d122b8dd06d0de9ae9284d4132072074", "size_bytes": 2055, "version_id": "1"},
+    "inventory": {
+      "baseline-calibration.json": {"sha256": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30", "size_bytes": 3329, "version_id": "1"},
+      "baseline-predictions.parquet": {"sha256": "828e261801aa36ab55c02fbe199bbd00ce44b8cef64dd0e0a183d0f6e0913f76", "size_bytes": 618114, "version_id": "1"},
+      "baseline-verification.json": {"sha256": "95172c94a21c56dfac3b4ac6925420b653de76da545c7ece0db0e8ab20483b64", "size_bytes": 5760, "version_id": "1"},
+      "calibration-predictions.json": {"sha256": "2574717d5b6a030d0fbba24e90041281beaf3a3567b9b6fecf887e557b73b697", "size_bytes": 646938, "version_id": "1"},
+      "configuration.json": {"sha256": "e8f049ee86b32cfb1991b48e94508719e2b11e8b2a61e8d7763fbf69bedad68d", "size_bytes": 3841, "version_id": "1"},
+      "event-0000.json": {"sha256": "38000711d765c404a4ec4dff048b51989892d4d78d54befbdba26d51bcae673f", "size_bytes": 242, "version_id": "1"},
+      "event-0001.json": {"sha256": "f831af73f1ee0e13fa91937cf127af23019fe39c727374927d2192cb50892467", "size_bytes": 2171, "version_id": "1"},
+      "event-0002.json": {"sha256": "552b76b5f6a4c56cd20bca3616b57aaf3a8d0bd1ca25497a9bbc2b89d716b452", "size_bytes": 294, "version_id": "1"},
+      "execution-context.json": {"sha256": "d3116fd1f35aefd143d66fb240e14582885019b7bf06131a881bd6e0fb1fedf4", "size_bytes": 648, "version_id": "1"},
+      "input-contract.json": {"sha256": "c28cacdf981c6c4ec7fb32f93a6349aec386ca883f9282cda6bbc588e1ae1c73", "size_bytes": 44243, "version_id": "1"},
+      "normalization.json": {"sha256": "339e4a2b5738d4219a0fe64768e7d5babb86934cd61f2224c76c6a1b295433bc", "size_bytes": 2834, "version_id": "1"},
+      "operating_point-predictions.json": {"sha256": "53488bc3716e009ecd43a7b8d9ec9835e9953f8d1d6075a537ab5cb90e982915", "size_bytes": 291016, "version_id": "1"},
+      "result.json": {"sha256": "4931e3a4181f98a33350f9b6e87de217b0493b9313ab70af64627b58e5d4277f", "size_bytes": 24106, "version_id": "1"},
+      "role-audit.json": {"sha256": "5a87e2228b3e2c535b3a2664eab2fdc5972aad5e6fafbc0f52b72699c63c6a5c", "size_bytes": 6998, "version_id": "1"},
+      "target-ledger.jsonl": {"sha256": "ee9e1c986b4103a819b3c8b4bfee6493f351b17837ef670aefba7970cd85daf7", "size_bytes": 1305978, "version_id": "1"}
+    },
+    "new_artifact_count": 15,
+    "new_artifact_bytes": 2956512,
+    "prior_publications": 7,
+    "prior_artifacts": 229,
+    "all_artifacts": 244,
+    "all_artifact_bytes": 285567717
+  },
+  "verification": {
+    "status": "verified",
+    "receipt_sha256": "22f65037c0533cf10d8b4693033b3b80e388bf1e6743692d16140e863e14de98",
+    "method": "local_reconciliation_of_version_pinned_S3_collection",
+    "verifier_source_commit": "5d2a5d2db0c4bc58edd42cfff2180837469ff441",
+    "verifier_sha256": "140d7358f084886178690f2452734263462d0e262f76ac8b1c4f3d39150f1159",
+    "arithmetic_policy": "named_float64_reductions_max_8_ulp",
+    "original_strict_readback_passed": false,
+    "original_failure_preserved": true,
+    "original_failure_sha256": "11b14accbd176b774c04e005fa376f7df1250c4a81c6c68d78db8088d846e2cf",
+    "differing_fields": 1,
+    "max_absolute_difference": 1.0842021724855044e-19,
+    "additional_metadata_gets": 2,
+    "additional_metadata_bytes": 2276,
+    "local_model_execution": false,
+    "calibration_refit": false,
+    "all_prerequisites_reverified": true
+  },
+  "report_manifest_sha256": "556a854e8f8628caca7f32a35f8362b361cc9799085205d5d0d656c9a1b9384d",
+  "cost": {
+    "cap_usd_excluding_vat": 6.25,
+    "reservation_held": 6.25,
+    "prior_comparison_hold": 6.25,
+    "confirmation_hold": 25,
+    "grid_hold": 50,
+    "historical_operator_baseline": 300,
+    "planning_envelope": 387.5,
+    "compute_disk_time_estimate_usd": 0.24160220889645684,
+    "estimate_excludes": ["storage", "requests", "egress", "VAT"],
+    "actual_bill_reconciled": false,
+    "estimated_savings_released": false
+  },
+  "scope": {
+    "jobs_created": 1,
+    "training": false,
+    "final_access": false,
+    "mlflow_online": "pending_retained_artifacts",
+    "g8_g9_reopened": false
+  },
+  "limitations": ["Development exposure and one date/instrument per role.", "O is used both for operating-point selection and reported quality.", "Scenario positives and research controls are not adjudicated real-world abuse.", "Frozen LightGBM calibration previously used the whole validation fold.", "Metadata source separation does not prove statistical independence.", "45 positives and perfect O scores require an unseen protocol and leakage/robustness review.", "Batch throughput does not establish real-time latency; LightGBM latency was not measured."],
+  "evidence_root": "outputs/transformer-comparison-replacement-r2-20261004/",
+  "next": "Human report/PR review and research decision; settings #314 and MLflow follow that decision."
+}

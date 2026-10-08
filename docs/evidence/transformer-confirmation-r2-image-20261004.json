@@ -1,0 +1,44 @@
+{
+  "schema_version": "transformer_confirmation_image_equivalence_v1",
+  "base_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+  "assembly_source_commit": "7b88ea213b0e38b8e453e40943dd8403ded79fb4",
+  "local_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr:confirm-7b88ea2",
+  "local_image_id": "sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952",
+  "architecture": "amd64",
+  "repository_characters": 47,
+  "base_layers_preserved": 14,
+  "config_env_entrypoint_command_preserved": true,
+  "unchanged_opt_research_files": 269,
+  "changed_files": [
+    "backend/app/ml/transformer/research_confirmation_contract.py",
+    "backend/app/ml/transformer/research_execution_spec.py",
+    "backend/app/ml/transformer/research_readback.py",
+    "backend/app/ml/transformer/research_storage.py",
+    "source-commit"
+  ],
+  "overlay_hashes": {
+    "backend/app/ml/transformer/research_confirmation_contract.py": "7bbbffdb4d100146303148a582a920a7cc6a70c9ce3a4326f4782c23b7a2b5b5",
+    "backend/app/ml/transformer/research_execution_spec.py": "7722e02eadfb41818f9bbfa0c57bb5464f4d440156b4ee14584c3954cef0babe",
+    "backend/app/ml/transformer/research_storage.py": "7a1a716b46fc604c0994c2052a74705433d1b3332c1abeebe1a6d7d28df666e7",
+    "backend/app/ml/transformer/research_readback.py": "30543ac349e684170798e3ce0090fa2ca259845e331f2c7fcd0310bc8b88c8be"
+  },
+  "protected_artifacts": {
+    "bundle.json": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+    "source-separation.json": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+    "inventory.jsonl": "d99876f0119c0a86e2395a7c61f4919b09506557f21b18dd8ef8e32b84dd0e23",
+    "baseline.parquet": "828e261801aa36ab55c02fbe199bbd00ce44b8cef64dd0e0a183d0f6e0913f76",
+    "baseline-calibration.json": "a27d88091988dc6e504e3e84d57c985f774f5865ea534882ba7fe87c6ea49e30",
+    "requirements.txt": "3bacccb8f71aed3ba520b692614ce52336e2a1c35875e6a4fb0690f51a9f72be"
+  },
+  "base_files_sha256": "51332e2999dd1c0f50c689b8406c765aa237fcda8ebe9783528871e959e27307",
+  "image_files_sha256": "630a38188cba4ee2716a01d28c3186fcc18883eabf039406eda45c6ff3cafc0b",
+  "model_execution": false,
+  "network_enabled": false,
+  "published_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:436def17c45688e764d1cf1b84100ef66f40acfe37bb42cd12ec5c63154c0952",
+  "registry_digest_independently_read": true,
+  "platform_manifest": "sha256:455c5413242d71948ac47089472ad497c312efdb8eedc184613beead0f8db7a5",
+  "registry_readback_file": {
+    "path": "docs/evidence/transformer-confirmation-r2-registry-20261004.txt",
+    "sha256": "57b83ccacbbbe012bc6872efdad24d6ee19c786d57450b1407ad184d513de04d"
+  }
+}
