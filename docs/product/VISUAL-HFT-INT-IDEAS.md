@@ -180,3 +180,185 @@ This can become a named LOB Arena capability:
 
 Useful VisualHFT-style studies include:
 
+- LOB imbalance;
+- VPIN;
+- order-to-trade ratio;
+- trade-to-order ratio;
+- market resilience;
+- resilience bias;
+- liquidity gaps;
+- spread and depth;
+- cancellation/update statistics;
+- multi-venue price and liquidity comparisons.
+
+These should be treated as **features**, not standalone proof of manipulation.
+
+Bad:
+
+```text
+VPIN > threshold => manipulation
+```
+
+Better:
+
+```text
+raw LOB sequence
+      │
+      ├── LOB imbalance
+      ├── OTR
+      ├── TTO
+      ├── VPIN
+      ├── resilience
+      ├── spread
+      ├── depth slope
+      ├── cancellations
+      ├── replenishment
+      └── cross-venue divergence
+             │
+             ▼
+     LightGBM + Transformer
+             │
+             ▼
+        ensemble score
+```
+
+### Research questions
+
+LOB Arena can test:
+
+- whether VPIN improves spoofing/layering detection;
+- whether OTR reduces or increases false positives;
+- whether resilience adds useful post-event context;
+- whether cross-venue residuals improve precision;
+- which engineered features improve a separately trained development candidate
+  compared against the unchanged frozen LightGBM baseline;
+- which features become redundant when the Transformer sees raw sequence data;
+- whether cross-venue context reduces false alerts during market-wide volatility.
+
+This turns common microstructure indicators into measurable surveillance research.
+
+---
+
+## 5. Event Capture: Convert Alerts into Cases
+
+LOB Arena should maintain a rolling market-data buffer and persist a bounded before/after window whenever a detector fires.
+
+```text
+                        live feeds
+                            │
+                    rolling 60s buffer
+                            │
+                            ▼
+                     LOB Arena model
+                            │
+                   P(spoofing)=0.94
+                            │
+                            ▼
+                         TRIGGER
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+           -30 sec                     +30 sec
+              │                           │
+              └─────────────┬─────────────┘
+                            ▼
+                    SURVEILLANCE CASE
+```
+
+A case could contain:
+
+```yaml
+case_id:
+venue:
+symbol:
+event_timestamp:
+
+suspected_pattern:
+lightgbm_score:
+transformer_score:
+ensemble_score:
+detector_votes:
+
+pre_event_window:
+post_event_window:
+
+lob_sequence:
+trades:
+cancellation_metrics:
+lob_imbalance:
+otr:
+tto:
+vpin:
+resilience:
+
+cross_venue_context:
+data_quality:
+
+model_explanation:
+evidence_artifacts:
+replay_id:
+```
+
+This moves LOB Arena from only a detector benchmark toward a **surveillance evaluation + investigation evidence platform**.
+
+---
+
+## 6. Real-Market Replay + Synthetic Manipulation Injection
+
+This should be a major LOB Arena direction.
+
+Synthetic simulation provides controlled labels.  
+Real feeds provide realistic noise.
+
+Combine them:
+
+```text
+REAL RECORDED MARKET
+BTC/USD, Binance
+09:30:00 → 09:45:00
+
+        +
+
+SYNTHETIC ATTACK INJECTION
+spoofing / layering / etc.
+
+        ↓
+
+HYBRID REPLAY
+
+        ↓
+
+LightGBM
+Transformer
+Ensemble
+baseline detectors
+
+        ↓
+
+Precision / Recall
+Detection delay
+False positives
+Robustness
+```
+
+Possible names:
+
+- Real-Market Adversarial Replay
+- Surveillance Red-Team Replay
+- Hybrid Historical + Synthetic Replay
+- Counterfactual Market Abuse Replay
+
+This directly strengthens the LOB Arena thesis:
+
+- pure synthetic data can be unrealistic;
+- pure historical data lacks reliable labels;
+- hybrid replay gives realistic background conditions plus known attack ground truth.
+
+---
+
+## 7. Feed Quality Must Be First-Class
+
+Real-time surveillance can confuse data failures with market anomalies.
+
+Example:
+
