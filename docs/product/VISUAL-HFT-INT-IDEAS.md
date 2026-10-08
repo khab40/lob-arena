@@ -705,3 +705,193 @@ Alexey
 
 ## 17. Target Architecture
 
+```text
+                 7 LIVE CRYPTO VENUES
+                          │
+                          ▼
+                NORMALIZED EVENT BUS
+                          │
+       ┌──────────────────┼──────────────────┐
+       ▼                  ▼                  ▼
+   LOB state       microstructure       feed quality
+                  feature engine         monitoring
+       │                  │                  │
+       └──────────────────┼──────────────────┘
+                          ▼
+                CROSS-VENUE CONTEXT
+                          │
+                          ▼
+              LOB ARENA DETECTOR STACK
+                          │
+               ┌──────────┴──────────┐
+               ▼                     ▼
+            LightGBM             Transformer
+               └──────────┬──────────┘
+                          ▼
+                       ENSEMBLE
+                          │
+                    anomaly score
+                          │
+              ┌───────────┴────────────┐
+              ▼                        ▼
+        event capture             live alert
+       pre/post window                 │
+              │                        │
+              └───────────┬────────────┘
+                          ▼
+                   FORENSIC CASE
+                          │
+            ┌─────────────┴─────────────┐
+            ▼                           ▼
+     VisualHFT plugin             LOB Arena UI
+```
+
+Replay path:
+
+```text
+Real recorded market
+        +
+Synthetic attack injection
+        ↓
+deterministic replay
+        ↓
+detector benchmark
+```
+
+---
+
+## 18. Recommended Priority
+
+### P0 — architecture / validation
+
+1. Define the canonical normalized event schema.
+2. Preserve:
+   - `exchange_timestamp`
+   - `receive_timestamp`
+   - `normalized_timestamp`
+   - `sequence_number`
+   - venue
+   - symbol
+   - data-quality metadata.
+3. Review VisualHFT connector implementations and license boundaries.
+4. Decide whether to port logic or build independent adapters.
+
+### P1 — live feeds
+
+5. Implement 2 venues first, preferably Binance + Coinbase/Kraken.
+6. Validate:
+   - snapshots;
+   - deltas;
+   - reconnects;
+   - gap handling;
+   - book reconstruction;
+   - timestamp semantics.
+7. Add the remaining venues only after the normalized contract is stable.
+
+### P2 — cross-venue features
+
+8. Build venue-consensus metrics.
+9. Add divergence features.
+10. Train a separate development candidate with cross-venue context and compare it
+    against the unchanged frozen LightGBM baseline.
+11. Repeat for Transformer.
+12. Measure false-positive changes, not just overall accuracy.
+
+### P3 — capture and replay
+
+13. Add rolling event capture.
+14. Persist detector-triggered before/after windows.
+15. Add deterministic replay.
+16. Introduce real-market + synthetic-attack replay.
+
+### P4 — collaboration
+
+17. Contact VisualHFT with a concrete experiment rather than a generic partnership request.
+18. Offer one small proof of concept:
+    - Binance + Coinbase;
+    - one symbol;
+    - one detector;
+    - one VisualHFT-facing score tile or report.
+19. If useful, evolve into a plugin/study.
+
+---
+
+## 19. Recommended First Proof of Concept
+
+Keep the first integration intentionally small.
+
+### Scope
+
+- instrument: `BTC/USD`;
+- venues: Binance + Coinbase;
+- data: L2;
+- window: live capture + deterministic replay;
+- detectors:
+  - frozen LightGBM baseline;
+  - current Transformer;
+- features:
+  - local LOB imbalance;
+  - cancellation/update rates;
+  - spread/depth;
+  - cross-venue imbalance residual;
+  - price residual;
+  - feed-quality state.
+
+### Output
+
+For every alert:
+
+```yaml
+alert_id:
+venue:
+symbol:
+timestamp:
+
+suspected_pattern:
+lightgbm_score:
+transformer_score:
+ensemble_score:
+
+cross_venue_anomaly_score:
+data_quality_score:
+
+evidence_window:
+replay_id:
+```
+
+### Success criteria
+
+The PoC is valuable if it demonstrates at least one of:
+
+- cross-venue context reduces false positives;
+- real-market replay exposes detector weaknesses not visible in synthetic data;
+- feed-quality state prevents spurious alerts;
+- Transformer and LightGBM respond differently to venue-local vs market-wide events;
+- the resulting evidence is useful enough to display in VisualHFT.
+
+---
+
+## 20. Core Strategic Principle
+
+The desirable product boundary is:
+
+> **VisualHFT = observe and investigate the market.**  
+> **LOB Arena = challenge, detect, evaluate, and explain surveillance behavior.**
+
+The three highest-priority ideas are therefore:
+
+1. **live normalized multi-venue feeds;**
+2. **cross-venue surveillance features;**
+3. **event capture + real-market adversarial replay.**
+
+Build those before investing heavily in additional UI or LLM-agent layers.
+
+LLMs are likely more valuable later for:
+
+- alert summarization;
+- investigation narratives;
+- evidence assembly;
+- case triage;
+- analyst assistance;
+
+than for deciding directly from raw high-frequency LOB events whether market manipulation occurred.
