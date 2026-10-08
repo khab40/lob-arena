@@ -1,0 +1,195 @@
+{
+  "schema_version": "transformer_comparison_proposal_v1",
+  "date": "2026-10-04",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "authorization": {
+    "status": "awaiting_exact_run_and_additional_spend_approval",
+    "jobs_authorized": 0,
+    "binding": "SHA-256 of this exact JSON and all referenced file hashes",
+    "scope_if_approved": "one listed Job, one attempt, supervised context, independent verification/reporting; cancel only this created Job to enforce bounds"
+  },
+  "assembly_source_commit": "b275e147257b605c8c528e7e61294a114cab7962",
+  "numerical_source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34",
+  "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:5ab068aae50ef1e8dc2ff89315f5cf5cda01b20b937b48caed8194f08880d713",
+  "repository_characters": 47,
+  "request_sha256": "d5b28eb967d59700182d8003e6b08e73264a2ed06ba0e3c6cb4b94160a9b4deb",
+  "request_file": {
+    "path": "docs/evidence/transformer-comparison-request-20261004.json",
+    "sha256": "f4ed069c2e3d2fb6bd2e5e5fa94ccd2bdfff70feccc2a41d120bda147cc52d40"
+  },
+  "image_file": {
+    "path": "docs/evidence/transformer-comparison-image-20261004.json",
+    "sha256": "6625680f7aa429cf17b3bf9dd2a1325fb1257fd3bd14ff33425cc2e27041e972"
+  },
+  "readiness_file": {
+    "path": "docs/evidence/transformer-comparison-readiness-20261004.json",
+    "sha256": "a7af5651d4e004f71f9c374fa2efa9544e6201cfa1286749397f3c0ca3ace55f"
+  },
+  "runbook_file": {
+    "path": "docs/ml/transformer-comparison-20261004.md",
+    "sha256": "6bc8a52120305a1ec094cc6ec8b584df812994a7caa96d528e74248913d7789d"
+  },
+  "operator_files": [
+    {
+      "path": "scripts/transformer_comparison_prepare.py",
+      "sha256": "7801846540078509623b5286f7fd13afe5190b785a51f892b737d80531b1345e"
+    },
+    {
+      "path": "scripts/transformer_comparison_observer.py",
+      "sha256": "2a79604a2d943cd4b09b73c7c35db689b70fe97368fe65e38f970a22559eea31"
+    },
+    {
+      "path": "scripts/transformer_comparison_image.py",
+      "sha256": "377696715622b9bb4a8efc9a2a73004d965d798d47d27243fd48f5fdcc0c57fc"
+    },
+    {
+      "path": "scripts/transformer_confirmation_prepare.py",
+      "sha256": "04024eba2e60fb6c8712728f7ec0ca4d90ec5d8be6a1b94cefd1f914b16e003f"
+    },
+    {
+      "path": "scripts/transformer_confirmation_supervisor.py",
+      "sha256": "c3403dcb2c01b4ea09825db5c221ec71f01a44700b1b572ec679aff453f52b6f"
+    },
+    {
+      "path": "scripts/transformer_research_operator.py",
+      "sha256": "15f15285331a6fec3bc148616e0ad680bd3d48ff6f43f8be601c35c561600230"
+    },
+    {
+      "path": "serverless/transformer_inputs/requirements.txt",
+      "sha256": "2bdb4d066cb34b8b0a1335be24f4bb5cd0950e7af52608fd36690344538c505c"
+    }
+  ],
+  "operator_python": "outputs/transformer-comparison-20261004/operator-venv/bin/python",
+  "custody_path": "outputs/transformer-startup-repair-20261003/p2/execution/context-private.key",
+  "execution_path": "outputs/transformer-comparison-20261004/execution",
+  "selected_checkpoint": {
+    "slot": "search-128-0003",
+    "request_sha256": "cea6563f836b2fa44ee70d3af7659613e95c31f81ca952033c22f52d9ae4ea99",
+    "bindings": {
+      "contract_sha256": "c28cacdf981c6c4ec7fb32f93a6349aec386ca883f9282cda6bbc588e1ae1c73",
+      "image_digest": "sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+      "normalization_sha256": "339e4a2b5738d4219a0fe64768e7d5babb86934cd61f2224c76c6a1b295433bc",
+      "ordered_targets_sha256": {
+        "calibration": "576b86e9a3dfc4ee68a741c56fc66832ded71c833cd74649798ebf59749ad777",
+        "operating_point": "3e56bbf57d4ca5c8b3c49dee298f6e7ceaaeabf9f6a1a42f181808b691f43961",
+        "selection": "b0a606caea2e39e33cd98a611a72043b99c080f4002239f5ab46d9a0be6fb566",
+        "train": "0df7723f4609826df918590d1f2ec17b0bbe869a013fc250a66bf8296cad5dad"
+      },
+      "role_manifest_sha256": "0e1bc71a8442bd20df510a3be2b6576e9eb7bff391b38228c66c8422159c62be",
+      "source_binding": {
+        "anchor_sha256": "697f29587002e8cb46f30c8942ebd1a3ac0e78701ed51e69f8aeb330431e83f3",
+        "feature_release_id": "nasdaq-public-sample-v1-c4-5c85182-20260905-features",
+        "feature_release_sha256": "956e5d0e600e831d662733b773f77790a649e7da6709ab88ed2294f4112a2198",
+        "lineage_receipt_sha256": "777dc99fc3bdb2d5a25b88508bde6034aefab972d7790be9323d833af8c0c3ba",
+        "payload_observation_ids_reenumerated": false,
+        "phase_one_receipts_sha256": "c5b5283ed5f289b40fe887c94de8da09a5a72c808ec9654718855bfc0156bdd0",
+        "phase_two_receipts_sha256": "34d70a24112955d4c4893e0f79fabc4693489570e9efd44b826f9d2a84d60d01",
+        "producer_commit": "cf426c0db0940a985133fc7c8482623186acd5a4",
+        "producer_image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/mdp@sha256:8ba71e9ed8ef90b10efe7abd3b2d8d8e0089990281a12c0c903ab8f7508e7195",
+        "proof_method": "authenticated_metadata_and_pinned_producer_contract",
+        "role_metadata_sha256": "0e1bc71a8442bd20df510a3be2b6576e9eb7bff391b38228c66c8422159c62be",
+        "source_receipt_sha256": "9ed4852ae01c952d76f59054e3db8ad1a8dce00b4ec7a543ce5a48641d7d07ae",
+        "source_separation_verified": true,
+        "statistical_independence_claimed": false
+      },
+      "source_commit": "87ce8a933c40fe825569e3de6a8699b519808c34"
+    },
+    "trial_sha256": "cd7c973e11dc6706490f0aa412f774e1642ffd11b6111af5ecb3c10ddf01e7db",
+    "checkpoint": {
+      "epoch": 4,
+      "name": "epoch-04.pt",
+      "object_name": "search-128-0003-epoch-04.pt",
+      "sha256": "e2cc94d8e11ad3ad644e52d5283fd958c5458717efd7cfe02ccc30f8f82e6b2b",
+      "size_bytes": 5033993,
+      "version_id": "1"
+    }
+  },
+  "max_jobs": 1,
+  "max_concurrent_jobs": 1,
+  "resources": {
+    "disk_gib": 100,
+    "max_output_bytes": 2147483648,
+    "platform": "gpu-l40s-a",
+    "preemptible": false,
+    "preset": "1gpu-8vcpu-32gb",
+    "publication_reserve_seconds": 600,
+    "restart_policy": "never",
+    "shm_bytes": 1073741824,
+    "timeout_seconds": 3600
+  },
+  "max_create_to_terminal_seconds": 7200,
+  "max_starting_seconds": 600,
+  "admission": {
+    "observer_started_before_create": true,
+    "observer_max_age_seconds": 30,
+    "supervisor_max_heartbeat_age_seconds": 3,
+    "ready_window_seconds": 120,
+    "gate": "both live inspect outputs admission_ready true immediately before one create",
+    "monitoring": "10-second target cadence, read retries may lengthen; operator watches through terminal",
+    "failure": "close admission; cancel only exact created Job on monitoring/context failure or bounds; no replacement"
+  },
+  "cost": {
+    "currency": "USD",
+    "vat": "excluded",
+    "additional_cap_proposed": 6.25,
+    "reservation_before_create": 6.25,
+    "existing_confirmation_commitment_retained": 25,
+    "prior_grid_allowance_retained": 50,
+    "historical_operator_baseline": 300,
+    "baseline_plus_reserved_allowances_if_approved": 381.25,
+    "actual_current_account_spend": "not_reconciled",
+    "planning_envelope_is_current_bill": false,
+    "policy": "operator-managed admission ledger, not provider monetary cutoff",
+    "max_runtime_hours": 1,
+    "extra_billing_hours_reserved": 1,
+    "runtime_extension": false,
+    "artifact_gib_reserved": 2,
+    "retention_days_reserved": 90,
+    "egress_gib_reserved": 16,
+    "requests_reserved": 10000,
+    "retention_review_date": "2027-01-02",
+    "retention_review_authorizes_deletion": false,
+    "release_policy": "hold submitted reservation until actual charges reconcile",
+    "gate": "refresh scoped estimate <=6.25 and reserve once; block unknown/unbounded components",
+    "anomaly_policy": "cancel exact active Job and reconcile; no automatic retry or replacement"
+  },
+  "read_only_retry_policy": {
+    "initial_seconds": 30,
+    "retry_seconds": [
+      60,
+      90,
+      120
+    ],
+    "mutation_retries": 0,
+    "ambiguous_write": "read-only reconciliation; never resubmit"
+  },
+  "outputs": [
+    "C logits and scalar temperature",
+    "O logits and selected development operating points",
+    "frozen LightGBM predictions/calibration and exact row alignment",
+    "original checkpoint plus new execution lineage",
+    "calibration/PR/confusion/family metrics",
+    "runtime/resource measurements",
+    "durable artifact inventory and replayable MLflow events",
+    "independent verification and Markdown/plots"
+  ],
+  "limitations": [
+    "development operating points selected on reported role",
+    "prior development exposure",
+    "one date and instrument per role",
+    "research control negatives",
+    "LightGBM latency not measured"
+  ],
+  "mlflow_online_required": false,
+  "out_of_scope": [
+    "training or checkpoint reselection",
+    "extra attempts or replacements",
+    "final-test access",
+    "new IAM",
+    "G8/G9 rerun",
+    "production promotion",
+    "merge",
+    "deletion"
+  ]
+}

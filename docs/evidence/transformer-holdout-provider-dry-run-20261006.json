@@ -1,0 +1,1 @@
+{"date":"2026-10-06","command":"nebius ai job create --dry-run","result":"Job validation succeeded; no resource was created.","image_digest":"sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e","request_sha256":"fbf88f60fbfcf7f41f38a33ec6483b7aa03138ca28c337d8957892431b3fee66","jobs_created":0}

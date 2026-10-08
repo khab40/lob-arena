@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "id": "aijob-e00k6zkjr3hqc15dhb",
+    "parent_id": "project-e00g6zvxpr00waz8t3y51k",
+    "name": "transformer-research-c4-20261003-r2-seed-7",
+    "resource_version": "1",
+    "created_at": "2026-10-04T06:38:38.879610Z",
+    "updated_at": "2026-10-04T06:38:38.879610Z"
+  },
+  "spec": {
+    "image": "cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9",
+    "platform": "gpu-l40s-a",
+    "preset": "1gpu-8vcpu-32gb",
+    "shm_size_bytes": "1073741824",
+    "disk": {
+      "type": "NETWORK_SSD",
+      "size_bytes": "107374182400"
+    },
+    "subnet_id": "vpcsubnet-e00ppzc4353dxv210j",
+    "pricing_model": {
+      "on_demand": {}
+    },
+    "timeout": "7200s"
+  },
+  "status": {
+    "state": "FAILED",
+    "state_details": {
+      "code": "ContainerFailed",
+      "message": "Container exited with non-zero exit code."
+    },
+    "started_at": "2026-10-04T06:42:23.326323980Z",
+    "finished_at": "2026-10-04T06:47:25.104263700Z"
+  },
+  "archive_projection": {
+    "omitted_spec_fields": [
+      "environment_variables",
+      "injected_files"
+    ],
+    "reason": "omit credential-selector identifiers and injected request payload from public diagnostic record",
+    "complete_root_receipt_sha256": "146d917098c026289c847693541ea97c577b22352f4d4e246da7183e6f3c0849"
+  }
+}

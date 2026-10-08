@@ -1,0 +1,20 @@
+[
+  {
+    "paths": [
+      "releases/*"
+    ],
+    "roles": [
+      "storage.viewer"
+    ],
+    "group_id": "group-e00gbaesf952eabrws"
+  },
+  {
+    "paths": [
+      "releases/g8-native-rehearsal-20260914/staging/*"
+    ],
+    "roles": [
+      "storage.viewer"
+    ],
+    "group_id": "group-e00wb5ptvpq0q7dpaf"
+  }
+]

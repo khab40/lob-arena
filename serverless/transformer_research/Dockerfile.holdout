@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+# Context produced by scripts/transformer_holdout_image.py; no dependency rebuild.
+FROM cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:56ccf4ee7c7bdc7c06f9971223a6158c1080095562e60ca128e0e683e1b6d460
+COPY backend/app/ml/transformer/ /opt/research/backend/app/ml/transformer/
+COPY portable-package.json runtime-lock.json context-manifest.json source-commit Dockerfile /opt/research/
+# Metadata/source inspection only; no Torch import, model loading or inference.
+RUN python -m app.ml.transformer.holdout_runtime
+CMD ["python", "-m", "app.ml.transformer.holdout_entrypoint"]

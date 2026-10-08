@@ -1,0 +1,10 @@
+# syntax=docker/dockerfile:1
+# Preserve the exact numerical runtime and dependencies used by the verified grid.
+FROM cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:b713f1ffeb3c2ba5e4ab09dd2cdb829c6d659a915dd140a113bcabdf6c1909d9
+COPY backend/app/ml/transformer/research_confirmation_contract.py \
+     backend/app/ml/transformer/research_execution_spec.py \
+     backend/app/ml/transformer/research_storage.py \
+     backend/app/ml/transformer/research_readback.py \
+     /opt/research/backend/app/ml/transformer/
+ARG SOURCE_COMMIT
+RUN python -c 'import re,sys; assert re.fullmatch("[0-9a-f]{40}",sys.argv[1]); open("/opt/research/source-commit","w").write(sys.argv[1])' "${SOURCE_COMMIT}"
