@@ -1,8 +1,8 @@
 # ARD-0042: Transformer and LightGBM Research Sequence
 
-Status: Accepted research ordering; operator continuation approved, holdout execution pending.
+Status: Accepted research ordering; holdout verified, bounded continuation and first mock next.
 
-Date: 2026-10-03; updated 2026-10-05. Records the operator-approved research forks.
+Date: 2026-10-03; updated 2026-10-08. Records the operator-approved research forks.
 
 Tickets: [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Feature #16](https://github.com/khab40/lob-arena/issues/16),
@@ -53,6 +53,22 @@ disclosed, so this cannot be called a globally blind benchmark. No training,
 calibration fitting, threshold search or automatic replacement follows the holdout.
 The remaining text describes the original development study; its final-fold
 exclusion remains enforced by all existing development consumers.
+
+## Verified continuation — 8 October 2026
+
+The [December report](../ml/transformer-holdout-report-20261007.md) is independently
+verified. Frozen balanced F1 is 95.35% for Transformer and 74.48% for LightGBM,
+on 15,160 rows / 135 positives. Historical LightGBM exposure, one date/three base
+sessions and synthetic attack labels constrain the conclusion.
+The [operator disposition](../ml/transformer-research-disposition-20261008.md)
+records continue_research and the previously scoped first mock.
+#314's scoped persistence/reference acceptance is complete; full #24 remains open.
+
+Current order: verified saved-score playback under #90/#91 → dedicated research
+inference adapter → governed causal event features/sequences → separately approved
+bounded Nebius rehearsal → MLflow/cost/full-story reconciliation. No new training,
+final access or cascade follows automatically. Production serving remains denied.
+This update supersedes the historical pending execution/calibration status below.
 
 ## Experiment sequence
 
@@ -159,7 +175,7 @@ implemented worker records MLflow reconciliation as pending. Later reconciliatio
 must index these same artifacts and identities without retraining. Online MLflow,
 registry aliases and platform #19–#21 acceptance are separate completion states.
 
-Status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
+Historical status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
 the separately authorized replacement and [four grid trials](../ml/transformer-training-grid-results.md)
 are independently verified. The selection winner is width 128 / rate 0.0003 /
 seed 42 / epoch 4. Both [replacement confirmations](../ml/transformer-confirmation-results-20261004.md)
