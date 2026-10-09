@@ -166,59 +166,11 @@ Remaining critical path:
 3. Reforecast downstream dates from remaining integration and acceptance work.
    October 9 is a baseline target, not a full-story completion forecast.
 
-The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
-at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
-and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
-
-1. #24's [input-contract implementation](../ml/transformer-input-contract.md) is
-   merged in #236. The [CPU development-input verification plan](../ml/transformer-development-verification-plan.md)
-   is implemented. Its approved Job failed before input download due to late
-   signed context; #238's repair is merged in #237 and the separately approved
-   [r2 replacement passed independent verification](../ml/transformer-development-results-r2.md).
-   PR #239 is merged. The [bounded GPU training/checkpoint, calibration and MLflow
-   plan](../ml/transformer-gpu-campaign-plan.md) was approved and merged in #241.
-   The first [readiness increment](../ml/transformer-campaign-readiness.md) merged
-   in #248. The [provenance continuation](../ml/transformer-role-provenance.md)
-   verified the 29-object metadata chain and 30 replay domains after the corrected
-   temporary grant. Access cleanup is independently verified at bucket version 134.
-   The verified metadata and train-only normalizer are now bound into a
-   deterministic CPU evidence bundle, independently checked offline. #249/#254
-   are merged. PR #258 and its compatibility repair are also merged with passing CI.
-   PR #267 merged the [actual-runtime readiness repair](../ml/transformer-runtime-preflight.md)
-   for Bugs #266/#268. The separately approved
-   [r3 audit passed](../ml/transformer-lineage-r3-results.md): 115 metadata GETs,
-   356,040 bytes and all 30 validation-run semantic bindings independently verified.
-   Cleanup restored the original two rules and non-policy settings at bucket
-   version 143. Earlier attempts remain preserved and consumed.
-   PRs #271/#272 are merged. The [source separation proof](../ml/transformer-source-separation.md)
-   now reauthenticates retained evidence and binds the three whole instrument
-   domains, including warm-up ancestry and all synthetic labels, to the reviewed
-   producer contract. It claims neither time separation nor statistical independence.
-   The [CPU role-audit package](../ml/transformer-role-audit-package.md) now binds
-   this proof to signed provider context, restricted row records and independent
-   class-count readback; PR #275 is merged. The research fork moved these checks
-   into each GPU Job, replacing the separate CPU-first prerequisite. The verified
-   smoke and four grid Jobs checked per-role support and exact row alignment.
-   [MLflow readiness](../ml/mlflow-readiness-design.md) and platform acceptance
-   remain deferred; retained S3 artifacts and replayable events preserve results.
-   Research-control negative labels remain assumptions and positive labels remain
-   synthetic. The [grid result](../ml/transformer-training-grid-results.md) advances
-   #24's research campaign; [confirmation stability passed](../ml/transformer-confirmation-results-20261004.md).
-   Calibration, exact-row comparison and the authorized December holdout are
-   independently verified. The [recorded continuation](../ml/transformer-research-disposition-20261008.md)
-   completes scoped #314 acceptance; full #24 still needs MLflow lineage,
-   dedicated serving-path and resource/cost acceptance.
-2. Reforecast downstream dates. The gated September 24 start was missed;
-   October 9 remains a baseline target, not a forecast. Preserve the frozen
-   LightGBM result; future qualification claims need untouched held-out evaluation data.
-
-See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
-[validation execution policy](../ml/model-validation-execution-policy.md): model/runtime
-work runs on Nebius Serverless; historical billing-freshness, submission-expiry and
-fixed VM windows are not current prerequisites. Final-test approval remains separate.
-
-Wave 2 eligibility is satisfied by the signed `research_baseline_qualified`
-disposition. Its research-only limits remain binding; the fixed training grid is verified.
+The [G8/G9 owner](../operations/g8/README.md) retains closure and recovery receipts.
+Apply the [validation execution policy](../ml/model-validation-execution-policy.md):
+model/runtime work runs on Nebius Serverless; final-test approval is separate.
+Preserve frozen LightGBM and consumed approvals. Future qualification needs
+untouched held-out data and a separately approved study.
 
 ## Phase 3 - Standalone Transformer
 
