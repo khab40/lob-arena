@@ -4,15 +4,16 @@ Reconciled 8 October, Asia/Tbilisi. Tracking:
 [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
+[Bug #357](https://github.com/khab40/lob-arena/issues/357),
 [Project #3](https://github.com/users/khab40/projects/3).
 
-**Goal: decide whether Transformer adds enough value over frozen LightGBM to
-justify further research.** Continue, stop and inconclusive are valid outcomes.
-This refreshes the existing plan; it does not change the experiment protocol or
-authorize execution, final-test access, promotion, merging or cleanup.
-Verification: reconcile saved evidence, repository documentation and GitHub state.
+Goal: decide whether Transformer justifies further research against frozen
+LightGBM. The verified outcome supports **continue_research**, accepted by the
+operator. [Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance;
+[this disposition](transformer-research-disposition-20261008.md) owns decision scope.
+This plan changes neither experiment protocol nor execution/access/spend authority.
 
-## 5 October comparison update
+## Verified research milestones
 
 PR #315 merged and the exact one-hour L40S package/$6.25 cap was approved.
 One comparison Job completed; all 15 new artifacts plus 229 prerequisites passed

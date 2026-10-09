@@ -129,142 +129,23 @@ For any newly approved package:
    publication bytes and SUCCESS before accepting completion. Final evaluation
    additionally needs a trusted signing-key fingerprint outside the package.
 
-```bash
-cd backend
-UV_CACHE_DIR=/tmp/lob-arena-uv-cache uv run --extra ml \
-  python ../scripts/lightgbm_wave1.py local-e2e \
-  --output ../outputs/lightgbm-wave1/local-fixture
-```
-
-G3 supplied the real image digest, least-privilege identities, approved buckets
-and MysteryBox secret references on 2026-08-16. After two failed mounted-S3
-attempts and three no-volume image/entrypoint failures, the Wave 1 boundary is:
-there are no `--volume` arguments. The Job receives `AWS_ACCESS_KEY_ID` and
-`AWS_SECRET_ACCESS_KEY` through separate MysteryBox selectors, downloads the
-exact development release prefix to `/job/wave1`, runs there, and uploads the
-verified result to the exact campaign/run prefix with `SUCCESS` last.
-
-Prepare the dry run with:
-
-```bash
-python scripts/lightgbm_wave1.py stage-fixture \
-  --release-id RELEASE_ID \
-  --run-id RUN_ID \
-  --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
-  --mlflow-tracking-uri http://PRIVATE_MLFLOW_HOST:5500 \
-  --output outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json
-
-export NEBIUS_WAVE1_INPUT_URI=s3://aimada-wave1-dev-e00g6zvxpr00/releases/RELEASE_ID/staging
-export NEBIUS_WAVE1_REQUEST_EVIDENCE=outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json
-export NEBIUS_OBJECT_STORAGE_ENDPOINT_URL=https://storage.eu-north1.nebius.cloud
-export NEBIUS_OBJECT_STORAGE_ACCESS_KEY_SECRET_ID=ACCESS_ID_SECRET_SELECTOR
-export NEBIUS_OBJECT_STORAGE_SECRET_KEY_SECRET_ID=SECRET_KEY_SELECTOR
-export NEBIUS_MLFLOW_USERNAME_SECRET_ID=MLFLOW_USERNAME_SECRET_SELECTOR
-export NEBIUS_MLFLOW_PASSWORD_SECRET_ID=MLFLOW_PASSWORD_SECRET_SELECTOR
-export WAVE1_SPEND_TO_DATE_USD=RECONCILED_SPEND_BELOW_40
-export WAVE1_DEVELOPMENT_JOBS_CONSUMED=5
-
-python scripts/submit_nebius_job.py \
-  --workload lightgbm-wave1 \
-  --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
-  --evidence-output outputs/lightgbm-wave1/g4-dry-run.json \
-  --dry-run
-```
-
-The two MLflow selectors must contain the `governed-writer` identity created by
-the MLflow initializer. They must not contain the bootstrap administrator or
-the read-only `prometheus` identity.
-
-New G4 Jobs use the exact approved digest in both commands above and below.
-The short-tag workaround for [#84](https://github.com/khab40/lob-arena/issues/84)
-is retired: a distinct deployment image or the workaround flag is rejected
-before dry-run generation and submission. After creation, the submitter reads
-back the exact Job ID and `spec.image`; missing or mismatched readback records a
-failed submission and requests cancellation. Historical short-tag receipts
-remain available for monitoring and existing-Job recovery, but cannot satisfy
-new digest-only collection. See [digest-pinned Jobs](../operations/digest-pinned-jobs.md)
-for the retained provider evidence and G8 migration requirements.
-
-Do not submit until the Operator has reviewed `g4-dry-run.json`. Confirm that
-review by passing its SHA-256; the submitter refuses a different request,
-command, spend baseline, Job count, or dry-run hash:
-
-```bash
-DRY_RUN_SHA256=$(shasum -a 256 outputs/lightgbm-wave1/g4-dry-run.json | awk '{print $1}')
-
-python scripts/submit_nebius_job.py \
-  --workload lightgbm-wave1 \
-  --image cr.eu-north1.nebius.cloud/REGISTRY/jobs@sha256:DIGEST \
-  --reviewed-dry-run outputs/lightgbm-wave1/g4-dry-run.json \
-  --reviewed-dry-run-sha256 "${DRY_RUN_SHA256}" \
-  --evidence-output outputs/lightgbm-wave1/g4-submission.json
-
-python scripts/lightgbm_wave1.py monitor-g4 \
-  --submission outputs/lightgbm-wave1/g4-submission.json \
-  --output outputs/lightgbm-wave1/g4-monitor.json
-```
-
-The monitor queries `nebius ai job get`, verifies the actual project, image,
-platform, preset, disk and timeout, collects redacted logs, and cancels a Job
-that has not completed within 15 minutes. After a completed Job, download and
-verify the immutable S3 result and assemble the exit gate:
-
-```bash
-python scripts/lightgbm_wave1.py collect-s3 \
-  --result-uri s3://aimada-wave1-results-e00g6zvxpr00/campaigns/wave1-research-20260816/development/RUN_ID \
-  --result outputs/lightgbm-wave1/g4-result \
-  --submission outputs/lightgbm-wave1/g4-submission.json \
-  --monitor outputs/lightgbm-wave1/g4-monitor.json \
-  --estimated-cost-usd JOB_COST_ESTIMATE \
-  --campaign-spend-to-date-usd RECONCILED_POST_JOB_SPEND \
-  --output outputs/lightgbm-wave1/g4-collection.json
-
-python scripts/lightgbm_wave1.py g4-exit \
-  --stage-evidence outputs/lightgbm-wave1/RELEASE_ID-request-evidence.json \
-  --dry-run-evidence outputs/lightgbm-wave1/g4-dry-run.json \
-  --submission outputs/lightgbm-wave1/g4-submission.json \
-  --monitor outputs/lightgbm-wave1/g4-monitor.json \
-  --collection outputs/lightgbm-wave1/g4-collection.json \
-  --result outputs/lightgbm-wave1/g4-result \
-  --output outputs/lightgbm-wave1/g4-exit.json
-```
-
-Run `make lightgbm-wave1-g4-check` before building the immutable cloud image.
-The shared MLflow VM remains stopped until immediately before an explicitly
-authorized submission and should be stopped again after evidence collection.
-
-The first six attempts failed before training. Attempt 7 completed the governed
-workload, matched `cpu-d3`, `4vcpu-16gb`, 100 GiB and the one-hour timeout, and
-published 25 result objects plus `SUCCESS`. Seven of the fixed 20 development
-slots are consumed and 13 remain. No rerun is authorized or needed. Governed
-collection completed, spend reconciled at USD 8.57 including VAT, all 16 G4
-gates passed and G5 is unlocked. The submitter verifies the canonical request
-evidence and rejects inline credentials, filesystem mounts, broad bucket
-probes, unbounded prefixes and request/runtime mismatches. The temporary
-digest-derived deployment alias is permitted only by the recorded bounded
-exception and must resolve to the full governed digest before and after Job
-creation. Final evaluation also requires the trusted signing-key SHA-256 from
-outside the candidate package.
+See [digest-pinned Jobs](../operations/digest-pinned-jobs.md) and immutable approved
+G8 records for concrete package/runtime identities. Current execution policy
+supersedes the old `WAVE1_SPEND_TO_DATE_USD` and fixed-slot examples; it does not
+change their recorded hashes or create permission for a new run.
 
 ## G5 reproducibility comparison
 
-After C4 publishes the frozen Nasdaq development projection, submit exactly
-three separately identified development Jobs using equivalent requests.
+The completed gate uses exactly three governed development runs with distinct
+run, provider Job and MLflow identities. It is a verification contract, not a
+request to repeat the cost-bearing sequence. Each request binds its own immutable
+`releases/<run_id>/staging` input URI and C4 MLflow dataset-release receipt;
+reusing the corpus-release prefix would collide and is forbidden. Verify receipt,
+frozen root and development projection identity before execution. MLflow train/
+validation Dataset inputs carry complete Parquet SHA-256 in `artifact_sha256`
+tags and bounded digest prefixes.
 
-The C4 gate must include a successful `make mlflow-log-dataset-release`
-receipt. Pass it to projection staging as `--c4-mlflow-evidence`; the package
-and request hash-bind the receipt, and the runner rejects a release, frozen
-root, or development projection mismatch. Each prepared G5 request must bind
-`input_release_uri` to its unique, immutable
-`releases/<run_id>/staging` package URI. Reusing the C4 dataset release prefix
-would collide with the already-published corpus and is forbidden. The transport
-rejects missing or different lineage URIs, and each successful run must expose
-metadata-only MLflow Dataset inputs for train and validation with complete
-governed Parquet SHA-256 values in `artifact_sha256` tags (and MLflow-bounded
-digest prefixes). Do not start the three paid Jobs if any of those
-preconditions is absent.
-
-After each result is downloaded and collected, enforce G5 with:
+The retained comparator interface is:
 
 ```bash
 python scripts/lightgbm_wave1.py g5-compare \
@@ -278,16 +159,10 @@ python scripts/lightgbm_wave1.py g5-compare \
   --output outputs/lightgbm-wave1/g5-repeat-comparison.json
 ```
 
-The command requires exactly three governed development projections, three
-distinct run, Nebius Job and MLflow identities, verified collection receipts,
-test-fold isolation and exact agreement across request inputs, model and
-validation-prediction hashes, best iteration, metrics, calibration parameters,
-operating points, feature order/importance, schemas, reliability artifacts and
-governed identities. Only timestamps, external execution IDs, runtime, peak
-memory, cost, request hash and timestamp-bearing candidate-package hash may
-differ.
-
-`--allow-fixture-preflight` is available only to test the comparison mechanism.
-It emits `local_fixture_comparator_preflight_only` and cannot produce a G5 pass.
-The real three-Job G5 sequence remains cost-bearing and requires the C0-C4
-Nasdaq foundation plus explicit Operator authorization.
+Require verified collections/test isolation and exact request inputs, model and
+validation-prediction hashes, best iteration, metrics, calibration, operating
+points, feature order/importance, schemas, reliability and governed identities.
+Only timestamps, external IDs, runtime, peak memory, cost, request hash and
+timestamp-bearing package hash may differ. `--allow-fixture-preflight` emits
+`local_fixture_comparator_preflight_only`, never a G5 pass. A future real repeat
+requires C0–C4 prerequisites and separate exact operator authorization.
