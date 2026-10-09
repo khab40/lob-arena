@@ -1,6 +1,6 @@
 # Current Transformer implementation
 
-Code inspected on 2026-10-03. Related work: [Transformer ticket #24](https://github.com/khab40/lob-arena/issues/24), tracked in [GitHub Project #3](https://github.com/users/khab40/projects/3).
+Code architecture inspected on 2026-10-03; execution status reconciled on 2026-10-08. [Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance. Related work: [Transformer ticket #24](https://github.com/khab40/lob-arena/issues/24), tracked in [GitHub Project #3](https://github.com/users/khab40/projects/3).
 
 The implementation is a **custom, small PyTorch Transformer neural network**, trained from scratch to predict **whether an attack is active at the current market observation**. It does not use an LLM, GPT, Llama, a tokenizer, or pretrained language-model weights.
 

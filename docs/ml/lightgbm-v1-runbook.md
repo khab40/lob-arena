@@ -1,43 +1,46 @@
 # Governed LightGBM v1 Runbook
 
-LightGBM v1 is a binary `attack_active` challenger. It never trains on the
-frozen test fold and never converts unreviewed history into label zero.
+LightGBM v1 is a binary `attack_active` challenger. It never trains on frozen
+test data or converts unreviewed history into label zero. Updated 8 October 2026;
+[Bug #357](https://github.com/khab40/lob-arena/issues/357),
+[Story #23](https://github.com/khab40/lob-arena/issues/23),
+[Project #3](https://github.com/users/khab40/projects/3).
 
 ## Execution policy and current workflow
 
-The local training, fixture, local-e2e and model-runtime test examples below
-describe the original implementation interface. Agent-initiated training,
-scoring and frozen-runtime rehearsals now run on Nebius Serverless Jobs, including
-synthetic fixtures. Use local execution for orchestration, edits, static checks
-and artifact inspection only. See the [validation policy](model-validation-execution-policy.md)
-and [current ML lifecycle](../use-cases/ml-lifecycle.md). Historical G4 budget and
-attempt examples are receipts, not current permission to submit new Jobs.
+G0–G9 are complete as `research_baseline_qualified`; see
+[G9 closure](../operations/g8/g9-closure-20260927.md) and
+[current status](../roadmap/CURRENT_STATUS.md). No rerun is needed or authorized.
+Agent-initiated training, scoring, synthetic training fixtures and frozen-runtime
+rehearsals run on Nebius Serverless Jobs. Local work is orchestration, static
+checks and artifact inspection. Apply the
+[validation policy](model-validation-execution-policy.md) and
+[ML lifecycle](../use-cases/ml-lifecycle.md). The interfaces below describe how
+an approved package is prepared; they do not grant access, execution or spend.
 
 ## Required inputs
 
-- passing locally verified corpus manifest and validation;
-- frozen chronological split;
-- externally SHA-256-anchored governed feature release;
-- `lob_features_v2` configuration; and
-- one shared artifact root containing the feature release and all model output.
-
-The shared root is mandatory because every manifest URI is root-relative and
-the final verifier resolves every referenced byte from that namespace.
+Require a passing verified corpus/validation, frozen chronological split,
+externally SHA-256-anchored governed feature release and `lob_features_v2`
+configuration. Keep the feature release and model outputs under one shared
+artifact root: manifest URIs are root-relative and verification resolves every
+referenced byte from that namespace.
 
 ## Commands
 
-Install the optional ML dependencies and run the focused gate:
+Install optional dependencies for orchestration/static inspection:
 
 ```bash
 cd backend
 uv sync --extra ml
 cd ..
-make lightgbm-v1-test
 ```
 
-The delivery commands are deliberately separate:
+The phase interfaces are deliberately separate. Execute model phases only
+inside an exactly approved bounded Job package, including model-runtime tests:
 
 ```text
+make lightgbm-v1-test
 make lightgbm-train-dev
 make lightgbm-calibrate
 make lightgbm-evaluate-test
@@ -45,14 +48,12 @@ make lightgbm-build-bundle
 make lightgbm-verify-release
 ```
 
-Provide the governed input paths through the environment variables named in
-the corresponding Make recipes. `LIGHTGBM_CREATED_AT` must be an explicit
-timezone-aware ISO-8601 timestamp and `LIGHTGBM_GIT_COMMIT` must be the exact
-40-character commit ID. The test command must be invoked only after validation
-calibration and operating modes are frozen.
-
-Calibration defaults to Platt scaling. The direct CLI can select isotonic or
-raw calibration and configure precision/recall floors:
+Supply governed paths using each Make recipe's environment variables.
+`LIGHTGBM_CREATED_AT` must be explicit timezone-aware ISO-8601;
+`LIGHTGBM_GIT_COMMIT` the exact 40-character commit. Test scoring requires frozen
+calibration/operating modes and separate final-access authorization. Generic
+calibration defaults to Platt; the completed research release selected isotonic.
+The direct CLI also supports isotonic/raw and configurable precision/recall floors:
 
 ```bash
 backend/.venv/bin/python scripts/lightgbm_v1.py calibrate --help

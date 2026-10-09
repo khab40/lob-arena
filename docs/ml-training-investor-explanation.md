@@ -100,16 +100,18 @@ We also need attack-level coverage, false-alert burden, detection delay, perform
 
 On the same 15,160 December research rows / 135 positives, frozen balanced operating points produced:
 
-| Measure | LightGBM | Existing Rules baseline |
-| --- | ---: | ---: |
-| Precision | **85.58%** | 0.89% |
-| Recall | **65.93%** | 100% |
-| F1 | **74.48%** | 1.77% |
-| False-positive observations | **15** | 14,985 |
-| Attack campaigns detected at least once | **27/27** | 27/27 |
+| Measure | Transformer | LightGBM | Existing Rules baseline |
+| --- | ---: | ---: | ---: |
+| Precision | **100%** | **85.58%** | 0.89% |
+| Recall | **91.11%** | **65.93%** | 100% |
+| F1 | **95.35%** | **74.48%** | 1.77% |
+| False-positive observations | **0** | **15** | 14,985 |
+| Attack campaigns detected at least once | **27/27** | **27/27** | 27/27 |
 
 LightGBM reduced false-positive **observations** by **99.90% against our existing Rules baseline**, while missing 46 of 135 positive observations. Catching every campaign once does not mean catching every attack phase or detecting it early enough. These are research measurements on one date, with synthetic positives—not production alert statistics. [Final evaluation evidence](operations/g8/g8-final-results-20260923.md)
 
-Our defensible advantage is **repeatable, evidence-backed comparison**: identical market observations, controlled attacks, explicit trade-offs and traceable results. We have demonstrated improvement over our own Rules baseline. We have not demonstrated superiority over commercial surveillance products, and Transformer gains remain a hypothesis.
+The verified Transformer missed 12 positive rows, with zero false-positive rows at its frozen balanced point. Its advantage over frozen LightGBM supports further research, bounded by one date/three base sessions, synthetic labels, repeated variants and earlier LightGBM exposure. Batch scoring time does not establish live alert latency. [Verified comparison and limitations](ml/transformer-holdout-report-20261007.md).
 
-For investors: **“LOB Arena gives teams a reproducible way to test surveillance models before deployment. Our first learned detector substantially reduced false-positive observations in a controlled benchmark; the next stage tests whether temporal modelling improves detection without unacceptable cost or delay.”**
+Our defensible advantage is **repeatable, evidence-backed comparison**: identical observations, controlled attacks, explicit trade-offs and traceable results. We have demonstrated improvement over our own baseline in this limited research corpus, not superiority over commercial surveillance products.
+
+For investors: **“LOB Arena gives teams a reproducible way to test surveillance models before deployment. Our first learned detector substantially reduced false-positive observations in a controlled benchmark; the next stage validates temporal modelling beyond this research corpus and tests live integration, cost and delay.”**

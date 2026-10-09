@@ -114,99 +114,15 @@ without retuning. See [data preparation](use-cases/ml-data-preparation.md).
 | Combined | Conditional #25, no verified combined runtime | NEW LightGBM with exact producer joins, leakage-safe downstream training, own calibration/thresholds and verified fallback; never append columns to frozen v1. [ARD-0037](architecture/ARD-0037-transformer-to-lightgbm-cascade.md). |
 | Deterministic | Versioned rules and decision policy | Present rule scores with their existing semantics, not calibrated probabilities without separate verification. |
 
-Reconstruct the order book, replay ordered events and compute the 60-feature
-contract from information available at each cutoff. It includes trailing 2-second
-and 10-second windows. Attach labels afterwards. Retain source, replay, split,
-feature and row identities. These limited dates and synthetic labels support
-research claims; future independent qualification needs an appropriate untouched
-evaluation protocol. See [data preparation](use-cases/ml-data-preparation.md).
-
-### LightGBM
-
-1. Train a binary `attack_active` model on CPU using deterministic configuration,
-   training-derived class balance and base-session weighting. Select the boosting
-   iteration through validation binary log loss and early stopping.
-2. The bounded G6 campaign compared four configuration/feature searches, confirmed
-   the selected configuration at seeds 7 and 2027 alongside seed 42, and compared
-   raw, Platt and isotonic calibration. Retain all nine trial receipts.
-3. Configuration ranking used balanced F1, minimum family recall, Brier score, ECE,
-   log loss and deterministic tie-breaking. Calibration ranking used Brier, ECE,
-   balanced F1 and method-name tie-breaking. The selected `ablate-state` experiment
-   excluded 29 state columns, leaving 31 ordered model features from the shared 60.
-4. Save the selected booster as `model.txt` with `training-run.json`, best iteration,
-   feature order, preprocessing and hashes. LightGBM has no periodic boosting-resume
-   checkpoint loop in this implementation; the saved model is the selected booster.
-5. Fit the selected isotonic mapping on validation predictions. Save its `x/y`
-   knots in `calibration-manifest.json`, together with the operating points. The
-   balanced threshold is `0.5769230769230769`, selected by maximum validation F1.
-6. Freeze the exact candidate, calibrator and thresholds before the separately
-   authorized final evaluation. Signed G9 accepted it as `research_baseline_qualified`.
-
-The runtime calculation is `p = isotonic(raw_probability)` followed by
-`alert = p >= frozen_threshold`. The adapter accepts the operating mode evaluated
-by the verified release. A different mode requires its corresponding verified evidence.
-Wave 1 reused validation for early stopping, selection, calibration and thresholds;
-its fitting-row calibration metrics do not prove independent calibration quality.
-See [selection procedure](use-cases/ml-training-selection.md) and
-[final results](operations/g8/g8-final-results-20260923.md). The signed disposition
-is retained in [G9 closure](operations/g8/g9-closure-20260927.md); older Transformer
-planning sections in the selection guide are superseded by the current source below.
-
-### Transformer
-
-1. Use causal sequences of up to 64 retained feature rows, each with 60 ordered
-   numeric features. These are feature rows, not 64 raw messages or 64 seconds.
-   Left padding has a validity mask; observed missing features have a separate mask.
-2. Fit normalization only on unique training rows, saving 60 means/scales and
-   observed counts with training lineage. Missing normalized values zero-fill;
-   the model also receives 60 missingness indicators, producing 120 input values
-   per observed step. Padding is excluded by the attention mask.
-3. Train the custom causal `SequenceClassifier` with weighted binary-logit loss,
-   AdamW, batch 64, up to 30 epochs, patience 5, warm-up/cosine learning-rate policy
-   and gradient clipping. Selection, calibration and operating-point roles are
-   authenticated separately; no final-test rows enter this development experiment.
-4. The four GPU trials compared widths 64/128 and learning rates 0.0003/0.001.
-   Checkpoint/configuration selection used raw selection log loss. The selected
-   candidate is width 128, learning rate 0.0003, seed 42, epoch 4. Selection-fold
-   F1 was descriptive, not the ranking criterion or proof of generalization.
-5. Save every completed epoch as immutable `epoch-NN.pt`, containing model state,
-   optimizer/RNG, trial/bindings and progress. A versioned publication receipt must
-   acknowledge the checksum. Retain the selected epoch's exact reference rather
-   than loading the last epoch. Confirmations at seeds 7/2027 verified stability;
-   seed 42 remains the candidate, rather than choosing the luckiest seed.
-6. The declared calibration stage fits temperature `T` only on calibration role C;
-   operating thresholds and frozen-LightGBM comparison use role O. The serving
-   formula is `p = sigmoid(logit / T)`, then `alert = p >= selected_threshold`.
-   Publish and independently verify those outputs before calling this a calibrated
-   runnable release. O also selects thresholds, so its results are development evidence.
-7. Export the selected model state, matching architecture, normalization, fitted
-   temperature and operating points into one serving release. Optimizer/RNG state
-   stays in the training archive. At inference use strict state loading, `eval()`
-   and `torch.inference_mode()`.
-
-The grid and seed confirmations are verified. A complete calibrated serving release
-must bind the independently verified calibration/comparison receipt; this document
-does not establish completion of the concurrent comparison work. Sources:
-[grid results](ml/transformer-training-grid-results.md),
-[checkpoint code](../backend/app/ml/transformer/research_checkpoint.py),
-[normalization](../backend/app/ml/transformer/normalization.py),
-[calibration](../backend/app/ml/transformer/research_evaluation.py) and [Story #24](https://github.com/khab40/lob-arena/issues/24).
-
-### Combined and deterministic choices
-
-The planned combination uses Transformer-derived temporal features plus base
-features in a newly trained LightGBM model. It requires producer-to-row lineage,
-leakage-safe downstream training, its own development-fitted calibration and frozen
-thresholds, and a verified
-standalone fallback. It cannot add columns to the existing frozen LightGBM booster.
-It remains conditional [#25](https://github.com/khab40/lob-arena/issues/25) scope;
-see [combined design](architecture/ARD-0037-transformer-to-lightgbm-cascade.md).
-
-Deterministic rules retain versioned parameters and decision policy. Their scores
-are presented as rule scores unless a separate probability-calibration procedure
-has been implemented and verified.
+Research settings/reference acceptance does not complete a serving release.
+Live retained-row sampling, ties, warm-up/gap/reset, bounded queues and incident
+consolidation remain [pending design decisions](architecture/ARD-0036-market-sequence-transformer.md#pending-live-integration-decisions).
+[Immutable training narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/frozen-detector-release-and-demo-flow.md#3-how-training-calibration-and-selection-produce-the-release)
+retains algorithm walkthroughs; the linked owning contracts avoid duplicate detail.
 
 ## 4. Frozen artifacts versus changing feature state
+
+The following event-inference state and checkpoints are proposed later scope.
 
 Model artifacts and fitting statistics are immutable. Runtime market state changes
 as events arrive. Start each independent run with new state; share loaded read-only
@@ -260,7 +176,7 @@ also retain the alert-consolidation policy because row alerts and incidents have
 different counts. Measure throughput, queue lag and event-to-alert latency with
 the replay speed and execution conditions attached.
 
-The first model-scoring rehearsal uses a bounded Nebius Serverless Job under the
+A later model-scoring rehearsal uses a bounded Nebius Serverless Job under the
 repository execution policy, with explicit resources, timeout, Job count and spend
 disposition. Durable artifacts survive tracking outages; reconcile MLflow without
 retraining. Shared sensitive-data deployment retains authentication/authorization.
@@ -269,6 +185,12 @@ retraining. Shared sensitive-data deployment retains authentication/authorizatio
 
 ```gherkin
 Feature: Frozen detector demo
+  Scenario: Play back verified saved scores
+    Given an allowlisted private campaign with verified version, size and hash receipts
+    When a local reviewer selects a detector and changes playback pacing
+    Then ordered saved scores and frozen threshold decisions remain unchanged
+    And the display identifies saved research predictions and their source
+
   Scenario: Deny unauthorized data access
     Given a reviewer has no authorized workspace session
     When the reviewer requests a dataset or detection run
