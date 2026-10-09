@@ -55,6 +55,8 @@ readback. Local/CI fake-consumer results are not CUDA parity evidence.
 The original story's dedicated-classifier scenario already passes for frozen
 research through the independently verified holdout Job. This new adapter's
 numerical verification is a separate increment, not a reason to repeat that run.
+The [public verification summary](../evidence/transformer-classifier-verification-20261009.json)
+pins the source, exact independent review and inert test receipts.
 
 Root evidence: `outputs/governed-transformer-closure-20261009/`.
 This directory retains this work's plan, reviews and tests. A network-disabled,
