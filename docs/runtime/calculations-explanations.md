@@ -361,172 +361,98 @@ owns runner arguments and filenames.
 
 ## Tournament Inputs
 
-Default values:
-
-```text
-number_of_scenarios = 100
-
-manipulation_types:
-  spoofing
-  layering
-  quote_stuffing
-
-difficulty_mix:
-  easy        20%
-  medium      50%
-  hard        20%
-  adversarial 10%
-
-detectors:
-  spoofing_like
-  layering_like
-  quote_stuffing
-
-random_seed = 42
-execution_mode = local_mock
-```
+The API accepts `number_of_scenarios` from 1 to 1000; scenario names are
+`spoofing_like_wall | layering_like | quote_stuffing | liquidity_evaporation`.
+Direct runner plans can also include the `normal_market` negative control.
+Difficulty is `easy | medium | hard | adversarial`, with default weights
+20% / 50% / 20% / 10%. `random_seed` defaults to 42.
+Requested API mode is `local_mock | local | nebius`.
 
 ## Execution Modes
 
-### `local_mock`
+- `local_mock`: return deterministic rows without simulation execution or runner artifacts.
+- `local`: run the retained, capped rule tournament through the existing background task; only one local tournament executes at a time.
+- `nebius`: use the configured Job path; missing configuration returns mock rows with a fallback reason.
 
-No simulation batch is executed. A deterministic leaderboard is returned immediately.
-
-This is the default Control Panel mode.
-
-### `local`
-
-The backend starts a background task and executes:
-
-```text
-serverless/jobs/detector_tournament.py
-```
-
-as a local subprocess.
-
-### `nebius`
-
-When `NEBIUS_JOB_SUBMIT_COMMAND_TEMPLATE` is configured:
-
-- the batch is submitted to Nebius;
-- a Nebius Job ID is recorded;
-- the UI polls status;
-- logs and S3 artifacts are collected;
-- metrics are reconstructed from downloaded artifacts.
-
-If the Job submission template is missing, LOB Arena returns deterministic mock tournament output and records a fallback reason.
+These are application capabilities. Agent-initiated model workloads, including
+synthetic training/scoring/evaluation rehearsals, run on Nebius under their own
+authorization. Local rule simulation does not waive that policy.
 
 ## Local Tournament Workload
 
-The requested total is converted to approximately equal runs per selected scenario:
+The facade passes exactly
+`effective_scenarios = min(requested_scenarios, local_limit)` to `--runs`.
+There is no ceil-per-family overshoot.
+
+`exact_balanced_plan(N, families, seed)` creates exactly N entries by cycling
+families, then shuffles them with the supplied seed. For N=100 and three
+families, the counts are 34 / 33 / 33. The weighted difficulty plan normalizes
+weights, floors N × weight, allocates the remaining entries by fractional
+remainder, then shuffles with `random_seed + 1`.
+
+Each run's seed is independently derived as:
 
 ```text
-effective_scenarios =
-    min(requested_scenarios, local_limit)
-
-runs_per_scenario =
-    ceil(effective_scenarios / number_of_scenario_types)
+digest = SHA-256("lob-arena:<random_seed>:<run_index>")
+run_seed = first_8_digest_bytes_as_big_endian_integer mod 2,147,483,647
 ```
 
-Example with 100 requested scenarios and three scenario families:
-
-```text
-runs_per_scenario = ceil(100 / 3) = 34
-actual simulations = 34 × 3 = 102
-```
-
-The local implementation can therefore run slightly more simulations than requested.
+[`run_planning.py`](../../backend/app/evaluation/run_planning.py) owns this
+algorithm. Difficulty selects baseline depth/normal-agent profiles; seeded
+variation changes reference price, tick spacing, depth and agent count.
 
 ## Single Simulation Run
 
-For each run and scenario:
-
-```python
-engine = SimulationEngine(seed=run_index + 17)
-```
-
-If the scenario is not `normal-market`, the relevant attack is launched.
-
-The simulation runs for exactly 14 ticks.
-
-At every tick:
-
-1. all detector scores are read;
-2. maximum confidence per detector is retained;
-3. the first tick crossing `0.75` is retained;
-4. detector types appearing in incidents are retained.
+Each planned scenario/difficulty pair creates
+`SimulationEngine(seed=run_seed, **engine_profile(difficulty, seed=run_seed))`,
+launches the selected attack unless it is `normal_market`, and executes
+14 ticks. The runner retains each detector's maximum confidence, alert ticks,
+incident presence and linked event/participant/order evidence.
 
 ## Ground-Truth Mapping
 
-The expected detector is hard-coded:
+Every selected detector is evaluated against binary attack-active truth:
 
 ```text
-spoofing_like_wall    → spoofing_like
-layering_like         → layering_like
-quote_stuffing        → quote_stuffing
-liquidity_evaporation → liquidity_shock
-normal_market         → no expected detector
-```
+truth = scenario != "normal_market"
+predicted = detector appeared in an incident OR max_confidence >= 0.75
 
-For each detector and simulation:
-
-```text
-truth =
-    detector == expected_detector
-
-predicted =
-    detector appeared in an incident
-    OR max_confidence >= 0.75
-```
-
-Then:
-
-```text
 TP = truth AND predicted
 FP = NOT truth AND predicted
 FN = truth AND NOT predicted
+TN = NOT truth AND NOT predicted
 ```
+
+Scenario family groups reports; it does not declare other detectors negative
+during an injected attack. Temporal/attribution evaluation uses the executed
+scenario label when available, not the generated specification's expected score.
 
 ## Detection Latency
 
-The first alert tick is converted to milliseconds:
-
 ```text
-latency_ms =
-    max(0, first_alert_tick - 1)
-    × tick_interval_seconds
-    × 1000
+latency_ms = max(0, first_alert_tick - 1) × tick_interval_seconds × 1000
 ```
 
-The default tick interval is `0.5 seconds`.
-
-Examples:
-
-```text
-alert at tick 1 → 0 ms
-alert at tick 2 → 500 ms
-alert at tick 3 → 1,000 ms
-```
-
-This is simulated market time, not wall-clock model-inference latency.
+The default interval is 0.5 seconds: ticks 1 / 2 / 3 correspond to
+0 / 500 / 1000 ms. This is simulated market time, not wall-clock inference
+latency. Average latency includes detections in positive runs.
 
 ## Tournament Metrics
 
-For each `(scenario, detector)` pair:
+[`ground_truth.py`](../../backend/app/evaluation/ground_truth.py) owns exact
+null/rounding and attribution behavior:
 
 ```text
-precision =
-    TP / (TP + FP)
-
-recall =
-    TP / (TP + FN)
-
-F1 =
-    2 × precision × recall
-    / (precision + recall)
+precision = TP / (TP + FP)
+recall = TP / (TP + FN)
+F1 = 2 × precision × recall / (precision + recall)
+specificity = TN / (TN + FP)
+false_positive_rate = FP / (FP + TN)
 ```
 
-If a denominator is zero, the value is set to zero.
+Undefined denominators produce null. F1 is zero when recall is zero; otherwise
+it is null when its inputs/denominator are undefined. A quiet normal-market run
+therefore has null precision/recall/F1, specificity 1 and false-positive rate 0.
 
 Average latency includes only detections for which that detector is the expected truth detector.
 

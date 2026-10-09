@@ -54,6 +54,7 @@ From the repository root:
 
 ```bash
 ./scripts/build-serverless-images.sh
+SMOKE=true ./scripts/build-serverless-images.sh
 ```
 
 Equivalent Make target:

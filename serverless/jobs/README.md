@@ -1,6 +1,8 @@
 # Serverless Jobs
 
-Nebius-oriented batch jobs for offline synthetic experiments.
+Batch utilities for synthetic rule experiments, public-data acquisition/preparation
+and governed LightGBM execution. Synthetic labels and detector scores are not
+verified real-market manipulation or compliance decisions.
 
 These jobs are educational simulation utilities. They do not evaluate real
 market manipulation, do not provide trading signals, and should not be used for
