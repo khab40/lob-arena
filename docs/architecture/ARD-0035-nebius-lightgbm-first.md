@@ -29,137 +29,30 @@ and thresholds remain frozen. No completed authorization may be replayed.
 
 ## Validation execution policy — 2026-09-16
 
-selected the `ablate-state` experiment. Its seed-42 result and the mechanically
-derived seed-7 and seed-2027 confirmations produced identical balanced F1
-`0.6931407942`, minimum attack-family recall `0.5333333333`, and validation
-binary log loss `0.3449773248`, passing all three stability gates.
-
-Raw, Platt, and isotonic calibration reproduced the same model and raw
-validation predictions. Isotonic was selected by the frozen ordering with
-calibrated Brier `0.0068910983` and validation ECE `1.4586e-18`; Platt produced
-`0.0080377169` and `0.0042177037`, and raw produced `0.0209358031` and
-`0.0816111663`. Balanced precision `0.6760563380`, recall `0.7111111111`, and
-F1 `0.6931407942` were unchanged. These are governed validation-only research
-results, not final-test or production-performance claims.
-
-All nine collection receipts verified, all nine MLflow run IDs are distinct,
-dataset lineage is metadata-only, and `test_fold_accessed=false`. The campaign
-used the same pinned runtime image and input identity throughout. Seven input
-packages record control-plane Git SHA `fb93abf`; the two final calibration
-packages record receipt-reliability SHA `2fdc29f`. The image, input identity,
-planned experiment specifications, calibration model, and raw predictions did
-not change. The comparator now records both SHAs while correctly treating the
-immutable image digest as runtime code identity and continues to reject runtime
-image or input drift.
-
-The selected candidate hash is
-`5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`;
-the reproducibility hash is
-`6afed0cc408791156b8ea801791ff1afc7ea2838d7f5978bda90ca145ef62e06`.
-The final comparison receipt is
-`outputs/lightgbm-wave1/nasdaq-g6-development-20260907/g6-comparison-final.json`
-with SHA-256
-`8baa904c5c8ccad4406d62b383999d0c294c9830869e1633aef71d3989b1aa40`.
-All 12 gates passed, every rejected trial remains in the receipt, project spend
-reconciled to USD 28.65, and the development ceiling is fully consumed at
-20/20. The temporary publisher grant was removed, the replacement publisher
-key is inactive, the previous key is expired, and the shared MLflow VM is
-`STOPPED`.
-
-G7 completed on 2026-09-12 without test access. Candidate
-`5cdd3b55c86338f4b492362c87e21682ff83ce9ae5258d1ddae60a5b6ff768ff`
-is bound to freeze receipt SHA-256
-`232f1a88e39caf2591df5ee135bb25b6ce2fb080688dc197cd96676840f8d7fc`.
-The exact-hash operator statement is recorded in outer authorization receipt
-SHA-256
-`b0b6cee7fce8db3618cdaeb905ec7588d57a94985ef3823215664da4ce8ceed6`,
-binding signed-content SHA-256
-`dcf056eba18cd95169f3caade2f7d1c2285e1b49b94e2a9ab353bb74f1233db0`,
-signature SHA-256
-`a012abb5948b3cf058c77fd9336f5a81eaaa0b2c2782aab653d9ba3dbf3005ea`,
-and trusted public-key SHA-256
-`a433d622c153a47df472a703d549f180c43ab5d467ae35606667d29ef24e06ab`.
-Independent verification reports `authorized`, `signature_verified=true`, and
-`final_identity_available=true`. At that G7 checkpoint the final fold was unopened;
-R4 subsequently downloaded it and failed before scoring (see current status above).
-
-The first two separately authorized G8 Jobs failed closed before candidate or
-final-release download. The second, `aijob-e00rwzexvwb11rmt4c`, is bound to
-authorization receipt SHA-256
-`99c0660231ec0584c38ba85f0d2d6c25e155b22162014a00b6b9f60eab733d60`,
-preflight SHA-256
-`18384b38c840fd903f3ee02824d98248b3704f885225c38a35a572c533379bea`,
-recovered submission receipt SHA-256
-`1a41e50036da77febeb0d8e609c2f0e3febbd0ee9aee9ce09ebf8b0c9450136f`,
-terminal monitor receipt SHA-256
-`8a2d21a435e15f19b8e8f62e99fabbd77e888542ebfcff2103263e5523eb66f8`,
-and redacted log SHA-256
-`53c70aae73acf70488552a569ec6b7db49296e14d4609f3080fbcfc59fb8be80`.
-The log terminates at the exactly-once intent claim, which precedes both S3
-downloads and evaluation. An authenticated query of MLflow experiment `3`
-found zero runs after submission, so no test result or success claim was
-recorded.
-
-The decisive live read-back was results-bucket policy version 3: the active G6
-campaign had its development writer but neither the final identity's
-development-candidate viewer nor final-results writer. Version 5 now adds only
-those two exact G6 prefixes and preserves the five prior rules. The identity
-provisioner is changed to append missing rules only when every existing rule
-matches a recognized Wave 1 lane, to use resource-version concurrency control,
-and to verify the resulting policy by read-back. The final key is `INACTIVE`
-and MLflow is `STOPPED`. The policy-remediation and MLflow absence-verification
-receipt SHA-256 values are respectively
-`5a9bbc2f998f8cc3621e2039b06428272ed19b2628b7f4c0a9fc5ce10fe680fd`
-and
-`1d3457e241e726ff2ecc210f7ce33b0ddb69b9447c6cd7e4561edb3a59dce950`;
-the idempotent provisioner state receipt SHA-256 is
-`7a1d3a7be81c4d526eed2479273adc2be76c74be2adc607c04a55eaaabca26c1`.
-Another Job requires a fresh signed authorization.
-
-The third authorization was consumed by exactly one Job,
-`aijob-e00gw2jh294yqa39pd`. The container failed before authorization
-verification because the newly injected runner imported
-`S3PublicationIntent` from an older frozen runtime image that did not contain
-it. The submission, monitor, redacted-log and verified-outcome SHA-256 values
-are `26a57b160b3abfd9fd5769076294c67c945056d5da02f07ce07705d62d558207`,
-`c69f11bce6d77a15cba4bce8fe9f6f7564ce2c37d057a049bb6772c5695c4d68`,
-`af12942515c13f6d270979a744d19cdc57018c065009cd271f36bd497be9d46f`,
-and `db743ebd216066feecec8d743246d2a6652558e25b2f1eef6409a3d3388ec9a7`.
-No candidate or final object was downloaded, and an authenticated MLflow query
-found zero matching governed-evaluation runs.
-
-The decision is to keep the authorized model runtime immutable and make the
-small injected control plane explicitly backwards compatible. Its private
-publication implementation performs only conditional `PutObject` operations,
-checksum read-back, marker-last publication and bounded rollback of objects it
-created. Each successful conditional create enters rollback ownership before
-metadata or read-back verification can fail. Preflight v2 now runs the exact
-injected runner's conditional-
-publication compatibility probe inside the exact digest-pinned image with
-networking disabled and binds both identities in its receipt; the previously
-failing image passes with runner SHA-256
-`b5c3e6c5c918ff7b219e497ab735249c5bfdc083874f7c68d9b7b59a3a6ebe2a`.
-The image build independently runs the same packaged G8 probe. This closes
-the compatibility class of failure before authorization or cloud spend without
-changing the frozen model or its dependency environment. No fourth Job is
-authorized by this remediation.
+Apply the [operator-managed validation policy](../ml/model-validation-execution-policy.md)
+instead of historical billing, package-expiry or fixed VM/spend limits. Retain
+finite resources, Job counts/timeouts, actual identities, integrity evidence and
+separate final-access/replacement authorization. Later exact approved packages
+retain their own bounds; this record grants no new run, access or spend.
 
 ## Evaluation and Recovery Decision Dependencies — 2026-09-15
 
-The following records extend this execution decision and preserve its frozen
-candidate and release-authority boundary:
+[ARD-0038](ARD-0038-c4-specific-evaluation.md) defines the separately hashed C4
+research evaluation; [ARD-0039](ARD-0039-same-run-mlflow-recovery.md) reserves and
+recovers the same MLflow run; [ARD-0040](ARD-0040-completed-release-publication-recovery.md)
+recovers completed publication without rescoring. The signed runner combines C4
+verification, durable pre-logging scored retention, same-run recovery and marker-last
+publication. Synthetic rehearsals and the accepted research outcome do not establish
+client qualification. Frozen model runtime and reviewed orchestration overlays
+retain separate bindings and must pass exact-image compatibility preflight.
 
-- [ARD-0038: C4-Specific Frozen Evaluation](ARD-0038-c4-specific-evaluation.md)
-- [ARD-0039: Same-Run MLflow Evaluation Recovery](ARD-0039-same-run-mlflow-recovery.md)
-- [ARD-0040: Completed-Release Publication Recovery](ARD-0040-completed-release-publication-recovery.md)
+## Historical execution record
 
-The signed replacement runner now binds C4 evidence, scored retention,
-reservation/recovery and completed-release publication. Native synthetic storage
-and remote recovery have been exercised; production qualification remains open.
-Every replacement must preserve R4's consumed authorization and test-access
-history and require its own reviewed, signed execution binding. See the current
-status above and [production package](../operations/g8/g8-production-package.md). Earlier
-G7/R1–R3 paragraphs are historical checkpoints, not current authorization.
+The [immutable pre-compaction record](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0035-nebius-lightgbm-first.md#implementation-status)
+retains G3–G8 attempts, receipt hashes, consumed slots, policy corrections and
+then-current resource/cost observations. [G8 results](../operations/g8/g8-final-results-20260923.md)
+and [G9 closure](../operations/g8/g9-closure-20260927.md) record the final outcome.
+Those snapshots are evidence, not executable instructions or current resource state.
 
 ## Context
 

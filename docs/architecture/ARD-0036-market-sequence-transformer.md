@@ -120,38 +120,18 @@ Feature: Governed causal Transformer inputs
 
 ## Context
 
-The tabular LightGBM detector observes causal rolling features but cannot learn
-arbitrary temporal structure across an ordered event window. A market-sequence
-Transformer may capture attack phase, cancellation choreography, refill and
-liquidity response patterns that are difficult to express as fixed aggregates.
-
-Sequence training adds material GPU cost, more leakage risk and a distinct
-serving surface. Its value must therefore be measured after the cheaper
-LightGBM baseline is frozen, on the same governed data and operational metrics.
-This classifier is separate from the generative vLLM AI Investigator.
+A sequence challenger may learn temporal structure beyond LightGBM's rolling
+features, but adds leakage risk, GPU cost and a serving surface. Measure its
+value after freezing the cheaper baseline on identical governed targets.
 
 ## Decision
 
-After ARD-0035 exits, develop one bounded causal Transformer challenger with a
-versioned sequence contract containing:
-
-- corpus, split and source-feature hashes;
-- event-time cutoff and proof that no later event is visible;
-- ordered inputs, sequence length, stride, padding and attention masks;
-- replay/session grouping and label horizon;
-- normalization or tokenization fitted on training only; and
-- deterministic row-to-sequence identity.
-
-The sequence contract consumes `sequence_projection_v1` from the selective
-Nasdaq-to-Nebius shared data foundation. It must bind the same root corpus,
-chronological split, replay domains and evaluation-row identities used by the
-Wave 1 `tabular_projection_v1`; the Transformer may not reacquire, resplit or
-relabel Nasdaq data independently. Existing sequences use left zero padding,
-attention masks and NaN feature missingness, with one target per retained row
-and no cross-shard history. The current materializer expands a complete shard
-in memory. The trainer must define train-only normalization, missingness,
-temporal encoding and label-independent sampling parity with serving. A changed
-representation/length requires a new versioned projection. See
+Bind corpus/split/source-feature hashes, event-time cutoff, ordered inputs,
+length/stride/padding/masks, replay/session groups, label horizon, train-only
+normalization and deterministic row-to-sequence identity. Consume
+`sequence_projection_v1` from the same corpus, chronological split and target
+ledger as `tabular_projection_v1`; never reacquire, resplit or relabel independently.
+A representation/length change needs a new projection version. See
 [data preparation](../use-cases/ml-data-preparation.md).
 
 For the current research fork, authenticate inputs and audit roles inside the

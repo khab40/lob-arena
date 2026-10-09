@@ -4,7 +4,12 @@ Status: Accepted
 
 Date: 2026-09-15
 
-Implementation Status: `[implemented and synthetically rehearsed; production G8 open]`
+Implementation Status: `[implemented; authorized C4 research G8 verified and G9 signed; production/client qualification unestablished]`
+
+Outcome reconciled 8 October: [G8 independent readback](../operations/g8/g8-final-results-20260923.md)
+and [G9 closure](../operations/g8/g9-closure-20260927.md) establish the limited
+research outcome. [Current status](../roadmap/CURRENT_STATUS.md) owns remaining work;
+dated synthetic/preflight narratives below retain their original scope.
 
 ## Context
 
