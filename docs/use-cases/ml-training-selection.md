@@ -148,15 +148,17 @@ flowchart TD
     Score --> Exit["G9 quality and operational disposition"]
 ```
 
-### Planned Transformer and cascade training
+### Transformer research and proposed cascade training
 
-After the LightGBM exit disposition, the Transformer campaign must declare its
-tensor contract, masked padding/missingness, causal cutoff, train-only
-normalization, model sizes, sequence lengths, optimizer/schedule, loss, seeds,
-early stopping and checkpoint selection before GPU Jobs. Record learning
-curves, retained checkpoint hashes, runtime, peak memory and throughput in
-MLflow. No Transformer training command or resumable checkpoint implementation
-exists yet. See [ARD-0036](../architecture/ARD-0036-market-sequence-transformer.md).
+The bounded standalone campaign, confirmations, calibration/comparison and
+authorized December evaluation are independently verified. The model/trainer
+and checkpoint implementation bind masked padding/missingness, causal cutoff,
+train-only normalization, architecture, optimizer/schedule, loss and seeds.
+See [ARD-0036](../architecture/ARD-0036-market-sequence-transformer.md) for the
+contract and [current disposition](../ml/transformer-research-disposition-20261008.md)
+for evidence and limitations. Durable results precede deferred MLflow
+reconciliation; full serving/resource acceptance and production qualification
+remain open. New fitting or scoring still needs its own approved package.
 
 The cascade needs a further guard: training features cannot be in-sample
 predictions/embeddings from a Transformer trained on those same labels.

@@ -18,85 +18,18 @@ Next is #90/#91 saved-score mock integration, then fresh inference. Hybrid work
 and broader quality claims still require a separately justified study.
 Existing dates below remain baseline targets pending evidence-based reforecast.
 
-The Transformer implementation, replacement GPU smoke and all four fixed-grid
-trials have passed independent verification. The [grid results](../ml/transformer-training-grid-results.md)
-select width 128, learning rate 0.0003, seed 42, epoch 4: selection log loss
-0.002437833 and F1 1.0 on 1,250 rows, including 45 positives. This is the tuning
-fold, not evidence of superiority over LightGBM. Both replacement confirmations
-are [independently verified](../ml/transformer-confirmation-results-20261004.md);
-three-seed stability passed with selection-loss range 0.002395075568322679 and
-F1 range 0.0. Seed 42 / epoch 4 remains the candidate. The earlier failed attempt
-is preserved, and the full $25 confirmation commitment remains held pending billing.
-The [checkpoint compatibility package](../ml/transformer-comparison-20261004.md)
-was approved and PR #311 merged, but its one-hour Job was cancelled when the
-observer rejected IMAGE_PULLING. That attempt's output prefix is empty.
-[Bug #312](https://github.com/khab40/lob-arena/issues/312) repairs the
-state mismatch and startup timer; PR #313 merged with all 25 checks passed.
-The [fresh r2 package](../ml/transformer-comparison-r2-20261004.md) passes
-252 inert tests (one expected skip), image/request inspection and exact dry-run.
-PR #315 merged and its exactly approved one-hour L40S Job completed in 324.59 s.
-The [comparison report](../ml/experiments/transformer-comparison-r2-20261004/report.md)
-records independently reconciled temperature/operating points and all 244 artifacts.
-[Bug #317](https://github.com/khab40/lob-arena/issues/317) resolves a single-ULP
-aggregate mismatch without rerunning the model. O development F1/AP are 1.00/1.00
-for Transformer versus 0.545/0.436 for frozen LightGBM. Recommendation is
-**continue_research**, accepted by the operator after PR #318 merged with green CI.
-The approved next study uses the same prepared December Nasdaq data with candidate
-choices locked before access. [Settings #314](../ml/transformer-settings-release.md)
-and the [prospective protocol](../ml/transformer-holdout-protocol-20261005.md) are
-merged in PR #319. The [separate consumer](../ml/transformer-holdout-consumer.md)
-is merged in PR #321 with authorization/parity, exact inputs/pairing and verified
-measurement/publication readback. The [sealed execution image/startup chunk](../ml/transformer-holdout-execution-package.md)
-preserves 13 numerical files and 48 installed packages; 403 inert regressions pass.
-P1 Bug #325 binds the copied overlay to a clean matching Git commit and verifies
-all 20 context files in the rebuilt image; PR #323 and review-policy PR #326 are
-merged with green CI. [Admission preparation](../ml/transformer-holdout-admission.md)
-authenticates a saved 64-row reference. PR #328 merged with all 25 checks passed;
-P1 #329 is closed. The approved three-JSON/62-HEAD metadata audit completed and
-[passed independent verification](../ml/transformer-holdout-metadata-results-20261006.md):
-30 December runs / 15,160 aligned rows, all versions `1`. Both grants are removed
-and original policies verified at final version 10 / results version 11.
-At that metadata stage, no December rows were read; HEAD checks did not verify
-fresh payload hashes. The later authorized evaluation is recorded below.
-PR #331 and both post-merge workflows passed. The reference is now published at
-version `1`; the sealed image is published by immutable digest. The
-[252-input execution package](../ml/transformer-holdout-run-20261006.md) binds exact
-access/credential/request pins, bounded supervision and original-policy restoration.
-Actual SDK/local-CLI preflight, 258 inert holdout tests and the exact provider dry-run pass.
-PR #337 merged with green CI and the operator approved the exact package. Both
-grants were verified at final11/results12, but the standalone watcher expired
-before a separate creation tool call; the submission guard stopped before intent
-or mutation. All 23 observations and fresh MCP reconciliation show Job absence;
-no December payload read or model ran. [Bug #339](https://github.com/khab40/lob-arena/issues/339)
-repairs this with [same-process admission](../operations/transformer-coordinated-admission.md),
-durable intent and reserved observation time; 46 focused inert cases pass.
-PR #340 and public-evidence prevention #342 are merged with green checks.
-Original observer history and the prior access overrun remain disclosed. The
-approved [first-Job recovery](../ml/transformer-holdout-first-run-recovery-20261007.md)
-completed as aijob-e00gvk2fdn6cmjxvkg, passed CUDA reference parity and published
-all seven outputs. Original verification aborted on cross-platform rounding;
-reviewed offline replay now verifies all 15,160 rows against the original baseline.
-The Job grants were removed after about 1,691 seconds within the three-hour window.
-After an earlier before-credential recovery failure, the corrected approved
-one-file recovery used one GET and restored the original results policy in
-139.547514 seconds. Current complete policies match at final14/2 and results19/9.
-[Bug #345](https://github.com/khab40/lob-arena/issues/345) repairs probability
-equivalence and durable readback under [this recovery plan](../ml/transformer-holdout-verification-repair-20261007.md).
-PR #346's repair and full verification are independently reviewed. Frozen balanced
-F1 is 95.35% for Transformer versus 74.48% for LightGBM; Transformer has zero
-false positives and 91.11% recall. LightGBM's high-recall point reaches 93.33%
-recall with 851 false positives. The [verified report and plots](../ml/transformer-holdout-report-20261007.md)
-and operator's 8 October continuation support bounded research/demo engineering.
-Explicit retained-reference calibration/decision acceptance completes #314's scope.
-Next: the [saved-score mock and fresh-inference sequence](../ml/transformer-research-disposition-20261008.md#next-medium-prs)
-under #90/#91. One date and three sessions do not establish production quality.
-The $6.25 holdout reservation remains held with billing unreconciled; no GPU
-rerun is required. Full #24 acceptance remains open alongside the approved first
-#90/#91 saved-score mock; fresh scoring follows separately reviewed packaging.
-Historical LightGBM December exposure remains disclosed; online
-MLflow follows research. Both $6.25 comparison commitments remain held pending
-billing. This roadmap grants no execution or access authority. Consumed attempts
-stay retained; no GPU rerun is needed. Future workloads need fresh exact approval.
+The verified development comparison and December holdout support the recorded
+`continue_research` decision and scoped #314 acceptance. Full #24 remains open
+for MLflow lineage, dedicated serving and resource/cost acceptance. Coverage is
+one December date and three sessions with research/synthetic labels; this does
+not establish production quality. Current candidate identity, metrics, access
+closure and unreconciled reservations are owned by [current status](CURRENT_STATUS.md)
+and the [research disposition](../ml/transformer-research-disposition-20261008.md).
+
+Consumed attempts and their immutable packages remain retained. The detailed
+[pre-compaction campaign narrative](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/roadmap/ROADMAP-MAIN.md)
+records the original Job, PR and recovery sequence. No rerun, final access,
+promotion or new workload follows from this roadmap.
 
 Baseline target for the current Nasdaq/LOBSTER learned-detector milestone:
 **2026-11-20**.
@@ -177,14 +110,9 @@ The following must match exactly:
 
 Different Job IDs, timestamps, runtime, and cost are permitted.
 
-**Complete 2026-09-07.** Successful Jobs
-`aijob-e00qe81x3p8td0sgmj`, `aijob-e00nq0t5p6j8jk88z3`, and
-`aijob-e00aw1zyvs4nf931ef` map respectively to MLflow runs
-`e3dd3db46d9741d89b3ed230df109c09`,
-`36589c337eb343a6bfe826ac3fb347dd`, and
-`ce34abdaf5014224b636f9a83354e67a`. The strict comparison receipt has status
-`passed`, disposition `g5_reproducibility_passed`, nine passing gates, and 21
-matching deterministic fields.
+**Complete 2026-09-07:** three sequential Jobs passed nine gates and matched
+21 deterministic fields. Exact Job/MLflow identities remain in the
+[historical campaign narrative](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/roadmap/ROADMAP-MAIN.md#g5---reproducibility).
 
 ### G6 - Bounded Development Campaign
 
@@ -195,42 +123,18 @@ Run the nine remaining experiments:
 - two candidate seed-stability runs; and
 - raw, Platt, and isotonic calibration comparisons.
 
-The fixed matrix, validation-only ordering, seed tolerances and calibration
-gate are now encoded in
-`configs/experiments/lightgbm-wave1/g6-campaign-20260907.json`. Four concrete
-search Jobs run first. Their selected experiment is then mechanically reused
-for the two seed and three calibration Jobs; no result-dependent trial is
-added. The completion comparator requires all nine planned run IDs, matching
-input/runtime-image identities, recorded source provenance, verified collection
-receipts, no test access, and retention of every rejected candidate.
-Each Job is also required to produce a distinct run in
-`lob-arena/lightgbm-development` with metadata-only governed dataset inputs,
-validation/detection/calibration metrics, artifacts and cloud resource
-evidence; raw rows are not uploaded to MLflow.
+The fixed matrix and validation-only ordering are encoded in
+`configs/experiments/lightgbm-wave1/g6-campaign-20260907.json`. Search selection
+feeds the two seed and three calibration Jobs mechanically; no test access or
+result-dependent added trials are permitted. All nine run IDs, collection receipts,
+input/image identities and metadata-only dataset lineage were verified.
 
-The initial infrastructure-only G5 failure and three successful repeats raised
-consumption from seven to 11 of the separate 20-Job LightGBM development
-ceiling. In accordance with the predeclared failure rule, the unstarted G6
-matrix drops one hyperparameter configuration and now consumes the nine
-remaining slots. There is no failure reserve unless the matrix is reduced
-again or the cap is formally amended before submission.
-
-**Complete 2026-09-10.** The search selected `ablate-state`; seeds 42, 7, and
-2027 reproduced F1 `0.6931407942`, minimum family recall `0.5333333333`, and
-validation binary log loss `0.3449773248` exactly. Isotonic retained those
-detection metrics while improving calibrated Brier score to
-`0.0068910983` and validation ECE to `1.4586e-18`, ahead of Platt
-(`0.0080377169`, `0.0042177037`) and raw
-(`0.0209358031`, `0.0816111663`). These are validation-only research metrics,
-not final-test or production claims.
-
-All nine collection receipts verified, all nine MLflow run IDs are distinct,
-dataset lineage is metadata-only, and no test fold was accessed. The immutable
-runtime image and dataset identity match across the campaign. Two recorded
-control-plane Git SHAs reflect the receipt-reliability fix applied before the
-last two packages; the runtime image, inputs, experiment specifications, model,
-and raw calibration predictions did not change. The original fail-closed
-diagnostic is retained separately from the passing final receipt.
+**Complete 2026-09-10:** `ablate-state` selected; seeds 42, 7 and 2027 matched
+exactly. Isotonic improved validation calibration without changing detection
+metrics. All rejected candidates and the original fail-closed receipt are retained.
+Development consumption is 20/20; this completed ceiling grants no new Jobs.
+Detailed validation metrics and source-repair provenance remain in the
+[historical G6 record](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/roadmap/ROADMAP-MAIN.md#g6---bounded-development-campaign).
 
 ### G7-G9
 
@@ -254,69 +158,19 @@ diagnostic is retained separately from the passing final receipt.
 
 Remaining critical path:
 
-The September 28 maintenance-first ordering is historical and was superseded by
-the operator's October 2 [research-first decision](../ml/transformer-research-fork.md).
-The Transformer/LightGBM comparison and authorized December evaluation are
-independently verified, and the bounded continuation decision is recorded.
-The #90/#91 saved-score mock is next; platform acceptance under #19–#21 remains
-deferred. The [MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md)
-passed; remaining recovery/registration, infrastructure and observability work
-is deferred. Preserve durable research artifacts and reconcile MLflow afterward.
-None requires reopening G8 or altering the signed G9 decision.
+1. Prepare #90/#91 private saved-score playback under the recorded continuation;
+   then define and separately approve the fresh-inference adapter and causal event
+   integration. Full #24 acceptance remains open.
+2. Reconcile durable MLflow events/lineage and deferred platform work under #19–#21
+   after research. None requires reopening signed G8/G9.
+3. Reforecast downstream dates from remaining integration and acceptance work.
+   October 9 is a baseline target, not a full-story completion forecast.
 
-The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
-at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
-and merge are complete. Tracking reconciliation is [Bug #229](https://github.com/khab40/lob-arena/issues/229).
-
-1. #24's [input-contract implementation](../ml/transformer-input-contract.md) is
-   merged in #236. The [CPU development-input verification plan](../ml/transformer-development-verification-plan.md)
-   is implemented. Its approved Job failed before input download due to late
-   signed context; #238's repair is merged in #237 and the separately approved
-   [r2 replacement passed independent verification](../ml/transformer-development-results-r2.md).
-   PR #239 is merged. The [bounded GPU training/checkpoint, calibration and MLflow
-   plan](../ml/transformer-gpu-campaign-plan.md) was approved and merged in #241.
-   The first [readiness increment](../ml/transformer-campaign-readiness.md) merged
-   in #248. The [provenance continuation](../ml/transformer-role-provenance.md)
-   verified the 29-object metadata chain and 30 replay domains after the corrected
-   temporary grant. Access cleanup is independently verified at bucket version 134.
-   The verified metadata and train-only normalizer are now bound into a
-   deterministic CPU evidence bundle, independently checked offline. #249/#254
-   are merged. PR #258 and its compatibility repair are also merged with passing CI.
-   PR #267 merged the [actual-runtime readiness repair](../ml/transformer-runtime-preflight.md)
-   for Bugs #266/#268. The separately approved
-   [r3 audit passed](../ml/transformer-lineage-r3-results.md): 115 metadata GETs,
-   356,040 bytes and all 30 validation-run semantic bindings independently verified.
-   Cleanup restored the original two rules and non-policy settings at bucket
-   version 143. Earlier attempts remain preserved and consumed.
-   PRs #271/#272 are merged. The [source separation proof](../ml/transformer-source-separation.md)
-   now reauthenticates retained evidence and binds the three whole instrument
-   domains, including warm-up ancestry and all synthetic labels, to the reviewed
-   producer contract. It claims neither time separation nor statistical independence.
-   The [CPU role-audit package](../ml/transformer-role-audit-package.md) now binds
-   this proof to signed provider context, restricted row records and independent
-   class-count readback; PR #275 is merged. The research fork moved these checks
-   into each GPU Job, replacing the separate CPU-first prerequisite. The verified
-   smoke and four grid Jobs checked per-role support and exact row alignment.
-   [MLflow readiness](../ml/mlflow-readiness-design.md) and platform acceptance
-   remain deferred; retained S3 artifacts and replayable events preserve results.
-   Research-control negative labels remain assumptions and positive labels remain
-   synthetic. The [grid result](../ml/transformer-training-grid-results.md) advances
-   #24's research campaign; [confirmation stability passed](../ml/transformer-confirmation-results-20261004.md).
-   Calibration, exact-row comparison and the authorized December holdout are
-   independently verified. The [recorded continuation](../ml/transformer-research-disposition-20261008.md)
-   completes scoped #314 acceptance; full #24 still needs MLflow lineage,
-   dedicated serving-path and resource/cost acceptance.
-2. Reforecast downstream dates. The gated September 24 start was missed;
-   October 9 remains a baseline target, not a forecast. Preserve the frozen
-   LightGBM result; future qualification claims need untouched held-out evaluation data.
-
-See the [detailed G8 plan](PHASES.md#g8-recovery-and-completion-plan). Apply the
-[validation execution policy](../ml/model-validation-execution-policy.md): model/runtime
-work runs on Nebius Serverless; historical billing-freshness, submission-expiry and
-fixed VM windows are not current prerequisites. Final-test approval remains separate.
-
-Wave 2 eligibility is satisfied by the signed `research_baseline_qualified`
-disposition. Its research-only limits remain binding; the fixed training grid is verified.
+The [G8/G9 owner](../operations/g8/README.md) retains closure and recovery receipts.
+Apply the [validation execution policy](../ml/model-validation-execution-policy.md):
+model/runtime work runs on Nebius Serverless; final-test approval is separate.
+Preserve frozen LightGBM and consumed approvals. Future qualification needs
+untouched held-out data and a separately approved study.
 
 ## Phase 3 - Standalone Transformer
 

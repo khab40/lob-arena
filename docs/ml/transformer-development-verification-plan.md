@@ -1,5 +1,10 @@
 # Transformer development-input verification — 2026-09-28
 
+Historical plan/execution record; reconciled 8 October 2026. The original plan/failed attempt precede the separately approved, verified development replacement.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 Latest outcome: the reviewed repair and separately approved r2 replacement
 [passed independent verification](transformer-development-results-r2.md).
 The original r1 planning and failed-attempt history below remain preserved.

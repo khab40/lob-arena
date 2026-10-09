@@ -1,5 +1,10 @@
 # Selected LightGBM lineage verification — 2026-09-22
 
+Historical plan/execution record; reconciled 8 October 2026. The bounded audit completed; its recorded cloud/access bounds are consumed historical authorization.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 As a validation engineer,
 I want the frozen development run's dataset lineage and seven saved artifacts independently verified,
 So that G8 preparation can rely on durable evidence without changing the candidate.

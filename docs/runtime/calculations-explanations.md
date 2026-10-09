@@ -1,501 +1,78 @@
 # LOB Arena Calculations and Workflow Explanations
 
-> **Scope reviewed 2026-09-21:** This is the legacy synthetic rules/tournament
-> calculation reference, including the retained Python batch implementation.
-> Its simulator-privileged features and coarse labels are not the causal
-> `lob_features_v2` ML contract. Java owns the live arena. The learned-model
-> lifecycle and current gates are documented [separately](../use-cases/ml-lifecycle.md).
-> Local tournament examples describe existing capability; agent model workloads
-> follow the [Nebius execution policy](../ml/model-validation-execution-policy.md).
+This reference owns the retained Python synthetic rule-detector and tournament
+formulas. Java owns the live arena under [ARD-0020](../architecture/ARD-0020-java-arena-websocket-agent-orchestration.md).
+Simulator-privileged rule features are not the causal `lob_features_v2` ML
+contract. Governed training/calibration/evaluation uses the
+[ML lifecycle](../use-cases/ml-lifecycle.md) and
+[Nebius execution policy](../ml/model-validation-execution-policy.md).
+
+The [pre-reconciliation narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/runtime/calculations-explanations.md)
+preserves the earlier workflow description and former gaps. It is historical:
+the maintained runner now applies exact counts, seed and difficulty and computes
+temporal/attribution metrics.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [End-to-End Flow](#end-to-end-flow)
 - [Step 1 — Runtime](#step-1--runtime)
-  - [Local Demo](#local-demo)
-  - [Nebius Cloud](#nebius-cloud)
-  - [Execution Evidence](#execution-evidence)
 - [Step 2 — Scenario Generator](#step-2--scenario-generator)
-  - [Inputs](#inputs)
-  - [Endpoint Generation Path](#endpoint-generation-path)
-  - [Canonical Scenario Output](#canonical-scenario-output)
-  - [Deterministic Fallback Generation](#deterministic-fallback-generation)
-  - [Projection into Arena](#projection-into-arena)
-  - [Replay in Arena](#replay-in-arena)
 - [Step 3 — Investigation Team](#step-3--investigation-team)
-  - [Input Evidence](#input-evidence)
-  - [Investigation Output](#investigation-output)
-  - [Detector Confidence vs Investigator Confidence](#detector-confidence-vs-investigator-confidence)
 - [Detector Evidence Calculations](#detector-evidence-calculations)
-  - [Bid and Ask Depth](#bid-and-ask-depth)
-  - [Order-Book Imbalance](#order-book-imbalance)
-  - [Spread in Basis Points](#spread-in-basis-points)
-  - [Depth Change](#depth-change)
-  - [Wall-Size Ratio](#wall-size-ratio)
-  - [Cancel-to-Trade Ratio](#cancel-to-trade-ratio)
-  - [Order Lifetime](#order-lifetime)
-  - [Message Rate](#message-rate)
 - [Detector Formulas](#detector-formulas)
-  - [Spoofing-Like Detector](#spoofing-like-detector)
-  - [Layering-Like Detector](#layering-like-detector)
-  - [Quote-Stuffing Detector](#quote-stuffing-detector)
-  - [Liquidity-Shock Detector](#liquidity-shock-detector)
-  - [Evidence Flattening](#evidence-flattening)
 - [Step 4 — Detector Tournament](#step-4--detector-tournament)
-  - [Tournament Inputs](#tournament-inputs)
-  - [Execution Modes](#execution-modes)
-  - [Local Tournament Workload](#local-tournament-workload)
-  - [Single Simulation Run](#single-simulation-run)
-  - [Ground-Truth Mapping](#ground-truth-mapping)
-  - [Detection Latency](#detection-latency)
-  - [Tournament Metrics](#tournament-metrics)
-  - [Generated Artifacts](#generated-artifacts)
 - [Step 5 — Execution Trace](#step-5--execution-trace)
 - [Datasets Used](#datasets-used)
 - [Known Implementation Gaps](#known-implementation-gaps)
 - [Worked Evidence Example](#worked-evidence-example)
 - [Accurate Technical Description](#accurate-technical-description)
 
----
-
 ## Overview
 
-The Nebius Control Panel combines three different mechanisms:
+The demo combines deterministic simulation, rule detectors and optional Nebius
+generation/investigation services. Rules calculate their scores and alert
+thresholds; the AI Investigator explains structured evidence. Its risk/confidence
+is explanatory output, not a calibrated probability of real market abuse.
 
-1. deterministic market simulation;
-2. deterministic rule-based detectors;
-3. optional Nebius LLM and Serverless execution for scenario generation, investigation, explanation, and batch processing.
-
-The five Control Panel workflow steps are:
-
-1. Runtime
-2. Scenario Generator
-3. Investigation Team
-4. Detector Tournament
-5. Execution Trace
-
-The most important architectural distinction is:
-
-```text
-Nebius AI:
-  scenario generation
-  evidence explanation
-  investigation synthesis
-  batch orchestration
-
-Deterministic LOB Arena code:
-  order book
-  feature calculation
-  detector confidence
-  alert threshold
-  tournament ground-truth mapping
-  precision / recall / F1
-```
-
-The AI does not currently calculate the primary detector confidence values. Those values come from explicit feature formulas and weighted rules in the backend.
-
----
+Mock outputs establish response compatibility, not measured detector quality or
+proof that an Endpoint/Job executed. Learned-model implementation, qualification
+and live integration remain separate from this synthetic rules path.
 
 ## End-to-End Flow
 
 ```text
-Scenario parameters
-       ↓
-Nebius Endpoint or deterministic template
-       ↓
-Canonical scenario + explicit ground truth
-       ↓
-Projection into an Arena attack scenario
-       ↓
-Arena simulation / order-book changes
-       ↓
-Feature extraction on each tick
-       ↓
-Four deterministic detector scores
-       ↓
-Incident and evidence
-       ↓
-Nebius Investigation Team explanation
-       ↓
-Tournament against known synthetic labels
-       ↓
-Precision / recall / F1 / latency + artifacts
+Bounded scenario specification + separate ground truth
+  -> named Arena scenario projection
+  -> authoritative Java live exchange (or retained offline batch simulation)
+  -> numeric rule features -> detector scores -> incidents/evidence
+  -> optional AI investigation
+  -> synthetic tournament metrics and retained artifacts
 ```
 
-The order book and matching engine remain authoritative. AI produces bounded scenarios and explanations, while detector confidence is calculated by deterministic formulas.
-
----
-
-# Step 1 — Runtime
-
-## What this step does
-
-Runtime selects whether LOB Arena operates in:
-
-- **Local Demo** mode; or
-- **Nebius Cloud** mode.
-
-The UI checks:
-
-- whether an AI Endpoint URL is configured;
-- whether the endpoint is healthy;
-- whether authentication credentials exist;
-- whether a Serverless Job submission command is configured.
-
-Conceptually:
-
-```text
-endpointWillUseNebius =
-    cloud mode
-    AND at least one endpoint is configured
-    AND endpoint health is healthy / ok / ready
-
-jobWillUseNebius =
-    cloud mode
-    AND Job submission template is configured
-```
-
-If those conditions fail, LOB Arena falls back to deterministic local behavior and displays the fallback status instead of claiming a successful cloud run.
-
-## Local Demo
-
-In Local Demo:
-
-- scenario generation uses deterministic templates;
-- investigation uses deterministic investigator output;
-- tournament defaults to deterministic mock output;
-- no GPU is used;
-- no Nebius credentials are required;
-- the same API response schemas and UI panels are retained.
-
-This makes the demo reliable, but a visible result in the panel does not automatically prove that a Nebius Endpoint or Serverless Job actually ran.
-
-## Nebius Cloud
-
-In Cloud mode:
-
-- Scenario Generator can call the Nebius Endpoint;
-- Investigation Team can call the Nebius Endpoint;
-- Detector Tournament can submit a Nebius Serverless Job;
-- the UI polls Job status;
-- generated artifacts can be collected from S3;
-- execution evidence can be synchronized into the local evidence archive.
-
-The standard tournament path polls every two seconds. Managed cloud experiment Jobs use five-second polling.
-
-## Execution Evidence
-
-The **Sync evidence from S3** action concerns cloud execution evidence, not detector evidence.
-
-Execution evidence can include:
-
-- Job IDs;
-- endpoint request metadata;
-- cloud artifact metadata;
-- S3 locations;
-- Job logs;
-- manifests;
-- checksums;
-- model and endpoint information.
-
-This differs from detector evidence such as `wall_size_ratio = 9.4` or `message_rate_per_sec = 22`.
-
----
-
-# Step 2 — Scenario Generator
-
-## Inputs
-
-The Control Panel sends:
-
-- manipulation type;
-- difficulty;
-- symbol;
-- duration in ticks;
-- liquidity regime;
-- volatility regime;
-- seed.
-
-Accepted values:
-
-```text
-Manipulation:
-  spoofing_like_wall
-  layering_like
-  quote_stuffing
-  liquidity_evaporation
-
-Difficulty:
-  easy
-  medium
-  hard
-  adversarial
-
-Liquidity:
-  thin
-  normal
-  deep
-
-Volatility:
-  low
-  medium
-  high
-
-Duration:
-  30–600 ticks
-```
-
-Default request:
-
-```text
-manipulation_type = spoofing
-difficulty        = medium
-symbol            = AIMD
-duration_ticks    = 120
-liquidity         = thin
-volatility        = high
-seed              = 42
-```
-
-## Endpoint Generation Path
-
-The frontend calls:
-
-```http
-POST /api/nebius/scenario-generator/generate
-```
-
-The backend then:
-
-1. sends the bounded request through the Nebius client;
-2. normalizes the response into a strict canonical schema;
-3. fills missing or malformed fields with deterministic fallback values;
-4. projects the canonical scenario into an Arena-compatible attack;
-5. stores the canonical and projected forms;
-6. preserves explicit ground truth.
-
-## Canonical Scenario Output
-
-The canonical scenario contains:
-
-```text
-scenario_id
-title
-description
-manipulation_type
-difficulty
-symbol
-duration_ticks
-liquidity_regime
-volatility_regime
-events[]
-ground_truth
-expected_detector_behavior
-explanation
-replay information
-source/model information
-fallback reason
-```
-
-Ground truth contains:
-
-- manipulation label;
-- manipulation start and end windows;
-- manipulator agent IDs;
-- expected detector targets;
-- positively labelled event IDs.
-
-The synthetic generator therefore produces the answer key explicitly. This makes later comparison between detector predictions and known truth possible.
-
-## Deterministic Fallback Generation
-
-When the real Endpoint is unavailable, `mock_response()` creates a reproducible scenario.
-
-The scenario ID is based on:
-
-```text
-manipulation type + symbol + stable seed
-```
-
-The approximate manipulation window is:
-
-```text
-start_tick = max(10, duration_ticks / 6)
-
-end_tick =
-    min(
-        duration_ticks,
-        max(start_tick + 12,
-            duration_ticks - duration_ticks / 5)
-    )
-```
-
-### Event templates
-
-**Spoofing**
-
-```text
-1. place a large visible wall
-2. cancel before execution
-3. execute a smaller opposite-side trade
-```
-
-**Layering**
-
-```text
-1. place a first layer
-2. add another adjacent layer
-3. cancel layers after pressure appears
-```
-
-**Liquidity Evaporation**
-
-```text
-1. thin the top three levels on both sides
-2. maintain reduced visible depth
-3. widen the spread after depth collapse
-```
-
-**Quote stuffing**
-
-```text
-1. burst-submit quotes
-2. rapidly cancel them
-3. record message-rate and spread distortion
-```
-
-### Quantity calculation
-
-```text
-thin liquidity   → 250
-normal liquidity → 500
-deep liquidity   → 800
-```
-
-### Price-offset scale
-
-```text
-low volatility    → 0.05
-medium volatility → 0.15
-high volatility   → 0.35
-```
-
-## Projection into Arena
-
-The canonical AI scenario is translated into the existing Arena attack configuration.
-
-Examples:
-
-```text
-fakeOrderLevels:
-  quote stuffing → 8
-  other types    → 4
-
-fakeOrderSizeMultiplier:
-  easy / medium    → 6
-  hard / adversarial → 10
-
-cancelDelayTicks:
-  quote stuffing → 4
-  other types    → 12
-
-realTradeSize:
-  easy      → 120
-  otherwise → 240
-
-stealth:
-  easy          → obvious
-  medium / hard → medium
-  adversarial   → subtle
-```
-
-## Replay in Arena
-
-The Replay button does not necessarily replay the raw LLM event list event-for-event.
-
-Instead it:
-
-1. takes the generated canonical scenario ID;
-2. retrieves the projected attack scenario;
-3. invokes the existing named-scenario injection path;
-4. lets `SimulationEngine` and `ScenarioController` execute it.
-
-A precise description is:
-
-> The AI generates a canonical scenario specification. LOB Arena then projects that specification onto one of the simulator’s supported executable scenario families.
-
----
-
-# Step 3 — Investigation Team
-
-## Input Evidence
-
-The Investigation Team normally receives an Arena incident or a fallback demonstration incident.
-
-Its input can include:
-
-- detector scores;
-- detector confidence;
-- order-book features;
-- incident tick;
-- attack and scenario context;
-- market snapshots or timeline events;
-- flattened detector evidence.
-
-The backend endpoint is:
-
-```http
-POST /api/nebius/investigation-team/analyze
-```
-
-The request and response are persisted in:
-
-```text
-nebius/investigation_team_reports.jsonl
-```
-
-## Investigation Output
-
-The Investigation Team returns:
-
-- manipulation type;
-- executive summary;
-- risk score;
-- confidence;
-- consensus;
-- specialist agent findings;
-- evidence timeline;
-- recommended action.
-
-Each specialist provides:
-
-```text
-name
-role
-finding
-confidence
-evidence items
-```
-
-The Investigation Team is therefore primarily an explanatory and adjudication layer, not the primary detector.
-
-## Detector Confidence vs Investigator Confidence
-
-### Detector confidence
-
-Calculated mechanically from explicit feature formulas.
-
-### Investigator confidence and risk score
-
-Returned by the Investigation Team response.
-
-- In real Endpoint mode, this is model-generated structured output based on supplied evidence.
-- In fallback mode, it is deterministic mock investigator output.
-
-The investigator’s `risk_score` is not yet a statistically calibrated probability of real market abuse. It is an explanatory risk assessment over synthetic evidence.
-
----
+## Step 1 — Runtime
+
+The [runtime model](runtime-model.md) owns current Java/Python boundaries and
+worker caps. The [Serverless entry point](../../serverless/README.md) owns wiring
+and distinguishes build/import checks from runtime smoke tests. Local mock
+responses require no cloud execution; a configured cloud route still records
+fallback if the Endpoint or Job path fails.
+
+## Step 2 — Scenario Generator
+
+[ARD-0016](../architecture/ARD-0016-ai-scenario-generator.md#canonical-schema)
+owns accepted enums, complete request/response examples, fallback and persistence.
+The Replay action projects a canonical specification onto one of four supported
+named scenarios; it does not replay arbitrary LLM events event for event.
+Specification ground truth must not be substituted for executed scenario labels.
+
+## Step 3 — Investigation Team
+
+[ARD-0015](../architecture/ARD-0015-nebius-ai-investigation-team.md) owns evidence
+shaping, fallback metadata and structured assessment. The request is a bounded
+summary, not an unbounded raw exchange stream. Detector scores are mechanical
+rule outputs; investigator risk/confidence is model-generated in Endpoint mode
+and deterministic mock output in fallback mode.
 
 # Detector Evidence Calculations
 
@@ -629,7 +206,7 @@ message_rate_per_sec =
 
 # Detector Formulas
 
-All current detectors raise an alert at:
+The four retained Python rule detectors raise an alert at:
 
 ```text
 confidence >= 0.75
@@ -773,429 +350,157 @@ evidence.setdefault(item.key, item)
 
 If multiple detectors expose the same evidence key, later values do not overwrite the first one.
 
----
 
 # Step 4 — Detector Tournament
 
+The maintained runner is
+[`serverless/jobs/detector_tournament.py`](../../serverless/jobs/detector_tournament.py).
+[ARD-0017](../architecture/ARD-0017-ai-detector-tournament.md) owns API modes and
+orchestration; the [Jobs reference](../../serverless/jobs/README.md#detector-tournament)
+owns runner arguments and filenames.
+
 ## Tournament Inputs
 
-Default values:
-
-```text
-number_of_scenarios = 100
-
-manipulation_types:
-  spoofing
-  layering
-  quote_stuffing
-
-difficulty_mix:
-  easy        20%
-  medium      50%
-  hard        20%
-  adversarial 10%
-
-detectors:
-  spoofing_like
-  layering_like
-  quote_stuffing
-
-random_seed = 42
-execution_mode = local_mock
-```
+The API accepts `number_of_scenarios` from 1 to 1000; scenario names are
+`spoofing_like_wall | layering_like | quote_stuffing | liquidity_evaporation`.
+Direct runner plans can also include the `normal_market` negative control.
+Difficulty is `easy | medium | hard | adversarial`, with default weights
+20% / 50% / 20% / 10%. `random_seed` defaults to 42.
+Requested API mode is `local_mock | local | nebius`.
 
 ## Execution Modes
 
-### `local_mock`
+- `local_mock`: return deterministic rows without simulation execution or runner artifacts.
+- `local`: run the retained, capped rule tournament through the existing background task; only one local tournament executes at a time.
+- `nebius`: use the configured Job path; missing configuration returns mock rows with a fallback reason.
 
-No simulation batch is executed. A deterministic leaderboard is returned immediately.
-
-This is the default Control Panel mode.
-
-### `local`
-
-The backend starts a background task and executes:
-
-```text
-serverless/jobs/detector_tournament.py
-```
-
-as a local subprocess.
-
-### `nebius`
-
-When `NEBIUS_JOB_SUBMIT_COMMAND_TEMPLATE` is configured:
-
-- the batch is submitted to Nebius;
-- a Nebius Job ID is recorded;
-- the UI polls status;
-- logs and S3 artifacts are collected;
-- metrics are reconstructed from downloaded artifacts.
-
-If the Job submission template is missing, LOB Arena returns deterministic mock tournament output and records a fallback reason.
+These are application capabilities. Agent-initiated model workloads, including
+synthetic training/scoring/evaluation rehearsals, run on Nebius under their own
+authorization. Local rule simulation does not waive that policy.
 
 ## Local Tournament Workload
 
-The requested total is converted to approximately equal runs per selected scenario:
+The facade passes exactly
+`effective_scenarios = min(requested_scenarios, local_limit)` to `--runs`.
+There is no ceil-per-family overshoot.
+
+`exact_balanced_plan(N, families, seed)` creates exactly N entries by cycling
+families, then shuffles them with the supplied seed. For N=100 and three
+families, the counts are 34 / 33 / 33. The weighted difficulty plan normalizes
+weights, floors N × weight, allocates the remaining entries by fractional
+remainder, then shuffles with `random_seed + 1`.
+
+Each run's seed is independently derived as:
 
 ```text
-effective_scenarios =
-    min(requested_scenarios, local_limit)
-
-runs_per_scenario =
-    ceil(effective_scenarios / number_of_scenario_types)
+digest = SHA-256("lob-arena:<random_seed>:<run_index>")
+run_seed = first_8_digest_bytes_as_big_endian_integer mod 2,147,483,647
 ```
 
-Example with 100 requested scenarios and three scenario families:
-
-```text
-runs_per_scenario = ceil(100 / 3) = 34
-actual simulations = 34 × 3 = 102
-```
-
-The local implementation can therefore run slightly more simulations than requested.
+[`run_planning.py`](../../backend/app/evaluation/run_planning.py) owns this
+algorithm. Difficulty selects baseline depth/normal-agent profiles; seeded
+variation changes reference price, tick spacing, depth and agent count.
 
 ## Single Simulation Run
 
-For each run and scenario:
-
-```python
-engine = SimulationEngine(seed=run_index + 17)
-```
-
-If the scenario is not `normal-market`, the relevant attack is launched.
-
-The simulation runs for exactly 14 ticks.
-
-At every tick:
-
-1. all detector scores are read;
-2. maximum confidence per detector is retained;
-3. the first tick crossing `0.75` is retained;
-4. detector types appearing in incidents are retained.
+Each planned scenario/difficulty pair creates
+`SimulationEngine(seed=run_seed, **engine_profile(difficulty, seed=run_seed))`,
+launches the selected attack unless it is `normal_market`, and executes
+14 ticks. The runner retains each detector's maximum confidence, alert ticks,
+incident presence and linked event/participant/order evidence.
 
 ## Ground-Truth Mapping
 
-The expected detector is hard-coded:
+Every selected detector is evaluated against binary attack-active truth:
 
 ```text
-spoofing_like_wall    → spoofing_like
-layering_like         → layering_like
-quote_stuffing        → quote_stuffing
-liquidity_evaporation → liquidity_shock
-normal_market         → no expected detector
-```
+truth = scenario != "normal_market"
+predicted = detector appeared in an incident OR max_confidence >= 0.75
 
-For each detector and simulation:
-
-```text
-truth =
-    detector == expected_detector
-
-predicted =
-    detector appeared in an incident
-    OR max_confidence >= 0.75
-```
-
-Then:
-
-```text
 TP = truth AND predicted
 FP = NOT truth AND predicted
 FN = truth AND NOT predicted
+TN = NOT truth AND NOT predicted
 ```
+
+Scenario family groups reports; it does not declare other detectors negative
+during an injected attack. Temporal/attribution evaluation uses the executed
+scenario label when available, not the generated specification's expected score.
 
 ## Detection Latency
 
-The first alert tick is converted to milliseconds:
-
 ```text
-latency_ms =
-    max(0, first_alert_tick - 1)
-    × tick_interval_seconds
-    × 1000
+latency_ms = max(0, first_alert_tick - 1) × tick_interval_seconds × 1000
 ```
 
-The default tick interval is `0.5 seconds`.
-
-Examples:
-
-```text
-alert at tick 1 → 0 ms
-alert at tick 2 → 500 ms
-alert at tick 3 → 1,000 ms
-```
-
-This is simulated market time, not wall-clock model-inference latency.
+The default interval is 0.5 seconds: ticks 1 / 2 / 3 correspond to
+0 / 500 / 1000 ms. This is simulated market time, not wall-clock inference
+latency. Average latency includes detections in positive runs.
 
 ## Tournament Metrics
 
-For each `(scenario, detector)` pair:
+[`ground_truth.py`](../../backend/app/evaluation/ground_truth.py) owns exact
+null/rounding and attribution behavior:
 
 ```text
-precision =
-    TP / (TP + FP)
-
-recall =
-    TP / (TP + FN)
-
-F1 =
-    2 × precision × recall
-    / (precision + recall)
+precision = TP / (TP + FP)
+recall = TP / (TP + FN)
+F1 = 2 × precision × recall / (precision + recall)
+specificity = TN / (TN + FP)
+false_positive_rate = FP / (FP + TN)
 ```
 
-If a denominator is zero, the value is set to zero.
+Undefined denominators produce null. F1 is zero when recall is zero; otherwise
+it is null when its inputs/denominator are undefined. A quiet normal-market run
+therefore has null precision/recall/F1, specificity 1 and false-positive rate 0.
 
-Average latency includes only detections for which that detector is the expected truth detector.
+For a labelled run, temporal overlap is the intersection-over-union of alert
+ticks and the inclusive primary manipulation window. First alert is classified
+as early, on time, late or missed. Event, participant and order precision/recall
+compare linked evidence IDs with label IDs; absent truth linkage yields null,
+not fabricated attribution. A phase is detected when any alert intersects its
+inclusive phase window. An unlabeled negative control has no phase/attribution
+truth; its alert timing is false positive or not applicable.
 
 ## Generated Artifacts
 
-The Job produces:
-
-```text
-metrics.csv
-results.json
-benchmark_report.md
-charts/f1_by_scenario.png
-charts/confidence_distribution.png
-charts/detection_latency.png
-```
-
-`results.json` contains per-run:
-
-- truth;
-- prediction;
-- true positive;
-- false positive;
-- false negative;
-- latency;
-- maximum confidence.
-
----
+The runner writes `metrics.csv`, `results.json`, `benchmark_report.md`,
+`charts/f1_by_scenario.png`, `charts/confidence_distribution.png` and
+`charts/detection_latency.png`. Per-run rows retain scenario, difficulty,
+derived seed, truth, predictions/confusion counts, maximum confidence, latency,
+temporal overlap, attribution and phase findings.
 
 # Step 5 — Execution Trace
 
-Execution Trace explains where a result came from.
-
-It should distinguish among:
-
-```text
-real Nebius Endpoint call
-real Nebius Serverless Job
-local simulator execution
-deterministic mock fallback
-```
-
-The trace and evidence layer can include:
-
-- execution mode;
-- model name;
-- Endpoint URL;
-- Job status;
-- Job ID;
-- fallback reason;
-- artifact paths;
-- cloud output URI;
-- token counts;
-- latency;
-- estimated cost;
-- S3 evidence records.
-
-The polished E2E flow is:
-
-```text
-AI-generated spoofing scenario
-→ LOB simulation
-→ detector alert
-→ LLM explanation
-→ investigation report
-→ detector tournament
-→ artifacts
-```
-
-Smoke-demo artifacts are written under:
-
-```text
-outputs/serverless-smoke/
-```
-
-Typical files include:
-
-```text
-summary.json
-scenario.json
-simulation_events.json
-detector_alerts.json
-investigation_report.md
-tournament_result.json
-serverless_job.json
-manifest.json
-```
-
----
+Record whether output came from an Endpoint, a Serverless Job, a local rule
+simulation or a deterministic mock. Preserve IDs, mode/model, fallback reason,
+artifact/manifest/checksum references and measured latency where available.
+The API smoke workflow writes `outputs/serverless-smoke/<experiment_id>/`;
+the shell smoke workflow has its separately selected output directory.
+Neither mock rows nor pending-cloud metadata prove a Job executed.
 
 # Datasets Used
 
-## Live Arena
-
-The live Arena uses internally generated synthetic data:
-
-- simulator-maintained order book;
-- normal-agent actions;
-- injected attack-agent actions;
-- matching-engine events;
-- snapshots;
-- detector features;
-- incidents.
-
-No public exchange dataset is loaded by the detector during live Arena execution.
-
-## Scenario Generator
-
-The generator creates a synthetic labelled scenario.
-
-- In mock mode it uses deterministic templates.
-- In real Endpoint mode an LLM generates structured scenario content, which is normalized and bounded before it enters the simulator.
-
-## Tournament
-
-The basic tournament does not load NASDAQ, LOBSTER, FI-2010, ABIDES output, or another external benchmark dataset.
-
-It creates new simulations for every run:
-
-```python
-SimulationEngine(seed=run_index + 17)
-```
-
-and applies hard-coded scenario-to-detector ground truth.
-
-The current benchmark is best described as:
-
-> A deterministic synthetic regression benchmark for LOB Arena’s own scenario and detector implementations.
-
-It is not yet an independent external validation benchmark.
-
----
+This basic tournament generates its own synthetic simulation runs; it does not
+load Nasdaq, LOBSTER, FI-2010 or ABIDES as an external validation benchmark.
+The live Java Arena separately supports historical/hybrid replay under
+[ARD-0023](../architecture/ARD-0023-hybrid-historical-replay.md). That capability
+does not make the basic synthetic tournament an independent market benchmark.
 
 # Known Implementation Gaps
 
-## 1. `difficulty_mix` is accepted but not applied by the basic batch runner
+The retained Python rules have explicit limitations:
 
-The UI sends easy, medium, hard, and adversarial proportions, but `serverless/jobs/detector_tournament.py` does not use difficulty.
+- `wall_size_ratio` uses synthetic `owner == "abuser"` information unavailable in anonymous real data.
+- `order_lifetime_ms` is elapsed time since scenario start, not measured order lifecycle.
+- Cancellation/trade proxies use simulator event messages and `TAKER_01`, rather than a venue-neutral order-flow contract.
+- The layering depth condition is ask-side-oriented.
+- The fixed 14-tick synthetic benchmark is a regression comparison, not evidence of production surveillance quality.
+- Temporal/attribution metrics exist, but their validity depends on actual label and detector-evidence linkage; null is not an observed score.
 
-A tournament configured as 90% adversarial therefore runs the same basic scenario mechanics as one configured as 90% easy, unless a separate cloud wrapper transforms the workload first.
-
-## 2. `random_seed` is accepted but not used by the basic tournament runner
-
-The request includes `random_seed`, but simulations use:
-
-```python
-seed = run_index + 17
-```
-
-Changing the Control Panel seed does not currently affect this script.
-
-## 3. Number of scenarios is not exact
-
-The value is converted to equal `runs_per_scenario`, which can overshoot the requested total.
-
-## 4. One expected detector per attack family
-
-For a spoofing scenario:
-
-```text
-spoofing_like = positive
-every other detector = negative
-```
-
-A liquidity detector that correctly observes a liquidity effect during spoofing is counted as a false positive.
-
-The benchmark therefore measures scenario-family classification more than general anomaly detection.
-
-## 5. Normal-market metrics can be misleading
-
-Normal market has no expected detector. If no alert occurs:
-
-```text
-TP = 0
-FP = 0
-FN = 0
-precision = 0
-recall = 0
-F1 = 0
-```
-
-A perfectly quiet detector therefore receives F1 equal to zero.
-
-Normal-market evaluation should also report:
-
-```text
-true negatives
-false-positive rate
-specificity
-balanced accuracy
-```
-
-## 6. Ground truth is coarse
-
-The canonical generated scenario contains manipulation windows and positive event IDs, but the basic tournament reduces truth to:
-
-```text
-scenario family → one expected detector
-```
-
-It does not yet score:
-
-- temporal overlap with the labelled attack window;
-- event-level precision and recall;
-- early versus late detection;
-- participant attribution;
-- order-level attribution;
-- manipulation phase detection.
-
-## 7. Detector evidence uses simulator privilege
-
-`wall_size_ratio` directly sums levels whose owner is `abuser`.
-
-That is acceptable for synthetic debugging but unavailable in anonymous real market data.
-
-A stronger observable-only implementation should use:
-
-- size relative to nearby levels;
-- distance from touch;
-- cancellation probability;
-- execution ratio;
-- replenishment pattern;
-- side switching;
-- participant or order linkage when available.
-
-## 8. Order lifetime is actually scenario elapsed time
-
-The feature is calculated from attack start tick, not from individual order insertion and cancellation timestamps.
-
-It should be renamed to `scenario_elapsed_ms` or replaced with real order-level lifetime statistics.
-
-## 9. Scenario catalog is intentionally bounded
-
-Scenario generation and tournament execution accept only the four native Arena scenarios. The liquidity-shock detector evaluates the `liquidity_evaporation` workload.
-
-## 10. Layering is asymmetric
-
-The layering detector checks excessive ask depth only:
-
-```text
-ask_depth > bid_depth × threshold
-```
-
-A symmetric implementation should support:
-
-```text
-ask_depth > bid_depth × threshold
-OR
-bid_depth > ask_depth × threshold
-```
-
----
+Observable-only features, genuine order lifetimes and causal learned-model
+contracts are documented in [feature engineering](../ml/feature-engineering-lightgbm.md).
+They must not be silently substituted into the frozen synthetic rule formulas.
 
 # Worked Evidence Example
 
@@ -1239,12 +544,11 @@ severity   = high
 
 The evidence values do not form an additional score. They are the underlying feature values that support the calculated confidence of `0.84`.
 
----
-
 # Accurate Technical Description
 
-A technically accurate description of the current implementation is:
-
-> LOB Arena generates bounded, explicitly labelled synthetic market-abuse scenarios using a Nebius AI Endpoint or deterministic fallback. Scenarios are projected into an authoritative limit-order-book simulator. On every simulation tick, deterministic feature extractors calculate depth, imbalance, spread, cancellation, message-rate, wall-size, and timing features. Four weighted rule-based detectors convert those features into confidence scores and incidents. The Nebius AI Investigation Team explains the resulting structured evidence. Detector tournaments replay synthetic scenario families locally or through Nebius Serverless Jobs and compare detector alerts with hard-coded scenario labels using precision, recall, F1, false positives, false negatives, and simulated detection latency.
-
-This separation is useful because the core evidence remains reproducible and auditable. The UI should, however, clearly indicate that the main numerical detector scores come from deterministic formulas rather than from an AI model classifier.
+LOB Arena's retained synthetic benchmark runs bounded, labelled simulator
+scenarios through four weighted rule detectors. It applies the requested total,
+seed and difficulty, reports binary attack-active quality plus available temporal
+and attribution measures, and preserves artifacts. Optional AI services generate
+specifications and explain evidence. Live exchange authority, governed learned
+models and production qualification have their own contracts and gates.

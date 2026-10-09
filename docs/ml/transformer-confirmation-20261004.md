@@ -1,5 +1,10 @@
 # Two-seed Transformer confirmation — 4 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. The first seed-7 attempt failed; separately approved replacement confirmations passed.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
 **Approved; sequence stopped after seed-7 startup failure.** The operator

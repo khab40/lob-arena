@@ -1,5 +1,10 @@
 # Transformer versus LightGBM research fork — 2026-10-02
 
+Historical plan/execution record; reconciled 8 October 2026. The original development fork completed; a separately authorized fixed-candidate December extension also completed.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 Operator approval: “yes, follow the new plan fork … concentrate on the new fork PR to validate Transformer idea vs LightGBM … all platform maintenance can be done later, after research work done.” The operator also permits keeping the existing MLflow VM running if needed.
 
 [Story #24](https://github.com/khab40/lob-arena/issues/24) → [Feature #16](https://github.com/khab40/lob-arena/issues/16) → [Epic #15](https://github.com/khab40/lob-arena/issues/15), [Project #3](https://github.com/users/khab40/projects/3).

@@ -1,5 +1,10 @@
 # Completed Transformer holdout — verification repair, 7 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. Reviewed offline replay verified the original outputs; the operator subsequently chose continue_research.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 Tracking: [Bug #345](https://github.com/khab40/lob-arena/issues/345), under
 [Transformer #24](https://github.com/khab40/lob-arena/issues/24), [Project #3](https://github.com/users/khab40/projects/3).
 
@@ -8,7 +13,7 @@ published all seven result objects. The original request, immutable image,
 model, calibration and operating points remain frozen. No training, selection,
 LightGBM rescoring or G8 rerun occurred. Original independent readback **aborted**;
 reviewed offline replay now verifies the complete declared population. The
-operator research decision remains pending.
+operator subsequently chose [continue_research](transformer-research-disposition-20261008.md).
 
 All temporary access is removed. The completed Job's grants were restored at
 final version **14 / 2 rules** and results version **15 / 9 rules** after about

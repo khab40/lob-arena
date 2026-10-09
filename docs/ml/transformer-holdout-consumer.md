@@ -12,7 +12,7 @@ Actor: validation engineer. Goal: immutable paired December inference.
 Value: reproducible research without using December to make candidate choices.
 Out of scope: training, fitting, threshold selection, data generation, G8 rerun,
 production serving and online MLflow. Verification: inert adversarial arrays,
-signed-context/IO faults, arithmetic readback and later authorized CUDA parity.
+signed-context/IO faults, arithmetic readback and verified authorized CUDA parity.
 
 ## Implemented sequence
 
@@ -67,8 +67,13 @@ Source history resets independently for every replay shard.
 artifacts, verifies the signed context and saved reference parity, reads exact
 published versions and original G8 versions, checks manifest row inventories,
 and recomputes fixed metrics and paired bootstrap without loading a model.
-Reuse Bug #317's maximum-eight-ULP rule for named float64 reductions; hashes,
-probabilities, rows, counts, thresholds, structure and decisions remain exact.
+Published calibrated probabilities may differ by at most one adjacent float64
+ULP, with exact decisions at all three thresholds and 0.5, stable ranking/ties and
+ten-bin reliability membership. Then recompute using the verified published
+probabilities: Bug #317's maximum-eight-ULP bound applies only to named float64
+reductions. Hashes, rows, counts, thresholds, structure and decisions remain exact.
+This differs from CUDA development-reference logit parity above; see
+[the arithmetic repair](transformer-holdout-verification-repair-20261007.md).
 Unsupported precision/recall/AP remain null with explicit reasons.
 
 [Bug #322](https://github.com/khab40/lob-arena/issues/322) also requires the

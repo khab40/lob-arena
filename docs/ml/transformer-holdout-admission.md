@@ -1,5 +1,10 @@
 # Transformer holdout admission — 6 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. Reference publication and metadata admission completed before the authorized holdout.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [settings #314](https://github.com/khab40/lob-arena/issues/314),
 [Project #3](https://github.com/users/khab40/projects/3).

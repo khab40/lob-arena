@@ -1,23 +1,22 @@
 # Nebius Deployment
 
-> **Deployment scope — reviewed 2026-09-21:** This guide includes legacy demo
-> endpoint/VM operations as well as current templates. Example resource IDs and
-> old receipts are not live-state assertions. Agent training, scoring, model
-> fixture generation and frozen-runtime tests use Nebius Serverless Jobs under
-> the [execution policy](../ml/model-validation-execution-policy.md); local work is orchestration,
-> editing, static checks and artifact inspection. The secure CEO UI remains planned.
+> **Legacy deployment recipes — reconciled 2026-10-08:** This guide preserves
+> endpoint, VM and synthetic Job templates from the earlier demo. Commands and
+> examples below are inspection-only; they are not a current governed execution
+> package or a complete deployment of the Java-owned live Arena. Example IDs,
+> tags and old receipts do not assert live availability. Use the
+> [current architecture](../architecture.md), [operations index](../operations/README.md),
+> [immutable-image preflight](../operations/digest-pinned-jobs.md) and
+> [execution policy](../ml/model-validation-execution-policy.md) for new work.
+> Every agent model workload requires a reviewed bounded Serverless Job package
+> and applicable approval. Secure shared CEO access remains planned.
 
-This project has two Nebius-oriented deployment surfaces:
+The historical split used interactive AI endpoints for explanations/report
+adapters and synthetic batch Jobs for benchmark artifacts. The diagram and
+helper recipes below describe that earlier path; they do not qualify learned
+models, restore retired authorization, or repair missing Java service/routing.
 
-- a serverless AI endpoint for explanations and report generation
-- a serverless batch job for detector benchmarking
-
-The Nebius design is intentionally split between offline jobs and interactive
-endpoints. Jobs handle repeatable engineering work that can run outside the UI.
-Endpoints handle low-latency explanation and narration requests from the FastAPI
-backend.
-
-## Nebius Serverless AI Jobs
+## Legacy synthetic Serverless Jobs (inspection only)
 
 ```mermaid
 flowchart LR
@@ -173,12 +172,12 @@ docker compose up -d --build
 Add `--profile prometheus` for Prometheus only or `--profile grafana` for
 Prometheus plus Grafana.
 
-Serverless Jobs do not need a long-running deployment. The jobs image is pushed
-now; actual jobs are submitted on demand from the backend experiment flow. To
-submit one sample job from the helper, opt in explicitly:
+Historical sample-job helper (inspection only): the generic tag-based renderer
+cannot emit the governed immutable image/label contract. Do not submit through
+this helper until that contract is repaired and independently reviewed.
 
 ```bash
-./scripts/deploy-nebius-partial.sh --sample-job
+# Historical: ./scripts/deploy-nebius-partial.sh --sample-job
 ```
 
 If you later need a public cloud-hosted app, prefer one small Nebius VM running
@@ -190,17 +189,18 @@ layer would make sense only if it supports WebSockets, persistent artifacts, and
 the Nebius CLI/config needed by the backend; otherwise it creates more friction
 than value for this repo today.
 
-Then create the endpoint and job:
+Historical endpoint/Job template (inspection only):
 
 ```bash
 export NEBIUS_SUBNET_ID=<vpc-subnet-id>
 export NEBIUS_PARENT_ID=<project-id>
 export ENDPOINT_TOKEN=<endpoint-bearer-token>
 export NEBIUS_ENDPOINT_IMAGE=ghcr.io/<your-org>/lob-arena-endpoint:<tag>
-export NEBIUS_JOB_IMAGE=ghcr.io/<your-org>/lob-arena-jobs:<tag>
+# Historical tagged Job reference; invalid for new Job submission:
+# NEBIUS_JOB_IMAGE=ghcr.io/<your-org>/lob-arena-jobs:<tag>
 
 ./scripts/create-nebius-ai-endpoint.sh
-./scripts/create-nebius-ai-job.sh
+# Historical helper: ./scripts/create-nebius-ai-job.sh
 ```
 
 To deploy the endpoint with local vLLM on one Nebius L40S:
@@ -291,18 +291,23 @@ Success criteria:
 - `local_vllm_model=Qwen/Qwen2.5-14B-Instruct`
 - `latency_ms > 0` on `/orderbook-alert` and `/investigation-report`
 
-After the endpoint, backend, and jobs image are available, run the deployment smoke workflow:
+Historical smoke template (inspection only; local model/runtime work is not
+authorized by this guide):
 
 ```bash
 NEBIUS_ENDPOINT_BASE_URL=https://<endpoint-host> \
 BACKEND_BASE_URL=https://<backend-host> \
-JOBS_IMAGE=ghcr.io/<your-org>/lob-arena-jobs:<tag> \
-./scripts/serverless-smoke.sh
+# Historical JOBS_IMAGE=ghcr.io/<your-org>/lob-arena-jobs:<tag>
+# ./scripts/serverless-smoke.sh
 ```
 
-The workflow writes `outputs/serverless-smoke/summary.json`. Real Nebius job submission is optional; if submit/artifact command templates are not configured, the summary marks those steps pending instead of failing the smoke.
+The historical workflow wrote `outputs/serverless-smoke/summary.json`; missing
+submit/artifact templates could leave pending steps. That is not current model
+or deployment acceptance. Inert build/import smoke and an approved Serverless
+runtime rehearsal are separate; see the [serverless owner](../../serverless/README.md).
 
-The shell scripts use the current deterministic CLI surfaces:
+The historical shell scripts assumed these CLI surfaces; the current SDK/CLI
+contract must be checked in the exact approved package before any cloud call:
 
 - `nebius ai endpoint create`
 - `nebius ai job create`

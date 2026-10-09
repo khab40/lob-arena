@@ -28,10 +28,12 @@ stream, scenario ground truth, hashes, and release contracts.
 ## Implementation scope
 
 LightGBM training/calibration and C4 tabular/sequence preparation exist.
-The Transformer research model, trainer and artifact-verification code are
-implemented in PR #284, but no successful GPU model run or quality result is
-verified. Cascade, model-version promotion and Java-stream learned serving remain
-planned. Use the [ML lifecycle](use-cases/ml-lifecycle.md) for
+The standalone Transformer training, confirmation, calibration, paired comparison
+and authorized December evaluation are independently verified. The
+[current disposition](ml/transformer-research-disposition-20261008.md) records
+`continue_research`; full serving, MLflow and resource/cost acceptance remains
+open. The next #90/#91 mock is private saved-score playback. Cascade, model-version
+promotion and Java-stream learned serving remain planned. Use the [ML lifecycle](use-cases/ml-lifecycle.md) for
 implementation boundaries and [current status](roadmap/CURRENT_STATUS.md) for
 dated qualification, frozen candidate and authorization evidence.
 
@@ -170,23 +172,9 @@ FastAPI, which already owns local child-process execution and Nebius Job
 submission, status refresh, and artifact collection. Prometheus does not scrape
 short-lived tournament processes or Nebius Jobs directly.
 
-
-
-The implemented operational contract is deliberately bounded:
-
-| Metric family | Purpose | Bounded labels |
-| --- | --- | --- |
-| `detector_tournament_runs_total` | Count tournament terminal outcomes | `execution_mode`, `outcome` |
-| `detector_tournament_duration_seconds` | Measure end-to-end tournament duration | `execution_mode`, `outcome` |
-| `detector_tournament_in_flight` | Show queued or running work | `execution_mode` |
-| `detector_tournament_scenarios_total` | Measure completed scenario throughput | `execution_mode`, `outcome` |
-| `detector_tournament_artifact_collections_total` | Track successful, failed, and incomplete result collection | `execution_mode`, `outcome` |
-
-Tournament IDs, Job IDs, seeds, scenario IDs, and artifact paths must not become
-Prometheus labels. Precision, recall, F1, detector leaderboards, and per-scenario
-results remain in the artifact store and product UI. Grafana's tournament view
-is for operational questions—whether work is completing, how long it takes, and
-where it fails—not for replacing the benchmark report.
+The [tournament metric contract](runtime/kernel-observability.md#detector-tournament-orchestration-metrics)
+owns bounded operational labels. Quality metrics and per-scenario results remain
+in benchmark artifacts and the product UI.
 
 Java 25 owns both the versioned deterministic kernel API and the stateful live arena. Spring Boot exposes kernel and arena REST plus `/ws/arena`, while framework objects remain outside the matching hot loop. FastAPI retains only AI/ML, Nebius, experiments, evidence, and serverless capabilities.
 
@@ -231,30 +219,10 @@ follow the [execution policy](ml/model-validation-execution-policy.md).
 
 ## Data Artifacts
 
-| Artifact | Purpose |
-| --- | --- |
-| `events.jsonl` | Append-only stream of simulation events, agent actions, detector signals, and state changes. |
-| `history/exchange_events.jsonl` | Canonical add/modify/cancel/execute/snapshot archive, segmented by stream ID for replay. |
-| `history/lob_snapshots.jsonl` | Snapshot-only canonical checkpoints for efficient L2 state scans. |
-| `data/processed/lobster/<dataset_id>/` | Immutable normalized LOBSTER events, aligned visible-depth snapshots, and registry manifest. |
-| `historical-replay/<run>/control.json` / `hybrid.json` | Historical-only and hybrid summaries over the same source window, including source/canonical counts and stream hashes. |
-| `historical-replay/<run>/comparison.json` | Detector TP/FN/FP/TN, precision, recall, F1, alert timing, and final-book realism deltas. |
-| `historical-replay/<run>/validation-report.json` / `.sig` | Causal-neighbourhood equivalence, lifecycle, provenance, determinism, and detached Ed25519 attestation. |
-| `historical-replay/<run>/manifest.json` / `checksums.sha256` | Replay comparison inventory and full-bundle integrity checks. |
-| `features/<run>/features.parquet` | Stable typed causal feature rows consumed by the governed LightGBM v1 loader and trainer. |
-| `features/<run>/run-metadata.json` / `feature-quality.json` | Feature/config/input hashes, source/session metadata, split policy, missing/distribution/class-balance summaries, and invalid rows. |
-| LightGBM Phase 0 manifests | Strict training, calibration, model-bundle, and prediction contracts binding governed inputs, frozen operating points, checksums, and release identity. |
-| `experiments/<experiment_id>/experiment.json` | Phase 4.5 experiment manifest with requested scenarios, execution mode, status, artifact paths, optional smart-batch link, and metrics. |
-| `experiments/<experiment_id>/attacks.jsonl` | Deterministic attack plan rows with expected labels, detector family, timing, agent profile, and parameters for each planned run. |
-| `experiments/<experiment_id>/jobs.jsonl` | Experiment-scoped local and Nebius Job records, including queued, running, completed, failed, and explicitly unconfigured states. |
-| `experiments/<experiment_id>/local-batch/` | Local smart-batch outputs for the experiment, including order-book events, trades, labels, alerts, metrics, report, and batch manifest. |
-| `experiments/<experiment_id>/artifact_index.json` | Index mapping original local-batch artifact names to canonical experiment-root artifact names. |
-| `experiments/<experiment_id>/investigations/` | Per-alert AI Investigator reports as JSON and Markdown, generated from persisted top-confidence batch alerts. |
-| `experiments/<experiment_id>/experiment_summary.json` / `leaderboard.json` | Aggregated experiment totals and scenario leaderboard sourced from detector metrics, labels, alerts, and investigations. |
-| `experiments/<experiment_id>/benchmark_report.md` | Human-readable synthetic educational benchmark report shown in Reports after aggregation. |
-| `snapshots.parquet` | Structured order book and market snapshots optimized for offline analysis. |
-| `incidents.json` | Detected incidents with metadata, timestamps, involved agents, scenario labels, and detector evidence. |
-| `reports.md` | Human-readable AI Investigator explanations, incident summaries, and benchmark reports. |
+The [artifact inventory](../contracts/README.md#artifact-inventory) owns exact
+paths and meanings for live history, legacy benchmarks and governed releases.
+It distinguishes immutable source records, projection/label metadata, learned
+release manifests and experiment reports.
 
 ### Artifact Relationships
 

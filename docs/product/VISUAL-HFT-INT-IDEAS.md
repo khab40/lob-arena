@@ -4,47 +4,26 @@
 **Project:** LOB Arena  
 **External project:** [VisualHFT](https://visualhft.com/)  
 **Repository:** [visualHFT/VisualHFT](https://github.com/visualHFT/VisualHFT)  
-**Reviewed:** 2026-10-04
+**Historical research snapshot:** 2026-10-04
+**Compacted:** 2026-10-08
 
 This is a historical concept snapshot. Proposed capabilities and illustrative examples
 are unimplemented; this document does not authorize implementation, model workloads
-or outreach.
+or outreach. External connector/depth observations below belong to that snapshot
+and need live verification before implementation. The [full concept record](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/product/VISUAL-HFT-INT-IDEAS.md)
+retains the original examples, benefit pitches and unsent outreach draft.
 
 ## 1. Strategic Fit
 
-VisualHFT and LOB Arena are complementary rather than directly competitive.
-
-VisualHFT is strong in:
-
-- live multi-venue market-data ingestion;
-- order-book normalization;
-- microstructure studies;
-- replay and event capture;
-- feed/infrastructure monitoring;
-- visualization and analyst workflows;
-- plugin/study extensibility.
-
-LOB Arena’s existing strengths and proposed directions include:
-
-- governed historical + synthetic order-book validation;
-- controlled attack injection;
-- reproducible detector benchmarking;
-- LightGBM and Transformer comparison;
-- proposed detector ensembles;
-- surveillance-oriented evidence and evaluation.
-
-The preferred product boundary is:
-
-> **VisualHFT = observe and investigate the market.**  
-> **LOB Arena = challenge, detect, evaluate, and explain surveillance behavior.**
-
-Do **not** turn LOB Arena into another VisualHFT-style desktop UI. Use VisualHFT ideas and, where appropriate, compatible/open-source components as an observation/data layer while keeping LOB Arena as the surveillance intelligence and validation layer.
-
----
+The proposed boundary is VisualHFT for market observation/analyst visualization,
+and LOB Arena for governed replay, controlled attack injection, detector comparison
+and surveillance evidence. LOB Arena should remain Linux/cloud-friendly and
+independent of the Windows/WPF desktop runtime. Reuse or port connector logic only
+after license review; a native normalized-event gateway is an alternative.
 
 ## 2. Add the Seven Public Crypto Feeds
 
-VisualHFT currently uses public L2 feeds from:
+The historical concept listed public L2 feeds from:
 
 | Venue | Typical/default depth |
 |---|---:|
@@ -58,101 +37,17 @@ VisualHFT currently uses public L2 feeds from:
 
 The useful idea is not only the connectors themselves, but the normalization layer that maps venue-specific symbols and event shapes into a common schema.
 
-Example:
-
-```text
-BTCUSDT
-tBTCUSD
-BTC-USD
-   ↓
-BTC/USD
-```
-
-Target ingestion shape:
-
-```text
-Binance ─┐
-Kraken ──┤
-Coinbase ┤
-Bitfinex ┤
-Gemini ──┼──> normalized event schema ──> LOB Arena
-KuCoin ──┤
-Bitstamp ┘
-```
-
-### Implementation constraints
-
-Do **not** make LOB Arena dependent on the VisualHFT Windows/WPF application.
-
-LOB Arena should remain:
-
-- Linux-friendly;
-- cloud-friendly;
-- Python-friendly;
-- usable from Nebius jobs and batch replay;
-- independent from a desktop GUI runtime.
-
-Preferred approaches:
-
-1. study/port connector logic where license-compatible;
-2. implement equivalent native adapters;
-3. introduce a small Linux-friendly market-data gateway;
-4. use a normalized event API/bus between feeds and LOB Arena.
-
----
+Normalize venue-specific symbols and event shapes into a common schema, for
+example `BTCUSDT`, `tBTCUSD` and `BTC-USD` into `BTC/USD`. Use native adapters,
+a Linux-friendly gateway or a normalized event API/bus usable from Nebius Jobs
+and batch replay; the desktop application must not become a runtime dependency.
 
 ## 3. Cross-Venue Surveillance: Highest-Value Extension
 
-The strongest idea is not “seven feeds.” It is **cross-venue context**.
-
-A single-venue detector cannot easily distinguish:
-
-- genuine market-wide movement;
-- venue-local abnormal quoting;
-- venue-local liquidity stress;
-- stale or corrupt market data;
-- manipulation-like order-book behavior.
-
-A multi-venue layer provides a market consensus.
-
-```text
-                Binance ─┐
-                Kraken  ─┤
-                Coinbase ─┤
-                Bitfinex ─┼──> normalized multi-venue LOB
-                Gemini   ─┤
-                KuCoin   ─┤
-                Bitstamp ─┘
-                          │
-                          ▼
-                 market consensus
-                          │
-                          ▼
-             LOB Arena detector stack
-                          │
-                          ▼
-              venue-specific anomaly
-```
-
-Example:
-
-```text
-Binance      +0.91 imbalance
-Coinbase     +0.08
-Kraken       +0.04
-Bitstamp     +0.06
-Bitfinex     +0.07
-```
-
-This is much more suspicious than:
-
-```text
-Binance      +0.75
-Coinbase     +0.71
-Kraken       +0.68
-Bitstamp     +0.73
-Bitfinex     +0.69
-```
+Use peer consensus to distinguish market-wide moves, venue-local quoting or
+liquidity stress and corrupt/stale data. An isolated +0.91 imbalance against
+peers near +0.04–0.08 has a different interpretation from all venues moving
+together near +0.68–0.75; neither pattern alone proves abuse.
 
 ### Candidate cross-venue features
 
@@ -169,12 +64,6 @@ Bitfinex     +0.69
 | Liquidity-gap divergence | local liquidity vacuum |
 | Lead/lag residual | abnormal propagation / price discovery |
 | Correlation break | venue behavior decoupled from peers |
-
-This can become a named LOB Arena capability:
-
-> **Cross-Venue Market Abuse Surveillance**
-
----
 
 ## 4. Reuse Microstructure Studies as Model Features
 
@@ -193,34 +82,9 @@ Useful VisualHFT-style studies include:
 
 These should be treated as **features**, not standalone proof of manipulation.
 
-Bad:
-
-```text
-VPIN > threshold => manipulation
-```
-
-Better:
-
-```text
-raw LOB sequence
-      │
-      ├── LOB imbalance
-      ├── OTR
-      ├── TTO
-      ├── VPIN
-      ├── resilience
-      ├── spread
-      ├── depth slope
-      ├── cancellations
-      ├── replenishment
-      └── cross-venue divergence
-             │
-             ▼
-     LightGBM + Transformer
-             │
-             ▼
-        ensemble score
-```
+A proposed feature engine combines these indicators with causal LOB sequences
+and cross-venue divergence for separately evaluated LightGBM/Transformer
+candidates. A threshold such as VPIN alone must not establish manipulation.
 
 ### Research questions
 
@@ -243,27 +107,9 @@ This turns common microstructure indicators into measurable surveillance researc
 
 LOB Arena should maintain a rolling market-data buffer and persist a bounded before/after window whenever a detector fires.
 
-```text
-                        live feeds
-                            │
-                    rolling 60s buffer
-                            │
-                            ▼
-                     LOB Arena model
-                            │
-                   P(spoofing)=0.94
-                            │
-                            ▼
-                         TRIGGER
-                            │
-              ┌─────────────┴─────────────┐
-              │                           │
-           -30 sec                     +30 sec
-              │                           │
-              └─────────────┬─────────────┘
-                            ▼
-                    SURVEILLANCE CASE
-```
+A bounded capture example is 30 seconds before and after a trigger. The
+before/after window supports investigation and replay; future/post-trigger context
+must not leak into causal detector inputs.
 
 A case could contain:
 
@@ -305,72 +151,18 @@ This moves LOB Arena from only a detector benchmark toward a **surveillance eval
 
 ## 6. Real-Market Replay + Synthetic Manipulation Injection
 
-This should be a major LOB Arena direction.
-
-Synthetic simulation provides controlled labels.  
-Real feeds provide realistic noise.
-
-Combine them:
-
-```text
-REAL RECORDED MARKET
-BTC/USD, Binance
-09:30:00 → 09:45:00
-
-        +
-
-SYNTHETIC ATTACK INJECTION
-spoofing / layering / etc.
-
-        ↓
-
-HYBRID REPLAY
-
-        ↓
-
-LightGBM
-Transformer
-Ensemble
-baseline detectors
-
-        ↓
-
-Precision / Recall
-Detection delay
-False positives
-Robustness
-```
-
-Possible names:
-
-- Real-Market Adversarial Replay
-- Surveillance Red-Team Replay
-- Hybrid Historical + Synthetic Replay
-- Counterfactual Market Abuse Replay
-
-This directly strengthens the LOB Arena thesis:
-
-- pure synthetic data can be unrealistic;
-- pure historical data lacks reliable labels;
-- hybrid replay gives realistic background conditions plus known attack ground truth.
-
----
+Combine recorded market background with controlled synthetic attack injection
+and deterministic replay. Compare rules, frozen LightGBM and a separately
+verified Transformer using precision, recall, detection delay, false positives
+and robustness. Keep synthetic attack labels distinct from assumed historical
+control labels; realistic background alone does not validate ground truth.
 
 ## 7. Feed Quality Must Be First-Class
 
 Real-time surveillance can confuse data failures with market anomalies.
 
-Example:
-
-```text
-missing feed messages
-      ↓
-apparent liquidity disappearance
-      ↓
-detector fires
-      ↓
-false manipulation alert
-```
+Missing messages can resemble liquidity disappearance. Preserve health metadata
+so detector reports can distinguish market anomalies, data anomalies and uncertainty.
 
 Every event/session should preserve feed-health metadata such as:
 
@@ -490,27 +282,9 @@ unless participant/account evidence and an appropriate investigative process exi
 
 ## 11. Build a LOB Arena Surveillance Plugin for VisualHFT
 
-A collaboration artifact could be a VisualHFT study/plugin showing LOB Arena results.
-
-Example:
-
-```text
-┌──────────────────────────────┐
-│ LOB Arena Surveillance       │
-│                              │
-│        0.87 HIGH             │
-│                              │
-│ Suspected: Layering          │
-│ Ensemble: 3/3                │
-│                              │
-│ LightGBM      0.91           │
-│ Transformer   0.84           │
-│ Rule engine   0.77           │
-│                              │
-│ Cross venue   ANOMALOUS      │
-│ Data quality  GOOD           │
-└──────────────────────────────┘
-```
+A future study/plugin could display score, suspected pattern, detector votes,
+cross-venue context and data quality, with click-through to supporting evidence.
+It must not imply that an ensemble or live learned-detector adapter exists today.
 
 Click-through could show:
 
@@ -523,242 +297,30 @@ Click-through could show:
 - replay button;
 - explanation / analyst notes.
 
-### Product division
+## 12. Trigger / Webhook Integration And Collaboration
 
-**VisualHFT**
+A metric/event webhook from VisualHFT to LOB Arena is a possible first bridge.
+Longer term, LOB Arena would own normalization and surveillance scoring and publish
+alerts/scores/evidence to a VisualHFT plugin. Either direction needs an approved
+adapter contract, timestamp/feed-quality handling and verified license boundaries.
 
-- trader/analyst workstation;
-- visualization;
-- market-data connectors;
-- microstructure studies;
-- replay;
-- operational feed monitoring.
-
-**LOB Arena**
-
-- surveillance intelligence;
-- detector stack;
-- attack injection;
-- adversarial replay;
-- benchmark/evaluation harness;
-- model comparison;
-- evidence generation.
-
-This is better than rebuilding an entire trading-style GUI inside LOB Arena.
-
----
-
-## 12. Trigger / Webhook Integration
-
-A simple first integration could be:
-
-### Direction A
-
-```text
-VisualHFT metric/event
-        ↓
-HTTP webhook
-        ↓
-LOB Arena
-        ↓
-surveillance scoring
-```
-
-### Direction B — preferred long term
-
-```text
-market feeds
-        ↓
-LOB Arena normalized pipeline
-        ↓
-surveillance models
-        ↓
-alert / score / evidence
-        ↓
-VisualHFT plugin
-```
-
-Direction B keeps LOB Arena in control of the surveillance pipeline and treats VisualHFT primarily as an observation/analyst surface.
-
----
-
-## 13. Why This Is Useful to LOB Arena
-
-### Technical leverage
-
-Potentially avoid rebuilding from scratch:
-
-- seven venue connectors;
-- symbol normalization;
-- snapshot/delta handling patterns;
-- reconnect/resync logic;
-- replay concepts;
-- feed-health monitoring;
-- microstructure studies;
-- rich desktop visualization.
-
-### Better validation
-
-LOB Arena gains:
-
-- realistic background noise;
-- multi-venue context;
-- real-time inference;
-- real-market replay;
-- data-quality-aware evaluation;
-- better false-positive analysis.
-
-### Stronger commercial positioning
-
-LOB Arena evolves from:
-
-> AI detector benchmark on synthetic order books
-
-toward:
-
-> multi-venue AI market-surveillance validation and investigation platform.
-
----
-
-## 14. Why This Is Useful to Alexey
-
-A stronger project description becomes possible:
-
-> Built a multi-venue real-time market-surveillance platform combining live crypto order-book feeds, market-microstructure analytics, adversarial replay, LightGBM/Transformer detection, cross-venue context, and reproducible surveillance evidence.
-
-This is directly relevant to roles in:
-
-- market surveillance;
-- exchanges;
-- crypto infrastructure;
-- FinTech;
-- market data;
-- quantitative platforms;
-- AI/ML platforms;
-- risk/compliance technology.
-
-It also creates a natural external collaborator and potential distribution channel for LOB Arena.
-
----
-
-## 15. Collaboration Proposal to VisualHFT
-
-Do not approach VisualHFT only with:
-
-> “Can I use your feeds?”
-
-Offer useful collaboration.
-
-### Proposal A — Multi-Venue Surveillance Experiment
-
-Use VisualHFT-compatible normalized feeds and test whether cross-venue context reduces false positives for manipulation-like events.
-
-Deliverables:
-
-- normalized event schema;
-- baseline detector results;
-- cross-venue feature set;
-- precision/recall comparison;
-- short technical report.
-
-### Proposal B — LOB Arena Surveillance Plugin
-
-Build a VisualHFT study/plugin that displays:
-
-- LOB Arena anomaly score;
-- suspected pattern;
-- LightGBM probability;
-- Transformer probability;
-- ensemble score;
-- cross-venue divergence;
-- data-quality state;
-- investigation/replay link.
-
-### Proposal C — Real-Market Adversarial Replay
-
-Record real market windows, inject controlled synthetic attack sequences, and benchmark detectors against known ground truth.
-
----
-
-## 16. Suggested Outreach Message
-
-**Subject:** LOB Arena × VisualHFT — AI market surveillance collaboration
-
-Hi Ariel,
-
-I’m building LOB Arena, an AI market-surveillance and evaluation platform focused on detecting manipulation patterns in limit-order-book data using ML and sequence models.
-
-I’ve been looking closely at VisualHFT and I think the projects are highly complementary. VisualHFT already has much of the infrastructure I would otherwise need to build around LOB Arena — normalized multi-venue L2 feeds, microstructure studies, triggers, event capture/replay and visualization — while LOB Arena focuses on surveillance models, adversarial scenarios and detector evaluation.
-
-A few collaboration ideas I’d be interested in exploring:
-
-- running LOB Arena against VisualHFT’s seven live crypto feeds and measuring whether cross-venue context reduces surveillance false positives;
-- building a LOB Arena surveillance study/plugin for VisualHFT showing detector scores, suspected pattern, cross-venue context and supporting evidence;
-- combining real-market replay with synthetic manipulation injection to create reproducible surveillance benchmarks.
-
-If this direction is relevant, I’d be happy to show LOB Arena and discuss a small proof of concept.
-
-Best,  
-Alexey
-
----
+Possible collaboration scopes are a small multi-venue surveillance experiment,
+a score/evidence plugin, or adversarial replay. Benefit pitches and the unsent
+outreach draft remain in the historical concept record linked above. This
+concept grants no outreach, implementation or workload approval.
 
 ## 17. Target Architecture
 
 ```text
-                 7 LIVE CRYPTO VENUES
-                          │
-                          ▼
-                NORMALIZED EVENT BUS
-                          │
-       ┌──────────────────┼──────────────────┐
-       ▼                  ▼                  ▼
-   LOB state       microstructure       feed quality
-                  feature engine         monitoring
-       │                  │                  │
-       └──────────────────┼──────────────────┘
-                          ▼
-                CROSS-VENUE CONTEXT
-                          │
-                          ▼
-              LOB ARENA DETECTOR STACK
-                          │
-               ┌──────────┴──────────┐
-               ▼                     ▼
-            LightGBM             Transformer
-               └──────────┬──────────┘
-                          ▼
-                       ENSEMBLE
-                          │
-                    anomaly score
-                          │
-              ┌───────────┴────────────┐
-              ▼                        ▼
-        event capture             live alert
-       pre/post window                 │
-              │                        │
-              └───────────┬────────────┘
-                          ▼
-                   FORENSIC CASE
-                          │
-            ┌─────────────┴─────────────┐
-            ▼                           ▼
-     VisualHFT plugin             LOB Arena UI
+market feeds -> normalized events -> LOB state / features / feed health
+             -> cross-venue context -> separately evaluated detector candidates
+             -> score / capture / alert -> evidence case -> analyst surface
+recorded market + synthetic injection -> deterministic replay -> benchmark
 ```
 
-Replay path:
-
-```text
-Real recorded market
-        +
-Synthetic attack injection
-        ↓
-deterministic replay
-        ↓
-detector benchmark
-```
-
----
+All new adapters, ensemble, case capture and plugin paths in this target are
+proposed. Current Java sole-writer ownership and approved research gates still
+apply; see [architecture](../architecture.md) and [current status](../roadmap/CURRENT_STATUS.md).
 
 ## 18. Recommended Priority
 
@@ -873,25 +435,7 @@ The PoC is valuable if it demonstrates at least one of:
 
 ## 20. Core Strategic Principle
 
-The desirable product boundary is:
-
-> **VisualHFT = observe and investigate the market.**  
-> **LOB Arena = challenge, detect, evaluate, and explain surveillance behavior.**
-
-The three highest-priority ideas are therefore:
-
-1. **live normalized multi-venue feeds;**
-2. **cross-venue surveillance features;**
-3. **event capture + real-market adversarial replay.**
-
-Build those before investing heavily in additional UI or LLM-agent layers.
-
-LLMs are likely more valuable later for:
-
-- alert summarization;
-- investigation narratives;
-- evidence assembly;
-- case triage;
-- analyst assistance;
-
-than for deciding directly from raw high-frequency LOB events whether market manipulation occurred.
+Prioritize normalized multi-venue feeds, cross-venue features, and evidence capture
+with deterministic adversarial replay before additional UI or LLM layers. LLMs may
+later assist summarization, narratives, evidence assembly and case triage; raw
+high-frequency decisions need separately validated detector evidence.

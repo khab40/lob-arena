@@ -7,15 +7,25 @@ The Java arena remains the authoritative exchange. This Python runner is retaine
 Environment:
 
 ```bash
-AGENT_RUNNER_AGENT_COUNT=200
-AGENT_RUNNER_HEAVY_AGENT_COUNT=8
+AGENT_RUNNER_AGENT_COUNT=24
+AGENT_RUNNER_MAX_AGENT_COUNT=48
+AGENT_RUNNER_HEAVY_AGENT_COUNT=0
+AGENT_RUNNER_MAX_HEAVY_AGENT_COUNT=2
 AGENT_RUNNER_HEAVY_AGENT_COMPLEXITY=20000
-AGENT_RUNNER_HEAVY_AGENT_WORKERS=2
-AGENT_RUNNER_LANGGRAPH_AGENT_COUNT=16
+AGENT_RUNNER_HEAVY_AGENT_WORKERS=1
+AGENT_RUNNER_MAX_HEAVY_AGENT_WORKERS=1
+AGENT_RUNNER_LANGGRAPH_AGENT_COUNT=0
+AGENT_RUNNER_MAX_LANGGRAPH_AGENT_COUNT=4
 AGENT_RUNNER_LANGGRAPH_STRATEGY=liquidity_rebalancer
 AGENT_RUNNER_AGENT_ID_PREFIX=REMOTE
 AGENT_RUNNER_DECISION_TIMEOUT_SECONDS=0.05
 ```
+
+These are the code and Compose defaults. Requested normal, heavy, worker and
+LangGraph counts are clamped to their corresponding `AGENT_RUNNER_MAX_*`
+values; `/health` reports effective counts and limits. Increasing a requested
+count alone does not increase its cap. Java's per-tick deadline still applies;
+see [runtime controls](../docs/runtime/runtime-model.md).
 
 Endpoints:
 

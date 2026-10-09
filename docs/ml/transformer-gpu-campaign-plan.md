@@ -1,12 +1,17 @@
 # Bounded Transformer development campaign — 2026-09-28
 
+Historical plan/execution record; reconciled 8 October 2026. The original campaign readiness state is historical; the approved research fork and later study completed.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 **2026-10-02 amendment:** the operator-approved [research fork](transformer-research-fork.md)
 supersedes the platform/MLflow-first ordering below. Perform role checks inside the
 first GPU Job, retain complete artifacts durably, and reconcile MLflow later.
 The fixed model grid, input boundaries and exact-package execution gate remain.
 The original config is retained unchanged for historical package verification.
 
-Status: **implementation approved; readiness work in progress; no GPU execution authorized**.
+Original 28 September status: **implementation approved; readiness in progress; no GPU execution yet authorized**.
 [Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
