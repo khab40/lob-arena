@@ -16,7 +16,7 @@ The kernel currently includes the frozen Java 25 implementations of event orderi
 
 It also includes the integer-tick/lot order book and matching engine described in [Java Integer Order Book](../docs/runtime/java-order-book.md).
 
-The complete candidate tick runner, normal agents, scenarios, baseline phase, and metric calculation are described in [Java Simulation Kernel](../docs/runtime/java-simulation-kernel.md).
+The tick runner, normal agents, scenarios, baseline phase, and metric calculation are described in [Java Simulation Kernel](../docs/runtime/java-simulation-kernel.md).
 
 The cross-language service and failure contract are described in [gRPC Kernel Boundary](../docs/runtime/grpc-kernel-boundary.md).
 

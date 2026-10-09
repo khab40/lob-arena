@@ -134,25 +134,34 @@ For example, this is a structurally valid mock envelope, not execution evidence:
 
 ## Workload And Metrics
 
-```http
-GET /api/nebius/tournament/{id}
-```
+`detector_tournament.py` runs exactly the effective total, distributing it
+with seeded balanced scenario and weighted difficulty plans. Each run derives
+its seed from the supplied master seed and run index; difficulty changes the
+simulation profile. Both controls affect the executed workload.
 
-Returns the same envelope with current `status`:
+Each selected detector uses binary attack-active truth: every injected attack
+is positive; `normal_market` is negative. Scenario family groups reports but
+does not make other detectors negative during an attack. Undefined metric
+denominators remain null. Reports include specificity/false-positive rate,
+temporal overlap, early/on-time/late detection, event/participant/order
+attribution and phase detection where label/evidence linkage is available.
+Missing attribution truth is not fabricated.
 
-- `queued`
-- `running`
-- `completed`
-- `failed`
-- `real_nebius_pending`
+Detection latency is simulated market time from the first alert tick, not
+wall-clock model-inference latency. See the exact
+[calculation reference](../runtime/calculations-explanations.md#step-4--detector-tournament).
 
-### Read Artifacts
+## Artifacts And E2E Smoke
 
-```http
-GET /api/nebius/tournament/{id}/artifacts
-```
+The lightweight runner writes `metrics.csv`, `results.json`,
+`benchmark_report.md` and three chart files. Local facade artifacts live under
+`outputs/nebius/tournaments/<id>/artifacts/`; state and request evidence are
+under `outputs/nebius/tournaments/<id>/`.
 
-Returns artifact metadata and download URLs:
+The artifact-heavy managed path reuses `run_batch_experiments.py`:
+events, trades, attack labels, blue-team alerts, metrics, report and manifest.
+The facade normalizes both inventories rather than adding another runner.
+See [Jobs reference](../../serverless/jobs/README.md) for filenames and runner arguments.
 
 ```json
 {
