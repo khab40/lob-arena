@@ -157,34 +157,36 @@ scenario that actually runs. Direct canonical-event replay remains future work.
 
 ## Fallback / Mock Behavior
 
-- Missing endpoint URL, API key, or invalid model JSON returns deterministic templates.
-- Templates are stable for the same request and seed.
-- Fallback preserves `ground_truth`, `events`, and `expected_detector_behavior`.
-- UI must label fallback as local template mode, while still showing the Nebius Serverless integration path.
-
-## Demo Script
-
-1. Open `/nebius`.
-2. Click `Generate AI Scenario`.
-3. Select `Spoofing`, `Medium`, `AIMD`, `120 ticks`, `Thin`, `High`.
-4. Generate scenario.
-5. Confirm badge `Powered by Nebius AI Serverless Endpoint` and source mode.
-6. Click `Replay in Arena`.
-7. Open incident/detector output.
-8. Send resulting incident to AI Investigation Team.
+- Missing endpoint configuration or failed/invalid endpoint output uses deterministic templates.
+- The same request and seed produce stable template content.
+- Normalization preserves ground truth, bounded events and expected detector behavior.
+- Responses retain mode/source/model and fallback metadata; the UI identifies mock or fallback output.
+- Endpoint model JSON is validated before it is adapted to the canonical response.
 
 ## Acceptance Criteria
 
-- Generated scenario can be replayed by the existing Arena injection path.
-- Ground truth is preserved in the canonical response and stored artifact.
-- UI clearly shows `Powered by Nebius AI Serverless Endpoint`.
-- Works with no Nebius credentials through deterministic mock mode.
-- Existing `/api/nebius/attack-scenario*` and `/generate-smart-scenario` routes continue to work.
-- Unsupported or invalid model output is normalized or replaced with deterministic fallback.
+- All four supported scenario families can use the existing Arena injection path.
+- Canonical ground truth and the compatibility projection are stored.
+- The UI shows the source mode and the Nebius Endpoint integration path.
+- Generation works without credentials through deterministic mock mode.
+- Existing compatibility routes continue to work.
+- Unsupported or invalid endpoint output is normalized or replaced by deterministic fallback.
+- Java remains the sole live-book writer; generated content does not create exchange authority.
 
-## Risks And Shortcuts
+## Alternatives And Consequences
 
-- Risk: canonical event replay is richer than current Arena scenario launch. Shortcut: store canonical events now, project to existing scenario names for replay, then add direct event replay later.
-- Requests are limited to the four first-class Arena routes so generated scenarios always replay their named implementation.
-- Risk: AI output violates enums. Shortcut: backend schema validation plus deterministic fallback.
-- Risk: too many controls in demo. The active page keeps only the core controls; the retired legacy tuning implementation has been removed.
+Reusing named scenario projection avoids a second simulator and preserves the
+existing detector/label path. Direct event-list execution was deferred because
+its contract is richer than the current injection path. The tradeoff is that
+generated event detail and expected risk are specifications, not independently
+verified replay outcomes. Ground truth and source metadata must stay separate
+from detector input.
+
+## Related Documentation
+
+- [Endpoint contracts and runnable examples](../../serverless/endpoint/README.md)
+- [AI/Serverless use cases](../use-cases/nebius-serverless-use-cases.md) — historical July payload/acceptance examples
+- [Scenario labeling](ARD-0006-scenario-labeling-and-reproducibility.md)
+- [Java live ownership](ARD-0020-java-arena-websocket-agent-orchestration.md)
+- [AI Investigation Team](ARD-0015-nebius-ai-investigation-team.md)
+- [Original implementation/UI/demo narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0016-ai-scenario-generator.md) — historical reference, not current instructions

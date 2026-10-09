@@ -18,33 +18,27 @@ rehearsals, follow the [Nebius execution policy](../ml/model-validation-executio
 
 ## Context
 
-LOB Arena already has detector tournament pieces:
-
-- `serverless/jobs/detector_tournament.py`: runs detector comparison over simulator scenarios and writes `metrics.csv`, `results.json`, chart artifacts, and `benchmark_report.md`.
-- `serverless/jobs/run_batch_experiments.py`: runs larger smart batches and writes canonical experiment artifacts such as `order_book_events.jsonl`, `attack_labels.jsonl`, `blue_team_alerts.jsonl`, `detector_metrics.csv`, and `manifest.json`.
-- `backend/app/api/routes_experiments.py`: exposes benchmark runs, managed experiments, local batch fallback, Nebius job config rendering, submit, refresh, collect, aggregate, summary, and leaderboard.
-- `backend/app/experiments/manager.py`: persists managed experiment state and artifacts.
-- `backend/app/experiments/aggregator.py`: builds `experiment_summary.json`, `leaderboard.json`, and benchmark report output.
-- `backend/app/experiments/nebius_orchestrator.py`: renders and tracks Nebius job submit/status/collect paths.
-- `frontend/src/pages/NebiusControlPanelPage.tsx`: already shows Detector Tournament controls, jobs, leaderboard, and artifact links.
-
-Phase 3 should expose this as “AI Detector Tournament using Nebius Serverless Jobs” without creating a second orchestration system.
+Existing detector and managed-experiment runners already provide synthetic
+scenarios, labels, alerts, metrics, reports and Nebius submit/collect paths.
+The command center needs one facade rather than a third runner or a second
+orchestration system.
 
 ## Decision
 
-Use a Nebius product facade for tournament operations:
+Expose `POST /api/nebius/tournament/start`,
+`GET /api/nebius/tournament/{id}` and
+`GET /api/nebius/tournament/{id}/artifacts` over existing runners:
 
-- `POST /api/nebius/tournament/start`
-- `GET /api/nebius/tournament/{id}`
-- `GET /api/nebius/tournament/{id}/artifacts`
+| Requested mode | Behavior | Response mode |
+| --- | --- | --- |
+| `local_mock` | Return deterministic mock rows without batch execution or runner artifacts | `local_mock` |
+| `local` | Queue a capped rule-detector tournament; one local tournament at a time | `local` |
+| `nebius`, configured | Submit a Job through the configured command template; collect artifacts explicitly | `nebius_serverless_job` |
+| `nebius`, unconfigured | Return deterministic mock rows with a fallback reason | `local_mock` |
 
-The facade reuses existing experiment APIs and runners internally:
-
-- `local_mock` fallback returns deterministic leaderboard rows without backend batch execution.
-- Explicit `local` execution uses `serverless/jobs/detector_tournament.py` for capped detector-set comparison when the user starts a lightweight tournament.
-- Managed Nebius job path uses `ManagedExperiment`, `render-nebius-job-config`, `submit-nebius`, `collect-nebius-artifacts`, and `aggregate`.
-- Larger artifact-heavy tournaments continue to use `run_batch_experiments.py` because it already produces canonical JSONL/CSV/MD artifacts for investigations and reports.
-- The polished challenge demo uses `serverless-smoke/run` as orchestration glue only. It does not introduce new detector algorithms or duplicate job architecture; it writes a curated artifact bundle under `outputs/serverless-smoke/`.
+Local rule-detector capability is not permission to execute an agent model
+workload locally. New Jobs require their own reviewed bounds, immutable image,
+exact dry run and applicable authorization.
 
 ```mermaid
 graph TD
@@ -69,84 +63,76 @@ graph TD
     Facade --> UI
 ```
 
-## Objective
-
-Run scalable detector evaluations over many generated or replayed synthetic scenarios. Each tournament compares detector predictions to synthetic ground truth and returns precision, recall, F1, latency, leaderboard rows, summary text, and downloadable artifacts.
-
-## User Controls
-
-Tournament start form:
-
-- `number_of_scenarios`: integer, default `100`, capped by backend
-- `manipulation_types`: list of `spoofing_like_wall`, `layering_like`, `quote_stuffing`, `liquidity_evaporation`
-- `difficulty_mix`: object such as `{ "easy": 0.2, "medium": 0.5, "hard": 0.2, "adversarial": 0.1 }`
-- `detector_set`: list of `spoofing_like`, `layering_like`, `quote_stuffing`, `liquidity_shock`
-- `random_seed`: integer
-- `execution_mode`: `local_mock | local | nebius`
-
-The first implementation can map `difficulty_mix` into scenario repetition/manifest metadata until simulator difficulty-specific replay is available.
+The diagram's generic config-rendering path is the retained demo integration.
+Its old tag-based examples do not meet current Job submission policy; see
+[Job image preflight](../operations/digest-pinned-jobs.md).
 
 ## Backend API
 
-### Start
-
-```http
-POST /api/nebius/tournament/start
-Content-Type: application/json
-```
-
-Request:
+The maintained schemas and lifecycle are in
+[`backend/app/nebius/detector_tournament.py`](../../backend/app/nebius/detector_tournament.py).
 
 ```json
 {
   "number_of_scenarios": 100,
-  "manipulation_types": ["spoofing", "layering", "quote_stuffing"],
+  "manipulation_types": [
+    "spoofing_like_wall",
+    "layering_like",
+    "quote_stuffing",
+    "liquidity_evaporation"
+  ],
   "difficulty_mix": {
     "easy": 0.2,
     "medium": 0.5,
     "hard": 0.2,
     "adversarial": 0.1
   },
-  "detector_set": ["spoofing_like", "layering_like", "quote_stuffing"],
+  "detector_set": ["spoofing_like", "layering_like", "quote_stuffing", "liquidity_shock"],
   "random_seed": 42,
   "execution_mode": "local_mock"
 }
 ```
 
-Response:
+`number_of_scenarios` is 1–1000. Scenario enums are exactly the four listed
+above; friendly `spoofing`/`layering` labels are not accepted aliases.
+Detector names are independent of scenario names. The local runner may cap the
+requested count and reports that effective count plus a fallback/cap reason.
+
+The response contains `tournament_id`, `status`, `execution_mode`,
+`started_at`, nullable `completed_at`, `detectors`, `leaderboard`,
+`metrics`, `artifacts`, `summary` and optional `fallback_reason`.
+Status is `queued | running | completed | failed | real_nebius_pending`.
+Artifact responses contain `tournament_id` and a list of
+`{name, path, download_url}`.
+
+For example, this is a structurally valid mock envelope, not execution evidence:
 
 ```json
 {
-  "tournament_id": "TRN-20260706-0001",
+  "tournament_id": "TRN-EXAMPLE",
   "status": "completed",
   "execution_mode": "local_mock",
   "started_at": "2026-07-06T10:00:00Z",
-  "completed_at": "2026-07-06T10:01:12Z",
-  "detectors": ["spoofing_like", "layering_like", "quote_stuffing"],
-  "leaderboard": [
-    {
-      "detector": "spoofing_like",
-      "scenario": "spoofing",
-      "precision": 1.0,
-      "recall": 0.75,
-      "f1": 0.8571,
-      "false_positives": 0,
-      "false_negatives": 1,
-      "avg_detection_latency_ms": 1200
-    }
-  ],
-  "metrics": {
-    "total_scenarios": 100,
-    "total_alerts": 87,
-    "macro_f1": 0.81
-  },
+  "completed_at": "2026-07-06T10:00:00Z",
+  "detectors": ["spoofing_like"],
+  "leaderboard": [{
+    "detector": "spoofing_like",
+    "scenario": "spoofing_like_wall",
+    "precision": 0.82,
+    "recall": 0.82,
+    "f1": 0.82,
+    "false_positives": 0,
+    "false_negatives": 1,
+    "avg_detection_latency_ms": 1200.0
+  }],
+  "metrics": {"total_scenarios": 100, "macro_f1": 0.82},
   "artifacts": {},
-  "summary": "Deterministic mock detector tournament completed after local runner fallback.",
-  "fallback_reason": "local_mock mode uses deterministic tournament output without backend batch execution."
+  "summary": "Illustrative deterministic mock tournament envelope.",
+  "fallback_reason": "local_mock mode does not execute a simulation batch."
 }
 ```
 
-### Read Status
+## Workload And Metrics
 
 ```http
 GET /api/nebius/tournament/{id}
