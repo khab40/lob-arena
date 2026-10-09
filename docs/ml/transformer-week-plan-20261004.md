@@ -66,21 +66,23 @@ comparison reservations $6.25 each, and the existing $6.25 holdout reservation.
 The approximately $1 grid estimate is not a bill, released reservation or new
 permission. Actual billing and online MLflow remain unreconciled; no billing queries.
 
-The replacement package layers four execution modules onto the grid's original
-digest image, preserving numerical source `87ce8a9` and all model/dependency bytes.
-It admits only confirmation seeds and exact legacy smoke/grid references. Later
-inference needs explicit checkpoint-origin compatibility; it cannot relabel the
-seed-42 checkpoint's original bindings. New logging is not part of this image.
-Existing epoch artifacts provide post-run curves; do not repeat training for logs.
+The numerical source/checkpoint origin remains separate from later execution
+assembly source and immutable images. Keep consumed attempts and original package
+hashes intact; do not repeat training to obtain richer logs. Future studies require
+fresh exact authorization and [retained readback](transformer-holdout-execution-package.md#future-readback-packages--8-october-2026).
 
-O is also used for threshold selection, LightGBM calibration previously saw the
-validation fold, and labels remain synthetic/research controls. Report these
-limits; neither untouched holdout performance nor a LightGBM speedup is established.
-G8/G9 remain closed. Platform work and cascade implementation do not precede the
-research decision. The separately authorized fixed-candidate December protocol does not establish
-production qualification; broader claims require a later unseen corpus.
+Development O selected thresholds and LightGBM calibration already saw validation.
+December was unseen by this Transformer but already used by LightGBM. One date,
+three base sessions, synthetic labels/assumed controls and repeated variants limit
+generalization. Batch timing is not event-to-alert latency or LightGBM speedup.
+No automatic retraining/reselection, production promotion or cascade follows.
 
-Evidence: [grid results](transformer-training-grid-results.md),
-[per-run reports](experiments/transformer-grid-20261003/index.md),
-[selection and decision protocol](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md),
-[live logging handoff](transformer-training-progress.md).
+## Historical execution snapshots
+
+[The immutable 4–7 October narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/ml/transformer-week-plan-20261004.md#4-october-execution-snapshot-before-replacement-approval)
+retains failures, grant restoration timings, exact approval/CI milestones and
+consumed package identities. Its pending-Job statements are historical. Detailed
+[comparison incident](transformer-comparison-abort-20261004.md),
+[first-run recovery](transformer-holdout-first-run-recovery-20261007.md),
+[verification repair](transformer-holdout-verification-repair-20261007.md) and
+[live-logging handoff](transformer-training-progress.md) remain linked evidence.
