@@ -52,6 +52,10 @@ Run forked kernel and matching diagnostics with `./gradlew :kernel-benchmarks:ru
 
 The Spring control plane exposes Prometheus and opt-in OpenTelemetry around the gRPC boundary. See [Kernel Observability](../docs/runtime/kernel-observability.md) for bounded meters, OTLP settings, and the Grafana template.
 
-The versioned kernel API is now Java-default in Compose. The multi-stage `java/Dockerfile` produces a non-root Java 25 runtime image while permanent CI and sampled runtime replay retain Python as the executable reference; see [Java Kernel Default Cutover](../docs/runtime/history/java-kernel-cutover.md).
+The versioned kernel API and live arena are Java-only authorities in Compose.
+The multi-stage `java/Dockerfile` produces a non-root Java 25 runtime image;
+permanent CI compares Java results with the immutable versioned corpus. See
+[Java Kernel Cut-over](../docs/runtime/history/java-kernel-cutover.md) for the
+completed migration and rollback policy.
 
 The checksum-pinned wrapper owns Gradle 9.6.1. The Foojay resolver auto-provisions a Java 25 toolchain when one is not installed, so a developer-global Gradle or Java 25 installation is not required. Generated Protobuf Java sources stay under `build/` and are not committed.

@@ -1,36 +1,36 @@
 # Nebius Serverless Deployment
 
-This folder contains the first-deployment serverless components needed to wire
-the React frontend and FastAPI backend to Nebius-hosted AI surfaces.
+This is the entry point for retained Serverless integration and image tooling.
+[Endpoint documentation](endpoint/README.md) owns interactive API/deployment
+details; [Jobs documentation](jobs/README.md) owns batch arguments/artifacts.
+Use the [ML lifecycle](../docs/use-cases/ml-lifecycle.md) for governed model work.
 
 ## Components
 
-- `endpoint/` - FastAPI Serverless AI Endpoint for incident explanation and scenario generation.
-- `jobs/` - batch jobs for detector tournament benchmarks and synthetic dataset generation.
-- `deployment.env.example` - backend and endpoint environment variables.
+| Component | Purpose |
+| --- | --- |
+| `endpoint/` | Bounded incident/scenario/investigation APIs with explicit mock or local-vLLM mode |
+| `jobs/` | Synthetic rule benchmarks, acquisition/preparation and governed LightGBM workloads |
+| `transformer_inputs/`, `transformer_research/`, `transformer_role_audit/` | Separately packaged Transformer research/verification execution boundaries |
+| `deployment.env.example` | Integration environment examples; not execution authorization |
 
 ## Endpoint Wiring
 
-The backend calls the endpoint through:
+The browser calls FastAPI; Endpoint URLs and tokens remain server-side.
 
 ```text
-NEBIUS_INCIDENT_EXPLAINER_URL=http://<endpoint>/explain-event
-NEBIUS_SCENARIO_GENERATOR_URL=http://<endpoint>/generate-scenario
+NEBIUS_ENDPOINT_BASE_URL=https://<endpoint-host>
+NEBIUS_INCIDENT_EXPLAINER_URL=https://<endpoint-host>/explain-event
+NEBIUS_SCENARIO_GENERATOR_URL=https://<endpoint-host>/generate-scenario
 ENDPOINT_TOKEN=<optional endpoint token>
 ```
 
-The frontend keeps calling the backend:
+Per-route overrides and the complete route list live in the
+[Endpoint reference](endpoint/README.md#backend-wiring). Unconfigured endpoints
+return typed mock output with source/fallback metadata.
 
-```text
-POST /api/incidents/{incident_id}/explain
-POST /api/red-team/generate-scenario
-```
-
-The browser never receives Nebius tokens.
-
-The repository's single Compose file keeps this wiring disabled by default. To
-run the app against deployed Serverless Endpoint and Job resources, configure
-the endpoint/job variables and start it with:
+Compose keeps Serverless integration disabled by default. For an already
+authorized and configured environment:
 
 ```bash
 NEBIUS_SERVERLESS_ENABLED=true \
@@ -38,24 +38,15 @@ NEBIUS_CLI_CONFIG_DIR="$HOME/.nebius" \
 docker compose up --build
 ```
 
-Use `--profile prometheus` or `--profile grafana` to add metrics or the complete
-dashboard stack to the same serverless run.
+`--profile prometheus` adds metrics; `--profile grafana` adds the full dashboard
+stack. Java remains the live exchange owner.
 
 ## Local Smoke Test
 
-Endpoint:
-
-```bash
-cd serverless/endpoint
-uvicorn app:app --host 0.0.0.0 --port 9000
-```
-
-Backend env:
-
-```bash
-NEBIUS_INCIDENT_EXPLAINER_URL=http://localhost:9000/explain-event
-NEBIUS_SCENARIO_GENERATOR_URL=http://localhost:9000/generate-scenario
-```
+A mock Endpoint can run on port 9000 as shown in the
+[local Endpoint examples](endpoint/README.md#local-run). Point backend overrides
+at `http://localhost:9000/explain-event` and `/generate-scenario`. This validates
+wiring/response shape, not GPU inference or cloud execution.
 
 ## Container Build
 

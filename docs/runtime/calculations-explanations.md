@@ -20,110 +20,53 @@ temporal/attribution metrics.
 - [Step 2 — Scenario Generator](#step-2--scenario-generator)
 - [Step 3 — Investigation Team](#step-3--investigation-team)
 - [Detector Evidence Calculations](#detector-evidence-calculations)
-  - [Bid and Ask Depth](#bid-and-ask-depth)
-  - [Order-Book Imbalance](#order-book-imbalance)
-  - [Spread in Basis Points](#spread-in-basis-points)
-  - [Depth Change](#depth-change)
-  - [Wall-Size Ratio](#wall-size-ratio)
-  - [Cancel-to-Trade Ratio](#cancel-to-trade-ratio)
-  - [Order Lifetime](#order-lifetime)
-  - [Message Rate](#message-rate)
 - [Detector Formulas](#detector-formulas)
-  - [Spoofing-Like Detector](#spoofing-like-detector)
-  - [Layering-Like Detector](#layering-like-detector)
-  - [Quote-Stuffing Detector](#quote-stuffing-detector)
-  - [Liquidity-Shock Detector](#liquidity-shock-detector)
-  - [Evidence Flattening](#evidence-flattening)
 - [Step 4 — Detector Tournament](#step-4--detector-tournament)
-  - [Tournament Inputs](#tournament-inputs)
-  - [Execution Modes](#execution-modes)
-  - [Local Tournament Workload](#local-tournament-workload)
-  - [Single Simulation Run](#single-simulation-run)
-  - [Ground-Truth Mapping](#ground-truth-mapping)
-  - [Detection Latency](#detection-latency)
-  - [Tournament Metrics](#tournament-metrics)
-  - [Generated Artifacts](#generated-artifacts)
 - [Step 5 — Execution Trace](#step-5--execution-trace)
 - [Datasets Used](#datasets-used)
 - [Known Implementation Gaps](#known-implementation-gaps)
 - [Worked Evidence Example](#worked-evidence-example)
 - [Accurate Technical Description](#accurate-technical-description)
 
----
-
 ## Overview
 
-The Nebius Control Panel combines three different mechanisms:
+The demo combines deterministic simulation, rule detectors and optional Nebius
+generation/investigation services. Rules calculate their scores and alert
+thresholds; the AI Investigator explains structured evidence. Its risk/confidence
+is explanatory output, not a calibrated probability of real market abuse.
 
-1. deterministic market simulation;
-2. deterministic rule-based detectors;
-3. optional Nebius LLM and Serverless execution for scenario generation, investigation, explanation, and batch processing.
-
-The five Control Panel workflow steps are:
-
-1. Runtime
-2. Scenario Generator
-3. Investigation Team
-4. Detector Tournament
-5. Execution Trace
-
-The most important architectural distinction is:
-
-```text
-Nebius AI:
-  scenario generation
-  evidence explanation
-  investigation synthesis
-  batch orchestration
-
-Deterministic LOB Arena code:
-  order book
-  feature calculation
-  detector confidence
-  alert threshold
-  tournament ground-truth mapping
-  precision / recall / F1
-```
-
-The AI does not currently calculate the primary detector confidence values. Those values come from explicit feature formulas and weighted rules in the backend.
-
----
+Mock outputs establish response compatibility, not measured detector quality or
+proof that an Endpoint/Job executed. Learned-model implementation, qualification
+and live integration remain separate from this synthetic rules path.
 
 ## End-to-End Flow
 
 ```text
-Scenario parameters
-       ↓
-Nebius Endpoint or deterministic template
-       ↓
-Canonical scenario + explicit ground truth
-       ↓
-Projection into an Arena attack scenario
-       ↓
-Arena simulation / order-book changes
-       ↓
-Feature extraction on each tick
-       ↓
-Four deterministic detector scores
-       ↓
-Incident and evidence
-       ↓
-Nebius Investigation Team explanation
-       ↓
-Tournament against known synthetic labels
-       ↓
-Precision / recall / F1 / latency + artifacts
+Bounded scenario specification + separate ground truth
+  -> named Arena scenario projection
+  -> authoritative Java live exchange (or retained offline batch simulation)
+  -> numeric rule features -> detector scores -> incidents/evidence
+  -> optional AI investigation
+  -> synthetic tournament metrics and retained artifacts
 ```
 
-The order book and matching engine remain authoritative. AI produces bounded scenarios and explanations, while detector confidence is calculated by deterministic formulas.
+## Step 1 — Runtime
 
----
+The [runtime model](runtime-model.md) owns current Java/Python boundaries and
+worker caps. The [Serverless entry point](../../serverless/README.md) owns wiring
+and distinguishes build/import checks from runtime smoke tests. Local mock
+responses require no cloud execution; a configured cloud route still records
+fallback if the Endpoint or Job path fails.
 
-# Step 1 — Runtime
+## Step 2 — Scenario Generator
 
-## What this step does
+[ARD-0016](../architecture/ARD-0016-ai-scenario-generator.md#canonical-schema)
+owns accepted enums, complete request/response examples, fallback and persistence.
+The Replay action projects a canonical specification onto one of four supported
+named scenarios; it does not replay arbitrary LLM events event for event.
+Specification ground truth must not be substituted for executed scenario labels.
 
-Runtime selects whether LOB Arena operates in:
+## Step 3 — Investigation Team
 
 - **Local Demo** mode; or
 - **Nebius Cloud** mode.

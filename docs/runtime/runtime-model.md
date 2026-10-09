@@ -161,12 +161,10 @@ Incident Details should show detector evidence first, then the generated explana
 
 Detection and Experiments summarize offline detector quality by scenario family, replay evidence, generated reports, and Managed Experiment artifacts.
 
-| Scenario | Precision | Recall | F1 |
-| --- | ---: | ---: | ---: |
-| Spoofing-like wall | 0.91 | 0.86 | 0.88 |
-| Layering-like | 0.84 | 0.79 | 0.81 |
-| Quote stuffing | 0.96 | 0.92 | 0.94 |
-| Liquidity shock | 0.89 | 0.83 | 0.86 |
+The screens display metrics from the selected run's persisted benchmark
+artifacts. A mock leaderboard is labelled as mock; it is not qualification
+evidence. See [benchmark methodology](../ml/benchmark-methodology.md) for metric
+definitions and [current status](../roadmap/CURRENT_STATUS.md) for verified results.
 
 ## Historical And Hybrid Runtime
 
@@ -219,7 +217,7 @@ graph LR
     Truth["Separate labels + reviewed negatives"]
     Corpus["Signed corpus + frozen split"]
     Features["lob_features_v2 float32<br/>v1 readable"]
-    Model["LightGBM v1<br/>next delivery"]
+    Model["Implemented LightGBM v1"]
     Evaluation["Rules vs model evaluation"]
     Release["Checksummed model release"]
     MLflow["MLflow tracking + registry"]
@@ -238,6 +236,10 @@ graph LR
 MLflow does not receive exchange write authority, decide which windows are
 clean, fit preprocessing, select thresholds, open the test fold, or sign a
 release. Those responsibilities remain in the governed repository pipelines.
+
+[ARD-0031](../architecture/ARD-0031-complete-lightgbm-v1.md) records the completed
+LightGBM implementation. Cloud qualification and live learned-detector serving
+are separate gates; consult [current status](../roadmap/CURRENT_STATUS.md).
 
 ## API Ownership
 
