@@ -154,6 +154,8 @@ class Settings(BaseSettings):
         alias="NEBIUS_LOCAL_TOURNAMENT_SCENARIO_LIMIT",
     )
     arena_output_dir: Path = Field(default=Path("../outputs"), alias="ARENA_OUTPUT_DIR")
+    research_saved_scores_enabled: bool = Field(default=False, alias="RESEARCH_SAVED_SCORES_ENABLED")
+    research_saved_scores_dir: Path | None = Field(default=None, alias="RESEARCH_SAVED_SCORES_DIR")
     arena_data_retention_days: int = Field(default=1, ge=1, le=3650, alias="ARENA_DATA_RETENTION_DAYS")
     arena_sample_data_dir: Path = Field(default=Path("../data/sample"), alias="ARENA_SAMPLE_DATA_DIR")
     arena_lobster_raw_dir: Path = Field(
