@@ -210,8 +210,8 @@ export function AboutPage() {
 
 function ArchitectureDiagram() {
   return (
-    <svg
-      aria-label="Architecture diagram showing browser, backend, identity, simulation runners, Nebius cloud, and evidence artifacts with directional arrows"
+    <img
+      alt="Architecture: React uses the Java sole-writer market kernel and Python AI/ML control plane; external agents submit bounded intents; Nebius Jobs produce retained evidence."
       className="architecture-flow-diagram"
       role="img"
       viewBox="0 0 1120 560"

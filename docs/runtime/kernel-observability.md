@@ -144,3 +144,22 @@ Grafana is a visualization consumer, never a kernel dependency. Prometheus scrap
 - [README observability overview](../../README.md#role-of-prometheus-and-grafana)
 - [Quick Start](../deployment/QUICKSTART.md)
 - [ARD-0021: Local Observability With Prometheus And Grafana](../architecture/ARD-0021-local-observability-grafana.md)
+
+
+## Detector tournament orchestration metrics
+
+The implemented operational contract is deliberately bounded:
+
+| Metric family | Purpose | Bounded labels |
+| --- | --- | --- |
+| `detector_tournament_runs_total` | Count tournament terminal outcomes | `execution_mode`, `outcome` |
+| `detector_tournament_duration_seconds` | Measure end-to-end tournament duration | `execution_mode`, `outcome` |
+| `detector_tournament_in_flight` | Show queued or running work | `execution_mode` |
+| `detector_tournament_scenarios_total` | Measure completed scenario throughput | `execution_mode`, `outcome` |
+| `detector_tournament_artifact_collections_total` | Track successful, failed, and incomplete result collection | `execution_mode`, `outcome` |
+
+Tournament IDs, Job IDs, seeds, scenario IDs, and artifact paths must not become
+Prometheus labels. Precision, recall, F1, detector leaderboards, and per-scenario
+results remain in the artifact store and product UI. Grafana's tournament view
+is for operational questions—whether work is completing, how long it takes, and
+where it fails—not for replacing the benchmark report.

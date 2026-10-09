@@ -282,27 +282,9 @@ unless participant/account evidence and an appropriate investigative process exi
 
 ## 11. Build a LOB Arena Surveillance Plugin for VisualHFT
 
-A collaboration artifact could be a VisualHFT study/plugin showing LOB Arena results.
-
-Example:
-
-```text
-┌──────────────────────────────┐
-│ LOB Arena Surveillance       │
-│                              │
-│        0.87 HIGH             │
-│                              │
-│ Suspected: Layering          │
-│ Ensemble: 3/3                │
-│                              │
-│ LightGBM      0.91           │
-│ Transformer   0.84           │
-│ Rule engine   0.77           │
-│                              │
-│ Cross venue   ANOMALOUS      │
-│ Data quality  GOOD           │
-└──────────────────────────────┘
-```
+A future study/plugin could display score, suspected pattern, detector votes,
+cross-venue context and data quality, with click-through to supporting evidence.
+It must not imply that an ensemble or live learned-detector adapter exists today.
 
 Click-through could show:
 
@@ -315,9 +297,12 @@ Click-through could show:
 - replay button;
 - explanation / analyst notes.
 
-### Product division
+## 12. Trigger / Webhook Integration And Collaboration
 
-**VisualHFT**
+A metric/event webhook from VisualHFT to LOB Arena is a possible first bridge.
+Longer term, LOB Arena would own normalization and surveillance scoring and publish
+alerts/scores/evidence to a VisualHFT plugin. Either direction needs an approved
+adapter contract, timestamp/feed-quality handling and verified license boundaries.
 
 - trader/analyst workstation;
 - visualization;

@@ -194,9 +194,14 @@ replacement scored the frozen candidate once; independent readback verified
 176 S3 objects, four MLflow artifacts, 30 dataset identities and 24 metrics.
 Final access and idle compute were closed; unknown billed costs remain disclosed.
 
-Current status: G0–G9 closed; the [September 27 signed exit](../operations/g8/g9-closure-20260927.md)
-permits Wave 2 research engineering. The following September 23 snapshot and
-earlier recovery plan are historical, not authorization to reopen G8/G9.
+The [G8 operations index](../operations/g8/README.md) owns final results and exact
+historical packages. The full [pre-compaction recovery sequence](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/roadmap/PHASES.md#g8-recovery-and-completion-plan)
+retains failed semantic attempts, R4's consumed approval/pre-scoring failure,
+transport warning, source verification and replacement-specific gates.
+No recovery snapshot authorizes a rerun or reopening G8/G9. Retain frozen
+candidate identities, durable scored-payload recovery and marker-last publication.
+Apply the current [validation policy](../ml/model-validation-execution-policy.md);
+old billing-freshness, package-expiry and fixed-VM gates are historical.
 
 Historical status on 2026-09-23: `[G0-G8 complete; G9 signed exit pending]`.
 The separately authorized Job `aijob-e00kd6g7vaqtngwv9r` completed one frozen

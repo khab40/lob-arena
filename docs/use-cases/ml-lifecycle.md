@@ -50,7 +50,7 @@ flowchart TD
     Tab["Development tabular projection"]
     Seq["Development 64-step sequence projection"]
     LGB["CPU Job: LightGBM trials"]
-    TF["Planned GPU Job: Transformer trials"]
+    TF["GPU Job: standalone Transformer trials"]
     Select["Validation-only selection, calibration and thresholds"]
     Candidate["Frozen candidate and exact artifact hashes"]
     Gate{"Separate final-test authorization"}
@@ -59,7 +59,7 @@ flowchart TD
     Deploy["Planned signed promotion and shadow serving"]
     Source --> Normalize --> Replay --> Freeze
     Freeze --> Tab --> LGB --> Select
-    Freeze --> Seq -.-> TF -.-> Select
+    Freeze --> Seq --> TF --> Select
     Select --> Candidate --> Gate
     Freeze --> Final["Final projection in separate storage"]
     Gate --> Test
