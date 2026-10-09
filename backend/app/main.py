@@ -11,6 +11,7 @@ from app.api.routes_health import router as health_router
 from app.api.routes_incidents import router as incidents_router
 from app.api.routes_nebius import nebius_client, router as nebius_router
 from app.api.routes_red_team import router as red_team_router
+from app.api.routes_saved_scores import router as saved_scores_router
 from app.api.routes_scenarios import router as scenarios_router
 from app.api.routes_simulation import router as simulation_router
 from app.arena.java_client import JavaArenaClient
@@ -24,6 +25,12 @@ from app.storage.retention import cleanup_output_data
 
 app = FastAPI(title="LOB Arena")
 settings = get_settings()
+if settings.research_saved_scores_enabled or settings.research_saved_scores_dir is not None:
+    # Fail before LocalStore/retention initialization can touch private custody.
+    from pathlib import Path
+    from app.research.saved_score_io import validate_private_roots
+    validate_private_roots(settings.research_saved_scores_dir,
+                           (settings.arena_output_dir, Path(__file__).resolve().parents[2] / "assets/screenshots"))
 metrics_registry = PrometheusTextRegistry()
 metrics_registry.counter(
     "backend_java_arena_requests_total",
@@ -74,6 +81,7 @@ app.include_router(scenarios_router)
 app.include_router(incidents_router)
 app.include_router(nebius_router)
 app.include_router(red_team_router)
+app.include_router(saved_scores_router)
 
 
 @app.get("/api/status", tags=["status"])
