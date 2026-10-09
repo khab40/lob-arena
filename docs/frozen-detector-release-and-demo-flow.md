@@ -5,69 +5,53 @@ Design recorded 4 October; scope reconciled 8 October 2026.
 [research disposition](ml/transformer-research-disposition-20261008.md) owns the
 approved continuation. This is design, not serving completion or run/access approval.
 
-Tracking: [Project #3](https://github.com/users/khab40/projects/3),
-[backend and evidence #90](https://github.com/khab40/lob-arena/issues/90),
-[secure CEO demo #91](https://github.com/khab40/lob-arena/issues/91).
-Model evidence belongs to [LightGBM #23](https://github.com/khab40/lob-arena/issues/23),
-[Transformer #24](https://github.com/khab40/lob-arena/issues/24) and the conditional
-[combined detector #25](https://github.com/khab40/lob-arena/issues/25).
+Tracking: [backend #90](https://github.com/khab40/lob-arena/issues/90),
+[demo #91](https://github.com/khab40/lob-arena/issues/91),
+[LightGBM #23](https://github.com/khab40/lob-arena/issues/23),
+[Transformer #24](https://github.com/khab40/lob-arena/issues/24),
+[conditional cascade #25](https://github.com/khab40/lob-arena/issues/25),
+[Bug #357](https://github.com/khab40/lob-arena/issues/357),
+[Project #3](https://github.com/users/khab40/projects/3).
 
 ## 1. The first working demo
 
-As a CEO or customer reviewer,
-I want to run a selected detector against a reproducible market scenario,
-So that I can see arriving events become alerts and decide which pilot to fund.
+As an authorized reviewer,
+I want to play back verified saved detector scores with clear source and threshold identity,
+So that I can inspect the research evidence before funding event-inference integration.
 
-Actor: authorized reviewer, with an operator preparing the release and run bounds.
-Goal: one understandable event-to-alert demonstration.
-Value: product feedback before broader platform work or further model research.
-Verification: a bounded rehearsal, verified release loading, feature/score parity
-and result readback. Out of scope: live-feed acquisition, production qualification,
-online training and automatic promotion.
-
-The first delivery uses one supported, calibrated learned detector. The design
-allows deterministic, LightGBM, Transformer and combined choices as their runtime
-and evidence become available. An unavailable option shows its readiness reason.
-The first demo does not depend on completing all four options. Full #90/#91
-acceptance remains separately tracked; this smaller delivery does not close them.
+The immediate #90/#91 mock authenticates version/size/hash receipts from an
+explicitly configured, allowlisted private campaign. It offers Transformer/
+LightGBM selection, source identity, ordered score/alert playback, pause/resume/
+speed and frozen threshold provenance. Label it **saved research predictions**:
+it replays scores, not an order book or newly inferred market events. Public
+aggregate reports cannot substitute for private rows. Use opaque IDs and local-only
+access, separate from generic artifact serving; exclude row payloads from Git,
+frontend fixtures and website assets. Reject corrupt evidence/unavailable detectors.
+This needs no model execution and does not complete full #90/#91 acceptance.
 
 ### Guided user journey
 
-1. **Log in.** Authenticate and enter an authorized workspace. Backend APIs enforce
-   access to datasets, runs and results. A local demo mode has an explicit identity;
-   it cannot provide fallback access to a shared sensitive-data deployment.
-2. **Ingest a dataset or select Synthetic.** For Nasdaq ITCH or LOBSTER, choose an
-   approved source/session, instrument and bounded event-time window. Show source
-   provenance, validation status and use restrictions. For Synthetic, choose a
-   versioned scenario profile and seed. Start becomes available after preparation.
-3. **Configure attacks or choose Without attacks.** Select supported spoofing-like
-   walls, layering or quote stuffing through the scenario's versioned schema.
-   Parameters include applicable side, size, level distance, start time, duration,
-   activity/cancellation rate and seed. The UI exposes only parameters supported
-   by that attack implementation. Ingested data can run unchanged or with a clearly
-   identified synthetic overlay. Apply overlay events before feature calculation.
-4. **Select the detector.** Choose a runnable deterministic, LightGBM, Transformer
-   or combined release and its verified operating mode. Show the release identity
-   and readiness. Weights, calibration and thresholds are fixed for the run.
-5. **Start detection.** Freeze the run configuration and source/release identities.
-   Show progress, warm-up, scores, alerts, processing lag and actionable failures.
-   Replay supports pacing, pause and resume within the declared run bounds.
-6. **Present results.** Show the event timeline, alerts and supporting evidence,
-   selected detector, source/attack configuration, thresholds and runtime measures.
-   Where supported ground truth exists, show precision, recall, F1 and the confusion
-   matrix. Include per-family results and delay only when the labels and event
-   evidence support those measures. Provide a compact management summary/export.
+The later event-to-alert journey below is proposed integration. It requires a
+verified runnable release, causal feature parity, bounded rehearsal and separately
+assessed authentication. It is not the first saved-score mock's acceptance scope.
 
-In the frozen C4 research corpus, historical controls are assumed research negatives;
-newly ingested history remains unlabeled unless independently adjudicated.
-Without attacks means no added synthetic attacks. Synthetic labels remain
-outside detector inputs. Historical participants do not react to a synthetic overlay.
-Equal-timestamp historical events precede the overlay under the existing replay
-ordering rule. The current wall schema includes `quantity_lots`, `duration_ticks`
-and `distance_levels`; layering includes level range and quantity increments;
-quote stuffing includes burst rate and start distance. Liquidity evaporation exists
-in the simulator but is outside these models' three-family calibrated research
-coverage. See [replay behavior](data/replay-quickstart.md).
+1. Authenticate an authorized workspace; backend APIs enforce dataset/run/result
+   access. Explicit local identity cannot provide shared sensitive-data fallback.
+2. Select an approved Nasdaq/LOBSTER source, instrument and time window, or a
+   versioned synthetic profile/seed; display provenance, validation and restrictions.
+3. Select supported wall/layering/stuffing parameters or no added attacks. Apply
+   identified synthetic overlay before features; freeze source/scenario/seed.
+4. Select a verified detector/operating mode; unavailable choices show readiness.
+   Pin weights/calibration/thresholds per run. Start shows warm-up, lag and failures.
+5. Present event-cutoff scores, alerts, evidence and runtime measures. Report
+   quality/delay only with supported labels; unchanged new history is unlabeled.
+
+C4 controls are assumed research negatives; synthetic labels stay outside inputs.
+Historical participants do not react to overlays; equal-time historical events
+precede overlays. Wall quantity/duration/distance, layering levels/increments and
+stuffing burst/distance parameters follow the versioned schema. Liquidity
+evaporation is outside the learned models' three-family calibrated coverage.
+See [replay behavior](data/replay-quickstart.md).
 
 ## 2. What the frozen release contains
 
@@ -116,14 +100,19 @@ integration work. See [existing serving boundary](use-cases/ml-model-serving.md)
 
 ## 3. How training, calibration and selection produce the release
 
-### Shared market data and causal features
+The shared corpus binds source/replay/split/feature/row identities. Public ITCH
+AAPL/MSFT/NVDA 10:00–10:30 Eastern sessions use January/March training, October
+development and December evaluation. Variants stay with base sessions; causal
+60-feature inputs include 2/10-second history and labels attach afterward.
+Limited dates/synthetic labels constrain claims; LOBSTER robustness is separate,
+without retuning. See [data preparation](use-cases/ml-data-preparation.md).
 
-The frozen research corpus uses public Nasdaq ITCH for AAPL, MSFT and NVDA in
-10:00–10:30 Eastern windows. Train dates are 30 January and 27 March 2019;
-30 October 2019 supplies development validation; 30 December 2019 supplied the
-completed LightGBM final evaluation. Source sessions and their synthetic variants
-stay in the same partition. Any LOBSTER robustness evaluation must be reported
-separately without retuning.
+| Detector | Verified research state | Required integration binding |
+| --- | --- | --- |
+| LightGBM | Frozen 31-feature CPU booster, isotonic calibration, three thresholds; signed research baseline | Preserve complete governed loader/release dependencies and root-relative paths. [Training](use-cases/ml-training-selection.md), [G9](operations/g8/g9-closure-20260927.md). |
+| Transformer | Width 128 / rate 0.0003 / seed 42 / epoch 4; train-only normalization, causal 64 retained rows ×60 features, 120 channels with missingness, frozen C temperature/O thresholds; holdout verified | Dedicated export/loader binds exact selected state, architecture, normalization/calibration/thresholds. Strict loading, `eval()` and `torch.inference_mode()`; optimizer/RNG remain training evidence. [ARD-0036](architecture/ARD-0036-market-sequence-transformer.md), [settings](ml/transformer-settings-release.md). |
+| Combined | Conditional #25, no verified combined runtime | NEW LightGBM with exact producer joins, leakage-safe downstream training, own calibration/thresholds and verified fallback; never append columns to frozen v1. [ARD-0037](architecture/ARD-0037-transformer-to-lightgbm-cascade.md). |
+| Deterministic | Versioned rules and decision policy | Present rule scores with their existing semantics, not calibrated probabilities without separate verification. |
 
 Reconstruct the order book, replay ordered events and compute the 60-feature
 contract from information available at each cutoff. It includes trailing 2-second

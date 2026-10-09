@@ -200,24 +200,24 @@ shasum -a 256 validation-public-key.pem
 jq -r '.key_id' signature.json
 ```
 
-The signed manifest is the evidence trust root. `checksums.sha256` is a
-convenient transport check and is not a substitute for signature and signed
-inventory verification.
+The signed manifest/inventory is the trust root; transport checksums alone do
+not authenticate evidence or a self-supplied public key.
 
 ## 10. Run implementation regression tests
 
-Run these when the ingestion, replay, detector, metric, or evidence code has
-changed. They are not a replacement for the data-specific evidence run:
+After ingestion/replay/metrics/evidence code changes, run scoped non-model tests
+and static checks; data-specific validation still requires the actual signed run.
+The full backend suite includes model workloads, so agent-initiated numerical
+checks belong in an authorized Nebius package. CI or the applicable approved
+execution plan owns those gates; do not invoke the whole suite locally by default.
 
 ```bash
-uv run --project backend pytest -q
 uv run --project backend ruff check backend scripts
-
 cd java
 ./gradlew test
 ```
 
-Validate documentation links from the repository root:
+From the root, validate Markdown links:
 
 ```bash
 backend/.venv/bin/python scripts/check_markdown_links.py README.md docs data/lobster
@@ -225,23 +225,19 @@ backend/.venv/bin/python scripts/check_markdown_links.py README.md docs data/lob
 
 ## Delivery checklist
 
-- [ ] Client files arrived through an approved secure channel.
-- [ ] Message and order-book filenames form one unambiguous pair.
-- [ ] The intended time window and depth were confirmed with the client.
-- [ ] Import completed and produced an immutable dataset ID.
-- [ ] Java accepted the actual normalized Parquet files.
-- [ ] The entire source row count was replayed.
-- [ ] Separate signed bundles were generated for every agreed attack and seed.
-- [ ] Every `validation-report.json` check passed.
-- [ ] Detector metrics met the client-specific acceptance thresholds.
-- [ ] Bundle signature and signed artifact inventory verified.
-- [ ] Public-key fingerprint was authenticated independently.
-- [ ] Private keys and licensed source data were excluded from the repository.
-- [ ] Evidence was archived in the approved immutable client location.
+- [ ] Secure delivery; unambiguous pair and agreed window/depth.
+- [ ] Immutable dataset ID; Java verified actual Parquet bytes; full rows replayed.
+- [ ] Separate signed bundles for every agreed attack/seed/config/code revision.
+- [ ] Every validation check passes; detector limitations/misses remain visible.
+- [ ] Agreed detector thresholds and label suitability assessed independently.
+- [ ] Signature/inventory verified; public-key fingerprint authenticated externally.
+- [ ] Private keys/licensed data excluded from Git; evidence archived immutably.
 
 ## Related documentation
 
-- [Hybrid Dataset Validation](hybrid-dataset-validation.md)
-- [Historical Market Data Ingestion ARD](../architecture/ARD-0022-historical-market-data-ingestion.md)
-- [Hybrid Historical Replay ARD](../architecture/ARD-0023-hybrid-historical-replay.md)
-- [Root historical and hybrid replay instructions](../../README.md#historical-and-hybrid-replay)
+[Hybrid validation](hybrid-dataset-validation.md),
+[ingestion ARD](../architecture/ARD-0022-historical-market-data-ingestion.md),
+[replay ARD](../architecture/ARD-0023-hybrid-historical-replay.md),
+[root replay instructions](../../README.md#historical-and-hybrid-replay).
+[Immutable prior walkthrough](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/data/client-historical-dataset-validation-runbook.md#1-prepare-the-client-delivery)
+retains the expanded example/checklists without duplicating them in an archive.
