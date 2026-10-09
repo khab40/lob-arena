@@ -44,6 +44,8 @@ The governed ML workflow adds fail-closed JSON contracts for:
 - `benchmark-results-v2.schema.json`;
 - `lightgbm-training-run-v1.schema.json`;
 - `lightgbm-model-bundle-v1.schema.json`;
+- `lightgbm-cloud-job-v1.schema.json`;
+- `lightgbm-cloud-run-v1.schema.json`;
 - `model-calibration-v1.schema.json`; and
 - `detector-predictions-v1.schema.json`.
 

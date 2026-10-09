@@ -1,32 +1,24 @@
 # LOB Arena Calculations and Workflow Explanations
 
-> **Scope reviewed 2026-09-21:** This is the legacy synthetic rules/tournament
-> calculation reference, including the retained Python batch implementation.
-> Its simulator-privileged features and coarse labels are not the causal
-> `lob_features_v2` ML contract. Java owns the live arena. The learned-model
-> lifecycle and current gates are documented [separately](../use-cases/ml-lifecycle.md).
-> Local tournament examples describe existing capability; agent model workloads
-> follow the [Nebius execution policy](../ml/model-validation-execution-policy.md).
+This reference owns the retained Python synthetic rule-detector and tournament
+formulas. Java owns the live arena under [ARD-0020](../architecture/ARD-0020-java-arena-websocket-agent-orchestration.md).
+Simulator-privileged rule features are not the causal `lob_features_v2` ML
+contract. Governed training/calibration/evaluation uses the
+[ML lifecycle](../use-cases/ml-lifecycle.md) and
+[Nebius execution policy](../ml/model-validation-execution-policy.md).
+
+The [pre-reconciliation narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/runtime/calculations-explanations.md)
+preserves the earlier workflow description and former gaps. It is historical:
+the maintained runner now applies exact counts, seed and difficulty and computes
+temporal/attribution metrics.
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [End-to-End Flow](#end-to-end-flow)
 - [Step 1 — Runtime](#step-1--runtime)
-  - [Local Demo](#local-demo)
-  - [Nebius Cloud](#nebius-cloud)
-  - [Execution Evidence](#execution-evidence)
 - [Step 2 — Scenario Generator](#step-2--scenario-generator)
-  - [Inputs](#inputs)
-  - [Endpoint Generation Path](#endpoint-generation-path)
-  - [Canonical Scenario Output](#canonical-scenario-output)
-  - [Deterministic Fallback Generation](#deterministic-fallback-generation)
-  - [Projection into Arena](#projection-into-arena)
-  - [Replay in Arena](#replay-in-arena)
 - [Step 3 — Investigation Team](#step-3--investigation-team)
-  - [Input Evidence](#input-evidence)
-  - [Investigation Output](#investigation-output)
-  - [Detector Confidence vs Investigator Confidence](#detector-confidence-vs-investigator-confidence)
 - [Detector Evidence Calculations](#detector-evidence-calculations)
   - [Bid and Ask Depth](#bid-and-ask-depth)
   - [Order-Book Imbalance](#order-book-imbalance)

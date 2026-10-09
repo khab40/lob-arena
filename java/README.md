@@ -50,7 +50,7 @@ not execute a second kernel, shadow live requests, or provide runtime fallback.
 
 Run forked kernel and matching diagnostics with `./gradlew :kernel-benchmarks:run --args='KernelBenchmarks -prof gc'`; see [Java Kernel Performance](../docs/runtime/java-kernel-performance.md) for gate policy and interpretation.
 
-The Spring control plane exposes Prometheus and opt-in OpenTelemetry around the candidate gRPC boundary. See [Kernel Observability](../docs/runtime/kernel-observability.md) for bounded meters, OTLP settings, and the Grafana template.
+The Spring control plane exposes Prometheus and opt-in OpenTelemetry around the gRPC boundary. See [Kernel Observability](../docs/runtime/kernel-observability.md) for bounded meters, OTLP settings, and the Grafana template.
 
 The versioned kernel API is now Java-default in Compose. The multi-stage `java/Dockerfile` produces a non-root Java 25 runtime image while permanent CI and sampled runtime replay retain Python as the executable reference; see [Java Kernel Default Cutover](../docs/runtime/history/java-kernel-cutover.md).
 
