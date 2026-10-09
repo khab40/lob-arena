@@ -9,7 +9,7 @@ The repository-root [ARCHITECTURE.md](../ARCHITECTURE.md) is only a navigation l
 | Topic | Entry points |
 | --- | --- |
 | Architecture | [System overview](architecture.md), [ARD index](architecture/README.md) |
-| Roadmap | [Current status](roadmap/CURRENT_STATUS.md), [retained status journal](roadmap/STATUS_HISTORY_20261008.md), [dates and dependencies](roadmap/ROADMAP-MAIN.md), [feature scope](roadmap/PHASES.md) |
+| Roadmap | [Current status](roadmap/CURRENT_STATUS.md), [retained status journal](roadmap/STATUS_HISTORY_20261008.md), [dates and dependencies](roadmap/ROADMAP-MAIN.md), [feature scope](roadmap/PHASES.md), [CEO demo delivery plan](roadmap/ceo-demo-plan-20261008.md) |
 | Use cases | [Workflow catalogue](use-cases/README.md), [ML lifecycle](use-cases/ml-lifecycle.md), [data preparation](use-cases/ml-data-preparation.md), [training and selection](use-cases/ml-training-selection.md), [serving plan](use-cases/ml-model-serving.md) |
 | Data | [Replay quickstart](data/replay-quickstart.md), [Nasdaq flow](data/nasdaq-public-sample-v1-data-flow.md), [corpus governance](data/governed-corpus-benchmark-protocol.md), [hybrid validation](data/hybrid-dataset-validation.md), [client runbook](data/client-historical-dataset-validation-runbook.md) |
 | ML | [LightGBM runbook](ml/lightgbm-v1-runbook.md), [features](ml/feature-engineering-lightgbm.md), [benchmarks](ml/benchmark-methodology.md), [MLflow](ml/mlflow-tracking-server.md), [execution policy](ml/model-validation-execution-policy.md), [LLM prompting](ml/surveillance-prompting.md) |

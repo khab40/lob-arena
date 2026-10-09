@@ -1,0 +1,31 @@
+{
+  "schema": "ceo_demo_planning_review_v1",
+  "date": "2026-10-09",
+  "scope": [
+    "docs/roadmap/ceo-demo-plan-20261008.md",
+    "docs/README.md"
+  ],
+  "behavioral_change": "none",
+  "base_commit": "6696294672ae87a3459abae4ccfa5703b63513df",
+  "reviewed_material_patch_sha256": "f044a2687600e586474b3c2c26f1a1fcc67961664bc2772cf43f9ec856612b53",
+  "plan_sha256": "3fbea76922a074a3052f38f3fe9c9657a2cb328c45d29ac1028df6c5ff9b9bcb",
+  "documentation_index_sha256": "90e651ce074c8e7cc47401b1647b7e7445306177f3a89a72ec5fd6e68430f9f8",
+  "canonical_reference_sha256": {
+    "docs/roadmap/PHASES.md": "06993a84dc4759b2219235674cb5885c9b28114ca2fe3498dd025a97a9209272",
+    "docs/frozen-detector-release-and-demo-flow.md": "f21a9caba200520394e5faf14948ec16de7c5a906dc3e1055b7d7e99837cef38",
+    "docs/architecture/ARD-0015-nebius-ai-investigation-team.md": "19a2a71c4b0bfb5e8baaee17cd52f992e5f106bc2d282c8e97215784a413c99e",
+    "docs/ml/transformer-research-disposition-20261008.md": "c0432421bd6fd215a5b0bf4699da99c4dbc93e8619f4b4f19e78cffe1e736503",
+    "docs/roadmap/CURRENT_STATUS.md": "c9d04b2f2db8eeecc9d6149ab308459fb47705c28680f6a569d708f009215e53"
+  },
+  "checks": {
+    "PLAN-01": "Pass: persistent Google instruction and current PHASES/#91 owner comparison",
+    "PLAN-02": "Pass: two Markdown files, local links/anchors, fences and whitespace; no private publication link",
+    "PLAN-03": "Pass: dated GitHub snapshot, original forecast arithmetic and scope/authorization gates"
+  },
+  "reviewer": "/root/demo_docs_audit",
+  "findings": [],
+  "resolved_findings": [
+    "P2: authentication owner is PHASES Wave5; ARD0012 is historical context"
+  ],
+  "disposition": "Planning documentation independently reviewed; no runtime story acceptance or new execution authority."
+}
