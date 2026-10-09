@@ -155,3 +155,67 @@ def test_changed_train_target_digest_precedes_numerical_consumer(environment):
     assert calls == []
 
 
+@pytest.mark.parametrize("defect", ["type", "root", "contract", "tabular_final", "sequence_final",
+    "tabular_metadata", "sequence_metadata", "constructed", "tabular_source", "sequence_source", "normalizer", "fold"])
+def test_direct_infer_provenance_rejected_before_gpu_batcher_or_prediction(environment, defect):
+    from app.ml.transformer.classifier_gpu import DedicatedGpuClassifier
+    package, dataset, args, _, _ = environment
+    calls = []
+
+    def never(*args, **kwargs):
+        calls.append(True)
+        raise AssertionError("invalid development input reached runtime")
+
+    consumer = DedicatedGpuClassifier.__new__(DedicatedGpuClassifier)
+    consumer._package = package
+    consumer._runtime = SimpleNamespace(torch=SimpleNamespace(cuda=SimpleNamespace(synchronize=never)),
+        np=np, iter_batches=never, predict=never)
+    normalizer, fold = package.normalization, "validation"
+    if defect == "type":
+        dataset = SimpleNamespace(contract=package.contract, root=package.contract.root,
+            tabular=SimpleNamespace(access_scope="final_test"), sequences=SimpleNamespace(access_scope="final_test"))
+    elif defect == "root":
+        dataset = replace(dataset, root=dataset.root.model_copy(update={"feature_release_id": "changed"}))
+    elif defect == "contract":
+        dataset = replace(dataset, contract=package.contract.model_copy(update={"sequence_manifest_sha256": "0" * 64}))
+    elif defect in ("tabular_final", "sequence_final"):
+        name = "tabular" if defect == "tabular_final" else "sequences"
+        dataset = replace(dataset, **{name: getattr(dataset, name).model_copy(update={"access_scope": "final_test"})})
+    elif defect in ("tabular_metadata", "sequence_metadata"):
+        name = "tabular" if defect == "tabular_metadata" else "sequences"
+        dataset = replace(dataset, **{name: getattr(dataset, name).model_copy(update={"projection_id": "changed"})})
+    elif defect == "constructed":
+        dataset = DevelopmentInputs(dataset.root, dataset.tabular.model_copy(update={"projection_id": "constructed"}),
+            dataset.sequences, dataset.artifact_root, package.contract)
+    elif defect in ("tabular_source", "sequence_source"):
+        args["tabular_path" if defect == "tabular_source" else "sequence_path"].write_bytes(b"{}")
+    elif defect == "normalizer":
+        normalizer = normalizer.model_copy(update={"means": (1.,) * 60})
+    else:
+        fold = "test"
+    with pytest.raises(ValueError):
+        consumer.infer(dataset, normalizer, fold=fold,
+            tabular_path=args["tabular_path"], sequence_path=args["sequence_path"])
+    assert calls == []
+
+
+def test_direct_infer_authentic_metadata_reaches_declared_batcher_in_order(environment):
+    from app.ml.transformer.classifier_gpu import DedicatedGpuClassifier
+    package, dataset, args, _, _ = environment
+    calls = []
+    batch = SimpleNamespace(values=None, valid_steps=None, missing_features=None, labels=np.asarray(LABELS),
+        target_ids=TARGETS, run_ids=("fixture-validation",) * 3)
+
+    def batches(actual, normalization, *, batch_size, fold):
+        calls.append((actual, normalization, batch_size, fold))
+        yield batch  # Declared inert structures; no feature tensors or learned model.
+
+    cuda = SimpleNamespace(synchronize=lambda: None, max_memory_allocated=lambda: 0, max_memory_reserved=lambda: 0)
+    consumer = DedicatedGpuClassifier.__new__(DedicatedGpuClassifier)
+    consumer._package, consumer.model, consumer.expires = package, None, args["expires"]
+    consumer._runtime = SimpleNamespace(torch=SimpleNamespace(cuda=cuda), np=np, iter_batches=batches,
+        split=lambda *args: None, predict=lambda *args, **kwargs: np.asarray([-2., 0., 2.]))
+    ids, labels, logits = consumer.infer(dataset, package.normalization, fold="validation",
+        tabular_path=args["tabular_path"], sequence_path=args["sequence_path"])
+    assert ids == TARGETS and labels == LABELS and logits.tolist() == [-2., 0., 2.]
+    assert calls == [(dataset, package.normalization, 64, "validation")]
