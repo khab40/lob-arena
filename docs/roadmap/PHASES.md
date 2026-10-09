@@ -203,118 +203,10 @@ candidate identities, durable scored-payload recovery and marker-last publicatio
 Apply the current [validation policy](../ml/model-validation-execution-policy.md);
 old billing-freshness, package-expiry and fixed-VM gates are historical.
 
-Historical status on 2026-09-23: `[G0-G8 complete; G9 signed exit pending]`.
-The separately authorized Job `aijob-e00kd6g7vaqtngwv9r` completed one frozen
-evaluation. All 176 S3 objects, four final MLflow artifacts, 30 dataset identities
-and 24 metrics passed independent readback; final access and idle compute are
-closed. See [measured results and G9 handoff](../operations/g8/g8-final-results-20260923.md).
-The then-pending G9 cost disposition and signed decision were completed in #231.
-
-The September 21 preparation history and ordered plan below are retained for
-audit. Their pending gates were subsequently completed in PRs #219–#223.
-
-R4 (`nasdaq-g8-final-r4-20260913`, Job `aijob-e00vtamgkr07mwzt4t`) downloaded
-the final release but failed before scoring. Preserve its consumed approval and
-four prior submissions. The candidate, calibration, features and thresholds remain
-frozen; no replacement authorization follows from this plan.
-
-Completed engineering evidence:
-
-- Corrected C4 loading, original-format comparison and MLflow report integration;
-  scored-payload retention before logging, same-run recovery and marker-last
-  publication are implemented.
-- The [native recovery rehearsal](../evidence/g8-native-recovery-20260917.json)
-  scored once, deliberately failed, and recovered after Job/workspace loss.
-  Independent authenticated MLflow readback verified 24 metrics, 30 dataset
-  inputs and four artifact hashes. The later [independent S3 readback](../evidence/g8-independent-s3-readback-20260917.json)
-  verified all 64 objects and closes the earlier AccessDenied verification gap.
-- Merged PR #201 adds the native production bootstrap and v3 replacement binding.
-  The [production review package](../operations/g8/g8-production-package.md) for
-  `nasdaq-g8-replacement-r5-20260917` is prepared but unsigned and not executable.
-  Synthetic comparison/lineage fixtures and transport checks do not establish
-  production model quality or execution of the changed production entrypoint.
-
-Historical completion plan (executed; current result linked above):
-
-1. **Verify original comparison and lineage evidence.** Locate and verify all
-   27 original Java/C3 checkpoints, their preparation binding and 30 replay domains;
-   verify genuine C4 dataset registration. Complete the frozen projection,
-   profile, comparison inventory and input-location metadata. Use retained metadata
-   first; preserve the separate gate for protected final-data access. Missing
-   original evidence is a blocker, not permission to regenerate rules or use fixtures.
-   September 21: the approved [metadata audit](../evidence/g8-original-comparison-metadata-20260921.json)
-   verified all 27 checkpoint inventories, 30 replay domains and the frozen projection.
-   All 89 metadata reads passed; temporary permissions were removed and denial
-   reverified. Metadata bindings are prepared. The [live C4 registration](../evidence/g8-capacity-registration-20260921.json)
-   now verifies four metadata artifacts and all 30 final-tabular lineage entries;
-   [Original payload verification](../evidence/g8-original-payload-verification-20260921.json)
-   is now complete: 294 objects / 2,632,277,460 bytes staged and all 377 payload/metadata
-   files independently rehashed. All 37 temporary grants were removed; the original
-   policy is restored and access denied again. The VM is stopped. Payload rows were
-   not parsed in that byte audit. The later approved semantic Job
-   `aijob-e00ezdakxbj7m0xxfy` [failed with ValidationError](../evidence/g8-comparison-semantics-20260921.json).
-   The local comparison metadata lacks required `preparation.logical_name`; the
-   redacted log cannot establish the exact failure stage or completed parsing.
-   Original evidence is preserved; the [retry proposal](../evidence/g8-comparison-semantics-retry-proposal-20260921.json)
-   adds only that field in a new tree, rebinds its inventory and adds safe diagnostics.
-   PR #210's corrected retry was approved and staged; all 377 files were rehashed.
-   R2 Job `aijob-e00v9yf6zxx3nkarn2` [was cancelled](../evidence/g8-comparison-semantics-r2-20260921.json)
-   after the expected 50-minute worker deadline without a worker result. Its parsing
-   progress and root cause are unknown. Semantics remain unverified; both approvals
-   are consumed. The [supervised proposal](../evidence/g8-comparison-supervised-proposal-20260921.json)
-   adds flushed stages, independent child-process timeout and a startup-output gate.
-2. **Verify the production transport on Nebius.** Exercise the actual bootstrap,
-   imports, mount checks and signed-context handoff without production final scoring.
-   Record exact package/image/source hashes and actual Job/filesystem identities.
-   Run model and frozen-runtime work on Serverless only, with declared resources,
-   finite timeout and intended Job count. Assess the rehearsal's nonfatal provider
-   mount error against actual mount observations; retain its unresolved history.
-   September 21: the [production transport probe](../evidence/g8-production-transport-probe-20260921.json)
-   passed on Job `aijob-e00samq5cpe1bysr4x`: 12 exact runtime overlays, read-only
-   package/bootstrap, native mount identity and signed actual-Job context verified.
-   The unsigned entrypoint and wrong context both failed closed. All 25 package
-   files were independently rehashed and archived; VM stopped, final key inactive.
-   The provider mount warning recurred despite successful runtime checks/readback;
-   its root cause remains unresolved. No protected rows, training or scoring ran.
-   Transport verification is complete. The failed semantic audit's compute was
-   released, including cancelled R2; VM stopped and final key inactive. Approve the
-   supervised one-Job proposal
-   before further protected parsing. Snapshot Parquet scope remains hash/footer-only;
-   snapshot row/schema consistency and prediction joins are not verified by this audit.
-3. **Complete package and preflight.** Check current identity/permissions, versioned
-   secrets, pinned image alias, MLflow readiness, native capacity and output/intent
-   state. The approved [32 GiB expansion](../evidence/g8-capacity-registration-20260921.json)
-   is applied and mounted capacity verified; the original 10 GiB limit could not
-   accommodate the 2.451 GiB comparison payload. The new unsigned September 21 review
-   binds verified comparison/lineage evidence and the 4 GiB checkpoint bound to
-   32 GiB storage. Recheck 20 GiB actual free space at execution; finish the canonical
-   request and complete v3 plan after runtime verification and approval. Rebind the
-   production review to the corrected comparison path/hash after successful audit;
-   the retained unsigned review still points to the defective metadata. Keep
-   scored/recovery evidence durable. Follow the [validation policy](../ml/model-validation-execution-policy.md);
-   do not reinstate historical billing-freshness, package-expiry or fixed-VM gates.
-4. **Obtain replacement-specific approval and sign.** Review the concrete package,
-   run scope and resource bounds, then obtain the exception for at most one
-   replacement. Bind fresh authorization files and sign the complete plan;
-   R4's consumed approval is unusable. Sign actual Job context separately from
-   provider readback after submission; preparation is not final-test authority.
-5. **Execute once and recover without rescoring.** Persist submission intent and
-   resolve ambiguous creates by readback. Seal scored payloads before logging,
-   retain one MLflow evaluation run and publish SUCCESS last. Post-scoring recovery
-   uses the retained seal; a failure without that seal requires explicit disposition.
-6. **Independently verify and close G8.** Download and verify S3 inventories/hashes;
-   cross-check MLflow metrics, original lineage and artifacts. Report actual C4
-   quality, uncertainty, coverage and resource/throughput evidence, including failed
-   thresholds. Update Issue #23, this plan, the roadmap and ARD-0035 with production
-   receipts. Stop idle compute and retire temporary access within approved scope;
-   retain evidence pending verified and approved cleanup. G9 then records the
-   signed quality/resource/cost disposition using the operator-managed policy.
-
-The [C4 contract](../operations/g8/g8-c4-evaluation-contract.md) covers one test date and three
-symbol sessions, with row-level metrics and research/synthetic labels. It does not
-establish seven-date benchmark or production/client acceptance. Successful execution
-cannot guarantee acceptance thresholds. The September 23 G7–G9 exit is at risk;
-retain downstream baseline dates until an evidence-backed replan is approved.
+The [C4 contract](../operations/g8/g8-c4-evaluation-contract.md) covers one test
+date and three symbol sessions with research/synthetic labels. It does not
+establish seven-date, production or client acceptance. Baseline downstream dates
+remain targets until an evidence-backed reforecast is approved.
 
 ### Wave 2: Add The Market-Sequence Transformer
 
@@ -330,11 +222,12 @@ Current work follows the [research-week plan](../ml/transformer-week-plan-202610
   checkpoints, measurements and replayable MLflow events in durable storage.
 - `[done]` Independently verify both replacement confirmations and three-seed
   stability; retain seed 42 / epoch 4 as the candidate.
-- `[next]` Prepare checkpoint-origin compatibility and obtain separate exact
-  run/spend approval for one calibration/comparison Job (one hour). No expanded
-  search, automatic replacement or final-test access is included.
-- `[next]` Independently verify C-role calibration and exact-row O-role comparison;
-  record continue/stop/inconclusive and any eligible freeze.
+- `[done]` Independently verify checkpoint compatibility, C-role calibration,
+  identical-row O comparison and the locked December holdout; record bounded
+  `continue_research` and retained-reference #314 acceptance.
+- `[next]` Prepare #90/#91 private saved-score playback. Fresh inference and
+  causal event integration require separately defined contracts and approval.
+- `[open]` Complete full #24 MLflow lineage, serving-path and resource/cost acceptance.
 - `[deferred]` Reconcile MLflow and #19–#21 after the research decision.
   New logging is future-runtime code; current dependency source/image pins remain.
 

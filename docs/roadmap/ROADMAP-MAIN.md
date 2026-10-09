@@ -123,42 +123,18 @@ Run the nine remaining experiments:
 - two candidate seed-stability runs; and
 - raw, Platt, and isotonic calibration comparisons.
 
-The fixed matrix, validation-only ordering, seed tolerances and calibration
-gate are now encoded in
-`configs/experiments/lightgbm-wave1/g6-campaign-20260907.json`. Four concrete
-search Jobs run first. Their selected experiment is then mechanically reused
-for the two seed and three calibration Jobs; no result-dependent trial is
-added. The completion comparator requires all nine planned run IDs, matching
-input/runtime-image identities, recorded source provenance, verified collection
-receipts, no test access, and retention of every rejected candidate.
-Each Job is also required to produce a distinct run in
-`lob-arena/lightgbm-development` with metadata-only governed dataset inputs,
-validation/detection/calibration metrics, artifacts and cloud resource
-evidence; raw rows are not uploaded to MLflow.
+The fixed matrix and validation-only ordering are encoded in
+`configs/experiments/lightgbm-wave1/g6-campaign-20260907.json`. Search selection
+feeds the two seed and three calibration Jobs mechanically; no test access or
+result-dependent added trials are permitted. All nine run IDs, collection receipts,
+input/image identities and metadata-only dataset lineage were verified.
 
-The initial infrastructure-only G5 failure and three successful repeats raised
-consumption from seven to 11 of the separate 20-Job LightGBM development
-ceiling. In accordance with the predeclared failure rule, the unstarted G6
-matrix drops one hyperparameter configuration and now consumes the nine
-remaining slots. There is no failure reserve unless the matrix is reduced
-again or the cap is formally amended before submission.
-
-**Complete 2026-09-10.** The search selected `ablate-state`; seeds 42, 7, and
-2027 reproduced F1 `0.6931407942`, minimum family recall `0.5333333333`, and
-validation binary log loss `0.3449773248` exactly. Isotonic retained those
-detection metrics while improving calibrated Brier score to
-`0.0068910983` and validation ECE to `1.4586e-18`, ahead of Platt
-(`0.0080377169`, `0.0042177037`) and raw
-(`0.0209358031`, `0.0816111663`). These are validation-only research metrics,
-not final-test or production claims.
-
-All nine collection receipts verified, all nine MLflow run IDs are distinct,
-dataset lineage is metadata-only, and no test fold was accessed. The immutable
-runtime image and dataset identity match across the campaign. Two recorded
-control-plane Git SHAs reflect the receipt-reliability fix applied before the
-last two packages; the runtime image, inputs, experiment specifications, model,
-and raw calibration predictions did not change. The original fail-closed
-diagnostic is retained separately from the passing final receipt.
+**Complete 2026-09-10:** `ablate-state` selected; seeds 42, 7 and 2027 matched
+exactly. Isotonic improved validation calibration without changing detection
+metrics. All rejected candidates and the original fail-closed receipt are retained.
+Development consumption is 20/20; this completed ceiling grants no new Jobs.
+Detailed validation metrics and source-repair provenance remain in the
+[historical G6 record](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/roadmap/ROADMAP-MAIN.md#g6---bounded-development-campaign).
 
 ### G7-G9
 
@@ -182,15 +158,13 @@ diagnostic is retained separately from the passing final receipt.
 
 Remaining critical path:
 
-The September 28 maintenance-first ordering is historical and was superseded by
-the operator's October 2 [research-first decision](../ml/transformer-research-fork.md).
-The Transformer/LightGBM comparison and authorized December evaluation are
-independently verified, and the bounded continuation decision is recorded.
-The #90/#91 saved-score mock is next; platform acceptance under #19–#21 remains
-deferred. The [MLflow metadata recovery drill](../ml/mlflow-metadata-recovery.md)
-passed; remaining recovery/registration, infrastructure and observability work
-is deferred. Preserve durable research artifacts and reconcile MLflow afterward.
-None requires reopening G8 or altering the signed G9 decision.
+1. Prepare #90/#91 private saved-score playback under the recorded continuation;
+   then define and separately approve the fresh-inference adapter and causal event
+   integration. Full #24 acceptance remains open.
+2. Reconcile durable MLflow events/lineage and deferred platform work under #19–#21
+   after research. None requires reopening signed G8/G9.
+3. Reforecast downstream dates from remaining integration and acceptance work.
+   October 9 is a baseline target, not a full-story completion forecast.
 
 The [G8 closure PR #223](https://github.com/khab40/lob-arena/pull/223) is merged
 at `118fde384f1c73d90390227085504e31a0319ae0`; post-merge CI passed. Its review
