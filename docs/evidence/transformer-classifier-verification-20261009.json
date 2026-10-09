@@ -29,8 +29,14 @@
   "new_adapter_cuda_parity": "pending separately authorized execution",
   "original_story_runtime_and_resource_criteria": "pass for frozen research; see canonical specification",
   "full_story_remaining": [
-    "authenticated MLflow lineage reconciliation",
-    "explicit operator feature-producer eligibility decision"
+    "authenticated MLflow lineage reconciliation"
   ],
-  "private_custody": "Original payloads and exact review/test receipts remain in operator evidence custody; this public summary contains no payloads."
+  "private_custody": "Original payloads and exact review/test receipts remain in operator evidence custody; this public summary contains no payloads.",
+  "operator_feature_producer_decision": {
+    "decision": "eligible_for_research_as_feature_producer",
+    "date": "2026-10-09",
+    "private_receipt_sha256": "5d14ef8d86ce45b75c429423020fd6a54b1a597e6f2aacae6e89234aaa693e49",
+    "story_25_implementation_authorized": false,
+    "production_promotion_authorized": false
+  }
 }
