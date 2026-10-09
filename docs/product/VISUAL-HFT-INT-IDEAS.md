@@ -312,59 +312,15 @@ concept grants no outreach, implementation or workload approval.
 ## 17. Target Architecture
 
 ```text
-                 7 LIVE CRYPTO VENUES
-                          │
-                          ▼
-                NORMALIZED EVENT BUS
-                          │
-       ┌──────────────────┼──────────────────┐
-       ▼                  ▼                  ▼
-   LOB state       microstructure       feed quality
-                  feature engine         monitoring
-       │                  │                  │
-       └──────────────────┼──────────────────┘
-                          ▼
-                CROSS-VENUE CONTEXT
-                          │
-                          ▼
-              LOB ARENA DETECTOR STACK
-                          │
-               ┌──────────┴──────────┐
-               ▼                     ▼
-            LightGBM             Transformer
-               └──────────┬──────────┘
-                          ▼
-                       ENSEMBLE
-                          │
-                    anomaly score
-                          │
-              ┌───────────┴────────────┐
-              ▼                        ▼
-        event capture             live alert
-       pre/post window                 │
-              │                        │
-              └───────────┬────────────┘
-                          ▼
-                   FORENSIC CASE
-                          │
-            ┌─────────────┴─────────────┐
-            ▼                           ▼
-     VisualHFT plugin             LOB Arena UI
+market feeds -> normalized events -> LOB state / features / feed health
+             -> cross-venue context -> separately evaluated detector candidates
+             -> score / capture / alert -> evidence case -> analyst surface
+recorded market + synthetic injection -> deterministic replay -> benchmark
 ```
 
-Replay path:
-
-```text
-Real recorded market
-        +
-Synthetic attack injection
-        ↓
-deterministic replay
-        ↓
-detector benchmark
-```
-
----
+All new adapters, ensemble, case capture and plugin paths in this target are
+proposed. Current Java sole-writer ownership and approved research gates still
+apply; see [architecture](../architecture.md) and [current status](../roadmap/CURRENT_STATUS.md).
 
 ## 18. Recommended Priority
 
@@ -479,25 +435,7 @@ The PoC is valuable if it demonstrates at least one of:
 
 ## 20. Core Strategic Principle
 
-The desirable product boundary is:
-
-> **VisualHFT = observe and investigate the market.**  
-> **LOB Arena = challenge, detect, evaluate, and explain surveillance behavior.**
-
-The three highest-priority ideas are therefore:
-
-1. **live normalized multi-venue feeds;**
-2. **cross-venue surveillance features;**
-3. **event capture + real-market adversarial replay.**
-
-Build those before investing heavily in additional UI or LLM-agent layers.
-
-LLMs are likely more valuable later for:
-
-- alert summarization;
-- investigation narratives;
-- evidence assembly;
-- case triage;
-- analyst assistance;
-
-than for deciding directly from raw high-frequency LOB events whether market manipulation occurred.
+Prioritize normalized multi-venue feeds, cross-venue features, and evidence capture
+with deterministic adversarial replay before additional UI or LLM layers. LLMs may
+later assist summarization, narratives, evidence assembly and case triage; raw
+high-frequency decisions need separately validated detector evidence.
