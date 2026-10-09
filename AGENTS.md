@@ -159,9 +159,36 @@
   fast-forward needed; perform it only with applicable authorization, a clean
   unused checkout, and no local-only commits. Never reset away work to synchronize.
 
-# Feature Stories & BDD Rules
+# Specification-Driven Development (SDD) & BDD Rules
 
 Use this format for every new feature or meaningful behavior change.
+
+## 0. Canonical specification before implementation
+
+- Before implementation, identify the Project #3 ticket and one maintained
+  canonical specification file/section for the change's scope. Link both in the
+  plan and PR. Reuse an existing specification; if none owns the behavior, create
+  `docs/specs/<ticket-number>-<short-name>.md` within the authorized scope.
+- The canonical specification owns intended behavior and acceptance for that
+  scope. Tickets, plans and PR descriptions summarize and link to it; they must
+  not maintain competing requirements. Reference existing contract and ADR owners
+  for their subjects rather than copying their definitions into a new spec.
+- Record actor, goal, value, in/out of scope, assumptions, dependencies,
+  acceptance scenarios and verification method before substantial code changes.
+  Resolve material conflicts before implementing the affected behavior. Ask only
+  for missing decisions or approvals; continue independent authorized work.
+- Give each acceptance scenario a stable ID in its title, such as
+  `Scenario: AC-01 Refuse invalid evidence`. Keep IDs stable across revisions;
+  include relevant failure and boundary cases. Do not invent product requirements.
+- When intended behavior changes, update the canonical specification and affected
+  scenario mappings before changing code. Record the reason and implementation
+  impact. Obtain approval when the change expands approved scope or crosses an
+  existing gate; routine choices within authorized scope need no extra approval.
+- Keep the specification current in the same PR as its implementation and tests.
+  Pin its commit or captured file SHA-256 in independent review receipts. Preserve
+  frozen packages, historical specifications and evidence; identify their current
+  successor instead of rewriting them. A specification grants no new execution,
+  data-access, spend, promotion, merge or deletion authorization.
 
 ## 1. User Story or Feature or large change (feat)
 
@@ -185,7 +212,7 @@ Define observable behavior with Cucumber/Gherkin:
 ```gherkin
 Feature: <feature name>
 
-  Scenario: <specific behavior>
+  Scenario: AC-01 <specific behavior>
     Given <initial context>
     When <action or event>
     Then <observable result>
@@ -212,7 +239,7 @@ So that I can measure detection quality reproducibly.
 ```gherkin
 Feature: Detector evaluation
 
-  Scenario: Evaluate a completed labelled run
+  Scenario: AC-01 Evaluate a completed labelled run
     Given a completed synthetic run with ground-truth labels
     And a detector has produced alerts
     When evaluation is executed
@@ -224,12 +251,14 @@ Feature: Detector evaluation
 
 ```text
 User need
-→ User story
-→ Gherkin scenarios
+→ Ticket and canonical specification
+→ User story and identified Gherkin scenarios
 → Implementation plan
 → Code
-→ Tests
-→ Verification
+→ Tests and scenario mapping
+→ Verification and retained evidence
+→ Independent review of the exact change
+→ Applicable publication and human approval gates
 ```
 
 Do not treat code completion alone as feature completion.
@@ -238,7 +267,15 @@ A feature is done when:
 - the story is satisfied;
 - applicable scenarios pass;
 - automated tests cover the behavior;
-- required documentation and execution evidence are updated.
+- each in-scope scenario links to its verification and retained evidence;
+- the canonical specification and required documentation reflect delivered behavior;
+- independent review and any correction re-review have no unresolved actionable
+  P0/P1/P2 findings, with receipts retained under root `outputs/`;
+- remaining execution or human approval gates are explicitly reported.
+
+Report implementation-ready, verified and merged/deployed states separately when
+they differ. Pending, failed, skipped or authorization-gated scenarios remain
+incomplete; do not claim full story acceptance from a narrower verified increment.
 
 ## 5. Definition of Ready
 
@@ -248,7 +285,10 @@ Before substantial implementation, identify:
 Actor:
 Goal:
 Value:
-Acceptance scenarios:
+Ticket URL:
+Canonical specification file/section:
+Acceptance scenarios with stable IDs:
+Assumptions and dependencies:
 Out of scope:
 Verification method:
 ```
@@ -260,3 +300,32 @@ Behavioral change: none.
 Invariant: <behavior that must remain unchanged>
 Verification: <tests/evidence proving it>
 ```
+
+Instruction-only and documentation maintenance may use an explicit scoped delta
+and existing canonical document rather than creating a new product story/spec.
+Use proportionate static or manual verification; do not add runtime tests merely
+to satisfy a template. Preserve ticket links and independent review requirements.
+
+## 6. Scenario-to-verification traceability
+
+Keep a compact mapping in the canonical specification for each delivered
+increment. Link to existing tests and evidence rather than duplicating them:
+
+| Scenario ID | Implementation or contract | Test/check | Evidence receipt | Status |
+| --- | --- | --- | --- | --- |
+| AC-01 | Relevant file/symbol or owned contract | Test name or documented check | Retained path and commit/hash | Pending / Pass / Fail / Gated |
+
+- Cover every in-scope scenario, including failure/boundary cases. Link exact
+  test names or documented checks and retain results for the reviewed commit/diff.
+  Use explicit `not applicable` entries with reasons where a column does not apply.
+- Use automated behavior tests where applicable. For documentation or operator
+  procedures, identify the static/manual check and its retained result. Never run
+  model training/scoring or access gated data simply to fill this mapping; prepare
+  the required authorized execution package and leave verification visibly gated.
+- The PR must link the canonical specification and mapping, state the delivered
+  scenario IDs and remaining gates, and link focused verification and independent
+  review receipts. Expose only safe evidence references; retain private payloads
+  and custody outside public publication.
+- Reviewers check the pinned specification against the exact diff, scenario
+  coverage and completion claims. Update mappings after corrections and obtain
+  the required separate-agent re-review before proceeding.
