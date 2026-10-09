@@ -454,142 +454,49 @@ Undefined denominators produce null. F1 is zero when recall is zero; otherwise
 it is null when its inputs/denominator are undefined. A quiet normal-market run
 therefore has null precision/recall/F1, specificity 1 and false-positive rate 0.
 
-Average latency includes only detections for which that detector is the expected truth detector.
+For a labelled run, temporal overlap is the intersection-over-union of alert
+ticks and the inclusive primary manipulation window. First alert is classified
+as early, on time, late or missed. Event, participant and order precision/recall
+compare linked evidence IDs with label IDs; absent truth linkage yields null,
+not fabricated attribution. A phase is detected when any alert intersects its
+inclusive phase window. An unlabeled negative control has no phase/attribution
+truth; its alert timing is false positive or not applicable.
 
 ## Generated Artifacts
 
-The Job produces:
-
-```text
-metrics.csv
-results.json
-benchmark_report.md
-charts/f1_by_scenario.png
-charts/confidence_distribution.png
-charts/detection_latency.png
-```
-
-`results.json` contains per-run:
-
-- truth;
-- prediction;
-- true positive;
-- false positive;
-- false negative;
-- latency;
-- maximum confidence.
-
----
+The runner writes `metrics.csv`, `results.json`, `benchmark_report.md`,
+`charts/f1_by_scenario.png`, `charts/confidence_distribution.png` and
+`charts/detection_latency.png`. Per-run rows retain scenario, difficulty,
+derived seed, truth, predictions/confusion counts, maximum confidence, latency,
+temporal overlap, attribution and phase findings.
 
 # Step 5 — Execution Trace
 
-Execution Trace explains where a result came from.
-
-It should distinguish among:
-
-```text
-real Nebius Endpoint call
-real Nebius Serverless Job
-local simulator execution
-deterministic mock fallback
-```
-
-The trace and evidence layer can include:
-
-- execution mode;
-- model name;
-- Endpoint URL;
-- Job status;
-- Job ID;
-- fallback reason;
-- artifact paths;
-- cloud output URI;
-- token counts;
-- latency;
-- estimated cost;
-- S3 evidence records.
-
-The polished E2E flow is:
-
-```text
-AI-generated spoofing scenario
-→ LOB simulation
-→ detector alert
-→ LLM explanation
-→ investigation report
-→ detector tournament
-→ artifacts
-```
-
-Smoke-demo artifacts are written under:
-
-```text
-outputs/serverless-smoke/
-```
-
-Typical files include:
-
-```text
-summary.json
-scenario.json
-simulation_events.json
-detector_alerts.json
-investigation_report.md
-tournament_result.json
-serverless_job.json
-manifest.json
-```
-
----
+Record whether output came from an Endpoint, a Serverless Job, a local rule
+simulation or a deterministic mock. Preserve IDs, mode/model, fallback reason,
+artifact/manifest/checksum references and measured latency where available.
+The API smoke workflow writes `outputs/serverless-smoke/<experiment_id>/`;
+the shell smoke workflow has its separately selected output directory.
+Neither mock rows nor pending-cloud metadata prove a Job executed.
 
 # Datasets Used
 
-## Live Arena
-
-The live Arena uses internally generated synthetic data:
-
-- simulator-maintained order book;
-- normal-agent actions;
-- injected attack-agent actions;
-- matching-engine events;
-- snapshots;
-- detector features;
-- incidents.
-
-No public exchange dataset is loaded by the detector during live Arena execution.
-
-## Scenario Generator
-
-The generator creates a synthetic labelled scenario.
-
-- In mock mode it uses deterministic templates.
-- In real Endpoint mode an LLM generates structured scenario content, which is normalized and bounded before it enters the simulator.
-
-## Tournament
-
-The basic tournament does not load NASDAQ, LOBSTER, FI-2010, ABIDES output, or another external benchmark dataset.
-
-It creates new simulations for every run:
-
-```python
-SimulationEngine(seed=run_index + 17)
-```
-
-and applies hard-coded scenario-to-detector ground truth.
-
-The current benchmark is best described as:
-
-> A deterministic synthetic regression benchmark for LOB Arena’s own scenario and detector implementations.
-
-It is not yet an independent external validation benchmark.
-
----
+This basic tournament generates its own synthetic simulation runs; it does not
+load Nasdaq, LOBSTER, FI-2010 or ABIDES as an external validation benchmark.
+The live Java Arena separately supports historical/hybrid replay under
+[ARD-0023](../architecture/ARD-0023-hybrid-historical-replay.md). That capability
+does not make the basic synthetic tournament an independent market benchmark.
 
 # Known Implementation Gaps
 
-## 1. `difficulty_mix` is accepted but not applied by the basic batch runner
+The retained Python rules have explicit limitations:
 
-The UI sends easy, medium, hard, and adversarial proportions, but `serverless/jobs/detector_tournament.py` does not use difficulty.
+- `wall_size_ratio` uses synthetic `owner == "abuser"` information unavailable in anonymous real data.
+- `order_lifetime_ms` is elapsed time since scenario start, not measured order lifecycle.
+- Cancellation/trade proxies use simulator event messages and `TAKER_01`, rather than a venue-neutral order-flow contract.
+- The layering depth condition is ask-side-oriented.
+- The fixed 14-tick synthetic benchmark is a regression comparison, not evidence of production surveillance quality.
+- Temporal/attribution metrics exist, but their validity depends on actual label and detector-evidence linkage; null is not an observed score.
 
 A tournament configured as 90% adversarial therefore runs the same basic scenario mechanics as one configured as 90% easy, unless a separate cloud wrapper transforms the workload first.
 

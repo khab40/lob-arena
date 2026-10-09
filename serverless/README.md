@@ -57,35 +57,20 @@ From the repository root:
 SMOKE=true ./scripts/build-serverless-images.sh
 ```
 
-Equivalent Make target:
+The first builds images. `SMOKE=true` inspects Endpoint/Jobs image metadata,
+checks the Jobs AWS CLI version and imports LightGBM/MLflow/PyArrow plus the
+Wave 1 runner. It does **not** start Endpoint health checks, train/score a model
+or execute a three-run simulation batch. `make serverless-smoke` invokes this
+same build/import check.
 
-```bash
-make serverless-build
-```
+Options match [the build script](../scripts/build-serverless-images.sh):
 
-Run endpoint health and jobs 3-run smoke checks against locally loaded images:
-
-```bash
-SMOKE=true ./scripts/build-serverless-images.sh
-make serverless-smoke
-```
-
-Push images after local build/smoke succeeds:
-
-```bash
-PUSH=true ./scripts/build-serverless-images.sh
-make serverless-push
-```
-
-The script options are environment variables:
-
-```bash
+```text
 IMAGE_NAMESPACE=ghcr.io/khab40
 TAG=latest
-ENDPOINT_IMAGE=ghcr.io/khab40/lob-arena-endpoint:latest
-JOBS_IMAGE=ghcr.io/khab40/lob-arena-jobs:latest
-PUSH=false
 PLATFORM=linux/amd64
+TARGET=all                 # all | endpoint | jobs
+PUSH=false
 SMOKE=false
 ```
 
