@@ -145,73 +145,48 @@ one afterward. Missing/failed trials are inconclusive, not architectural inferio
 
 ## Durable execution and MLflow
 
-The [protocol amendment](../../configs/experiments/transformer/research-fork-20261002.json)
-preserves the hash of the [base configuration](../../configs/experiments/transformer/c4-campaign-20260928.json).
-It defines eight GPU slots: smoke, four grid trials, two seed confirmations and
-inference/calibration. One L40S, 8 vCPU, 32 GiB RAM, 100 GiB disk and 1 GiB shared
-memory per Job; concurrency one, restart never. Smoke/inference have one-hour
-timeouts and training slots two hours: at most 14 planned GPU-hours. These are
-resource bounds, not measured cost. No automatic replacement is included.
+The [original amendment](../../configs/experiments/transformer/research-fork-20261002.json)
+binds the [base config](../../configs/experiments/transformer/c4-campaign-20260928.json):
+eight slots (smoke, four trials, two confirmations, inference), one L40S, 8 vCPU,
+32 GiB RAM, 100 GiB disk, 1 GiB shared memory, concurrency one, restart never.
+Smoke/inference timeouts are one hour, training two: 14 planned GPU-hours, not
+measured cost or cumulative replacement allowance. Consumed approvals are not reusable.
 
-Exact requests bind source commit, immutable image digest, inputs, output prefix
-and dependency receipts. The worker requires a signed context bound to the
-observed provider Job. The publisher is designed to conditionally create objects,
-verify their versions and bytes, journal events and publish SUCCESS last.
-Ambiguous publication stops; a completed container alone is insufficient evidence.
+Exact requests bind execution source, immutable image, inputs, output prefix and
+dependencies; signed context binds observed provider Job. Conditional publication
+verifies versions/bytes, journals events and writes SUCCESS last. Ambiguity stops;
+container completion alone is insufficient. Numerical source/checkpoint origins
+remain separate from execution assembly source; never relabel older bindings.
 
-Retain configuration, preprocessing/lineage, checkpoints and RNG state, curves,
-logits with target IDs, baseline/calibration hashes, comparison metrics, runtime
-identities, measurements and verification receipts in versioned storage. The
-implemented worker records MLflow reconciliation as pending. Later reconciliation
-must index these same artifacts and identities without retraining. Online MLflow,
-registry aliases and platform #19–#21 acceptance are separate completion states.
-
-Historical status reconciliation, 2026-10-04: the October 3 failed first smoke remains retained and consumed;
-the separately authorized replacement and [four grid trials](../ml/transformer-training-grid-results.md)
-are independently verified. The selection winner is width 128 / rate 0.0003 /
-seed 42 / epoch 4. Both [replacement confirmations](../ml/transformer-confirmation-results-20261004.md)
-are independently verified and three-seed stability passed: selection-loss range
-0.002395075568322679 and F1 range 0.0. Seed 42 remains the candidate; this does not
-establish an advantage over LightGBM. The [current week plan](../ml/transformer-week-plan-20261004.md)
-next requires checkpoint-origin compatibility and separate exact run/spend approval
-for one inference/calibration Job, at most one hour. Calibration/comparison has not run.
-Research decision precedes MLflow/platform maintenance and any conditional cascade.
+Retain config, preprocessing/lineage, weights/RNG, curves, ordered logits, baseline/
+calibration hashes, metrics, resources and verification receipts. Future holdout
+packages use [RetainingReadbackStore](../ml/transformer-holdout-execution-package.md#future-readback-packages--8-october-2026):
+a fresh private root `outputs/` or approved external directory, outside disposable
+worktrees. Before returning results, retain verified publication bytes with original
+version/size/SHA-256 and exact request verifier-input responses. Offline recovery
+also needs separately retained pinned settings. Keep payloads private and original
+collectors/packages unchanged; retention adds no access/run/spend authority.
+MLflow later indexes these same artifacts without retraining; online tracking,
+registry aliases and platform #19–#21 acceptance remain separate.
 
 ## Replacement lineage decision — 4 October 2026
 
-After seed 7 failed before training, its prefix remains consumed. The original
-v1 schema fixes campaign/name/prefix, so a new name alone cannot safely replace
-that attempt. The [confirmation-only v2 package](../ml/transformer-confirmation-r2-20261004.md)
-uses a fresh fixed namespace and exactly five pinned legacy publications.
-Cross-image compatibility applies only to those smoke/grid references, requiring
-their original source, image, signing key and request/SUCCESS hashes. Own-result
-verification still requires the new exact assembly identity and trial.
-
-The new image retains the original sealed image layers; only four execution
-modules and the source marker change. Numerical source and assembly source are
-separate provenance fields. Model, training, selection, inputs, dependencies and
-baseline bytes stay unchanged. Supervised attester readiness precedes async
-submission, retaining failure diagnostics without automatically retrying a write.
-
-This compatibility does not authorize inference or silently migrate checkpoints.
-The later inference package must recognize the selected seed-42 checkpoint's
-original bindings and record its own execution identity separately. Never rewrite
-checkpoint bindings to satisfy a newer runtime. This keeps the comparison design
-unchanged while making replacement provenance explicit and testable.
+The failed seed-7 prefix is consumed. The [confirmation v2 package](../ml/transformer-confirmation-r2-20261004.md)
+uses a fresh namespace and exactly five pinned legacy publications. Cross-image
+compatibility admits only those references with original source/image/key and
+request/SUCCESS hashes; own results require exact new assembly/trial identity.
+The sealed base layers/numerical source stay fixed; four execution modules and
+source marker change. Attester readiness precedes submission; failures retain
+origin diagnostics without automatic write retry. Later inference explicitly
+admits original checkpoint bindings and records its own identity separately.
 
 ## Comparison versus combination
 
-Today both standalone models consume aligned projections of the same governed
-release and their predictions are compared side by side. Neither model's output
-feeds the other during this experiment, and there is no live cascade.
-
-Only after a research decision justifies further work may
-[ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) be implemented: a frozen
-Transformer produces causal scores/embeddings, joined by exact row identity to
-tabular features, then a **new** LightGBM candidate learns from the combined
-features. Cross-fitting or disjoint producer/downstream training groups is
-required to prevent stacking leakage. This does not modify frozen LightGBM v1.
-Separate ablations and serving/fallback acceptance must justify that added cost.
+Aligned standalone predictions are compared side by side; there is no live
+cascade. [ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md) needs a separate
+justified decision: causal producer scores/embeddings join exact rows into a
+**new** LightGBM candidate, using cross-fitting or disjoint producer/downstream
+training groups. Frozen v1 stays unchanged; ablations/fallback/serving costs must pass.
 
 ## Acceptance scenarios and consequences
 
@@ -228,12 +203,12 @@ Feature: Transformer research decision
     Then selection is rejected and the campaign remains inconclusive
 
   Scenario: Keep a negative result without expanding the search
-    Given a complete verified comparison does not justify more Transformer work
+    Given a complete comparison does not justify further Transformer work
     When the operator chooses to stop
     Then LightGBM remains the research baseline
     And no cascade, extra trial or final evaluation starts automatically
 ```
 
-The fork brings the research question forward while retaining governance checks.
-It defers platform acceptance and accepts explicitly limited development evidence.
-It avoids committing to an expensive cascade before demonstrating standalone value.
+Research proceeds before platform maintenance without weakening governance.
+[Immutable historical narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0042-transformer-lightgbm-research-sequence.md#durable-execution-and-mlflow)
+retains dated trial/replacement milestones; linked receipts remain authoritative.

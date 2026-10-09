@@ -9,95 +9,54 @@ Tracking: [Bug #357](https://github.com/khab40/lob-arena/issues/357),
 
 ## Prerequisites
 
-- A paired LOBSTER message and order-book CSV delivery.
-- Docker with Compose, or equivalent local Java and Python services.
-- `jq`, `openssl`, and `shasum`.
-- An Ed25519 signing key held outside the repository. Production keys should be
-  organization-managed or hardware-backed.
-- An authenticated, independent channel through which recipients can confirm
-  the expected public-key fingerprint.
-
-The Data Ingestion UI and API discover files already present on the server.
-They do not upload client files. Transfer client data into the configured
-`ARENA_LOBSTER_RAW_DIR` using the organization's approved secure transfer
-process.
-
-Do not commit licensed client data, private signing keys, or client evidence
-bundles to this repository.
+Require a paired delivery, Docker Compose or Java/Python services, `jq`,
+`openssl`, `shasum`, and an externally held Ed25519 key. Client keys must be
+organization-approved, preferably managed/hardware-backed, with public-key
+fingerprint authentication through an independent channel. UI/API discover
+server files; they do not upload data. Transfer securely into configured
+`ARENA_LOBSTER_RAW_DIR`. Never commit licensed data, private keys or client bundles.
+This workflow grants no new client access or model-execution authorization.
 
 ## 1. Prepare the client delivery
 
-Place each delivery in its own directory below `data/lobster/` when using the
-default Compose configuration:
-
-```text
-data/lobster/
-└── <client>/<delivery-id>/
-    ├── SPY_2012-06-21_34200000_57600000_message_30.csv
-    └── SPY_2012-06-21_34200000_57600000_orderbook_30.csv
-```
-
-Both filenames must have the same symbol, date, start/end milliseconds, and
-depth:
+Default Compose deliveries live under `data/lobster/<client>/<delivery-id>/`:
 
 ```text
 <SYMBOL>_<YYYY-MM-DD>_<START_MS>_<END_MS>_message_<DEPTH>.csv
 <SYMBOL>_<YYYY-MM-DD>_<START_MS>_<END_MS>_orderbook_<DEPTH>.csv
 ```
 
-The message file uses the public six-column LOBSTER layout: seconds since
-midnight, event type, source order ID, size, price multiplied by 10,000, and
-direction. Each order-book row contains `4 × DEPTH` values in repeating ask
-price, ask size, bid price, bid size order.
-
-For a 09:45:00–09:46:00 window:
-
-- start: `35100000` milliseconds since midnight;
-- end: `35160000` milliseconds since midnight.
-
-The source filenames may describe a larger session. Select the one-minute
-window during import.
+Both names must agree on symbol/date/session/depth. Messages have six columns:
+seconds since midnight, event type, source order ID, size, price ×10,000,
+direction. Book rows have `4 × DEPTH` repeating ask price/size, bid price/size.
+A 09:45–09:46 window is `35100000`–`35160000` ms; filenames may cover a larger
+session, with the selected minute bounded during import.
 
 ## 2. Start the services
-
-From the repository root:
 
 ```bash
 docker compose up -d --build
 ```
 
-The relevant endpoints are:
+| Surface | Address |
+| --- | --- |
+| Ingestion API | `http://localhost:8000` |
+| Java replay API | `http://localhost:8081` |
+| UI | `http://localhost:5173` |
 
-- Data Ingestion API: `http://localhost:8000`
-- Java replay API: `http://localhost:8081`
-- UI: `http://localhost:5173`
-
-Compose mounts `data/lobster` into the Python ingestion service and
-`data/processed/lobster` read-only into the Java exchange.
+Compose mounts `data/lobster` into ingestion and `data/processed/lobster`
+read-only into Java. These are local services; shared access requires its own
+approved authentication/authorization configuration.
 
 ## 3. Discover and import the selected window
 
-List candidates:
-
 ```bash
 curl -sS http://localhost:8000/api/data-ingestion/lobster/candidates \
-  | jq '.[] | {
-      candidate_id,
-      symbol,
-      trade_date,
-      start_time,
-      end_time,
-      depth,
-      status,
-      errors
-    }'
+  | jq '.[] | {candidate_id,symbol,trade_date,start_time,end_time,depth,status,errors}'
 ```
 
-Do not import a candidate whose status is `invalid`. Its `errors` array
-identifies missing pairs, duplicate files, invalid names, depth problems, or
-session-range problems.
-
-Import the 09:45 one-minute window using the selected `candidate_id`:
+Reject `invalid` candidates: `errors` names pairing, duplicates, filename, depth
+or session problems. Import the selected valid candidate:
 
 ```bash
 curl -sS -X POST \
