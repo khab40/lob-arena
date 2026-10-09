@@ -28,6 +28,12 @@ It does not authorize a training run, final-test access or model promotion.
 | Transformer → LightGBM | Proposed; derived-feature release, leakage-safe training, joined model and fallback service are not implemented |
 | MLflow promotion / online ML service | Run logging and registry namespace exist; automatic model-version publication, promotion and Java-to-model serving integration do not |
 
+The [current disposition](../ml/transformer-research-disposition-20261008.md)
+records `continue_research`. The next #90/#91 mock is private local playback of
+verified saved scores, not fresh inference or order-book replay. Full #24
+MLflow, serving and resource/cost acceptance remains open. See
+[current status](../roadmap/CURRENT_STATUS.md) for dates and evidence.
+
 The current frozen C4 corpus has four dates. It is not the seven-date benchmark
 merely because both use the name `nasdaq-public-sample-v1`. Compare protocol
 hashes and coverage before combining results. See

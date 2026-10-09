@@ -44,56 +44,10 @@ and batch replay; the desktop application must not become a runtime dependency.
 
 ## 3. Cross-Venue Surveillance: Highest-Value Extension
 
-The strongest idea is not “seven feeds.” It is **cross-venue context**.
-
-A single-venue detector cannot easily distinguish:
-
-- genuine market-wide movement;
-- venue-local abnormal quoting;
-- venue-local liquidity stress;
-- stale or corrupt market data;
-- manipulation-like order-book behavior.
-
-A multi-venue layer provides a market consensus.
-
-```text
-                Binance ─┐
-                Kraken  ─┤
-                Coinbase ─┤
-                Bitfinex ─┼──> normalized multi-venue LOB
-                Gemini   ─┤
-                KuCoin   ─┤
-                Bitstamp ─┘
-                          │
-                          ▼
-                 market consensus
-                          │
-                          ▼
-             LOB Arena detector stack
-                          │
-                          ▼
-              venue-specific anomaly
-```
-
-Example:
-
-```text
-Binance      +0.91 imbalance
-Coinbase     +0.08
-Kraken       +0.04
-Bitstamp     +0.06
-Bitfinex     +0.07
-```
-
-This is much more suspicious than:
-
-```text
-Binance      +0.75
-Coinbase     +0.71
-Kraken       +0.68
-Bitstamp     +0.73
-Bitfinex     +0.69
-```
+Use peer consensus to distinguish market-wide moves, venue-local quoting or
+liquidity stress and corrupt/stale data. An isolated +0.91 imbalance against
+peers near +0.04–0.08 has a different interpretation from all venues moving
+together near +0.68–0.75; neither pattern alone proves abuse.
 
 ### Candidate cross-venue features
 
@@ -110,12 +64,6 @@ Bitfinex     +0.69
 | Liquidity-gap divergence | local liquidity vacuum |
 | Lead/lag residual | abnormal propagation / price discovery |
 | Correlation break | venue behavior decoupled from peers |
-
-This can become a named LOB Arena capability:
-
-> **Cross-Venue Market Abuse Surveillance**
-
----
 
 ## 4. Reuse Microstructure Studies as Model Features
 
@@ -134,34 +82,9 @@ Useful VisualHFT-style studies include:
 
 These should be treated as **features**, not standalone proof of manipulation.
 
-Bad:
-
-```text
-VPIN > threshold => manipulation
-```
-
-Better:
-
-```text
-raw LOB sequence
-      │
-      ├── LOB imbalance
-      ├── OTR
-      ├── TTO
-      ├── VPIN
-      ├── resilience
-      ├── spread
-      ├── depth slope
-      ├── cancellations
-      ├── replenishment
-      └── cross-venue divergence
-             │
-             ▼
-     LightGBM + Transformer
-             │
-             ▼
-        ensemble score
-```
+A proposed feature engine combines these indicators with causal LOB sequences
+and cross-venue divergence for separately evaluated LightGBM/Transformer
+candidates. A threshold such as VPIN alone must not establish manipulation.
 
 ### Research questions
 
@@ -184,27 +107,9 @@ This turns common microstructure indicators into measurable surveillance researc
 
 LOB Arena should maintain a rolling market-data buffer and persist a bounded before/after window whenever a detector fires.
 
-```text
-                        live feeds
-                            │
-                    rolling 60s buffer
-                            │
-                            ▼
-                     LOB Arena model
-                            │
-                   P(spoofing)=0.94
-                            │
-                            ▼
-                         TRIGGER
-                            │
-              ┌─────────────┴─────────────┐
-              │                           │
-           -30 sec                     +30 sec
-              │                           │
-              └─────────────┬─────────────┘
-                            ▼
-                    SURVEILLANCE CASE
-```
+A bounded capture example is 30 seconds before and after a trigger. The
+before/after window supports investigation and replay; future/post-trigger context
+must not leak into causal detector inputs.
 
 A case could contain:
 
@@ -246,72 +151,18 @@ This moves LOB Arena from only a detector benchmark toward a **surveillance eval
 
 ## 6. Real-Market Replay + Synthetic Manipulation Injection
 
-This should be a major LOB Arena direction.
-
-Synthetic simulation provides controlled labels.  
-Real feeds provide realistic noise.
-
-Combine them:
-
-```text
-REAL RECORDED MARKET
-BTC/USD, Binance
-09:30:00 → 09:45:00
-
-        +
-
-SYNTHETIC ATTACK INJECTION
-spoofing / layering / etc.
-
-        ↓
-
-HYBRID REPLAY
-
-        ↓
-
-LightGBM
-Transformer
-Ensemble
-baseline detectors
-
-        ↓
-
-Precision / Recall
-Detection delay
-False positives
-Robustness
-```
-
-Possible names:
-
-- Real-Market Adversarial Replay
-- Surveillance Red-Team Replay
-- Hybrid Historical + Synthetic Replay
-- Counterfactual Market Abuse Replay
-
-This directly strengthens the LOB Arena thesis:
-
-- pure synthetic data can be unrealistic;
-- pure historical data lacks reliable labels;
-- hybrid replay gives realistic background conditions plus known attack ground truth.
-
----
+Combine recorded market background with controlled synthetic attack injection
+and deterministic replay. Compare rules, frozen LightGBM and a separately
+verified Transformer using precision, recall, detection delay, false positives
+and robustness. Keep synthetic attack labels distinct from assumed historical
+control labels; realistic background alone does not validate ground truth.
 
 ## 7. Feed Quality Must Be First-Class
 
 Real-time surveillance can confuse data failures with market anomalies.
 
-Example:
-
-```text
-missing feed messages
-      ↓
-apparent liquidity disappearance
-      ↓
-detector fires
-      ↓
-false manipulation alert
-```
+Missing messages can resemble liquidity disappearance. Preserve health metadata
+so detector reports can distinguish market anomalies, data anomalies and uncertainty.
 
 Every event/session should preserve feed-health metadata such as:
 
