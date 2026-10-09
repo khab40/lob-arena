@@ -4,7 +4,12 @@ Status: Accepted
 
 Date: 2026-09-15
 
-Implementation Status: `[replacement integration and native synthetic recovery verified; production qualification pending]`
+Implementation Status: `[same-run recovery verified; authorized C4 research replacement accepted; production/client qualification unestablished]`
+
+Outcome reconciled 8 October: [G8 independent readback](../operations/g8/g8-final-results-20260923.md)
+and [G9 closure](../operations/g8/g9-closure-20260927.md) establish the limited
+research outcome. [Current status](../roadmap/CURRENT_STATUS.md) owns remaining work;
+dated synthetic/preflight narratives below retain their original scope.
 
 ## Validation execution policy — 2026-09-16
 
@@ -60,7 +65,9 @@ four verified artifacts, including reordered tag readback and zero writes on
 completed recovery. Lost create, metric, artifact and FINISHED responses are
 covered by the [recovery rehearsal](../operations/g8/g8-mlflow-recovery.md).
 
-The production runner still needs a reviewed replacement execution package.
+Historical 17 September preparation required a reviewed replacement package;
+the later authorized research replacement completed. The following receipt
+describes the earlier synthetic rehearsal, not the final C4 outcome.
 The [September 17 native rehearsal](../evidence/g8-native-recovery-20260917.json)
 now establishes pre-logging checkpoint retention, recovery in a second Job after
 workspace loss, and authenticated recovery of the same remote MLflow run for
@@ -68,7 +75,8 @@ synthetic inputs. Independent MLflow artifact hashes, metrics and lineage match.
 The Job verified S3 publication; [independent readback](../evidence/g8-independent-s3-readback-20260917.json)
 subsequently verified all 64 objects with the already-authorized development
 identity, after the MLflow identity was denied. No access was widened. Production data,
-actual Java comparisons, quality acceptance and G8 completion remain separate.
+actual Java comparisons and research quality acceptance required the later
+G8/G9 evidence linked above. Client qualification remains separate.
 
 The [native rehearsal package](../operations/g8/g8-native-rehearsal-package.md) uses the existing
 filesystem for hash-verified package staging and checkpoint retention. Its Job

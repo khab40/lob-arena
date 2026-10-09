@@ -2,47 +2,42 @@
 
 Status: Accepted research ordering; holdout verified; bounded continuation and first saved-score mock next.
 
-Date: 2026-10-03; updated 2026-10-08. Records the operator-approved research forks.
+Date: 2026-10-03; updated 2026-10-08.
 
-Tickets: [Story #24](https://github.com/khab40/lob-arena/issues/24),
+Tracking: [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Feature #16](https://github.com/khab40/lob-arena/issues/16),
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
+[Bug #357](https://github.com/khab40/lob-arena/issues/357),
 [Project #3](https://github.com/users/khab40/projects/3).
 Later cascade scope belongs to [Story #25](https://github.com/khab40/lob-arena/issues/25).
 
 ## Context and decision
 
-LightGBM's signed G9 outcome is `research_baseline_qualified`, not production
-qualification. The immediate question is whether a standalone Transformer adds
-enough value to justify more research. Platform maintenance and live MLflow
-acceptance must not prevent that experiment when complete results can be retained
-durably. A negative or inconclusive answer is a valid outcome.
-
-Keep [ARD-0036](ARD-0036-market-sequence-transformer.md) as the Transformer design.
-This record owns comparison and ordering. It supersedes the MLflow-first and
-separate-CPU-first research prerequisites in
-[ARD-0041](ARD-0041-mlflow-readiness-before-transformer-execution.md), while leaving
-its maintenance acceptance work open. It does not change final-test authorization,
-approve new permissions or promote either model. G8/G9 remain closed.
+LightGBM G9 is `research_baseline_qualified`, not production qualification.
+Test whether a standalone Transformer justifies more research; negative and
+inconclusive outcomes are valid. [ARD-0036](ARD-0036-market-sequence-transformer.md)
+owns model design; this record owns comparison and ordering. It supersedes
+[ARD-0041](ARD-0041-mlflow-readiness-before-transformer-execution.md)'s MLflow-first
+and separate-CPU-first research prerequisites, leaving maintenance acceptance
+open. Durable complete results may precede online MLflow. G8/G9 stay closed.
 
 As a researcher,
 I want a bounded comparison against frozen LightGBM on identical development targets,
 So that I can continue or stop Transformer work using measured quality and cost.
 
-Actor: researcher. Goal: a reproducible continue/stop/inconclusive decision.
-Value: test the hypothesis before investing in serving or a cascade.
-Out of scope: new corpus, final fold, LightGBM refit, deployment and promotion.
-Verification: exact ordered identities and labels, complete trial receipts,
-independent recomputation from saved predictions and explicit limitations.
+Actor: researcher. Goal: reproducible continue/stop/inconclusive decision.
+Value: test standalone value before serving/cascade investment.
+Original-study exclusions: new corpus, final fold, LightGBM refit, deployment,
+promotion. Verification: ordered identities/labels, complete trial receipts,
+independent saved-prediction recomputation and explicit limitations.
 
 ## Holdout extension — 5 October 2026
 
-PR #318 merged with verified C/O results; the operator chose **continue_research**
-and approved the later-date implementation plan. [Settings #314](../ml/transformer-settings-release.md)
-retain the original seed-42/epoch-4 candidate as research-only metadata. The
-[locked protocol](../ml/transformer-holdout-protocol-20261005.md) extends the original
-development-only fork with separately authorized December inference. It does not
-change the original experiment's exclusion of final data or reopen LightGBM G8/G9.
+After verified C/O results the operator chose `continue_research`. The
+[settings release](../ml/transformer-settings-release.md) freezes seed 42/epoch 4;
+the [locked protocol](../ml/transformer-holdout-protocol-20261005.md) separately
+extends research to December inference. Existing development consumers still
+reject final data. This extension never reopens LightGBM G8/G9.
 
 Order: settings/protocol → separate holdout adapter/package → exact dry-run and
 final-access/run/spend approval → one GPU reference-parity/holdout Job → independent

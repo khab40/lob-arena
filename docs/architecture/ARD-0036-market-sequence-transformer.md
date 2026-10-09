@@ -134,81 +134,60 @@ ledger as `tabular_projection_v1`; never reacquire, resplit or relabel independe
 A representation/length change needs a new projection version. See
 [data preparation](../use-cases/ml-data-preparation.md).
 
-For the current research fork, authenticate inputs and audit roles inside the
-first GPU Job before any optimizer step. Use time-boxed GPU Serverless AI Jobs
-for training and batch inference; calibration is in the final inference slot.
-The Mac performs orchestration, static checks and artifact inspection. Do not
-serve or train this classifier through vLLM unless a later ARD intentionally
-changes it into a compatible generative architecture.
+Authenticate inputs and audit roles before fitting inside the first GPU Job.
+Training/batch inference use bounded Serverless Jobs; calibration occupies the
+final inference slot. The Mac orchestrates and inspects artifacts. Do not use
+vLLM for this classifier. The fixed research matrix varies width/rate and confirms
+seeds; broader search and any new final evaluation require separate approval.
 
-The current matrix varies only width and learning rate, followed by fixed seed
-confirmation. Sequence length, encoding, schedule and loss are fixed. Broader
-search is deferred. Final test is outside this research fork and requires a
-separately frozen candidate and explicit authorization.
+A later registered candidate must bind preprocessing, weights, calibration,
+thresholds, sequence schema, checkpoint checksum and model card. Retain curves,
+parameter count, runtime/memory/resources, metrics and explicit unknown costs.
+MLflow reconciliation does not imply registration or promotion.
 
-Any later registered candidate must contain preprocessing, model weights,
-calibration, thresholds, sequence schema, checkpoint checksum and a model card.
-The durable research package retains curves, parameter count, runtime, memory,
-resource identities and detector metrics; unknown costs are identified. MLflow
-reconciliation is required later and does not imply registration or promotion.
+### Pending live integration decisions
+
+Before approving event inference, specify how live causal feature rows reproduce
+the trained retained-row sampling contract, equal-timestamp cutoff/order, gap and
+session resets, warm-up/padding and unavailable-state behavior. Define bounded
+queue/backpressure and stale-result handling outside Java book mutation, plus
+row-alert consolidation/deduplication into incidents. The nine Arena display
+features are insufficient for the trained 60-feature contract. These are unresolved
+design/acceptance choices, not approved architecture or authorization for a run.
 
 ## Exit Gates
 
-Transformer-derived features may be consumed by LightGBM only after:
-
-1. the standalone Transformer bundle verifies from immutable inputs;
-2. causal-cutoff and split-leakage tests pass;
-3. standalone LightGBM and Transformer are evaluated on identical rows;
-4. incremental quality is reported alongside detection delay, throughput,
-   failure behavior and GPU cost; and
-5. a go/no-go record approves the model as a feature producer even if it is not
-   selected as a standalone champion.
+A Transformer feature producer needs immutable bundle verification, causal/split
+checks, identical comparison rows, incremental quality with delay/throughput/
+failure/GPU-cost evidence, and an explicit go/no-go decision. Even a standalone
+champion does not automatically approve the [cascade](ARD-0037-transformer-to-lightgbm-cascade.md).
 
 ## Cost And Operations
 
-- Cap the experiment matrix before starting the GPU campaign.
-- Start with the smallest architecture and shortest useful sequence.
-- Use early stopping, resumable checkpoints and small smoke datasets before
-  full runs.
-- Prefer ephemeral Job execution; no interactive GPU endpoint is required for
-  training.
-- Record actual active GPU time and resource evidence. Follow the validation
-  policy above for cost reporting; do not query billing or remaining credit.
-- Stop unused GPU endpoints immediately and delete them when fast restart is
-  unnecessary because retained disks may still incur storage cost. Completed
-  Jobs remove their associated VM and disk; retain governed checkpoints and
-  evidence in Object Storage.
+Bound the matrix, start small, early-stop and checkpoint. Use ephemeral Jobs,
+record active GPU time/resources, and retain verified evidence in durable storage.
+No interactive GPU endpoint is required. Resource deletion needs applicable
+operator approval. [Retaining readback](../ml/transformer-holdout-execution-package.md#future-readback-packages--8-october-2026)
+is required for future holdout packages; preserve frozen collectors/identities.
 
 ## Alternatives Considered
 
-### Start with the Transformer before LightGBM
-
-Rejected because the project already has a complete CPU-friendly LightGBM
-boundary and needs its measured baseline to justify GPU spend.
-
-### Use vLLM for the detector
-
-Rejected because vLLM serves autoregressive language models, while this design
-is a causal market-sequence classifier with different input, output and latency
-contracts.
-
-### Promote the Transformer on quality alone
-
-Rejected. A surveillance candidate must also satisfy clean-window, calibration,
-latency, throughput, reproducibility and cost gates.
+Transformer-first research was rejected until LightGBM froze. vLLM was rejected
+for the classifier's different contract. Quality-only promotion was rejected:
+clean-window, calibration, latency, throughput, reproducibility and cost gates remain.
 
 ## Consequences
 
-The project can test richer temporal context without weakening the existing
-governance boundary. Training and optional inference introduce GPU cost and
-additional artifacts, but the staged gate makes that spend explicit and
-reversible.
+Richer temporal context can be studied without weakening governance; serving and
+optional combination add separately assessed artifacts, cost and acceptance work.
+[Historical implementation narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0036-market-sequence-transformer.md#implementation-status)
+retains dated development milestones and superseded pending-holdout statements.
 
 ## Related Records
 
-- [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
-- [ARD-0025: Governed Corpus And ML Benchmark](ARD-0025-governed-corpus-and-ml-benchmark.md)
-- [ARD-0035: Nebius-First LightGBM](ARD-0035-nebius-lightgbm-first.md)
-- [ARD-0037: Transformer-To-LightGBM Cascade](ARD-0037-transformer-to-lightgbm-cascade.md)
-- [ARD-0042: Transformer and LightGBM Research Sequence](ARD-0042-transformer-lightgbm-research-sequence.md)
-- [Project phases](../roadmap/PHASES.md)
+[ARD-0024](ARD-0024-versioned-causal-feature-engineering.md),
+[ARD-0025](ARD-0025-governed-corpus-and-ml-benchmark.md),
+[ARD-0035](ARD-0035-nebius-lightgbm-first.md),
+[ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md),
+[ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md),
+[project phases](../roadmap/PHASES.md).

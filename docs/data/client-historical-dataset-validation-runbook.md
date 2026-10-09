@@ -1,13 +1,11 @@
 # Client Historical Dataset Validation Runbook
 
-This runbook describes how to ingest a new client-supplied LOBSTER
-message/order-book pair, replay the same window as a historical control and as
-a hybrid stream with predefined synthetic attacks, produce signed evidence,
-and decide whether the dataset passes validation.
-
-Use this workflow for every client dataset and selected time window. The
-repository's unit tests verify the implementation; the signed replay workflow
-below validates the actual client data.
+Ingest a client LOBSTER message/book pair, replay the same window as historical
+control and with predefined attacks, produce signed evidence, and assess data
+validation separately from detector quality. Repeat for each dataset/window.
+Implementation tests do not replace data-specific signed evidence.
+Tracking: [Bug #357](https://github.com/khab40/lob-arena/issues/357),
+[Project #3](https://github.com/users/khab40/projects/3).
 
 ## Prerequisites
 
