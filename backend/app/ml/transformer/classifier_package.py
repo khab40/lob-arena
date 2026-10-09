@@ -189,3 +189,49 @@ class ClassifierResult:
     measurements: tuple  # Immutable key/value runtime measurements; no event-to-alert claim.
 
 
+def research_inference(package, *, tabular_path, sequence_path, artifact_root,
+                       expires, fold="validation", mode="balanced"):
+    """Reopen governed development sources; no public arrays/runtime bypass."""
+    package = reauthenticate_classifier(package)
+    if fold not in ("train", "validation"):
+        raise ValueError("classifier permits development train/validation folds only")
+    points = {point.mode: point.threshold for point in package.release.operating_points}
+    if mode not in points:
+        raise ValueError("classifier requires a frozen operating point")
+    if (isinstance(expires, bool) or not isinstance(expires, Real)
+            or not math.isfinite(expires) or expires <= time.monotonic()):
+        raise ValueError("classifier requires a finite future deadline")
+    dataset = _open_development(package, tabular_path=tabular_path,
+        sequence_path=sequence_path, artifact_root=artifact_root)
+    targets, labels = [], []
+    for window in dataset.windows(fold):
+        targets.append(window.target_id)
+        labels.append(window.label)
+    targets, labels = tuple(targets), tuple(labels)
+    if (not targets or len(set(targets)) != len(targets)
+            or any(type(t) is not str or len(t) != 64 or any(c not in "0123456789abcdef" for c in t) for t in targets)
+            or any(type(label) is not int or label not in (0, 1) for label in labels)
+            or (fold == "train" and _target_digest(targets) != package.release.lineage.train_targets_sha256)):
+        raise ValueError("classifier ordered development target identity differs")
+    if time.monotonic() >= expires:
+        raise TimeoutError("classifier input verification deadline")
+    consumer = _consumer(package, expires)
+    ids, actual_labels, logits = consumer.infer(dataset, package.normalization, fold=fold,
+        tabular_path=tabular_path, sequence_path=sequence_path)
+    if (tuple(ids) != targets or tuple(actual_labels) != labels
+            or any(isinstance(label, bool) or not isinstance(label, Integral) for label in actual_labels)):
+        raise ValueError("classifier result target order or labels differs")
+    import numpy as np
+    from .research_evaluation import sigmoid
+    values = np.asarray(logits)
+    if (values.shape != (len(targets),) or any(isinstance(v, (bool, np.bool_))
+            or not isinstance(v, Real) for v in values) or not np.isfinite(values).all()):
+        raise ValueError("classifier requires finite aligned logits")
+    values = values.astype(np.float64)
+    probabilities = sigmoid(values / package.release.temperature)
+    if not np.isfinite(probabilities).all() or time.monotonic() >= expires:
+        raise ValueError("classifier result nonfinite or deadline expired")
+    predictions = tuple(ClassifierPrediction(target, label, package.release.release_id, mode,
+        float(logit), float(probability), bool(probability >= points[mode]))
+        for target, label, logit, probability in zip(targets, labels, values, probabilities, strict=True))
+    return ClassifierResult(predictions, tuple(sorted(consumer.measurements.items())))
