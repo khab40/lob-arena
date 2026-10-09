@@ -1,7 +1,13 @@
 # Nasdaq Public Sample v1: Dataset and Processing Flow
 
-Status (2026-09-21): C0–C4 and G0–G7 are complete for the four-date corpus.
-G8 remains open and G9 blocked; see [current status](../roadmap/CURRENT_STATUS.md).
+Current gate disposition (2026-10-08): C0–C4 and G0–G9 are complete for
+this frozen four-date corpus. G9 closed as `research_baseline_qualified` on
+September 27; see [signed closure](../operations/g8/g9-closure-20260927.md) and
+[current status](../roadmap/CURRENT_STATUS.md). The later bounded Transformer
+comparison/December evaluation is verified; the dataset contract below is
+unchanged. Research/synthetic labels, prior exposure and separate access/promotion
+gates remain explicit; this page grants no new final-data access or workload.
+
 Development and final projections are separately published,
 development-to-final access denial is verified, and MLflow run
 `dc119d708cc4464e8fe1b82ba976bf3e` indexes the metadata-only release lineage.
