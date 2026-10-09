@@ -1,3 +1,12 @@
+# Status journal through 8 October 2026
+
+This is retained execution and planning history, not current instructions or
+authorization. Start at [current status](CURRENT_STATUS.md). Entries below retain
+the complete original status text; superseded statements describe their dates only.
+Original source: `d896efe8ca501c1ef8e6c63442f3433948a6405e`; original text SHA-256:
+`df02b9f8791955120036d56efd82348f8f30f3c7855fe7bcf368b3566216e3b2`.
+
+<!-- original status text begins -->
 ## 2026-10-08 — Research continuation; settings acceptance complete
 
 The operator's current instruction records **continue_research** and continuation
