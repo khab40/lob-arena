@@ -50,8 +50,7 @@ wiring/response shape, not GPU inference or cloud execution.
 
 ## Container Build
 
-Build from repository root with the default GitHub Container Registry namespace
-`ghcr.io/khab40` and tag `latest`:
+From the repository root:
 
 ```bash
 ./scripts/build-serverless-images.sh

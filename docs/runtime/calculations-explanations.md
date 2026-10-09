@@ -68,179 +68,11 @@ Specification ground truth must not be substituted for executed scenario labels.
 
 ## Step 3 — Investigation Team
 
-end_tick =
-    min(
-        duration_ticks,
-        max(start_tick + 12,
-            duration_ticks - duration_ticks / 5)
-    )
-```
-
-### Event templates
-
-**Spoofing**
-
-```text
-1. place a large visible wall
-2. cancel before execution
-3. execute a smaller opposite-side trade
-```
-
-**Layering**
-
-```text
-1. place a first layer
-2. add another adjacent layer
-3. cancel layers after pressure appears
-```
-
-**Liquidity Evaporation**
-
-```text
-1. thin the top three levels on both sides
-2. maintain reduced visible depth
-3. widen the spread after depth collapse
-```
-
-**Quote stuffing**
-
-```text
-1. burst-submit quotes
-2. rapidly cancel them
-3. record message-rate and spread distortion
-```
-
-### Quantity calculation
-
-```text
-thin liquidity   → 250
-normal liquidity → 500
-deep liquidity   → 800
-```
-
-### Price-offset scale
-
-```text
-low volatility    → 0.05
-medium volatility → 0.15
-high volatility   → 0.35
-```
-
-## Projection into Arena
-
-The canonical AI scenario is translated into the existing Arena attack configuration.
-
-Examples:
-
-```text
-fakeOrderLevels:
-  quote stuffing → 8
-  other types    → 4
-
-fakeOrderSizeMultiplier:
-  easy / medium    → 6
-  hard / adversarial → 10
-
-cancelDelayTicks:
-  quote stuffing → 4
-  other types    → 12
-
-realTradeSize:
-  easy      → 120
-  otherwise → 240
-
-stealth:
-  easy          → obvious
-  medium / hard → medium
-  adversarial   → subtle
-```
-
-## Replay in Arena
-
-The Replay button does not necessarily replay the raw LLM event list event-for-event.
-
-Instead it:
-
-1. takes the generated canonical scenario ID;
-2. retrieves the projected attack scenario;
-3. invokes the existing named-scenario injection path;
-4. lets `SimulationEngine` and `ScenarioController` execute it.
-
-A precise description is:
-
-> The AI generates a canonical scenario specification. LOB Arena then projects that specification onto one of the simulator’s supported executable scenario families.
-
----
-
-# Step 3 — Investigation Team
-
-## Input Evidence
-
-The Investigation Team normally receives an Arena incident or a fallback demonstration incident.
-
-Its input can include:
-
-- detector scores;
-- detector confidence;
-- order-book features;
-- incident tick;
-- attack and scenario context;
-- market snapshots or timeline events;
-- flattened detector evidence.
-
-The backend endpoint is:
-
-```http
-POST /api/nebius/investigation-team/analyze
-```
-
-The request and response are persisted in:
-
-```text
-nebius/investigation_team_reports.jsonl
-```
-
-## Investigation Output
-
-The Investigation Team returns:
-
-- manipulation type;
-- executive summary;
-- risk score;
-- confidence;
-- consensus;
-- specialist agent findings;
-- evidence timeline;
-- recommended action.
-
-Each specialist provides:
-
-```text
-name
-role
-finding
-confidence
-evidence items
-```
-
-The Investigation Team is therefore primarily an explanatory and adjudication layer, not the primary detector.
-
-## Detector Confidence vs Investigator Confidence
-
-### Detector confidence
-
-Calculated mechanically from explicit feature formulas.
-
-### Investigator confidence and risk score
-
-Returned by the Investigation Team response.
-
-- In real Endpoint mode, this is model-generated structured output based on supplied evidence.
-- In fallback mode, it is deterministic mock investigator output.
-
-The investigator’s `risk_score` is not yet a statistically calibrated probability of real market abuse. It is an explanatory risk assessment over synthetic evidence.
-
----
+[ARD-0015](../architecture/ARD-0015-nebius-ai-investigation-team.md) owns evidence
+shaping, fallback metadata and structured assessment. The request is a bounded
+summary, not an unbounded raw exchange stream. Detector scores are mechanical
+rule outputs; investigator risk/confidence is model-generated in Endpoint mode
+and deterministic mock output in fallback mode.
 
 # Detector Evidence Calculations
 
@@ -374,7 +206,7 @@ message_rate_per_sec =
 
 # Detector Formulas
 
-All current detectors raise an alert at:
+The four retained Python rule detectors raise an alert at:
 
 ```text
 confidence >= 0.75
@@ -518,9 +350,14 @@ evidence.setdefault(item.key, item)
 
 If multiple detectors expose the same evidence key, later values do not overwrite the first one.
 
----
 
 # Step 4 — Detector Tournament
+
+The maintained runner is
+[`serverless/jobs/detector_tournament.py`](../../serverless/jobs/detector_tournament.py).
+[ARD-0017](../architecture/ARD-0017-ai-detector-tournament.md) owns API modes and
+orchestration; the [Jobs reference](../../serverless/jobs/README.md#detector-tournament)
+owns runner arguments and filenames.
 
 ## Tournament Inputs
 
