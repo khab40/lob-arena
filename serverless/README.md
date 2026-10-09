@@ -88,88 +88,33 @@ runtime workflow: Endpoint health/alert/report requests, a three-run Jobs-image
 rule batch, a ten-attack managed experiment and local batch, with optional Job
 submission/collection if command templates are configured.
 
-```bash
-NEBIUS_ENDPOINT_BASE_URL=http://localhost:9000 \
-BACKEND_BASE_URL=http://localhost:8000 \
-JOBS_IMAGE=ghcr.io/khab40/lob-arena-jobs:latest \
-./scripts/serverless-smoke.sh
-```
-
-For a deployed endpoint:
-
-```bash
-NEBIUS_ENDPOINT_BASE_URL=https://<endpoint-host> \
-BACKEND_BASE_URL=https://<backend-host> \
-ENDPOINT_TOKEN=<optional-endpoint-token> \
-JOBS_IMAGE=ghcr.io/<your-org>/lob-arena-jobs:<tag> \
-./scripts/serverless-smoke.sh
-```
-
-The script writes `outputs/serverless-smoke/summary.json` and stores raw
-responses in the same directory. It checks endpoint `/health`,
-`/orderbook-alert`, `/investigation-report`, runs the jobs image locally with
-three runs, creates a backend experiment with 10 attacks, runs the local batch,
-and optionally submits/collects Nebius job artifacts when command templates are
-configured. Real Nebius job submission is not required for the smoke to pass;
-when not configured, it is marked pending in the summary.
-
-Equivalent manual commands:
-
-```bash
-docker build --platform linux/amd64 -f serverless/endpoint/Dockerfile \
-  -t ghcr.io/khab40/lob-arena-endpoint:latest \
-  serverless/endpoint
-
-docker build -f serverless/jobs/Dockerfile \
-  -t ghcr.io/khab40/lob-arena-jobs:latest \
-  .
-```
+It writes responses and `summary.json` to `outputs/serverless-smoke/` by default.
+Cloud execution may remain pending while smoke succeeds. Review its selected
+Endpoint, Job configuration and execution bounds before an authorized run;
+Endpoint inference and model workloads follow the applicable
+[execution policy](../docs/ml/model-validation-execution-policy.md).
 
 ## First Deployment Checklist
 
-1. Build and push `nebius-market-abuse-endpoint`.
-2. Deploy it as a Nebius Serverless AI Endpoint with `scripts/create-nebius-ai-endpoint.sh`.
-3. Copy the public endpoint URL into backend env:
-   - `NEBIUS_INCIDENT_EXPLAINER_URL`
-   - `NEBIUS_SCENARIO_GENERATOR_URL`
-4. Start the backend and frontend.
-5. In Arena, create an incident and click Nebius AI Investigator.
+1. Follow the [Endpoint deployment procedure](endpoint/README.md#deploy-local-vllm-on-l40s) for its selected mode/resources and authorization.
+2. Configure backend URLs and check explicitly labelled mock/real/fallback state.
+3. Use the [Jobs reference](jobs/README.md#experiment-job-config-rendering) and current digest policy for a separately authorized batch package.
+4. Retain execution identities, terminal/readback evidence and collected artifacts.
 
-Local-vLLM L40S endpoint:
-
-```bash
-export NEBIUS_PARENT_ID=<project-id>
-export NEBIUS_SUBNET_ID=<vpc-subnet-id>
-export ENDPOINT_TOKEN=<endpoint-bearer-token>
-export NEBIUS_ENDPOINT_IMAGE=ghcr.io/<your-org>/lob-arena-endpoint:<tag>
-export NEBIUS_ENDPOINT_MODE=local_vllm
-export NEBIUS_ENDPOINT_PLATFORM=gpu-l40s-d
-export NEBIUS_ENDPOINT_PRESET=1gpu-16vcpu-96gb
-export LOCAL_VLLM_BASE_URL=http://127.0.0.1:8001/v1
-export LOCAL_VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct
-export LOCAL_VLLM_HOST=127.0.0.1
-export LOCAL_VLLM_PORT=8001
-export LOCAL_VLLM_DTYPE=auto
-export LOCAL_VLLM_GPU_MEMORY_UTILIZATION=0.90
-export LOCAL_VLLM_MAX_MODEL_LEN=16384
-export LOCAL_VLLM_ENABLE_PREFIX_CACHING=true
-export LOCAL_VLLM_MAX_NUM_SEQS=16
-export LOCAL_VLLM_TRUST_REMOTE_CODE=true
-
-./scripts/create-nebius-ai-endpoint.sh
-```
-6. In Lab/Judge flow, call `POST /api/red-team/generate-scenario`.
-7. Build and push `nebius-market-abuse-jobs`.
-8. Run the detector tournament job with `jobs/job_config.example.yaml`.
-9. Run the synthetic dataset job with `jobs/dataset_job_config.example.yaml`.
+The old tag-oriented first-deployment examples and July registry observations
+are retained in the
+[historical revision](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/serverless/README.md).
+They are not current registry state or approved Job instructions.
 
 ## Cost Controls
 
-- Keep endpoint mode as `mock` for initial connectivity tests.
-- Use `--runs 100` and `--samples 100` until the full path works.
-- Switch `NEBIUS_ENDPOINT_MODE=local_vllm` only after backend-to-endpoint wiring is verified.
+Keep finite resource/time/Job-count bounds and required execution evidence.
+[Validation execution policy](../docs/ml/model-validation-execution-policy.md)
+owns current operator limits; historical smoke sizes are examples, not new
+spend/access authorization.
 
 ## Safety
 
-All endpoint and job outputs are synthetic educational artifacts. They are not
-real market abuse detections, trading signals, or compliance decisions.
+Synthetic outputs are educational evidence, not verified real manipulation,
+trading signals or compliance decisions. Historical acquisition and governed
+model artifacts retain their distinct provenance and qualification contracts.

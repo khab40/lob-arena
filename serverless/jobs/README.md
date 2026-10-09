@@ -4,19 +4,16 @@ Batch utilities for synthetic rule experiments, public-data acquisition/preparat
 and governed LightGBM execution. Synthetic labels and detector scores are not
 verified real-market manipulation or compliance decisions.
 
-These jobs are educational simulation utilities. They do not evaluate real
-market manipulation, do not provide trading signals, and should not be used for
-compliance decisions.
+Agent-initiated model workloads, including training/scoring/evaluation rehearsals,
+run on Nebius under the [execution policy](../../docs/ml/model-validation-execution-policy.md).
+Local commands below describe retained rule-simulation or inert packaging
+capabilities; they are not authorization to run a model workload locally.
 
 ## Structured lifecycle logs
 
-Executable Jobs emit one JSON object per lifecycle event. Each record includes
-UTC timestamp, level, job type, stable event name, and a plain-language
-description of the work. Timed phases produce `.started`, `.completed`, or
-`.failed` events and include `duration_ms`; failures include only the exception
-type, never the exception message.
-
-Example:
+Jobs emit JSON lifecycle events with UTC timestamp, level, job type, event name
+and a plain-language description. Timed phases emit `.started`, `.completed`
+or `.failed` with `duration_ms`; failures retain exception type, not message.
 
 ```json
 {"description":"Train LightGBM with the frozen hyperparameters, seed, class weighting, and early-stopping policy.","event":"model.train.started","job_type":"lightgbm-wave1","level":"INFO","run_id":"wave1-development-001","timestamp":"2026-08-27T00:00:00+00:00"}

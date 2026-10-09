@@ -54,7 +54,10 @@ session-level splits, canonical Java replay inputs, and signed benchmark
 results before any learned-model training. The LightGBM Phase 0 schemas also
 bind stable model/training identities, feature and split hashes, validation-only
 calibration, frozen operating thresholds, prediction outputs, and the
-checksummed model artifact inventory before the trainer is implemented. Runtime
+checksummed model artifact inventory used by the implemented trainer and scorer.
+The cloud Job/run contracts bind the execution request and retained run evidence.
+See [ARD-0031](../docs/architecture/ARD-0031-complete-lightgbm-v1.md) for completed
+implementation and its separate qualification boundary. Runtime
 verification additionally checks normalized artifact paths, exact bytes,
 sizes, SHA-256 values, canonical manifest contents, schema compatibility, and
 the complete checksum inventory.
