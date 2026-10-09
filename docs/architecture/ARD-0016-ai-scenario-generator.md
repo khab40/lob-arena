@@ -4,37 +4,26 @@ Status: Accepted
 
 Date: 2026-07-06
 
-Implementation Status: `[done]`
-
-Primary implementation:
-
-- Backend API: `POST /api/nebius/scenario-generator/generate`
-- Backend service: `backend/app/nebius/scenario_generator.py`
-- Serverless endpoint: `POST /generate-market-abuse-scenario`
-- Frontend surface: AI Command Center scenario generator panel
+Implementation Status: `[done: bounded demo integration]`
 
 ## Context
 
-LOB Arena already has red-team scenario generation, local templates, variant generation, and Arena injection. Phase 2 promotes this into an AI Scenario Generator where Nebius AI Serverless creates synthetic market-abuse scenarios that the existing simulator can replay.
-
-Existing code to reuse:
-
-- `backend/app/nebius/client.py`: `RedTeamScenarioRequest`, `RedTeamScenarioResponse`, `NebiusClient.generate_red_team_scenario()`
-- `backend/app/api/routes_nebius.py`: `AttackScenarioInput`, `AttackScenario`, `POST /api/nebius/attack-scenario`, variants, list, template, and inject routes
-- Live injection: Java arena scenario APIs via `backend/app/arena/java_client.py`;
-  `backend/app/arena/engine.py` is retained for offline/serverless simulation.
-- `serverless/endpoint/app.py`: `ScenarioGenerationRequest`, `ScenarioGenerationResponse`, `POST /generate-scenario`, `POST /generate-smart-scenario`
-- `frontend/src/pages/AttackScenarioGeneratorPage.tsx`
-- `frontend/src/components/AttackBuilder.tsx`
+The AI Scenario Generator promotes existing red-team templates, variant generation
+and Arena injection into a bounded Nebius Endpoint workflow. It generates a
+synthetic specification with explicit ground truth; Java remains the live exchange
+authority. Python retains generation, normalization, persistence and projection.
 
 ## Decision
 
-Use a canonical AI scenario contract and expose it through promoted routes:
+Use one canonical scenario contract through:
 
-- Backend: `POST /api/nebius/scenario-generator/generate`
-- Serverless endpoint: `POST /generate-market-abuse-scenario`
+- backend: `POST /api/nebius/scenario-generator/generate`;
+- endpoint: `POST /generate-market-abuse-scenario`.
 
-Keep the current `/api/nebius/attack-scenario*`, `/generate-scenario`, and `/generate-smart-scenario` routes working as compatibility paths. The backend remains responsible for normalizing Nebius output into a replayable simulator scenario and preserving ground truth.
+Keep `/api/nebius/attack-scenario*`, `/generate-scenario` and
+`/generate-smart-scenario` as compatibility paths. Normalize endpoint output or
+replace invalid output with deterministic templates. Persist the canonical
+scenario and its `AttackScenario` projection separately.
 
 ```mermaid
 graph TD
@@ -54,26 +43,28 @@ graph TD
     UI --> Arena
 ```
 
-## Objective
-
-Generate bounded synthetic market-abuse workloads from six demo controls:
-
-- manipulation type: `spoofing_like_wall`, `layering_like`, `quote_stuffing`, `liquidity_evaporation`
-- difficulty: `easy`, `medium`, `hard`, `adversarial`
-- symbol
-- duration
-- liquidity regime
-- volatility regime
-
-The generated result must be replayable by Arena and must carry ground truth for detectors and later tournament jobs.
-
 ## Canonical Schema
 
-Backend request model: `MarketAbuseScenarioGenerationRequest`.
+The maintained models are
+[`backend/app/nebius/scenario_generator.py`](../../backend/app/nebius/scenario_generator.py);
+the endpoint request model is in
+[`serverless/endpoint/app.py`](../../serverless/endpoint/app.py).
+
+| Request field | Accepted values / bounds |
+| --- | --- |
+| `manipulation_type` | `spoofing_like_wall`, `layering_like`, `quote_stuffing`, `liquidity_evaporation` |
+| `difficulty` | `easy`, `medium`, `hard`, `adversarial` |
+| `symbol` | 1–16 characters |
+| `duration_ticks` | 30–600 |
+| `liquidity_regime` | `thin`, `normal`, `deep` |
+| `volatility_regime` | `low`, `medium`, `high` |
+| `seed` | Optional deterministic fallback seed |
+
+Human-facing “Spoofing” and “Layering” labels are not API enum aliases.
 
 ```json
 {
-  "manipulation_type": "spoofing",
+  "manipulation_type": "spoofing_like_wall",
   "difficulty": "medium",
   "symbol": "AIMD",
   "duration_ticks": 120,
@@ -83,62 +74,60 @@ Backend request model: `MarketAbuseScenarioGenerationRequest`.
 }
 ```
 
-Validation:
-
-- `manipulation_type`: `spoofing_like_wall | layering_like | quote_stuffing | liquidity_evaporation`
-- `difficulty`: `easy | medium | hard | adversarial`
-- `duration_ticks`: bounded to the simulator replay window, recommended `30..600`
-- `liquidity_regime`: `thin | normal | deep`
-- `volatility_regime`: `low | medium | high`
-- `seed`: optional deterministic fallback seed
-
-Backend response model: `CanonicalMarketAbuseScenario`.
+A structurally valid illustrative backend response follows. Its values are an
+example, not a measured result or an execution receipt.
 
 ```json
 {
-  "scenario_id": "ai-scenario-20260706-0001",
-  "title": "Spoofing Pressure Near Mid",
-  "description": "Synthetic spoofing workload with visible bid-side depth that cancels before execution.",
-  "manipulation_type": "spoofing",
+  "mode": "mock",
+  "endpoint": "/generate-market-abuse-scenario",
+  "scenario_id": "ai-spoofing-example",
+  "title": "Synthetic Spoofing Pressure",
+  "description": "A bounded visible-wall scenario specification.",
+  "manipulation_type": "spoofing_like_wall",
   "difficulty": "medium",
   "symbol": "AIMD",
   "duration_ticks": 120,
+  "liquidity_regime": "thin",
+  "volatility_regime": "high",
   "ground_truth": {
-    "label": "spoofing",
+    "label": "spoofing_like_wall",
     "manipulation_windows": [{"start_tick": 20, "end_tick": 96}],
     "manipulator_agent_ids": ["AI-SPOOF-001"],
     "expected_detector_targets": ["wall_size_ratio", "cancel_to_trade_ratio"],
-    "positive_event_ids": ["evt-0020-place", "evt-0024-cancel"]
+    "positive_event_ids": ["evt-0020-place"]
   },
-  "events": [
-    {
-      "event_id": "evt-0020-place",
-      "tick": 20,
-      "event_type": "place_order",
-      "agent_id": "AI-SPOOF-001",
-      "symbol": "AIMD",
-      "side": "buy",
-      "price": 99.75,
-      "quantity": 750,
-      "order_id": "ord-0020-a",
-      "metadata": {"intent": "visible_depth_pressure"}
-    },
-    {
-      "event_id": "evt-0024-cancel",
-      "tick": 24,
-      "event_type": "cancel_order",
-      "agent_id": "AI-SPOOF-001",
-      "symbol": "AIMD",
-      "order_id": "ord-0020-a",
-      "metadata": {"reason": "cancel_before_execution"}
-    }
-  ],
+  "events": [{
+    "event_id": "evt-0020-place",
+    "tick": 20,
+    "event_type": "place_order",
+    "type": "place_order",
+    "agent_id": "AI-SPOOF-001",
+    "symbol": "AIMD",
+    "scenario_id": "ai-spoofing-example",
+    "scenario_name": "Synthetic Spoofing Pressure",
+    "scenario_family": "spoofing_like_wall",
+    "stage": "wall_placed",
+    "message": "Place synthetic visible depth.",
+    "side": "buy",
+    "price": 99.75,
+    "quantity": 750,
+    "order_id": "ord-0020-a",
+    "metadata": {"intent": "visible_depth_pressure"}
+  }],
   "expected_detector_behavior": {
     "primary_signals": ["wall_size_ratio", "cancel_to_trade_ratio"],
     "expected_risk_score": 0.76,
     "false_positive_risk": "medium"
   },
-  "explanation": "The workload creates transient visible depth and rapid cancellation without real execution.",
+  "explanation": "Synthetic visible depth is supplied as scenario context.",
+  "replay": {
+    "mode": "attack_scenario_projection",
+    "route": "spoofing_like_wall",
+    "supported": true,
+    "scenario_id": "ai-spoofing-example",
+    "duration_ticks": 120
+  },
   "source": {
     "mode": "mock",
     "provider": "nebius_serverless",
@@ -148,14 +137,17 @@ Backend response model: `CanonicalMarketAbuseScenario`.
 }
 ```
 
-Event contract:
+Event types are `place_order | cancel_order | trade | quote_update`. Every
+canonical event also carries `type`, `scenario_id`, `scenario_name`,
+`scenario_family`, `stage` and `message`; order fields apply when relevant.
+Unknown extra information belongs under `metadata`.
 
-- `event_type`: `place_order | cancel_order | trade | quote_update`
-- Required for replay ordering: `event_id`, `tick`, `event_type`, `agent_id`, `symbol`
-- Order fields when applicable: `side`, `price`, `quantity`, `order_id`
-- Extra fields stay under `metadata` so simulator adapters can ignore unknown values.
+## Replay And Persistence
 
-## Backend Changes
+`generate_with_client()` passes a validated request to `NebiusClient`.
+The backend stores `nebius/generated_market_abuse_scenarios.jsonl` and
+`nebius/attack_scenarios.jsonl`. `project_attack_scenario()` maps ID/title/type,
+regime, duration, expected signals and source into the compatibility projection.
 
 Implemented in `backend/app/nebius/scenario_generator.py` with:
 

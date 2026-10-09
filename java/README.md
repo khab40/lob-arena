@@ -1,4 +1,4 @@
-# Java Candidate Kernel
+# Java Kernel And Live Arena
 
 This Gradle build contains the authoritative Java 25 kernel and live arena.
 The migration in [ARD-0019](../docs/architecture/ARD-0019-python-reference-java-kernel-migration.md)

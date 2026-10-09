@@ -92,7 +92,6 @@ Scenario agents are launched manually from the UI. They run for a bounded interv
 | `LayeringLikeAgent` | Places multiple same-side levels, then cancels them as a group. |
 | `QuoteStuffingLikeAgent` | Generates many place and cancel updates in a short time window. |
 | `LiquidityEvaporationScenario` | Removes visible depth quickly and stresses liquidity-shock features. |
-| `PanicSelloffScenario` | Sends aggressive sell pressure to simulate a sudden disorderly move. |
 
 ## Main UI Screens
 

@@ -4,24 +4,17 @@ Status: Accepted
 
 Date: 2026-07-06
 
-Implementation Status: `[done]`
+Implementation Status: `[done: bounded demo tournament]`
 
-Primary implementation:
+## Governed ML boundary
 
-- Backend API: `POST /api/nebius/tournament/start`, `GET /api/nebius/tournament/{id}`, `GET /api/nebius/tournament/{id}/artifacts`
-- E2E demo API: `POST /api/nebius/serverless-smoke/run`
-- Backend service: `backend/app/nebius/detector_tournament.py`
-- E2E demo service: `backend/app/nebius/serverless_smoke.py`
-- Serverless job: `serverless/jobs/detector_tournament.py`
-- Frontend surface: AI Command Center detector tournament panel
-
-## Governed ML boundary — 2026-09-21
-
-The tournament and mock leaderboard described here do not train/select the
-governed LightGBM, Transformer or cascade. Governed development uses immutable
-projections, separate train/validation/test access, hash-bound candidates and
-independently verified comparisons. See [ML lifecycle use cases](../use-cases/ml-lifecycle.md).
-A demo leaderboard or successful Job is not a model qualification receipt.
+This tournament and its mock leaderboard do not train or select governed
+LightGBM, Transformer or cascade candidates. A demo leaderboard or successful
+Job is not a model qualification receipt. Governed development uses immutable
+projections, separate fold access, hash-bound candidates and independently
+verified comparisons; see [ML lifecycle](../use-cases/ml-lifecycle.md).
+Agent-initiated model training/scoring/evaluation workloads, including synthetic
+rehearsals, follow the [Nebius execution policy](../ml/model-validation-execution-policy.md).
 
 ## Context
 
