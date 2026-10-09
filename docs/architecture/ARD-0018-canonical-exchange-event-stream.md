@@ -86,20 +86,28 @@ rotation, stream reset and publication boundaries.
 
 [ARD-0023](ARD-0023-hybrid-historical-replay.md) uses the same versioned vocabulary:
 
-- strict canonical CSV maps source lifecycle events into add/modify/cancel/
-  execute-compatible kernel mutations;
-- normalized LOBSTER replay reconstructs deterministic visible aggregate
-  levels and records the immutable source L2 snapshot;
-- historical source sequence remains distinct from total canonical sequence;
-  and
-- synthetic overlays share the live kernel but retain separate source,
-  identity, seed, and ground-truth provenance.
+- strict canonical CSV maps actual source lifecycle events into kernel mutations;
+- normalized LOBSTER reconstructs deterministic aggregate visible levels and retains the immutable source L2 snapshot;
+- Nasdaq ITCH normalization is defined in [ARD-0032](ARD-0032-nasdaq-itch-ingestion.md);
+- synthetic overlays share the kernel but retain separate IDs, source, seeds and ground truth.
+
+Historical-only records do not establish benign labels. Combined-book prediction
+checkpoints and historical-source validation snapshots remain distinct.
+
+## Alternatives And Consequences
+
+A loosely shaped UI event feed cannot reconstruct order-level lifecycle or
+preserve source timing. L2 snapshots remain observational checkpoints and cannot
+replace canonical mutations. The versioned contract makes validation and replay
+portable, but adds identifiers/timing fields and requires explicit adapters or
+migrations for incompatible schema changes.
 
 ## Related Documentation
 
 - [Exchange Event Stream](../runtime/exchange-event-stream.md)
-- [ARD-0002: WebSocket State Schema](ARD-0002-websocket-state-schema.md)
-- [ARD-0004: Benchmark Artifact Format](ARD-0004-benchmark-artifact-format.md)
-- [ARD-0011: Exchange Liquidity Invariant](ARD-0011-exchange-liquidity-invariant.md)
-- [ARD-0022: Historical Market Data Ingestion](ARD-0022-historical-market-data-ingestion.md)
-- [ARD-0023: Deterministic Hybrid Historical Replay](ARD-0023-hybrid-historical-replay.md)
+- [Determinism v1](../runtime/determinism-contract-v1.md)
+- [WebSocket state](ARD-0002-websocket-state-schema.md)
+- [Liquidity and quote ownership](ARD-0011-exchange-liquidity-invariant.md)
+- [Java kernel migration](ARD-0019-python-reference-java-kernel-migration.md)
+- [Historical ingestion](ARD-0022-historical-market-data-ingestion.md)
+- [Hybrid replay](ARD-0023-hybrid-historical-replay.md)

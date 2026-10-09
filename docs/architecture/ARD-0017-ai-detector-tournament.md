@@ -172,17 +172,26 @@ The command center renders one managed-experiment tournament panel; the
 
 ## Acceptance Criteria
 
-- UI can start a tournament from the command center.
-- UI can show leaderboard and metric summary.
-- Mock/local mode works with no Nebius credentials.
-- Real Nebius job path is isolated behind job config and submit commands.
-- Artifacts are visible or downloadable.
-- Existing experiment APIs and job runners continue to work.
-- No duplicate tournament runner is introduced.
+- The command center starts a tournament and displays its status, leaderboard and artifacts.
+- Mock mode works without credentials and is clearly labelled.
+- Explicit local rule runs are capped and serialized; failed/timeout runs retain readable state and a fallback reason.
+- Configured Nebius execution is isolated behind Job configuration and submit/collect commands.
+- Requested counts, seed and difficulty affect the runner as documented.
+- Existing experiment APIs and both runners remain usable; no third runner is introduced.
+- Detailed detector quality remains artifact evidence, not Prometheus labels or model qualification.
 
-## Risks And Shortcuts
+## Alternatives And Consequences
 
-- Scenario inputs are restricted to the four native Arena implementations; unsupported projections are rejected.
-- Risk: `difficulty_mix` is not yet supported by simulator physics. Shortcut: store it in manifest and use it to weight scenario selection first.
-- Risk: cloud artifacts are not mounted automatically. Shortcut: keep `collect-nebius-artifacts` as explicit step.
-- Risk: two existing runners have different artifact names. Shortcut: facade normalizes both into the same response envelope.
+A new orchestration system was rejected because the managed-experiment API
+already owns configuration, state, collection and aggregation. Different runner
+filenames remain a compatibility cost handled by the facade. Mock results make
+the demo usable without cloud configuration, but must never be presented as
+measured detector performance. Cloud output collection remains explicit.
+
+## Related Documentation
+
+- [Current source and schemas](../../backend/app/nebius/detector_tournament.py)
+- [Synthetic rule calculations and limitations](../runtime/calculations-explanations.md)
+- [Operational tournament telemetry](ARD-0021-local-observability-grafana.md)
+- [Job image preflight and authorization](../operations/digest-pinned-jobs.md)
+- [Original implementation/UI/demo narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0017-ai-detector-tournament.md) — historical reference, not current commands

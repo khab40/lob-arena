@@ -13,20 +13,22 @@ at once would have removed the working correctness reference while combining
 delivery, performance and deployment risks. The deterministic kernel could move
 independently behind one language-neutral contract.
 
-The performance-sensitive exchange kernel can move independently if both implementations share a language-neutral request/result contract and deterministic semantics.
+The migration sequence is historical. Java now owns both the versioned kernel
+and live arena; Python shadow/authority/fallback controls are retired.
+[ARD-0020](ARD-0020-java-arena-websocket-agent-orchestration.md) records the
+subsequent complete live cutover.
 
 ## Decision
 
-Migrate through a reference-and-candidate architecture, then retire the duplicate runtime after parity and cut-over:
+Migrate through a reference-and-candidate architecture, prove parity, then retire
+the duplicate kernel:
 
-- Python remains authoritative only until parity is demonstrated.
-- Protobuf defines simulation input, canonical events, trades, snapshots, metrics, and result hashes.
-- Java 25 implements the candidate kernel as plain Java modules.
-- Spring Boot remains outside the kernel and becomes the Java control-plane framework only after kernel stability.
-- Python and Java receive identical scenario requests and are compared by a differential harness.
-- Authority moves by component and runtime mode only after correctness, performance, observability, and rollback gates pass.
-- After the stability window, Java becomes the sole versioned deterministic-kernel implementation. The immutable golden corpus replaces executable Python-kernel replay as the compatibility oracle.
-- Python remains for ML/AI, Nebius integration, experiments, serverless jobs, and capabilities that still have no Java replacement.
+1. Protobuf defines requests, integer-unit canonical events, trades, snapshots, quantized metrics and result hashes.
+2. Freeze numeric conversion, logical time, total ordering, named SplitMix64 streams, identifiers, FIFO/modify semantics and canonical encoding.
+3. Implement Java 25 as framework-free modules; Spring, transport, telemetry and persistence stay outside the hot loop.
+4. Compare identical serialized requests across the Python reference and Java candidate, retaining full results and the first divergence.
+5. Move authority only after correctness, performance, observability, stability and rollback gates pass.
+6. Retire executable Python-kernel replay after cutover. An immutable versioned golden corpus becomes the compatibility oracle.
 
 ## Final Component Boundary
 
@@ -44,50 +46,56 @@ graph LR
     Client --> Request
 ```
 
-The Java boundary owns the versioned kernel and, after the follow-on ARD-0020 cut-over, the interactive arena clock, scenarios, deterministic detectors, incidents, persistence, REST/WebSocket delivery, and agent orchestration. Python retains ML/AI, Nebius integration, experiments, serverless jobs, and a thin Java arena client.
+Java owns the versioned kernel and, after ARD-0020, the interactive clock,
+scenarios, deterministic detectors/incidents, journals, REST/WebSocket and agent
+orchestration. Python retains AI/ML, LangGraph-capable agent execution, Nebius
+integration, experiments, offline/serverless simulation and a thin Java client.
 
-## Step 1 Implementation Record
+## Completed Implementation Sequence
 
-- Froze component ownership and the initial Java authority boundary.
-- Defined `python`, `shadow`, and `java` authority modes.
-- Defined correctness, performance, observability, rollback, and long-term reference gates.
-- Recorded Java 25, repository-owned Gradle/toolchain, and build-owned Protobuf generation policy.
-- Explicitly excluded Kafka, Chronicle Queue, Agrona, ClickHouse, Parquet, and full Spring migration from correctness parity work unless later gates justify them.
-- Confirmed the current workstation has Java 21 and no global Gradle or `protoc`; repository-owned tooling is required before Java compilation.
+| Stage | Completed boundary |
+| --- | --- |
+| 1–4 | Ownership gates; versioned Protobuf; integer units/ordering/PRNG; explicit canonical SHA-256 encoding |
+| 5–6 | Python reference adapter and immutable requests/results covering all five event types and six scenarios |
+| 7–10 | Repository-owned Java toolchain/build, determinism/hashing, integer matching engine and complete Java tick runner |
+| 11–13 | Shared unary gRPC, structured differential reports and bounded shadow verification |
+| 14–15 | Separate JMH diagnostics, portable allocation/latency gates and failure-isolated boundary telemetry |
+| 16–17 | Staged authority rollout, Java-default image and permanent real-service corpus replay |
+| 18 | Java-only HTTP/gRPC kernel; removed Python reference, routing, replay/shadow/fallback and duplicate tests |
 
-## Step 2 Implementation Record
+The [historical migration guide](../runtime/history/java-kernel-migration.md)
+retains the step table, initial component boundaries and former authority modes.
+The [original detailed implementation record](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0019-python-reference-java-kernel-migration.md#step-1-implementation-record)
+preserves all 18 step narratives, historical tooling observations, Linux parity
+correction and dated image measurements. Those commands/measurements are not
+current runtime instructions or capacity guarantees.
 
-- Added the versioned `lob.exchange.v1` Protobuf package with Java package and multiple-file generation options.
-- Defined language-neutral simulation requests/configuration, scenario parameters, all five exchange event payloads, L2 books, quantized metrics, hashes, and simulation results.
-- Represented price and quantity state as integer ticks/lots and midpoint as twice-price ticks; no floating-point fields or maps exist in the deterministic request/result boundary.
-- Added checked-in Python bindings plus a build script that generates them with the locked compiler and detects stale generated sources.
-- Added descriptor, oneof discriminator, all-event, request/result, integer-unit, and round-trip tests.
-- Java generation remains owned by the Gradle scaffold in step 7; step 2 does not require global Gradle or `protoc`.
+## Compatibility And Rollback
 
-## Step 3 Implementation Record
+- Java is the sole production implementation of the versioned deterministic kernel.
+- Permanent CI starts the production Java service and compares complete results with immutable `contracts/golden/parity-v1` bytes.
+- Intentional deterministic behavior or fixture changes require the [corpus versioning/ARD policy](../runtime/golden-parity-corpus-v1.md#maintenance-policy).
+- Operational rollback deploys a previously verified Java image/release; no Python kernel fallback remains.
+- Retained offline Python simulation is not live authority or the versioned-kernel compatibility oracle.
 
-- Froze signed 64-bit price ticks, quantity lots, exact nanounit conversion, twice-price midpoint representation, and quantized metric rounding.
-- Froze a six-field total event-order key and numeric phase order for agents, scenarios, baseline repair, snapshots, and final metrics.
-- Selected portable SplitMix64 with explicit unsigned overflow and rejection-sampled bounded integers.
-- Added SHA-256-derived named PRNG stream seeds so components do not share order-sensitive random state.
-- Froze simulation identifier, logical-time, modify, FIFO matching, execution emission, and tick-phase rules.
-- Added executable language-neutral JSON vectors and Python reference tests for PRNG output, stream derivation, ordering, units, midpoints, rounding, and identifiers.
+## Toolchain And Performance Boundary
 
-## Step 4 Implementation Record
+The repository owns a checksum-pinned Gradle 9.6.1 wrapper, Java 25 toolchain
+declaration and build-time Java Protobuf/gRPC generation. Checked-in Python
+bindings are contract/client tooling. A Java 21 launcher can use the wrapper's
+toolchain provisioning; no global Gradle or `protoc` is required.
 
-- Defined fixed-width big-endian primitive encoding, NFC UTF-8 strings, explicit optional presence, and ordered repeated values.
-- Added payload-discriminated canonical bytes for all five exchange events and a standalone canonical L2 book encoding.
-- Added per-event and book SHA-256 digests plus a domain-separated rolling stream hash chain.
-- Required matching schema version and contiguous sequence starting at 1 before stream hashing.
-- Added golden canonical bytes/digests and tests for all payloads, optional presence, state sensitivity, sequence/version rejection, Unicode normalization, and independence from Protobuf wire serialization.
+[JMH diagnostics and portable gates](../runtime/java-kernel-performance.md) are
+separate from correctness parity. Agrona, alternative queues or data structures
+require profiling evidence; brokers and analytics storage were not prerequisites
+for moving the deterministic hot loop.
 
-## Step 5 Implementation Record
+## Alternatives And Consequences
 
-- Added an authoritative `PythonReferenceKernel` that accepts `SimulationRequest` and returns `SimulationResult` without changing runtime authority.
-- Added missing deterministic inputs for tick interval, agent count, baseline tick spacing, and maximum agent quote size to the additive Protobuf config.
-- Converted all canonical Python event variants and L2 books into exact integer-tick/lot Protobuf messages.
-- Returned contiguous events, final book, canonical event/book hashes, sorted quantized market/detector metrics, and explicit termination status.
-- Added repeat-run byte determinism, five-event scenario coverage, snapshot cadence, hash verification, metadata propagation, metric ordering, parameter rejection, and event-limit tests.
+A complete backend rewrite before parity was rejected because it would remove
+the independent reference and entangle unrelated components. Permanent duplicate
+runtime kernels were also rejected after the stability gates: the golden corpus
+detects behavior drift without sampled production replay.
 
 ## Step 6 Implementation Record
 

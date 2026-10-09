@@ -32,7 +32,7 @@ SDKMAN users can pin the repo JDK with the checked-in `.sdkmanrc`:
 sdk env
 ```
 
-Start the candidate gRPC server for offline shadow replay with:
+Start the authoritative gRPC server for service integration or golden-corpus verification with:
 
 ```bash
 ./gradlew :kernel-grpc:run --args=50051
@@ -44,7 +44,9 @@ Start the Spring control plane with the project SDKMAN pin and Java 25 runtime c
 ../scripts/run-java-control-plane.sh --server.port=8081
 ```
 
-See [Kernel Shadow Mode](../docs/runtime/history/kernel-shadow-mode.md) for the Python replay command and live-mirroring guarantees.
+Replay the immutable expected results with the Python verification client described in
+[Golden Parity Corpus V1](../docs/runtime/golden-parity-corpus-v1.md). Python does
+not execute a second kernel, shadow live requests, or provide runtime fallback.
 
 Run forked kernel and matching diagnostics with `./gradlew :kernel-benchmarks:run --args='KernelBenchmarks -prof gc'`; see [Java Kernel Performance](../docs/runtime/java-kernel-performance.md) for gate policy and interpretation.
 
