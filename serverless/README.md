@@ -74,39 +74,19 @@ PUSH=false
 SMOKE=false
 ```
 
-For example:
-
-```bash
-IMAGE_NAMESPACE=ghcr.io/<your-org> TAG=<tag> ./scripts/build-serverless-images.sh
-PUSH=true IMAGE_NAMESPACE=ghcr.io/<your-org> TAG=<tag> ./scripts/build-serverless-images.sh
-SMOKE=true IMAGE_NAMESPACE=ghcr.io/<your-org> TAG=<tag> ./scripts/build-serverless-images.sh
-```
-
-By default, the script builds these local tags:
-
-```text
-ghcr.io/khab40/lob-arena-endpoint:latest
-ghcr.io/khab40/lob-arena-jobs:latest
-```
-
-Anonymous registry verification on 2026-07-13 confirmed the jobs `latest` and
-`artifacts-v2` tags and the Endpoint `vllm-qwen-v11` tag. Each published image
-includes `linux/amd64`; the Endpoint `latest` tag is not published. Local builds
-may still use `latest`, but production Endpoint deployment examples use the
-versioned public tag. VM and Kubernetes deployment scripts build and push their
-application images to the explicitly configured namespace.
-
-Smoke checks:
-
-```text
-Endpoint: docker run endpoint image, call GET /health.
-Jobs: docker run jobs image with run_batch_experiments.py --runs 3 --batch-size 2.
-```
+`ENDPOINT_IMAGE` and `JOBS_IMAGE` override local tags; `TARGET` selects the build.
+Authorized image publication uses `PUSH=true` or `make serverless-push`.
+Local build tags are not immutable Job deployment identities. Before building,
+uploading or submitting a Job image, apply the
+[repository-length/digest preflight](../docs/operations/digest-pinned-jobs.md).
+No build command grants cloud-run authorization.
 
 ## Deployment Smoke Workflow
 
-After the endpoint, backend, and jobs image are available, run the end-to-end
-deployment smoke workflow:
+[`scripts/serverless-smoke.sh`](../scripts/serverless-smoke.sh) is a separate
+runtime workflow: Endpoint health/alert/report requests, a three-run Jobs-image
+rule batch, a ten-attack managed experiment and local batch, with optional Job
+submission/collection if command templates are configured.
 
 ```bash
 NEBIUS_ENDPOINT_BASE_URL=http://localhost:9000 \

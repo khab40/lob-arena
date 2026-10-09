@@ -498,119 +498,9 @@ The retained Python rules have explicit limitations:
 - The fixed 14-tick synthetic benchmark is a regression comparison, not evidence of production surveillance quality.
 - Temporal/attribution metrics exist, but their validity depends on actual label and detector-evidence linkage; null is not an observed score.
 
-A tournament configured as 90% adversarial therefore runs the same basic scenario mechanics as one configured as 90% easy, unless a separate cloud wrapper transforms the workload first.
-
-## 2. `random_seed` is accepted but not used by the basic tournament runner
-
-The request includes `random_seed`, but simulations use:
-
-```python
-seed = run_index + 17
-```
-
-Changing the Control Panel seed does not currently affect this script.
-
-## 3. Number of scenarios is not exact
-
-The value is converted to equal `runs_per_scenario`, which can overshoot the requested total.
-
-## 4. One expected detector per attack family
-
-For a spoofing scenario:
-
-```text
-spoofing_like = positive
-every other detector = negative
-```
-
-A liquidity detector that correctly observes a liquidity effect during spoofing is counted as a false positive.
-
-The benchmark therefore measures scenario-family classification more than general anomaly detection.
-
-## 5. Normal-market metrics can be misleading
-
-Normal market has no expected detector. If no alert occurs:
-
-```text
-TP = 0
-FP = 0
-FN = 0
-precision = 0
-recall = 0
-F1 = 0
-```
-
-A perfectly quiet detector therefore receives F1 equal to zero.
-
-Normal-market evaluation should also report:
-
-```text
-true negatives
-false-positive rate
-specificity
-balanced accuracy
-```
-
-## 6. Ground truth is coarse
-
-The canonical generated scenario contains manipulation windows and positive event IDs, but the basic tournament reduces truth to:
-
-```text
-scenario family → one expected detector
-```
-
-It does not yet score:
-
-- temporal overlap with the labelled attack window;
-- event-level precision and recall;
-- early versus late detection;
-- participant attribution;
-- order-level attribution;
-- manipulation phase detection.
-
-## 7. Detector evidence uses simulator privilege
-
-`wall_size_ratio` directly sums levels whose owner is `abuser`.
-
-That is acceptable for synthetic debugging but unavailable in anonymous real market data.
-
-A stronger observable-only implementation should use:
-
-- size relative to nearby levels;
-- distance from touch;
-- cancellation probability;
-- execution ratio;
-- replenishment pattern;
-- side switching;
-- participant or order linkage when available.
-
-## 8. Order lifetime is actually scenario elapsed time
-
-The feature is calculated from attack start tick, not from individual order insertion and cancellation timestamps.
-
-It should be renamed to `scenario_elapsed_ms` or replaced with real order-level lifetime statistics.
-
-## 9. Scenario catalog is intentionally bounded
-
-Scenario generation and tournament execution accept only the four native Arena scenarios. The liquidity-shock detector evaluates the `liquidity_evaporation` workload.
-
-## 10. Layering is asymmetric
-
-The layering detector checks excessive ask depth only:
-
-```text
-ask_depth > bid_depth × threshold
-```
-
-A symmetric implementation should support:
-
-```text
-ask_depth > bid_depth × threshold
-OR
-bid_depth > ask_depth × threshold
-```
-
----
+Observable-only features, genuine order lifetimes and causal learned-model
+contracts are documented in [feature engineering](../ml/feature-engineering-lightgbm.md).
+They must not be silently substituted into the frozen synthetic rule formulas.
 
 # Worked Evidence Example
 
@@ -654,12 +544,11 @@ severity   = high
 
 The evidence values do not form an additional score. They are the underlying feature values that support the calculated confidence of `0.84`.
 
----
-
 # Accurate Technical Description
 
-A technically accurate description of the current implementation is:
-
-> LOB Arena generates bounded, explicitly labelled synthetic market-abuse scenarios using a Nebius AI Endpoint or deterministic fallback. Scenarios are projected into an authoritative limit-order-book simulator. On every simulation tick, deterministic feature extractors calculate depth, imbalance, spread, cancellation, message-rate, wall-size, and timing features. Four weighted rule-based detectors convert those features into confidence scores and incidents. The Nebius AI Investigation Team explains the resulting structured evidence. Detector tournaments replay synthetic scenario families locally or through Nebius Serverless Jobs and compare detector alerts with hard-coded scenario labels using precision, recall, F1, false positives, false negatives, and simulated detection latency.
-
-This separation is useful because the core evidence remains reproducible and auditable. The UI should, however, clearly indicate that the main numerical detector scores come from deterministic formulas rather than from an AI model classifier.
+LOB Arena's retained synthetic benchmark runs bounded, labelled simulator
+scenarios through four weighted rule detectors. It applies the requested total,
+seed and difficulty, reports binary attack-active quality plus available temporal
+and attribution measures, and preserves artifacts. Optional AI services generate
+specifications and explain evidence. Live exchange authority, governed learned
+models and production qualification have their own contracts and gates.

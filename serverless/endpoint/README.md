@@ -33,23 +33,9 @@ the deterministic path. See [prompting contracts, budgets, and examples](../../d
   at `LOCAL_VLLM_BASE_URL`; it does not load Transformers in FastAPI and does
   not call an external model gateway.
 
-Local vLLM env:
-
-```bash
-NEBIUS_ENDPOINT_MODE=local_vllm
-LOCAL_VLLM_BASE_URL=http://127.0.0.1:8001/v1
-LOCAL_VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct
-LOCAL_VLLM_HOST=127.0.0.1
-LOCAL_VLLM_PORT=8001
-LOCAL_VLLM_DTYPE=auto
-LOCAL_VLLM_GPU_MEMORY_UTILIZATION=0.90
-LOCAL_VLLM_MAX_MODEL_LEN=16384
-LOCAL_VLLM_ENABLE_PREFIX_CACHING=true
-LOCAL_VLLM_MAX_NUM_SEQS=16
-LOCAL_VLLM_TRUST_REMOTE_CODE=true
-NEBIUS_PROMPT_SEED=42
-NEBIUS_REQUEST_TIMEOUT_SECONDS=180
-```
+The [deployment block](#deploy-local-vllm-on-l40s) owns local-vLLM settings.
+Additional defaults are `NEBIUS_PROMPT_SEED=42` and
+`NEBIUS_REQUEST_TIMEOUT_SECONDS=180`.
 
 In `local_vllm` mode, `/endpoint/start.sh` starts FastAPI/Uvicorn on
 `0.0.0.0:9000`, starts the local vLLM OpenAI-compatible server, then waits until
