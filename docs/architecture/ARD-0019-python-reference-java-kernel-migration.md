@@ -8,7 +8,10 @@ Implementation Status: `[done: step 18 of 18]`
 
 ## Context
 
-LOB Arena began with its deterministic simulation, order book, matching, scenarios, detectors, API, and orchestration implemented in Python. Rewriting the complete backend at once would have combined correctness, delivery, deployment, and operational risk while removing the working reference needed to prove behavioral equivalence.
+Moving the Python exchange, simulation, scenarios, detectors and orchestration
+at once would have removed the working correctness reference while combining
+delivery, performance and deployment risks. The deterministic kernel could move
+independently behind one language-neutral contract.
 
 The performance-sensitive exchange kernel can move independently if both implementations share a language-neutral request/result contract and deterministic semantics.
 

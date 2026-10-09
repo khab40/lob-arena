@@ -84,8 +84,7 @@ rotation, stream reset and publication boundaries.
 
 ## Historical Replay Evolution
 
-ARD-0023 implements the historical extension point without changing the
-versioned event schema:
+[ARD-0023](ARD-0023-hybrid-historical-replay.md) uses the same versioned vocabulary:
 
 - strict canonical CSV maps source lifecycle events into add/modify/cancel/
   execute-compatible kernel mutations;
