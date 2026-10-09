@@ -1,6 +1,11 @@
 # Fixed-candidate December holdout protocol
 
-Date: 2026-10-05. Status: implementation approved; execution not authorized.
+Historical plan/execution record; reconciled 8 October 2026. The fixed protocol was later executed once under separate exact approval and independently verified.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
+Date: 2026-10-05. Original planning status: implementation approved; execution not yet authorized at that date.
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Story #314](https://github.com/khab40/lob-arena/issues/314),
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →

@@ -210,104 +210,10 @@ export function AboutPage() {
 
 function ArchitectureDiagram() {
   return (
-    <svg
-      aria-label="Architecture diagram showing browser, backend, identity, simulation runners, Nebius cloud, and evidence artifacts with directional arrows"
+    <img
+      alt="Architecture: React uses the Java sole-writer market kernel and Python AI/ML control plane; external agents submit bounded intents; Nebius Jobs produce retained evidence."
       className="architecture-flow-diagram"
-      role="img"
-      viewBox="0 0 1120 560"
-    >
-      <defs>
-        <marker id="architecture-arrow" markerHeight="10" markerWidth="10" orient="auto" refX="9" refY="5">
-          <path d="M0,0 L10,5 L0,10 Z" />
-        </marker>
-      </defs>
-
-      <text className="architecture-lane-title" x="120" y="38">User Surface</text>
-      <text className="architecture-lane-title" x="420" y="38">Backend Control Plane</text>
-      <text className="architecture-lane-title" x="735" y="38">Compute</text>
-      <text className="architecture-lane-title" x="980" y="38">Evidence</text>
-
-      <g className="architecture-node">
-        <rect height="128" width="230" x="36" y="72" />
-        <text x="151" y="108">
-          <tspan x="151">React / Vite UI</tspan>
-          <tspan x="151" dy="24">Arena, Detection,</tspan>
-          <tspan x="151" dy="24">Nebius AI, About</tspan>
-          <tspan x="151" dy="24">Dashboard views</tspan>
-        </text>
-      </g>
-
-      <g className="architecture-node">
-        <rect height="132" width="252" x="360" y="70" />
-        <text x="486" y="105">
-          <tspan x="486">FastAPI Backend</tspan>
-          <tspan x="486" dy="24">REST, WebSocket,</tspan>
-          <tspan x="486" dy="24">runtime config, jobs,</tspan>
-          <tspan x="486" dy="24">artifact collection</tspan>
-        </text>
-      </g>
-
-      <g className="architecture-node architecture-secondary">
-        <rect height="104" width="238" x="366" y="252" />
-        <text x="485" y="286">
-          <tspan x="485">Platform Identity</tspan>
-          <tspan x="485" dy="24">workspace, roles,</tspan>
-          <tspan x="485" dy="24">cases, audit trail</tspan>
-        </text>
-      </g>
-
-      <g className="architecture-node">
-        <rect height="120" width="242" x="690" y="72" />
-        <text x="811" y="106">
-          <tspan x="811">Local Simulation</tspan>
-          <tspan x="811" dy="24">agent runners, order book,</tspan>
-          <tspan x="811" dy="24">detectors, replay windows</tspan>
-        </text>
-      </g>
-
-      <g className="architecture-node architecture-cloud">
-        <rect height="132" width="254" x="686" y="250" />
-        <text x="813" y="284">
-          <tspan x="813">Nebius Serverless</tspan>
-          <tspan x="813" dy="24">vLLM endpoint, AI reports,</tspan>
-          <tspan x="813" dy="24">serverless jobs, object</tspan>
-          <tspan x="813" dy="24">storage artifact sync</tspan>
-        </text>
-      </g>
-
-      <g className="architecture-node architecture-evidence">
-        <rect height="138" width="220" x="864" y="402" />
-        <text x="974" y="438">
-          <tspan x="974">Evidence Store</tspan>
-          <tspan x="974" dy="24">events, snapshots,</tspan>
-          <tspan x="974" dy="24">alerts, reports, metrics,</tspan>
-          <tspan x="974" dy="24">benchmark outputs</tspan>
-        </text>
-      </g>
-
-      <path className="architecture-edge" d="M266 136 L360 136" />
-      <text className="architecture-edge-label" x="313" y="120">REST / WS</text>
-
-      <path className="architecture-edge" d="M612 132 L690 132" />
-      <text className="architecture-edge-label" x="651" y="116">run state</text>
-
-      <path className="architecture-edge" d="M612 304 L686 304" />
-      <text className="architecture-edge-label" x="649" y="288">jobs + AI calls</text>
-
-      <path className="architecture-edge" d="M812 192 L812 250" />
-      <text className="architecture-edge-label" x="812" y="224">detector evidence</text>
-
-      <path className="architecture-edge architecture-edge-curved" d="M940 314 C1015 328 1032 370 1006 402" />
-      <text className="architecture-edge-label" x="1010" y="354">cloud outputs</text>
-
-      <path className="architecture-edge architecture-edge-curved" d="M812 382 C812 440 840 468 864 472" />
-      <text className="architecture-edge-label" x="806" y="428">reports</text>
-
-      <path className="architecture-edge architecture-edge-curved" d="M932 132 C1012 170 1038 295 1000 402" />
-      <text className="architecture-edge-label" x="1014" y="240">local artifacts</text>
-
-      <path className="architecture-edge architecture-edge-back" d="M864 506 C620 560 290 520 184 200" />
-      <text className="architecture-edge-label" x="514" y="526">artifact links return to the UI</text>
-    </svg>
+      src="/img/about_architecture_diagram.svg"
+    />
   );
 }

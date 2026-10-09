@@ -1,62 +1,52 @@
 # ARD-0036: Governed Market-Sequence Transformer Challenger
 
-Status: Accepted research design; development GPU results verified, holdout execution pending.
+Status: Accepted research design; development and authorized holdout independently verified; live integration pending.
 
-Date: 2026-08-16; updated 2026-10-05.
+Date: 2026-08-16; updated 2026-10-08.
 
-Ticket: [Story #24](https://github.com/khab40/lob-arena/issues/24),
+Tracking: [Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Bug #357](https://github.com/khab40/lob-arena/issues/357),
 [Project #3](https://github.com/users/khab40/projects/3).
-The approved research fork changes execution ordering, not the frozen data or
-final-test boundary. [ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md)
-owns comparison, experiment sequencing and the subsequent research decision.
+[ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md) owns comparison,
+experiment ordering and research disposition; this record owns model design.
 
 ## Signed LightGBM exit — 2026-09-27
 
-G9 is complete as `research_baseline_qualified`; the operator accepted the
-verified governed package and unknown-cost disposition and delegated signing.
-See the [signed decision and verification](../operations/g8/g9-closure-20260927.md).
-Wave 2 engineering is eligible; the first #24 input-contract chunk and governed
-input verification are complete. Production/client qualification is not
-established. Older pending-G9 statements below are historical.
+G9 is complete as `research_baseline_qualified`: the operator accepted the
+verified package and unknown-cost disposition and delegated signing.
+See [G9 closure](../operations/g8/g9-closure-20260927.md).
+Production/client qualification is not established.
 
 ## Validation execution policy — 2026-09-16
 
-The operator removed administrative submission/retention windows, billing checks
-and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
-in preference to older operational bounds in this record. No billing queries or
-balance-refresh requests. Finite Job timeouts, execution identities, evidence
-integrity and separate final-test authorization remain. This is an execution-policy
-change, not model-quality acceptance or a completed G8/G9 milestone.
+Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
+in preference to historical billing, retention-window and fixed spend/VM limits.
+Finite resource/Job/time bounds, execution identities, integrity and separate
+final-access/replacement approvals remain. No billing or balance queries.
 
 ## Implementation Status
 
-Status: `[in progress; GitHub Story #24; research-baseline G9 exit accepted]`
+The causal classifier, GPU trainer, checkpoint/resume, versioned publisher,
+calibration and independent reader are implemented. Replacement smoke, all four
+trials, three-seed stability, C/O comparison and the authorized December holdout
+are independently verified. The operator chose `continue_research`.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining story acceptance;
+[the disposition](../ml/transformer-research-disposition-20261008.md) records scope.
 
-The causal classifier, GPU trainer, checkpoint/resume support, calibration,
-versioned publisher and independent result reader are implemented in
-[PR #284](https://github.com/khab40/lob-arena/pull/284). This is implementation
-progress with independently verified replacement smoke, four trials, three-seed
-stability and C/O comparison. PR #318 merged and the operator chose continue_research.
-The original failed attempts remain preserved. Development results do not establish
-holdout or production quality; see [current status](../roadmap/CURRENT_STATUS.md).
+The [settings release](../ml/transformer-settings-release.md) retains the original
+seed-42/epoch-4 candidate and complete preprocessing/calibration configuration.
+#314's scoped persistence/reference acceptance is met. It includes CUDA logit
+parity on 64 saved development windows and separately derived probability/decision
+arithmetic; it is not a new capture of original-Job reference probabilities.
+[ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md#verified-continuation--8-october-2026)
+keeps reference parity, held-out probability portability and reduction tolerances distinct.
 
-The [research settings release](../ml/transformer-settings-release.md) binds the
-original checkpoint and complete preprocessing/calibration configuration. Its
-metadata gates pass; authorized inference-consumer parity remains pending. The
-[December protocol](../ml/transformer-holdout-protocol-20261005.md) extends research
-with a separate holdout consumer and fresh exact final-access/run/spend gate.
-Existing development consumers must continue rejecting final data. No model,
-normalizer, calibration or threshold choice may use December outcomes.
-
-The [input consumer contract](../ml/transformer-input-contract.md) now verifies
-the complete causal source window, masks, exact target alignment and train-only
-normalization. [Merged #239's r2 evidence](../ml/transformer-development-results-r2.md)
-verifies all 42,660 development targets on Nebius with independent artifact readback.
-The [research fork](../ml/transformer-research-fork.md) amends the earlier
-[GPU campaign plan](../ml/transformer-gpu-campaign-plan.md): role checks run inside
-the GPU Job before fitting, and online MLflow readiness is deferred. Serving,
-registry promotion and a Transformer-to-LightGBM cascade remain unimplemented.
+The [input consumer](../ml/transformer-input-contract.md) verifies windows,
+masks, target alignment and train-only normalization. The first mock replays
+verified saved scores; dedicated inference, causal event integration, online
+MLflow, cost reconciliation, production serving and a cascade remain pending.
+Development consumers still reject final data. Consumed holdout approval grants
+no new access, training, calibration, threshold search or replacement execution.
 
 ## Implemented research architecture
 
@@ -64,11 +54,11 @@ As a detector developer,
 I want a causal sequence classifier over the governed feature release,
 So that I can test temporal information without changing labels or target rows.
 
-Actor: detector developer. Goal: standalone development challenger.
+Actor: detector developer. Goal: standalone research challenger.
 Value: measure temporal modeling beyond tabular features.
-Out of scope: raw-event tokenization, live serving, cascade and final evaluation.
-Verification: inert contract checks locally; model behavior in Nebius GPU Jobs;
-independent artifact and metric readback before accepting a result.
+Out of scope: raw-event tokenization, live serving and cascade.
+Verification: inert local contract checks; numerical behavior in authorized
+Nebius Jobs; independent artifact and metric readback before accepting results.
 
 ```mermaid
 flowchart LR
@@ -84,32 +74,31 @@ flowchart LR
     Verify -. "later reconciliation" .-> MLflow["MLflow research lineage"]
 ```
 
-Each window contains up to 64 retained supervised feature rows, not 64 raw ITCH
-events or a fixed duration. Left padding and no cross-shard history preserve the
-existing projection. The normalizer is fitted on training only. Sixty normalized
-values plus 60 missingness indicators form a 120-channel token; padding remains
-distinct from a missing feature. Targets bind exact governed row identities.
+Each window has up to 64 retained supervised feature rows, not raw ITCH events
+or a fixed duration. Left padding and no cross-shard history preserve the
+projection. Sixty train-normalized values plus 60 missingness indicators form a
+120-channel token; padding is distinct from missing features. Targets bind exact
+row identities. The existing materializer expands a complete shard in memory.
 
 The [classifier](../../backend/app/ml/transformer/research_model.py) projects to
-width 64 or 128, adds fixed sinusoidal positions, then uses two pre-normalized
-blocks with four attention heads, a 4x-width GELU feed-forward layer and 0.1
-dropout. Valid queries cannot attend to future or padded keys. Padded outputs
-are zeroed. Final layer normalization and the last valid token feed one binary
-logit for `attack_active`. This is separate from the generative AI Investigator.
+width 64/128, adds fixed sinusoidal positions, then uses two pre-normalized blocks:
+four heads, 4x-width GELU feed-forward layer, dropout 0.1. Valid queries cannot
+attend to future/padded keys; padded outputs are zeroed. Final layer normalization
+and the last valid token produce one `attack_active` logit. The generative AI
+Investigator is a separate model.
 
 The [trainer](../../backend/app/ml/transformer/research_training.py) uses float32
-AdamW, weighted binary cross entropy, batch size 64, gradient clipping at 1.0,
-5% warmup and cosine decay. Weights balance classes and base sessions within
-each class; seeded epoch shuffling does not sample by label. CUDA deterministic
-algorithms are required and TF32 is disabled. This is a reproducibility setting,
-not a claim of verified reproducibility across arbitrary hardware or versions.
+AdamW, weighted BCE, batch 64, gradient clipping 1.0, 5% warmup and cosine decay.
+Weights balance classes and base sessions within class; seeded shuffling does
+not sample by label. CUDA deterministic algorithms and disabled TF32 do not
+promise reproducibility across arbitrary hardware or dependency versions.
 
-Epoch checkpoints bind model, optimizer, RNG/progress, configuration, source,
-image, input/normalizer hashes and ordered target hashes. Publication must return
-a verified object version and checksum before acknowledging an epoch. Resume
-support does not authorize an automatic replacement Job. GPU smoke checks cover
-causality, padding, missingness, gradients, batch behavior and resume parity;
-they remain required execution evidence, not satisfied by source inspection.
+Epoch checkpoints bind model, optimizer, RNG/progress, configuration, numerical
+source, execution image, input/normalizer and ordered-target hashes. Publication
+must verify object version/checksum before acknowledging an epoch. Resume never
+authorizes automatic replacement. CUDA smoke evidence covers causality, padding,
+missingness, gradients, batch behavior and resume parity; source inspection alone
+cannot satisfy those behavior gates.
 
 ```gherkin
 Feature: Governed causal Transformer inputs
@@ -119,8 +108,7 @@ Feature: Governed causal Transformer inputs
     Then the research Job rejects the input before fitting
 
   Scenario: Preserve causal predictions
-    Given a valid governed sequence window
-    And the classifier is in evaluation mode
+    Given a valid governed sequence window in evaluation mode
     When only positions after an observed token are changed
     Then that token's encoded representation is unchanged
 
@@ -132,115 +120,74 @@ Feature: Governed causal Transformer inputs
 
 ## Context
 
-The tabular LightGBM detector observes causal rolling features but cannot learn
-arbitrary temporal structure across an ordered event window. A market-sequence
-Transformer may capture attack phase, cancellation choreography, refill and
-liquidity response patterns that are difficult to express as fixed aggregates.
-
-Sequence training adds material GPU cost, more leakage risk and a distinct
-serving surface. Its value must therefore be measured after the cheaper
-LightGBM baseline is frozen, on the same governed data and operational metrics.
-This classifier is separate from the generative vLLM AI Investigator.
+A sequence challenger may learn temporal structure beyond LightGBM's rolling
+features, but adds leakage risk, GPU cost and a serving surface. Measure its
+value after freezing the cheaper baseline on identical governed targets.
 
 ## Decision
 
-After ARD-0035 exits, develop one bounded causal Transformer challenger with a
-versioned sequence contract containing:
-
-- corpus, split and source-feature hashes;
-- event-time cutoff and proof that no later event is visible;
-- ordered inputs, sequence length, stride, padding and attention masks;
-- replay/session grouping and label horizon;
-- normalization or tokenization fitted on training only; and
-- deterministic row-to-sequence identity.
-
-The sequence contract consumes `sequence_projection_v1` from the selective
-Nasdaq-to-Nebius shared data foundation. It must bind the same root corpus,
-chronological split, replay domains and evaluation-row identities used by the
-Wave 1 `tabular_projection_v1`; the Transformer may not reacquire, resplit or
-relabel Nasdaq data independently. Existing sequences use left zero padding,
-attention masks and NaN feature missingness, with one target per retained row
-and no cross-shard history. The current materializer expands a complete shard
-in memory. The trainer must define train-only normalization, missingness,
-temporal encoding and label-independent sampling parity with serving. A changed
-representation/length requires a new versioned projection. See
+Bind corpus/split/source-feature hashes, event-time cutoff, ordered inputs,
+length/stride/padding/masks, replay/session groups, label horizon, train-only
+normalization and deterministic row-to-sequence identity. Consume
+`sequence_projection_v1` from the same corpus, chronological split and target
+ledger as `tabular_projection_v1`; never reacquire, resplit or relabel independently.
+A representation/length change needs a new projection version. See
 [data preparation](../use-cases/ml-data-preparation.md).
 
-For the current research fork, authenticate inputs and audit roles inside the
-first GPU Job before any optimizer step. Use time-boxed GPU Serverless AI Jobs
-for training and batch inference; calibration is in the final inference slot.
-The Mac performs orchestration, static checks and artifact inspection. Do not
-serve or train this classifier through vLLM unless a later ARD intentionally
-changes it into a compatible generative architecture.
+Authenticate inputs and audit roles before fitting inside the first GPU Job.
+Training/batch inference use bounded Serverless Jobs; calibration occupies the
+final inference slot. The Mac orchestrates and inspects artifacts. Do not use
+vLLM for this classifier. The fixed research matrix varies width/rate and confirms
+seeds; broader search and any new final evaluation require separate approval.
 
-The current matrix varies only width and learning rate, followed by fixed seed
-confirmation. Sequence length, encoding, schedule and loss are fixed. Broader
-search is deferred. Final test is outside this research fork and requires a
-separately frozen candidate and explicit authorization.
+A later registered candidate must bind preprocessing, weights, calibration,
+thresholds, sequence schema, checkpoint checksum and model card. Retain curves,
+parameter count, runtime/memory/resources, metrics and explicit unknown costs.
+MLflow reconciliation does not imply registration or promotion.
 
-Any later registered candidate must contain preprocessing, model weights,
-calibration, thresholds, sequence schema, checkpoint checksum and a model card.
-The durable research package retains curves, parameter count, runtime, memory,
-resource identities and detector metrics; unknown costs are identified. MLflow
-reconciliation is required later and does not imply registration or promotion.
+### Pending live integration decisions
+
+Before approving event inference, specify how live causal feature rows reproduce
+the trained retained-row sampling contract, equal-timestamp cutoff/order, gap and
+session resets, warm-up/padding and unavailable-state behavior. Define bounded
+queue/backpressure and stale-result handling outside Java book mutation, plus
+row-alert consolidation/deduplication into incidents. The nine Arena display
+features are insufficient for the trained 60-feature contract. These are unresolved
+design/acceptance choices, not approved architecture or authorization for a run.
 
 ## Exit Gates
 
-Transformer-derived features may be consumed by LightGBM only after:
-
-1. the standalone Transformer bundle verifies from immutable inputs;
-2. causal-cutoff and split-leakage tests pass;
-3. standalone LightGBM and Transformer are evaluated on identical rows;
-4. incremental quality is reported alongside detection delay, throughput,
-   failure behavior and GPU cost; and
-5. a go/no-go record approves the model as a feature producer even if it is not
-   selected as a standalone champion.
+A Transformer feature producer needs immutable bundle verification, causal/split
+checks, identical comparison rows, incremental quality with delay/throughput/
+failure/GPU-cost evidence, and an explicit go/no-go decision. Even a standalone
+champion does not automatically approve the [cascade](ARD-0037-transformer-to-lightgbm-cascade.md).
 
 ## Cost And Operations
 
-- Cap the experiment matrix before starting the GPU campaign.
-- Start with the smallest architecture and shortest useful sequence.
-- Use early stopping, resumable checkpoints and small smoke datasets before
-  full runs.
-- Prefer ephemeral Job execution; no interactive GPU endpoint is required for
-  training.
-- Record actual active GPU time and resource evidence. Follow the validation
-  policy above for cost reporting; do not query billing or remaining credit.
-- Stop unused GPU endpoints immediately and delete them when fast restart is
-  unnecessary because retained disks may still incur storage cost. Completed
-  Jobs remove their associated VM and disk; retain governed checkpoints and
-  evidence in Object Storage.
+Bound the matrix, start small, early-stop and checkpoint. Use ephemeral Jobs,
+record active GPU time/resources, and retain verified evidence in durable storage.
+No interactive GPU endpoint is required. Resource deletion needs applicable
+operator approval. [Retaining readback](../ml/transformer-holdout-execution-package.md#future-readback-packages--8-october-2026)
+is required for future holdout packages; preserve frozen collectors/identities.
 
 ## Alternatives Considered
 
-### Start with the Transformer before LightGBM
-
-Rejected because the project already has a complete CPU-friendly LightGBM
-boundary and needs its measured baseline to justify GPU spend.
-
-### Use vLLM for the detector
-
-Rejected because vLLM serves autoregressive language models, while this design
-is a causal market-sequence classifier with different input, output and latency
-contracts.
-
-### Promote the Transformer on quality alone
-
-Rejected. A surveillance candidate must also satisfy clean-window, calibration,
-latency, throughput, reproducibility and cost gates.
+Transformer-first research was rejected until LightGBM froze. vLLM was rejected
+for the classifier's different contract. Quality-only promotion was rejected:
+clean-window, calibration, latency, throughput, reproducibility and cost gates remain.
 
 ## Consequences
 
-The project can test richer temporal context without weakening the existing
-governance boundary. Training and optional inference introduce GPU cost and
-additional artifacts, but the staged gate makes that spend explicit and
-reversible.
+Richer temporal context can be studied without weakening governance; serving and
+optional combination add separately assessed artifacts, cost and acceptance work.
+[Historical implementation narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0036-market-sequence-transformer.md#implementation-status)
+retains dated development milestones and superseded pending-holdout statements.
 
 ## Related Records
 
-- [ARD-0024: Versioned Causal Feature Engineering](ARD-0024-versioned-causal-feature-engineering.md)
-- [ARD-0025: Governed Corpus And ML Benchmark](ARD-0025-governed-corpus-and-ml-benchmark.md)
-- [ARD-0035: Nebius-First LightGBM](ARD-0035-nebius-lightgbm-first.md)
-- [ARD-0037: Transformer-To-LightGBM Cascade](ARD-0037-transformer-to-lightgbm-cascade.md)
-- [ARD-0042: Transformer and LightGBM Research Sequence](ARD-0042-transformer-lightgbm-research-sequence.md)
-- [Project phases](../roadmap/PHASES.md)
+[ARD-0024](ARD-0024-versioned-causal-feature-engineering.md),
+[ARD-0025](ARD-0025-governed-corpus-and-ml-benchmark.md),
+[ARD-0035](ARD-0035-nebius-lightgbm-first.md),
+[ARD-0037](ARD-0037-transformer-to-lightgbm-cascade.md),
+[ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md),
+[project phases](../roadmap/PHASES.md).

@@ -1,5 +1,10 @@
 # Transformer campaign readiness — 2026-09-28
 
+Historical plan/execution record; reconciled 8 October 2026. Its CPU/MLflow-first ordering is historical; ARD-0042 governs the completed research study.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 The operator approved [PR #241's plan](transformer-gpu-campaign-plan.md) with
 “follow the plan”. This implements its first configuration/role-audit increment
 under [Story #24](https://github.com/khab40/lob-arena/issues/24), Feature #16 →

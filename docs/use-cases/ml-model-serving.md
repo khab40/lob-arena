@@ -19,8 +19,8 @@ comparison and later deploy it with a traceable rollback identity.
 
 PostgreSQL stores tracking/registry metadata. MLflow proxies permitted artifacts
 to MinIO locally or Nebius Object Storage in cloud deployment. The checked-in
-[Dockerfile](../../deployments/mlflow/Dockerfile) pins 3.16.0; this is a source
-configuration fact, not a fresh assertion about a currently running VM.
+[Dockerfile](../../deployments/mlflow/Dockerfile) owns the source version pin;
+that configuration is not a fresh assertion about a currently running VM.
 
 [tracking.py](../../backend/app/ml/lightgbm/tracking.py) logs explicit artifacts;
 it does not call `log_model`, create model versions, assign champion aliases or

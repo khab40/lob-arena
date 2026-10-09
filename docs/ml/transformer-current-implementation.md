@@ -1,6 +1,6 @@
 # Current Transformer implementation
 
-Code inspected on 2026-10-03. Related work: [Transformer ticket #24](https://github.com/khab40/lob-arena/issues/24), tracked in [GitHub Project #3](https://github.com/users/khab40/projects/3).
+Code architecture inspected on 2026-10-03; execution status reconciled on 2026-10-08. [Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance. Related work: [Transformer ticket #24](https://github.com/khab40/lob-arena/issues/24), tracked in [GitHub Project #3](https://github.com/users/khab40/projects/3).
 
 The implementation is a **custom, small PyTorch Transformer neural network**, trained from scratch to predict **whether an attack is active at the current market observation**. It does not use an LLM, GPT, Llama, a tokenizer, or pretrained language-model weights.
 
@@ -134,6 +134,13 @@ The detailed settings are in [c4-campaign-20260928.json](../../configs/experimen
 
 ## Recorded execution status
 
-The repository's [October 3 smoke-status snapshot](../evidence/transformer-research-smoke-status-20261003.json) records Job `aijob-e00qpnac5v335pddbn` failing at startup with `PublicationUncertain`, **before model execution**. That snapshot contains no Transformer quality result.
+Replacement smoke, all four trials, three-seed confirmation, C/O comparison and
+the separately authorized December holdout are independently verified. The
+[disposition](transformer-research-disposition-20261008.md) records bounded
+continuation and scoped settings/reference acceptance. The immediate mock replays
+saved scores; live inference, MLflow/cost reconciliation and full #24 remain open.
 
-This document reflects inspected code and retained repository evidence. Live Nebius state was not queried when preparing it. The neural network and research execution path are implemented, but the recorded attempt does not establish successful training, improved detection quality, or production deployment.
+The [October 3 failed-smoke snapshot](../evidence/transformer-research-smoke-status-20261003.json)
+is historical: it failed before model execution and contains no quality result.
+It does not describe the completed replacement or later study. Consumed packages
+and approvals remain unchanged and cannot authorize another Job.

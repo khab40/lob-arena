@@ -1,5 +1,10 @@
 # Transformer validation lineage audit — 2026-09-29
 
+Historical plan/execution record; reconciled 8 October 2026. The failed/replacement lineage proposals are historical; the final r3 lineage result is independently verified.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 The [first approved attempt](../evidence/transformer-lineage-attempt-20260929.json)
 aborted after one request GET. [Bug #260](https://github.com/khab40/lob-arena/issues/260)
 fixes hashing that injected a later optional model default into historical

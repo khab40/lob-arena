@@ -1,10 +1,15 @@
 # ARD-0040: Completed-Release Publication Recovery
 
-Status: Accepted for the recovery primitive; native synthetic execution verified
+Status: Accepted; recovery primitive and authorized research lifecycle verified
 
 Date: 2026-09-15
 
-Implementation Status: `[post-MLflow recovery integrated; native synthetic verification complete; production G8 open]`
+Implementation Status: `[publication recovery verified; authorized C4 research G8 complete and G9 signed; production/client qualification unestablished]`
+
+Outcome reconciled 8 October: [G8 independent readback](../operations/g8/g8-final-results-20260923.md)
+and [G9 closure](../operations/g8/g9-closure-20260927.md) establish the limited
+research outcome. [Current status](../roadmap/CURRENT_STATUS.md) owns remaining work;
+dated synthetic/preflight narratives below retain their original scope.
 
 ## Context
 
@@ -53,10 +58,10 @@ exercised by the [two-Job synthetic rehearsal](../evidence/g8-native-recovery-20
 A second Job recovered after loss of the original workspace; authenticated
 MLflow readback and later [independent S3 readback](../evidence/g8-independent-s3-readback-20260917.json)
 verified the result. The ordinary no-volume guard and S3/FUSE prohibition remain.
-Original production comparison/registration evidence, storage capacity, changed
-production transport validation, current preflight and replacement-specific
-signed authorization remain separate requirements; synthetic success is not G8
-completion. See the [production package](../operations/g8/g8-production-package.md).
+At that historical rehearsal, comparison/registration evidence, storage capacity,
+changed transport preflight and replacement-specific authorization were separate
+requirements. Synthetic success alone was not G8 completion; the later research
+outcome uses the independently verified receipts linked above. See the [production package](../operations/g8/g8-production-package.md).
 
 ## Implementation and verification
 

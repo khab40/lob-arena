@@ -6,19 +6,19 @@ Date: 2026-07-31
 
 Implementation Status: `[lightgbm-v1 done]`
 
-## Wave 1 Evaluation Update — 2026-09-21
+## Wave 1 Evaluation Update — reconciled 2026-10-08
 
-Local v1 implementation is complete; cloud qualification remains open under
-[ARD-0035](ARD-0035-nebius-lightgbm-first.md). Wave 1 froze isotonic calibration
-through validation-only selection; the generic Platt default below is unchanged.
-The frozen four-date C4 candidate uses the separate
-[ARD-0038](ARD-0038-c4-specific-evaluation.md) evaluation contract, without claiming
-seven-date benchmark equivalence. Same-run logging and post-logging publication
-recovery extend the release lifecycle through
-[ARD-0039](ARD-0039-same-run-mlflow-recovery.md) and
-[ARD-0040](ARD-0040-completed-release-publication-recovery.md). The signed replacement path now includes durable pre-logging retention and
-same-run recovery. A native two-Job synthetic rehearsal passed; production
-replacement qualification and authorization remain separate.
+Local v1 and the authorized C4 research evaluation are complete. G9 is signed
+`research_baseline_qualified`; [ARD-0035](ARD-0035-nebius-lightgbm-first.md) and
+[G9 closure](../operations/g8/g9-closure-20260927.md) record the outcome. Client/
+production qualification remains unestablished. Wave 1 selected isotonic using
+validation only; the generic Platt default below is unchanged. The four-date
+[C4 contract](ARD-0038-c4-specific-evaluation.md) does not claim seven-date
+benchmark equivalence. [Same-run recovery](ARD-0039-same-run-mlflow-recovery.md)
+and [publication recovery](ARD-0040-completed-release-publication-recovery.md)
+preserve durable evidence without rescoring. [Current status](../roadmap/CURRENT_STATUS.md)
+owns remaining ML work. The [September 21 snapshot](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0031-complete-lightgbm-v1.md#wave-1-evaluation-update--2026-09-21)
+retains the historical pending-replacement state.
 
 ## Context
 

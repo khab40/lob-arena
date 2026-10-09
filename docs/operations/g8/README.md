@@ -1,10 +1,16 @@
 # G8 operations
 
-Start with [current status](../../roadmap/CURRENT_STATUS.md) and the
-[current recovery plan](../../roadmap/PHASES.md#g8-recovery-and-completion-plan),
-then the [production package](g8-production-package.md). These own dated
-readiness and the order of remaining gates. Reading a runbook grants no execution
-authority; final-test/replacement approval remains separate.
+G8 is complete and G9 closed as `research_baseline_qualified`. Start with the
+[final results](g8-final-results-20260923.md),
+[signed G9 closure](g9-closure-20260927.md) and
+[current status](../../roadmap/CURRENT_STATUS.md). Production/client qualification
+remains open. These records grant no new execution or final-test authority.
+
+## Retained contracts and historical recovery packages
+
+The [production package](g8-production-package.md) and
+[earlier recovery plan](../../roadmap/PHASES.md#g8-recovery-and-completion-plan)
+describe their dated preparation stages, not remaining current G8 work.
 
 | Need | Detailed reference |
 | --- | --- |
@@ -21,6 +27,6 @@ authority; final-test/replacement approval remains separate.
 
 The detailed records retain their original procedures, failure semantics,
 authorization boundaries and evidence. Superseded dated observations inside
-them are history; consult the current status/plan before preparing any action.
+them are history; consult current status before preparing any action.
 The [execution policy](../../ml/model-validation-execution-policy.md) applies to
 all agent-initiated model workloads.

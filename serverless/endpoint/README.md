@@ -33,23 +33,9 @@ the deterministic path. See [prompting contracts, budgets, and examples](../../d
   at `LOCAL_VLLM_BASE_URL`; it does not load Transformers in FastAPI and does
   not call an external model gateway.
 
-Local vLLM env:
-
-```bash
-NEBIUS_ENDPOINT_MODE=local_vllm
-LOCAL_VLLM_BASE_URL=http://127.0.0.1:8001/v1
-LOCAL_VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct
-LOCAL_VLLM_HOST=127.0.0.1
-LOCAL_VLLM_PORT=8001
-LOCAL_VLLM_DTYPE=auto
-LOCAL_VLLM_GPU_MEMORY_UTILIZATION=0.90
-LOCAL_VLLM_MAX_MODEL_LEN=16384
-LOCAL_VLLM_ENABLE_PREFIX_CACHING=true
-LOCAL_VLLM_MAX_NUM_SEQS=16
-LOCAL_VLLM_TRUST_REMOTE_CODE=true
-NEBIUS_PROMPT_SEED=42
-NEBIUS_REQUEST_TIMEOUT_SECONDS=180
-```
+The [deployment block](#deploy-local-vllm-on-l40s) owns local-vLLM settings.
+Additional defaults are `NEBIUS_PROMPT_SEED=42` and
+`NEBIUS_REQUEST_TIMEOUT_SECONDS=180`.
 
 In `local_vllm` mode, `/endpoint/start.sh` starts FastAPI/Uvicorn on
 `0.0.0.0:9000`, starts the local vLLM OpenAI-compatible server, then waits until
@@ -59,8 +45,9 @@ and FastAPI start line.
 
 ## Deploy Local vLLM On L40S
 
-Build and push the endpoint image, then create a Nebius Serverless Endpoint that
-runs vLLM and FastAPI inside the container:
+After reviewing resources, startup/runtime bounds and applicable execution
+authorization, build/publish the selected image and create its Endpoint. This
+procedure runs vLLM and FastAPI inside one container:
 
 ```bash
 docker build --platform linux/amd64 \
@@ -101,64 +88,30 @@ python scripts/call_endpoint.py \
 
 ## Cloud Validation
 
-Apple Silicon Docker cannot realistically validate the L40S GPU path. Validate
-`local_vllm` in Nebius with a pushed `linux/amd64` image:
+The deployment block above is the single source for its build, mode, model and
+resource settings. For an authorized `local_vllm` deployment, use a pushed
+`linux/amd64` image; Apple Silicon Docker cannot validate the L40S GPU path.
 
-```bash
-export NEBIUS_ENDPOINT_IMAGE=ghcr.io/<your-org>/lob-arena-endpoint:<tag>
-docker buildx build --platform linux/amd64 \
-  -f serverless/endpoint/Dockerfile \
-  -t "${NEBIUS_ENDPOINT_IMAGE}" \
-  --push \
-  serverless/endpoint
-
-export NEBIUS_PARENT_ID=<project-id>
-export NEBIUS_SUBNET_ID=<vpc-subnet-id>
-export ENDPOINT_TOKEN=<endpoint-bearer-token>
-export NEBIUS_ENDPOINT_MODE=local_vllm
-export NEBIUS_ENDPOINT_PLATFORM=gpu-l40s-d
-export NEBIUS_ENDPOINT_PRESET=1gpu-16vcpu-96gb
-export LOCAL_VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct
-export LOCAL_VLLM_HOST=127.0.0.1
-export LOCAL_VLLM_PORT=8001
-export LOCAL_VLLM_BASE_URL=http://127.0.0.1:8001/v1
-export LOCAL_VLLM_DTYPE=auto
-export LOCAL_VLLM_GPU_MEMORY_UTILIZATION=0.90
-export LOCAL_VLLM_MAX_MODEL_LEN=16384
-export LOCAL_VLLM_ENABLE_PREFIX_CACHING=true
-export LOCAL_VLLM_MAX_NUM_SEQS=16
-export LOCAL_VLLM_TRUST_REMOTE_CODE=true
-
-./scripts/create-nebius-ai-endpoint.sh
-```
-
-After Nebius reports the endpoint URL and ID:
+After provider readback identifies the Endpoint and URL:
 
 ```bash
 export NEBIUS_ENDPOINT_BASE_URL=https://<endpoint-host>
 export NEBIUS_ENDPOINT_ID=<endpoint-id>
 export ENDPOINT_TOKEN=<endpoint-bearer-token>
 
-curl -fsS -H "Authorization: Bearer ${ENDPOINT_TOKEN}" \
-  "${NEBIUS_ENDPOINT_BASE_URL%/}/health"
-
 ./scripts/validate-local-vllm-endpoint.sh validate
 ./scripts/validate-local-vllm-endpoint.sh logs
 ```
 
-Expected success:
-
-```text
-endpoint_mode=local_vllm
-model_mode=local_vllm
-local_vllm_model=Qwen/Qwen2.5-14B-Instruct
-latency_ms > 0 for /orderbook-alert and /investigation-report
-```
+Successful evidence identifies `endpoint_mode=local_vllm`,
+`model_mode=local_vllm`, `local_vllm_model=Qwen/Qwen2.5-14B-Instruct`
+and measured latency for alert/report routes. A healthy mock response does not
+establish GPU execution.
 
 ## Local Run
 
 ```bash
-uvicorn app:app --host 0.0.0.0 --port 9000
+NEBIUS_ENDPOINT_MODE=mock uvicorn app:app --host 0.0.0.0 --port 9000
 ```
 
 Health:
@@ -207,7 +160,7 @@ Generate canonical market-abuse scenario:
 curl -X POST http://localhost:9000/generate-market-abuse-scenario \
   -H 'Content-Type: application/json' \
   -d '{
-    "manipulation_type":"spoofing",
+    "manipulation_type":"spoofing_like_wall",
     "difficulty":"medium",
     "symbol":"AIMD",
     "duration_ticks":120,
@@ -247,11 +200,17 @@ ENDPOINT_TOKEN=<optional endpoint token>
 
 ## Docker
 
+The image defaults to `local_vllm`; set mock mode explicitly for a connectivity
+check that does not start model inference:
+
 ```bash
-docker build --platform linux/amd64 -f serverless/endpoint/Dockerfile -t nebius-market-abuse-endpoint serverless/endpoint
-docker run --rm -p 9000:9000 nebius-market-abuse-endpoint
+docker run --rm -p 9000:9000 -e NEBIUS_ENDPOINT_MODE=mock nebius-market-abuse-endpoint
 ```
 
-The endpoint image is intended for Nebius `linux/amd64` GPU runtimes such as
-L40S. Local Apple Silicon Docker inference testing is not required; Docker
+Use the [deployment build](#deploy-local-vllm-on-l40s) with the selected image
+name. The image targets Nebius `linux/amd64` GPU runtimes such as L40S; Docker
 Desktop does not expose Apple GPU/MPS to Linux containers.
+
+The [historical revision](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/serverless/endpoint/README.md)
+retains the former repeated build/environment examples. They grant no new
+deployment or inference authorization.

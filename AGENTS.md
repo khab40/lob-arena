@@ -47,7 +47,8 @@
 - Run future agent-initiated model workloads on Nebius Serverless Jobs, including
   synthetic rehearsals, fixture generation that trains models, and pre-production
   tests that exercise training, scoring, or the frozen evaluation runtime.
-  The operator requested this on 2026-09-15; see `docs/g8-source-sdk.md`.
+  The operator requested this on 2026-09-15; see
+  `docs/operations/g8/g8-source-sdk.md`.
 - Use the local machine for orchestration, code edits, static checks, and artifact
   inspection. Prepare explicit resource, timeout, Job-count, and spend bounds
   before cloud runs, and retain runtime identities and execution evidence.

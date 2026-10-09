@@ -27,20 +27,17 @@ Market surveillance concepts are difficult to evaluate because order-book data i
 
 ## Product Direction
 
-The active sequence is governed LightGBM qualification, a standalone sequence
-Transformer, a Transformer-to-LightGBM cascade, integrated comparison evidence,
-then a secure CEO workflow. LightGBM training/calibration and both C4 projections
-exist; production G8 evaluation is open and G9 exit blocked. Transformer training,
-cascade and near-real-time learned-model integration remain planned.
-
-Live rules already produce confidence timelines and incidents. Learned models
-will first be compared on historical/synthetic/hybrid replay, then considered
-for controlled shadow serving with causal features and a verified fallback.
+Frozen LightGBM is the qualified research baseline; bounded standalone Transformer
+training, comparison and authorized December evaluation are independently verified.
+The operator continues research. The immediate #90/#91 delivery is planned private
+playback of verified saved scores, followed by a dedicated inference adapter and
+causal event integration. Live rules already produce confidence timelines and
+incidents. Production qualification, MLflow/resource acceptance, secure shared
+serving and a conditional cascade remain open or separately gated.
 Customer feed/detector adapter productization remains parked.
 
 ## Next Step
 
-Complete the gated LightGBM evaluation and signed exit before advancing the
-learned-detector sequence. See [current roadmap evidence](../roadmap/CURRENT_STATUS.md)
+Prepare the saved-score mock within the recorded integration sequence. See [current roadmap evidence](../roadmap/CURRENT_STATUS.md)
 and the [serving use cases](../use-cases/ml-model-serving.md). No production
 market-abuse detection or compliance acceptance is claimed.

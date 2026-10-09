@@ -1,5 +1,10 @@
 # Independent LightGBM retention audit
 
+Historical plan/execution record; reconciled 8 October 2026. The 22 September discrepancy was later resolved by the lineage verification; G8/G9 research acceptance is complete.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 ## User story and readiness
 
 As a validation engineer,
@@ -182,7 +187,7 @@ datasets, model bytes and historical MLflow records remain unchanged.
 The [second continuation](../evidence/lightgbm-tracking-readiness-20260922.json)
 reached SSH and HTTP health, matched the expected top-level run metadata and
 dataset-name set, but reported discrepancies for 90 dataset inputs. No artifact
-downloads followed. The cause remains unresolved; subsequent diagnostics identify
+downloads followed. This snapshot predates the [resolved source-URI diagnosis](lightgbm-lineage-verification.md#diagnosis-and-correction); subsequent diagnostics identify
 failed field names without exposing remote values and hash failed run responses.
 Those diagnostics have inert test coverage, not another live readback. Automatic
 shutdown was verified in 218.552 seconds, including one stop-command timeout.

@@ -1,6 +1,6 @@
 # Functional Overview
 
-Reviewed 2026-09-21 against the [roadmap snapshot](../roadmap/CURRENT_STATUS.md).
+Reconciled 2026-10-08 with [current evidence](../roadmap/CURRENT_STATUS.md).
 The end-to-end diagram below is the target workflow, not a claim that all stages ship.
 
 This document defines the user-visible capabilities, workflow boundaries, and
@@ -19,8 +19,9 @@ The commercial north star is BYO data plus BYO detector adapter: govern customer
 data, train LOB Arena reference detectors offline, certify a customer detector
 on replay, and later compare it in real-time shadow mode. That productization is
 parked for the active milestone: one verified Nasdaq/LOBSTER E2E demonstration
-covering LightGBM, standalone Transformer and hybrid, followed by a simplified
-CEO-facing UI.
+covering verified learned-detector evidence and a simplified CEO-facing UI.
+The immediate #90/#91 mock is private saved-score playback; fresh inference,
+LOBSTER robustness and a conditional cascade are later separately gated work.
 
 ## Actors
 
@@ -52,10 +53,10 @@ CEO-facing UI.
 | LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |
 | Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
 | LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
-| Market-sequence Transformer challenger | Planned Wave 2 | Causal sequence-aware attack state/phase model after the Nebius LightGBM baseline is frozen |
+| Market-sequence Transformer challenger | Bounded research independently verified; full Story #24 acceptance open | Causal 64-row classifier with frozen settings; dedicated serving, MLflow and resource/cost acceptance remain |
 | Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
 | Pluggable detector adapter and test harness | Parked commercial Tier-1; partial evaluation foundation | Customer detector as system under test; one causal contract and comparable evidence against LightGBM, Transformer, hybrid and future references |
-| Nasdaq/LOBSTER three-model E2E demonstration | Active milestone | One campaign identity from governed data through LightGBM, Transformer, hybrid, LOBSTER robustness and verified CEO-demo evidence |
+| Nasdaq/LOBSTER three-model E2E demonstration | Conditional baseline milestone; first mock planned | Private saved-score playback next; fresh inference, LOBSTER robustness and cascade remain separately gated |
 | Google Auth and secure workspace gate | Archived implementation available; planned Story #91 | Selectively restore Google sign-in/app sessions and add backend authorization before sensitive shared data is exposed |
 | Nasdaq/LOBSTER ingestion and replay UI | Planned Story #91 after backend contracts stabilize | Guided source/session/window selection, provenance/progress and historical-control versus synthetic-overlay replay |
 | Experiment results and report UI | Planned Story #91 after E2E backend | One verified campaign view for rules, LightGBM, Transformer and hybrid with MLflow identities, quality, calibration, latency and cost |
@@ -181,16 +182,12 @@ when it:
 - compares rules and LightGBM on identical governed observations; and
 - reports liquidity evaporation and subtle layering challenge performance.
 
-The implementation now satisfies this software boundary. Official Nasdaq ITCH
-samples plus the repository LOBSTER sample may support a research-only
-qualification and unlock Wave 2 engineering after the selective acquisition,
-public-sample quality, reproducibility, isolation, cost and operational gates
-pass. C0–C4 and G0–G7 are complete; both public-sample projections exist. G8
-production evaluation is open and G9 exit is blocked. Native synthetic recovery
-passed but does not establish model quality or unlock Wave 2 by itself. Production/client
-performance acceptance still requires appropriately licensed data,
-independent clean-window reviews and a signed chronological test release
-suitable for that claim.
+The implementation satisfies the software boundary. G8/G9 are closed with the
+signed `research_baseline_qualified` disposition. The four-date public sample
+supports limited research conclusions; it does not establish production/client
+performance. That acceptance still requires appropriately licensed data,
+independent clean-window reviews and a suitable signed chronological test release.
+See [current status](../roadmap/CURRENT_STATUS.md) for evidence and remaining gates.
 
 ## Track B: Corpus Operations Acceptance
 
