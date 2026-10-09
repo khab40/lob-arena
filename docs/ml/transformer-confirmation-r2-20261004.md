@@ -1,5 +1,10 @@
 # Replacement confirmations — 4 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. Both replacement confirmations completed and three-seed stability passed.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Project #3](https://github.com/users/khab40/projects/3).
 PR #307 merged as `6a61a6f`; its 25 checks passed. This package prepares the

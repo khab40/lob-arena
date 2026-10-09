@@ -1,5 +1,10 @@
 # Exact frozen Transformer holdout — 6 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. The initial observer attempt created no Job; the separately approved same-input recovery completed.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 > Historical execution package: approved, then aborted before Job creation.
 > Both original policies were independently restored on 7 October at
 > final12/results13; late removal is disclosed. Do not execute the instructions

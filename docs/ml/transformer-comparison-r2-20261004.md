@@ -1,5 +1,10 @@
 # Corrected comparison replacement — 4 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. The corrected comparison completed under separate exact approval and passed independent readback.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [Bug #312](https://github.com/khab40/lob-arena/issues/312),
 [Project #3](https://github.com/users/khab40/projects/3).

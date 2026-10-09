@@ -1,7 +1,12 @@
 # Sealed Transformer holdout execution packaging
 
+Historical plan/execution record; reconciled 8 October 2026. The original package was later admitted and executed; future readback instructions below remain current.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 Date: 2026-10-05; source-provenance correction verified 2026-10-06.
-Status: image/startup packaging implemented; exact inventory,
+Original 5 October status: image/startup packaging implemented; exact inventory,
 provider dry-run and execution authorization pending.
 [Story #24](https://github.com/khab40/lob-arena/issues/24),
 [settings Story #314](https://github.com/khab40/lob-arena/issues/314),

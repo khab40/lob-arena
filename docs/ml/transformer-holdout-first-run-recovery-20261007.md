@@ -1,5 +1,10 @@
 # First frozen Transformer holdout recovery — 7 October 2026
 
+Historical plan/execution record; reconciled 8 October 2026. This recovery was later exactly approved and completed; its approval is consumed.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining acceptance.
+[ARD-0042](../architecture/ARD-0042-transformer-lightgbm-research-sequence.md) owns research ordering;
+pending instructions below do not authorize another run or reuse consumed approval.
+
 Tracking: [Bug #339](https://github.com/khab40/lob-arena/issues/339) under
 [Transformer #24](https://github.com/khab40/lob-arena/issues/24),
 [settings #314](https://github.com/khab40/lob-arena/issues/314),
@@ -56,8 +61,9 @@ provider spec, nonce, signing public identity and policy bytes are preserved.
 Only the two local injection paths and two reviewed operator source hashes changed.
 
 Image remains `cr.eu-north1.nebius.cloud/e00jaawvmwdhya5z2w/tr@sha256:f381263db4095fdb1fec24da505339195033f66e9c26cb98c3d13584a6ae402e`.
-Repository length is 47; numerical source is
-`fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508`. No rebuild or mutable tag.
+Repository length is 47; execution source is
+`fe5eaaa931791d3c3e809a1d0c2ff8a6811dc508`; numerical/training source remains
+`87ce8a933c40fe825569e3de6a8699b519808c34`. No rebuild or mutable tag.
 Operator source is `8cde2d17e8651f77f870bbe2193d5bb7222d0444`; all 236 source pins match.
 The fresh [provider dry-run](../evidence/transformer-holdout-recovery-dry-run-20261007.json)
 succeeded without creation. The copied `provider-dry-run.json` is historical

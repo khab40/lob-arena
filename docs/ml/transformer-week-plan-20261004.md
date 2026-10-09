@@ -1,7 +1,7 @@
 # Transformer research week: 4–10 October 2026
 
-Reconciled 8 October, Asia/Tbilisi, against verified grid/confirmation/comparison/holdout results and live
-GitHub tracking. [Story #24](https://github.com/khab40/lob-arena/issues/24) →
+Reconciled 8 October, Asia/Tbilisi. Tracking:
+[Story #24](https://github.com/khab40/lob-arena/issues/24) →
 [Feature #16](https://github.com/khab40/lob-arena/issues/16) →
 [Epic #15](https://github.com/khab40/lob-arena/issues/15),
 [Project #3](https://github.com/users/khab40/projects/3).

@@ -61,15 +61,11 @@ backend/.venv/bin/python scripts/lightgbm_v1.py calibrate --help
 
 ## Outputs
 
-Training produces `model.txt` and `training-run.json`. Calibration produces
-raw validation predictions, the calibration manifest, metrics, global feature
-importance, reliability evidence and the ordered feature schema. Frozen-test
-scoring produces predictions, alert-level contributions and a prediction
-manifest. Bundle assembly writes `model-bundle.json` and `checksums.sha256`,
-then runs the Phase 0 byte verifier immediately.
-
-The complete verified release can be supplied to the existing governed
-benchmark by adding these fields to `governed_evaluation_plan_v1`:
+Training writes `model.txt`/`training-run.json`. Calibration writes raw validation
+predictions, calibration manifest/metrics, feature importance, reliability and
+ordered schema. Frozen scoring writes predictions, alert contributions and
+prediction manifest. Assembly writes `model-bundle.json`/`checksums.sha256`, then
+runs the Phase 0 byte verifier. A complete release supplies all five fields:
 
 ```json
 {
@@ -81,51 +77,57 @@ benchmark by adding these fields to `governed_evaluation_plan_v1`:
 }
 ```
 
-All five fields are required together. The evaluator reruns complete release
-verification before replacing canonical rule alerts with the frozen LightGBM
-alerts for the candidate side. Deterministic-rule session metrics remain the
-paired baseline. Detection-before-benefit, false alerts per million events,
-regime matrices, uncertainty and challenge-family results continue to come
-from the governed canonical benchmark. The runtime adapter is locked to the
-operating mode evaluated by that release.
+`governed_evaluation_plan_v1` rejects partial fields and verifies the complete
+release before using frozen LightGBM candidate alerts. Canonical deterministic
+rules remain the paired session baseline. Detection-before-benefit, false alerts
+per million events, regime/uncertainty/family reports retain the canonical
+benchmark contract. The runtime adapter pins the evaluated operating mode.
 
 ## MLflow
 
-Pass `--mlflow-tracking-uri` to calibration to record the development run.
-Bundle logging is permitted only after local verification. MLflow stores
-permitted manifests, metrics, diagrams, feature importance and the model; it
-does not receive raw LOBSTER records or become the approval authority.
+Calibration accepts `--mlflow-tracking-uri`; bundle logging follows byte
+verification. MLflow indexes permitted manifests, metrics, diagrams, importance,
+model and metadata-only Dataset lineage. It receives no raw licensed records
+and is not the approval authority. The VM may remain running under the recorded
+operator-managed policy; historical start/stop instructions are superseded.
 
 ## Current evidence boundary
 
-Fixture and synthetic runs prove determinism, compatibility and orchestration.
-They do not establish client performance. Official public Nasdaq ITCH samples
-plus the repository LOBSTER sample may support the research-only
-`research_baseline_qualified` disposition and unlock Wave 2 engineering. A
-production/client performance release still requires appropriately licensed
-data, two-reviewer clean labels, a frozen test split and signed governed
-evaluation suitable for that claim.
+Fixtures establish determinism/compatibility/orchestration, not client quality.
+The completed public Nasdaq/LOBSTER research package supports the signed
+research-baseline disposition and Wave 2 engineering. Production/client claims
+still need appropriate licensed data, independently reviewed clean labels, a
+frozen test protocol and signed evaluation suitable for that claim.
 
 ## Wave 1 local gate
 
-The Nebius Wave 1 shell reuses this implementation without submitting a cloud
-job. Run the local gates from the repository root:
+This heading preserves links to the original implementation workflow. Its local
+training/e2e examples are historical interfaces, superseded for agent execution
+by the policy above. The [immutable Wave 1 narrative](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/ml/lightgbm-v1-runbook.md#wave-1-local-gate)
+retains commands, failed attempts, seven consumed slots, old budget/VM rules and
+alias exceptions. Those receipts cannot authorize new submissions or collections.
 
-```bash
-make lightgbm-v1-test
-make lightgbm-wave1-test
-make lightgbm-wave1-local-e2e
-make lightgbm-wave1-container-smoke
-make check-submit
-```
+The retained transport contract uses no filesystem/S3 volumes: separate
+MysteryBox selectors supply credentials, the Job downloads the exact development
+prefix to `/job/wave1`, then conditionally publishes verified results with SUCCESS
+last. MLflow selectors must be `governed-writer`, never bootstrap administrator
+or read-only `prometheus`. Reject inline credentials, mounts, broad probes,
+unbounded prefixes and mismatched request/runtime identity.
 
-`lightgbm-wave1-local-e2e` creates a clean temporary package, trains and
-calibrates on the approved research fixture, freezes the candidate, creates an
-ephemeral Ed25519 fixture authorization, opens the fixture test fold once,
-builds and verifies the bundle, collects checksums, and writes the exit record.
-It does not create a Nebius resource or use cloud credentials.
+For any newly approved package:
 
-For manual inspection in a retained directory:
+1. Bind exact source/input/output identities, finite resources/timeouts/Job count,
+   dependencies and authorization in staging/request evidence.
+2. Verify image repository length ≤64 characters **before** build/upload/submission;
+   retain the full `@sha256:` digest. Mutable tags, distinct deployment images and
+   the historical short/digest-derived alias exception are rejected for new Jobs.
+3. Generate the exact dry-run; independent review and operator approval bind its
+   SHA-256. Never reuse consumed approval or infer budget from historical slots.
+4. Submit once and read back provider Job/project/image/resources/timeout. Missing
+   or mismatched identity fails admission; reconcile ambiguous creation before retry.
+5. Monitor within the package's bounds; independently verify version/size/hash,
+   publication bytes and SUCCESS before accepting completion. Final evaluation
+   additionally needs a trusted signing-key fingerprint outside the package.
 
 ```bash
 cd backend
