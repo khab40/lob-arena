@@ -1,62 +1,52 @@
 # ARD-0036: Governed Market-Sequence Transformer Challenger
 
-Status: Accepted research design; development GPU results verified, holdout execution pending.
+Status: Accepted research design; development and authorized holdout independently verified; live integration pending.
 
-Date: 2026-08-16; updated 2026-10-05.
+Date: 2026-08-16; updated 2026-10-08.
 
-Ticket: [Story #24](https://github.com/khab40/lob-arena/issues/24),
+Tracking: [Story #24](https://github.com/khab40/lob-arena/issues/24),
+[Bug #357](https://github.com/khab40/lob-arena/issues/357),
 [Project #3](https://github.com/users/khab40/projects/3).
-The approved research fork changes execution ordering, not the frozen data or
-final-test boundary. [ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md)
-owns comparison, experiment sequencing and the subsequent research decision.
+[ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md) owns comparison,
+experiment ordering and research disposition; this record owns model design.
 
 ## Signed LightGBM exit — 2026-09-27
 
-G9 is complete as `research_baseline_qualified`; the operator accepted the
-verified governed package and unknown-cost disposition and delegated signing.
-See the [signed decision and verification](../operations/g8/g9-closure-20260927.md).
-Wave 2 engineering is eligible; the first #24 input-contract chunk and governed
-input verification are complete. Production/client qualification is not
-established. Older pending-G9 statements below are historical.
+G9 is complete as `research_baseline_qualified`: the operator accepted the
+verified package and unknown-cost disposition and delegated signing.
+See [G9 closure](../operations/g8/g9-closure-20260927.md).
+Production/client qualification is not established.
 
 ## Validation execution policy — 2026-09-16
 
-The operator removed administrative submission/retention windows, billing checks
-and fixed validation spend/VM limits until LightGBM and Transformers validation
-have recorded outcomes. Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
-in preference to older operational bounds in this record. No billing queries or
-balance-refresh requests. Finite Job timeouts, execution identities, evidence
-integrity and separate final-test authorization remain. This is an execution-policy
-change, not model-quality acceptance or a completed G8/G9 milestone.
+Apply the [validation execution policy](../ml/model-validation-execution-policy.md)
+in preference to historical billing, retention-window and fixed spend/VM limits.
+Finite resource/Job/time bounds, execution identities, integrity and separate
+final-access/replacement approvals remain. No billing or balance queries.
 
 ## Implementation Status
 
-Status: `[in progress; GitHub Story #24; research-baseline G9 exit accepted]`
+The causal classifier, GPU trainer, checkpoint/resume, versioned publisher,
+calibration and independent reader are implemented. Replacement smoke, all four
+trials, three-seed stability, C/O comparison and the authorized December holdout
+are independently verified. The operator chose `continue_research`.
+[Current status](../roadmap/CURRENT_STATUS.md) owns remaining story acceptance;
+[the disposition](../ml/transformer-research-disposition-20261008.md) records scope.
 
-The causal classifier, GPU trainer, checkpoint/resume support, calibration,
-versioned publisher and independent result reader are implemented in
-[PR #284](https://github.com/khab40/lob-arena/pull/284). This is implementation
-progress with independently verified replacement smoke, four trials, three-seed
-stability and C/O comparison. PR #318 merged and the operator chose continue_research.
-The original failed attempts remain preserved. Development results do not establish
-holdout or production quality; see [current status](../roadmap/CURRENT_STATUS.md).
+The [settings release](../ml/transformer-settings-release.md) retains the original
+seed-42/epoch-4 candidate and complete preprocessing/calibration configuration.
+#314's scoped persistence/reference acceptance is met. It includes CUDA logit
+parity on 64 saved development windows and separately derived probability/decision
+arithmetic; it is not a new capture of original-Job reference probabilities.
+[ARD-0042](ARD-0042-transformer-lightgbm-research-sequence.md#verified-continuation--8-october-2026)
+keeps reference parity, held-out probability portability and reduction tolerances distinct.
 
-The [research settings release](../ml/transformer-settings-release.md) binds the
-original checkpoint and complete preprocessing/calibration configuration. Its
-metadata gates pass; authorized inference-consumer parity remains pending. The
-[December protocol](../ml/transformer-holdout-protocol-20261005.md) extends research
-with a separate holdout consumer and fresh exact final-access/run/spend gate.
-Existing development consumers must continue rejecting final data. No model,
-normalizer, calibration or threshold choice may use December outcomes.
-
-The [input consumer contract](../ml/transformer-input-contract.md) now verifies
-the complete causal source window, masks, exact target alignment and train-only
-normalization. [Merged #239's r2 evidence](../ml/transformer-development-results-r2.md)
-verifies all 42,660 development targets on Nebius with independent artifact readback.
-The [research fork](../ml/transformer-research-fork.md) amends the earlier
-[GPU campaign plan](../ml/transformer-gpu-campaign-plan.md): role checks run inside
-the GPU Job before fitting, and online MLflow readiness is deferred. Serving,
-registry promotion and a Transformer-to-LightGBM cascade remain unimplemented.
+The [input consumer](../ml/transformer-input-contract.md) verifies windows,
+masks, target alignment and train-only normalization. The first mock replays
+verified saved scores; dedicated inference, causal event integration, online
+MLflow, cost reconciliation, production serving and a cascade remain pending.
+Development consumers still reject final data. Consumed holdout approval grants
+no new access, training, calibration, threshold search or replacement execution.
 
 ## Implemented research architecture
 
@@ -64,11 +54,11 @@ As a detector developer,
 I want a causal sequence classifier over the governed feature release,
 So that I can test temporal information without changing labels or target rows.
 
-Actor: detector developer. Goal: standalone development challenger.
+Actor: detector developer. Goal: standalone research challenger.
 Value: measure temporal modeling beyond tabular features.
-Out of scope: raw-event tokenization, live serving, cascade and final evaluation.
-Verification: inert contract checks locally; model behavior in Nebius GPU Jobs;
-independent artifact and metric readback before accepting a result.
+Out of scope: raw-event tokenization, live serving and cascade.
+Verification: inert local contract checks; numerical behavior in authorized
+Nebius Jobs; independent artifact and metric readback before accepting results.
 
 ```mermaid
 flowchart LR
@@ -84,32 +74,31 @@ flowchart LR
     Verify -. "later reconciliation" .-> MLflow["MLflow research lineage"]
 ```
 
-Each window contains up to 64 retained supervised feature rows, not 64 raw ITCH
-events or a fixed duration. Left padding and no cross-shard history preserve the
-existing projection. The normalizer is fitted on training only. Sixty normalized
-values plus 60 missingness indicators form a 120-channel token; padding remains
-distinct from a missing feature. Targets bind exact governed row identities.
+Each window has up to 64 retained supervised feature rows, not raw ITCH events
+or a fixed duration. Left padding and no cross-shard history preserve the
+projection. Sixty train-normalized values plus 60 missingness indicators form a
+120-channel token; padding is distinct from missing features. Targets bind exact
+row identities. The existing materializer expands a complete shard in memory.
 
 The [classifier](../../backend/app/ml/transformer/research_model.py) projects to
-width 64 or 128, adds fixed sinusoidal positions, then uses two pre-normalized
-blocks with four attention heads, a 4x-width GELU feed-forward layer and 0.1
-dropout. Valid queries cannot attend to future or padded keys. Padded outputs
-are zeroed. Final layer normalization and the last valid token feed one binary
-logit for `attack_active`. This is separate from the generative AI Investigator.
+width 64/128, adds fixed sinusoidal positions, then uses two pre-normalized blocks:
+four heads, 4x-width GELU feed-forward layer, dropout 0.1. Valid queries cannot
+attend to future/padded keys; padded outputs are zeroed. Final layer normalization
+and the last valid token produce one `attack_active` logit. The generative AI
+Investigator is a separate model.
 
 The [trainer](../../backend/app/ml/transformer/research_training.py) uses float32
-AdamW, weighted binary cross entropy, batch size 64, gradient clipping at 1.0,
-5% warmup and cosine decay. Weights balance classes and base sessions within
-each class; seeded epoch shuffling does not sample by label. CUDA deterministic
-algorithms are required and TF32 is disabled. This is a reproducibility setting,
-not a claim of verified reproducibility across arbitrary hardware or versions.
+AdamW, weighted BCE, batch 64, gradient clipping 1.0, 5% warmup and cosine decay.
+Weights balance classes and base sessions within class; seeded shuffling does
+not sample by label. CUDA deterministic algorithms and disabled TF32 do not
+promise reproducibility across arbitrary hardware or dependency versions.
 
-Epoch checkpoints bind model, optimizer, RNG/progress, configuration, source,
-image, input/normalizer hashes and ordered target hashes. Publication must return
-a verified object version and checksum before acknowledging an epoch. Resume
-support does not authorize an automatic replacement Job. GPU smoke checks cover
-causality, padding, missingness, gradients, batch behavior and resume parity;
-they remain required execution evidence, not satisfied by source inspection.
+Epoch checkpoints bind model, optimizer, RNG/progress, configuration, numerical
+source, execution image, input/normalizer and ordered-target hashes. Publication
+must verify object version/checksum before acknowledging an epoch. Resume never
+authorizes automatic replacement. CUDA smoke evidence covers causality, padding,
+missingness, gradients, batch behavior and resume parity; source inspection alone
+cannot satisfy those behavior gates.
 
 ```gherkin
 Feature: Governed causal Transformer inputs
@@ -119,8 +108,7 @@ Feature: Governed causal Transformer inputs
     Then the research Job rejects the input before fitting
 
   Scenario: Preserve causal predictions
-    Given a valid governed sequence window
-    And the classifier is in evaluation mode
+    Given a valid governed sequence window in evaluation mode
     When only positions after an observed token are changed
     Then that token's encoded representation is unchanged
 

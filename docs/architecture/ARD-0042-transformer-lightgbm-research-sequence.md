@@ -1,6 +1,6 @@
 # ARD-0042: Transformer and LightGBM Research Sequence
 
-Status: Accepted research ordering; holdout verified, bounded continuation and first mock next.
+Status: Accepted research ordering; holdout verified; bounded continuation and first saved-score mock next.
 
 Date: 2026-10-03; updated 2026-10-08. Records the operator-approved research forks.
 

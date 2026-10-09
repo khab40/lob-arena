@@ -1,6 +1,6 @@
 # ARD-0040: Completed-Release Publication Recovery
 
-Status: Accepted for the recovery primitive; native synthetic execution verified
+Status: Accepted; recovery primitive and authorized research lifecycle verified
 
 Date: 2026-09-15
 

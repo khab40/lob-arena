@@ -4,15 +4,28 @@ Status: Accepted
 
 Date: 2026-08-16
 
-Status reconciled: 2026-09-23
+Status reconciled: 2026-10-08.
 
-## Signed LightGBM exit — 2026-09-27
+Tracking: [Bug #357](https://github.com/khab40/lob-arena/issues/357),
+[LightGBM Story #23](https://github.com/khab40/lob-arena/issues/23),
+[Project #3](https://github.com/users/khab40/projects/3).
 
-G9 is complete as `research_baseline_qualified`; the operator accepted the
-verified governed package and unknown-cost disposition and delegated signing.
-See the [signed decision and verification](../operations/g8/g9-closure-20260927.md).
-Wave 2 engineering is eligible; #24 remains Todo, not started. Production/client
-qualification is not established. Older pending-G9 statements below are historical.
+## Implementation Status
+
+G0–G9 are complete. The signed 27 September exit is
+`research_baseline_qualified`; production/client qualification is not established.
+The operator accepted the verified package and unknown-cost disposition and
+delegated signing. See [G9 closure](../operations/g8/g9-closure-20260927.md).
+Transformer development and its separately authorized holdout are verified;
+[current status](../roadmap/CURRENT_STATUS.md) owns the remaining work.
+
+The approved G8 replacement completed one frozen evaluation. Independent readback
+verified 176 S3 objects, four MLflow artifacts, 30 dataset identities and 24 metrics.
+Precision 85.58%, recall 65.93% and F1 74.48% cover three symbol sessions on one
+research date, with synthetic positives and assumed research-control negatives.
+The final fold was downloaded by failed R4 before the successful replacement;
+it must not be described as globally unopened. Candidate, features, calibration
+and thresholds remain frozen. No completed authorization may be replayed.
 
 ## Validation execution policy — 2026-09-16
 

@@ -13,8 +13,11 @@ same-run, readback-verified log-only recovery through the shared logger API.
 The signed replacement runner integrates scored retention and same-run recovery.
 The [native synthetic rehearsal](../evidence/g8-native-recovery-20260917.json)
 verified authenticated remote logging and recovery after Job workspace loss;
-production qualification remains pending. A reserved run is not a completed
-evaluation receipt.
+production/client qualification remains pending. The later authorized C4
+research replacement passed independent verification and G9 is signed
+`research_baseline_qualified`; see [G9 closure](../operations/g8/g9-closure-20260927.md).
+A reserved run is not a completed evaluation receipt. Transformer online MLflow
+reconciliation remains open in [current status](../roadmap/CURRENT_STATUS.md).
 
 ## Context
 
