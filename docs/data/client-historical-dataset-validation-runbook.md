@@ -62,41 +62,21 @@ or session problems. Import the selected valid candidate:
 curl -sS -X POST \
   http://localhost:8000/api/data-ingestion/lobster/candidates/<candidate-id>/import \
   -H 'Content-Type: application/json' \
-  -d '{"start_time_ms":35100000,"end_time_ms":35160000}' \
-  | jq
+  -d '{"start_time_ms":35100000,"end_time_ms":35160000}' | jq
 ```
 
-Import runs in the background. Poll until the new dataset appears:
+Import is asynchronous. Poll until registered; record immutable dataset ID and
+row count. Failed imports are not runnable; recheck candidate status/errors.
 
 ```bash
 curl -sS http://localhost:8000/api/data-ingestion/datasets \
-  | jq '.[] | select(
-      .start_time_ms == 35100000 and
-      .end_time_ms == 35160000
-    ) | {
-      dataset_id,
-      symbol,
-      trade_date,
-      depth,
-      row_count,
-      path
-    }'
+  | jq '.[] | select(.start_time_ms == 35100000 and .end_time_ms == 35160000) |
+    {dataset_id,symbol,trade_date,depth,row_count,path}'
 ```
 
-Record the immutable `dataset_id` and `row_count`.
-
-During import, Python validates:
-
-- message/order-book row synchronization;
-- timestamp and trading-session integrity;
-- price-level ordering and uncrossed books;
-- visible price-level changes and volume conservation where observable;
-- tracked order lifecycle operations;
-- normalized Parquet alignment;
-- output hashes, row counts, and source provenance.
-
-Failed imports are not registered as runnable datasets. Inspect the candidate's
-`status` and `errors` again if no dataset appears.
+Python validates paired rows, timestamps/session, ordered uncrossed price levels,
+observable volume/level changes, tracked order lifecycles, normalized Parquet
+alignment, hashes/counts and provenance.
 
 ## 4. Confirm Java can see the normalized dataset
 
@@ -105,42 +85,28 @@ curl -sS http://localhost:8081/api/arena/historical-datasets \
   | jq '.[] | select(.dataset_id == "<dataset-id>")'
 ```
 
-Java independently verifies the actual `events.parquet` and
-`book_snapshots.parquet` files when replay begins. It rejects:
-
-- size or SHA-256 mismatches against the manifest;
-- incomplete, duplicate, or physically out-of-order source sequences;
-- event/book row-count mismatches;
-- timestamp regressions or values outside the selected session; and
-- message/book rows that are not positionally aligned on sequence and timestamp.
-
-This check is intentionally repeated at the replay trust boundary; a manifest
-alone is not accepted as proof.
+At replay, Java independently checks actual `events.parquet`/`book_snapshots.parquet`
+size/hash, complete unique physically ordered source sequences, matching row
+counts, monotone in-session timestamps and positional sequence/time alignment.
+The manifest alone is insufficient at this replay trust boundary.
 
 ## 5. Create or select the production signing key
 
-For a disposable local test key:
+A disposable local key can be created outside repository/evidence directories:
 
 ```bash
 umask 077
-openssl genpkey -algorithm Ed25519 \
-  -out /secure/lob-validation-key.pem
+openssl genpkey -algorithm Ed25519 -out /secure/lob-validation-key.pem
 ```
 
-For client delivery, use the approved organization key. Keep the private key
-outside the repository and outside the evidence output directory.
+Client delivery uses the approved organization key, never this disposable key
+unless explicitly accepted for that delivery. The private key stays outside bundles.
 
 ## 6. Generate signed evidence
 
-Run one evidence bundle per scenario. The CLI automatically executes:
-
-1. a historical-only control;
-2. a hybrid run over the same window;
-3. a deterministic repeat of the control; and
-4. a deterministic repeat of the hybrid run.
-
-Calculate `max_ticks` from the dataset row count and the Java
-`LOB_ARENA_HISTORICAL_ROWS_PER_TICK` setting. The Compose default is `250`:
+For each scenario the CLI runs historical control, hybrid, and one deterministic
+repeat of each. Calculate full-window ticks with Java's configured rows per tick
+(Compose default 250):
 
 ```bash
 ROW_COUNT=<row-count>
@@ -148,15 +114,11 @@ ROWS_PER_TICK=250
 MAX_TICKS=$(( (ROW_COUNT + ROWS_PER_TICK - 1) / ROWS_PER_TICK + 1 ))
 ```
 
-The Java API accepts at most `100000` ticks. If the calculated value exceeds
-that limit, select a smaller source window or deliberately increase
-`LOB_ARENA_HISTORICAL_ROWS_PER_TICK` and restart `java-kernel`.
-
-The replay needs enough ticks to contain the complete attack and at least one
-post-attack observation. Use at least seven replay ticks for quote-stuffing.
-For small datasets, reduce rows per tick rather than allowing the evidence run
-to finish before the scenario lifecycle and post-attack phase are observable.
-Record the chosen rows-per-tick value as part of the delivery configuration.
+Java accepts at most 100,000 ticks. Exceeding that requires a smaller window or
+a deliberately increased rows-per-tick setting and `java-kernel` restart. Cover
+the complete attack plus at least one post-attack observation; quote stuffing
+needs at least seven replay ticks. For small datasets reduce rows per tick so
+the lifecycle remains observable. Record the chosen configuration.
 
 ```bash
 backend/.venv/bin/python scripts/run_historical_replay_comparison.py \
@@ -170,96 +132,58 @@ backend/.venv/bin/python scripts/run_historical_replay_comparison.py \
   --output outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42
 ```
 
-Repeat with separate output directories for:
-
-- `spoofing_like_wall`
-- `layering_like`
-- `quote_stuffing`
-
-Do not reuse an evidence directory for a different dataset, scenario, seed, or
-code revision.
-
-Each directory contains:
-
-- `control.json`
-- `hybrid.json`
-- `comparison.json`
-- `validation-report.json`
-- `manifest.json`
-- `manifest.sig`
-- `signature.json`
-- `validation-public-key.pem`
-- `checksums.sha256`
-
-The private key is never copied into the bundle.
+Repeat `spoofing_like_wall`, `layering_like`, `quote_stuffing` with separate
+output directories. Never reuse a directory across dataset/scenario/seed/code
+revision. Each bundle contains control/hybrid/comparison/validation JSON,
+`manifest.json`, `manifest.sig`, `signature.json`, `validation-public-key.pem`
+and `checksums.sha256`; never a private key. This replay command runs the existing
+canonical comparison. Agent-initiated learned-model training/scoring/runtime
+rehearsals, including synthetic fixtures, require authorized Nebius Jobs under
+[the execution policy](../ml/model-validation-execution-policy.md).
 
 ## 7. Apply the validation gate
 
-The dataset/scenario run passes only when the validation verdict and every
-validation check pass:
+Pass requires the verdict and **every** check to pass:
 
 ```bash
-jq -e '
-  .verdict == "pass" and
-  ([.checks[].status] | all(. == "pass"))
-' outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42/validation-report.json
+jq -e '.verdict == "pass" and ([.checks[].status] | all(. == "pass"))' \
+  outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42/validation-report.json
 ```
 
-The report checks:
+Checks cover source hashes/complete sequences, identical historical snapshots,
+deterministic repeats/traces, collision-safe `SYN:` lifecycle and quantity
+semantics, synthetic-ground-truth localization/no label leakage, intended
+book/event-flow impact, and exact books plus statistical equivalence outside
+the causal neighborhood. Quote stuffing may leave identical end-of-tick books;
+message/add/cancel/execute-flow divergence establishes its intended impact.
+See [validation details](hybrid-dataset-validation.md).
 
-- verified historical source hashes and complete source-sequence coverage;
-- identical control/hybrid historical snapshot streams;
-- deterministic repeated streams and traces;
-- collision-safe `SYN:` order lifecycles;
-- cancellation and execution quantity semantics;
-- attack localization to synthetic ground truth;
-- absence of label leakage;
-- intended book or event-flow impact during injection; and
-- exact book equality plus statistical equivalence outside the attack's causal
-  neighbourhood.
-
-Quote-stuffing may leave the same end-of-tick book as the control. Its intended
-impact is therefore proven through message/add/cancel/execute flow divergence,
-while the outside-window equivalence requirement remains unchanged.
-
-A failure is evidence, not something to sign away. Retain the failed bundle,
-investigate the named check, and create a new run directory after correcting
-the source or configuration.
+Retain failures, investigate the named check, then use a fresh output directory
+for corrected source/configuration; signing does not turn a failure into a pass.
 
 ## 8. Review detector metrics
 
-Validation correctness and detector performance are separate gates. Review TP,
-FN, FP, TN, precision, recall, F1, and alert timing:
+Validation correctness and detector quality are separate gates:
 
 ```bash
-jq '.detector_metrics[] | {
-  detector,
-  true_positive,
-  false_negative,
-  false_positive,
-  true_negative,
-  precision,
-  recall,
-  f1,
-  control_alert_ticks,
-  hybrid_alert_ticks
-}' outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42/comparison.json
+jq '.detector_metrics[] | {detector,true_positive,false_negative,false_positive,
+  true_negative,precision,recall,f1,control_alert_ticks,hybrid_alert_ticks}' \
+  outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42/comparison.json
 ```
 
-Apply the client's agreed detector thresholds. A structurally valid hybrid
-dataset can still demonstrate a detector miss, which must remain visible in
-the commercial report.
+Apply agreed client thresholds; a valid hybrid dataset can expose detector misses.
+Report them. Unreviewed historical controls are not independently proven clean
+labels; qualify quality claims to the supported synthetic/reference population.
 
 ## 9. Verify the signed bundle
 
-Run the repository verifier. It verifies the Ed25519 signature over
-`manifest.json`, the key ID, and every signed artifact's SHA-256 and byte size:
+The verifier checks Ed25519 over `manifest.json`, key ID, and every signed
+artifact's SHA-256/byte size:
 
 ```bash
 backend/.venv/bin/python -c '
 from pathlib import Path
 from scripts.run_historical_replay_comparison import verify_bundle_signature
-
 verify_bundle_signature(
     Path("outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42")
 )
@@ -267,17 +191,11 @@ print("signed bundle verified")
 '
 ```
 
-Optionally verify the transport checksum list:
+Check transport and independently authenticate the public-key fingerprint:
 
 ```bash
 cd outputs/client-validation/<client>/<dataset-id>/spoofing-seed-42
 shasum -a 256 -c checksums.sha256
-```
-
-Confirm the public-key fingerprint through the independent client-approved
-channel:
-
-```bash
 shasum -a 256 validation-public-key.pem
 jq -r '.key_id' signature.json
 ```
