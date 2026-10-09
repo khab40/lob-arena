@@ -1,9 +1,9 @@
 # Frozen detector release and CEO demo flow
 
-Design recorded on 4 October 2026. This document defines the proposed detector
-release, the guided demo and the relationship between training artifacts and
-runtime state. It documents design; it does not implement serving or authorize
-model execution, final-test access or promotion.
+Design recorded 4 October; scope reconciled 8 October 2026.
+[Current status](roadmap/CURRENT_STATUS.md) owns remaining acceptance;
+[research disposition](ml/transformer-research-disposition-20261008.md) owns the
+approved continuation. This is design, not serving completion or run/access approval.
 
 Tracking: [Project #3](https://github.com/users/khab40/projects/3),
 [backend and evidence #90](https://github.com/khab40/lob-arena/issues/90),
