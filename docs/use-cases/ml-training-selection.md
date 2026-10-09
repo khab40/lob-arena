@@ -148,7 +148,7 @@ flowchart TD
     Score --> Exit["G9 quality and operational disposition"]
 ```
 
-### Planned Transformer and cascade training
+### Transformer research and proposed cascade training
 
 After the LightGBM exit disposition, the Transformer campaign must declare its
 tensor contract, masked padding/missingness, causal cutoff, train-only

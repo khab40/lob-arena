@@ -40,7 +40,7 @@ Status: `[in progress]`
 
 Roadmap decision date: 2026-08-16
 
-Status reconciliation date: 2026-10-04. The [current research-week plan](../ml/transformer-week-plan-20261004.md)
+Status reconciliation date: 2026-10-08. The [current research-week plan](../ml/transformer-week-plan-20261004.md)
 puts the Transformer/LightGBM decision before platform maintenance and any cascade.
 
 ### Commercial North Star And Deliberate Parking Decision
@@ -96,7 +96,9 @@ are not additive engineering progress. Under Feature #16, Wave 1 / Story #23
 closed with the signed `research_baseline_qualified` G9 disposition. Wave 2 /
 Story #24 is In Progress: the GPU smoke, four training trials and both seed
 confirmations are independently verified; [seed stability passed](../ml/transformer-confirmation-results-20261004.md).
-Calibration and exact-row comparison remain.
+Calibration, identical-row development comparison and the locked December holdout
+are independently verified. Scoped #314 acceptance is complete; full #24 serving,
+MLflow lineage and resource/cost acceptance remain open.
 Wave 3 / Story #25 is conditional on the research decision; Stories #90/#91
 remain downstream. No cascade or production qualification is established.
 
@@ -120,7 +122,7 @@ Do not interpret its old task counts or Job budget as new execution authority.
 | Wave | Status | Primary Nebius resource | Outcome | Exit gate before next wave |
 | --- | --- | --- | --- | --- |
 | 1. Nebius LightGBM baseline | `[done: research_baseline_qualified]` | CPU Serverless AI Jobs, Standard Object Storage, shared MLflow | Verified frozen bundle and signed G9 research disposition | Research-only limits and accepted unknown costs remain explicit; no G8 rerun or production promotion |
-| 2. Market-sequence Transformer | `[in progress: confirmations verified; stability passed]` | Bounded GPU Serverless AI Jobs with input checks and calibration inside the Jobs | Prepare checkpoint-origin compatibility, then calibrate and compare with frozen LightGBM on identical development rows | Independently verified quality, stability and resource evidence supports continue/stop/inconclusive; separate exact approval required for the remaining one-hour Job |
+| 2. Market-sequence Transformer | `[in progress: bounded research verified]` | Bounded GPU Serverless AI Jobs with input checks and calibration inside the Jobs | Calibration, identical-row comparison and December holdout are verified; private saved-score playback is next | Recorded continue_research supports bounded demo engineering; full #24 serving, MLflow and resource/cost acceptance remain open; new workloads require exact approval |
 | 3. Transformer to LightGBM cascade | `[conditional; not started]` | Ephemeral GPU batch feature extraction followed by CPU Serverless AI Jobs | Materialize causal embeddings/scores and train a new LightGBM candidate only if the research decision justifies it | Separate scope/approval, ablation, serving-cost and failure-mode gates, and champion/rollback decision |
 | 4. Integrated E2E evidence flow | `[todo; GitHub Story #90]` | Existing CPU/GPU Jobs, Object Storage and MLflow | Run one campaign from Nasdaq/LOBSTER source manifests through all three detector paths and one comparison/evidence package | One command or bounded orchestration path verifies every identity, metric, artifact and cost record without manual repair |
 | 5. Secure CEO demo UI | `[todo after Wave 4; GitHub Story #91]` | Existing React/FastAPI/Java surfaces plus selectively restored Google Auth | Deliver Sign in → Data → Replay → Experiments → Management Summary from verified campaign artifacts | A non-technical reviewer can run or replay the demo, explain the outcome and limitations, and cannot access sensitive shared data without backend authorization |
@@ -185,8 +187,12 @@ Wave 1 exit criteria:
 
 #### G8 Recovery And Completion Plan
 
-See the [current roadmap snapshot](CURRENT_STATUS.md) for milestone dependencies
-and the source revision used by this documentation review.
+G0–G9 are closed. The [signed September 27 exit](../operations/g8/g9-closure-20260927.md)
+permits research engineering as `research_baseline_qualified`; it excludes
+production/client qualification and registry promotion. The separately approved
+replacement scored the frozen candidate once; independent readback verified
+176 S3 objects, four MLflow artifacts, 30 dataset identities and 24 metrics.
+Final access and idle compute were closed; unknown billed costs remain disclosed.
 
 Current status: G0–G9 closed; the [September 27 signed exit](../operations/g8/g9-closure-20260927.md)
 permits Wave 2 research engineering. The following September 23 snapshot and

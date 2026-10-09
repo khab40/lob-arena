@@ -1,6 +1,6 @@
 # ML lifecycle: data to selected detector
 
-Reviewed against repository source on 2026-09-21. This guide separates
+Reconciled with retained evidence on 2026-10-08. This guide separates
 implemented capabilities, recorded research results and proposed serving work.
 It does not authorize a training run, final-test access or model promotion.
 
@@ -22,9 +22,9 @@ It does not authorize a training run, final-test access or model promotion.
 | LOBSTER / ITCH ingestion; Java control and hybrid replay | Implemented; replay of recorded history does not make its participants reactive |
 | C4 tabular and sequence projections | Implemented and frozen; shared row identities, separate development and final lanes |
 | Governed LightGBM | Training, calibration, bounded trial selection, frozen candidate, bundle verification and Python scoring adapter implemented |
-| Wave 1 qualification | G0–G7 complete; G8 production evaluation open, G9 disposition blocked |
-| Native evaluation recovery | Two-Job synthetic rehearsal and independent MLflow/S3 readback recorded; not production quality evidence |
-| Transformer classifier | Sequence data foundation exists; model, trainer, GPU campaign and classifier service remain proposed |
+| Wave 1 qualification | G8/G9 closed as `research_baseline_qualified`; production/client qualification remains open |
+| Native evaluation recovery | Implemented; retained rehearsal and signed replacement evidence have distinct scopes |
+| Transformer classifier | Training, confirmation, calibration, paired comparison and authorized December evaluation independently verified; dedicated serving remains planned |
 | Transformer → LightGBM | Proposed; derived-feature release, leakage-safe training, joined model and fallback service are not implemented |
 | MLflow promotion / online ML service | Run logging and registry namespace exist; automatic model-version publication, promotion and Java-to-model serving integration do not |
 

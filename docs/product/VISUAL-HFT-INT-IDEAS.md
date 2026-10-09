@@ -4,47 +4,26 @@
 **Project:** LOB Arena  
 **External project:** [VisualHFT](https://visualhft.com/)  
 **Repository:** [visualHFT/VisualHFT](https://github.com/visualHFT/VisualHFT)  
-**Reviewed:** 2026-10-04
+**Historical research snapshot:** 2026-10-04
+**Compacted:** 2026-10-08
 
 This is a historical concept snapshot. Proposed capabilities and illustrative examples
 are unimplemented; this document does not authorize implementation, model workloads
-or outreach.
+or outreach. External connector/depth observations below belong to that snapshot
+and need live verification before implementation. The [full concept record](https://github.com/khab40/lob-arena/blob/1417a4e4bfb6803bc967b4469b85e4f379759e8e/docs/product/VISUAL-HFT-INT-IDEAS.md)
+retains the original examples, benefit pitches and unsent outreach draft.
 
 ## 1. Strategic Fit
 
-VisualHFT and LOB Arena are complementary rather than directly competitive.
-
-VisualHFT is strong in:
-
-- live multi-venue market-data ingestion;
-- order-book normalization;
-- microstructure studies;
-- replay and event capture;
-- feed/infrastructure monitoring;
-- visualization and analyst workflows;
-- plugin/study extensibility.
-
-LOB Arena’s existing strengths and proposed directions include:
-
-- governed historical + synthetic order-book validation;
-- controlled attack injection;
-- reproducible detector benchmarking;
-- LightGBM and Transformer comparison;
-- proposed detector ensembles;
-- surveillance-oriented evidence and evaluation.
-
-The preferred product boundary is:
-
-> **VisualHFT = observe and investigate the market.**  
-> **LOB Arena = challenge, detect, evaluate, and explain surveillance behavior.**
-
-Do **not** turn LOB Arena into another VisualHFT-style desktop UI. Use VisualHFT ideas and, where appropriate, compatible/open-source components as an observation/data layer while keeping LOB Arena as the surveillance intelligence and validation layer.
-
----
+The proposed boundary is VisualHFT for market observation/analyst visualization,
+and LOB Arena for governed replay, controlled attack injection, detector comparison
+and surveillance evidence. LOB Arena should remain Linux/cloud-friendly and
+independent of the Windows/WPF desktop runtime. Reuse or port connector logic only
+after license review; a native normalized-event gateway is an alternative.
 
 ## 2. Add the Seven Public Crypto Feeds
 
-VisualHFT currently uses public L2 feeds from:
+The historical concept listed public L2 feeds from:
 
 | Venue | Typical/default depth |
 |---|---:|
@@ -58,48 +37,10 @@ VisualHFT currently uses public L2 feeds from:
 
 The useful idea is not only the connectors themselves, but the normalization layer that maps venue-specific symbols and event shapes into a common schema.
 
-Example:
-
-```text
-BTCUSDT
-tBTCUSD
-BTC-USD
-   ↓
-BTC/USD
-```
-
-Target ingestion shape:
-
-```text
-Binance ─┐
-Kraken ──┤
-Coinbase ┤
-Bitfinex ┤
-Gemini ──┼──> normalized event schema ──> LOB Arena
-KuCoin ──┤
-Bitstamp ┘
-```
-
-### Implementation constraints
-
-Do **not** make LOB Arena dependent on the VisualHFT Windows/WPF application.
-
-LOB Arena should remain:
-
-- Linux-friendly;
-- cloud-friendly;
-- Python-friendly;
-- usable from Nebius jobs and batch replay;
-- independent from a desktop GUI runtime.
-
-Preferred approaches:
-
-1. study/port connector logic where license-compatible;
-2. implement equivalent native adapters;
-3. introduce a small Linux-friendly market-data gateway;
-4. use a normalized event API/bus between feeds and LOB Arena.
-
----
+Normalize venue-specific symbols and event shapes into a common schema, for
+example `BTCUSDT`, `tBTCUSD` and `BTC-USD` into `BTC/USD`. Use native adapters,
+a Linux-friendly gateway or a normalized event API/bus usable from Nebius Jobs
+and batch replay; the desktop application must not become a runtime dependency.
 
 ## 3. Cross-Venue Surveillance: Highest-Value Extension
 
