@@ -64,3 +64,46 @@ the complete checksum inventory.
 
 Run `make check-governed-contracts` to detect drift between generated JSON
 contracts and their fail-closed runtime models.
+
+## Artifact inventory
+
+The table retains the originally named artifact paths and their purposes across
+legacy/demo and governed workflows; it is not one current publication allowlist.
+[ARD-0004](../docs/architecture/ARD-0004-benchmark-artifact-format.md) owns the
+legacy benchmark format. [ARD-0026](../docs/architecture/ARD-0026-governed-lightgbm-release-boundary.md),
+[ARD-0031](../docs/architecture/ARD-0031-complete-lightgbm-v1.md) and the versioned
+schemas above own governed release compatibility and exact checksum inventories.
+
+| Artifact | Purpose |
+| --- | --- |
+| `events.jsonl` | Append-only stream of simulation events, agent actions, detector signals, and state changes. |
+| `history/exchange_events.jsonl` | Canonical add/modify/cancel/execute/snapshot archive, segmented by stream ID for replay. |
+| `history/lob_snapshots.jsonl` | Snapshot-only canonical checkpoints for efficient L2 state scans. |
+| `data/processed/lobster/<dataset_id>/` | Immutable normalized LOBSTER events, aligned visible-depth snapshots, and registry manifest. |
+| `historical-replay/<run>/control.json` / `hybrid.json` | Historical-only and hybrid summaries over the same source window, including source/canonical counts and stream hashes. |
+| `historical-replay/<run>/comparison.json` | Detector TP/FN/FP/TN, precision, recall, F1, alert timing, and final-book realism deltas. |
+| `historical-replay/<run>/validation-report.json` / `.sig` | Causal-neighbourhood equivalence, lifecycle, provenance, determinism, and detached Ed25519 attestation. |
+| `historical-replay/<run>/manifest.json` / `checksums.sha256` | Replay comparison inventory and full-bundle integrity checks. |
+| `features/<run>/features.parquet` | Stable typed causal feature rows consumed by the governed LightGBM v1 loader and trainer. |
+| `features/<run>/run-metadata.json` / `feature-quality.json` | Feature/config/input hashes, source/session metadata, split policy, missing/distribution/class-balance summaries, and invalid rows. |
+| LightGBM Phase 0 manifests | Strict training, calibration, model-bundle, and prediction contracts binding governed inputs, frozen operating points, checksums, and release identity. |
+| `experiments/<experiment_id>/experiment.json` | Phase 4.5 experiment manifest with requested scenarios, execution mode, status, artifact paths, optional smart-batch link, and metrics. |
+| `experiments/<experiment_id>/attacks.jsonl` | Deterministic attack plan rows with expected labels, detector family, timing, agent profile, and parameters for each planned run. |
+| `experiments/<experiment_id>/jobs.jsonl` | Experiment-scoped local and Nebius Job records, including queued, running, completed, failed, and explicitly unconfigured states. |
+| `experiments/<experiment_id>/local-batch/` | Local smart-batch outputs for the experiment, including order-book events, trades, labels, alerts, metrics, report, and batch manifest. |
+| `experiments/<experiment_id>/artifact_index.json` | Index mapping original local-batch artifact names to canonical experiment-root artifact names. |
+| `experiments/<experiment_id>/investigations/` | Per-alert AI Investigator reports as JSON and Markdown, generated from persisted top-confidence batch alerts. |
+| `experiments/<experiment_id>/experiment_summary.json` / `leaderboard.json` | Aggregated experiment totals and scenario leaderboard sourced from detector metrics, labels, alerts, and investigations. |
+| `experiments/<experiment_id>/benchmark_report.md` | Human-readable synthetic educational benchmark report shown in Reports after aggregation. |
+| `snapshots.parquet` | Structured order book and market snapshots optimized for offline analysis. |
+| `incidents.json` | Detected incidents with metadata, timestamps, involved agents, scenario labels, and detector evidence. |
+| `reports.md` | Human-readable AI Investigator explanations, incident summaries, and benchmark reports. |
+
+The legacy `history/exchange_events.jsonl` / `history/lob_snapshots.jsonl` names
+belong to the retained Python implementation record. Current Java cursor replay
+uses `history/exchange-events/<stream_id>/segment-*.jsonl`; see the
+[durable stream contract](../docs/runtime/exchange-event-stream.md#durable-streams).
+The current signed hybrid comparison inventory uses `manifest.sig`,
+`validation-public-key.pem` and `signature.json`; see
+[ARD-0023](../docs/architecture/ARD-0023-hybrid-historical-replay.md#evaluation-and-artifacts).
+Actual filenames and allowed members are taken from each run or release manifest.
