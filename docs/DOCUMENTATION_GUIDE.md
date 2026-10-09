@@ -14,7 +14,7 @@ owner; other documents summarize its purpose and link to it.
 | Target dates and dependencies | [Main roadmap](roadmap/ROADMAP-MAIN.md) |
 | Forward feature requirements | [Phase scope](roadmap/PHASES.md) |
 | Exact contract, formula or command | Relevant data, ML, runtime or operations reference |
-| Historical attempts and review outcomes | [Archive](archive/README.md), linked receipts |
+| Historical attempts and review outcomes | [Archive](archive/README.md), [status journal](roadmap/STATUS_HISTORY_20261008.md), linked receipts |
 
 ## Editing rules
 
@@ -37,6 +37,12 @@ owner; other documents summarize its purpose and link to it.
 8. Do not require a diagram, status table, documentation map or generic
    "business value" section in every document. Avoid another full-file review
    ledger for routine edits; put validation evidence in the PR.
+9. Keep current status short. Move dated attempt narratives to the journal or
+   result owner, with an explicit historical banner and preserved incoming
+   anchors. Record net text reduction separately from history relocation.
+10. An ARD's Accepted status describes the decision. Link implementation evidence
+    to its maintained owner instead of copying evolving progress into each ARD.
+    Retired identifiers get disposition entries linking the unchanged original.
 
 ## Validation
 

@@ -30,7 +30,16 @@ platform to Nebius or participate in simulation and detector decisions. See
 [Kernel Observability](../docs/runtime/kernel-observability.md) for the scrape targets,
 dashboard roles, and profile commands.
 
-For a small Nebius VM app host, use:
+## Legacy VM and Kubernetes helpers
+
+The VM and Kubernetes examples below predate the Java cutover. Their manifests
+omit the Java control plane and cannot host the current live Arena. They are
+retained for inspection only; do not use them as current deployment recipes.
+A repair must add Java and validate REST/WebSocket routing, state ownership and
+storage before these modes can be recommended. See the
+[current architecture](../docs/architecture.md).
+
+Historical VM example:
 
 ```bash
 export NEBIUS_VM_HOST=<vm-public-ip-or-dns>
@@ -43,7 +52,7 @@ scripts/deploy-nebius-vm.sh --dry-run
 scripts/deploy-nebius-vm.sh
 ```
 
-This deploys only `frontend`, `backend`, and `agent-runner` to the VM with
+The historical helper deploys only `frontend`, `backend`, and `agent-runner` to the VM with
 Docker Compose. By default it installs Docker on a fresh VM; set
 `NEBIUS_VM_BOOTSTRAP_DOCKER=false` if the VM is already managed. Keep GPU
 inference on Nebius Serverless Endpoint and detector tournaments on Nebius
@@ -52,7 +61,7 @@ Serverless Jobs. For thousands of logical agents, raise
 to Kubernetes CPU node pools when you need multiple runner shards with separate
 service addresses in `ARENA_REMOTE_AGENT_URLS`.
 
-For the later Kubernetes path:
+Historical Kubernetes example:
 
 ```bash
 export KUBE_CONTEXT=<context>
@@ -67,11 +76,10 @@ scripts/deploy-nebius-k8s.sh --dry-run
 scripts/deploy-nebius-k8s.sh
 ```
 
-Start with `K8S_BACKEND_REPLICAS=1`; the backend owns in-memory arena state and
-local output files today. The Kubernetes runner uses a StatefulSet so the
-backend can call every shard by stable pod DNS. Scale `K8S_AGENT_RUNNER_REPLICAS`
-first for thousands of simulated agents. Add durable storage/session routing
-before raising backend replicas.
+The old Kubernetes design used one Python backend replica and a runner
+StatefulSet. Current Java owns live exchange state and transport; these manifests
+do not implement that topology. Replica/state/storage decisions must be revisited
+in an approved deployment repair rather than inferred from this example.
 
 Modes:
 

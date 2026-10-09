@@ -1,4 +1,4 @@
-# Governed Job images — 2026-09-28
+# Immutable Job images and repository preflight
 
 [Bug #84](https://github.com/khab40/lob-arena/issues/84) and
 [Bug #246](https://github.com/khab40/lob-arena/issues/246),

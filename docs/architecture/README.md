@@ -81,6 +81,11 @@ Each record retains its own decision context and supersession status.
 
 - [Nebius Serverless Use Cases](../use-cases/nebius-serverless-use-cases.md) — Historical July payload/acceptance examples
 
+### Retired Implementation Records
+
+- [ARD-0012: Google Authentication](ARD-0012-google-authentication.md) — Archived implementation; shared-data authorization remains a Story #91 gate
+- [ARD-0014: Multiuser Platform Foundation](ARD-0014-multiuser-platform-foundation.md) — Archived identity/workspace design; retained identifier and explicit disposition
+
 ## Writing records
 
 Keep status/date, context, decision, alternatives and consequences. Add detail

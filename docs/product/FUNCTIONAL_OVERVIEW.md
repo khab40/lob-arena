@@ -1,6 +1,6 @@
 # Functional Overview
 
-Reviewed 2026-09-21 against the [roadmap snapshot](../roadmap/CURRENT_STATUS.md).
+Reconciled 2026-10-08 with [current evidence](../roadmap/CURRENT_STATUS.md).
 The end-to-end diagram below is the target workflow, not a claim that all stages ship.
 
 This document defines the user-visible capabilities, workflow boundaries, and
@@ -19,8 +19,9 @@ The commercial north star is BYO data plus BYO detector adapter: govern customer
 data, train LOB Arena reference detectors offline, certify a customer detector
 on replay, and later compare it in real-time shadow mode. That productization is
 parked for the active milestone: one verified Nasdaq/LOBSTER E2E demonstration
-covering LightGBM, standalone Transformer and hybrid, followed by a simplified
-CEO-facing UI.
+covering verified learned-detector evidence and a simplified CEO-facing UI.
+The immediate #90/#91 mock is private saved-score playback; fresh inference,
+LOBSTER robustness and a conditional cascade are later separately gated work.
 
 ## Actors
 
@@ -52,7 +53,7 @@ CEO-facing UI.
 | LightGBM Phase 2 binary trainer | Implemented | Deterministic training-only class/session weighting, native missing values, validation early stopping and reproducible model/training manifests |
 | Shared MLflow | Implemented and deployed | Authenticated tracking/registry with PostgreSQL and S3-compatible artifacts |
 | LightGBM v1 calibration and detector | Implemented | Validation-only Platt/isotonic calibration, frozen modes, contributions, verified adapter and paired frozen-test input |
-| Market-sequence Transformer challenger | Planned Wave 2 | Causal sequence-aware attack state/phase model after the Nebius LightGBM baseline is frozen |
+| Market-sequence Transformer challenger | Bounded research independently verified; full Story #24 acceptance open | Causal 64-row classifier with frozen settings; dedicated serving, MLflow and resource/cost acceptance remain |
 | Transformer to LightGBM cascade | Planned Wave 3 | Versioned Transformer scores/embeddings augment a separate LightGBM family after standalone sequence evaluation |
 | Pluggable detector adapter and test harness | Parked commercial Tier-1; partial evaluation foundation | Customer detector as system under test; one causal contract and comparable evidence against LightGBM, Transformer, hybrid and future references |
 | Nasdaq/LOBSTER three-model E2E demonstration | Active milestone | One campaign identity from governed data through LightGBM, Transformer, hybrid, LOBSTER robustness and verified CEO-demo evidence |
