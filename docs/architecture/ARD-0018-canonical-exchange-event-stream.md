@@ -10,11 +10,12 @@ Completion: The original ten implementation steps completed in commit `32dc799`.
 
 ## Ownership update
 
-This record preserves the original Python implementation history. The current
-canonical stream is produced by the sole Java exchange under
-[ARD-0020](ARD-0020-java-arena-websocket-agent-orchestration.md); Python consumes
-its artifacts for causal features and ML. Do not build a second live exchange
-from the historical implementation steps below.
+[ARD-0020](ARD-0020-java-arena-websocket-agent-orchestration.md) made Java the sole
+live exchange and REST/WebSocket owner. Retained Python schemas/readers consume
+artifacts for offline simulation, causal features and ML; they do not establish
+a second live exchange. The
+[original Python implementation record](https://github.com/khab40/lob-arena/blob/d896efe8ca501c1ef8e6c63442f3433948a6405e/docs/architecture/ARD-0018-canonical-exchange-event-stream.md#step-1-implementation-record)
+retains the ten-step migration history and former persistence paths.
 
 ## Context
 
