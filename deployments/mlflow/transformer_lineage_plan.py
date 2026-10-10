@@ -196,3 +196,133 @@ def _datasets(metadata, inventory, settings):
     return sorted(result, key=canonical)
 
 
+def build_plan(snapshots, pins, events, *, reconciled_at):
+    """Caller supplies external receipts; never read missing artifacts or regenerate originals.
+
+    `pins` maps every SOURCES name to an independently approved Receipt. `events`
+    maps the twelve exact event names to Snapshot values authenticated by the
+    externally pinned original selection inventory. Model checkpoint bytes are
+    deliberately absent from this interface.
+    """
+    require(set(snapshots) == set(pins) == SOURCES
+            and set(events) == {f"event-{i:04}.json" for i in range(12)}
+            and all(type(snapshots[name]) is Snapshot and type(pins[name]) is Receipt for name in SOURCES)
+            and all(type(item) is Snapshot for item in events.values()), "exact original metadata inputs required")
+    raw = {name: snapshots[name].checked(pins[name]) for name in SOURCES}
+    require(sum(map(len, raw.values())) + sum(len(item.data) for item in events.values()) <= MAX_TOTAL,
+            "metadata aggregate bound")
+    metadata = {name: record(data) for name, data in raw.items() if name != "development_inventory"}
+    inventory = [record(line) for line in raw["development_inventory"].splitlines()]
+    settings, selection, index = (metadata[name] for name in ("settings", "selection_verification", "selected_index"))
+    result, config, lineage = metadata["result"], metadata["configuration"], settings["lineage"]
+    require(settings["schema_version"] == "transformer_selected_settings_v1" and settings["scope"] == "research_only"
+            and lineage["selection_run_id"] == config["run_id"] == RUN
+            and lineage["selection_job_id"] == result["job_id"] == index["job_id"] == JOB
+            and lineage["selected_epoch"] == index["selected_epoch"] == result["selected_epoch"] == 4
+            and index["status"] == "verified" and index["stopped_epoch"] == result["progress"]["epoch"] == 9
+            and result["final_test_access"] is False and config["final_test"] is False,
+            "original selected execution identity differs")
+    trial = {key: settings["training"][key] for key in ("width", "learning_rate", "seed", "max_epochs",
+                                                       "batch_size", "patience")}
+    require(trial == result["trial"] == index["trial"]
+            == {"width": 128, "learning_rate": .0003, "seed": 42, "max_epochs": 30, "batch_size": 64, "patience": 5},
+            "original selected trial differs")
+    require(config["source_commit"] == lineage["numerical_source_commit"]
+            and config["image_digest"] == lineage["training_image_digest"]
+            and sha(raw["configuration"]) == result["request_sha256"] == index["request_sha256"]
+            == lineage["selection_request_sha256"]
+            and selection["status"] == selection["result"]["status"] == "verified"
+            and {**result, "status": "verified"} == selection["result"]
+            and result["bindings"] == metadata["verification"]["result"]["checkpoint_origin"]["bindings"],
+            "original configuration/result evidence differs")
+    for name in ("verification", "selection_verification", "decision", "comparison_summary", "contract", "normalization"):
+        require(pins[name].as_dict() == settings["artifacts"][name], "settings original receipt differs")
+    require(index["verification_sha256"] == pins["selection_verification"].sha256
+            and metadata["verification"]["status"] == metadata["comparison_summary"]["verification"]["status"]
+            == "verified"
+            and metadata["comparison_summary"]["verification"]["receipt_sha256"] == pins["verification"].sha256
+            and metadata["decision"]["results_evidence_sha256"] == pins["comparison_summary"].sha256
+            and metadata["decision"]["decision"] == settings["decision"], "original evidence trust chain differs")
+    checkpoint = result["selected_checkpoint"]
+    require(checkpoint == index["selected_checkpoint"]
+            and all(checkpoint[k] == settings["artifacts"]["checkpoint"][k]
+                    for k in ("sha256", "size_bytes", "version_id"))
+            and checkpoint["epoch"] == 4 and checkpoint["version_id"] == "1"
+            and settings["artifacts"]["checkpoint"]["uri"] == RESULTS + RUN.removesuffix("-search-128-0003")
+            + "/search-128-0003/" + checkpoint["object_name"], "original checkpoint reference differs")
+    for name in ("configuration", "result"):
+        ref = selection["inventory"][name + ".json"]
+        require(ref == {k: getattr(pins[name], k) for k in ("sha256", "size_bytes", "version_id")},
+                "original publication receipt differs")
+    previous = None
+    for count in range(12):
+        name = f"event-{count:04}.json"
+        ref = selection["inventory"][name]
+        expected = Receipt(RESULTS + RUN.removesuffix("-search-128-0003") + "/search-128-0003/" + name, **ref)
+        event_raw = events[name].checked(expected)
+        event = record(event_raw)
+        require(event["index"] == count and event["previous_sha256"] == previous
+                and event["request_sha256"] == lineage["selection_request_sha256"], "original journal chain differs")
+        previous = sha(event_raw)
+        if count == 11:
+            require(event["kind"] == "completed" and event["payload"]["result_sha256"] == sha(raw["result"]),
+                    "original journal completion differs")
+    campaign_inputs = metadata["campaign"]["inputs"]
+    require(pins["development_inventory"].sha256 == campaign_inputs["inventory_sha256"], "input inventory pin differs")
+    for name, key in (("root", "root_file_sha256"), ("tabular", "tabular_sha256"), ("sequence", "sequence_sha256")):
+        require(pins[name].sha256 == campaign_inputs[key], "original manifest pin differs")
+    require(metadata["contract"]["root"] == metadata["root"]
+            and metadata["contract"]["ordered_features"] == settings["preprocessing"]["ordered_features"]
+            and metadata["normalization"]["training_binding_sha256"] == lineage["training_binding_sha256"]
+            and metadata["normalization"]["fitting_row_sha256"] == lineage["train_targets_sha256"],
+            "original preprocessing/feature binding differs")
+    require(settings["artifacts"]["contract"]["sha256"] == result["bindings"]["contract_sha256"]
+            and settings["artifacts"]["normalization"]["sha256"] == result["bindings"]["normalization_sha256"]
+            and settings["temperature"] == metadata["verification"]["result"]["calibration"]["temperature"]
+            and settings["operating_points"] == [{"mode": item["mode"], "threshold": item["threshold"]}
+                for item in metadata["verification"]["result"]["comparison"]["transformer_selected_operating_points"]],
+            "original frozen calibration or preprocessing differs")
+    params = {}
+    for name, value in (("trial", trial), ("campaign", metadata["campaign"]), ("architecture", settings["architecture"]),
+                        ("preprocessing", settings["preprocessing"]), ("training", settings["training"]),
+                        ("resources", config["resources"]), ("data", metadata["root"]),
+                        ("source", result["bindings"]), ("calibration", {"temperature": settings["temperature"],
+                          "operating_points": settings["operating_points"]})):
+        _flatten(value, name, params)
+    start, finish = milliseconds(index["started_at"]), milliseconds(index["finished_at"])
+    require(start < finish <= milliseconds(reconciled_at), "original/reconciliation time order differs")
+    history = result["progress"]["history"]
+    require(len(history) == 9 and [row["epoch"] for row in history] == list(range(1, 10)), "original nine epochs required")
+    require(result["selection_log_loss"] == history[3]["selection_log_loss"]
+            and result["selection_f1_at_half"] == history[3]["selection_f1_at_half"], "selected epoch metrics differ")
+    metrics = []
+    for row in history:
+        for key in ("weighted_train_loss", "selection_log_loss", "selection_f1_at_half"):
+            require(type(row[key]) in (int, float) and math.isfinite(row[key]), "finite original epoch metric required")
+            metrics.append({"key": "epoch." + key, "value": row[key], "step": row["epoch"], "timestamp": finish})
+    for key in ("selected_epoch", "parameter_count", "selection_log_loss", "selection_f1_at_half", "duration_seconds",
+                "peak_allocated_gpu_bytes", "peak_reserved_gpu_bytes"):
+        value = result[key]
+        require(type(value) in (int, float) and math.isfinite(value), "finite original summary metric required")
+        metrics.append({"key": "selected." + key, "value": value, "step": 0, "timestamp": finish})
+    binding = {"run_name": RUN, "job_id": JOB, "request_sha256": lineage["selection_request_sha256"],
+               "settings_sha256": pins["settings"].sha256, "source_commit": lineage["numerical_source_commit"],
+               "image_digest": lineage["training_image_digest"]}
+    tags = {RESERVATION: sha(canonical(binding)), "transformer.reconciliation_at": reconciled_at,
+            "transformer.metric_timestamp_policy": "original_finish_utc_ms",
+            "transformer.purpose": "retrospective_original_execution_metadata",
+            **{"transformer." + key: str(value) for key, value in lineage.items()},
+            "transformer.settings_sha256": pins["settings"].sha256,
+            "transformer.original_completed_at": index["finished_at"],
+            "transformer.original_started_at": index["started_at"]}
+    uploads = [("lineage/" + name + (".jsonl" if name == "development_inventory" else ".json"), data)
+               for name, data in sorted(raw.items())]
+    uploads += [("lineage/" + name, events[name].data) for name in sorted(events)]
+    uploads += [("lineage/artifact-index.json", canonical(settings["artifacts"]))]
+    plan = {"schema_version": "original_transformer_mlflow_v1", "experiment": EXPERIMENT, "run_name": RUN,
+            "start_time": start, "end_time": finish, "binding": binding, "tags": tags, "params": params,
+            "metrics": metrics, "datasets": _datasets(metadata, inventory, settings),
+            "artifacts": {name: {"size_bytes": len(data), "sha256": sha(data)} for name, data in uploads}}
+    sealed = SealedPlan(canonical(plan), tuple(uploads))
+    sealed.checked(sealed.sha256())
+    return sealed
