@@ -169,3 +169,110 @@ def _mutation(root, budget, function, operation, *args, **kwargs):
     return budget.call(function, *args, **kwargs)
 
 
+def reconcile(sealed, *, approved_plan_sha256, journal, writer, reader, writer_artifacts, reader_artifacts, expires):
+    """Read/write only the sealed original record; no namespace, permission or model APIs.
+
+    Adapters must disable retries and prove their authenticated named principal
+    and exact experiment access. They are separate writer/reader sessions; do not
+    supply a writer session as the independent reader. This function imports no
+    SDK and its receipt is protocol evidence until used with reviewed live adapters.
+    """
+    plan, files = sealed.checked(approved_plan_sha256)
+    require(writer is not reader and writer_artifacts is not reader_artifacts, "independent reader required")
+    budget = Budget(expires)
+    for client, identity in ((writer, "governed-writer"), (reader, "prometheus"),
+                             (writer_artifacts, "governed-writer"), (reader_artifacts, "prometheus")):
+        require(client.transport_controls == CONTROLS
+                and budget.call(client.authenticated_identity) == identity, "scoped authenticated adapter required")
+    with locked(journal, plan, approved_plan_sha256) as root:
+        for identity in ("writer", "reader"):
+            directory = root / (identity + "-artifacts")
+            require(not directory.is_symlink(), "artifact custody path changed")
+            directory.mkdir(mode=0o700, exist_ok=True)
+            require(not (directory / "lineage").is_symlink(), "artifact custody path changed")
+            (directory / "lineage").mkdir(mode=0o700, exist_ok=True)
+            require(not directory.is_symlink() and not (directory / "lineage").is_symlink()
+                    and directory.resolve() == directory and stat.S_IMODE(directory.stat().st_mode) == 0o700,
+                    "artifact custody path changed")
+        experiments = [budget.call(client.get_experiment_by_name, EXPERIMENT) for client in (writer, reader)]
+        require(all(item is not None and item.lifecycle_stage == "active" for item in experiments)
+                and str(experiments[0].experiment_id) == str(experiments[1].experiment_id),
+                "active existing Transformer experiment required")
+        experiment_id = str(experiments[0].experiment_id)
+        budget.call(writer.require_permission, experiment_id, "EDIT")
+        budget.call(reader.require_permission, experiment_id, "READ")
+        runs = budget.call(writer.search_runs, [experiment_id],
+            filter_string=f"tags.`{RESERVATION}` = '{plan['tags'][RESERVATION]}'", run_view_type=3, max_results=2)
+        require(len(runs) <= 1 and not getattr(runs, "token", None), "ambiguous original run search")
+        named = budget.call(writer.search_runs, [experiment_id],
+            filter_string=f"tags.`mlflow.runName` = '{RUN}'", run_view_type=3, max_results=2)
+        require(len(named) <= 1 and not getattr(named, "token", None), "ambiguous original named run search")
+        require(not named or runs and named[0].info.run_id == runs[0].info.run_id,
+                "existing original named record requires source-bound adoption; no replacement")
+        require(not runs or named, "reserved run lacks exact original name")
+        intent = root / "create-intent.json"
+        if not runs:
+            require(not intent.exists() and not (root / "run.json").exists(), "unresolved create; never recreate")
+            persist(intent, {"reservation": plan["tags"][RESERVATION], "start_time": plan["start_time"]})
+            run = budget.call(writer.create_run, experiment_id, start_time=plan["start_time"],
+                              tags=plan["tags"], run_name=RUN)
+            runs = budget.call(writer.search_runs, [experiment_id],
+                filter_string=f"tags.`{RESERVATION}` = '{plan['tags'][RESERVATION]}'", run_view_type=3, max_results=2)
+            require(len(runs) == 1 and not getattr(runs, "token", None)
+                    and runs[0].info.run_id == run.info.run_id, "create response not uniquely visible")
+        require(intent.is_file() and not intent.is_symlink(), "original run has no durable creation intent")
+        run = runs[0]
+        require(str(run.info.experiment_id) == experiment_id
+                and run.data.tags.get(RESERVATION) == plan["tags"][RESERVATION], "original reservation differs")
+        run_id = str(run.info.run_id)
+        persist(root / "run.json", {"run_id": run_id, "reservation": plan["tags"][RESERVATION]})
+        state, missing = _read(writer, writer_artifacts, run_id, experiment_id, plan, budget,
+                               retention=root / "writer-artifacts")
+        metrics = {metric_identity(item): item for item in plan["metrics"]}
+        datasets = {dataset_identity(item): item for item in plan["datasets"]}
+        for kind in ("params", "tags", "metrics", "datasets", "artifacts"):
+            for key in missing[kind]:
+                operation = {"plan_sha256": approved_plan_sha256, "run_id": run_id, "kind": kind, "key": key}
+                if kind == "params":
+                    _mutation(root, budget, writer.log_param, operation, run_id, key, plan[kind][key], synchronous=True)
+                elif kind == "tags":
+                    _mutation(root, budget, writer.set_tag, operation, run_id, key, plan[kind][key], synchronous=True)
+                elif kind == "metrics":
+                    item = metrics[key]
+                    _mutation(root, budget, writer.log_metric, operation, run_id, item["key"], item["value"],
+                              timestamp=item["timestamp"], step=item["step"], synchronous=True)
+                elif kind == "datasets":
+                    _mutation(root, budget, writer.log_inputs, operation, run_id, datasets=[datasets[key]])
+                else:
+                    _mutation(root, budget, writer_artifacts.write, operation, run_id, key, files[key])
+        first, _ = _read(writer, writer_artifacts, run_id, experiment_id, plan, budget, complete=True,
+                         retention=root / "writer-artifacts")
+        independent, _ = _read(reader, reader_artifacts, run_id, experiment_id, plan, budget, complete=True,
+                               retention=root / "reader-artifacts")
+        require(canonical(first) == canonical(independent), "independent metadata readback differs")
+        if state["status"] != "FINISHED":
+            persist(root / "readback-before-finish.json", {"plan_sha256": approved_plan_sha256,
+                    "metadata_sha256": sha(canonical(first)), "run_id": run_id,
+                    "writer": first, "reader": independent})
+            _mutation(root, budget, writer.set_terminated, {"plan_sha256": approved_plan_sha256,
+                "run_id": run_id, "kind": "finish", "end_time": plan["end_time"]},
+                run_id, status="FINISHED", end_time=plan["end_time"])
+        final, _ = _read(writer, writer_artifacts, run_id, experiment_id, plan, budget, complete=True,
+                         retention=root / "writer-artifacts")
+        independent, _ = _read(reader, reader_artifacts, run_id, experiment_id, plan, budget, complete=True,
+                               retention=root / "reader-artifacts")
+        require(final["status"] == "FINISHED" and canonical(final) == canonical(independent),
+                "independent completed readback differs")
+        receipt = {"schema_version": "original_transformer_metadata_protocol_receipt_v1", "run_id": run_id,
+                   "plan_sha256": approved_plan_sha256, "readback_sha256": sha(canonical(final)),
+                   "writer_identity": "governed-writer", "reader_identity": "prometheus",
+                   "live_application_acceptance": "requires reviewed live adapters and retained authenticated evidence",
+                   "start_time": plan["start_time"], "end_time": plan["end_time"],
+                   "counts": {key: len(plan[key]) for key in ("params", "tags", "metrics", "datasets", "artifacts")}}
+        budget.ensure()
+        persist(root / "writer-readback.json", final)
+        persist(root / "reader-readback.json", independent)
+        budget.ensure()
+        persist(root / "complete.json", receipt)
+        budget.ensure()
+        return receipt
