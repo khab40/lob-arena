@@ -125,6 +125,48 @@ Feature: Dedicated research classifier package
     And production serving remains denied
 ```
 
+## Original-run MLflow reconciliation increment
+
+As a validation engineer, I want the original selected run indexed and read back
+through authenticated MLflow identities, so that its package and code/data/feature
+lineage remain inspectable without another model execution. AC-01 owns this scope;
+ARD-0027 owns authentication and ARD-0039 owns same-run recovery. Use original
+configuration, result, event journals and manifest receipts, not current producer
+defaults. Keep original run/Job/source/image identities and all nine epoch records.
+If original epoch timestamps are absent, declare original finish milliseconds as
+the retrospective metric timestamp convention. Reconciliation time is separate.
+
+Prepare a sealed metadata plan before contacting the application. Use the existing
+Transformer experiment, writer and independent reader; additions to permissions
+require a separately reviewed concrete delta. Bind the first retrospective record
+to one exclusive durable intent and refuse ambiguous creation or conflicting state.
+Read before writes, add only missing exact records, and verify both identities'
+complete parameters, metric histories, dataset/feature lineage and allowed artifact
+bytes. Completed replay performs zero writes. No weights upload, model flavor,
+registration, alias, upgrade or additional training belongs to this increment.
+
+```gherkin
+Feature: Original selected Transformer tracking reconciliation
+
+  Scenario: AC-01a Preserve original execution lineage
+    Given authenticated original settings, result, journals and manifest receipts
+    When a metadata logging plan is prepared
+    Then parameters and epoch metrics retain their original source identities
+    And retrospective timestamp conventions are explicit
+
+  Scenario: AC-01b Recover one tracking record
+    Given an exclusive intent bound to the original selected execution
+    When tracking reconciliation encounters missing or ambiguous state
+    Then only missing exact metadata is added to the uniquely identified record
+    And conflicting or unresolved creation is refused
+
+  Scenario: AC-01c Verify independently and replay safely
+    Given complete writer and independent-reader readback of the sealed plan
+    When completed reconciliation is replayed
+    Then no application writes occur
+    And retained readback binds all planned lineage and artifact bytes
+```
+
 ## Verification and traceability
 
 Local/CI checks use invented inert fixtures; no model training/scoring. Numerical
@@ -138,6 +180,9 @@ only safe aggregate public evidence, with normal Gitleaks/ggshield hooks enabled
 | Scenario | Implementation / contract | Test or check | Evidence | Status |
 | --- | --- | --- | --- | --- |
 | AC-01 | Selected settings; MLflow #19 | Original settings integrity checks; authenticated MLflow readback pending | [Settings disposition](../ml/transformer-research-disposition-20261008.md#selected-settings-acceptance) | Partial; MLflow gated |
+| AC-01a | [Sealed original metadata plan](../../deployments/mlflow/transformer_lineage_plan.py) | `test_sealed_plan_preserves_original_epoch_time_params_and_metadata_only_uploads`; `test_builder_rejects_changed_original_inputs_before_plan` in [inert tests](../../backend/tests/test_transformer_mlflow_lineage.py) | Root outputs/governed-transformer-closure-20261009/mlflow-lineage-iteration1-author-receipt.json and mlflow-lineage-iteration1-review-story24_audit.json (clear) | Gated: original retained-input seal and live readback pending |
+| AC-01b | [Exclusive journal and reconciler](../../deployments/mlflow/transformer_lineage.py) | `test_unresolved_create_intent_never_creates_a_replacement`; `test_uncertain_committed_writes_reconcile_without_duplicate_record_or_history`; `test_existing_named_original_without_our_journal_cannot_create_a_duplicate`; conflict/admission cases in the linked tests | Same author and independent review receipts | Gated: live original-record reconciliation pending |
+| AC-01c | Independent authenticated readback and replay | `test_complete_independent_readback_and_replay_have_zero_remote_writes`; `test_reader_byte_mismatch_cannot_finish_or_establish_completion` | Same author receipt; authenticated live receipts pending | Gated: live application verification pending |
 | AC-02 | Frozen research reports; validation cost policy | Four trial indexes, seven report manifests and 23 report/chart hashes verified; cost remains unknown/operator-managed | Root outputs/governed-transformer-closure-20261009/frozen-resource-audit-story24_audit.json; [holdout](../ml/transformer-holdout-report-20261007.md) | Pass for frozen research |
 | AC-03 | Governed input contract | Existing causal/mask/split/normalization tests and verified Jobs | [Development results](../ml/transformer-development-results-r2.md), [holdout](../ml/transformer-holdout-report-20261007.md) | Pass for frozen research |
 | AC-04 | Frozen holdout dedicated FixedGpuConsumer | Independently verified CUDA reference parity and holdout inference; frozen runtime source identity checked | [Verified holdout](../ml/transformer-holdout-report-20261007.md); root outputs/governed-transformer-closure-20261009/original-acceptance-reassessment-story24_audit.json | Pass for frozen research; new increment separately gated |
@@ -150,6 +195,16 @@ only safe aggregate public evidence, with normal Gitleaks/ggshield hooks enabled
 | AC-07 | Operator disposition / ARD-0037 | Operator selected research feature-producer eligibility on 9 October 2026 | Root outputs/governed-transformer-closure-20261009/eligibility-decision-20261009.json; [public receipt](../evidence/transformer-classifier-verification-20261009.json) | Pass; eligible for research in #25; implementation and production promotion remain gated |
 
 Pin this file and the exact implementation diff in each independent review receipt.
+The original-run reconciliation increment passes 47 inert fixture cases and
+Ruff, retained in `mlflow-lineage-iteration1-author-receipt.json`. These checks
+cover source/epoch/timestamp integrity, authentication and access admission,
+uncertain writes, duplicate/conflicting records, independent artifact bytes,
+journal custody and deadline boundaries. They instantiate no MLflow client.
+Independent review of the exact implementation and specification reports no
+actionable P0/P1/P2 findings; its receipt is
+`mlflow-lineage-iteration1-review-story24_audit.json`. The seal from retained
+original metadata and live authenticated readback remain pending.
+
 Update mappings only for observed verification; pending/gated scenarios remain
 incomplete. Full #24 closure follows all seven criteria, independently clear review,
 CI and explicit remaining decisions. Report implementation, verified execution and
