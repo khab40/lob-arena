@@ -377,3 +377,124 @@ def test_reader_byte_mismatch_cannot_finish_or_establish_completion(plan, sessio
     assert not (args["journal"] / "complete.json").exists()
 
 
+def test_sealed_upload_drift_and_journal_rebinding_fail_before_remote_mutations(plan, session):
+    bank, args = session
+    changed = replace(plan, uploads=((plan.uploads[0][0], b"changed"), *plan.uploads[1:]))
+    with pytest.raises(ValueError, match="upload differs"):
+        run(changed, args)
+    assert bank.writes == 0
+    run(plan, args)
+    before = bank.writes
+    value, files = plan.checked(plan.sha256())
+    value["tags"]["transformer.reconciliation_at"] = "2026-10-09T16:00:00Z"
+    changed = replace(plan, data=canonical(value))
+    with pytest.raises(ValueError, match="journal conflict"):
+        run(changed, args)
+    assert bank.writes == before
+
+
+def test_symlink_journal_and_duplicate_dataset_tags_are_rejected(plan, session, tmp_path):
+    bank, args = session
+    target = tmp_path / "link"
+    target.symlink_to(args["journal"], target_is_directory=True)
+    args["journal"] = target
+    with pytest.raises(ValueError, match="canonical journal"):
+        run(plan, args)
+    assert bank.writes == 0
+    entity = NS(dataset=NS(to_dictionary=lambda: {}), tags=[NS(key="same", value="1"), NS(key="same", value="2")])
+    with pytest.raises(ValueError, match="duplicate dataset input tag"):
+        logging.dataset_identity(entity)
+
+
+def test_existing_named_original_without_our_journal_cannot_create_a_duplicate(plan, session):
+    bank, args = session
+    value, _ = plan.checked(plan.sha256())
+    old = args["writer"].create_run("7", start_time=value["start_time"], tags=value["tags"], run_name=RUN)
+    bank.runs[old.info.run_id].data.tags.pop(logging.RESERVATION)
+    before = bank.writes
+    with pytest.raises(ValueError, match="source-bound adoption"):
+        run(plan, args)
+    assert bank.writes == before and bank.creates == 1
+
+
+@pytest.mark.parametrize("failure", ["experiment", "name"])
+def test_get_run_identity_drift_stops_before_remote_writes(plan, session, failure):
+    bank, args = session
+    run(plan, args)
+    original = args["writer"].get_run
+
+    def changed(run_id):
+        item = original(run_id)
+        if failure == "experiment":
+            item.info.experiment_id = "different-experiment"
+        else:
+            item.data.tags.pop("mlflow.runName")
+        return item
+
+    args["writer"].get_run = changed
+    before = bank.writes
+    with pytest.raises(ValueError):
+        run(plan, args)
+    assert bank.writes == before
+
+
+def test_unresolved_uncommitted_write_never_retries_or_completes(plan, session):
+    bank, args = session
+    bank.fail = "param"
+    with pytest.raises(TimeoutError):
+        run(plan, args)
+    next(iter(bank.runs.values())).data.params.clear()
+    before = bank.writes
+    with pytest.raises(ValueError, match="unresolved write intent"):
+        run(plan, args)
+    assert bank.writes == before and not (args["journal"] / "complete.json").exists()
+
+
+def test_call_returning_after_deadline_has_no_protocol_success(monkeypatch):
+    clock = [100.]
+    monkeypatch.setattr(logging.time, "monotonic", lambda: clock[0])
+    budget = logging.Budget(101.)
+
+    def late():
+        clock[0] = 102.
+        return "late result"
+
+    with pytest.raises(TimeoutError):
+        budget.call(late)
+
+
+def test_final_persistence_after_deadline_cannot_return_success(plan, session, monkeypatch):
+    bank, args = session
+    clock = [100.]
+    monkeypatch.setattr(logging.time, "monotonic", lambda: clock[0])
+    original = logging.persist
+
+    def late(path, value):
+        original(path, value)
+        if path.name == "complete.json":
+            clock[0] = 200.
+
+    monkeypatch.setattr(logging, "persist", late)
+    with pytest.raises(TimeoutError):
+        run(plan, args)
+
+
+@pytest.mark.parametrize("value", ["2026-10-03T17:42:11.824179027Z", "2026-10-03T17:42:11.824+00:00"])
+def test_original_nanosecond_timestamp_has_exact_milliseconds(value):
+    assert milliseconds(value) == 1791049331824
+
+
+@pytest.mark.parametrize("value", ["2026-10-03T17:42:11+03:00", "2026-10-03", None])
+def test_timestamp_requires_explicit_utc(value):
+    with pytest.raises(ValueError, match="UTC timestamp"):
+        milliseconds(value)
+
+
+def test_existing_artifact_custody_symlink_fails_before_creating_external_directory(plan, session, tmp_path):
+    bank, args = session
+    external = tmp_path / "unrelated"
+    external.mkdir()
+    (args["journal"] / "writer-artifacts").symlink_to(external, target_is_directory=True)
+    with pytest.raises(ValueError, match="custody path"):
+        run(plan, args)
+    assert bank.writes == 0 and not (external / "lineage").exists()
