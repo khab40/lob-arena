@@ -191,3 +191,189 @@ class Client:
         self.bank.runs[run_id].data.tags[key] = value
         self.bank.changed("tag")
 
+    def log_metric(self, run_id, key, value, *, timestamp, step, synchronous):
+        assert synchronous
+        self.bank.histories.setdefault((run_id, key), []).append(
+            {"key": key, "value": value, "timestamp": timestamp, "step": step})
+        latest = max(self.bank.histories[run_id, key], key=lambda row: (row["step"], row["timestamp"]))
+        self.bank.runs[run_id].data.metrics[key] = latest["value"]
+        self.bank.changed("metric")
+
+    def log_inputs(self, run_id, *, datasets):
+        self.bank.runs[run_id].inputs.dataset_inputs.extend(deepcopy(datasets))
+        self.bank.changed("dataset")
+
+    def set_terminated(self, run_id, *, status, end_time):
+        self.bank.runs[run_id].info.status = status
+        self.bank.runs[run_id].info.end_time = end_time
+        self.bank.changed("finish")
+
+
+class Artifacts(Client):
+    def list(self, run_id):
+        return [path for owner, path in self.bank.files if owner == run_id]
+
+    def read(self, run_id, path, limit):
+        return self.bank.files[run_id, path]
+
+    def write(self, run_id, path, raw):
+        self.bank.files[run_id, path] = raw
+        self.bank.changed("artifact")
+
+
+@pytest.fixture
+def session(tmp_path):
+    tmp_path.chmod(0o700)
+    bank = Bank()
+    return bank, {"journal": tmp_path, "writer": Client(bank, "governed-writer"),
+                  "reader": Client(bank, "prometheus"), "writer_artifacts": Artifacts(bank, "governed-writer"),
+                  "reader_artifacts": Artifacts(bank, "prometheus")}
+
+
+def run(plan, args):
+    return logging.reconcile(plan, approved_plan_sha256=plan.sha256(), expires=time.monotonic() + 60, **args)
+
+
+def test_sealed_plan_preserves_original_epoch_time_params_and_metadata_only_uploads(plan):
+    value, files = plan.checked(plan.sha256())
+    assert len(value["datasets"]) == 180 and len(value["artifacts"]) == 28
+    assert len(value["metrics"]) == 34
+    assert {item["timestamp"] for item in value["metrics"]} == {value["end_time"]}
+    assert [item["step"] for item in value["metrics"] if item["key"] == "epoch.selection_log_loss"] == list(range(1, 10))
+    assert value["params"]["training.seed"] == "42"
+    assert value["params"]["architecture.precision"] == "float32"
+    assert value["params"]["campaign.training.optimizer"] == "AdamW"
+    assert all(not path.endswith((".pt", ".parquet", "MLmodel")) for path in files)
+
+
+def test_metadata_module_import_is_torch_and_mlflow_free():
+    code = "import sys; import deployments.mlflow.transformer_lineage; assert 'torch' not in sys.modules; "
+    code += "assert 'mlflow' not in sys.modules"
+    subprocess.run([sys.executable, "-c", code], cwd=ROOT, check=True, timeout=20)
+
+
+@pytest.mark.parametrize("failure", ["hash", "version", "events", "pin", "oversize", "time"])
+def test_builder_rejects_changed_original_inputs_before_plan(failure):
+    snapshots, pins, events = fixture_sources()
+    when = "2026-10-09T15:00:00Z"
+    if failure == "hash":
+        snapshots["result"] = replace(snapshots["result"], data=b"{}")
+    elif failure == "version":
+        snapshots["result"] = replace(snapshots["result"], receipt=pins["root"])
+    elif failure == "events":
+        events["event-0003.json"] = events["event-0002.json"]
+    elif failure == "pin":
+        pins["settings"] = pins["root"]
+    elif failure == "oversize":
+        snapshots["settings"] = replace(snapshots["settings"], data=b"x" * (2 * 1024**2 + 1))
+    else:
+        when = "2025-01-01T00:00:00Z"
+    with pytest.raises(ValueError):
+        build_plan(snapshots, pins, events, reconciled_at=when)
+
+
+def test_complete_independent_readback_and_replay_have_zero_remote_writes(plan, session):
+    bank, args = session
+    receipt = run(plan, args)
+    assert receipt["counts"]["datasets"] == 180 and bank.creates == 1
+    before = bank.writes
+    assert run(plan, args) == receipt and bank.writes == before
+    assert (args["journal"] / "complete.json").is_file()
+    assert record((args["journal"] / "writer-readback.json").read_bytes()) == record(
+        (args["journal"] / "reader-readback.json").read_bytes())
+    for path, raw in plan.uploads:
+        assert (args["journal"] / "reader-artifacts" / path).read_bytes() == raw
+
+
+@pytest.mark.parametrize("failure", ["create", "param", "metric", "dataset", "artifact", "finish"])
+def test_uncertain_committed_writes_reconcile_without_duplicate_record_or_history(plan, session, failure):
+    bank, args = session
+    bank.fail = failure
+    with pytest.raises(TimeoutError):
+        run(plan, args)
+    receipt = run(plan, args)
+    assert bank.creates == 1 and receipt["counts"]["metrics"] == 34
+    assert all(len(rows) == len({logging.metric_identity(row) for row in rows}) for rows in bank.histories.values())
+    before = bank.writes
+    assert run(plan, args) == receipt and bank.writes == before
+
+
+def test_unresolved_create_intent_never_creates_a_replacement(plan, session):
+    bank, args = session
+    bank.fail = "create"
+    with pytest.raises(TimeoutError):
+        run(plan, args)
+    bank.runs.clear()
+    with pytest.raises(ValueError, match="never recreate"):
+        run(plan, args)
+    assert bank.creates == 1
+
+
+@pytest.mark.parametrize("failure", ["params", "metrics", "duplicate_metric", "datasets", "duplicate_dataset",
+                                    "artifact", "status", "start", "end", "duplicate_run"])
+def test_existing_conflicting_or_duplicate_state_stops_without_remote_writes(plan, session, failure):
+    bank, args = session
+    run(plan, args)
+    run_id = next(iter(bank.runs))
+    item = bank.runs[run_id]
+    if failure == "params":
+        item.data.params["training.seed"] = "7"
+    elif failure in {"metrics", "duplicate_metric"}:
+        key = next(iter(item.data.metrics))
+        if failure == "metrics":
+            bank.histories[run_id, key][0]["value"] = 123.
+        else:
+            bank.histories[run_id, key].append(deepcopy(bank.histories[run_id, key][0]))
+    elif failure == "datasets":
+        item.inputs.dataset_inputs[0]["tags"]["version_id"] = "2"
+    elif failure == "duplicate_dataset":
+        item.inputs.dataset_inputs.append(deepcopy(item.inputs.dataset_inputs[0]))
+    elif failure == "artifact":
+        bank.files[next(iter(bank.files))] = b"changed metadata"
+    elif failure == "status":
+        item.info.status = "FAILED"
+    elif failure == "start":
+        item.info.start_time += 1
+    elif failure == "end":
+        item.info.end_time += 1
+    else:
+        bank.runs["f" * 32] = deepcopy(item)
+    before = bank.writes
+    with pytest.raises(ValueError):
+        run(plan, args)
+    assert bank.writes == before
+
+
+@pytest.mark.parametrize("failure", ["permission", "experiment", "identity", "controls", "shared_reader", "pin"])
+def test_admission_gates_have_zero_remote_writes(plan, session, failure):
+    bank, args = session
+    if failure == "permission":
+        args["writer"].allowed = False
+    elif failure == "experiment":
+        args["reader"].active = False
+    elif failure == "identity":
+        args["reader"].identity = "governed-writer"
+    elif failure == "controls":
+        args["writer"].transport_controls = {**logging.CONTROLS, "http_retries": 1}
+    elif failure == "shared_reader":
+        args["reader"] = args["writer"]
+    else:
+        plan = replace(plan, data=plan.data + b" ")
+        with pytest.raises(ValueError, match="external logging plan pin"):
+            logging.reconcile(plan, approved_plan_sha256=sha(plan.data[:-1]), expires=time.monotonic() + 60, **args)
+        assert bank.writes == 0
+        return
+    with pytest.raises((ValueError, PermissionError)):
+        run(plan, args)
+    assert bank.writes == 0
+
+
+def test_reader_byte_mismatch_cannot_finish_or_establish_completion(plan, session):
+    bank, args = session
+    args["reader_artifacts"].read = lambda *_: b"wrong independent bytes"
+    with pytest.raises(ValueError, match="readback differs"):
+        run(plan, args)
+    assert next(iter(bank.runs.values())).info.status == "RUNNING"
+    assert not (args["journal"] / "complete.json").exists()
+
+
