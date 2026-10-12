@@ -194,3 +194,129 @@ def test_existing_pinned_verifier_reads_only_invented_custody_and_refuses_later_
     (directory / "predictions.json").write_bytes(b"{}")
     response = post(journey, "anomalies", {"detector": "transformer", "target_id": threshold_row["target_id"]})
     assert response.status_code == 503 and str(directory) not in response.text
+
+
+def test_another_authenticated_subject_cannot_read_explain_save_or_export(journey):
+    snapshot, _, _ = complete(journey)
+    other = TestClient(journey.app, base_url=ORIGIN, client=("127.0.0.1", 50001))
+    journey.login("other-subject", "other@example.com", other)
+    for suffix in ("", "/export"):
+        assert other.get(f"/api/ceo-demo/evidence/{snapshot['id']}{suffix}").status_code == 404
+    for suffix in ("explanation", "save"):
+        assert post(journey, f"anomalies/{snapshot['id']}/{suffix}", client=other).status_code == 404
+    assert other.get("/api/ceo-demo/evidence").json() == []
+
+
+@pytest.mark.parametrize("path", ["campaign", "rows?detector=transformer", "evidence", "evidence/" + "a" * 32 + "/export"])
+def test_missing_session_denies_before_any_original_or_artifact_reads(journey, path):
+    journey.client.cookies.clear()
+    before = len(journey.reads)
+    response = journey.client.get("/api/ceo-demo/" + path)
+    assert response.status_code == 401 and len(journey.reads) == before
+
+
+def test_missing_journey_configuration_is_visible_unavailable(journey):
+    journey.app.state.ceo_journey = None
+    assert journey.client.get("/api/ceo-demo/campaign").status_code == 503
+
+
+@pytest.mark.parametrize("kind", ["snapshot", "explanation", "saved"])
+def test_corrupt_intermediate_or_saved_bytes_refused_without_save_success(journey, kind):
+    snapshot, _, _ = complete(journey)
+    path = journey.service.store.path("example-subject", snapshot["id"], kind)
+    raw = path.read_bytes()
+    path.write_bytes(raw.replace(b"AAPL", b"MSFT", 1))
+    if kind == "saved":
+        response = journey.client.get(f"/api/ceo-demo/evidence/{snapshot['id']}")
+    else:
+        response = post(journey, f"anomalies/{snapshot['id']}/save")
+    assert response.status_code == 503 and str(path) not in response.text
+    if kind == "saved":
+        assert journey.client.get("/api/ceo-demo/evidence").status_code == 503
+
+
+def test_save_before_explanation_is_refused(journey):
+    snapshot = capture(journey)
+    assert post(journey, f"anomalies/{snapshot['id']}/save").status_code == 404
+
+
+def test_fsync_failure_retains_partial_and_never_reports_save_success(journey, monkeypatch):
+    snapshot = capture(journey)
+    assert post(journey, f"anomalies/{snapshot['id']}/explanation").status_code == 200
+    def fail(_):
+        raise OSError("/private/example/fsync failed")
+    monkeypatch.setattr("app.ceo_journey_store.os.fsync", fail)
+    response = post(journey, f"anomalies/{snapshot['id']}/save")
+    assert response.status_code == 503 and "/private/" not in response.text
+    home = journey.service.store.home("example-subject")
+    assert list(home.glob(".partial-*")) and not list(home.glob("*.saved.json"))
+
+
+@pytest.mark.parametrize("unsafe", ["symlink", "hardlink", "fifo", "permissions", "oversized"])
+def test_unsafe_saved_file_refused(journey, unsafe):
+    snapshot, _, _ = complete(journey)
+    path = journey.service.store.path("example-subject", snapshot["id"], "saved")
+    if unsafe == "symlink":
+        old = path.with_suffix(".original")
+        path.rename(old)
+        path.symlink_to(old)
+    elif unsafe == "hardlink":
+        os.link(path, path.with_suffix(".linked"))
+    elif unsafe == "fifo":
+        path.unlink()
+        os.mkfifo(path, 0o600)
+    elif unsafe == "permissions":
+        path.chmod(0o644)
+    else:
+        path.write_bytes(b"x" * (256 * 1024 + 1))
+    response = journey.client.get(f"/api/ceo-demo/evidence/{snapshot['id']}/export")
+    assert response.status_code == 503 and str(path) not in response.text
+
+
+@pytest.mark.parametrize("body", ["extra", "large", "crosssite"])
+def test_unsafe_mutation_refused_before_original_capture(journey, body):
+    before = len(journey.reads)
+    if body == "large":
+        response = journey.client.post("/api/ceo-demo/anomalies", content="x" * 8193, headers={"Origin": ORIGIN})
+    else:
+        request = {"detector": "transformer", "target_id": "a" * 64}
+        if body == "extra":
+            request["snapshot"] = {"path": "/private/example"}
+        response = journey.client.post("/api/ceo-demo/anomalies", json=request,
+            headers={"Origin": "https://other.example" if body == "crosssite" else ORIGIN})
+    assert response.status_code in {400, 403, 413} and len(journey.reads) == before
+    assert "/private/" not in response.text
+
+
+def test_unsupported_paging_and_duplicate_detector_query_refused(journey):
+    for query in ("detector=transformer&offset=1", "detector=transformer&detector=lightgbm", "session_id=example"):
+        assert journey.client.get("/api/ceo-demo/rows?" + query).status_code == 400
+
+
+def test_server_created_ids_and_client_evidence_refusal(journey):
+    snapshot = capture(journey)
+    assert post(journey, f"anomalies/{snapshot['id']}/explanation", {"input": snapshot}).status_code == 400
+    assert post(journey, f"anomalies/{snapshot['id']}/save", {"snapshot": snapshot}).status_code == 400
+    assert journey.client.get("/api/ceo-demo/evidence/not-an-id/export").status_code == 404
+
+
+def test_count_and_byte_budgets_fail_before_another_artifact(journey, monkeypatch):
+    snapshot = capture(journey)
+    monkeypatch.setattr("app.ceo_journey_store.MAX_FILES", 1)
+    assert post(journey, f"anomalies/{snapshot['id']}/explanation").status_code == 503
+    monkeypatch.setattr("app.ceo_journey_store.MAX_FILES", 1000)
+    monkeypatch.setattr("app.ceo_journey_store.MAX_STORE_BYTES", 1)
+    assert post(journey, f"anomalies/{snapshot['id']}/explanation").status_code == 503
+
+
+def test_private_store_refuses_unsafe_directory_and_exclusive_write_preserves_original(tmp_path):
+    root = tmp_path / "journey"
+    tmp_path.chmod(0o700)
+    store = JourneyStore(root)
+    identifier = secrets.token_hex(16)
+    first = {"example": "first"}
+    assert store.write("subject", identifier, "snapshot", first) == first
+    assert store.write("subject", identifier, "snapshot", {"example": "second"}) == first
+    store.home("subject").chmod(0o755)
+    with pytest.raises(ArtifactUnavailable):
+        store.existing("subject", identifier, "snapshot")
