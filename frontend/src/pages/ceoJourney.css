@@ -1,0 +1,12 @@
+.ceo-journey-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:24px;margin-top:28px}
+.ceo-playback,.ceo-evidence{border:1px solid #d7e1df;border-radius:14px;padding:22px;background:#fff;min-width:0}
+.ceo-step-title{display:flex;justify-content:space-between;gap:10px;font-size:12px;text-transform:uppercase;color:#176861;letter-spacing:.06em}.ceo-step-title b{background:#e4f2ee;padding:4px 7px;border-radius:5px;font-size:10px}
+.ceo-toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:18px 0}.ceo-toolbar label,.ceo-alert-select{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.ceo-demo select{border:1px solid #aabeb9;border-radius:7px;padding:9px;background:white;color:#203e39}.ceo-demo button:disabled{opacity:.5;cursor:default}
+.ceo-table-scroll{overflow:auto}.ceo-demo table{width:100%;border-collapse:collapse;font-size:12px}.ceo-demo th,.ceo-demo td{padding:10px 6px;text-align:left;border-bottom:1px solid #edf1f0}.ceo-demo th{color:#526963}
+.ceo-alert-select{margin:16px 0}.ceo-demo details{margin-top:20px;color:#526963;font-size:12px}.ceo-demo summary{cursor:pointer}.ceo-digest{font:11px ui-monospace,monospace;overflow-wrap:anywhere;color:#637771}
+.ceo-paired{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.ceo-paired>div{display:flex;flex-direction:column;gap:5px;background:#edf5f2;padding:14px;border-radius:9px}.ceo-paired strong{font-size:23px}.ceo-paired span{font-size:12px}
+.ceo-explanation{border-left:3px solid #ce9b47;background:#fff8eb;padding:14px;margin:16px 0}.ceo-explanation b{font-size:12px}.ceo-explanation p{white-space:pre-wrap}
+.ceo-records{list-style:none;padding:0}.ceo-records li{display:flex;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid #dbe5e1;padding:12px 0;font-size:12px}.ceo-journey-error{padding:14px;background:#fff0ec;border-radius:8px}
+.ceo-demo-card:has(.ceo-journey-grid){max-width:1250px;width:100%}.ceo-demo-card:has(.ceo-journey-grid)>h1{margin-bottom:8px}
+@media(max-width:900px){.ceo-journey-grid{grid-template-columns:1fr}.ceo-playback,.ceo-evidence{padding:16px}.ceo-step-title{flex-direction:column}}
