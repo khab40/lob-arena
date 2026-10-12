@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "strict": true,
     "target": "ES2022",
     "baseUrl": ".",
