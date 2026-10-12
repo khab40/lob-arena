@@ -4,6 +4,7 @@ type RuntimeConfig = {
   VITE_API_BASE_URL?: string;
   VITE_ARENA_MODE?: ArenaMode;
   VITE_ARENA_WS_URL?: string;
+  VITE_CEO_DEMO?: string;
 };
 
 declare global {
@@ -15,6 +16,8 @@ declare global {
 const runtimeConfig = typeof window === "undefined" ? undefined : window.__LOB_ARENA_CONFIG__;
 const browserOrigin = typeof window === "undefined" ? "http://localhost:5173" : window.location.origin;
 const browserWebSocketOrigin = browserOrigin.replace(/^http/, "ws");
+
+export const CEO_DEMO_ENABLED = configuredValue(runtimeConfig?.VITE_CEO_DEMO, import.meta.env.VITE_CEO_DEMO, "false") === "true";
 
 function configuredValue(runtimeValue: string | undefined, buildValue: string | undefined, fallback: string): string {
   return runtimeValue?.trim() || buildValue?.trim() || fallback;
