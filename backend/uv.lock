@@ -879,6 +879,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "google-auth" },
     { name = "grpcio" },
     { name = "httptools" },
     { name = "protobuf" },
@@ -915,6 +916,7 @@ dev = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "gitpython", marker = "extra == 'ml'", specifier = ">=3.1.58,<4.0.0" },
+    { name = "google-auth", specifier = ">=2.56.2,<3" },
     { name = "grpcio", specifier = ">=1.82.1" },
     { name = "httptools", specifier = ">=0.7.1" },
     { name = "lightgbm", marker = "extra == 'ml'", specifier = ">=4.6.0,<5.0.0" },
