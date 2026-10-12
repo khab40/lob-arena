@@ -9,6 +9,8 @@ import { AttackScenarioGeneratorPage } from "@/pages/AttackScenarioGeneratorPage
 import { DataIngestionPage } from "@/pages/DataIngestionPage";
 import { NebiusControlPanelPage } from "@/pages/NebiusControlPanelPage";
 import { SavedScoreResearchPage } from "@/pages/SavedScoreResearchPage";
+import { CeoDemoPage } from "@/pages/CeoDemoPage";
+import { CEO_DEMO_ENABLED } from "@/config/runtime";
 import {
   getStoredRuntimeMode,
   runtimeComponents,
@@ -33,6 +35,10 @@ const SIDEBAR_DEFAULT_WIDTH = 292;
 const SIDEBAR_COLLAPSED_WIDTH = 78;
 
 export function App() {
+  return CEO_DEMO_ENABLED || window.location.pathname === "/ceo-demo" ? <CeoDemoPage /> : <ResearchApp />;
+}
+
+function ResearchApp() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(() => getStoredSidebarWidth());
   const resizingRef = useRef(false);

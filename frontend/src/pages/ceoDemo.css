@@ -1,0 +1,12 @@
+.ceo-demo { min-height: 100vh; max-width: 1120px; margin: auto; padding: 32px 24px; color: var(--color-text); }
+.ceo-demo-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 48px; }
+.ceo-demo-header strong { font-size: 24px; }
+.ceo-demo-header span, .ceo-demo footer { color: var(--color-text-muted); }
+.ceo-demo-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 40px; }
+.ceo-demo-card h1 { font-size: clamp(24px, 4vw, 38px); max-width: 700px; line-height: 1.2; }
+.ceo-demo-card p { max-width: 760px; line-height: 1.6; }
+.ceo-demo-card [role="alert"] { color: var(--color-danger); }
+.ceo-demo-account { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ceo-google-button { min-height: 44px; margin: 24px 0; }
+.ceo-demo footer { margin-top: 24px; font-size: 14px; }
+@media (max-width: 640px) { .ceo-demo { padding: 20px 16px; } .ceo-demo-card { padding: 24px; } }
