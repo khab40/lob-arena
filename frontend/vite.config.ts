@@ -1,8 +1,9 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { ceoLoopbackProxy } from "./dev/ceoLoopbackProxy.ts";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [ceoLoopbackProxy(), react()],
   build: {
     chunkSizeWarningLimit: 650,
     rollupOptions: {
@@ -28,6 +29,10 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      "/api/auth": { target: "http://127.0.0.1:8000", changeOrigin: false, xfwd: false },
+      "/api/ceo-demo": { target: "http://127.0.0.1:8000", changeOrigin: false, xfwd: false }
+    },
     allowedHosts: [
       '.trycloudflare.com'
     ]
