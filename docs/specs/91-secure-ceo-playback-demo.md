@@ -63,6 +63,27 @@ and pending work before displaying the replacement account. Same-subject polling
 preserves the current snapshot. This restores CEO-AC-02/09 isolation within the
 approved demo workspace; it does not add identity or administration scope.
 
+Frontend image packaging correction ([Bug #381](https://github.com/khab40/lob-arena/issues/381)):
+the image build must retain the existing `dev/ceoLoopbackProxy.ts` dependency
+imported by `vite.config.ts`. The frontend context currently excludes that file,
+causing the production image build to fail while a full-checkout build passes.
+Admit only that directory and exact file through the existing build-input allowlist.
+The first correction's `!dev/` also admitted descendants under Docker's parent
+matching semantics; its custom static checker incorrectly reported them excluded
+(finding `CEO-PACKAGING-I1-01`). Preserve that packet as failed exclusion evidence.
+Order the rules as `!dev/`, `dev/**`, then `!dev/ceoLoopbackProxy.ts` so the exact
+dependency is admitted after descendants are excluded. Verify invented sibling,
+dotfile and nested paths using pinned official `moby/patternmatcher` v0.6.0,
+including both parent-matching APIs; do not use the incompatible custom parser.
+Docker's [context syntax](https://docs.docker.com/build/concepts/context/#syntax)
+and [matcher source](https://github.com/moby/patternmatcher/blob/v0.6.0/patternmatcher.go)
+own those matching semantics.
+Preserve CEO-AC-02b's local access guard and CEO-AC-10's reviewed-build prerequisite;
+this changes packaging only, with no proxy, authentication or inference behavior
+change. Verify context selection and the existing proxy tests, lint and build;
+independent correction review precedes any image build or CI rerun. Original-custody
+end-to-end rehearsal, deployment and full story acceptance remain pending.
+
 ## Acceptance
 
 ```gherkin
@@ -227,12 +248,19 @@ Evidence references are retained privately under root
   and [#378](https://github.com/khab40/lob-arena/issues/378). The correction is CLEAR
   with no actionable P0/P1/P2 findings; its SHA-256 is
   `8f7294a1aa33c67f63123b387665afec849ae2cf3baa0f0b9b0e7ddd65dc66ab`.
+- **P**: `frontend-image-packaging-correction1/checks.json` records the official
+  matcher check (20 paths, 80 assertions), five proxy tests and lint passing. The
+  unchanged production build carries forward from the original iteration. Its custom parser
+  exclusion claim is invalidated by `frontend-image-packaging-iteration1-review-classifier_author.json`
+  (P2 `CEO-PACKAGING-I1-01`); its five proxy tests, lint and production build remain
+  passing evidence. Correction review and the fixed image CI build remain pending;
+  local checks do not establish an image build or actual rehearsal.
 
 | Scenario | Contract or implementation | Check | Retained evidence | Status |
 | --- | --- | --- | --- | --- |
 | CEO-AC-01 | `CEOAuth`; Google verification and opaque session | A: `test_http_login_cookie_session_and_logout`, `test_official_google_verifier_signature_and_claims_without_network`, `test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout`; Auth browser: `Google callback enters the workspace and logout removes its contents` | B, F, R | Inert/mock pass; actual Google integration pending |
 | CEO-AC-02 | `CEOAccessBoundary`; session and user isolation | A: `test_session_expiry_and_current_allowlist_removal`, `test_alternative_routes_denied_even_after_login`, `test_cross_site_mutation_and_websocket_refusal`; J: `test_missing_session_denies_before_any_original_or_artifact_reads`, `test_another_authenticated_subject_cannot_read_explain_save_or_export`; Journey browser: `CEO-AC-02/09 replacement account clears captured and saved evidence` | B, F, R | Inert/mock denial and isolation pass; actual rehearsal pending |
-| CEO-AC-02b | Local backend and development/preview proxy guards | A: `test_local_forwarded_origin_and_host_refusal_before_reads`, `test_direct_remote_peer_denied`, `test_missing_google_config_visible_and_denies`; [`frontend/test/ceo-loopback-proxy.test.mjs`](../../frontend/test/ceo-loopback-proxy.test.mjs): `denies remote or unknown original peers despite forged local headers`, `guards the preview server before its inherited demo proxies` | B, F, R | Inert local/shared boundary pass; actual local integration pending |
+| CEO-AC-02b | Local backend and development/preview proxy guards | A: `test_local_forwarded_origin_and_host_refusal_before_reads`, `test_direct_remote_peer_denied`, `test_missing_google_config_visible_and_denies`; [`frontend/test/ceo-loopback-proxy.test.mjs`](../../frontend/test/ceo-loopback-proxy.test.mjs): `denies remote or unknown original peers despite forged local headers`, `guards the preview server before its inherited demo proxies`; P: `config_dependency_included`, `unrelated_inputs_excluded` | B, F, R, P | Inert local/shared boundary and context checks pass; packaging review, image CI and actual local integration pending |
 | CEO-AC-03 | Pinned saved-score verifier and fixed paired window | J: `test_fixed_original_window_preserves_ordinals_targets_timestamps_and_both_scores`, `test_existing_pinned_verifier_reads_only_invented_custody_and_refuses_later_change`; Journey flow | B, F, R | Invented custody/mock pass; original-custody playback pending |
 | CEO-AC-04 | Reverification and safe unavailable response | J: `test_changed_custody_refuses_fresh_reads_and_capture_without_private_path_leak`, `test_missing_journey_configuration_is_visible_unavailable`, `test_no_original_transformer_alert_means_unavailable_campaign`; Journey browser: `CEO-AC-04 unavailable custody shows a safe operator action` | B, F, R | Inert/mock refusal pass; original-custody integration pending |
 | CEO-AC-05 | Immutable captured snapshot and paired context | J: `test_capture_keeps_exact_selected_row_paired_context_and_immutable_hash`, `test_lightgbm_alert_capture_uses_same_original_window`; Journey browser: `CEO-AC-05 same-account polling preserves its immutable captured snapshot`; Journey flow | B, F, R | Inert/mock pass; original-custody rehearsal pending |
@@ -240,7 +268,7 @@ Evidence references are retained privately under root
 | CEO-AC-07 | Durable verified user/workspace-owned saved bundle | J: `test_explicit_factual_fallback_and_repeated_explain_save_reopen_export_are_durable`, `test_another_authenticated_subject_cannot_read_explain_save_or_export`; Journey flow | B, F, R | Fixture save/readback/export pass; actual rehearsal pending |
 | CEO-AC-08 | Bounded requests and durable failure handling | J: `test_save_before_explanation_is_refused`, `test_fsync_failure_retains_partial_and_never_reports_save_success`, `test_corrupt_intermediate_or_saved_bytes_refused_without_save_success`, `test_unsafe_mutation_refused_before_original_capture`, `test_count_and_byte_budgets_fail_before_another_artifact`; Journey browser: `CEO-AC-08 failed save cannot enable download or claim retained evidence` | B, F, R | Inert/mock failure boundaries pass; actual rehearsal pending |
 | CEO-AC-09 | Durable session revocation and expiration | A: `test_google_session_opaque_durable_logout`, `test_session_expiry_and_current_allowlist_removal`, `test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout`; Auth browser: `server expiration clears the workspace without a browser session fallback` | B, F, R | Inert/mock pass; actual Google lifecycle pending |
-| CEO-AC-10 | Reviewed local journey and separately approved deployment | Actual sign-in/playback/capture/explain/save/reopen/export receipt with source build and explanation mode | Actual receipt not yet retained | Pending/gated; no actual original-custody end-to-end receipt |
+| CEO-AC-10 | Reviewed local journey and separately approved deployment | Fixed frontend image CI build and actual sign-in/playback/capture/explain/save/reopen/export receipt with source build and explanation mode | P records local checks only; image CI and actual receipts not yet retained | Pending/gated; image CI and actual original-custody end-to-end receipt pending |
 
 Actual Google integration, original-custody end-to-end rehearsal, CI/publication
 and deployment remain pending. The first original-data S3 HEAD failure has no
