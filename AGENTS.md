@@ -2,6 +2,22 @@
 
 # Operator execution preferences
 
+- Reuse existing building blocks first (operator instruction, 2026-10-12).
+  Before implementing a change, inspect the existing UI components, hooks,
+  backend services, contracts, libraries, tests and deployment tooling. Record
+  which parts will be reused in the implementation plan and canonical spec.
+  Extend the existing solution rather than creating a parallel UI, backend or
+  workflow. When functionality is shared, extract or extend a common component
+  or library instead of copying it; add a dependency only when existing code
+  cannot reasonably meet the need, with its purpose and tradeoffs documented.
+  Demo and release work must preserve the working product's capabilities and
+  use a separate task branch, release configuration and verified immutable tag.
+  A simplified demo must not replace or hide existing UI/backend functionality
+  unless the operator explicitly authorizes that scope. Before any replacement
+  or rewrite, document the concrete gap, reuse options and compatibility impact,
+  and obtain explicit operator approval unless already given for that change.
+  Reviewers must check reuse and preservation alongside acceptance criteria.
+
 - For future Transformer holdout execution packages, explicitly select
   `RetainingReadbackStore` for independent result collection and verification.
   Retain verified publication bytes and their original version/size/SHA-256
