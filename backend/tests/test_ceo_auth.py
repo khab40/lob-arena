@@ -380,3 +380,108 @@ def test_official_google_verifier_signature_and_claims_without_network(signing_m
         with pytest.raises(Exception):
             verify_oauth2_token(token, request, audience="invented-client")
     assert calls == [("https://www.googleapis.com/oauth2/v1/certs", "GET")]
+
+
+@pytest.mark.parametrize("response", [{"keys": []}, {}, {"kid": "not-a-certificate"}])
+def test_certificate_transport_rejects_unbounded_jwk_branch_and_retries(monkeypatch, response):
+    from app.ceo_google_worker import CERTS_URL, CertificateRequest
+    requests = []
+    class Response:
+        status = 200
+        def __enter__(self):
+            return self
+        def __exit__(self, *_args):
+            pass
+        def read(self, maximum):
+            assert maximum == 1024 * 1024 + 1
+            return json.dumps(response).encode()
+    class Opener:
+        def open(self, request, timeout):
+            requests.append((request.full_url, timeout))
+            return Response()
+    monkeypatch.setattr("app.ceo_google_worker.build_opener", lambda *_args: Opener())
+    transport = CertificateRequest()
+    with pytest.raises(ValueError):
+        transport(CERTS_URL)
+    with pytest.raises(ValueError):
+        transport(CERTS_URL)
+    assert requests == [(CERTS_URL, 10)]
+
+
+def test_google_worker_does_not_serialize_failure_or_credential(monkeypatch):
+    import io
+    from app import ceo_google_worker
+    output = io.StringIO()
+    monkeypatch.setattr(ceo_google_worker.sys, "stdin", SimpleNamespace(buffer=io.BytesIO(
+        b'{"credential":"invented-id-token","client_id":"invented-client"}')))
+    monkeypatch.setattr(ceo_google_worker.sys, "stdout", output)
+    def refuse(*_args, **_kwargs):
+        raise ValueError("invented-id-token/private-path")
+    monkeypatch.setattr(ceo_google_worker, "verify_oauth2_token", refuse)
+    assert ceo_google_worker.main() == 1
+    assert output.getvalue() == ""
+
+
+@pytest.mark.parametrize("position", ["before", "after"])
+def test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout(configured, position):
+    auth, claims, now, _ = configured
+    client, app = make_client(auth)
+    if position == "before":
+        client.cookies.set("unrelated", '{"flag":0,"time":123}', domain="localhost.local", path="/")
+    assert sign_in(client, claims).status_code == 200
+    if position == "after":
+        client.cookies.set("unrelated", '{"flag":0,"time":123}', domain="localhost.local", path="/")
+    assert client.get("/api/auth/session").status_code == 200
+    assert client.get("/api/ceo-demo/campaign").status_code == 200
+    now[0] += 1800
+    assert client.get("/api/auth/session").status_code == 401
+    assert client.get("/api/ceo-demo/campaign").status_code == 401
+    assert sign_in(client, claims).status_code == 200
+    assert client.post("/api/auth/logout", headers={"Origin": ORIGIN}).status_code == 204
+    assert client.get("/api/auth/session").status_code == 401
+    assert app.state.reads == 1
+
+
+@pytest.mark.parametrize("kind", ["session", "challenge"])
+@pytest.mark.parametrize("path", ["session", "google", "logout"])
+def test_duplicate_application_cookies_refused_before_session_or_google(configured, kind, path, monkeypatch):
+    auth, claims, _, calls = configured
+    client, app = make_client(auth)
+    config = client.get("/api/auth/config")
+    claims["nonce"] = config.json()["nonce"]
+    monkeypatch.setattr(auth, "session", lambda _: pytest.fail("Ambiguous cookies reached session lookup"))
+    name = auth.session_cookie if kind == "session" else auth.challenge_cookie
+    raw = f'{name}={"a" * 43}; unrelated={{"flag":0}}; {name}={"b" * 43}'
+    headers = {"Cookie": raw, "Origin": ORIGIN}
+    response = client.get("/api/auth/session", headers=headers) if path == "session" else client.post(
+        "/api/auth/" + path, json={"credential": "example"} if path == "google" else {}, headers=headers)
+    assert response.status_code == 403 and response.json() == {"detail": "Request refused"}
+    assert calls == [] and app.state.reads == 0
+
+
+@pytest.mark.parametrize("kind", ["session", "challenge"])
+@pytest.mark.parametrize("value", [None, "", "short", "a" * 42, "a" * 44, "a" * 42 + "/", '"not-opaque"', "%61" * 43])
+def test_malformed_application_cookie_refused_without_verifier(configured, kind, value, monkeypatch):
+    auth, _, _, calls = configured
+    client, app = make_client(auth)
+    monkeypatch.setattr(auth, "session", lambda _: pytest.fail("Malformed cookies reached session lookup"))
+    name = auth.session_cookie if kind == "session" else auth.challenge_cookie
+    app_cookie = name if value is None else f"{name}={value}"
+    response = client.get("/api/auth/session", headers={"Cookie": f'unrelated={{"flag":0}}; {app_cookie}'})
+    assert response.status_code == 403 and calls == [] and app.state.reads == 0
+
+
+def test_quoted_valid_cookie_uses_same_decoded_value_as_request_cookies(configured):
+    auth, claims, *_ = configured
+    client, _ = make_client(auth)
+    assert sign_in(client, claims).status_code == 200
+    token = client.cookies.get(auth.session_cookie)
+    response = client.get("/api/auth/session", headers={"Cookie": f'unrelated={{"flag":0}}; {auth.session_cookie}="{token}"'})
+    assert response.status_code == 200
+
+
+def test_unbounded_cookie_header_is_refused_without_session_lookup(configured, monkeypatch):
+    auth, *_ = configured
+    client, _ = make_client(auth)
+    monkeypatch.setattr(auth, "session", lambda _: pytest.fail("Unbounded header reached session lookup"))
+    assert client.get("/api/auth/session", headers={"Cookie": "unrelated=" + "x" * 16384}).status_code == 403
