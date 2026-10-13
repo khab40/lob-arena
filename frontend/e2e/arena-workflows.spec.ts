@@ -2,6 +2,7 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 
 type ApiState = {
   candidates?: Record<string, unknown>[];
+  itchCandidates?: Record<string, unknown>[];
   datasets?: Record<string, unknown>[];
   deletedDatasets?: string[];
   experiment?: ReturnType<typeof experimentFixture> | null;
@@ -75,9 +76,9 @@ async function mockApi(page: Page, state: ApiState = {}) {
       return json(state.candidates);
     }
     if (path === "/api/data-ingestion/sources/nasdaq_itch/candidates" && method === "GET") {
-      return json([]);
+      return json(state.itchCandidates ?? []);
     }
-    const candidateImport = path.match(/^\/api\/data-ingestion\/sources\/lobster\/candidates\/([^/]+)\/import$/);
+    const candidateImport = path.match(/^\/api\/data-ingestion\/sources\/(?:lobster|nasdaq_itch)\/candidates\/([^/]+)\/import$/);
     if (candidateImport && method === "POST") {
       state.importRequests?.push(request.postDataJSON() as Record<string, unknown>);
       return json({ candidate_id: candidateImport[1], dataset_id: null, status: "importing" }, 202);
@@ -624,4 +625,30 @@ test("data ingestion accepts custom minutes and deletes a confirmed dataset", as
   await page.getByRole("button", { name: "Delete dataset" }).click();
   await expect.poll(() => state.deletedDatasets).toEqual(["dataset-stale"]);
   await expect(page.getByText("dataset-stale")).toBeHidden();
+});
+
+test("ITCH-AC-01 directory-only MSFT cannot import while AAPL remains usable", async ({ page }) => {
+  const reason = "MSFT has no visible-order lifecycle events in this source; choose another symbol or source.";
+  const candidate = (symbol: string, status: string) => ({
+    candidate_id: `fixture-${symbol}`, source_type: "nasdaq_itch", venue: "XNAS",
+    symbol, status, trade_date: "2026-01-02", depth: 10, dataset_id: null,
+    start_time: "00:00:00.000", start_time_ms: 0,
+    end_time: "24:00:00.000", end_time_ms: 86_400_000,
+    source_file: "fixture/2026-01-02.NASDAQ_ITCH50.fixture.gz", source_file_size: 229,
+    message_file: null, message_file_size: null,
+    orderbook_file: null, orderbook_file_size: null,
+    errors: status === "invalid" ? [reason] : []
+  });
+  const state: ApiState = { itchCandidates: [candidate("AAPL", "ready"), candidate("MSFT", "invalid")] };
+  await mockApi(page, state);
+  await page.goto("/data-ingestion");
+  const msft = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "MSFT", exact: true }) });
+  await expect(msft.getByRole("button", { name: "Import window" })).toBeDisabled();
+  await expect(msft.getByText(reason)).toBeVisible();
+  const aapl = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "AAPL", exact: true }) });
+  await expect(aapl.getByRole("button", { name: "Import window" })).toBeEnabled();
+  expect(state.importRequests).toHaveLength(0);
+  await aapl.getByRole("button", { name: "Import window" }).click();
+  await expect.poll(() => state.importRequests?.length).toBe(1);
+  expect(state.importRequests?.[0]).toEqual({ depth: 10, start_time_ms: 34_200_000, end_time_ms: 36_000_000 });
 });
