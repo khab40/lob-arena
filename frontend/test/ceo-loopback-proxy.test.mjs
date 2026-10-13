@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
-import { guardDemoProxy, ceoLoopbackProxy } from "../dev/ceoLoopbackProxy.ts";
+import { bypassRemoteDemoProxy, guardDemoProxy, ceoLoopbackProxy } from "../dev/ceoLoopbackProxy.ts";
 
-function request(peer, url = "/api/auth/config", headers = {}) {
+function request(peer, url = "/api/auth/config", headers = {}, fullApplication = false) {
   let forwarded = false;
   const response = { statusCode: 200, headers: {}, body: null,
     setHeader(key, value) { this.headers[key] = value; }, end(body) { this.body = body; } };
-  guardDemoProxy({ url, headers, socket: { remoteAddress: peer } }, response, () => { forwarded = true; });
+  guardDemoProxy({ url, headers, socket: { remoteAddress: peer } }, response, () => { forwarded = true; }, fullApplication);
   return { forwarded, response };
 }
 
@@ -46,4 +46,33 @@ it("guards the preview server before its inherited demo proxies", () => {
   ceoLoopbackProxy().configurePreviewServer({ middlewares: { use(middleware) { registered.push(middleware); } } });
   assert.deepEqual(registered, [guardDemoProxy]);
   assert.equal(request("192.0.2.1", "/api/ceo-demo/campaign").forwarded, false);
+});
+
+it("guards ordinary APIs in the authenticated application without changing disabled mode", () => {
+  for (const path of ["/api/kernel/state", "/api/arena/state", "/api/data-ingestion/datasets", "/api/nebius/status", "/health", "/health?verbose=false"]) {
+    assert.equal(request("192.0.2.1", path, {}, false).forwarded, true);
+    assert.equal(request("192.0.2.1", path, {}, true).response.statusCode, 403);
+    assert.equal(request("127.0.0.1", path, {}, true).forwarded, true);
+    assert.equal(request("127.0.0.1", path, { forwarded: "example" }, true).response.statusCode, 403);
+  }
+});
+
+it("refuses WebSocket upstream creation for remote or forwarded original peers", () => {
+  for (const peer of ["192.0.2.1", "::ffff:192.0.2.1", undefined]) {
+    assert.equal(bypassRemoteDemoProxy({ headers: {}, socket: { remoteAddress: peer } }), false);
+  }
+  assert.equal(bypassRemoteDemoProxy({ headers: { forwarded: "for=127.0.0.1" }, socket: { remoteAddress: "127.0.0.1" } }), false);
+  assert.equal(bypassRemoteDemoProxy({ headers: {}, socket: { remoteAddress: "127.0.0.1" } }), undefined);
+});
+
+it("registers the full application guard before development and preview proxying", () => {
+  for (const entry of ["configureServer", "configurePreviewServer"]) {
+    const registered = [];
+    ceoLoopbackProxy(true)[entry]({ middlewares: { use(middleware) { registered.push(middleware); } } });
+    let forwarded = false;
+    const response = { setHeader() {}, end() {} };
+    registered[0]({ url: "/api/arena/state", headers: {}, socket: { remoteAddress: "192.0.2.1" } }, response, () => { forwarded = true; });
+    assert.equal(forwarded, false);
+    assert.equal(response.statusCode, 403);
+  }
 });
