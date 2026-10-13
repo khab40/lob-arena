@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { captureAnomaly, DemoAccessEnded, downloadEvidence, explainAnomaly, getEvidenceList, getPreparedCampaign, getPreparedRows, reopenEvidence, saveEvidence } from "@/api/ceoJourney";
-import type { SavedDetectorId, SavedScoreRow } from "@/types/savedScores";
+import type { SavedDetectorId } from "@/types/savedScores";
 import type { AnomalySnapshot, DemoExplanation, EvidenceRecord, EvidenceSummary, PreparedCampaign, PreparedPage } from "@/types/ceoJourney";
-import { CeoPlaybackPanel } from "./CeoPlaybackPanel";
-import { CeoEvidencePanel } from "./CeoEvidencePanel";
-import "./ceoJourney.css";
+import { PreparedEvidenceContext } from "./preparedEvidence";
 
-export function CeoJourney({ onAccessEnded }: { onAccessEnded: () => void }) {
+export function CeoJourney({ children, onAccessEnded }: { children: ReactNode; onAccessEnded: () => void }) {
   const [campaign, setCampaign] = useState<PreparedCampaign | null>(null);
   const [page, setPage] = useState<PreparedPage | null>(null);
   const [detector, setDetector] = useState<SavedDetectorId>("transformer");
@@ -16,11 +14,14 @@ export function CeoJourney({ onAccessEnded }: { onAccessEnded: () => void }) {
   const [explanation, setExplanation] = useState<DemoExplanation | null>(null);
   const [saved, setSaved] = useState<EvidenceRecord | null>(null);
   const [records, setRecords] = useState<EvidenceSummary[]>([]);
-  const [busy, setBusy] = useState(true), [error, setError] = useState(""), [attempt, setAttempt] = useState(0);
+  const [active, setActive] = useState(false);
+  const activate = useCallback(() => setActive(true), []);
+  const [busy, setBusy] = useState(false), [error, setError] = useState(""), [attempt, setAttempt] = useState(0);
   const operation = useRef<AbortController | null>(null);
   const ended = useRef(onAccessEnded); ended.current = onAccessEnded;
 
   useEffect(() => {
+    if (!active) return;
     const controller = new AbortController(); operation.current = controller;
     setBusy(true); setError("");
     setCampaign(null); setPage(null); setPlaying(false);
@@ -34,7 +35,7 @@ export function CeoJourney({ onAccessEnded }: { onAccessEnded: () => void }) {
       }
     }).finally(() => { if (!controller.signal.aborted) setBusy(false); });
     return () => { controller.abort(); operation.current?.abort(); };
-  }, [attempt]);
+  }, [active, attempt]);
 
   useEffect(() => {
     if (!playing || !page) return;
@@ -84,20 +85,10 @@ export function CeoJourney({ onAccessEnded }: { onAccessEnded: () => void }) {
     if (signal.aborted) return;
     setSnapshot(value.snapshot); setExplanation(value.explanation); setSaved(value);
   }); }
-  return <>
-    {error ? <div className="ceo-journey-error"><p role="alert">{error}</p><button type="button" disabled={busy} onClick={() => setAttempt(v => v + 1)}>Reload prepared campaign</button></div> : null}
-    {!campaign || !page ? <p role="status">{busy ? "Opening the verified campaign…" : "The prepared campaign is unavailable."}</p> : <div className="ceo-journey-grid">
-      <CeoPlaybackPanel campaign={campaign} page={page} detector={detector} cursor={cursor} playing={playing} speed={speed}
-        busy={busy} selected={selected} onDetector={chooseDetector} onPlay={() => {
-          if (cursor === page.rows.length) setCursor(0); setPlaying(v => !v);
-        }} onSpeed={setSpeed} onJump={() => {
-          setPlaying(false); const index = page.rows.findIndex(r => r.alert);
-          if (index >= 0) { setCursor(index + 1); setSelected(page.rows[index].target_id); }
-        }} onSelect={(row: SavedScoreRow) => setSelected(row.target_id)} onCapture={capture} />
-      <CeoEvidencePanel snapshot={snapshot} explanation={explanation} saved={saved} records={records} busy={busy}
-        onExplain={explain} onSave={save} onReopen={reopen} onDownload={() => {
-          if (saved) void run(signal => downloadEvidence(saved.id, signal));
-        }} />
-    </div>}
-  </>;
+  function download() { if (saved) void run(signal => downloadEvidence(saved.id, signal)); }
+  return <PreparedEvidenceContext.Provider value={{ campaign, page, detector, cursor, playing, speed, selected,
+    snapshot, explanation, saved, records, busy, error, activate, retry: () => setAttempt(v => v + 1),
+    chooseDetector, setPlaying, setSpeed, setCursor, setSelected, capture, explain, save, reopen, download }}>
+    {children}
+  </PreparedEvidenceContext.Provider>;
 }
