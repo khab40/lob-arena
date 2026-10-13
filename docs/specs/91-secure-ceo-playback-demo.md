@@ -1,8 +1,14 @@
-# Secure CEO playback demo
+# Secure CEO demo: playback and fresh detection
 
 Tickets: [#91](https://github.com/khab40/lob-arena/issues/91) and
 [#90](https://github.com/khab40/lob-arena/issues/90), in
 [Project #3](https://github.com/users/khab40/projects/3).
+
+The [fresh-detection successor](#fresh-detection-successor--13-october-2026)
+records the operator's clarified release target. The saved-playback increment
+below remains a delivered interim capability, with its original scope preserved.
+
+## Saved-playback increment — 12 October 2026
 
 Operator decision, 12 October 2026: deliver saved Transformer/LightGBM playback
 first for this week's CEO demo; fresh scoring follows later. Start on localhost
@@ -465,7 +471,7 @@ As a demo reviewer, I want directory-only ITCH symbols identified before import,
 so that I can select usable data without an avoidable failed job.
 
 The bundled synthetic fixture has MSFT directory metadata but only AAPL order
-events. Discovery currently calls both ready. Reuse `iter_records`, the existing
+events. Before the fix, discovery called both ready. Reuse `iter_records`, the existing
 candidate invalid/errors contract, service refusal and Data Ingestion controls.
 Do not add another UI or replay path or alter the original fixture's bytes.
 Small-source event availability is checked only within explicit input/record
@@ -509,10 +515,16 @@ Feature: ITCH source readiness
 
 | Scenario | Implementation/check | Evidence | Status |
 | --- | --- | --- | --- |
-| ITCH-AC-01 | `test_directory_only_symbol_is_refused_before_import_job`; browser `ITCH-AC-01 directory-only MSFT cannot import while AAPL remains usable` | Root `outputs/ceo-playback-demo-20261012/itch-readiness-389/iteration1/checks.json` | Focused checks pass; review/CI pending |
-| ITCH-AC-02 | `test_fixture_normalizes_every_visible_lifecycle_transition`, `test_selected_symbol_never_reads_other_symbol_orders`; LOBSTER checks | Same retained iteration receipt | Focused checks pass; review/CI pending |
-| ITCH-AC-03 | `test_large_source_skips_event_inspection`, `test_incomplete_event_inspection_does_not_mark_symbols_empty` (record/payload budgets) | Same retained iteration receipt | Focused checks pass; review/CI pending |
-| ITCH-AC-04 | `test_truncated_gzip_is_invalid_instead_of_failing_discovery` | Correction receipt in `itch-readiness-389/iteration2/` | Focused check passes; re-review/CI pending |
+| ITCH-AC-01 | `test_directory_only_symbol_is_refused_before_import_job`; browser `ITCH-AC-01 directory-only MSFT cannot import while AAPL remains usable` | Root `outputs/ceo-playback-demo-20261012/itch-readiness-389/iteration1/checks.json` | Focused checks, independent review and CI pass |
+| ITCH-AC-02 | `test_fixture_normalizes_every_visible_lifecycle_transition`, `test_selected_symbol_never_reads_other_symbol_orders`; LOBSTER checks | Same retained iteration receipt | Focused checks, independent review and CI pass |
+| ITCH-AC-03 | `test_large_source_skips_event_inspection`, `test_incomplete_event_inspection_does_not_mark_symbols_empty` (record/payload budgets) | Same retained iteration receipt | Focused checks, independent review and CI pass |
+| ITCH-AC-04 | `test_truncated_gzip_is_invalid_instead_of_failing_discovery` | Correction receipt in `itch-readiness-389/iteration2/` | Focused check, correction re-review and CI pass |
+
+Fix commit `4d183ac` passed all 25 checks in
+[CI 38363316055](https://github.com/khab40/lob-arena/actions/runs/38363316055).
+The independent correction review is retained in `iteration2/review-full_product_review.json`.
+The local backend was restarted from that commit; direct fixture discovery shows
+AAPL ready and MSFT invalid. Actual authenticated browser reinspection is pending.
 
 The bounded source audit found only the 229-byte generated fixture in the root
 and demo worktree's `data/nasdaq-itch`; their default roots contain no 2019 raw
@@ -524,3 +536,91 @@ and the maintained [four-date data flow](../data/nasdaq-public-sample-v1-data-fl
 Actual private environment overrides and current cloud object availability were
 not inspected. Any development replay recovery requires exact artifact/access
 bounds; December final data remains governed separately.
+
+## Fresh-detection successor — 13 October 2026
+
+Operator clarification: the CEO release must attach the selected, trained,
+calibrated and tested LightGBM and Transformer to the existing UI and backend.
+The reviewer chooses one model per run; the result must come from that model's
+fresh execution. Saved playback does not satisfy this successor. LLM explanation
+is later work. This is an increment of existing #90/#91, not full story closure.
+
+As an authorized CEO reviewer, I want to load a supported source, choose a frozen
+detector and inspect its measured result, so that I can assess what it catches,
+misses and falsely flags through the existing application.
+
+Actor: allowlisted Google user; operator configures approved data and execution.
+Goal: Google → data/mode → selected model → run → quality and detection evidence.
+Value: a reproducible product demonstration with honest strengths and limitations.
+Technical acceptance and metric definitions belong to
+[frozen detector flow §6](../frozen-detector-release-and-demo-flow.md#6-observable-acceptance-for-implementation).
+This section owns the corresponding existing-screen journey and presentation.
+
+| Data choice | Evaluation meaning |
+| --- | --- |
+| Real historical | Unlabelled unless independent truth is provided; show alerts and evidence without invented FP/FN/F1. |
+| Clean synthetic | Evaluator knows the generated control population; show false alarms and its denominator. |
+| Synthetic with known attacks | Executed attack truth stays outside detector inputs; evaluate against the retained ledger. |
+| Supported combination | Score all admitted compatible causal inputs; retain provenance, ordering and label coverage; compute quality metrics only on the supported labelled population. |
+| Future source | Extend existing adapters when implemented and authorized; unavailable sources remain unavailable. |
+
+Reuse plan: `DataIngestionPage` and existing source adapters/Java replay for data;
+existing Arena controls, `FeaturePipeline` and causal Transformer windows for
+events/features; governed `LightGbmV1Detector` and the reviewed #24 classifier
+work for frozen model admission; existing evaluation, results and evidence
+services for outcomes. Extend shared result components and existing navigation.
+The #24 classifier currently accepts governed development batches and requires
+CUDA; an adapter and independently verified parity are still required for this
+journey. Preserve the frozen research package while adding that adapter.
+
+In scope: the two selected models, bounded supported data modes, fresh causal
+scoring, visible readiness/progress/failure, labelled metrics, retained evidence,
+and a separate immutable release tag with an authentic end-to-end rehearsal.
+Out of scope: retraining/retuning, #25 cascade, new feed acquisition, arbitrary
+uploads, future connectors, production qualification and real LLM explanation.
+Shared deployment follows the existing separately configured deployment gate.
+
+Dependencies: exact frozen release custody, compatible features and causal history,
+approved bounded execution and retained evaluator-only truth. Agent-initiated
+model execution remains on Nebius Serverless Jobs under the existing resource,
+timeout, access and spend rules. This specification is not execution approval.
+Verification: inert API/UI contract tests; separately bounded numerical/parity
+checks; independent review; CI; Google-to-result/export browser rehearsal.
+
+```gherkin
+Feature: Existing application with selected frozen detectors
+  Scenario: CEO-FRESH-01 Choose a supported source and mode
+    Given the reviewer has entered the existing workspace through Google
+    When the reviewer selects historical, clean synthetic, attack synthetic or a supported combination
+    Then the existing controls show its identity, availability and label coverage
+    And unavailable choices explain what is missing before a run starts
+
+  Scenario: CEO-FRESH-02 Run the selected frozen model
+    Given a compatible source and a verified LightGBM or Transformer release
+    When the reviewer starts a bounded run with the selected model
+    Then the application displays that run's model identity and actual progress
+    And warm-up, unavailable execution and failures cannot appear as successful detection
+
+  Scenario: CEO-FRESH-03 Understand the measured result
+    Given a completed run and its retained evaluation coverage
+    When the reviewer opens its result in the existing application
+    Then source, selected model, alerts and supported quality metrics appear together
+    And counts, denominators, units and unavailable metrics are explicit
+    And detailed provenance remains available without preceding the main outcome
+
+  Scenario: CEO-FRESH-04 Rehearse and retain the tagged result
+    Given the reviewed release preserves the existing screens and backend capabilities
+    When Google entry, data selection, each model run, result, save, reopen, export and logout are rehearsed
+    Then retained evidence binds those observations to the exact immutable release
+    And the exported result matches the saved run and its selected model
+```
+
+| Scenario | Reused implementation / remaining work | Verification and evidence | Status |
+| --- | --- | --- | --- |
+| CEO-FRESH-01 | Existing ingestion/replay/scenario controls; common run binding pending | Source/mode and unavailable-path API/browser checks planned; no fresh-run receipt | Pending |
+| CEO-FRESH-02 | Existing frozen loaders/features; model adapter and runtime bridge pending | Selected-model identity, causal parity and bounded numerical rehearsal planned | Pending |
+| CEO-FRESH-03 | Existing evaluation/results/evidence components; common result presentation pending | Label-aware result fixtures and actual retained run readback planned | Pending |
+| CEO-FRESH-04 | Existing auth, full stack, evidence save/export and release tooling | Authentic two-model rehearsal, independent review, exact-source CI and new tag pending | Pending |
+
+The delivered `ceo-demo-20261012-r1` tag is the saved-playback draft. Its historical
+research metrics do not describe a newly selected input or a newly executed run.
