@@ -40,5 +40,10 @@ under root `outputs/chore-deps-20261013/`.
 
 | Scenario | Implementation/contract | Test/check | Evidence | Status |
 | --- | --- | --- | --- | --- |
-| AC-01 | `deployments/mlflow/Dockerfile` | `test_mlflow_metadata_artifacts_auth_and_hardening_are_explicit`; CI Build mlflow image version import | `outputs/chore-deps-20261013/pr370-verification.json`, `pr370-ci.json` | Focused pass; CI image gate pending |
+| AC-01 | `deployments/mlflow/Dockerfile` | `test_mlflow_metadata_artifacts_auth_and_hardening_are_explicit`; CI Build mlflow image version import | `outputs/chore-deps-20261013/pr370-verification.json`, `pr370-ci.json` | Pass (focused and CI; receipt pins verified head) |
 | AC-02 | Existing deployment files and policies | `backend/tests/test_mlflow_deployment.py`; diff against original PR/base | `outputs/chore-deps-20261013/pr370-tests.log`, `pr370-review.json` | Pass (focused) |
+
+CI pass above is pinned to dependency head `aa3f83b6fbf77a71429b9dbe12a4d38299a16025`
+in `outputs/chore-deps-20261013/pr370-ci-pre-traceability.json`. This status-only
+update changes no dependency or product bytes. Each subsequent publication head
+requires fresh CI before merge; its result is retained in `pr370-ci.json`.
