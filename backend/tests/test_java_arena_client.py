@@ -1,16 +1,8 @@
 import asyncio
 import json
-from io import BytesIO
 
 from app.arena.java_client import JavaArenaClient
-
-
-class Response(BytesIO):
-    def __enter__(self) -> "Response":
-        return self
-
-    def __exit__(self, *args: object) -> None:
-        self.close()
+from app.arena.java_transport import JavaResponse
 
 
 def _state(*, tick: int = 0, running: bool = False) -> dict[str, object]:
@@ -42,11 +34,11 @@ def _state(*, tick: int = 0, running: bool = False) -> dict[str, object]:
 def test_java_arena_client_controls_and_reads_state(monkeypatch) -> None:
     calls: list[tuple[str, str]] = []
 
-    def urlopen(req, timeout: float):
-        calls.append((req.method, req.full_url))
-        return Response(json.dumps(_state(tick=2, running=True)).encode())
+    def request(_self, method, path):
+        calls.append((method, "http://java:8080" + path))
+        return JavaResponse(200, json.dumps(_state(tick=2, running=True)).encode(), "application/json")
 
-    monkeypatch.setattr("app.arena.java_client.request.urlopen", urlopen)
+    monkeypatch.setattr("app.arena.java_transport.JavaTransport.request", request)
     client = JavaArenaClient("http://java:8080", timeout_seconds=0.5)
 
     async def run() -> None:
@@ -63,11 +55,11 @@ def test_java_arena_client_controls_and_reads_state(monkeypatch) -> None:
 
 
 def test_java_arena_client_reads_lightweight_metrics_snapshot(monkeypatch) -> None:
-    def urlopen(req, timeout: float):
-        assert req.full_url == "http://java:8080/api/arena/metrics-state"
-        return Response(b'{"tick":7,"running":false,"incidents_count":3}')
+    def request(_self, method, path):
+        assert path == "/api/arena/metrics-state"
+        return JavaResponse(200, b'{"tick":7,"running":false,"incidents_count":3}', "application/json")
 
-    monkeypatch.setattr("app.arena.java_client.request.urlopen", urlopen)
+    monkeypatch.setattr("app.arena.java_transport.JavaTransport.request", request)
 
     snapshot = asyncio.run(JavaArenaClient("http://java:8080").get_metrics_snapshot())
 
@@ -89,11 +81,11 @@ def test_java_arena_client_maps_scenario_slug(monkeypatch) -> None:
         "evidence": [],
     }
 
-    def urlopen(req, timeout: float):
-        assert req.full_url == "http://java:8080/api/scenarios/spoofing-like"
-        return Response(json.dumps(scenario).encode())
+    def request(_self, method, path):
+        assert path == "/api/scenarios/spoofing-like"
+        return JavaResponse(200, json.dumps(scenario).encode(), "application/json")
 
-    monkeypatch.setattr("app.arena.java_client.request.urlopen", urlopen)
+    monkeypatch.setattr("app.arena.java_transport.JavaTransport.request", request)
     tracker = asyncio.run(JavaArenaClient("http://java:8080").start_scenario("spoofing_like_wall"))
 
     assert tracker.scenario_id == "SCN-000001"

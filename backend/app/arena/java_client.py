@@ -1,6 +1,8 @@
 import asyncio
 import json
-from urllib import error, parse, request
+from urllib import parse
+
+from app.arena.java_transport import JavaTransport
 
 from app.metrics import PrometheusTextRegistry, Timer
 from app.schemas.arena import ArenaMetricsSnapshot, ArenaState, AttackTrackerState, ExchangeEventReplay, Incident
@@ -18,6 +20,7 @@ class JavaArenaClient:
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self.metrics = metrics
+        self.transport = JavaTransport(self.base_url, timeout_seconds)
 
     @property
     def state(self) -> ArenaState:
@@ -102,24 +105,19 @@ class JavaArenaClient:
         return ArenaState.model_validate(payload)
 
     def _request(self, method: str, path: str) -> object:
-        req = request.Request(
-            f"{self.base_url}{path}",
-            method=method,
-            headers={"Accept": "application/json"},
-        )
         timer = Timer()
         outcome = "completed"
         try:
-            with request.urlopen(req, timeout=self.timeout_seconds) as response:
-                return json.loads(response.read().decode("utf-8"))
-        except error.HTTPError as exc:
-            outcome = f"http_{exc.code}"
-            if exc.code == 404:
-                raise LookupError(path) from exc
-            raise ValueError(f"Java arena returned HTTP {exc.code}") from exc
-        except (error.URLError, TimeoutError) as exc:
+            response = self.transport.request(method, path)
+            if response.status >= 400:
+                outcome = f"http_{response.status}"
+                if response.status == 404:
+                    raise LookupError(path)
+                raise ValueError(f"Java arena returned HTTP {response.status}")
+            return json.loads(response.body.decode("utf-8"))
+        except RuntimeError:
             outcome = "unavailable"
-            raise RuntimeError(f"Java arena is unavailable at {self.base_url}") from exc
+            raise
         finally:
             if self.metrics is not None:
                 endpoint = _endpoint_label(path)
