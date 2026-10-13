@@ -5,6 +5,10 @@ issues, baseline targets and pending readiness evidence, use the
 [current roadmap snapshot](roadmap/CURRENT_STATUS.md). This is the canonical
 system overview; ARD-0001 retains the original decision history.
 
+The [architecture review and design patterns](architecture/architecture-review-and-design-patterns.md)
+explains the implemented boundaries, the reasons for the key patterns, and their
+tradeoffs against the reviewed source snapshot.
+
 LOB Arena separates six concerns:
 
 - **User and integration surfaces**: React/Vite UI, CLIs, batch jobs, and future
