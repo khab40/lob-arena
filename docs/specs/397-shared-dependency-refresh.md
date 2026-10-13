@@ -49,4 +49,9 @@ retained under root `outputs/chore-deps-20261013/`.
 | --- | --- | --- | --- | --- |
 | AC-01 | Both manifests and shared lockfile | `frontend/test/shared-lockfile.test.mjs`: shared frontend and website lockfile uses matching dependency specifiers; both frozen installs | `outputs/chore-deps-20261013/pr372-verification.json` (pins baseline, diff and spec hashes) | Pass (focused) |
 | AC-02 | Existing `pnpm` controls | Compare both `pnpm` definitions with pre-repair head | `outputs/chore-deps-20261013/pr372-verification.json` (pins baseline, diff and spec hashes) | Pass (focused) |
-| AC-03 | Existing product build/test scripts | Frontend/website unit, lint, build, browser CI | `outputs/chore-deps-20261013/pr372-*-tests.log`, `pr372-*-lint.log`, `pr372-*-build.log`; `pr372-ci.json` after publication | Focused pass; CI gate pending |
+| AC-03 | Existing product build/test scripts | Frontend/website unit, lint, build, browser CI | `outputs/chore-deps-20261013/pr372-*-tests.log`, `pr372-*-lint.log`, `pr372-*-build.log`; `pr372-ci.json` after publication | Pass (focused and CI; receipt pins verified head) |
+
+CI pass above is pinned to dependency head `7c9bc2e126d52fa856e8648bbdc13985f6a132d1`
+in `outputs/chore-deps-20261013/pr372-ci-pre-traceability.json`. This status-only
+update changes no dependency or product bytes. Each subsequent publication head
+requires fresh CI before merge; its result is retained in `pr372-ci.json`.
