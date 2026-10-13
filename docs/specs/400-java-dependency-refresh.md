@@ -45,9 +45,14 @@ Feature: Java dependency refresh with strict diagnostics
 
 | Scenario | Implementation/contract | Test/check | Evidence | Status |
 | --- | --- | --- | --- | --- |
-| AC-01 | Existing exchange-proto/kernel-grpc build files | `./gradlew clean check --no-daemon`; CI Java 25 and permanent golden corpus | `outputs/chore-deps-20261013/pr371-tests.log`, `pr371-ci.json` | Local pass; golden CI pending |
+| AC-01 | Existing exchange-proto/kernel-grpc build files | `./gradlew clean check --no-daemon`; CI Java 25 and permanent golden corpus | `outputs/chore-deps-20261013/pr371-tests.log`, `pr371-ci.json` | Pass (local and golden CI; receipt pins verified head) |
 | AC-02 | Existing wrapper and `java/gradle.properties` | Compare wrapper properties/JAR/policy with baseline; six-artifact version check | `outputs/chore-deps-20261013/pr371-verification.json` | Pass (static) |
 | AC-03 | Deferred Gradle 9.8.1/Protobuf compatibility | Same strict Java/golden checks after compatibility correction | Bug #400 and retained failed log `pr371-java-failed.log` | Gated; not delivered |
+
+CI pass above is pinned to dependency head `33aa9437b97ad3e6eba1e1cbdbf653b06b8210e0`
+in `outputs/chore-deps-20261013/pr371-ci-pre-traceability.json`. This status-only
+update changes no dependency or product bytes. Each subsequent publication head
+requires fresh CI before merge; its result is retained in `pr371-ci.json`.
 
 Exact diff/spec pins and independent review remain in root
 `outputs/chore-deps-20261013/`. Current green verification cannot complete AC-03.
