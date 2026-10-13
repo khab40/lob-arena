@@ -297,8 +297,11 @@ grants no cloud mutation, data-access expansion, spend, merge or cleanup approva
 
 The [local CEO runbook](../operations/local-ceo-playback-demo.md) describes the
 approved local surface and rehearsal procedure. It does not replace this contract.
-The following mapping records the local saved-playback increment. It distinguishes
-inert failure checks, authentic browser integration and the remaining review/CI gates.
+### Historical predecessor verification
+
+The following mapping records the rejected prepared-page/backend predecessor.
+Its passing functional checks remain historical evidence, not acceptance of the
+current full-product release. The current mapping follows the validation correction.
 
 Test references: **A** is [`backend/tests/test_ceo_auth.py`](../../backend/tests/test_ceo_auth.py);
 **J** is [`backend/tests/test_ceo_journey.py`](../../backend/tests/test_ceo_journey.py).
@@ -394,21 +397,56 @@ Scenario: CEO-AC-12v Validate the authenticated minimal application image
 ```
 
 Focused inert tests and independent exact-diff review precede publication.
-Fresh backend test and image-smoke CI results are required; both scenarios are
-pending until those checks pass for the corrected source.
+Fresh backend test and image-smoke CI passed for corrected source `f168c305` in
+[run 38342831278](https://github.com/khab40/lob-arena/actions/runs/38342831278).
+All 25 PR checks passed. The backend failed-job retry addressed a pre-existing
+watchdog race, not a product change; [Bug #387](https://github.com/khab40/lob-arena/issues/387)
+remains open and must be fixed before #24's live MLflow VM work.
 
 | Scenario | Implementation | Focused check | Evidence | Status |
 | --- | --- | --- | --- | --- |
-| CEO-AC-11v | Existing `JavaArenaClient` metrics, invented shared transport response | `test_java_arena_client_records_proxy_metrics` (completed, HTTP 404/422/503, unavailable) | Root `outputs/ceo-playback-demo-20261012/full-product-ci-validation1/checks.json` | 42 focused inert checks pass; independent review and fresh CI pending |
-| CEO-AC-12v | `app.runtime_smoke --minimal-image` | `test_minimal_smoke_accepts_google_auth_without_verifier_invocation`, rejection/import/callability/engine-authority cases in `test_runtime_smoke.py` | Same correction receipt; original failing CI retained | Inert inventory checks pass; actual minimal-image CI pending |
+| CEO-AC-11v | Existing `JavaArenaClient` metrics, invented shared transport response | `test_java_arena_client_records_proxy_metrics` (completed, HTTP 404/422/503, unavailable) | Root `outputs/ceo-playback-demo-20261012/full-product-ci-validation1/checks.json` and `review-full_product_review.json`; CI above | Pass: 42 focused checks, independent CLEAR review and backend CI |
+| CEO-AC-12v | `app.runtime_smoke --minimal-image` | `test_minimal_smoke_accepts_google_auth_without_verifier_invocation`, rejection/import/callability/engine-authority cases in `test_runtime_smoke.py` | Same correction receipts; original failing CI retained | Pass: inert checks, independent CLEAR review and actual backend image-smoke CI |
+
+### Current full-product draft, 13 October 2026
+
+The original frontend, normal FastAPI backend, Java kernel and agent are running
+locally from `f168c305ce865e3b0c91d11968079f28dbacf18a`. Runtime and image identities
+are retained in root `outputs/ceo-playback-demo-20261012/release-local-20261013/`.
+`rehearsal-v2.json` records actual Google access, original Data Ingestion and Arena,
+64 original saved rows, capture, labelled deterministic explanation, durable save
+and reload/reopen. `server-saved-verification.json` verifies the retained 3,636-byte
+canonical bundle and all three hashes. It does not prove browser download.
+
+Full-product CLEAR reviews are retained as `full-product-backend2-review-full_product_review.json`,
+`full-product-frontend1-review-publication_review.json`,
+`full-product-packaging2-review-full_product_review.json`,
+`full-product-ci1-review-full_product_review.json`,
+`full-product-fixture1-review-full_product_review.json`,
+`full-product-proxy2-review-publication_review.json` and the validation review above.
+The local topology's separate CLEAR preparation review is
+`release-local-20261013/review-v2-full_product_review.json`.
+
+Browser export, post-capture detector switching and logout/re-entry remain pending:
+the download attempt timed out and the computer-use connection became unavailable.
+Existing mocked browser and inert boundary tests pass but do not complete those
+authentic steps. No model, LLM, import, deletion or new cloud workload was run.
+
+The operator requested a running draft today. An immutable **draft** release tag
+may identify this reviewed, CI-passing local increment while these steps remain
+explicitly pending. This refines the full-rehearsal tag prerequisite for draft
+delivery only; CEO-AC-10/12 and full story acceptance remain incomplete. Retain the
+partial receipt, exact source/image identities and independent disposition before
+tagging. Any documentation-only release commit requires fresh CI and proof that
+the running application/build inputs are unchanged from the rehearsed source.
 
 | Scenario | Full-product correction verification | Evidence | Status |
 | --- | --- | --- | --- |
-| CEO-AC-01/02/02b/09 | Session denial, existing HTTP methods, Java and active WebSocket expiry/revocation; account-state reset | New exact-diff checks and review receipt required | Pending |
-| CEO-AC-03/04/05 | Existing Saved Research with authentic fixed window, original offsets and thresholds; source-only failure | New browser and original-custody rehearsal receipt required | Pending |
-| CEO-AC-06/07/08 | Saved snapshot input in existing Investigation Team; same exact retained evidence contracts | New browser and export verification receipt required | Pending |
-| CEO-AC-11 | All original screens/controllers and normal backend initialization; ordinary and authenticated browser suites | New full-product browser/backend receipts required | Pending |
-| CEO-AC-10/12 | Full existing four-service release, isolated outputs/ports, exact images and immutable tag | Reviewed packaging, fresh CI and local release rehearsal required | Pending |
+| CEO-AC-01/02/02b/09 | A: `test_existing_routes_are_session_protected_and_preserved`; `test_full_product_boundary.py`; account replacement and expiry browser cases | `full-product-backend2/checks.json` (299 inert checks), CLEAR backend/proxy reviews, 35-case browser CI and `rehearsal-v2.json` | Inert checks and actual Google/live no-cookie denial pass; actual logout/re-entry pending |
+| CEO-AC-03/04/05 | J: fixed-window/capture tests; Journey browser fixed-window and source-only failure cases | CLEAR frontend review, 35-case browser CI and `rehearsal-v2.json` | Authentic 64-row playback, paired scores and capture pass; post-capture detector switching pending |
+| CEO-AC-06/07/08 | J: durable explain/save/export and failed-write cases; existing Investigation Team saved input | Same browser CI; `rehearsal-v2.json`, `server-saved-verification.json` | Actual fallback, save, reload/reopen and server hashes pass; actual browser export pending |
+| CEO-AC-11 | Journey browser: `CEO-AC-11 authenticated full product keeps its controllers alongside saved evidence`, `CEO-AC-04/11 unavailable prepared custody leaves ordinary screens working` | CLEAR backend/frontend/fixture reviews, 22 ordinary + 13 authenticated browser cases, actual original-screen observations | Pass for preserved capabilities under their existing configuration contracts |
+| CEO-AC-10/12 | Full existing four-service release, isolated outputs/ports, exact images and immutable draft tag | CLEAR packaging/preparation reviews, 25-check CI, `runtime-identities.json`, `rehearsal-v2.json`; final release receipt required | Draft running locally; final documentation review/CI/tag pending; full rehearsal acceptance pending |
 
 The original three saved publications were recovered under bounded approval;
 the temporary exact-key viewer rule was removed with the original nine rules
