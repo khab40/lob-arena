@@ -35,7 +35,7 @@ const SIDEBAR_DEFAULT_WIDTH = 292;
 const SIDEBAR_COLLAPSED_WIDTH = 78;
 
 export function App() {
-  return CEO_DEMO_ENABLED || window.location.pathname === "/ceo-demo" ? <CeoDemoPage /> : <ResearchApp />;
+  return CEO_DEMO_ENABLED ? <CeoDemoPage><ResearchApp /></CeoDemoPage> : <ResearchApp />;
 }
 
 function ResearchApp() {
@@ -176,7 +176,9 @@ function ResearchApp() {
 function ConsoleTopbar() {
   return (
     <section className="console-topbar" aria-label="AI command console">
-      <span className="runtime-status active console-ai-button">Control Panel ready</span>
+      <span className="runtime-status active console-ai-button">
+        Control Panel ready
+      </span>
     </section>
   );
 }

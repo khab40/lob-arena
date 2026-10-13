@@ -6,29 +6,38 @@ interface Props {
   onReopen: (id: string) => void; onDownload: () => void;
 }
 export function CeoEvidencePanel(p: Props) {
-  return <section className="ceo-evidence" aria-label="Captured evidence">
-    <div className="ceo-step-title"><span>2 · Review and retain the evidence</span></div>
+  return <section className="nebius-result-block investigation-team-report" aria-label="Captured evidence">
+    <header className="arena-column-header"><h2>Incidents / Investigations</h2></header>
     <h2>{p.snapshot ? `${p.snapshot.row.symbol} · captured anomaly` : "Capture an alert to continue"}</h2>
     {p.snapshot ? <>
       <p>Original row {p.snapshot.row.ordinal} · {p.snapshot.detector} · synthetic label {p.snapshot.row.synthetic_label}</p>
       <p>This snapshot stays fixed when playback or detector selection changes.</p>
-      <div className="ceo-paired">{(["transformer", "lightgbm"] as const).map(name => {
+      <section className="detector-confidence-panel" aria-label="Captured paired detector scores"><h3>Saved detector probabilities</h3>
+      <div className="detector-meter-list">{(["transformer", "lightgbm"] as const).map(name => {
         const score = p.snapshot!.paired_scores[name];
-        return <div key={name}><b>{name === "transformer" ? "Transformer" : "LightGBM"}</b><strong>{score.probability.toFixed(6)}</strong>
-          <span>Threshold {score.threshold.toPrecision(7)}</span><span>{score.alert ? "Threshold alert" : "Below threshold"}</span></div>;
-      })}</div>
+        return <div className={`detector-meter ${score.alert ? "highlighted" : ""}`} key={name}>
+          <div className="detector-meter-header"><span>{name === "transformer" ? "Transformer" : "LightGBM"}</span><strong>{score.probability.toFixed(6)}</strong></div>
+          <div className="detector-meter-track" aria-label={`${name} saved probability ${score.probability.toFixed(6)}`}><div style={{ width: `${score.probability * 100}%` }} /></div>
+          <span>Threshold {String(score.threshold)} · {score.alert ? "Threshold alert" : "Below threshold"}</span></div>;
+      })}</div></section>
+      <section className="evidence-panel"><h3>Captured original evidence</h3><dl className="incident-replay-meta">
+        <div><dt>Target</dt><dd>{p.snapshot.row.target_id}</dd></div>
+        <div><dt>Source row</dt><dd>{p.snapshot.row.source_ordinal}</dd></div>
+        <div><dt>Timestamp (ns)</dt><dd>{p.snapshot.row.timestamp_ns}</dd></div>
+        <div><dt>Family</dt><dd>{p.snapshot.row.family}</dd></div>
+        <div><dt>Snapshot SHA-256</dt><dd>{p.snapshot.snapshot_sha256}</dd></div>
+      </dl></section>
       <p>{p.snapshot.context.length} preceding saved rows retained.</p>
-      <button type="button" disabled={p.busy || !!p.explanation} onClick={p.onExplain}>Explain captured evidence</button>
-      {p.explanation ? <div className="ceo-explanation"><b>Deterministic fallback · no LLM call</b><p>{p.explanation.text}</p></div> : null}
-      <div className="ceo-toolbar"><button type="button" disabled={p.busy || !p.explanation || !!p.saved} onClick={p.onSave}>Save verified evidence</button>
-        <button type="button" disabled={p.busy || !p.saved} onClick={p.onDownload}>Download evidence JSON</button></div>
+      <button className="primary-button" type="button" disabled={p.busy || !!p.explanation} onClick={p.onExplain}>Explain captured evidence</button>
+      {p.explanation ? <section className="nebius-investigator-panel"><div className="structured-ai-output"><article><h4>Deterministic fallback · no LLM call</h4><p>{p.explanation.text}</p></article></div></section> : null}
+      <div className="nebius-button-row"><button className="primary-button" type="button" disabled={p.busy || !p.explanation || !!p.saved} onClick={p.onSave}>Save verified evidence</button>
+        <button className="secondary-button" type="button" disabled={p.busy || !p.saved} onClick={p.onDownload}>Download evidence JSON</button></div>
       {p.saved ? <p role="status">Evidence saved and verified. Reopen it below to check the retained result.</p> : null}
-      <p className="ceo-digest">Snapshot SHA-256: {p.snapshot.snapshot_sha256}</p>
     </> : <p>The backend captures original scores and provenance before an explanation can be requested.</p>}
     <h3>Saved evidence</h3>
-    {p.records.length ? <ul className="ceo-records">{p.records.map(r => <li key={r.id}>
+    {p.records.length ? <div className="incident-evidence-summary"><ul>{p.records.map(r => <li key={r.id}>
       <span>{r.symbol} · {r.detector} · {new Date(r.saved_at).toLocaleString()}</span>
-      <button type="button" disabled={p.busy} onClick={() => p.onReopen(r.id)}>Reopen {r.id.slice(0, 8)}</button>
-    </li>)}</ul> : <p>No saved records in this account yet.</p>}
+      <button className="secondary-button" type="button" disabled={p.busy} onClick={() => p.onReopen(r.id)}>Reopen {r.id.slice(0, 8)}</button>
+    </li>)}</ul></div> : <p>No saved records in this account yet.</p>}
   </section>;
 }

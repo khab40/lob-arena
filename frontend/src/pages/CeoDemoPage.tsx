@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { getDemoAuthConfig, getDemoSession, signInToDemo, signOutOfDemo } from "@/api/ceoAuth";
 import type { DemoSession } from "@/api/ceoAuthContract";
 import { loadGoogleSignIn, renderGoogleSignIn } from "./ceoGoogleSignIn";
 import { CeoJourney } from "./CeoJourney";
-import "./ceoDemo.css";
+import { startSessionRequests } from "@/api/sessionRequests";
+import { clearControlCenterIncident } from "@/controlCenterIncident";
 
-export function CeoDemoPage() {
+export function CeoDemoPage({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<DemoSession | null>(null);
   const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -78,31 +79,39 @@ export function CeoDemoPage() {
     } finally { setBusy(false); }
   }
 
-  return <main className="ceo-demo">
-    <header className="ceo-demo-header"><strong>LOB Arena</strong><span>Research demonstration</span></header>
-    <section className="ceo-demo-card" aria-label={session ? "Demo workspace" : "Google sign-in"}>
+  return <>
+    <section className="panel" aria-label={session ? "Demo workspace" : "Google sign-in"}>
       {session ? <>
-        <div className="ceo-demo-account"><span>{session.user.name} · {session.user.email}</span>
-          <button disabled={busy} onClick={logout} type="button">Sign out</button></div>
-        <h1>Prepared research campaign</h1>
-        <p>Inspect verified saved Transformer and LightGBM predictions, review an anomaly and retain its evidence.</p>
+        <div className="toolbar"><strong>{session.user.name} · {session.user.email}</strong>
+          <button className="secondary-button" disabled={busy} onClick={logout} type="button">Sign out</button></div>
         <p role="status">Signed in to the demo workspace.</p>
-        <CeoJourney key={JSON.stringify([session.workspace_id, session.user.id])}
-          onAccessEnded={() => { setSession(null); setError("Your session ended. Sign in to continue."); }} />
       </> : <>
-        <h1>Follow an anomaly from result to evidence</h1>
-        <p>Sign in to open the prepared research campaign.</p>
+        <h2>Google sign-in</h2>
+        <p>Sign in to use LOB Arena and its verified saved research.</p>
         {checking ? <p role="status">Checking access…</p> : configured === false
           ? <p role="status">The demo is being prepared. Sign-in is not configured yet.</p> : null}
-        <div className="ceo-google-button" ref={button} aria-label="Sign in with Google"
+        <div ref={button} aria-label="Sign in with Google"
           hidden={checking || configured === false} />
         {busy ? <p role="status">Completing sign-in…</p> : null}
       </>}
       {error ? <p role="alert">{error}</p> : null}
-      {!session && !checking && (error || configured === false) && !busy ? <button onClick={() => {
+      {!session && !checking && (error || configured === false) && !busy ? <button className="secondary-button" onClick={() => {
         setError(""); setAttempt((value) => value + 1);
       }} type="button">Try again</button> : null}
     </section>
-    <footer>Saved research predictions · synthetic research labels</footer>
-  </main>;
+    {session ? <SessionWorkspace key={JSON.stringify([session.workspace_id, session.user.id])}
+      onAccessEnded={() => { setSession(null); setError("Your session ended. Sign in to continue."); }}>{children}</SessionWorkspace> : null}
+  </>;
+}
+
+function SessionWorkspace({ children, onAccessEnded }: { children: ReactNode; onAccessEnded: () => void }) {
+  const ended = useRef(onAccessEnded); ended.current = onAccessEnded;
+  const [ready, setReady] = useState(false);
+  useLayoutEffect(() => {
+    clearControlCenterIncident();
+    const stop = startSessionRequests(() => ended.current());
+    setReady(true);
+    return () => { stop(); clearControlCenterIncident(); };
+  }, []);
+  return ready ? <CeoJourney onAccessEnded={() => ended.current()}>{children}</CeoJourney> : null;
 }
