@@ -158,8 +158,14 @@ rtk proxy uv run --locked --env-file /absolute/project/outputs/ceo-demo-private/
 From its `frontend/` in another terminal, reuse the existing Vite application:
 
 ```sh
-rtk proxy env VITE_CEO_DEMO=true pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort
+rtk proxy env VITE_CEO_DEMO=true \
+  VITE_API_BASE_URL=http://localhost:5173 \
+  VITE_ARENA_WS_URL=ws://localhost:5173/ws/arena VITE_ARENA_MODE=websocket \
+  pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort
 ```
+
+These explicit child values override inherited or local Vite settings and retain
+the reviewed same-origin HTTP/WebSocket session boundary.
 
 Open `http://localhost:5173/arena`. Google protects the existing route table and
 controllers; saved evidence is an additional source, not a replacement cockpit.

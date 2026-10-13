@@ -19,7 +19,10 @@ def main() -> None:
     assert _absent("app.contracts.python_reference")
     if "--minimal-image" in sys.argv:
         assert _absent("grpc")
-        assert _absent("google")
+        assert _absent("google.protobuf")
+        from google.oauth2.id_token import verify_oauth2_token
+
+        assert callable(verify_oauth2_token)
 
 
 if __name__ == "__main__":
