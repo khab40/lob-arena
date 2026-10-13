@@ -3,6 +3,10 @@ import type { Incident, InvestigationContext } from "@/types/arena";
 
 const STORAGE_KEY = "lob-arena.control-center.incident";
 
+export function clearControlCenterIncident() {
+  window.sessionStorage.removeItem(STORAGE_KEY);
+}
+
 export function storeControlCenterIncident(incident: Incident) {
   window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(incident));
 }

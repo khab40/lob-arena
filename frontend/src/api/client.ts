@@ -1,5 +1,6 @@
 import type { BenchmarkResult, Incident, ScenarioConfig } from "@/types/arena";
 import { API_BASE_URL } from "@/config/runtime";
+import { sessionFetch as fetch } from "./sessionRequests";
 import type {
   AttackScenario,
   AttackScenarioInput,
