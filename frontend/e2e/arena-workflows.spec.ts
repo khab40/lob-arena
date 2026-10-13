@@ -71,10 +71,13 @@ async function mockApi(page: Page, state: ApiState = {}) {
       status
     });
 
-    if (path === "/api/data-ingestion/lobster/candidates" && method === "GET") {
+    if (path === "/api/data-ingestion/sources/lobster/candidates" && method === "GET") {
       return json(state.candidates);
     }
-    const candidateImport = path.match(/^\/api\/data-ingestion\/lobster\/candidates\/([^/]+)\/import$/);
+    if (path === "/api/data-ingestion/sources/nasdaq_itch/candidates" && method === "GET") {
+      return json([]);
+    }
+    const candidateImport = path.match(/^\/api\/data-ingestion\/sources\/lobster\/candidates\/([^/]+)\/import$/);
     if (candidateImport && method === "POST") {
       state.importRequests?.push(request.postDataJSON() as Record<string, unknown>);
       return json({ candidate_id: candidateImport[1], dataset_id: null, status: "importing" }, 202);
@@ -568,6 +571,10 @@ test("data ingestion accepts custom minutes and deletes a confirmed dataset", as
   const state: ApiState = {
     candidates: [{
       candidate_id: "candidate-1",
+      source_type: "lobster",
+      venue: "NASDAQ",
+      source_file: null,
+      source_file_size: null,
       dataset_id: null,
       depth: 10,
       end_time: "10:30:00.000",
@@ -608,6 +615,7 @@ test("data ingestion accepts custom minutes and deletes a confirmed dataset", as
   await page.getByRole("button", { name: "Import window" }).click();
   await expect.poll(() => state.importRequests?.length).toBe(1);
   expect(state.importRequests?.[0]).toEqual({
+    depth: 10,
     end_time_ms: 35_220_000,
     start_time_ms: 34_200_000
   });
