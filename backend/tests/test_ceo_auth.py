@@ -161,14 +161,27 @@ def test_http_login_cookie_session_and_logout(configured):
     assert client.get("/api/ceo-demo/campaign").status_code == 401
 
 
-@pytest.mark.parametrize("path", ["/api/legacy-evidence", "/api/research/saved-scores", "/docs", "/metrics",
+@pytest.mark.parametrize("path", ["/api/research/saved-scores", "/metrics",
                                   "/api/auth/config/", "/api/auth/config%2f", "/api/auth/unknown"])
-def test_alternative_routes_denied_even_after_login(configured, path):
+def test_unavailable_routes_remain_unavailable_after_login(configured, path):
     auth, claims, *_ = configured
     client, app = make_client(auth)
     assert sign_in(client, claims).status_code == 200
     assert client.get(path).status_code == 404
     assert app.state.reads == 0
+
+
+def test_existing_routes_are_session_protected_and_preserved(configured):
+    auth, claims, now, _ = configured
+    client, app = make_client(auth)
+    assert client.get("/api/legacy-evidence").status_code == 401
+    assert client.get("/docs").status_code == 401
+    assert sign_in(client, claims).status_code == 200
+    assert client.get("/api/legacy-evidence").json() == {"legacy": True}
+    assert client.get("/docs").status_code == 200
+    now[0] += 1800
+    assert client.get("/api/legacy-evidence").status_code == 401
+    assert app.state.reads == 1
 
 
 @pytest.mark.parametrize("header,value", [("Origin", "https://other.example"), ("Forwarded", "for=127.0.0.1"),
