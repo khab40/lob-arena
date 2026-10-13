@@ -11,6 +11,10 @@ Accepted design is not proof of implementation or qualification. Read
 [architecture overview](../architecture.md) for current ownership.
 Each record retains its own decision context and supersession status.
 
+## Implementation reviews
+
+- [Architecture review and design patterns](architecture-review-and-design-patterns.md) — Source-backed pattern rationale, ownership boundaries and tradeoffs; reviewed snapshot dated 2026-10-13
+
 ## Records
 
 ### Core System Design
