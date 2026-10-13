@@ -50,7 +50,12 @@ root `outputs/chore-deps-20261013/`; no numerical model execution is needed.
 | --- | --- | --- | --- | --- |
 | AC-01 | `backend/pyproject.toml`, `backend/uv.lock` | `uv lock --project backend --check`; lock metadata inspection | `outputs/chore-deps-20261013/pr373-verification.json` | Pass (inert) |
 | AC-02 | Existing requirements/security constraints | `test_dependency_security_floors.py`, `test_serverless_docker_build_contexts.py`; inert Jobs resolver | `outputs/chore-deps-20261013/pr373-tests.log`, `pr373-verification.json` | Pass (inert) |
-| AC-03 | Existing backend/Jobs image consumers | CI LightGBM governed data boundary: Verify ML dependency imports (`--extra ml`); Build jobs image | `outputs/chore-deps-20261013/pr373-ci.json` | CI gate pending |
+| AC-03 | Existing backend/Jobs image consumers | CI LightGBM governed data boundary: Verify ML dependency imports (`--extra ml`); Build jobs image | `outputs/chore-deps-20261013/pr373-ci.json` | Pass (CI; receipt pins verified head) |
+
+CI pass above is pinned to dependency head `30496d4180638f3fecabf0ce8a1242bd85449b76`
+in `outputs/chore-deps-20261013/pr373-ci-pre-traceability.json`. This status-only
+update changes no dependency or product bytes. Each subsequent publication head
+requires fresh CI before merge; its result is retained in `pr373-ci.json`.
 
 Both Jobs requirement sets are resolved for Linux x86_64/Python 3.11, matching
 their Dockerfiles. The market-preparation image is outside the existing CI
