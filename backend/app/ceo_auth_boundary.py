@@ -40,10 +40,11 @@ class CEOAccessBoundary:
     async def __call__(self, scope, receive, send):
         if not self.auth.settings.ceo_demo_enabled or scope["type"] not in ("http", "websocket"):
             return await self.app(scope, receive, send)
-        if scope["type"] == "websocket":
-            return await send({"type": "websocket.close", "code": 1008})
+        websocket = scope["type"] == "websocket"
 
         async def deny(status, detail):
+            if websocket:
+                return await send({"type": "websocket.close", "code": 1008})
             response = JSONResponse({"detail": detail}, status_code=status, headers={"Cache-Control": "no-store"})
             await response(scope, receive, send)
 
@@ -66,33 +67,42 @@ class CEOAccessBoundary:
                             for key, _ in headers)
             if not loopback or forwarded:
                 return await deny(403, "Local access required")
-        if (scope.get("scheme") != origin.scheme or header(b"host") != origin.netloc
+        scheme = {"ws": "http", "wss": "https"}.get(scope.get("scheme"), scope.get("scheme"))
+        if (scheme != origin.scheme or header(b"host") != origin.netloc
                 or header(b"origin") not in ("", self.auth.origin)
                 or header(b"sec-fetch-site") not in ("", "same-origin", "none")):
             return await deny(403, "Origin refused")
-        path, method = scope["path"], scope["method"]
+        path, method = scope["path"], scope.get("method", "GET")
         if scope.get("raw_path", path.encode()) != path.encode("utf-8"):
             return await deny(404, "Unavailable route")
-        if path == "/healthz" and method == "GET":
+        if not websocket and path == "/healthz" and method == "GET":
             return await JSONResponse({"status": "ok"}, headers={"Cache-Control": "no-store"})(scope, receive, send)
-        is_auth = AUTH_METHODS.get(path) == method
+        is_auth = not websocket and AUTH_METHODS.get(path) == method
         is_demo = path.startswith("/api/ceo-demo/") and method in ("GET", "POST")
-        if not is_auth and not is_demo:
+        if path.startswith("/api/auth/") and not is_auth:
             return await deny(404, "Unavailable route")
-        if method == "POST" and header(b"origin") != self.auth.origin:
+        if (websocket or method not in ("GET", "HEAD", "OPTIONS")) and header(b"origin") != self.auth.origin:
             return await deny(403, "Origin required")
         try:
             cookies = application_cookies(header(b"cookie"), (self.auth.session_cookie, self.auth.challenge_cookie))
         except ValueError:
             return await deny(403, "Request refused")
         try:
-            session = self.auth.session(cookies.get(self.auth.session_cookie, ""))
+            token = cookies.get(self.auth.session_cookie, "")
+            session = self.auth.session(token)
         except (OSError, ValueError, sqlite3.Error):
             return await deny(503, "Session unavailable")
         scope["ceo_user"] = session
-        if is_demo and not session:
+        if not is_auth and not session:
             return await deny(401, "Session required")
-        if method == "POST":
+        if not is_auth:
+            def current_session():
+                try:
+                    return self.auth.session(token) == session
+                except (OSError, ValueError, sqlite3.Error):
+                    return False
+            scope["ceo_session_check"] = current_session
+        if method == "POST" and (is_auth or is_demo):
             if path == "/api/auth/google" and not self.auth.configured:
                 return await deny(503, "Sign-in unavailable")
             maximum = 16384 if path == "/api/auth/google" else 8192
