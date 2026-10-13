@@ -2,6 +2,31 @@
 
 FastAPI container for Nebius Serverless AI Endpoint deployment.
 
+## Dependency Maintenance
+
+Scoped maintenance under [Feature #14](https://github.com/khab40/lob-arena/issues/14)
+in Project #3: [PR #374](https://github.com/khab40/lob-arena/pull/374) raises the
+FastAPI minimum from 0.142.2 to 0.142.4 in the existing requirements file.
+Behavioral change: no intended route, schema, authentication, prompting or
+endpoint-mode change. Invariant: retain the existing Starlette/Pydantic security
+floors and all API/deployment boundaries. Reuse the existing requirements,
+Dockerfile and dependency-security-floor regression; no dependency is added.
+
+Verification is scoped to inert floor/boundary checks and fresh repository CI.
+The existing [`test_dependency_security_floors.py`](../../backend/tests/test_dependency_security_floors.py)
+owns the endpoint dependency-floor check and weaker/prerelease rejection cases.
+Reviewed source, this section's hash, focused checks and CI receipts are retained
+under root `outputs/chore-deps-20261013/pr374-*.json` and `pr374-tests.log`.
+This maintenance does not qualify or authorize a GPU endpoint deployment or
+model inference; the deployment/runtime gates below remain applicable.
+
+| Maintenance invariant | Check | Evidence | Status |
+| --- | --- | --- | --- |
+| FastAPI floor strengthened; other floors/API files preserved | Existing security-floor tests and exact diff comparison | `outputs/chore-deps-20261013/pr374-verification.json`, `pr374-review.json` | Pass (inert) |
+| Repository compatibility | Existing required CI | `outputs/chore-deps-20261013/pr374-ci.json` | CI gate pending |
+
+## Routes
+
 It exposes the AI surfaces used by the backend:
 
 - `GET /health`
