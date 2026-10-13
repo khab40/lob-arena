@@ -64,6 +64,7 @@ jobs:
   frontend:
     name: Frontend lint and build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -95,6 +96,20 @@ jobs:
 
       - name: Build production frontend
         run: pnpm run build
+
+      - name: Install Chromium for inert browser checks
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verify ordinary and authenticated application workflows
+        run: pnpm run test:e2e --workers=2
+
+      - name: Retain failing invented-fixture browser evidence
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-browser-failures
+          path: frontend/test-results
+          if-no-files-found: ignore
 
   transformer-reports:
     name: Transformer offline reports
@@ -472,6 +487,18 @@ jobs:
 
       - name: Validate Compose configuration
         run: docker compose config --quiet
+
+      - name: Validate local CEO release configuration without starting services
+        env:
+          CEO_RELEASE_TAG: invented-ci-release
+          CEO_RELEASE_RUNTIME_DIR: /tmp/invented-ceo-runtime
+          CEO_RELEASE_UID: "1001"
+          CEO_RELEASE_GID: "1001"
+          NEBIUS_SERVERLESS_ENABLED: "false"
+          NEBIUS_ENDPOINT_MODE: mock
+        run: >-
+          docker compose -f docker-compose.yml
+          -f deployments/docker-compose.ceo-local.yml config --quiet
 
       - name: Validate serverless Compose configuration
         env:
