@@ -183,55 +183,152 @@ retraining. Shared sensitive-data deployment retains authentication/authorizatio
 
 ## 6. Observable acceptance for implementation
 
+Operator clarification, 13 October 2026: the next CEO release reuses the selected,
+trained, calibrated and research-tested frozen LightGBM and Transformer as modules
+in the existing UI/backend. Saved playback remains a historical interim capability;
+it does not satisfy fresh execution. Sections 2–5 own release, input and runtime
+bindings. [#90](https://github.com/khab40/lob-arena/issues/90) owns reproducible
+results, [#91](https://github.com/khab40/lob-arena/issues/91) owns the authenticated
+journey, and [#24](https://github.com/khab40/lob-arena/issues/24) owns the Transformer
+dependency. This section owns the technical acceptance below, not an implementation
+or execution approval. The [CEO specification](specs/91-secure-ceo-playback-demo.md)
+maps the UI journey to these scenarios.
+
+As an authorized surveillance reviewer,
+I want to run either selected frozen model on a supported source and scenario,
+So that I can inspect fresh detection and its supported quality evidence.
+
+The bounded increment supports existing synthetic clean, synthetic known-attack,
+real historical and supported combination modes. Attack truth is known to the
+evaluator, hidden from the detectors. Future sources/combinations require compatible
+adapters and reviewed provenance; no new connector is implied. New training,
+retuning, #25 cascade and LLM explanation are outside this increment. Reuse existing
+Google access, Data Ingestion, Arena, result/evidence and deployment boundaries;
+do not replace them with a parallel application.
+
+The initial quality unit is one scored feature checkpoint/target row at its event
+cutoff. Retain the label reference, coverage and denominators for that unit. Any
+attack/window or consolidated-incident metrics use their existing governed contract
+and a separate labelled unit; never combine their counts with row metrics. A label
+sidecar joins by exact run/target/cutoff identity after inference; labels, attack
+family/phase and scenario truth are excluded from model features and detector
+requests. The operator may select a known attack, and results may expose evaluator
+truth afterward. Unlabelled history is not automatically a clean negative. C4's
+`research_control_assumption` remains an assumption, not verified benign behavior.
+
 ```gherkin
 Feature: Frozen detector demo
-  Scenario: Play back verified saved scores
+  Scenario: FDD-AC-01 Play back verified saved scores
     Given an allowlisted private campaign with verified version, size and hash receipts
     When a local reviewer selects a detector and changes playback pacing
     Then ordered saved scores and frozen threshold decisions remain unchanged
     And the display identifies saved research predictions and their source
 
-  Scenario: Deny unauthorized data access
+  Scenario: FDD-AC-02 Deny unauthorized data access
     Given a reviewer has no authorized workspace session
     When the reviewer requests a dataset or detection run
     Then the backend denies access before exposing data or starting model work
 
-  Scenario: Run an authorized scenario
-    Given an authorized dataset or synthetic profile and bounded attack configuration
-    And a verified runnable detector release
+  Scenario: FDD-AC-03 Run an authorized scenario with a selected frozen model
+    Given an authorized supported source, window and clean or attack configuration
+    And the selected frozen LightGBM or Transformer has a verified runnable release
     When the reviewer starts detection
-    Then results identify the source configuration and exact detector release
+    Then that model computes fresh calibrated scores from the causal source inputs
+    And its selected weights, preprocessing, calibration and thresholds stay frozen
+    And results are identified as fresh detection rather than saved-score playback
+    And results identify the source configuration and exact detector release
     And scores and alerts trace to their event cutoffs
 
-  Scenario: Preserve the release on different replay speeds
+  Scenario: FDD-AC-04 Preserve the release on different replay speeds
     Given identical ordered events and a frozen detector release
     When replay pacing changes within supported processing bounds
     Then feature checkpoints and decisions match within declared numerical tolerances
 
-  Scenario: Resume a saved replay
+  Scenario: FDD-AC-05 Resume a saved replay
     Given a compatible run checkpoint and unchanged source and release identities
     When the replay resumes
     Then feature and attack state are restored or reconstructed
     And previously emitted results are not duplicated
 
-  Scenario: Reject an invalid release or input
+  Scenario: FDD-AC-06 Reject an invalid release or input
     Given a changed artifact hash or incompatible feature contract
     When the detector prepares to score
     Then scoring is unavailable and the reason is visible
 
-  Scenario: Select an unfinished detector
+  Scenario: FDD-AC-07 Select an unfinished detector
     Given a detector option lacks verified runtime or calibration evidence
     When the reviewer opens detector selection
     Then that option shows its readiness reason and cannot start a run
 
-  Scenario: Present results without ground truth
+  Scenario: FDD-AC-08 Present results without ground truth
     Given a historical replay without independently supported attack labels
     When results are presented
     Then alerts and runtime evidence are visible
-    And precision and recall are marked unavailable for that replay
+    And ground-truth FN, FP, precision, recall and F1 are unavailable for that replay
+    And unknown intervals are not counted as clean negatives
+
+  Scenario: FDD-AC-09 Isolate evaluator truth from the detectors
+    Given a synthetic known-attack or labelled combination has a truth sidecar
+    When either frozen model receives inputs for detection
+    Then it receives only its governed features and causal history
+    And labels, attack families, phases and truth are not detector inputs
+    And the evaluator joins predictions to truth by exact run, target and cutoff
+
+  Scenario: FDD-AC-10 Report a clean-only labelled evaluation
+    Given the evaluated scored rows have supported clean labels and no attack labels
+    When quality evidence is presented
+    Then FP, TN, evaluated coverage and the false-positive rate are reported
+    And attack recall and F1 are unavailable because attack support is absent
+    And zero-denominator metrics are unavailable with their reason
+
+  Scenario: FDD-AC-11 Report an attack-labelled evaluation
+    Given scored rows have supported attack and negative labels for a declared unit
+    When the evaluator compares frozen decisions with the aligned truth sidecar
+    Then TP, FP, FN, TN, precision, recall and F1 use that unit and labelled coverage
+    And metrics with absent support or zero denominators state their limitation
+    And evidence identifies source, label protocol, model and frozen operating point
+
+  Scenario: FDD-AC-12 Report partial label coverage honestly
+    Given a combination contains labelled and unlabelled source intervals
+    When quality evidence is presented
+    Then confusion counts and quality metrics use only supported labelled rows
+    And labelled, unlabelled, scored and unavailable coverage are reported separately
+    And those metrics are not described as quality for the entire combination
+
+  Scenario: FDD-AC-13 Preserve causality and readiness across sources
+    Given an identified supported source or combination with a declared ordering policy
+    When events reach the feature and history pipeline
+    Then component provenance, event cutoffs and deterministic tie ordering are retained
+    And history stays isolated by stream, session, instrument and replay scenario
+    And new runs and declared gaps or boundaries apply the frozen reset policy
+    And warm-up, stale input or broken continuity show scoring unavailable
+    And unavailable rows are not clean negatives or silently omitted from coverage
+
+  Scenario: FDD-AC-14 Bind the CEO release and its run evidence
+    Given a reviewed CEO release with an immutable source tag and runtime identity
+    When either selected model completes a run
+    Then its result binds the release, source, features, model and calibration identities
+    And its retained predictions, label reference and quality evidence have checked hashes
+    And changing a frozen component requires a new release identity
+    And a failed run or incomplete evidence save cannot be presented as verified success
 ```
 
 Verification requires export/load score parity, offline/stream feature parity at
 identical cutoffs, warm-up/session-reset/gap handling, bounded performance evidence
-and result readback. These are implementation acceptance requirements; this saved
-design document does not claim those scenarios have passed.
+and result readback. Use inert boundary/label-isolation tests and separately approved
+bounded Nebius execution for numerical verification; preserve the original frozen
+packages and retained receipts. Map fresh-run, source/label coverage and release
+failures to exact checks and retained evidence before a completion claim. All fresh
+scenarios remain Pending here; preserved saved-playback acceptance is historical
+and its verified status belongs to the existing saved-score/CEO mappings. This
+documentation clarification does not claim fresh implementation, parity, a model
+run, shared deployment or full #90/#91 acceptance.
+
+| Scenario IDs | Reused owner or planned boundary | Verification and evidence | Status |
+| --- | --- | --- | --- |
+| FDD-AC-01, FDD-AC-02 | Saved-score and authenticated CEO contracts | Existing [saved-score contract](ml/verified-saved-score-mock.md) and [CEO mapping](specs/91-secure-ceo-playback-demo.md); no new run claimed | Historical scope; status stays with those mappings |
+| FDD-AC-03, FDD-AC-04, FDD-AC-05, FDD-AC-13 | Frozen loaders, causal features/history and replay policy in sections 2–5 | Planned export/load and offline/stream parity, pacing/resume/reset/gap/warm-up checks; exact fresh-run receipt not yet retained | Pending; numerical execution gated |
+| FDD-AC-06, FDD-AC-07 | Fail-closed release/input admission and readiness | Planned changed-hash, incompatible-contract and unavailable-detector checks; fresh integration receipt pending | Pending |
+| FDD-AC-09 | Governed feature inventory and evaluator-only sidecar | Planned input-isolation and exact target/cutoff join checks; fresh integration receipt pending | Pending |
+| FDD-AC-08, FDD-AC-10, FDD-AC-11, FDD-AC-12 | Existing row/window evaluation contracts and declared coverage | Planned clean/attack/unknown/partial/zero-support checks plus labelled-result readback; fresh quality receipt pending | Pending |
+| FDD-AC-14 | Immutable release and durable result/evidence contracts | Planned source/runtime/model/source pins and failed-run/incomplete-save readback; final fresh release rehearsal pending | Pending |
