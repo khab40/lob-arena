@@ -1,6 +1,7 @@
 import { validateEvidence, validateEvidenceList, validateExplanation, validatePreparedCampaign, validatePreparedPage, validateSnapshot } from "./ceoJourneyContract";
 import type { SavedDetectorId } from "../types/savedScores";
 import type { AnomalySnapshot, PreparedCampaign } from "../types/ceoJourney";
+import { sessionFetch as fetch } from "./sessionRequests";
 
 export class DemoAccessEnded extends Error {}
 async function request(path: string, signal: AbortSignal, body?: unknown): Promise<unknown> {
