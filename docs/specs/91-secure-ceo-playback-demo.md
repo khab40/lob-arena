@@ -24,22 +24,26 @@ Goal: Google sign-in → prepared campaign → saved predictions → captured an
 → explanation → durable report and evidence export.
 Value: one understandable, repeatable, evidence-backed demonstration.
 
-In scope: backend-verified Google identity, application sessions, one prepared
-campaign, existing Transformer/LightGBM saved decisions, a bounded anomaly snapshot,
-evidence-grounded explanation, durable save/readback and protected export.
-Out of scope: fresh model scoring, new training, #25 cascade, live feeds, arbitrary
-uploads, broad source catalogue, tournaments, resumable event replay, multiworkspace
-administration, production qualification and #24's original MLflow reconciliation.
+In scope: preserve the existing application screens, controllers, backend services
+and deployment stack; add backend-verified Google identity and application sessions,
+one prepared campaign, existing Transformer/LightGBM saved decisions, a bounded
+anomaly snapshot, evidence-grounded explanation, durable save/readback and protected
+export to those existing surfaces. Existing capabilities retain their contracts
+and configuration requirements. Disabled or unconfigured cloud services retain
+their existing visible states; this increment grants no new execution or spend.
+Out of scope: implementing fresh model scoring, new training, #25 cascade, new live
+feeds, new ingestion or tournament capabilities, multiworkspace administration,
+production qualification and #24's original MLflow reconciliation.
 
 Dependencies: approved private saved-score custody; Google web client configuration,
 allowed identities and the exact local or shared origin; existing explanation configuration
 when an LLM is used. Missing configuration must produce a visible unavailable state.
 No demo fallback may grant access to a shared deployment.
 
-Assumptions: the shared deployment exposes only this bounded demo surface. Other
-Arena controls and WebSockets may be unavailable there; they must not expose an
-unauthenticated alternative. The existing local research interface remains usable
-under its original direct-loopback guard. A deterministic explanation fallback is
+Assumptions: the demo preserves the existing full application behind the session
+boundary, including its REST and WebSocket transport. Private prepared evidence
+does not become generic Arena artifacts. The existing local research interface
+remains usable under its original direct-loopback guard. A deterministic explanation fallback is
 acceptable when explicitly labelled; it must not be described as a real LLM result.
 
 Local-first refinement: an explicit local demo mode permits a configured HTTP
@@ -82,7 +86,57 @@ Preserve CEO-AC-02b's local access guard and CEO-AC-10's reviewed-build prerequi
 this changes packaging only, with no proxy, authentication or inference behavior
 change. Verify context selection and the existing proxy tests, lint and build;
 independent correction review precedes any image build or CI rerun. Original-custody
-end-to-end rehearsal, deployment and full story acceptance remain pending.
+end-to-end rehearsal and full story acceptance are tracked separately below.
+
+Existing-interface correction ([Bug #383](https://github.com/khab40/lob-arena/issues/383)),
+operator instruction 12 October: use the existing Arena interface, not a separate
+CEO screen. Keep the application sidebar, account/theme controls, Arena cockpit
+and Control Panel investigation presentation. The standalone route must not
+replace the application shell. Its historical functional rehearsal is retained;
+it does not accept the rejected presentation.
+
+Further operator correction, 12 October: preserve the developed and tested UI and
+backend capabilities. Merely reusing the shell while replacing its pages or
+disabling backend initialization does not satisfy this request. The earlier
+prepared-page override and its functional receipts remain historical, unaccepted
+for this full-product release. Reuse the same separate task branch/PR; issue the
+verified build through an immutable release tag, with isolated release configuration.
+
+Keep one existing route table, actual Arena/Data Ingestion/Scenario Generator/
+Control Panel controllers and normal backend initialization. Add prepared playback
+as a source in Saved Research, and a saved-anomaly input in the existing
+Investigation Team section. Reuse protected capture/explain/save/readback/export
+contracts; do not construct order-book features, trades, heuristic confidence or
+synthetic incident timelines from saved score rows. A custody failure affects
+only that source. It must not block the other working screens.
+
+Key protected frontend state by workspace and Google subject; logout, expiry and
+account replacement clear it and abort pending work. Session protection covers
+existing FastAPI and direct Java API/WebSocket alternatives, including frames and
+commands after revocation. Preserve existing route methods and request limits.
+Validate private roots before generic store initialization or retention. Keep
+Java/agent internal ports private in release configuration. Reuse the existing
+four-service Compose stack and dependencies; correct only demonstrated packaging
+gaps. Local-first verification uses inert fixtures and mock external services.
+Fresh scoring and Nebius deployment remain separately gated.
+
+Browser-runner correction for Bug #383 (finding `CEO-ARENA-I1-01`): the standard
+frontend `test:e2e` command must exercise both ordinary Arena behavior and the
+explicit prepared mode. A single server cannot enable both after the standalone
+route stopped choosing the runtime. Use separate test projects and strict-port
+fixture servers with explicit false/true demo flags; refuse reuse of an existing
+server whose mode is unverified. This changes test orchestration only. The website
+has its own browser configuration and is unaffected. Retain the initial CLEAR
+review and supplemental P2; correction re-review is required before publication.
+
+Fixture correction ([Bug #384](https://github.com/khab40/lob-arena/issues/384)):
+the unchanged ordinary ingestion test still mocks retired discovery/import paths.
+Align only its invented fixture with the maintained source-scoped client contract,
+including both discovery sources, candidate source metadata and import depth 10.
+Keep the exact 17-minute window, confirmed dataset deletion and unhandled-route
+refusal. This restores ordinary-mode verification without changing ingestion,
+authentication, model or cloud behavior. The default browser command must pass
+all 33 cases (22 ordinary and 11 prepared); retain earlier failed attempts.
 
 ## Acceptance
 
@@ -150,6 +204,22 @@ Feature: Secure research playback demonstration
     When the reviewer logs out or its configured lifetime ends
     Then that session cannot read or mutate the demo afterward
 
+  Scenario: CEO-AC-11 Preserve the existing product capabilities
+    Given the operator enabled the authenticated demo release
+    When the authorized reviewer uses existing application screens
+    Then the existing navigation, theme, controllers and backend contracts remain available
+    And prepared playback is additive in Saved Research and Investigation Team
+    And unavailable prepared custody does not block other working screens
+    And saved scores do not become invented order-book or incident features
+
+  Scenario: CEO-AC-12 Release the existing full stack reproducibly
+    Given a reviewed commit with passing focused checks and CI
+    When the operator starts its isolated local release configuration
+    Then the existing frontend, backend, Java kernel and agent services are used
+    And an immutable release tag identifies that exact verified commit
+    And writable runtime outputs are separate from retained private evidence
+    And internal service ports cannot bypass the configured session boundary
+
   Scenario: CEO-AC-10 Rehearse the complete journey
     Given the reviewed build, approved deployment and prepared private campaign
     When the operator completes sign-in, playback, capture, explanation and save
@@ -210,10 +280,12 @@ cannot change an already captured snapshot. It always identifies saved research
 predictions, synthetic labels and the actual explanation mode. This refinement
 implements the existing bounded scope and does not authorize a remote LLM call.
 
-1. Restore a narrow backend identity/session boundary and deny alternative access.
-2. Reuse the pinned saved-score loader through the protected demo contract.
-3. Capture one anomaly and connect explanation to that immutable snapshot.
-4. Persist and verify a bounded result bundle; add the guided UI and export.
+1. Preserve existing routes/controllers behind the account-keyed Google/session gate.
+2. Reuse Saved Research with a protected fixed-window source adapter; preserve the
+   ordinary reader's local custody guard and original paging behavior.
+3. Add saved-snapshot input and existing evidence actions to Investigation Team.
+4. Restore normal backend services and protect all HTTP/Java/WebSocket alternatives;
+   use existing transport libraries and preserve route contracts and private roots.
 5. Independently review each coherent iteration, run focused tests and CI, then
    prepare the concrete deployment and end-to-end rehearsal.
 
@@ -225,8 +297,8 @@ grants no cloud mutation, data-access expansion, spend, merge or cleanup approva
 
 The [local CEO runbook](../operations/local-ceo-playback-demo.md) describes the
 approved local surface and rehearsal procedure. It does not replace this contract.
-The following mapping records verification of the implemented increment, not full
-scenario acceptance with actual Google identity and original campaign custody.
+The following mapping records the local saved-playback increment. It distinguishes
+inert failure checks, authentic browser integration and the remaining review/CI gates.
 
 Test references: **A** is [`backend/tests/test_ceo_auth.py`](../../backend/tests/test_ceo_auth.py);
 **J** is [`backend/tests/test_ceo_journey.py`](../../backend/tests/test_ceo_journey.py).
@@ -253,27 +325,62 @@ Evidence references are retained privately under root
   unchanged production build carries forward from the original iteration. Its custom parser
   exclusion claim is invalidated by `frontend-image-packaging-iteration1-review-classifier_author.json`
   (P2 `CEO-PACKAGING-I1-01`); its five proxy tests, lint and production build remain
-  passing evidence. Correction review and the fixed image CI build remain pending;
-  local checks do not establish an image build or actual rehearsal.
+  passing evidence. Correction review is CLEAR; the fixed frontend image and all
+  25 PR checks passed at predecessor commit `5214a74b670defb0a0571591213ac488fed8676a`
+  ([CI run](https://github.com/khab40/lob-arena/actions/runs/38268949603)).
+- **U**: `existing-arena-iteration1/checks.json` records the corrected existing
+  interface's 61 Node checks, 11 mocked browser cases, lint and production build.
+  The first browser attempt retains its compile/HMR-test failures; the corrected
+  run passes. The HMR exception permits only the configured development server's
+  exact root socket; market sockets and other API calls remain failures.
+- **D**: `existing-arena-iteration1/browser-rehearsal.json` and
+  `export-verification.json` record actual Google access, authentic original-score
+  playback, capture, Control Panel navigation, labelled fallback, save, reload,
+  reopen, export, detector comparison and logout/re-entry. The browser export equals
+  the retained saved object and all three canonical hashes verify. This uses the
+  recovered version-1 publications and runs no model. Temporary recovery access
+  was selectively removed and independently read back before UI rehearsal.
+  The rejected standalone UI's earlier functional receipt remains historical.
+- **UR**: `existing-arena-iteration1-review-classifier_author.json` is the exact
+  diff/spec independent review receipt. The current correction requires CLEAR
+  review and fresh head CI before publication readiness is claimed.
+- **U2**: `existing-arena-correction1/checks.json` owns verification of the default
+  frontend browser command across both modes. The initial UI review is superseded
+  for publication by `existing-arena-iteration1-ci-supplement-review-classifier_author.json`;
+  `existing-arena-correction1-review-classifier_author.json` records correction review.
 
 | Scenario | Contract or implementation | Check | Retained evidence | Status |
 | --- | --- | --- | --- | --- |
-| CEO-AC-01 | `CEOAuth`; Google verification and opaque session | A: `test_http_login_cookie_session_and_logout`, `test_official_google_verifier_signature_and_claims_without_network`, `test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout`; Auth browser: `Google callback enters the workspace and logout removes its contents` | B, F, R | Inert/mock pass; actual Google integration pending |
-| CEO-AC-02 | `CEOAccessBoundary`; session and user isolation | A: `test_session_expiry_and_current_allowlist_removal`, `test_alternative_routes_denied_even_after_login`, `test_cross_site_mutation_and_websocket_refusal`; J: `test_missing_session_denies_before_any_original_or_artifact_reads`, `test_another_authenticated_subject_cannot_read_explain_save_or_export`; Journey browser: `CEO-AC-02/09 replacement account clears captured and saved evidence` | B, F, R | Inert/mock denial and isolation pass; actual rehearsal pending |
-| CEO-AC-02b | Local backend and development/preview proxy guards | A: `test_local_forwarded_origin_and_host_refusal_before_reads`, `test_direct_remote_peer_denied`, `test_missing_google_config_visible_and_denies`; [`frontend/test/ceo-loopback-proxy.test.mjs`](../../frontend/test/ceo-loopback-proxy.test.mjs): `denies remote or unknown original peers despite forged local headers`, `guards the preview server before its inherited demo proxies`; P: `config_dependency_included`, `unrelated_inputs_excluded` | B, F, R, P | Inert local/shared boundary and context checks pass; packaging review, image CI and actual local integration pending |
-| CEO-AC-03 | Pinned saved-score verifier and fixed paired window | J: `test_fixed_original_window_preserves_ordinals_targets_timestamps_and_both_scores`, `test_existing_pinned_verifier_reads_only_invented_custody_and_refuses_later_change`; Journey flow | B, F, R | Invented custody/mock pass; original-custody playback pending |
-| CEO-AC-04 | Reverification and safe unavailable response | J: `test_changed_custody_refuses_fresh_reads_and_capture_without_private_path_leak`, `test_missing_journey_configuration_is_visible_unavailable`, `test_no_original_transformer_alert_means_unavailable_campaign`; Journey browser: `CEO-AC-04 unavailable custody shows a safe operator action` | B, F, R | Inert/mock refusal pass; original-custody integration pending |
-| CEO-AC-05 | Immutable captured snapshot and paired context | J: `test_capture_keeps_exact_selected_row_paired_context_and_immutable_hash`, `test_lightgbm_alert_capture_uses_same_original_window`; Journey browser: `CEO-AC-05 same-account polling preserves its immutable captured snapshot`; Journey flow | B, F, R | Inert/mock pass; original-custody rehearsal pending |
-| CEO-AC-06 | Snapshot-bound factual `deterministic_fallback` | J: `test_explicit_factual_fallback_and_repeated_explain_save_reopen_export_are_durable`; [`frontend/test/ceo-journey.test.mjs`](../../frontend/test/ceo-journey.test.mjs): `explanation and reopened evidence keep exact snapshot binding and actual fallback mode`; Journey flow | B, F, R | Labelled fallback verified with fixtures; actual rehearsal pending |
-| CEO-AC-07 | Durable verified user/workspace-owned saved bundle | J: `test_explicit_factual_fallback_and_repeated_explain_save_reopen_export_are_durable`, `test_another_authenticated_subject_cannot_read_explain_save_or_export`; Journey flow | B, F, R | Fixture save/readback/export pass; actual rehearsal pending |
-| CEO-AC-08 | Bounded requests and durable failure handling | J: `test_save_before_explanation_is_refused`, `test_fsync_failure_retains_partial_and_never_reports_save_success`, `test_corrupt_intermediate_or_saved_bytes_refused_without_save_success`, `test_unsafe_mutation_refused_before_original_capture`, `test_count_and_byte_budgets_fail_before_another_artifact`; Journey browser: `CEO-AC-08 failed save cannot enable download or claim retained evidence` | B, F, R | Inert/mock failure boundaries pass; actual rehearsal pending |
-| CEO-AC-09 | Durable session revocation and expiration | A: `test_google_session_opaque_durable_logout`, `test_session_expiry_and_current_allowlist_removal`, `test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout`; Auth browser: `server expiration clears the workspace without a browser session fallback` | B, F, R | Inert/mock pass; actual Google lifecycle pending |
-| CEO-AC-10 | Reviewed local journey and separately approved deployment | Fixed frontend image CI build and actual sign-in/playback/capture/explain/save/reopen/export receipt with source build and explanation mode | P records local checks only; image CI and actual receipts not yet retained | Pending/gated; image CI and actual original-custody end-to-end receipt pending |
+| CEO-AC-01 | `CEOAuth`; Google verification and opaque session | A: `test_http_login_cookie_session_and_logout`, `test_official_google_verifier_signature_and_claims_without_network`, `test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout`; Auth browser: `Google callback enters the workspace and logout removes its contents` | B, F, R, U, D | Actual local Google integration and inert checks pass |
+| CEO-AC-02 | `CEOAccessBoundary`; session and user isolation | A: `test_session_expiry_and_current_allowlist_removal`, `test_alternative_routes_denied_even_after_login`, `test_cross_site_mutation_and_websocket_refusal`; J: `test_missing_session_denies_before_any_original_or_artifact_reads`, `test_another_authenticated_subject_cannot_read_explain_save_or_export`; Journey browser: `CEO-AC-02/09 replacement account clears captured and saved evidence` | B, F, R, U, D | Inert/mock denial and isolation pass; local session integration pass |
+| CEO-AC-02b | Local backend and development/preview proxy guards | A: `test_local_forwarded_origin_and_host_refusal_before_reads`, `test_direct_remote_peer_denied`, `test_missing_google_config_visible_and_denies`; [`frontend/test/ceo-loopback-proxy.test.mjs`](../../frontend/test/ceo-loopback-proxy.test.mjs): `denies remote or unknown original peers despite forged local headers`, `guards the preview server before its inherited demo proxies`; P: `config_dependency_included`, `unrelated_inputs_excluded` | B, F, R, P, U, D | Boundary checks and packaging review pass; predecessor image CI pass; fresh head CI pending |
+| CEO-AC-03 | Pinned saved-score verifier and fixed paired window | J: `test_fixed_original_window_preserves_ordinals_targets_timestamps_and_both_scores`, `test_existing_pinned_verifier_reads_only_invented_custody_and_refuses_later_change`; Journey flow | B, F, R, U, D | Authentic original-custody playback and detector comparison pass |
+| CEO-AC-04 | Reverification and safe unavailable response | J: `test_changed_custody_refuses_fresh_reads_and_capture_without_private_path_leak`, `test_missing_journey_configuration_is_visible_unavailable`, `test_no_original_transformer_alert_means_unavailable_campaign`; Journey browser: `CEO-AC-04 unavailable custody shows a safe operator action` | B, F, R, U, D | Inert refusal and authentic custody integration pass; original bytes preserved |
+| CEO-AC-05 | Immutable captured snapshot and paired context | J: `test_capture_keeps_exact_selected_row_paired_context_and_immutable_hash`, `test_lightgbm_alert_capture_uses_same_original_window`; Journey browser: `CEO-AC-05 same-account polling preserves its immutable captured snapshot`; Journey flow | B, F, R, U, D | Original-custody immutable capture and detector-change preservation pass |
+| CEO-AC-06 | Snapshot-bound factual `deterministic_fallback` | J: `test_explicit_factual_fallback_and_repeated_explain_save_reopen_export_are_durable`; [`frontend/test/ceo-journey.test.mjs`](../../frontend/test/ceo-journey.test.mjs): `explanation and reopened evidence keep exact snapshot binding and actual fallback mode`; Journey flow | B, F, R, U, D | Actual snapshot-bound labelled fallback and exact input binding pass |
+| CEO-AC-07 | Durable verified user/workspace-owned saved bundle | J: `test_explicit_factual_fallback_and_repeated_explain_save_reopen_export_are_durable`, `test_another_authenticated_subject_cannot_read_explain_save_or_export`; Journey flow | B, F, R, U, D | Actual save, reload, reopen and browser export verification pass |
+| CEO-AC-08 | Bounded requests and durable failure handling | J: `test_save_before_explanation_is_refused`, `test_fsync_failure_retains_partial_and_never_reports_save_success`, `test_corrupt_intermediate_or_saved_bytes_refused_without_save_success`, `test_unsafe_mutation_refused_before_original_capture`, `test_count_and_byte_budgets_fail_before_another_artifact`; Journey browser: `CEO-AC-08 failed save cannot enable download or claim retained evidence` | B, F, R, U | Inert/mock failure boundaries pass; no deliberate original-custody damage |
+| CEO-AC-09 | Durable session revocation and expiration | A: `test_google_session_opaque_durable_logout`, `test_session_expiry_and_current_allowlist_removal`, `test_unrelated_unquoted_json_cookie_preserves_login_poll_expiry_and_logout`; Auth browser: `server expiration clears the workspace without a browser session fallback` | B, F, R, U, D | Inert expiry/revocation checks and actual logout/re-entry pass |
+| CEO-AC-11 | Existing App shell, Arena and Control Panel; account-keyed controller above routes | Journey browser: `CEO-AC-11 existing Arena shell and Control Panel preserve original evidence without legacy work`; actual dark/light theme and route rehearsal | U, D, UR | Existing interface and navigation pass; exact correction review pending |
+| CEO-AC-10 | Reviewed local journey and separately approved deployment | Fixed frontend image CI build and actual sign-in/playback/capture/explain/save/reopen/export receipt with source build and explanation mode | P, U, D, UR | Local journey pass; exact correction review and fresh head CI pending; shared deployment deferred |
 
-Actual Google integration, original-custody end-to-end rehearsal, CI/publication
-and deployment remain pending. The first original-data S3 HEAD failure has no
-established cause in this increment; it does not establish that original custody
-is missing or invalid. Full #90/#91 acceptance and #24 MLflow closure stay open.
+The table above records predecessor verification only. The operator rejected its
+prepared-page/backend override as insufficient preservation of the product.
+The full-product correction requires new frontend, backend/transport and packaging
+checks, independent review, fresh CI and an authentic rehearsal before release.
+
+| Scenario | Full-product correction verification | Evidence | Status |
+| --- | --- | --- | --- |
+| CEO-AC-01/02/02b/09 | Session denial, existing HTTP methods, Java and active WebSocket expiry/revocation; account-state reset | New exact-diff checks and review receipt required | Pending |
+| CEO-AC-03/04/05 | Existing Saved Research with authentic fixed window, original offsets and thresholds; source-only failure | New browser and original-custody rehearsal receipt required | Pending |
+| CEO-AC-06/07/08 | Saved snapshot input in existing Investigation Team; same exact retained evidence contracts | New browser and export verification receipt required | Pending |
+| CEO-AC-11 | All original screens/controllers and normal backend initialization; ordinary and authenticated browser suites | New full-product browser/backend receipts required | Pending |
+| CEO-AC-10/12 | Full existing four-service release, isolated outputs/ports, exact images and immutable tag | Reviewed packaging, fresh CI and local release rehearsal required | Pending |
+
+The original three saved publications were recovered under bounded approval;
+the temporary exact-key viewer rule was removed with the original nine rules
+preserved. Historical failed attempts remain retained. Shared Nebius deployment,
+full #90/#91 acceptance and #24 MLflow closure stay open.
 A passing narrow demo does not establish fresh scoring, LOBSTER robustness,
 cascade value, production
 latency or completed story acceptance.
