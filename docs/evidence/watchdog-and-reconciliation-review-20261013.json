@@ -1,0 +1,40 @@
+{
+  "schema_version": "bug_fix_review_summary_v1",
+  "recorded_date": "2026-10-13",
+  "publication_kind": "non_executable_review_metadata",
+  "base_commit": "dc9d99a7d7efc110573174cd39bdc90a641290bb",
+  "implementation_and_reconciliation_tip": "995951c0dada02961012307134c82d1baf7bc3a4",
+  "project_url": "https://github.com/users/khab40/projects/3",
+  "bug_numbers": [387, 358, 376, 379, 382],
+  "watchdog_review": {
+    "reviewer": "/root/ceo_bugs_audit",
+    "authors": ["/root/auth_bugs_audit", "/root"],
+    "captured_diff_sha256": "af2a5b6001e52c7f84ec9c7d465128e32ee250400b833874a6f83b009873781f",
+    "canonical_specification": ["docs/ml/mlflow-readiness-design.md", "48644c53cd0092c1fac89ad4e8e5bad65df93cb2ac3784f2dd17476123d99da3"],
+    "source": ["scripts/nebius_mlflow_watchdog.py", "cd189eba7d15c1ca8d7b5dd4cf09e04b1c1ff00e089eb66b781adf058c94e407"],
+    "tests": ["backend/tests/test_nebius_mlflow_watchdog.py", "a16ab2375c6fde25e16db337057f459c114650fa3fba19386467bd360e9bd533"],
+    "runbook": ["docs/operations/mlflow-readiness.md", "1df4ca93b8381a1d20f1f152a53680a8a80bc956bbe7aa0a86157ffe499d6d26"],
+    "scenarios": ["WD-AC-01", "WD-AC-02", "WD-AC-03", "WD-AC-04", "WD-AC-05"],
+    "independent_inert_cases_passed": 51,
+    "independent_ruff": "pass",
+    "disposition": "CLEAR",
+    "actionable_P0_P1_P2": 0,
+    "retained_receipt": "outputs/bug-fixes-387-reconciliation-20261013/iteration1/independent-review.json"
+  },
+  "reconciliation_review": {
+    "reviewer": "/root/auth_bugs_audit",
+    "author": "/root/custody_bugs_audit",
+    "captured_diff_sha256": "26b04ff6b5319a6746c54f8abb40192b81a2194488693db306dc5b792c63a19c",
+    "document": ["docs/operations/recovery-bug-evidence-reconciliation-20261013.md", "ed9789c9e780e9e73774ee7c088b81abe6a8aa9bd97c02b92d8748a7b3c3c983"],
+    "metadata": ["docs/evidence/recovery-bug-closure-20261013.json", "78223166a125d3e5ec5d734f5219d724fc27ca3bdc83a17196c259b223ccea31"],
+    "independent_current_inert_cases_passed": 5,
+    "prior_source_spec_test_review_and_terminal_pins_verified": 21,
+    "disposition": "CLEAR",
+    "actionable_P0_P1_P2": 0,
+    "retained_receipt": "outputs/bug-fixes-387-reconciliation-20261013/iteration2/independent-review.json",
+    "limits": ["Private correction suites inspected, not rerun", "Raw payloads and SDK attempt counts not verified", "No full Story90_91 acceptance"]
+  },
+  "tracking_readback": {"bug358_parent": 90, "bug387_parent": 24, "bug358_and_bug387_project_status": "In Progress", "all_five_bugs": "OPEN_pending_PR_merge"},
+  "remaining_gates": ["Current-head PR CI", "Operator merge approval", "Separate live readiness authorization and fresh execution pins", "Local branch cleanup approval after PR disposition"],
+  "execution_limits": "Inert verification only; no new provider/cloud/model invocation or credential/private-payload read. Historical frozen packages and private custody remain unchanged."
+}
