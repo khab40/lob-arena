@@ -369,6 +369,39 @@ prepared-page/backend override as insufficient preservation of the product.
 The full-product correction requires new frontend, backend/transport and packaging
 checks, independent review, fresh CI and an authentic rehearsal before release.
 
+### Validation-only correction, 2026-10-13
+
+Bug [#386](https://github.com/khab40/lob-arena/issues/386), under #91 in Project #3,
+owns two stale backend checks exposed by CI run `38340617695` at `de524b08`.
+Behavioral change: none. The invariant is the existing Java proxy metrics contract
+and a Java-authoritative minimal image with the required Google authentication
+import, without the retired Python engine/routes/contracts, gRPC or protobuf.
+Reuse the shared `JavaTransport` test seam and existing runtime smoke command;
+add no dependency, provider request, model execution or deployment scope.
+
+```gherkin
+Scenario: CEO-AC-11v Verify existing proxy metrics through the current transport
+  Given an invented Java transport response or failure
+  When the existing typed client completes its request
+  Then the original response and outcome-labelled proxy metrics are verified
+  And no external request is made
+
+Scenario: CEO-AC-12v Validate the authenticated minimal application image
+  Given the existing application with its required Google token verifier
+  When minimal-image validation runs
+  Then the verifier import succeeds without contacting Google
+  And retired Python runtime components, gRPC and protobuf remain absent
+```
+
+Focused inert tests and independent exact-diff review precede publication.
+Fresh backend test and image-smoke CI results are required; both scenarios are
+pending until those checks pass for the corrected source.
+
+| Scenario | Implementation | Focused check | Evidence | Status |
+| --- | --- | --- | --- | --- |
+| CEO-AC-11v | Existing `JavaArenaClient` metrics, invented shared transport response | `test_java_arena_client_records_proxy_metrics` (completed, HTTP 404/422/503, unavailable) | Root `outputs/ceo-playback-demo-20261012/full-product-ci-validation1/checks.json` | 42 focused inert checks pass; independent review and fresh CI pending |
+| CEO-AC-12v | `app.runtime_smoke --minimal-image` | `test_minimal_smoke_accepts_google_auth_without_verifier_invocation`, rejection/import/callability/engine-authority cases in `test_runtime_smoke.py` | Same correction receipt; original failing CI retained | Inert inventory checks pass; actual minimal-image CI pending |
+
 | Scenario | Full-product correction verification | Evidence | Status |
 | --- | --- | --- | --- |
 | CEO-AC-01/02/02b/09 | Session denial, existing HTTP methods, Java and active WebSocket expiry/revocation; account-state reset | New exact-diff checks and review receipt required | Pending |

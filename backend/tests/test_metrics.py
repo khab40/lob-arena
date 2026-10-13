@@ -2,27 +2,20 @@ import asyncio
 import importlib.util
 import json
 import sys
-from io import BytesIO
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app as backend_app
 from app.arena.java_client import JavaArenaClient
+from app.arena.java_transport import JavaResponse
 from app.metrics import PrometheusTextRegistry
 from app.nebius.detector_tournament import (
     DetectorTournamentMetrics,
     DetectorTournamentResponse,
 )
 from app.schemas.arena import ArenaMetricsSnapshot
-
-
-class Response(BytesIO):
-    def __enter__(self) -> "Response":
-        return self
-
-    def __exit__(self, *args: object) -> None:
-        self.close()
 
 
 def _state() -> dict[str, object]:
@@ -74,22 +67,37 @@ def test_prometheus_text_registry_renders_counter_gauge_and_histogram() -> None:
     assert 'demo_duration_seconds_sum{outcome="ok"} 2.2' in rendered
 
 
-def test_java_arena_client_records_proxy_metrics(monkeypatch) -> None:
+@pytest.mark.parametrize("status,error,outcome", [
+    (200, None, "completed"), (404, LookupError, "http_404"),
+    (422, ValueError, "http_422"), (503, ValueError, "http_503"),
+    (None, RuntimeError, "unavailable"),
+])
+def test_java_arena_client_records_proxy_metrics(monkeypatch, status, error, outcome) -> None:
     registry = PrometheusTextRegistry()
     registry.counter("backend_java_arena_requests_total", "Requests.", ("method", "endpoint", "outcome"))
     registry.histogram("backend_java_arena_request_duration_seconds", "Duration.", ("method", "endpoint", "outcome"))
 
-    def urlopen(req, timeout: float):
-        return Response(json.dumps(_state()).encode())
+    client = JavaArenaClient("http://java:8080", metrics=registry)
+    calls = []
 
-    monkeypatch.setattr("app.arena.java_client.request.urlopen", urlopen)
+    def request(method, path):
+        calls.append((method, path))
+        if status is None:
+            raise RuntimeError("Invented Java unavailable")
+        return JavaResponse(status, json.dumps(_state()).encode(), "application/json")
 
-    state = asyncio.run(JavaArenaClient("http://java:8080", metrics=registry).get_state())
+    monkeypatch.setattr(client.transport, "request", request)
+    if error is None:
+        assert asyncio.run(client.get_state()).tick == 3
+    else:
+        with pytest.raises(error):
+            asyncio.run(client.get_state())
 
-    assert state.tick == 3
+    assert calls == [("GET", "/api/arena/state")]
     rendered = registry.render()
-    assert 'backend_java_arena_requests_total{method="GET",endpoint="/api/arena/state",outcome="completed"} 1' in rendered
-    assert 'backend_java_arena_request_duration_seconds_count{method="GET",endpoint="/api/arena/state",outcome="completed"} 1' in rendered
+    labels = f'method="GET",endpoint="/api/arena/state",outcome="{outcome}"'
+    assert f'backend_java_arena_requests_total{{{labels}}} 1' in rendered
+    assert f'backend_java_arena_request_duration_seconds_count{{{labels}}} 1' in rendered
 
 
 def test_detector_tournament_metrics_track_bounded_lifecycle_without_run_ids() -> None:
