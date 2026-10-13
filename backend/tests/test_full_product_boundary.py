@@ -169,3 +169,128 @@ def test_active_websocket_refuses_command_after_authority_ends(configured, monke
     assert kwargs["max_size"] is None  # Preserve Java-owned state frame limits.
 
 
+@pytest.mark.parametrize("ending", ["frame", "idle", "cancel"])
+def test_websocket_frame_recheck_idle_expiry_and_cancel_cleanup(monkeypatch, ending):
+    async def run():
+        valid = [True]
+        frames, closes = [], []
+        class Browser:
+            scope = {"ceo_session_check": lambda: valid[0]}
+            app = SimpleNamespace(state=SimpleNamespace(simulation=JavaArenaClient("http://invented-java", 0.2)))
+            async def accept(self):
+                pass
+            async def receive(self):
+                await asyncio.Future()
+            async def send_text(self, payload):
+                frames.append(payload)
+            async def close(self, code):
+                closes.append(code)
+        class Upstream:
+            async def recv(self):
+                if ending == "frame":
+                    valid[0] = False
+                    return "refused-frame"
+                await asyncio.Future()
+            async def close(self):
+                closes.append("upstream")
+        async def connect(*_args, **_kwargs):
+            return Upstream()
+        monkeypatch.setattr(routes_java, "connect", connect)
+        task = asyncio.create_task(routes_java.java_websocket(Browser()))
+        await asyncio.sleep(0.01)
+        if ending == "cancel":
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await asyncio.wait_for(task, 1.5)
+        else:
+            valid[0] = False
+            await asyncio.wait_for(task, 1.5)
+        assert frames == [] and "upstream" in closes
+        if ending != "cancel":
+            assert closes == ["upstream", 1008]
+    asyncio.run(run())
+
+
+def test_streaming_response_closes_owned_upstream_on_browser_cancel():
+    async def run():
+        closed = []
+        class Stream(RawReply):
+            def close(self):
+                closed.append(True)
+        async def send(message):
+            if message["type"] == "http.response.body":
+                raise asyncio.CancelledError
+        async def receive():
+            await asyncio.Future()
+        with pytest.raises(asyncio.CancelledError):
+            await routes_java.JavaProxyResponse(Stream())(
+                {"type": "http", "asgi": {"spec_version": "2.4"}}, receive, send)
+        assert closed == [True]
+    asyncio.run(run())
+
+
+def test_cancelled_header_open_retains_ownership_and_closes_late_result():
+    async def run():
+        started, release, closed = threading.Event(), threading.Event(), threading.Event()
+        class Stream(RawReply):
+            def close(self):
+                closed.set()
+        def opening(*_args, **_kwargs):
+            started.set()
+            assert release.wait(1)
+            return Stream()
+        class Browser:
+            method, url = "GET", SimpleNamespace(path="/api/arena/state")
+            scope, headers = {"query_string": b""}, {}
+            app = SimpleNamespace(state=SimpleNamespace(simulation=SimpleNamespace(
+                transport=SimpleNamespace(open=opening))))
+            async def stream(self):
+                yield b""
+        task = asyncio.create_task(routes_java.java_http(Browser()))
+        assert await asyncio.to_thread(started.wait, 1)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        release.set()
+        assert await asyncio.to_thread(closed.wait, 1)
+    asyncio.run(run())
+
+
+def test_session_end_during_upload_refused_before_upstream():
+    async def run():
+        valid, calls = [True], []
+        class Browser:
+            method, url = "POST", SimpleNamespace(path="/api/kernel/run")
+            scope = {"query_string": b"", "ceo_session_check": lambda: valid[0]}
+            headers = {}
+            app = SimpleNamespace(state=SimpleNamespace(simulation=SimpleNamespace(
+                transport=SimpleNamespace(open=lambda *_args, **_kwargs: calls.append(True)))))
+            async def stream(self):
+                valid[0] = False
+                yield b"invented"
+        from fastapi import HTTPException
+        with pytest.raises(HTTPException) as exc:
+            await routes_java.java_http(Browser())
+        assert exc.value.status_code == 401 and calls == []
+    asyncio.run(run())
+
+
+def test_websocket_library_redirect_dials_no_second_owner():
+    from websockets.exceptions import InvalidStatus
+    async def run():
+        calls = []
+        redirect = InvalidStatus(SimpleNamespace(status_code=302,
+            headers={"Location": "ws://unexpected.example/private"}))
+        class Connection:
+            transport = SimpleNamespace(abort=lambda: calls.append("abort"))
+            async def handshake(self, *_args):
+                raise redirect
+        connector = routes_java.DirectJavaConnect("ws://invented-java/ws/arena", proxy=None, open_timeout=0.2)
+        async def create_connection():
+            calls.append("connect")
+            return Connection()
+        connector.create_connection = create_connection
+        with pytest.raises(InvalidStatus):
+            await connector
+        assert calls == ["connect", "abort"]
+    asyncio.run(run())
