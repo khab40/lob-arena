@@ -1,0 +1,40 @@
+# Merge with ../docker-compose.yml; the first local release runs Vite/FastAPI
+# on the host so Google authentication keeps its direct-loopback boundary.
+name: lob-arena-ceo-local
+
+services:
+  java-kernel:
+    image: lob-arena-ceo/java-kernel:${CEO_RELEASE_TAG:?set the reviewed release tag}
+    user: "${CEO_RELEASE_UID:?set numeric host runtime owner UID}:${CEO_RELEASE_GID:?set numeric host runtime owner GID}"
+    ports: !override
+      - "127.0.0.1:8082:8080"
+    volumes:
+      - ${CEO_RELEASE_RUNTIME_DIR:?set a dedicated runtime output directory}:/app/outputs
+    environment:
+      ARENA_REMOTE_AGENT_URLS: http://agent-runner:9100
+
+  agent-runner:
+    image: lob-arena-ceo/agent-runner:${CEO_RELEASE_TAG:?set the reviewed release tag}
+    ports: !override
+      - "127.0.0.1:9101:9100"
+    environment:
+      AGENT_RUNNER_HEAVY_AGENT_COUNT: "0"
+      AGENT_RUNNER_LANGGRAPH_AGENT_COUNT: "0"
+
+  # These existing image definitions are retained for packaging verification.
+  # Do not enable this profile: container-peer/HTTPS authentication is gated.
+  backend:
+    profiles: ["container-app-gated"]
+    image: lob-arena-ceo/backend:${CEO_RELEASE_TAG:?set the reviewed release tag}
+    ports: !override
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ${CEO_RELEASE_RUNTIME_DIR:?set a dedicated runtime output directory}:/app/outputs
+
+  frontend:
+    profiles: ["container-app-gated"]
+    image: lob-arena-ceo/frontend:${CEO_RELEASE_TAG:?set the reviewed release tag}
+    ports: !override
+      - "127.0.0.1:5173:5173"
+    environment:
+      VITE_CEO_DEMO: "true"
