@@ -254,3 +254,153 @@ def test_invalid_result_always_reaches_emergency_readback(bounded_session, value
         pass
     assert calls[-2:] == [("stop", 45), ("get", 15)]
     assert watchdog.verified_stop(json.loads((directory / "emergency-stop.json").read_text()))
+
+
+@pytest.mark.parametrize("failure", ["unreadable", "touch", "wait", "wait-timeout", "timeout-receipt",
+                                        "emergency-receipt", "nonzero-exit", "interrupted"])
+def test_cleanup_bookkeeping_failure_cannot_skip_stop(bounded_session, monkeypatch, failure):
+    directory, calls, child = bounded_session
+    original_read, original_touch, original_save = Path.read_text, Path.touch, watchdog.save
+    def broken():
+        raise OSError("inert private error sentinel")
+    if failure == "unreadable":
+        def read(path, *args, **kwargs):
+            return broken() if path.name == "watchdog-result.json" else original_read(path, *args, **kwargs)
+        monkeypatch.setattr(Path, "read_text", read)
+    if failure == "touch":
+        monkeypatch.setattr(Path, "touch", lambda path, **kwargs: broken() if path.name == "stop-requested"
+                            else original_touch(path, **kwargs))
+    if failure in {"wait", "wait-timeout", "timeout-receipt", "interrupted"}:
+        child.wait_error = KeyboardInterrupt() if failure == "interrupted" else (
+            subprocess.TimeoutExpired("inert", 190) if "timeout" in failure else OSError("inert private error sentinel"))
+    if failure in {"timeout-receipt", "emergency-receipt"}:
+        child.result = None
+        target = "watchdog-wait-timeout.json" if failure == "timeout-receipt" else "emergency-stop.json"
+        monkeypatch.setattr(watchdog, "save", lambda path, value: broken() if path.name == target
+                            else original_save(path, value))
+    if failure == "nonzero-exit":
+        child.exit_code = 1
+    if failure == "interrupted":
+        with pytest.raises(KeyboardInterrupt):
+            with watchdog.bounded_vm(directory):
+                pass
+    else:
+        with watchdog.bounded_vm(directory):
+            pass
+    assert calls[-2:] == [("stop", 45), ("get", 15)]
+    errors = json.loads((directory / "watchdog-cleanup-errors.json").read_text())
+    assert errors["errors"] and "sentinel" not in json.dumps(errors)
+    assert watchdog.verified_stop(errors["emergency"])
+
+
+def test_unverified_stop_raises_intervention_even_when_receipt_writes_fail(bounded_session, monkeypatch):
+    directory, calls, child = bounded_session
+    child.result = None
+    original_save = watchdog.save
+    def save(path, value):
+        if path.name in {"emergency-stop.json", "watchdog-cleanup-errors.json"}:
+            raise OSError("inert private error sentinel")
+        original_save(path, value)
+    def provider(action, timeout=45):
+        calls.append((action, timeout))
+        return {"id": watchdog.VM_ID, "state": "STOPPING"}
+    with pytest.raises(RuntimeError, match="VM stop unverified; immediate operator intervention required"):
+        with watchdog.bounded_vm(directory):
+            monkeypatch.setattr(watchdog, "provider", provider)
+            monkeypatch.setattr(watchdog, "save", save)
+    assert calls[-6:] == [("stop", 45), ("get", 15)] * 3
+
+
+def test_wrong_resource_preset_is_never_adopted(tmp_path, monkeypatch):
+    monkeypatch.setattr(watchdog, "provider", lambda *args: {
+        "state": "STOPPED", "resources": {"platform": "cpu-e2", "preset": "different"}})
+    with pytest.raises(ValueError, match="stopped, unchanged"):
+        with watchdog.bounded_vm(tmp_path / "session"):
+            pytest.fail("must not enter")
+
+
+@pytest.mark.parametrize("value", [b"", b"[]", b"{}", b'{"pid":999,"expires_monotonic":700}'])
+def test_invalid_handshake_refuses_start(tmp_path, monkeypatch, value):
+    class Child:
+        pid = 123
+        def poll(self):
+            return None
+    (tmp_path / "watchdog-ready.json").write_bytes(value)
+    monkeypatch.setattr(watchdog.time, "monotonic", lambda: 100)
+    with pytest.raises(ValueError, match="handshake"):
+        watchdog.await_ready(tmp_path, Child(), 700)
+
+
+def test_handshake_preserves_startup_window(tmp_path, monkeypatch):
+    class Child:
+        pid = 123
+        def poll(self):
+            return None
+    monkeypatch.setattr(watchdog.time, "monotonic", lambda: 100)
+    watchdog.save(tmp_path / "watchdog-ready.json", {"pid": 123, "expires_monotonic": 689})
+    with pytest.raises(RuntimeError, match="startup window expired"):
+        watchdog.await_ready(tmp_path, Child(), 689)
+
+
+def test_failed_temporary_cleanup_preserves_publication_failure(tmp_path, monkeypatch):
+    def publish(*args):
+        raise RuntimeError("inert publication failure")
+    def cleanup(*args):
+        raise OSError("inert cleanup failure")
+    monkeypatch.setattr(watchdog.os, "link", publish)
+    monkeypatch.setattr(watchdog.os, "unlink", cleanup)
+    with pytest.raises(RuntimeError, match="publication failure"):
+        watchdog.save(tmp_path / "receipt.json", stopped())
+    assert not (tmp_path / "receipt.json").exists()
+
+
+def test_publication_cancellation_leaves_no_final_receipt(tmp_path, monkeypatch):
+    def dump(*args, **kwargs):
+        raise KeyboardInterrupt()
+    monkeypatch.setattr(watchdog.json, "dump", dump)
+    with pytest.raises(KeyboardInterrupt):
+        watchdog.save(tmp_path / "receipt.json", stopped())
+    assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("observed", [None, [], {"id": "other-vm", "state": "STOPPED"},
+                                       {"id": watchdog.VM_ID, "state": "STOPPING"}])
+def test_stop_requires_pinned_well_shaped_independent_readback(observed):
+    calls = []
+    def provider(action, timeout=45):
+        calls.append((action, timeout))
+        return observed
+    assert not watchdog.stop_verified(provider)["verified_stopped"]
+    assert calls == [("stop", 45), ("get", 15)] * 3
+
+
+def test_cleanup_retains_stop_evidence_without_replacing_primary_failure(bounded_session, monkeypatch):
+    directory, calls, child = bounded_session
+    child.result = None
+    original = watchdog.save
+    def save(path, value):
+        if path.name == "emergency-stop.json":
+            raise OSError("inert private error sentinel")
+        original(path, value)
+    monkeypatch.setattr(watchdog, "save", save)
+    with pytest.raises(RuntimeError, match="inert primary failure"):
+        with watchdog.bounded_vm(directory):
+            raise RuntimeError("inert primary failure")
+    assert calls[-2:] == [("stop", 45), ("get", 15)]
+    receipt = json.loads((directory / "watchdog-cleanup-errors.json").read_text())
+    assert watchdog.verified_stop(receipt["emergency"]) and "sentinel" not in json.dumps(receipt)
+
+
+def test_verified_stop_reports_unavailable_evidence(bounded_session, monkeypatch):
+    directory, calls, child = bounded_session
+    child.result = None
+    original = watchdog.save
+    def save(path, value):
+        if path.name in {"emergency-stop.json", "watchdog-cleanup-errors.json"}:
+            raise OSError("inert private error sentinel")
+        original(path, value)
+    monkeypatch.setattr(watchdog, "save", save)
+    with pytest.raises(RuntimeError, match="VM stopped; shutdown evidence could not be retained"):
+        with watchdog.bounded_vm(directory):
+            pass
+    assert calls[-2:] == [("stop", 45), ("get", 15)]
