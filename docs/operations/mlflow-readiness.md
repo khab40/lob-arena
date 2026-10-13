@@ -12,6 +12,20 @@ agent-selected retry count. It does not require retrying deterministic failures.
 See [console analysis](../ml/mlflow-readiness-health.md#r3-console-analysis).
 The earlier r1/r2 execution account below is historical.
 
+Watchdog correction [Bug #387](https://github.com/khab40/lob-arena/issues/387)
+uses the [maintained readiness scenarios](../ml/mlflow-readiness-design.md),
+WD-AC-01–05. New receipts are complete create-once publications. A missing,
+unreadable or invalid stop receipt, or a stop-signaling/wait/bookkeeping failure,
+must reach emergency shutdown and independent readback of the pinned VM as
+STOPPED. Diagnostic receipt failure cannot suppress that shutdown path.
+The existing VM identity, stopped-before-start constraint, resource preset,
+600-second deadline and retry/time bounds remain unchanged.
+Inert verification and exact-change independent review are required before
+publication; they establish no live readiness result. Preserve every original
+attempt/package and its hashes. A future execution package using this changed
+watchdog needs new exact source/manifest pins and applicable execution approval;
+do not substitute it into a frozen historical package or reuse its approval.
+
 Status: the approved first attempt aborted before staging; independent Nebius
 readback verified STOPPED at resource version 108. No application mutation or
 artifact transfer occurred. The [attempt receipt](../evidence/mlflow-readiness-attempt-20261002.json)

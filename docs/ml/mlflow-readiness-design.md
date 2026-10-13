@@ -89,6 +89,68 @@ Feature: MLflow readiness for governed development
 
 ## Components and evidence
 
+### Watchdog receipt and shutdown correction — Bug #387
+
+Actor: platform operator. Goal: retain complete shutdown evidence and reach
+emergency shutdown despite receipt or bookkeeping failures. Value: a failed
+receipt cannot turn a bounded VM session into an unverified running session.
+Ticket: [Bug #387](https://github.com/khab40/lob-arena/issues/387), under
+[#24](https://github.com/khab40/lob-arena/issues/24), [Project #3](https://github.com/users/khab40/projects/3).
+This section owns the correction's intended behavior. The earlier readiness
+scenarios and historical attempts remain unchanged.
+
+Scope: the existing watchdog, receipt publication, inert failure tests and
+shutdown verification. Preserve its pinned VM, stopped-before-start ownership,
+600-second deadline, existing retry/time bounds and subprocess-group cleanup.
+Assumptions: the local filesystem supports atomic same-directory publication;
+host, network and provider availability remain prerequisites for live stopping.
+No VM start, provider call, model workload, credential access, permission change
+or new live readiness acceptance is authorized by this correction.
+
+```gherkin
+Feature: Complete watchdog receipts and reachable emergency shutdown
+
+  Scenario: WD-AC-01 Publish a complete receipt once
+    Given a watchdog receipt destination has not been published
+    When a reader observes it during publication or writer interruption
+    Then the destination is absent or contains the complete JSON receipt
+    And an existing destination is never overwritten
+
+  Scenario: WD-AC-02 Refuse unverified receipt contents
+    Given a result receipt is missing, unreadable, malformed or has invalid fields
+    When a bounded session finalizes
+    Then it attempts emergency shutdown and independent stopped-state readback
+
+  Scenario: WD-AC-03 Stop despite bookkeeping failures
+    Given a bounded session may have requested VM startup
+    When stop signaling, child waiting or receipt publication fails
+    Then the failure cannot skip emergency shutdown and stopped-state readback
+    And retained diagnostic errors contain no raw exception text
+
+  Scenario: WD-AC-04 Require exact stopped-state evidence
+    Given a receipt claims shutdown success
+    When the bounded session verifies that claim
+    Then success requires the Boolean true and readback of the pinned VM as STOPPED
+    And unverified shutdown raises the operator-intervention error
+
+  Scenario: WD-AC-05 Preserve bounded session ownership and timing
+    Given the existing bounded session startup and shutdown constraints
+    When the corrected watchdog runs
+    Then it refuses to adopt an already-running or differently sized VM
+    And its startup, shutdown and subprocess cleanup bounds remain unchanged
+```
+
+Verification uses only inert providers and local process/filesystem fixtures.
+Live readiness remains separately gated. Current increment mapping:
+
+| Scenario | Implementation | Test/check | Evidence receipt | Status |
+| --- | --- | --- | --- | --- |
+| WD-AC-01 | `scripts/nebius_mlflow_watchdog.py:save` | `test_receipt_publication_is_complete_private_and_create_once`, `test_process_interruption_never_publishes_partial_receipt`, `test_atomic_publication_failures_leave_absent_or_complete_receipt` | `outputs/bug-fixes-387-reconciliation-20261013/iteration1/author-receipt.json` | Pass, inert |
+| WD-AC-02 | `verified_stop`, `bounded_vm` | `test_invalid_result_always_reaches_emergency_readback`, `test_cleanup_bookkeeping_failure_cannot_skip_stop[unreadable]` | Same retained receipt; exact diff/specification pins in review | Pass, inert |
+| WD-AC-03 | `bounded_vm` finalization | `test_cleanup_bookkeeping_failure_cannot_skip_stop`, `test_cleanup_retains_stop_evidence_without_replacing_primary_failure`, `test_verified_stop_reports_unavailable_evidence` | Same retained receipt | Pass, inert |
+| WD-AC-04 | `verified_stop`, `stop_verified` | `test_stop_requires_pinned_well_shaped_independent_readback`, `test_unverified_stop_raises_intervention_even_when_receipt_writes_fail` | Same retained receipt | Pass, inert |
+| WD-AC-05 | Existing startup/provider ownership | `test_cleanup_on_every_session_path`, `test_wrong_resource_preset_is_never_adopted`, `test_handshake_preserves_startup_window`, `test_provider_timeout_kills_the_entire_cli_process_group` | Same retained receipt | Pass, inert |
+
 ```mermaid
 flowchart TD
     Mac[Mac: review, orchestration and watchdog] --> VM[Existing Nebius MLflow VM]

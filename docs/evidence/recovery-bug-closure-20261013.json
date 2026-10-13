@@ -1,0 +1,67 @@
+{
+  "schema_version": "recovery_bug_closure_metadata_v1",
+  "recorded_date": "2026-10-13",
+  "behavioral_change": "none",
+  "project_url": "https://github.com/users/khab40/projects/3",
+  "intended_parent_url": "https://github.com/khab40/lob-arena/issues/90",
+  "reconciliation_document": "docs/operations/recovery-bug-evidence-reconciliation-20261013.md",
+  "baseline_commit": "dc9d99a7d7efc110573174cd39bdc90a641290bb",
+  "publication_kind": "non_executable_allowlisted_metadata",
+  "closure_status": "prior_delivery_closure_pending_merge",
+  "excluded": ["private_package_code", "executable_plans", "selectors", "commands", "policy_bodies", "credentials", "payloads"],
+  "bugs": [
+    {
+      "number": 358, "url": "https://github.com/khab40/lob-arena/issues/358", "observed_state": "OPEN", "observed_project_status": "Todo", "observed_parent": null,
+      "prior_delivery": {"duplicate_of": 359, "merged_pr": 362, "merge_commit": "41ae6d24601e7fd2b7f359051a6ccdc330402b13"},
+      "specification": ["docs/ml/verified-saved-score-mock.md", "db431732ddb4690c8f9e77dfcfb17aadcf12e4f1e338539f870ca53219f6cb3d"],
+      "source": ["backend/app/main.py", "4d9541fd53521b73ee0be09a233aace990dab162aed22ceaf40ef5a3ddb0b394"],
+      "tests": [["backend/tests/test_saved_score_routes.py", "c69ad13c3f0c2406610f4370ad9264de68dd290ff5d316043005f66e6b44e238"], ["backend/tests/test_saved_scores.py", "a6744a05a536a3f1273ba76f6149d6123b649045aefbf873ee5069e44712baf4"]],
+      "test_names": ["test_private_root_guard_precedes_startup_cleanup[True/False]", "test_private_and_generic_artifact_roots_must_be_disjoint", "test_private_evidence_outside_generic_artifact_routes", "test_disabled_by_default_and_no_private_error_details"],
+      "review": ["outputs/transformer-integration-20261008/backend-correction-review.json", "6eae7dd52e40c6d0e2c010cef2f96007dfc87547f7c2b19355c895fddbf54904"],
+      "review_result": {"scope": "actual_duplicate_Bug359", "inert_cases": 48, "actionable_P0_P1_P2": 0},
+      "current_check": {"inert_cases": 5, "status": "pass", "unconfigured_disabled_startup": "guard_condition_inspection"}
+    },
+    {
+      "number": 376, "url": "https://github.com/khab40/lob-arena/issues/376", "observed_state": "OPEN", "observed_project_status": "In Progress", "observed_parent": 90,
+      "prior_delivery": "pinned_private_collection_v2_successor",
+      "specification": ["outputs/ceo-playback-demo-20261012/saved-campaign-collection-preparation-v2/specification.md", "037c5589851c19653d4a929ca7c0039544a16f48361fa24e2c67ea5212090454"],
+      "source": ["outputs/ceo-playback-demo-20261012/saved-campaign-collection-preparation-v2/collect.py", "d43434faf2a404ca9be4b36d18d657c0859fd7c4004edd2c6fd2b754549e9bfa"],
+      "tests": [["outputs/ceo-playback-demo-20261012/saved-campaign-collection-preparation-v2/test_collect.py", "2b75b5d68f6fa0f3d50af8c2006b317f6933a43099db11067bfcf3ea2bcc6525"]],
+      "test_names": ["test_final_stdout_preserves_primary_accounting_when_close_also_fails"],
+      "review": ["outputs/saved-campaign-collection-correction1-review-classifier_author.json", "09f4b2cfca0044c636c3cb9523e0fe33b9956f6c332758aef11336fa762f2f26"],
+      "review_result": {"status": "CLEAR", "inert_cases": 22, "failure_combinations": 9, "ruff": "pass", "closed_finding": "CEO-COLLECTION-I1-01", "actionable_P0_P1_P2": 0},
+      "boundary_coverage": ["primary_and_close_failure", "close_only_failure", "persistent_close_failure", "cancellation", "exact_safe_stdout_accounting", "single_close_and_no_duplicate_requests"]
+    },
+    {
+      "number": 379, "url": "https://github.com/khab40/lob-arena/issues/379", "observed_state": "OPEN", "observed_project_status": "In Progress", "observed_parent": 90,
+      "prior_delivery": "pinned_private_HEAD_diagnostic_v2_successor",
+      "specification": ["outputs/ceo-playback-demo-20261012/saved-output-head-diagnostic-preparation-v2/specification.md", "a0641784d17a02d53fe78eade0db614507a6d8379c32974661c417d187536a59"],
+      "source": ["outputs/ceo-playback-demo-20261012/saved-output-head-diagnostic-preparation-v2/diagnose.py", "ad94a70b13762dd11e1e228d9dbbabb312dfa147a8f8212d02968ef37e1a589d"],
+      "tests": [["outputs/ceo-playback-demo-20261012/saved-output-head-diagnostic-preparation-v2/test_diagnose.py", "2a7df8b988862dc16988bf8f9bc3e6d46cb8e75c40712f6f38afbaaf0e4b8337"]],
+      "test_names": ["test_responded_custody_failure_keeps_safe_observation"],
+      "review": ["outputs/ceo-playback-demo-20261012/saved-output-head-diagnostic-correction1-review-classifier_author.json", "7ca05d2a31f31c79bf74f6062654c68feacae86245fa0bcf36a736b2bbd9a225"],
+      "review_result": {"status": "CLEAR", "inert_cases": 34, "response_write_fault_combinations": 4, "ruff": "pass", "closed_finding": "CEO-HEAD-DIAG-I1-01", "actionable_P0_P1_P2": 0},
+      "boundary_coverage": ["response_write_OSError", "cancellation", "persistent_failure_receipt_refusal", "primary_safe_observation_and_counts", "secret_canary_absence", "zero_GET"],
+      "terminal": ["outputs/ceo-playback-demo-20261012/saved-output-head-diagnostic-head-1a96b52124394316/terminal-receipt.json", "0d291f450c955981ad62802c2ac5041b42fa8f4cdcca02c731bd6177998e6ce0"],
+      "actual_outcome": {"status": "failed_HEAD_diagnostic_accounting_verified", "category": "http_403", "exit_code": 255, "stdout_bytes": 0, "stderr_bytes": 133, "validated_grounding": 6, "validated_selectors": 2, "HEAD_intended_started_responded_validated": [1, 1, 1, 0], "GET_count": 0, "cleanup": "completed", "finalization": "completed", "original_collection_verified": false}
+    },
+    {
+      "number": 382, "url": "https://github.com/khab40/lob-arena/issues/382", "observed_state": "OPEN", "observed_project_status": "In Progress", "observed_parent": 90,
+      "prior_delivery": "pinned_private_policy_guard_v2_successor", "scenario_ids": ["ACCESS-03", "ACCESS-04"],
+      "specification": ["outputs/ceo-playback-demo-20261012/saved-output-access-recovery-preparation-v2/specification.md", "1f3a3ab35c1c3a039acd3caf41d9dd075d86fbd873c0b96b762ca1c7b12324b9"],
+      "source": ["outputs/ceo-playback-demo-20261012/saved-output-access-recovery-preparation-v2/policy_guard.py", "a9f959cb49aff817229752e0e1c3352e38da258304f9f6ba360f5a7d60181ece"],
+      "tests": [["outputs/ceo-playback-demo-20261012/saved-output-access-recovery-preparation-v2/test_policy_guard.py", "7babea46cb7d885075a7c4587bcb2811bf9938e7813ed43e77f6b5f950649600"]],
+      "test_names": ["test_exact_removal_preserves_baseline_and_fresh_version", "test_parent_prefix_root_key_wildcard_and_empty_refused", "test_question_placeholder_full_key_and_prefix_refused", "test_single_question_matches_exactly_one_character", "test_regex_and_glob_special_characters_are_literal", "test_mixed_exact_and_overlapping_wildcard_refused", "test_exact_rule_plus_separate_wildcard_refused", "test_reordered_exact_scope_refused_conservatively", "test_absent_and_nonoverlapping_baseline_preserved", "test_nonoverlapping_other_current_change_preserved", "test_broader_unchanged_removal_readback_refused", "test_other_group_overlap_is_preserved", "test_invalid_wildcard_or_path_shape_refused"],
+      "review": ["outputs/ceo-playback-demo-20261012/saved-output-access-recovery-correction1-review-classifier_author.json", "991673465ce4792a07b196d28a2a92e30f7caa853d4026516be60bda6ffd7ead"],
+      "review_result": {"status": "CLEAR", "inert_tests": 13, "subtests": 8, "ruff": "pass", "closed_finding": "ACCESS-CLEANUP-PREFIX-01", "actionable_P0_P1_P2": 0}
+    }
+  ],
+  "supporting_actual_outcomes": {
+    "applies_to": [376, 382],
+    "collection_terminal": ["outputs/ceo-playback-demo-20261012/saved-output-access-execution-b53bf7eb72e5433c/collection-terminal-receipt.json", "b40916a16fc04c7203ada285cc0ebdbb823531e7e59a0aab1630f001c63c27d9"],
+    "access_execution": ["outputs/ceo-playback-demo-20261012/saved-output-access-execution-b53bf7eb72e5433c/execution-receipt.json", "dc57056cae4874a4b0a6ea729dbb5ecf1dd1317f6de5b21cbc0ba3c09f4ed899"],
+    "independent_metadata_audit": ["outputs/ceo-playback-demo-20261012/saved-output-access-execution-audit-classifier_author-checks.json", "80de647efa92bd40d99a0a449eea1520bff47b0ef67b9673356259e7b877b8e3"],
+    "result": {"validated_HEADs": 3, "validated_GETs": 3, "verified_objects": 3, "verified_bytes": 10388606, "collection_finalization": "completed", "temporary_rule_removed": true, "original_nine_rule_specification_preserved": true},
+    "limitation": "Supporting outcomes do not replace inert failure proofs or establish full Story90_91 acceptance; no new invocation or access is authorized."
+  }
+}
