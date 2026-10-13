@@ -1,13 +1,53 @@
 import { useEffect, useRef, useState } from "react";
 import { getSavedCampaign, getSavedScorePage } from "@/api/savedScores";
-import type { SavedCampaign, SavedDetectorId, SavedProvenance, SavedScorePage, SavedScoreRow } from "@/types/savedScores";
+import type { SavedCampaign, SavedDetectorId, SavedScorePage, SavedScoreRow } from "@/types/savedScores";
 import { appendSavedRow, savedPlaybackDelay, SAVED_SPEEDS } from "./savedScorePlayback";
 import "./savedScoreResearch.css";
+import { ScorePlot, Provenance } from "./SavedScoreView";
+import { usePreparedEvidence } from "./preparedEvidence";
+import { CeoPlaybackPanel } from "./CeoPlaybackPanel";
+import { NavLink } from "react-router";
+
 
 const detectorNames: Record<SavedDetectorId, string> = { transformer: "Transformer", lightgbm: "LightGBM" };
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : "Saved research predictions are unavailable.";
 
 export function SavedScoreResearchPage() {
+  const prepared = usePreparedEvidence();
+  const [source, setSource] = useState("prepared");
+  if (!prepared) return <OrdinarySavedScoreResearchPage />;
+  return <>
+    <section className="saved-score-panel"><label>Saved research source <select value={source} onChange={e => setSource(e.target.value)}>
+      <option value="prepared">Prepared verified window</option><option value="ordinary">Ordinary local research</option>
+    </select></label></section>
+    {source === "prepared" ? <PreparedSavedScoreResearch /> : <OrdinarySavedScoreResearchPage />}
+  </>;
+}
+
+function PreparedSavedScoreResearch() {
+  const prepared = usePreparedEvidence()!;
+  const { activate } = prepared;
+  useEffect(() => { activate(); }, [activate]);
+  return <>
+    {prepared.error ? <section className="saved-score-panel"><p role="alert">{prepared.error}</p>
+      <button className="secondary-button" type="button" disabled={prepared.busy} onClick={prepared.retry}>Reload prepared campaign</button></section> : null}
+    {!prepared.campaign || !prepared.page ? <p role="status">{prepared.busy ? "Opening the verified campaign…" : "The prepared campaign is unavailable."}</p>
+      : <CeoPlaybackPanel campaign={prepared.campaign} page={prepared.page} detector={prepared.detector} cursor={prepared.cursor}
+        playing={prepared.playing} speed={prepared.speed} busy={prepared.busy} selected={prepared.selected}
+        onDetector={prepared.chooseDetector} onPlay={() => { if (prepared.cursor === prepared.page!.rows.length) prepared.setCursor(0); prepared.setPlaying(!prepared.playing); }}
+        onSpeed={prepared.setSpeed} onJump={() => { prepared.setPlaying(false); const i = prepared.page!.rows.findIndex(r => r.alert);
+          if (i >= 0) { prepared.setCursor(i + 1); prepared.setSelected(prepared.page!.rows[i].target_id); } }}
+        onSelect={row => prepared.setSelected(row.target_id)} onCapture={prepared.capture} />}
+    <section className="saved-score-panel" aria-label="Saved anomaly investigation">
+      <h2>{prepared.snapshot ? `${prepared.snapshot.row.symbol} · captured anomaly` : "Capture an alert to continue"}</h2>
+      {prepared.snapshot ? <p>Original row {prepared.snapshot.row.ordinal} · {prepared.snapshot.detector} · synthetic label {prepared.snapshot.row.synthetic_label}</p> : null}
+      <p>Saved anomalies remain fixed when playback or detector selection changes.</p>
+      <NavLink className="secondary-button" to="/nebius?step=3&input=saved">Investigate in Control Panel</NavLink>
+    </section>
+  </>;
+}
+
+function OrdinarySavedScoreResearchPage() {
   const [campaign, setCampaign] = useState<SavedCampaign | null>(null);
   const [sessionId, setSessionId] = useState("");
   const [detector, setDetector] = useState<SavedDetectorId>("transformer");
@@ -130,32 +170,4 @@ export function SavedScoreResearchPage() {
       </section> : null}
     </div>
   );
-}
-
-function ScorePlot({ rows, threshold }: { rows: SavedScoreRow[]; threshold?: number }) {
-  const points = rows.map((row, index) => `${30 + index * (540 / 19)},${110 - row.probability * 90}`).join(" ");
-  return <figure className="saved-score-plot">
-    <figcaption>Last 20 saved probabilities · dashed line is the frozen threshold</figcaption>
-    <svg aria-label="Recent saved probabilities and frozen threshold" role="img" viewBox="0 0 600 130">
-      <text x="0" y="25">1</text><text x="0" y="115">0</text>
-      <line x1="30" x2="570" y1="110" y2="110" className="saved-score-axis" />
-      {threshold !== undefined ? <line x1="30" x2="570" y1={110 - threshold * 90} y2={110 - threshold * 90} className="saved-score-threshold" /> : null}
-      <polyline fill="none" points={points} className="saved-score-line" />
-    </svg>
-  </figure>;
-}
-
-function Provenance({ value }: { value: SavedProvenance }) {
-  return <details className="saved-score-provenance" open>
-    <summary>Verified source identities</summary>
-    <dl>
-      <dt>Verification SHA-256</dt><dd>{value.verification_sha256}</dd>
-      <dt>Selected Transformer settings SHA-256</dt><dd>{value.settings_sha256}</dd>
-      <dt>Original Job</dt><dd>{value.job_id}</dd>
-      <dt>Request SHA-256</dt><dd>{value.request_sha256}</dd>
-      <dt>Paired prediction receipt</dt><dd>Version {value.predictions.version_id} · {value.predictions.size_bytes} bytes · {value.predictions.sha256}</dd>
-      <dt>Transformer checkpoint SHA-256</dt><dd>{value.model_checkpoint_sha256}</dd>
-    </dl>
-    <p>LightGBM score lineage is bound to the verified paired predictions; the checkpoint above identifies the Transformer.</p>
-  </details>;
 }
