@@ -212,3 +212,26 @@ a model. Fixed safe errors may also indicate a refused write or storage budget:
 journey files are bounded to 256 KiB each, at most 1000 retained files including
 partials, and 256 MiB total. Preserve failed partials and durable state for
 review; cleanup or replacement requires its applicable authorization.
+
+## Current local draft, 13 October 2026
+
+The original four-service application is live at `http://localhost:5173`, using
+the existing approved Google identity. Rehearsed application source is
+`f168c305ce865e3b0c91d11968079f28dbacf18a`, with all 25 PR checks passing.
+Root `outputs/ceo-playback-demo-20261012/release-local-20261013/` retains reviewed
+preparation, exact image/runtime identities, `rehearsal-v2.json`, the original
+Arena screenshot and `server-saved-verification.json`.
+
+Actual Google sign-in, saved playback, capture, deterministic explanation, save
+and reload/reopen passed. The retained server bundle's canonical hashes verify.
+Browser JSON download, post-capture detector switching and logout/re-entry are
+pending after the computer-use connection became unavailable. Reconnect it and
+finish steps 3, 5 and 6 above; server readback and mocked tests do not replace them.
+
+The maintained specification permits an immutable draft tag with these explicit
+pending checks, after documentation review and fresh exact-head CI. This does
+not complete CEO-AC-10/12 or full #90/#91 acceptance. A documentation-only final
+commit must retain identical running application/build inputs. Keep the draft
+local; shared HTTPS/Nebius deployment and fresh scoring remain later work.
+Fix [Bug #387](https://github.com/khab40/lob-arena/issues/387) before #24's live
+MLflow VM reconciliation; its watchdog is not used by this local draft.
