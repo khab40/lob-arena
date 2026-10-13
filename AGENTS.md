@@ -105,6 +105,30 @@
   project's backlog under the approved parent. Approval to create or park a
   ticket does not itself authorize implementation.
 
+# PR completion and unfinished scope
+
+- Before marking a PR ready for merge, complete, merged or successfully delivered,
+  verify every acceptance criterion in its declared scope against the canonical
+  specification and exact reviewed head. Pending, failed, skipped or gated
+  in-scope criteria mean the PR's scope is incomplete. Green CI, written code,
+  a preview/release tag or a test passing on retry does not by itself establish
+  completion of the declared scope.
+- A deliberately bounded increment may finish while broader parent acceptance
+  remains open only when its scope and excluded criteria were explicit and
+  approved. Do not silently shrink or rename unfinished scope to claim success.
+- Do not close an unfinished PR as completed or merge it to dispose of pending
+  work. An operator may explicitly authorize administrative closure of unfinished
+  scope. Before closure, create or verify linked follow-up task(s) in Project #3
+  under the proper parent, retaining every remaining scenario ID, limitation,
+  dependency, evidence gap and verification method; cross-link them from the PR.
+- Record that exception as **closed unmerged/incomplete**, with the operator's
+  authorization and exact head. Keep original parent stories open where their
+  acceptance is not met; transferring work is not verification or delivery.
+- Preserve the code, immutable tags, worktrees and durable evidence needed by
+  the continuation. Closure/transfer grants no merge, deletion, model execution,
+  data access, cloud deployment or spend authorization. Cleanup retains its
+  separate exact-target approval and preservation requirements.
+
 # Branch and worktree lifecycle
 
 - Use `main` as the only permanent development branch. Default to one active
