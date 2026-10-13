@@ -23,7 +23,12 @@ model inference; the deployment/runtime gates below remain applicable.
 | Maintenance invariant | Check | Evidence | Status |
 | --- | --- | --- | --- |
 | FastAPI floor strengthened; other floors/API files preserved | Existing security-floor tests and exact diff comparison | `outputs/chore-deps-20261013/pr374-verification.json`, `pr374-review.json` | Pass (inert) |
-| Repository compatibility | Existing required CI | `outputs/chore-deps-20261013/pr374-ci.json` | CI gate pending |
+| Repository compatibility | Existing required CI | `outputs/chore-deps-20261013/pr374-ci.json` | Pass (CI; receipt pins verified head) |
+
+CI pass above is pinned to dependency head `2e065846f82084b3a22fe6f4cce672d9db3a4441`
+in `outputs/chore-deps-20261013/pr374-ci-pre-traceability.json`. This status-only
+update changes no dependency or product bytes. Each subsequent publication head
+requires fresh CI before merge; its result is retained in `pr374-ci.json`.
 
 ## Routes
 
