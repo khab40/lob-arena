@@ -6,6 +6,7 @@ import os
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -14,9 +15,32 @@ VM_ID = "computeinstance-e00xq8hqrzks2pf3gn"
 
 
 def save(path, value):
-    with path.open("x", encoding="utf-8") as stream:
-        json.dump(value, stream, indent=2)
-        stream.write("\n")
+    """Publish complete private JSON without replacing any existing receipt."""
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(value, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.link(temporary, path)  # Same-directory atomic, exclusive publication.
+        descriptor = os.open(path.parent, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+    finally:
+        try:
+            os.unlink(temporary)
+        except OSError:
+            pass  # Temporary-file cleanup must not replace a publication failure.
+
+
+def verified_stop(value):
+    if not isinstance(value, dict) or value.get("verified_stopped") is not True:
+        return False
+    observed = value.get("after")
+    return isinstance(observed, dict) and observed.get("id") == VM_ID and observed.get("state") == "STOPPED"
 
 
 def provider(action, timeout=45):
@@ -46,21 +70,23 @@ def provider(action, timeout=45):
             "observed_at_unix": time.time()}
 
 
-def stop_verified(call=provider):
+def stop_verified(call=None):
+    call = provider if call is None else call
     attempts = []
     for _ in range(3):
         try:
             response = call("stop")
             attempts.append({"stop_response": response})
             observed = call("get", timeout=15)
-            if observed["state"] == "STOPPED":
+            if verified_stop({"verified_stopped": True, "after": observed}):
                 return {"verified_stopped": True, "attempts": attempts, "after": observed}
         except Exception as exc:
             attempts.append({"error": type(exc).__name__})
     return {"verified_stopped": False, "attempts": attempts}
 
 
-def watch(directory, expires, stop=stop_verified):
+def watch(directory, expires, stop=None):
+    stop = stop_verified if stop is None else stop
     save(directory / "watchdog-ready.json", {"pid": os.getpid(), "expires_monotonic": expires})
     reason = "deadline"
     while time.monotonic() < expires:
@@ -71,7 +97,7 @@ def watch(directory, expires, stop=stop_verified):
     receipt = {"reason": reason, "stop_started_at_unix": time.time(), **stop()}
     receipt["completed_at_unix"] = time.time()
     save(directory / "watchdog-result.json", receipt)
-    return 0 if receipt["verified_stopped"] else 1
+    return 0 if verified_stop(receipt) else 1
 
 
 def await_ready(directory, child, expires):
@@ -83,9 +109,11 @@ def await_ready(directory, child, expires):
         if ready.exists():
             try:
                 value = json.loads(ready.read_text())
-            except json.JSONDecodeError:
-                continue  # The child is still flushing its tiny handshake.
-            if value["pid"] != child.pid or value["expires_monotonic"] != expires:
+            except (OSError, UnicodeError, ValueError):
+                raise ValueError("invalid watchdog handshake") from None
+            if not isinstance(value, dict):
+                raise ValueError("invalid watchdog handshake")
+            if value.get("pid") != child.pid or value.get("expires_monotonic") != expires:
                 raise ValueError("watchdog handshake mismatch")
             if expires - time.monotonic() < 590:
                 raise RuntimeError("watchdog startup window expired")
@@ -124,17 +152,53 @@ def bounded_vm(directory):
             raise RuntimeError("VM did not reach RUNNING")
         yield expires
     finally:
-        (directory / "stop-requested").touch(exist_ok=True)
+        errors, interruptions = [], []
+
+        def failed(stage, exc):
+            errors.append({"stage": stage, "error": type(exc).__name__})
+            if not isinstance(exc, Exception):
+                interruptions.append(exc)
+
+        def retain(name, value):
+            try:
+                save(directory / name, value)
+                return True
+            except BaseException as exc:
+                failed(name, exc)
+                return False
+
         try:
-            child.wait(timeout=190)
-        except subprocess.TimeoutExpired:
-            save(directory / "watchdog-wait-timeout.json", {"at_unix": time.time()})
-        result = directory / "watchdog-result.json"
-        if not result.exists() or not json.loads(result.read_text()).get("verified_stopped"):
-            emergency = stop_verified()
-            save(directory / "emergency-stop.json", emergency)
-            if not emergency["verified_stopped"]:
-                raise RuntimeError("VM stop unverified; immediate operator intervention required")
+            (directory / "stop-requested").touch(exist_ok=True)
+        except BaseException as exc:
+            failed("stop-requested", exc)
+        try:
+            if child.wait(timeout=190) != 0:
+                errors.append({"stage": "watchdog-wait", "error": "NonzeroExit"})
+        except subprocess.TimeoutExpired as exc:
+            failed("watchdog-wait", exc)
+            retain("watchdog-wait-timeout.json", {"at_unix": time.time()})
+        except BaseException as exc:
+            failed("watchdog-wait", exc)
+        try:
+            result = json.loads((directory / "watchdog-result.json").read_text(encoding="utf-8"))
+        except BaseException as exc:
+            failed("watchdog-result", exc)
+            result = None
+        emergency = None
+        if errors or not verified_stop(result):
+            try:
+                emergency = stop_verified()
+            except BaseException as exc:
+                failed("emergency-stop", exc)
+                emergency = {"verified_stopped": False}
+            retain("emergency-stop.json", emergency)
+        retained = not errors or retain("watchdog-cleanup-errors.json", {"errors": errors, "emergency": emergency})
+        if emergency is not None and not verified_stop(emergency):
+            raise RuntimeError("VM stop unverified; immediate operator intervention required")
+        if interruptions:
+            raise interruptions[0]
+        if not retained and sys.exc_info()[0] is None:
+            raise RuntimeError("VM stopped; shutdown evidence could not be retained")
 
 
 if __name__ == "__main__":

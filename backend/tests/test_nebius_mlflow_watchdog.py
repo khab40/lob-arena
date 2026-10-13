@@ -3,7 +3,9 @@ import importlib.util
 import json
 import subprocess
 import sys
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -12,6 +14,19 @@ SOURCE = Path(__file__).resolve().parents[2] / "scripts/nebius_mlflow_watchdog.p
 SPEC = importlib.util.spec_from_file_location("watchdog", SOURCE)
 watchdog = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(watchdog)
+PROVIDER = watchdog.provider
+
+
+def stopped():
+    return {"verified_stopped": True, "attempts": [],
+            "after": {"id": watchdog.VM_ID, "state": "STOPPED"}}
+
+
+@pytest.fixture(autouse=True)
+def forbid_live_provider(monkeypatch):
+    def forbidden(*args, **kwargs):
+        pytest.fail("live provider must never run in watchdog tests")
+    monkeypatch.setattr(watchdog, "provider", forbidden)
 
 
 def test_detached_watchdog_stops_after_parent_exits(tmp_path):
@@ -19,7 +34,8 @@ def test_detached_watchdog_stops_after_parent_exits(tmp_path):
             f"s=importlib.util.spec_from_file_location('w',{str(SOURCE)!r}); "
             "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
             f"m.watch(pathlib.Path({str(tmp_path)!r}),time.monotonic()+.2,"
-            "stop=lambda:{'verified_stopped':True,'inert':True})")
+            "stop=lambda:{'verified_stopped':True,'inert':True,"
+            "'after':{'id':m.VM_ID,'state':'STOPPED'}})")
     parent = ("import subprocess,sys; "
               f"subprocess.Popen([sys.executable,'-c',{code!r}],start_new_session=True,"
               "stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)")
@@ -36,7 +52,7 @@ def test_detached_watchdog_stops_after_parent_exits(tmp_path):
 def test_stop_requested_exits_before_deadline(tmp_path):
     (tmp_path / "stop-requested").touch()
     assert watchdog.watch(tmp_path, time.monotonic() + 600,
-                          stop=lambda: {"verified_stopped": True}) == 0
+                          stop=stopped) == 0
     assert json.loads((tmp_path / "watchdog-result.json").read_text())["reason"] == "requested"
 
 
@@ -44,7 +60,7 @@ def test_stop_requires_readback_and_bounds_retries():
     calls = []
     def provider(action, timeout=45):
         calls.append((action, timeout))
-        return {"state": "STOPPED" if len(calls) == 4 else "STOPPING"}
+        return {"id": watchdog.VM_ID, "state": "STOPPED" if len(calls) == 4 else "STOPPING"}
     result = watchdog.stop_verified(provider)
     assert result["verified_stopped"]
     assert calls == [("stop", 45), ("get", 15), ("stop", 45), ("get", 15)]
@@ -69,7 +85,8 @@ def test_cleanup_on_every_session_path(tmp_path, monkeypatch, failure):
         pid = 123
         def wait(self, timeout):
             assert (directory / "stop-requested").exists()
-            watchdog.save(directory / "watchdog-result.json", {"verified_stopped": True})
+            watchdog.save(directory / "watchdog-result.json", stopped())
+            return 0
     def ready(*args):
         if failure == "arm":
             raise RuntimeError("handshake failed")
@@ -118,6 +135,6 @@ def test_provider_timeout_kills_the_entire_cli_process_group(monkeypatch):
     monkeypatch.setattr(watchdog.subprocess, "Popen", lambda *a, **k: child)
     monkeypatch.setattr(watchdog.os, "killpg", lambda *args: killed.append(args))
     with pytest.raises(subprocess.TimeoutExpired):
-        watchdog.provider("get", timeout=1)
+        PROVIDER("get", timeout=1)
     assert killed == [(456, watchdog.signal.SIGKILL)]
     assert child.calls == 2
