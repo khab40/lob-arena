@@ -6,6 +6,32 @@ Deliver one understandable journey from Google sign-in to retained anomaly evide
 
 ## Persistent operator requirement
 
+### Current delivery target — 13 October 2026
+
+The operator clarified the release target: **Google → supported data/mode →
+selected frozen LightGBM or Transformer → fresh detection → measured quality and
+retained evidence**, using the existing UI/backend. LLM explanations follow later.
+Real historical, clean synthetic, attack-labelled synthetic (truth hidden from
+detectors) and supported combinations are distinct modes; future connectors can
+follow. Metrics follow actual label coverage, not assumed clean history.
+
+The local `ceo-demo-20261012-r1` draft preserves the full application and adds
+Google-protected saved predictions. It does not run either learned model on a
+newly selected source. Bug [#389](https://github.com/khab40/lob-arena/issues/389)
+fixes directory-only ITCH candidates; it does not acquire the missing Nasdaq corpus.
+Fresh source-to-model integration, valid evaluation and authentic two-model
+rehearsal remain the critical path under existing #90/#91 and #24 dependencies.
+
+Acceptance is maintained in the
+[fresh UI successor](../specs/91-secure-ceo-playback-demo.md#fresh-detection-successor--13-october-2026)
+and [frozen detector flow §6](../frozen-detector-release-and-demo-flow.md#6-observable-acceptance-for-implementation).
+The estimates and broader roadmap dates below are historical baselines, not a
+fresh completion promise. Prioritize one meaningful bounded source-to-result run
+for each model, then presentation/rehearsal. Defer LLM, cascade, future feeds,
+broad robustness research and shared deployment from this local release increment.
+
+### Original requirement — 8 October 2026
+
 Operator instruction, 8 October 2026: **the CEO demo must begin with a Google login screen**. Keep this requirement in future demo plans and #91 acceptance. Restore backend verification, application sessions and workspace authorization before a shared deployment exposes sensitive data; protect REST, WebSocket and evidence/export routes. A login page alone does not satisfy this requirement. The approved loopback-only saved-score mock can precede this shared-demo gate.
 
 The requested journey is retained here: Google login → ingest new data, reuse previously ingested data or choose a real-time feed → start a flow or attach to an existing flow → choose a detector → record anomalies → explain results with an LLM → save evidence. This instruction records a product requirement; it does not provision an account or authorize deployment, model runs, new data access or spend.
