@@ -6,6 +6,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from app.data_ingestion import itch
+from app.data_ingestion.service import DataIngestionService
 from app.data_ingestion.itch import (
     FORMAT_VERSION,
     PARSER_VERSION,
@@ -29,6 +30,58 @@ def test_fixture_discovers_stock_directory_symbols() -> None:
     ]
     assert all(item.source_type == "nasdaq_itch" for item in candidates)
     assert all(item.venue == "XNAS" for item in candidates)
+    assert candidates[0].status == "ready"
+    assert candidates[1].status == "invalid"
+    assert "MSFT has no visible-order lifecycle events" in candidates[1].errors[0]
+
+
+def test_directory_only_symbol_is_refused_before_import_job(tmp_path: Path) -> None:
+    service = DataIngestionService(tmp_path / "lobster", tmp_path / "registry", FIXTURE_DIR)
+    candidate = next(item for item in service.candidates("nasdaq_itch") if item.symbol == "MSFT")
+
+    with pytest.raises(ValueError, match="MSFT has no visible-order lifecycle events"):
+        service.begin_import(candidate.candidate_id, source_type="nasdaq_itch")
+    assert not (tmp_path / "registry").exists()
+
+
+def test_truncated_gzip_is_invalid_instead_of_failing_discovery(tmp_path: Path) -> None:
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    fixture = FIXTURE_DIR / "2026-01-02.NASDAQ_ITCH50.fixture.gz"
+    (raw / fixture.name).write_bytes(fixture.read_bytes()[:-8])
+    service = DataIngestionService(tmp_path / "lobster", tmp_path / "registry", raw)
+
+    candidate, = service.candidates("nasdaq_itch")
+
+    assert candidate.status == "invalid"
+    assert "end-of-stream" in candidate.errors[0]
+    with pytest.raises(ValueError, match="end-of-stream"):
+        service.begin_import(candidate.candidate_id, source_type="nasdaq_itch")
+    assert not (tmp_path / "registry").exists()
+
+
+@pytest.mark.parametrize("limit", ["DISCOVERY_EVENT_MAX_RECORDS", "DISCOVERY_EVENT_MAX_PAYLOAD_BYTES"])
+def test_incomplete_event_inspection_does_not_mark_symbols_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, limit: str
+) -> None:
+    monkeypatch.setattr(itch, limit, 1)
+
+    candidates = discover_candidates(FIXTURE_DIR, tmp_path / "registry")
+
+    assert [item.status for item in candidates] == ["ready", "ready"]
+    assert all(not item.errors for item in candidates)
+
+
+def test_large_source_skips_event_inspection(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "large.itch"
+    with source.open("wb") as stream:
+        stream.truncate(itch.DISCOVERY_EVENT_MAX_SOURCE_BYTES + 1)
+
+    def forbidden_records(_path: Path):
+        raise AssertionError("large source must not enter the event inspection")
+
+    monkeypatch.setattr(itch, "iter_records", forbidden_records)
+    assert itch._empty_symbols_in_small_source(source, ["MSFT"]) == set()
 
 
 def test_fixture_normalizes_every_visible_lifecycle_transition(tmp_path: Path) -> None:

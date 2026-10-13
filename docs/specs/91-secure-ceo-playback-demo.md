@@ -408,9 +408,9 @@ remains open and must be fixed before #24's live MLflow VM work.
 | CEO-AC-11v | Existing `JavaArenaClient` metrics, invented shared transport response | `test_java_arena_client_records_proxy_metrics` (completed, HTTP 404/422/503, unavailable) | Root `outputs/ceo-playback-demo-20261012/full-product-ci-validation1/checks.json` and `review-full_product_review.json`; CI above | Pass: 42 focused checks, independent CLEAR review and backend CI |
 | CEO-AC-12v | `app.runtime_smoke --minimal-image` | `test_minimal_smoke_accepts_google_auth_without_verifier_invocation`, rejection/import/callability/engine-authority cases in `test_runtime_smoke.py` | Same correction receipts; original failing CI retained | Pass: inert checks, independent CLEAR review and actual backend image-smoke CI |
 
-### Current full-product draft, 13 October 2026
+### Initial full-product draft, 13 October 2026
 
-The original frontend, normal FastAPI backend, Java kernel and agent are running
+The original frontend, normal FastAPI backend, Java kernel and agent ran
 locally from `f168c305ce865e3b0c91d11968079f28dbacf18a`. Runtime and image identities
 are retained in root `outputs/ceo-playback-demo-20261012/release-local-20261013/`.
 `rehearsal-v2.json` records actual Google access, original Data Ingestion and Arena,
@@ -455,3 +455,72 @@ full #90/#91 acceptance and #24 MLflow closure stay open.
 A passing narrow demo does not establish fresh scoring, LOBSTER robustness,
 cascade value, production
 latency or completed story acceptance.
+
+### ITCH source readiness correction — Bug #389
+
+Ticket: [#389](https://github.com/khab40/lob-arena/issues/389), child of #91 in
+[Project #3](https://github.com/users/khab40/projects/3); existing PR #380.
+
+As a demo reviewer, I want directory-only ITCH symbols identified before import,
+so that I can select usable data without an avoidable failed job.
+
+The bundled synthetic fixture has MSFT directory metadata but only AAPL order
+events. Discovery currently calls both ready. Reuse `iter_records`, the existing
+candidate invalid/errors contract, service refusal and Data Ingestion controls.
+Do not add another UI or replay path or alter the original fixture's bytes.
+Small-source event availability is checked only within explicit input/record
+bounds. Incomplete checks never establish that a symbol has no events. Large
+sessions keep their existing directory discovery path and import validation.
+The additional scan accepts files up to 1 MiB and inspects at most 10,000
+records, stopping after 1 MiB of framed payload (one final record may cross
+that boundary). A budget stop means unknown availability, never empty.
+ARD-0032 owns parsing/provenance; existing empty-window validation remains.
+
+Assumptions/dependencies: locally configured source roots, approved source data,
+existing adapter and session authorization. Also audit configured roots and
+safe local/campaign metadata to explain the missing real Nasdaq data. Acquisition,
+final-data recovery, cloud/model workloads and shared deployment are out of scope.
+
+```gherkin
+Feature: ITCH source readiness
+  Scenario: ITCH-AC-01 Refuse a directory-only small source
+    Given the bundled fixture contains MSFT directory metadata without MSFT order events
+    When available sources are discovered
+    Then MSFT has an invalid status and a reason identifying its missing events
+    And the existing screen disables Import and the backend refuses an import job
+
+  Scenario: ITCH-AC-02 Preserve usable source conversion
+    Given the bundled fixture contains eight AAPL lifecycle events at 09:30
+    When AAPL is imported for 09:30 through 09:31
+    Then the existing aligned event and book outputs contain eight rows
+    And empty windows and cross-symbol substitution remain rejected
+
+  Scenario: ITCH-AC-03 Preserve bounded discovery
+    Given a source exceeds the small-source size or inspection budget
+    When its directory is discovered
+    Then discovery does not finish a full-session event scan
+    And an incomplete inspection does not mark any symbol empty
+
+  Scenario: ITCH-AC-04 Refuse a truncated gzip source
+    Given a small source has a truncated gzip trailer
+    When discovery inspects its events
+    Then the source is invalid with its validation error and no import job starts
+```
+
+| Scenario | Implementation/check | Evidence | Status |
+| --- | --- | --- | --- |
+| ITCH-AC-01 | `test_directory_only_symbol_is_refused_before_import_job`; browser `ITCH-AC-01 directory-only MSFT cannot import while AAPL remains usable` | Root `outputs/ceo-playback-demo-20261012/itch-readiness-389/iteration1/checks.json` | Focused checks pass; review/CI pending |
+| ITCH-AC-02 | `test_fixture_normalizes_every_visible_lifecycle_transition`, `test_selected_symbol_never_reads_other_symbol_orders`; LOBSTER checks | Same retained iteration receipt | Focused checks pass; review/CI pending |
+| ITCH-AC-03 | `test_large_source_skips_event_inspection`, `test_incomplete_event_inspection_does_not_mark_symbols_empty` (record/payload budgets) | Same retained iteration receipt | Focused checks pass; review/CI pending |
+| ITCH-AC-04 | `test_truncated_gzip_is_invalid_instead_of_failing_discovery` | Correction receipt in `itch-readiness-389/iteration2/` | Focused check passes; re-review/CI pending |
+
+The bounded source audit found only the 229-byte generated fixture in the root
+and demo worktree's `data/nasdaq-itch`; their default roots contain no 2019 raw
+session. The configured defaults are checkout-relative, and the thin local
+release adds no research-corpus mount. C0–C4 prepared the 2019 research corpus
+in cloud storage; C4 model-feature projections are not UI replay books. See
+root `outputs/ceo-playback-demo-20261012/nasdaq-local-source-audit-20261013.json`
+and the maintained [four-date data flow](../data/nasdaq-public-sample-v1-data-flow.md).
+Actual private environment overrides and current cloud object availability were
+not inspected. Any development replay recovery requires exact artifact/access
+bounds; December final data remains governed separately.
