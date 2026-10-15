@@ -1,0 +1,42 @@
+{
+  "schema_version": "transformer_classifier_inert_verification_v1",
+  "ticket": "https://github.com/khab40/lob-arena/issues/24",
+  "project": "https://github.com/users/khab40/projects/3",
+  "canonical_spec": "docs/specs/24-governed-transformer.md",
+  "source_commit": "33105c678368c5a26cad2b8b09ec4b995acd183c",
+  "reviewed_diff_sha256": "c96cc6345f81df2a9b956f34156f24c85016cf1b1dc31627d5a5f92890e3b825",
+  "reviewed_specification_sha256": "666830330f017d81bf6042a3ac00faa7dfc4a7b40873b7bc738f452152f6966f",
+  "independent_review": {
+    "reviewer": "/root/story24_audit",
+    "receipt_sha256": "7c1c136926ca726b58e72a30f419a50259b0aaafb0decc0590b85d311f961e0c",
+    "actionable_findings": {
+      "P0": 0,
+      "P1": 0,
+      "P2": 0
+    },
+    "prior_findings_closed": 3
+  },
+  "inert_verification": {
+    "focused_cases": 121,
+    "focused_log_sha256": "eb612ec949509b0ac0c4f98f40199a613cb67089f11f0bf02fce0bf44f1a80e3",
+    "regression_cases": 251,
+    "regression_log_sha256": "328b234fb827108bfbf80fababf07f1dd4cc52fa73cc0ad1678730205ca33004",
+    "ruff": "pass",
+    "documentation_local_links": "pass",
+    "maximum_changed_lines_per_commit": 191
+  },
+  "verification_scope": "invented metadata and declared fake consumers; no trained-model loading or scoring",
+  "new_adapter_cuda_parity": "pending separately authorized execution",
+  "original_story_runtime_and_resource_criteria": "pass for frozen research; see canonical specification",
+  "full_story_remaining": [
+    "authenticated MLflow lineage reconciliation"
+  ],
+  "private_custody": "Original payloads and exact review/test receipts remain in operator evidence custody; this public summary contains no payloads.",
+  "operator_feature_producer_decision": {
+    "decision": "eligible_for_research_as_feature_producer",
+    "date": "2026-10-09",
+    "private_receipt_sha256": "5d14ef8d86ce45b75c429423020fd6a54b1a597e6f2aacae6e89234aaa693e49",
+    "story_25_implementation_authorized": false,
+    "production_promotion_authorized": false
+  }
+}
