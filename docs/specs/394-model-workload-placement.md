@@ -57,6 +57,13 @@ classification pins and refusal of authorization overrides. No model runtime
 is executed by those checks. Source/classification review and current-head CI
 remain separate from the historical audit and any numerical qualification.
 
+Python compatibility: the same reviewed source must retain its classification
+under the existing Python 3.11/3.12 CI and local Python 3.14. Serialize parsed
+AST fields consistently, omitting empty lists and optional absent fields while
+preserving literal `None`. This retains the original 3.14 audit hashes; it does
+not change model assertions or weaken the full source-byte pins. Verify the
+complete inventory on all three interpreters before publishing a correction.
+
 | Scenario | Check/evidence under root outputs/ceo-codebase-recovery-20261015 | Status |
 | --- | --- | --- |
 | WORKLOAD-AC-01/02 | `checks.json`, `source-review.json`: focused policy tests, reviewed inventory and unchanged 82 model definitions | Local pass; CI pending |

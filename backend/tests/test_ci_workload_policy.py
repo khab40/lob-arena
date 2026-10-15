@@ -13,6 +13,16 @@ from scripts.ci_workload_policy import canonical, sha, test_nodes as source_test
 from scripts.prepare_ci_workload_inventory import prepare
 
 REPO = Path(__file__).resolve().parents[2]
+
+
+def test_ast_hash_preserves_reviewed_format_and_literal_none():
+    source = b"def test_empty(value=None):\n    assert value is None\n"
+    assert source_test_nodes(source) == {
+        "test_empty": "0481243d4120ed402eb9a9f4305b29b663a5ec501964a7c38bf2d1fc52f92eb5"
+    }
+    assert source_test_nodes(source.replace(b"is None", b"is False")) != source_test_nodes(source)
+
+
 SOURCE = '''import sys, types
 import pytest
 sys.modules["lightgbm"] = types.ModuleType("lightgbm")

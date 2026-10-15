@@ -48,16 +48,34 @@ def read_bytes(path):
     return raw
 
 
+def _stable_ast_dump(node):
+    """Match the reviewed 3.14 parsed-AST format on supported older Pythons."""
+    if isinstance(node, ast.AST):
+        fields = []
+        for name, value in ast.iter_fields(node):
+            # Parser list fields are structural; empty additions such as
+            # type_params must not change a previously reviewed function hash.
+            if isinstance(value, list) and not value:
+                continue
+            if value is None and getattr(type(node), name, ...) is None:
+                continue
+            fields.append(name + "=" + _stable_ast_dump(value))
+        return type(node).__name__ + "(" + ", ".join(fields) + ")"
+    if isinstance(node, list):
+        return "[" + ", ".join(_stable_ast_dump(value) for value in node) + "]"
+    return repr(node)
+
+
 def test_nodes(raw):
     tree = ast.parse(raw)
     nodes = {}
     for item in tree.body:
         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)) and item.name.startswith("test_"):
-            nodes[item.name] = sha(ast.dump(item, include_attributes=False).encode())
+            nodes[item.name] = sha(_stable_ast_dump(item).encode())
         elif isinstance(item, ast.ClassDef) and item.name.startswith("Test"):
             for method in item.body:
                 if isinstance(method, (ast.FunctionDef, ast.AsyncFunctionDef)) and method.name.startswith("test_"):
-                    nodes[item.name + "::" + method.name] = sha(ast.dump(method, include_attributes=False).encode())
+                    nodes[item.name + "::" + method.name] = sha(_stable_ast_dump(method).encode())
     return nodes
 
 

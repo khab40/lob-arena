@@ -114,7 +114,7 @@
 {"path":"scripts/check_markdown_links.py","sha256":"d3d585f9f821b1d2e4d32ea428a3751fcd1037091312197ce77abe4f86f1cd44","tests":[]},
 {"path":"scripts/check_publication_secret_gate.py","sha256":"5ecc5f94682339b23bf1e2dc48a06a81e56575927c966a923bb240119deb194d","tests":[]},
 {"path":"scripts/ci_pytest_guard.py","sha256":"4953dbe05330c9a311443b4a3c5f10bc5781db95257de339d434789e7eaa2688","tests":[]},
-{"path":"scripts/ci_workload_policy.py","sha256":"d642c564ee20d12b7bdf8ea22e4392ff0c4f2dfd71b9828aff4a3e62c5d86340","tests":[]},
+{"path":"scripts/ci_workload_policy.py","sha256":"9234ba92195d0e304cf8e08162ecbb6993089ae7ee2a38ad3e95dcdc5a4c7d3d","tests":[]},
 {"path":"scripts/collect_transformer_holdout_metadata.py","sha256":"da7912cc30a4f0b60865559dae16c4b3c4619ef873bbcd1715408e7aefdf4a1e","tests":[]},
 {"path":"scripts/collect_transformer_lineage_metadata.py","sha256":"e7ecde02db6fda7c63476a837f655bcfc7626091e4a38cd7bfe9586584561a64","tests":[]},
 {"path":"scripts/evaluate_governed_benchmark.py","sha256":"3105c8cdc9144be2cbdf055975e1082081f1dea6b72d6543007bdda7ca71a569","tests":[]},
