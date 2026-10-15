@@ -1,5 +1,59 @@
 # Secure CEO demo: playback and fresh detection
 
+## Approved main recovery — 15 October 2026
+
+Ticket: [#392](https://github.com/khab40/lob-arena/issues/392), under #91 in
+[Project #3](https://github.com/users/khab40/projects/3). The operator explicitly
+approved point 1 of the codebase recovery proposal on 15 October. This bounded
+increment restores the secure saved-playback application to current `main`.
+Fresh detection, source generation, model execution, deployment and full parent
+acceptance remain outside this increment and tracked by #392/#90/#91.
+
+As an authorized demo operator, I want the existing secure Arena and verified
+saved evidence available from main, so I can run a reproducible interim demo
+while the original fresh-detection backlog remains explicit.
+
+Reuse the 42 reviewed secure-demo commits through `f3f6f20`, already rebased on
+main `393ba47`: CEOAuth, CEOJourney/JourneyStore, the original React routes and
+controllers, shared request transport, Java proxy, verified saved-score loader,
+ITCH validation and loopback release configuration. Preserve current main's
+dependency updates, original model packages, historical tags and evidence.
+The former continuation and its uncommitted work are preserved in a verified
+Git bundle and checksum-verified archives under root
+`outputs/ceo-codebase-recovery-20261015/`; their source worktrees remain intact.
+
+Apply the retained fixture corrections for [#393](https://github.com/khab40/lob-arena/issues/393)
+and [#396](https://github.com/khab40/lob-arena/issues/396): await actual session
+teardown and completed theme transitions before assertions. Product behavior,
+assertions and retry policy are unchanged. Use the existing static inventory
+and pytest selection for [#394](394-model-workload-placement.md), with numerical
+execution kept outside ordinary CI. The separate model-runner implementation
+is preserved with the old continuation; this recovery does not qualify it.
+
+Acceptance reuses the scenario IDs below. No historical receipt establishes a
+new exact-head pass. Final review checks the recovered source, preservation,
+current dependencies, scoped test results and authentic browser evidence.
+
+| Scenario IDs | Recovery verification | Root receipt | Status |
+| --- | --- | --- | --- |
+| CEO-AC-01–04/08/09 | Auth/backend boundary tests; allowed/denied entry, logout, expiry and workspace isolation | `checks.json`, `browser-rehearsal.json` | Pass for saved increment |
+| CEO-AC-05–07 | Verified saved playback, capture, model switch, explanation, save/reopen and canonical browser export equality | `checks.json`, `browser-rehearsal.json` | Pass |
+| CEO-AC-11; ITCH-AC-01–04 | Existing ordinary/authenticated screens, Java proxy and source readiness checks | `checks.json`, `browser-rehearsal.json` | Pass; no new ITCH import claimed |
+| CEO-AC-10/12 (saved increment only) | Browser suite without retries, actual saved-flow rehearsal, independent review and final-head CI | `source-review.json`; final release receipt | Local checks/rehearsal pass; final review/CI/tag pending |
+| WORKLOAD-AC-01/02/05 | Reviewed source inventory, excluded numerical fixtures and explicit CI status | `source-review.json`, `checks.json` | Local pass; CI pending |
+| CEO-FRESH-01–04; WORKLOAD-AC-03/04 | Broader fresh journey and authorized numerical execution | Preserved continuation; #392/#394 | Excluded from approved recovery; incomplete |
+
+Merge and cleanup require their exact-target operator approvals. Completion of
+this bounded recovery must not close #392, #90 or #91 as fully delivered.
+
+Receipts above are retained under root `outputs/ceo-codebase-recovery-20261015/`.
+Verification: 267 focused inert backend tests, 69 frontend unit tests, lint/build,
+and all 36 browser tests with zero retries passed. The authentic Google journey
+saved/reopened original evidence and exported JSON equal to the server record.
+The source review pins `f3f6f20` plus patch `958f740e8fe8a163fcaf753b2860d5a6366d2160b1adb8c6e0f747f0a0b8a908`.
+No model workload or new cloud deployment ran. Final publication evidence remains
+distinct from these local checks and does not qualify fresh detection.
+
 Tickets: [#91](https://github.com/khab40/lob-arena/issues/91) and
 [#90](https://github.com/khab40/lob-arena/issues/90), in
 [Project #3](https://github.com/users/khab40/projects/3).

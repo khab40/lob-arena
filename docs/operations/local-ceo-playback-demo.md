@@ -79,7 +79,9 @@ Missing Google configuration or unsafe private state keeps sign-in unavailable;
 missing or invalid custody keeps the campaign unavailable. Neither condition
 grants a fallback session or exposes fixture predictions.
 
-Use the existing `feat/ceo-playback-demo-20261012` task branch and PR #380.
+For the approved 15 October recovery, use `fix/ceo-main-recovery-392-20261015`
+and its recovery PR linked to [#392](https://github.com/khab40/lob-arena/issues/392).
+PR #380 is historical, closed unmerged with incomplete fresh acceptance.
 After the final reviewed commit passes its checks, bind an immutable release tag
 to that exact commit. The public configuration example's tag is a proposed name;
 a tag or image name alone does not establish verified source or build identity.

@@ -350,6 +350,7 @@ test("day and night palettes keep sidebar text and buttons consistent", async ({
 
   await page.getByTitle("Light").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(secondary).toHaveCSS("background-color", "rgba(124, 58, 237, 0.09)");
   const light = await page.evaluate(() => {
     const styles = (selector: string) => {
       const computed = getComputedStyle(document.querySelector(selector)!);
@@ -376,6 +377,7 @@ test("day and night palettes keep sidebar text and buttons consistent", async ({
 
   await page.getByTitle("Dark").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(secondary).toHaveCSS("background-color", "rgba(139, 92, 246, 0.14)");
   const dark = await page.evaluate(() => {
     const styles = (selector: string) => {
       const computed = getComputedStyle(document.querySelector(selector)!);

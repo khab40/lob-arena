@@ -69,15 +69,33 @@ test("denied identity stays on sign-in with a fresh challenge", async ({ page })
 
 test("server expiration clears the workspace without a browser session fallback", async ({ page }) => {
   let active = true;
+  let observedExpiry!: () => void, releaseExpiry!: () => void;
+  const expiryRequested = new Promise<void>(resolve => { observedExpiry = resolve; });
+  const expiryReleased = new Promise<void>(resolve => { releaseExpiry = resolve; });
   await page.clock.install();
-  await page.route("**/api/auth/session", (route) => route.fulfill({ status: active ? 200 : 401, json: active ? session : {} }));
+  await page.route("**/api/auth/session", async (route) => {
+    if (active) return route.fulfill({ json: session });
+    observedExpiry();
+    await expiryReleased;
+    return route.fulfill({ status: 401, json: {} });
+  });
   await page.route("**/api/auth/config", (route) => route.fulfill({ json: { configured: false, client_id: null, nonce: null } }));
   await page.goto("/research-predictions");
   await expect(page.getByRole("button", { name: "Sign out", exact: true })).toBeVisible();
-  await page.evaluate(() => sessionStorage.setItem("lob-arena.control-center.incident", "account-a-example"));
+  await page.evaluate(() => {
+    sessionStorage.setItem("lob-arena.control-center.incident", "account-a-example");
+    sessionStorage.setItem("unrelated-fixture", "preserved");
+  });
   active = false;
+  const expired = page.waitForResponse(response => response.url().endsWith("/api/auth/session") && response.status() === 401);
   await page.clock.fastForward(60000);
-  expect(await page.evaluate(() => sessionStorage.getItem("lob-arena.control-center.incident"))).toBeNull();
+  await expiryRequested;
+  await expect(page.getByRole("button", { name: "Sign out", exact: true })).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem("lob-arena.control-center.incident"))).toBe("account-a-example");
+  releaseExpiry();
+  await expired;
   await expect(page.getByRole("button", { name: "Sign out", exact: true })).toHaveCount(0);
   await expect(page.getByRole("alert")).toContainText("session ended");
+  expect(await page.evaluate(() => sessionStorage.getItem("lob-arena.control-center.incident"))).toBeNull();
+  expect(await page.evaluate(() => sessionStorage.getItem("unrelated-fixture"))).toBe("preserved");
 });
