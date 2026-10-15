@@ -7,6 +7,7 @@ grader-smoke:
 	./scripts/grader-smoke.sh
 
 backend-test:
+	@printf "%s\n" "Reviewed inert tests only; numerical tests require the admitted Nebius CPU runner (Bug #394)."
 	cd backend && uv run pytest
 
 backend-dev:
@@ -98,12 +99,14 @@ lightgbm-phase1-test:
 		tests/test_lightgbm_governed_data.py
 
 lightgbm-phase2-test:
+	@printf "%s\n" "Default pytest guard excludes numerical nodes before fixtures; CPU Job verification is separate."
 	cd backend && uv run --extra ml pytest \
 		tests/test_lightgbm_phase0_contracts.py \
 		tests/test_lightgbm_governed_data.py \
 		tests/test_lightgbm_training.py
 
 lightgbm-v1-test:
+	@printf "%s\n" "Default pytest guard excludes numerical nodes before fixtures; CPU Job verification is separate."
 	cd backend && uv run --extra ml pytest \
 		tests/test_lightgbm_phase0_contracts.py \
 		tests/test_lightgbm_governed_data.py \
@@ -111,6 +114,7 @@ lightgbm-v1-test:
 		tests/test_lightgbm_v1.py
 
 lightgbm-wave1-test:
+	@printf "%s\n" "Default pytest guard excludes numerical nodes before fixtures; CPU Job verification is separate."
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml pytest \
 		tests/test_lightgbm_g5.py \
 		tests/test_lightgbm_wave1.py \
@@ -170,6 +174,7 @@ lightgbm-wave1-g7-check:
 		python ../scripts/lightgbm_wave1.py g7-verify --help >/dev/null
 
 lightgbm-wave1-g8-check:
+	@printf "%s\n" "G8 inert metadata/refusal checks only; excluded numerical assertions remain in the admitted CPU Job."
 	cd backend && UV_CACHE_DIR=$${UV_CACHE_DIR:-/tmp/lob-arena-uv-cache} uv run --extra ml --with awscli==1.46.1 python -m pytest -q \
 		tests/test_c4_evaluation.py \
 		tests/test_c4_replay_evidence.py \

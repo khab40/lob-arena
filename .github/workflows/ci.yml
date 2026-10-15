@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend lint and tests
+    name: Backend lint and reviewed inert tests
     runs-on: ubuntu-latest
     # ensure Python can import top-level packages like `serverless`
     env:
@@ -41,7 +41,12 @@ jobs:
       - name: Run Ruff
         run: uv run --project backend ruff check backend serverless scripts
 
-      - name: Run backend tests
+      - name: Verify reviewed workload source inventory before collection
+        run: >-
+          uv run --project backend python -c
+          "from pathlib import Path; from scripts.ci_workload_policy import validate_inventory; validate_inventory(Path('.'))"
+
+      - name: Run backend inert tests (model suite requires admitted Nebius Job)
         working-directory: backend
         run: uv run pytest -c pyproject.toml tests --junitxml=test-results.xml
 
@@ -126,7 +131,7 @@ jobs:
           --with pytest pytest backend/tests/test_transformer_research_report.py
 
   lightgbm-phase1:
-    name: LightGBM governed data boundary
+    name: Governed inert data and recovery boundaries
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: ${{ github.workspace }}
@@ -211,7 +216,7 @@ jobs:
           uv run --extra ml pytest tests/test_digest_job_submission.py tests/test_g8_digest_context.py
           tests/test_g8_final_window.py tests/test_g8_production_transport.py
 
-      - name: Run governed LightGBM tests
+      - name: Run governed inert checks with ML installed (numerical nodes excluded)
         working-directory: backend
         run: |
           uv run --extra ml pytest \
@@ -220,8 +225,14 @@ jobs:
             tests/test_lightgbm_training.py \
             tests/test_lightgbm_v1.py
 
-      - name: Run G8 C4 evaluation and recovery gates with ML dependencies
+      - name: Run G8 C4 inert metadata and refusal checks (numerical Job remains separate)
         run: make lightgbm-wave1-g8-check
+
+      - name: Report numerical verification gate
+        run: >-
+          printf '%s\n' 'This CI job verifies inert contracts only. The unchanged model-reaching
+          test suite requires its reviewed, explicitly admitted Nebius CPU Job; green CI
+          does not establish numerical acceptance for #392.' >> "$GITHUB_STEP_SUMMARY"
 
   java-kernel:
     name: Java 25 kernel and control plane
