@@ -66,6 +66,6 @@ complete inventory on all three interpreters before publishing a correction.
 
 | Scenario | Check/evidence under root outputs/ceo-codebase-recovery-20261015 | Status |
 | --- | --- | --- |
-| WORKLOAD-AC-01/02 | `checks.json`, `source-review.json`: focused policy tests, reviewed inventory and unchanged 82 model definitions | Local pass; CI pending |
+| WORKLOAD-AC-01/02 | `checks.json`, `portable-review.json`: focused policy tests, three interpreter checks and unchanged 82 model definitions | Local verification/review pass; final-head CI in `publication.json` and PR #401 |
 | WORKLOAD-AC-03/04 | Preserved separate runner; exact admitted Nebius execution/readback | Excluded from recovery; incomplete |
-| WORKLOAD-AC-05 | Workflow names/summary, Make messages and this acceptance mapping; `source-review.json` | Static review pass; CI pending |
+| WORKLOAD-AC-05 | Workflow names/summary, Make messages and this acceptance mapping; `portable-review.json` | Review pass; final-head CI in `publication.json` and PR #401 |

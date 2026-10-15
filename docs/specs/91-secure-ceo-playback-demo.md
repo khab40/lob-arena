@@ -39,8 +39,8 @@ current dependencies, scoped test results and authentic browser evidence.
 | CEO-AC-01–04/08/09 | Auth/backend boundary tests; allowed/denied entry, logout, expiry and workspace isolation | `checks.json`, `browser-rehearsal.json` | Pass for saved increment |
 | CEO-AC-05–07 | Verified saved playback, capture, model switch, explanation, save/reopen and canonical browser export equality | `checks.json`, `browser-rehearsal.json` | Pass |
 | CEO-AC-11; ITCH-AC-01–04 | Existing ordinary/authenticated screens, Java proxy and source readiness checks | `checks.json`, `browser-rehearsal.json` | Pass; no new ITCH import claimed |
-| CEO-AC-10/12 (saved increment only) | Browser suite without retries, actual saved-flow rehearsal, independent review and final-head CI | `source-review.json`; final release receipt | Local checks/rehearsal pass; final review/CI/tag pending |
-| WORKLOAD-AC-01/02/05 | Reviewed source inventory, excluded numerical fixtures and explicit CI status | `source-review.json`, `checks.json` | Local pass; CI pending |
+| CEO-AC-10/12 (saved increment only) | Browser suite without retries, actual saved-flow rehearsal, independent review and final-head CI | `source-review.json`, `final-review.json`, `publication.json`; [PR #401](https://github.com/khab40/lob-arena/pull/401) | Local verification/review pass; final-head CI and tag indexed by publication receipt |
+| WORKLOAD-AC-01/02/05 | Reviewed source inventory, excluded numerical fixtures and explicit CI status | `portable-review.json`, `checks.json`, `publication.json` | Local verification/review pass; final-head CI indexed by publication receipt |
 | CEO-FRESH-01–04; WORKLOAD-AC-03/04 | Broader fresh journey and authorized numerical execution | Preserved continuation; #392/#394 | Excluded from approved recovery; incomplete |
 
 Merge and cleanup require their exact-target operator approvals. Completion of
@@ -51,8 +51,11 @@ Verification: 267 focused inert backend tests, 69 frontend unit tests, lint/buil
 and all 36 browser tests with zero retries passed. The authentic Google journey
 saved/reopened original evidence and exported JSON equal to the server record.
 The source review pins `f3f6f20` plus patch `958f740e8fe8a163fcaf753b2860d5a6366d2160b1adb8c6e0f747f0a0b8a908`.
-No model workload or new cloud deployment ran. Final publication evidence remains
-distinct from these local checks and does not qualify fresh detection.
+The portable inventory correction preserves all prior hashes under Python
+3.11/3.12/3.14; its 15 focused policy checks and independent review passed.
+No model workload or new cloud deployment ran. `publication.json` records the
+final reviewed head, CI run, immutable recovery tag and merge state. Publication
+evidence remains distinct from local checks and does not qualify fresh detection.
 
 Tickets: [#91](https://github.com/khab40/lob-arena/issues/91) and
 [#90](https://github.com/khab40/lob-arena/issues/90), in
