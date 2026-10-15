@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend lint and reviewed inert tests
+    name: Backend lint and tests
     runs-on: ubuntu-latest
     # ensure Python can import top-level packages like `serverless`
     env:
@@ -131,7 +131,7 @@ jobs:
           --with pytest pytest backend/tests/test_transformer_research_report.py
 
   lightgbm-phase1:
-    name: Governed inert data and recovery boundaries
+    name: LightGBM governed data boundary
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: ${{ github.workspace }}
