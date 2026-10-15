@@ -14,6 +14,9 @@
 !tsconfig.app.json
 !tsconfig.node.json
 !vite.config.ts
+!dev/
+dev/**
+!dev/ceoLoopbackProxy.ts
 !nginx.conf
 !runtime-config.js.template
 !public/

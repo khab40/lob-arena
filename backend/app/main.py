@@ -1,36 +1,51 @@
 import time
+from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 
 from app.api.routes_arena import router as arena_router
 from app.api.routes_data_ingestion import router as data_ingestion_router
 from app.api.routes_experiments import router as experiments_router
 from app.api.routes_health import router as health_router
+from app.api.routes_java import router as java_router
 from app.api.routes_incidents import router as incidents_router
 from app.api.routes_nebius import nebius_client, router as nebius_router
 from app.api.routes_red_team import router as red_team_router
 from app.api.routes_saved_scores import router as saved_scores_router
+from app.api.routes_ceo_auth import router as ceo_auth_router
+from app.api.routes_ceo_journey import router as ceo_journey_router
 from app.api.routes_scenarios import router as scenarios_router
 from app.api.routes_simulation import router as simulation_router
 from app.arena.java_client import JavaArenaClient
 from app.config import get_settings
+from app.ceo_auth import CEOAuth
+from app.ceo_auth_boundary import CEOAccessBoundary
+from app.ceo_journey import CEOJourney
 from app.data_ingestion.service import DataIngestionService
 from app.metrics import PrometheusTextRegistry
 from app.nebius.detector_tournament import DetectorTournamentMetrics
 from app.nebius.evidence_archive import configure_default_evidence_archive
 from app.storage.local_store import LocalStore
 from app.storage.retention import cleanup_output_data
+from app.runtime_roots import validate_runtime_roots
 
 app = FastAPI(title="LOB Arena")
 settings = get_settings()
-if settings.research_saved_scores_enabled or settings.research_saved_scores_dir is not None:
-    # Fail before LocalStore/retention initialization can touch private custody.
-    from pathlib import Path
-    from app.research.saved_score_io import validate_private_roots
-    validate_private_roots(settings.research_saved_scores_dir,
-                           (settings.arena_output_dir, Path(__file__).resolve().parents[2] / "assets/screenshots"))
+app.state.settings = settings
+screenshots = Path(__file__).resolve().parents[2] / "assets/screenshots"
+validate_runtime_roots(settings, screenshots)
+app.state.ceo_auth = CEOAuth(settings)
+app.state.ceo_journey = None
+if settings.ceo_demo_enabled and app.state.ceo_auth.configured:
+    try:
+        app.state.ceo_journey = CEOJourney(settings, (settings.arena_output_dir,
+            screenshots, settings.ceo_demo_state_dir))
+    except (OSError, ValueError):
+        pass
 metrics_registry = PrometheusTextRegistry()
 metrics_registry.counter(
     "backend_java_arena_requests_total",
@@ -50,7 +65,6 @@ app.state.nebius_evidence = (
     else None
 )
 app.state.retention_cleanup = cleanup_output_data(app.state.store.output_dir, settings.arena_data_retention_days)
-app.state.settings = settings
 app.state.data_ingestion = DataIngestionService(
     settings.arena_lobster_raw_dir,
     settings.arena_historical_data_dir,
@@ -66,11 +80,21 @@ app.state.arena_metrics_snapshot_at = None
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_allowed_origin_list,
+    allow_origins=[app.state.ceo_auth.origin] if settings.ceo_demo_enabled else settings.cors_allowed_origin_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(CEOAccessBoundary, auth=app.state.ceo_auth)
+app.include_router(ceo_auth_router)
+app.include_router(ceo_journey_router)
+
+if settings.ceo_demo_enabled:
+    @app.exception_handler(RequestValidationError)
+    async def ceo_validation_error(_request: Request, _exception: RequestValidationError):
+        if not _request.url.path.startswith(("/api/auth/", "/api/ceo-demo/")):
+            return await request_validation_exception_handler(_request, _exception)
+        return JSONResponse({"detail": "Invalid request"}, status_code=400, headers={"Cache-Control": "no-store"})
 
 app.include_router(health_router)
 app.include_router(arena_router)
@@ -82,6 +106,7 @@ app.include_router(incidents_router)
 app.include_router(nebius_router)
 app.include_router(red_team_router)
 app.include_router(saved_scores_router)
+app.include_router(java_router)  # Existing typed paths retain precedence.
 
 
 @app.get("/api/status", tags=["status"])

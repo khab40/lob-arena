@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/config/runtime";
+import { sessionFetch as fetch } from "./sessionRequests";
 import { assertSavedScoreLoopback, SAVED_PAGE_SIZE, validateSavedCampaign, validateSavedScorePage } from "./savedScoreContract";
 import type { SavedCampaign, SavedDetectorId } from "@/types/savedScores";
 

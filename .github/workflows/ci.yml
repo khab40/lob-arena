@@ -41,7 +41,12 @@ jobs:
       - name: Run Ruff
         run: uv run --project backend ruff check backend serverless scripts
 
-      - name: Run backend tests
+      - name: Verify reviewed workload source inventory before collection
+        run: >-
+          uv run --project backend python -c
+          "from pathlib import Path; from scripts.ci_workload_policy import validate_inventory; validate_inventory(Path('.'))"
+
+      - name: Run backend inert tests (model suite requires admitted Nebius Job)
         working-directory: backend
         run: uv run pytest -c pyproject.toml tests --junitxml=test-results.xml
 
@@ -64,6 +69,7 @@ jobs:
   frontend:
     name: Frontend lint and build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -95,6 +101,20 @@ jobs:
 
       - name: Build production frontend
         run: pnpm run build
+
+      - name: Install Chromium for inert browser checks
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Verify ordinary and authenticated application workflows
+        run: pnpm run test:e2e --workers=2
+
+      - name: Retain failing invented-fixture browser evidence
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: frontend-browser-failures
+          path: frontend/test-results
+          if-no-files-found: ignore
 
   transformer-reports:
     name: Transformer offline reports
@@ -196,7 +216,7 @@ jobs:
           uv run --extra ml pytest tests/test_digest_job_submission.py tests/test_g8_digest_context.py
           tests/test_g8_final_window.py tests/test_g8_production_transport.py
 
-      - name: Run governed LightGBM tests
+      - name: Run governed inert checks with ML installed (numerical nodes excluded)
         working-directory: backend
         run: |
           uv run --extra ml pytest \
@@ -205,8 +225,14 @@ jobs:
             tests/test_lightgbm_training.py \
             tests/test_lightgbm_v1.py
 
-      - name: Run G8 C4 evaluation and recovery gates with ML dependencies
+      - name: Run G8 C4 inert metadata and refusal checks (numerical Job remains separate)
         run: make lightgbm-wave1-g8-check
+
+      - name: Report numerical verification gate
+        run: >-
+          printf '%s\n' 'This CI job verifies inert contracts only. The unchanged model-reaching
+          test suite requires its reviewed, explicitly admitted Nebius CPU Job; green CI
+          does not establish numerical acceptance for #392.' >> "$GITHUB_STEP_SUMMARY"
 
   java-kernel:
     name: Java 25 kernel and control plane
@@ -472,6 +498,18 @@ jobs:
 
       - name: Validate Compose configuration
         run: docker compose config --quiet
+
+      - name: Validate local CEO release configuration without starting services
+        env:
+          CEO_RELEASE_TAG: invented-ci-release
+          CEO_RELEASE_RUNTIME_DIR: /tmp/invented-ceo-runtime
+          CEO_RELEASE_UID: "1001"
+          CEO_RELEASE_GID: "1001"
+          NEBIUS_SERVERLESS_ENABLED: "false"
+          NEBIUS_ENDPOINT_MODE: mock
+        run: >-
+          docker compose -f docker-compose.yml
+          -f deployments/docker-compose.ceo-local.yml config --quiet
 
       - name: Validate serverless Compose configuration
         env:

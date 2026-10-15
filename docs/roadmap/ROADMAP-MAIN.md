@@ -14,7 +14,14 @@ Operator-approved priority: [Transformer versus LightGBM research](../ml/transfo
 under [#24](https://github.com/khab40/lob-arena/issues/24), before platform maintenance
 #19–#21. PR #283's reusable repairs are merged. The operator continues bounded
 research after verified December results; see the [current disposition](../ml/transformer-research-disposition-20261008.md).
-Next is #90/#91 saved-score mock integration, then fresh inference. Hybrid work
+The saved-score draft is now tagged `ceo-demo-20261012-r1`. The 13 October
+operator priority is the existing #90/#91 application running either selected
+frozen LightGBM or Transformer on supported historical/synthetic data and showing
+label-aware detection quality and retained evidence. See the
+[current demo target](ceo-demo-plan-20261008.md#current-delivery-target--13-october-2026)
+and its linked canonical acceptance; fresh integration/rehearsal remains pending.
+LLM explanations, future source connectors and shared deployment can follow this
+local release increment. This does not complete the broader phases below. Hybrid work
 and broader quality claims still require a separately justified study.
 Existing dates below remain baseline targets pending evidence-based reforecast.
 

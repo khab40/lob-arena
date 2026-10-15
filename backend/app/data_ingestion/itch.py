@@ -10,6 +10,7 @@ import shutil
 import struct
 import sys
 from collections import Counter
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +28,9 @@ DEFAULT_MIN_FREE_BYTES = 20 * 1024**3
 DEFAULT_MAX_WORKING_BYTES = 12 * 1024**3
 CHUNK_ROWS = 50_000
 RESOURCE_CHECK_RECORDS = 50_000
+DISCOVERY_EVENT_MAX_SOURCE_BYTES = 1024**2
+DISCOVERY_EVENT_MAX_PAYLOAD_BYTES = 1024**2
+DISCOVERY_EVENT_MAX_RECORDS = 10_000
 MESSAGE_LENGTHS = {
     "S": 12,
     "R": 39,
@@ -98,9 +102,11 @@ def discover_candidates(raw_dir: Path, processed_dir: Path) -> list[IngestionCan
     for path in sorted(item for item in raw_root.rglob("*") if _is_itch_file(item)):
         relative = path.relative_to(raw_root).as_posix()
         trade_date = _trade_date_from_name(path.name)
+        empty_symbols: set[str] = set()
         try:
             symbols = discover_symbols(path)
-        except (OSError, ValueError) as exc:
+            empty_symbols = _empty_symbols_in_small_source(path, symbols)
+        except (EOFError, OSError, ValueError) as exc:
             symbols = []
             discovery_error = str(exc)
         else:
@@ -115,6 +121,11 @@ def discover_candidates(raw_dir: Path, processed_dir: Path) -> list[IngestionCan
                 errors.append("ITCH filename must contain YYYYMMDD, YYYY-MM-DD, or MMDDYYYY trade date")
             if not symbol:
                 errors.append(discovery_error or "ITCH stream contains no Stock Directory messages")
+            if symbol in empty_symbols:
+                errors.append(
+                    f"{symbol} has no visible-order lifecycle events in this source; "
+                    "choose another symbol or source."
+                )
             matching = next(
                 (
                     manifest.dataset_id
@@ -165,6 +176,30 @@ def discover_symbols(path: Path) -> list[str]:
         elif record.message_type in BOOK_MESSAGE_TYPES:
             break
     return sorted(set(symbols.values()))
+
+
+def _empty_symbols_in_small_source(path: Path, symbols: list[str]) -> set[str]:
+    """Only a complete bounded inspection can establish absence of events."""
+    if path.stat().st_size > DISCOVERY_EVENT_MAX_SOURCE_BYTES:
+        return set()
+    symbol_by_locate: dict[int, str] = {}
+    symbols_with_events: set[str] = set()
+    payload_bytes = 0
+    with closing(iter_records(path)) as records:
+        for _ in range(DISCOVERY_EVENT_MAX_RECORDS):
+            record = next(records, None)
+            if record is None:
+                return set(symbols) - symbols_with_events
+            payload_bytes += len(record.payload) + 2
+            if payload_bytes > DISCOVERY_EVENT_MAX_PAYLOAD_BYTES:
+                return set()
+            if record.message_type == "R":
+                symbol_by_locate[record.stock_locate] = _alpha(record.payload[11:19])
+            elif record.message_type in BOOK_MESSAGE_TYPES:
+                symbol = symbol_by_locate.get(record.stock_locate)
+                if symbol:
+                    symbols_with_events.add(symbol)
+    return set()
 
 
 def convert_itch(

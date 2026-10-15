@@ -46,6 +46,9 @@ import {
   type ReportsSummary,
   type ServerlessSmokeResponse
 } from "@/api/client";
+import { usePreparedEvidence } from "./preparedEvidence";
+import { CeoEvidencePanel } from "./CeoEvidencePanel";
+import { NavLink } from "react-router";
 import { incidentInvestigationRequest, loadControlCenterIncident } from "@/controlCenterIncident";
 import type { Incident } from "@/types/arena";
 import { arenaScenarioLabels, arenaScenarioTypes } from "@/scenarios";
@@ -191,6 +194,10 @@ const demoScenarios: DemoScenario[] = [
 export function NebiusControlPanelPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const prepared = usePreparedEvidence();
+  const [investigationSource, setInvestigationSource] = useState(() => searchParams.get("input") === "saved" ? "saved" : "arena");
+  const activatePrepared = prepared?.activate;
+  useEffect(() => { if (investigationSource === "saved") activatePrepared?.(); }, [investigationSource, activatePrepared]);
   const [arenaIncident] = useState<Incident | null>(() => loadControlCenterIncident(searchParams.get("incidentId")));
   const [runtimeStatus, setRuntimeStatus] = useState<NebiusRuntimeStatus>(fallbackRuntimeStatus);
   const [usageMetrics, setUsageMetrics] = useState<NebiusUsageMetrics>(fallbackUsageMetrics);
@@ -636,7 +643,7 @@ export function NebiusControlPanelPage() {
     || (experiment && Object.keys(experiment.artifact_paths).length)
     || nebiusEvidence.some((record) => Date.parse(record.created_at) >= Date.parse(sessionStartedAt))
   );
-  const workflowStepReady = [true, controlPlaneReady, controlPlaneReady && investigationInputReady, controlPlaneReady, controlPlaneReady && executionResultsReady];
+  const workflowStepReady = [true, controlPlaneReady, (controlPlaneReady && investigationInputReady) || Boolean(prepared), controlPlaneReady, controlPlaneReady && executionResultsReady];
   const activeWorkflowTitle = workflowSteps[activeWorkflowStep - 1] ?? workflowSteps[0];
   const goToPreviousWorkflowStep = () => setActiveWorkflowStep((step) => Math.max(1, step - 1));
   const goToNextWorkflowStep = () => setActiveWorkflowStep((step) => Math.min(workflowSteps.length, step + 1));
@@ -787,6 +794,17 @@ export function NebiusControlPanelPage() {
           title="Investigation Team"
           description="Send detector incidents for explanation, report generation, and analyst-ready findings."
         >
+          {prepared ? <label>Investigation input <select value={investigationSource} onChange={e => setInvestigationSource(e.target.value)}>
+            <option value="arena">Ordinary Arena incident</option><option value="saved">Verified saved anomaly</option>
+          </select></label> : null}
+          {investigationSource === "saved" && prepared ? <>
+            <p>Verified saved research input · deterministic fallback · no LLM call.</p>
+            <NavLink className="secondary-button" to="/research-predictions">Open saved research</NavLink>
+            {prepared.error ? <p role="alert">{prepared.error}</p> : null}
+            <CeoEvidencePanel snapshot={prepared.snapshot} explanation={prepared.explanation} saved={prepared.saved}
+              records={prepared.records} busy={prepared.busy} onExplain={prepared.explain} onSave={prepared.save}
+              onReopen={prepared.reopen} onDownload={prepared.download} />
+          </> : <>
           {arenaIncident ? (
             <article className="control-center-incident">
               <span>Selected Arena incident</span>
@@ -812,6 +830,7 @@ export function NebiusControlPanelPage() {
           {investigationTeamReport ? <InvestigationTeamReport report={investigationTeamReport} /> : null}
           {experimentMessage ? <p className="experiment-message">{experimentMessage}</p> : null}
           <ExperimentInvestigationResults investigations={experimentInvestigations} />
+          </>}
         </InfrastructureSection> : null}
 
         {activeWorkflowStep === 4 ? <InfrastructureSection

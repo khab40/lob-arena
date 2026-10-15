@@ -156,6 +156,13 @@ class Settings(BaseSettings):
     arena_output_dir: Path = Field(default=Path("../outputs"), alias="ARENA_OUTPUT_DIR")
     research_saved_scores_enabled: bool = Field(default=False, alias="RESEARCH_SAVED_SCORES_ENABLED")
     research_saved_scores_dir: Path | None = Field(default=None, alias="RESEARCH_SAVED_SCORES_DIR")
+    ceo_demo_enabled: bool = Field(default=False, alias="CEO_DEMO_ENABLED")
+    ceo_demo_local: bool = Field(default=False, alias="CEO_DEMO_LOCAL")
+    ceo_demo_origin: str | None = Field(default=None, alias="CEO_DEMO_ORIGIN")
+    google_client_id: str | None = Field(default=None, alias="GOOGLE_CLIENT_ID")
+    ceo_demo_allowed_emails: str = Field(default="", alias="CEO_DEMO_ALLOWED_EMAILS")
+    ceo_demo_state_dir: Path | None = Field(default=None, alias="CEO_DEMO_STATE_DIR")
+    ceo_demo_session_seconds: int = Field(default=1800, ge=60, le=3600, alias="CEO_DEMO_SESSION_SECONDS")
     arena_data_retention_days: int = Field(default=1, ge=1, le=3650, alias="ARENA_DATA_RETENTION_DAYS")
     arena_sample_data_dir: Path = Field(default=Path("../data/sample"), alias="ARENA_SAMPLE_DATA_DIR")
     arena_lobster_raw_dir: Path = Field(

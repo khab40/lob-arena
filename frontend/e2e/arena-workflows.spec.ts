@@ -2,6 +2,7 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 
 type ApiState = {
   candidates?: Record<string, unknown>[];
+  itchCandidates?: Record<string, unknown>[];
   datasets?: Record<string, unknown>[];
   deletedDatasets?: string[];
   experiment?: ReturnType<typeof experimentFixture> | null;
@@ -71,10 +72,13 @@ async function mockApi(page: Page, state: ApiState = {}) {
       status
     });
 
-    if (path === "/api/data-ingestion/lobster/candidates" && method === "GET") {
+    if (path === "/api/data-ingestion/sources/lobster/candidates" && method === "GET") {
       return json(state.candidates);
     }
-    const candidateImport = path.match(/^\/api\/data-ingestion\/lobster\/candidates\/([^/]+)\/import$/);
+    if (path === "/api/data-ingestion/sources/nasdaq_itch/candidates" && method === "GET") {
+      return json(state.itchCandidates ?? []);
+    }
+    const candidateImport = path.match(/^\/api\/data-ingestion\/sources\/(?:lobster|nasdaq_itch)\/candidates\/([^/]+)\/import$/);
     if (candidateImport && method === "POST") {
       state.importRequests?.push(request.postDataJSON() as Record<string, unknown>);
       return json({ candidate_id: candidateImport[1], dataset_id: null, status: "importing" }, 202);
@@ -346,6 +350,7 @@ test("day and night palettes keep sidebar text and buttons consistent", async ({
 
   await page.getByTitle("Light").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(secondary).toHaveCSS("background-color", "rgba(124, 58, 237, 0.09)");
   const light = await page.evaluate(() => {
     const styles = (selector: string) => {
       const computed = getComputedStyle(document.querySelector(selector)!);
@@ -372,6 +377,7 @@ test("day and night palettes keep sidebar text and buttons consistent", async ({
 
   await page.getByTitle("Dark").click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(secondary).toHaveCSS("background-color", "rgba(139, 92, 246, 0.14)");
   const dark = await page.evaluate(() => {
     const styles = (selector: string) => {
       const computed = getComputedStyle(document.querySelector(selector)!);
@@ -568,6 +574,10 @@ test("data ingestion accepts custom minutes and deletes a confirmed dataset", as
   const state: ApiState = {
     candidates: [{
       candidate_id: "candidate-1",
+      source_type: "lobster",
+      venue: "NASDAQ",
+      source_file: null,
+      source_file_size: null,
       dataset_id: null,
       depth: 10,
       end_time: "10:30:00.000",
@@ -608,6 +618,7 @@ test("data ingestion accepts custom minutes and deletes a confirmed dataset", as
   await page.getByRole("button", { name: "Import window" }).click();
   await expect.poll(() => state.importRequests?.length).toBe(1);
   expect(state.importRequests?.[0]).toEqual({
+    depth: 10,
     end_time_ms: 35_220_000,
     start_time_ms: 34_200_000
   });
@@ -616,4 +627,30 @@ test("data ingestion accepts custom minutes and deletes a confirmed dataset", as
   await page.getByRole("button", { name: "Delete dataset" }).click();
   await expect.poll(() => state.deletedDatasets).toEqual(["dataset-stale"]);
   await expect(page.getByText("dataset-stale")).toBeHidden();
+});
+
+test("ITCH-AC-01 directory-only MSFT cannot import while AAPL remains usable", async ({ page }) => {
+  const reason = "MSFT has no visible-order lifecycle events in this source; choose another symbol or source.";
+  const candidate = (symbol: string, status: string) => ({
+    candidate_id: `fixture-${symbol}`, source_type: "nasdaq_itch", venue: "XNAS",
+    symbol, status, trade_date: "2026-01-02", depth: 10, dataset_id: null,
+    start_time: "00:00:00.000", start_time_ms: 0,
+    end_time: "24:00:00.000", end_time_ms: 86_400_000,
+    source_file: "fixture/2026-01-02.NASDAQ_ITCH50.fixture.gz", source_file_size: 229,
+    message_file: null, message_file_size: null,
+    orderbook_file: null, orderbook_file_size: null,
+    errors: status === "invalid" ? [reason] : []
+  });
+  const state: ApiState = { itchCandidates: [candidate("AAPL", "ready"), candidate("MSFT", "invalid")] };
+  await mockApi(page, state);
+  await page.goto("/data-ingestion");
+  const msft = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "MSFT", exact: true }) });
+  await expect(msft.getByRole("button", { name: "Import window" })).toBeDisabled();
+  await expect(msft.getByText(reason)).toBeVisible();
+  const aapl = page.getByRole("row").filter({ has: page.getByRole("cell", { name: "AAPL", exact: true }) });
+  await expect(aapl.getByRole("button", { name: "Import window" })).toBeEnabled();
+  expect(state.importRequests).toHaveLength(0);
+  await aapl.getByRole("button", { name: "Import window" }).click();
+  await expect.poll(() => state.importRequests?.length).toBe(1);
+  expect(state.importRequests?.[0]).toEqual({ depth: 10, start_time_ms: 34_200_000, end_time_ms: 36_000_000 });
 });
