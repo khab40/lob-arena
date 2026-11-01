@@ -24,8 +24,8 @@ sourceSets {
 
 dependencies {
     api("com.google.protobuf:protobuf-java:4.36.2")
-    api("io.grpc:grpc-protobuf:1.84.1")
-    api("io.grpc:grpc-stub:1.84.1")
+    api("io.grpc:grpc-protobuf:1.85.1")
+    api("io.grpc:grpc-stub:1.85.1")
     compileOnly("org.apache.tomcat:annotations-api:6.0.53")
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -38,7 +38,7 @@ protobuf {
     }
     plugins {
         create("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.84.1"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.85.1"
         }
     }
     generateProtoTasks {
